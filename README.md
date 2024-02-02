@@ -79,7 +79,7 @@ Follow the prompts to enter the source picture path, media folder name, and movi
 ![movieimage](https://i.imgur.com/Nfdten6.png)
 
 ### Example of TV Lib:
-![tvimage](https://i.imgur.com/sYqGRTZ.png)
+![tvimage](https://i.imgur.com/uaxb1eM.png)
 
 
 Feel free to customize the script further to suit your preferences or automation needs.
