@@ -69,7 +69,7 @@ Follow the prompts to enter the source picture path, media folder name, and movi
 ### Example of script output:
 ![outputimage](https://i.imgur.com/xzkYB6B.png)
 
-### Example of Postersafter creation:
+### Example of Posters after creation:
 ![assetimage](https://i.imgur.com/3Snagbg.png)
 
 ### Example of 4K Lib after pmm magic:
