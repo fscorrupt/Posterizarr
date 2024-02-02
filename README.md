@@ -69,16 +69,16 @@ Follow the prompts to enter the source picture path, media folder name, and movi
 ### Example of script output:
 ![outputimage](https://i.imgur.com/xzkYB6B.png)
 
-### Example of Assets folder:
+### Example of Postersafter creation:
 ![assetimage](https://i.imgur.com/3Snagbg.png)
 
-### Example of 4K Lib:
+### Example of 4K Lib after pmm magic:
 ![4kimage](https://i.imgur.com/5psJmCU.png)
 
-### Example of Movie Lib:
+### Example of Movie Lib after pmm magic:
 ![movieimage](https://i.imgur.com/Nfdten6.png)
 
-### Example of TV Lib:
+### Example of TV Lib after pmm magic:
 ![tvimage](https://i.imgur.com/lR6lGzY.jpeg)
 
 
