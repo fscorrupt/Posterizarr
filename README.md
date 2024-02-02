@@ -67,7 +67,7 @@ Follow the prompts to enter the source picture path, media folder name, and movi
 ![scriptimage](https://i.imgur.com/MOWuO2i.png)
 
 ### Example of script output:
-![outputimage](https://i.imgur.com/wcACjyS.png)
+![outputimage](https://i.imgur.com/xzkYB6B.png)
 
 ### Example of Assets folder:
 ![assetimage](https://i.imgur.com/3Snagbg.png)
