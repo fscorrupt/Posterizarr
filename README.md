@@ -9,6 +9,7 @@ First run can take a while, after that only missing posters are created (if post
 
 Before using this script, make sure you have the following prerequisites installed and configured:
 
+- Powershell 5.1
 - **TMDB API Read Access Token:** [Get TMDB API Key](https://www.themoviedb.org/settings/api)
 - **Fanart API Key:** [Get Fanart API Key](https://fanart.tv/get-an-api-key)
 - **TVDB API Key:** [Get TVDB API Key](https://thetvdb.com/api-information/signup)
