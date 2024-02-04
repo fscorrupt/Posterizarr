@@ -36,6 +36,8 @@ Before using this script, make sure you have the following prerequisites install
    - `maxCharactersPerLine`: Maximum characters per line on the poster.
    - `targetWidth`: Target width for the final poster.
    - `LibraryFolders`: true/false for the asset structure in one folder or splited in lib folders.
+   - `RootFolders`: Specify the Library Root Folders.
+   - `PlexToken`: if you want to run this from remote, you have to specify the Plex Token.
 3. Rename the config file to `config.json`
 
 ## Usage
