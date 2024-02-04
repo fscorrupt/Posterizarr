@@ -19,9 +19,9 @@ Before using this script, make sure you have the following prerequisites install
 
 1. Open `config.example.json` located in the same directory as the script.
 2. Update the following variables with your API keys and preferences:
-   - `tvdbapi`: Your TVDB API key.
-   - `tmdbtoken`: Your TMDB API key.
-   - `FanartTvAPIKey`: Your Fanart API key.
+   - `tvdbapi`: Your TVDB project API key.
+   - `tmdbtoken`: Your TMDB token.
+   - `FanartTvAPIKey`: Your Fanart personal API key.
    - `LibstoExclude`: Libraries to exclude from processing.
    - `TempPath`: Temporary folder path.
    - `AssetPath`: Path to store generated posters.
