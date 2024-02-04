@@ -402,7 +402,7 @@ else {
         }
         catch {
             <#Do this if a terminating exception happens#>
-            $ErrorOutput = "Error retrieving Fanart for movie - Title: $($entry.Foldername) | tvdbid: $($entry.tvdbid) | imdbid: $($entry.imdbid) | tmdbid: $($entry.tmdbid) | $posterurl" 
+            $ErrorOutput = "Error retrieving Fanart for - Title: $($entry.Foldername) | tvdbid: $($entry.tvdbid) | imdbid: $($entry.imdbid) | tmdbid: $($entry.tmdbid) | $posterurl | Error: $_" 
             $ErrorOutput | Out-File $TempPath\Scriptlog.log -Append
         }
     }
