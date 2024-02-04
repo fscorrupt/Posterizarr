@@ -19,18 +19,53 @@ $tvdbapi = $config.tvdbapi
 $tmdbtoken = $config.tmdbtoken
 $FanartTvAPIKey = $config.FanartTvAPIKey
 $LibstoExclude = $config.LibstoExclude
+$RootFolders = $config.RootFolders
 $TempPath = $config.TempPath
 $AssetPath = $config.AssetPath
 $font = "$TempPath\$($config.font)"
 $overlay = "$TempPath\$($config.overlay)"
 $magickinstalllocation = $config.magickinstalllocation
 $magick = "$magickinstalllocation\magick.exe"
+$PlexToken = $config.PlexToken
 $PlexUrl = $config.PlexUrl
 $LibraryFolders = $config.LibraryFolders
 $maxCharactersPerLine = 27 
 $targetWidth = 1000
-[xml]$Libs = (Invoke-WebRequest $PlexUrl/library/sections).content
-
+if (!(Test-Path $TempPath)){
+    New-Item -ItemType Directory $TempPath -Force | out-null
+}
+if ($PlexToken){
+    Write-Host "Plex token found, checking access now..."
+    "Plex token found, checking access now..."| Out-File $TempPath\Scriptlog.log -Append
+    if ((Invoke-WebRequest "$PlexUrl/?X-Plex-Token=$PlexToken").StatusCode -eq 200){
+        Write-Host "    Plex access is working..." -ForegroundColor Green
+        "Plex access is working..."| Out-File $TempPath\Scriptlog.log -Append
+        [xml]$Libs = (Invoke-WebRequest "$PlexUrl/library/sections/?X-Plex-Token=$PlexToken").content
+    }
+    Else {
+        Write-Host "Could not access plex with this url: $PlexUrl/?X-Plex-Token=$PlexToken" -ForegroundColor red
+        Write-Host "    Please check token and access..." -ForegroundColor red
+        pause
+        exit
+    }
+}
+Else {
+    Write-Host "Checking Plex access now..."
+    "Checking Plex access now..."| Out-File $TempPath\Scriptlog.log -Append
+    if ((Invoke-WebRequest "$PlexUrl").StatusCode -eq 200){
+        Write-Host "    Plex access is working..." -ForegroundColor Green
+        "Plex access is working..."| Out-File $TempPath\Scriptlog.log -Append
+        [xml]$Libs = (Invoke-WebRequest "$PlexUrl/library/sections").content
+    }
+    Else {
+        Write-Host "Could not access plex with this url: $PlexUrl" -ForegroundColor red
+        Write-Host "    Please check access and settings in plex..." -ForegroundColor red
+        write-host "To be able to connect to plex without Auth"
+        write-host "You have to enter your ip range in 'Settings -> Network -> List of IP addresses and networks that are allowed without auth: '192.168.1.0/255.255.255.0''"
+        pause
+        exit
+    }
+}
 Write-Host "Cleanup old log file..."
 "Cleanup old log file..."| Out-File $TempPath\Scriptlog.log -Append
 # cleanup old logfile
@@ -44,7 +79,7 @@ if (!(Test-Path $magick)){
     $InstallArguments = "/verysilent /DIR=`"$magickinstalllocation`""
     Invoke-WebRequest https://imagemagick.org/archive/binaries/ImageMagick-7.1.1-27-Q16-HDRI-x64-dll.exe -OutFile $TempPath\ImageMagick-7.1.1-27-Q16-HDRI-x64-dll.exe
     Start-Process $TempPath\ImageMagick-7.1.1-27-Q16-HDRI-x64-dll.exe -ArgumentList $InstallArguments -NoNewWindow -Wait
-    Write-Host "ImageMagick installed here: $magickinstalllocation" -ForegroundColor Green
+    Write-Host "    ImageMagick installed here: $magickinstalllocation" -ForegroundColor Green
     "ImageMagick installed here: $magickinstalllocation"| Out-File $TempPath\Scriptlog.log -Append
     Remove-Item $TempPath\ImageMagick-7.1.1-27-Q16-HDRI-x64-dll.exe -Force | out-null
 }
@@ -54,7 +89,7 @@ if (!(Get-InstalledModule -Name FanartTvAPI)) {
     "FanartTvAPI Module missing, installing it for you..."| Out-File $TempPath\Scriptlog.log -Append
     Install-Module -Name FanartTvAPI -Force -Confirm -AllowClobber
     
-    Write-Host "FanartTvAPI Module installed, importing it now..." -ForegroundColor Green
+    Write-Host "    FanartTvAPI Module installed, importing it now..." -ForegroundColor Green
     "FanartTvAPI Module installed, importing it now..."| Out-File $TempPath\Scriptlog.log -Append
     Import-Module -Name FanartTvAPI
 }
@@ -171,7 +206,7 @@ else {
         $libtemp | Add-Member -MemberType NoteProperty -Name "Name" -Value $lib.title
         $Libsoverview += $libtemp
     }
-    Write-Host "Found '$($Libsoverview.count)' libs..."
+    Write-Host "    Found '$($Libsoverview.count)' libs..."
     "Found '$($Libsoverview.count)' libs..."| Out-File $TempPath\Scriptlog.log -Append
     # Create Folder structure
     if (!(Test-Path $TempPath\assets)) {
@@ -182,7 +217,12 @@ else {
     $Libraries = @()
     Foreach ($Library in $Libsoverview) {
         if ($Library.Name -notin $LibstoExclude) {
-            [xml]$Libcontent = (Invoke-WebRequest $PlexUrl/library/sections/$($Library.ID)/all).content
+            if ($PlexToken){
+                [xml]$Libcontent = (Invoke-WebRequest $PlexUrl/library/sections/$($Library.ID)/all?X-Plex-Token=$PlexToken).content
+            }
+            Else {
+                [xml]$Libcontent = (Invoke-WebRequest $PlexUrl/library/sections/$($Library.ID)/all).content
+            }
             if ($Libcontent.MediaContainer.video) {
                 $contentquery = 'video'
             }
@@ -190,20 +230,38 @@ else {
                 $contentquery = 'Directory'
             }
             foreach ($item in $Libcontent.MediaContainer.$contentquery) {
-                [xml]$Metadata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey)).content
+                if ($PlexToken){
+                    [xml]$Metadata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey)?X-Plex-Token=$PlexToken).content
+                }
+                Else {
+                    [xml]$Metadata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey)).content
+                }
                 $metadatatemp = $Metadata.MediaContainer.$contentquery.guid.id
                 $tmdbpattern = 'tmdb://(\d+)'
                 $imdbpattern = 'imdb://tt(\d+)'
                 $tvdbpattern = 'tvdb://(\d+)'
                 if ($Metadata.MediaContainer.$contentquery.Location) {
                     $location = $Metadata.MediaContainer.$contentquery.Location.path
-                    $extractedFolder = $location -replace '.+\/([^\/]+)$', '$1'
+                    foreach ($rootFolder in $rootFolders) {
+                        if ($location -like "$rootFolder*") {
+                            $extractedFolder = $location.Substring($rootFolder.Length)
+                        }
+                    }
                 }
                 Else {
                     $location = $Metadata.MediaContainer.$contentquery.media.part.file
-                    $extractedFolder = $location -replace '^.*\/([^\/]+)\/.*$', '$1'
+                    foreach ($rootFolder in $rootFolders) {
+                        if ($location -like "$rootFolder*") {
+                            $extractedFolder = $location.Substring($rootFolder.Length)
+                            if ($extractedFolder -like '*\*'){
+                                $extractedFolder = $extractedFolder.split('\')[0]
+                            }
+                            if ($extractedFolder -like '*/*'){
+                                $extractedFolder = $extractedFolder.split('/')[0]
+                            }
+                        }
+                    }
                 }
-
                 #$ID = ([regex]::Matches($metadatatemp, $tvdbpattern)).groups[0].groups[1].value
                 $matchesimdb = [regex]::Matches($metadatatemp, $imdbpattern)
                 $matchestmdb = [regex]::Matches($metadatatemp, $tmdbpattern)
@@ -222,12 +280,12 @@ else {
                 $temp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value $imdbid
                 $temp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value $tmdbid
                 $temp | Add-Member -MemberType NoteProperty -Name "ratingKey" -Value $item.ratingKey
-                $temp | Add-Member -MemberType NoteProperty -Name "Foldername" -Value $extractedFolder
+                $temp | Add-Member -MemberType NoteProperty -Name "RootFoldername" -Value $extractedFolder
                 $Libraries += $temp
             }
         }
     }
-    Write-Host "Found '$($Libraries.count)' Items..." -ForegroundColor Cyan
+    Write-Host "    Found '$($Libraries.count)' Items..." -ForegroundColor Cyan
     "Found '$($Libraries.count)' Items..."  | Out-File $TempPath\Scriptlog.log -Append
     $Libraries | Select-Object * | Export-Csv -Path "$TempPath\PlexLibexport.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
     Write-Host "Export everything to a csv: $TempPath\PlexLibexport.csv"

@@ -3,11 +3,13 @@
   "tmdbtoken": "TMDBTOKEN",
   "FanartTvAPIKey": "FANARTAPIKEY",
   "LibstoExclude": ["OverlayTest", "Youtube", "Audiobooks", "Kids Audiobooks", "Tech Trainings"],
+  "RootFolders": ["/mnt/unionfs/Shows/","/mnt/unionfs/Movies/","/mnt/unionfs/4kmovies/","/mnt/unionfs/Anime/","/mnt/unionfs/AnimeShows/","/mnt/unionfs/KidsMovies/","/mnt/unionfs/KidsShows/"],
   "TempPath": "C:\\PosterTemp",
   "AssetPath": "P:\\assets",
   "font": "Rocky.ttf",
   "overlay": "overlay.png",
   "PlexUrl": "http://192.168.1.93:32400",
+  "PlexToken": "",
   "LibraryFolders": "true/false",
   "magickinstalllocation": "C:\\PosterTemp\\ImageMagick-7.1.1-Q16-HDRI"
 }
