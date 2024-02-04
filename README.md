@@ -5,10 +5,6 @@ This PowerShell script automates the process of generating posters for your Plex
 It also generates a csv file with all Movie/Show information that gets queried during Script run.
 First run can take a while, after that only missing posters are created (if posters are present in asset directory they get skipped)
 
-## !! IMPORTANT !!
-
-Currently it only works if you have `/mnt/unionfs` as root folder for your libs, i will soon update the code/config to be able to specify the root folders.
-
 ## Requirements
 
 Before using this script, make sure you have the following prerequisites installed and configured:
