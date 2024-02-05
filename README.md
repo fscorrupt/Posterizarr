@@ -1,3 +1,8 @@
+# !! IMPORTANT !!
+
+Only tested on linux with a Folder structure like `/mnt/unionfs/Movies`...
+So it may not work for you, script is in alpha state and build for my environment.
+
 # Plex Poster Maker
 
 This PowerShell script automates the process of generating posters for your Plex media library. The posters are created by using information from your Plex library, such as movie or show title, and fetching relevant artwork from Fanart.tv, TMDB, and TVDB. The script supports both automatic mode and manual mode for creating custom posters that could not generated automatically.
