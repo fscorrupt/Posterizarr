@@ -11,7 +11,35 @@ param (
 # ImageMagick                   -> https://imagemagick.org/archive/binaries/ImageMagick-7.1.1-27-Q16-HDRI-x64-dll.exe
 # FanartTvAPI Module            -> https://github.com/Celerium/FanartTV-PowerShellWrapper
 #####################################################################################################################
+function AddTrailingSlash($path) {
+    if (-not ($path -match '[\\/]$')) {
+        $path += if ($path -match '\\') { '\' } else { '/' }
+    }
+    return $path
+}
 
+function RemoveTrailingSlash($path) {
+    if ($path -match '[\\/]$') {
+        $path = $path.TrimEnd('\', '/')
+    }
+    return $path
+}
+
+# Check if Config file is present
+if (!(Test-Path "$PSScriptRoot\config.json")){
+    Write-Host "Config File missing, downloading it for you..."
+    "Config File missing, downloading it for you..." | Out-File $TempPath\Scriptlog.log -Append 
+    Invoke-WebRequest -uri "https://github.com/fscorrupt/PosterMaker/blob/e60606eecfd1f096919355dac1e1b92c31fa106e/config.example.json" -OutFile "$PSScriptRoot\config.json"
+    Write-Host "    Config File downloaded here: '$PSScriptRoot\config.json'"
+    "Config File downloaded here: '$PSScriptRoot\config.json'" | Out-File $TempPath\Scriptlog.log -Append 
+    
+    Write-Host "    Please configure the config file according to GH, exit script now..." -ForegroundColor Yellow
+    "Please configure the config file according to GH, exit script now..." | Out-File $TempPath\Scriptlog.log -Append 
+    pause
+    exit
+}
+
+# load config file
 $config = Get-Content -Raw -Path "$PSScriptRoot\config.json" | ConvertFrom-Json
 
 # Access variables from the config file
@@ -19,21 +47,31 @@ $tvdbapi = $config.tvdbapi
 $tmdbtoken = $config.tmdbtoken
 $FanartTvAPIKey = $config.FanartTvAPIKey
 $LibstoExclude = $config.LibstoExclude
-$RootFolders = $config.RootFolders
-$TempPath = $config.TempPath
-$AssetPath = $config.AssetPath
+$RootFolders = $config.RootFolders | ForEach-Object { AddTrailingSlash $_ }
+$TempPath = RemoveTrailingSlash $config.TempPath
+$AssetPath = RemoveTrailingSlash $config.AssetPath
 $font = "$TempPath\$($config.font)"
 $overlay = "$TempPath\$($config.overlay)"
-$magickinstalllocation = $config.magickinstalllocation
+$magickinstalllocation = RemoveTrailingSlash $config.magickinstalllocation
 $magick = "$magickinstalllocation\magick.exe"
 $PlexToken = $config.PlexToken
 $PlexUrl = $config.PlexUrl
 $LibraryFolders = $config.LibraryFolders
 $maxCharactersPerLine = 27 
 $targetWidth = 1000
+
 if (!(Test-Path $TempPath)) {
     New-Item -ItemType Directory $TempPath -Force | out-null
 }
+
+# Test if files are present in Script root
+if (!(Test-Path $overlay)){
+    Invoke-WebRequest -uri "https://github.com/fscorrupt/PosterMaker/blob/e60606eecfd1f096919355dac1e1b92c31fa106e/overlay.png" -OutFile $overlay 
+}
+if (!(Test-Path $font)){
+    Invoke-WebRequest -uri "https://github.com/fscorrupt/PosterMaker/blob/e60606eecfd1f096919355dac1e1b92c31fa106e/Rocky.ttf" -OutFile $font
+}
+
 if ($PlexToken) {
     Write-Host "Plex token found, checking access now..."
     "Plex token found, checking access now..." | Out-File $TempPath\Scriptlog.log -Append
