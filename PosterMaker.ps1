@@ -344,6 +344,7 @@ else {
 
                 if ($LibraryFolders -eq 'true') {
                     $LibraryName = $entry.'Library Name'
+                    $MoveTestPath = "$AssetPath\$LibraryName"
                     $backgroundImageoriginal = "$AssetPath\$LibraryName\$($entry.RootFoldername).jpg"
                 }
                 Else {
@@ -435,6 +436,10 @@ else {
                     $Arguments = "convert `"$backgroundImage`" `"$overlay`" -geometry +0+450 -composite -bordercolor white -border 15 -font `"$font`" -fill white -pointsize 50 -gravity center -draw `"text 0,530 '$joinedTitle '`" `"$backgroundImage`""
                     Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
 
+                    # Create Folder Dir if Missing
+                    if (!(Test-Path $MoveTestPath) -and $LibraryFolders -eq $true){
+                        New-Item -ItemType Directory -Path $MoveTestPath -Force | out-null
+                    }
                     # Move file back to original naming with Brackets.
                     Move-Item -LiteralPath $backgroundImage -destination $backgroundImageoriginal -Force -ErrorAction SilentlyContinue
                 }
