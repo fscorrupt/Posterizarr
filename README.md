@@ -3,13 +3,14 @@
 This PowerShell script automates the process of generating posters for your Plex media library. The posters are created by using information from your Plex library, such as movie or show title, and fetching relevant artwork from Fanart.tv, TMDB, and TVDB. The script supports both automatic mode and manual mode for creating custom posters that could not generated automatically.
 
 It also generates a csv file with all Movie/Show information that gets queried during Script run.
-First run can take a while, after that only missing posters are created (if posters are present in asset directory they get skipped)
+First run can take a while, after that only missing posters are created (if posters are present in asset directory they get skipped).
+
+Only tested with **Powershell 5.1**.
 
 ## Requirements
 
 Before using this script, make sure you have the following prerequisites installed and configured:
 
-- Powershell 5.1
 - **TMDB API Read Access Token:** [Get TMDB API Key](https://www.themoviedb.org/settings/api)
 - **Fanart API Key:** [Get Fanart API Key](https://fanart.tv/get-an-api-key)
 - **TVDB API Key:** [Get TVDB API Key](https://thetvdb.com/api-information/signup)
