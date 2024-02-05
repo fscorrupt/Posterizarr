@@ -31,15 +31,15 @@ $PlexUrl = $config.PlexUrl
 $LibraryFolders = $config.LibraryFolders
 $maxCharactersPerLine = 27 
 $targetWidth = 1000
-if (!(Test-Path $TempPath)){
+if (!(Test-Path $TempPath)) {
     New-Item -ItemType Directory $TempPath -Force | out-null
 }
-if ($PlexToken){
+if ($PlexToken) {
     Write-Host "Plex token found, checking access now..."
-    "Plex token found, checking access now..."| Out-File $TempPath\Scriptlog.log -Append
-    if ((Invoke-WebRequest "$PlexUrl/?X-Plex-Token=$PlexToken").StatusCode -eq 200){
+    "Plex token found, checking access now..." | Out-File $TempPath\Scriptlog.log -Append
+    if ((Invoke-WebRequest "$PlexUrl/?X-Plex-Token=$PlexToken").StatusCode -eq 200) {
         Write-Host "    Plex access is working..." -ForegroundColor Green
-        "Plex access is working..."| Out-File $TempPath\Scriptlog.log -Append
+        "Plex access is working..." | Out-File $TempPath\Scriptlog.log -Append
         [xml]$Libs = (Invoke-WebRequest "$PlexUrl/library/sections/?X-Plex-Token=$PlexToken").content
     }
     Else {
@@ -51,10 +51,10 @@ if ($PlexToken){
 }
 Else {
     Write-Host "Checking Plex access now..."
-    "Checking Plex access now..."| Out-File $TempPath\Scriptlog.log -Append
-    if ((Invoke-WebRequest "$PlexUrl").StatusCode -eq 200){
+    "Checking Plex access now..." | Out-File $TempPath\Scriptlog.log -Append
+    if ((Invoke-WebRequest "$PlexUrl").StatusCode -eq 200) {
         Write-Host "    Plex access is working..." -ForegroundColor Green
-        "Plex access is working..."| Out-File $TempPath\Scriptlog.log -Append
+        "Plex access is working..." | Out-File $TempPath\Scriptlog.log -Append
         [xml]$Libs = (Invoke-WebRequest "$PlexUrl/library/sections").content
     }
     Else {
@@ -67,30 +67,30 @@ Else {
     }
 }
 Write-Host "Cleanup old log file..."
-"Cleanup old log file..."| Out-File $TempPath\Scriptlog.log -Append
+"Cleanup old log file..." | Out-File $TempPath\Scriptlog.log -Append
 # cleanup old logfile
 if ((Test-Path $TempPath\Scriptlog.log)) {
     Remove-Item $TempPath\Scriptlog.log
 }
 
-if (!(Test-Path $magick)){
+if (!(Test-Path $magick)) {
     Write-Host "ImageMagick missing, downloading/installing it for you..." -ForegroundColor Red
     "ImageMagick missing, downloading/installing it for you..." | Out-File $TempPath\Scriptlog.log -Append
     $InstallArguments = "/verysilent /DIR=`"$magickinstalllocation`""
     Invoke-WebRequest https://imagemagick.org/archive/binaries/ImageMagick-7.1.1-27-Q16-HDRI-x64-dll.exe -OutFile $TempPath\ImageMagick-7.1.1-27-Q16-HDRI-x64-dll.exe
     Start-Process $TempPath\ImageMagick-7.1.1-27-Q16-HDRI-x64-dll.exe -ArgumentList $InstallArguments -NoNewWindow -Wait
     Write-Host "    ImageMagick installed here: $magickinstalllocation" -ForegroundColor Green
-    "ImageMagick installed here: $magickinstalllocation"| Out-File $TempPath\Scriptlog.log -Append
+    "ImageMagick installed here: $magickinstalllocation" | Out-File $TempPath\Scriptlog.log -Append
     Remove-Item $TempPath\ImageMagick-7.1.1-27-Q16-HDRI-x64-dll.exe -Force | out-null
 }
 # check if fanart Module is installed
 if (!(Get-InstalledModule -Name FanartTvAPI)) {
     Write-Host "FanartTvAPI Module missing, installing it for you..." -ForegroundColor Red
-    "FanartTvAPI Module missing, installing it for you..."| Out-File $TempPath\Scriptlog.log -Append
+    "FanartTvAPI Module missing, installing it for you..." | Out-File $TempPath\Scriptlog.log -Append
     Install-Module -Name FanartTvAPI -Force -Confirm -AllowClobber
     
     Write-Host "    FanartTvAPI Module installed, importing it now..." -ForegroundColor Green
-    "FanartTvAPI Module installed, importing it now..."| Out-File $TempPath\Scriptlog.log -Append
+    "FanartTvAPI Module installed, importing it now..." | Out-File $TempPath\Scriptlog.log -Append
     Import-Module -Name FanartTvAPI
 }
 # Add Fanart Api
@@ -153,13 +153,13 @@ if ($Manual) {
     $FolderName = Read-Host "Enter Media Foldername (how plex sees it)"
     $Titletext = Read-Host "Enter Movie/Show Title"
 
-    $PicturePath = $PicturePath.replace('"','')
-    $FolderName = $FolderName.replace('"','')
-    $Titletext = $Titletext.replace('"','')
+    $PicturePath = $PicturePath.replace('"', '')
+    $FolderName = $FolderName.replace('"', '')
+    $Titletext = $Titletext.replace('"', '')
 
-    if ($LibraryFolders -eq 'true'){
+    if ($LibraryFolders -eq 'true') {
         $LibraryName = Read-Host "Enter Plex Library Name"
-        $LibraryName = $LibraryName.replace('"','')
+        $LibraryName = $LibraryName.replace('"', '')
         $backgroundImageoriginal = "$AssetPath\$LibraryName\$FolderName.jpg"
     }
     Else {
@@ -167,7 +167,7 @@ if ($Manual) {
     }
 
     $backgroundImage = "$TempPath\$FolderName.jpg"
-    $backgroundImage = $backgroundImage.Replace('[', '_').Replace(']', '_')
+    $backgroundImage = $backgroundImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
 
     Write-Host "Creating poster now..." -ForegroundColor Cyan
     if ($Titletext.Length -gt $maxCharactersPerLine ) {
@@ -207,7 +207,7 @@ else {
         $Libsoverview += $libtemp
     }
     Write-Host "    Found '$($Libsoverview.count)' libs..."
-    "Found '$($Libsoverview.count)' libs..."| Out-File $TempPath\Scriptlog.log -Append
+    "Found '$($Libsoverview.count)' libs..." | Out-File $TempPath\Scriptlog.log -Append
     # Create Folder structure
     if (!(Test-Path $TempPath\assets)) {
         New-Item -ItemType Directory "$TempPath\assets" -Force | Out-Null
@@ -217,7 +217,7 @@ else {
     $Libraries = @()
     Foreach ($Library in $Libsoverview) {
         if ($Library.Name -notin $LibstoExclude) {
-            if ($PlexToken){
+            if ($PlexToken) {
                 [xml]$Libcontent = (Invoke-WebRequest $PlexUrl/library/sections/$($Library.ID)/all?X-Plex-Token=$PlexToken).content
             }
             Else {
@@ -230,7 +230,7 @@ else {
                 $contentquery = 'Directory'
             }
             foreach ($item in $Libcontent.MediaContainer.$contentquery) {
-                if ($PlexToken){
+                if ($PlexToken) {
                     [xml]$Metadata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey)?X-Plex-Token=$PlexToken).content
                 }
                 Else {
@@ -253,10 +253,10 @@ else {
                     foreach ($rootFolder in $rootFolders) {
                         if ($location -like "$rootFolder*") {
                             $extractedFolder = $location.Substring($rootFolder.Length)
-                            if ($extractedFolder -like '*\*'){
+                            if ($extractedFolder -like '*\*') {
                                 $extractedFolder = $extractedFolder.split('\')[0]
                             }
-                            if ($extractedFolder -like '*/*'){
+                            if ($extractedFolder -like '*/*') {
                                 $extractedFolder = $extractedFolder.split('/')[0]
                             }
                         }
@@ -295,114 +295,120 @@ else {
     "Starting poster creation now, this can take a while..." | Out-File $TempPath\Scriptlog.log -Append
     foreach ($entry in $Libraries) {
         try {
-            $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}]'
-            if ($entry.title -match $cjkPattern) {
-                $Titletext = $entry.originalTitle
-            }
-            else {
-                $Titletext = $entry.title
-            }
+            if ($($entry.RootFoldername)) {
+                $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}]'
+                if ($entry.title -match $cjkPattern) {
+                    $Titletext = $entry.originalTitle
+                }
+                else {
+                    $Titletext = $entry.title
+                }
 
-            if ($LibraryFolders -eq 'true'){
-                $LibraryName = $entry.'Library Name'
-                $backgroundImageoriginal = "$AssetPath\$LibraryName\$($entry.Foldername).jpg"
-            }
-            Else {
-                $backgroundImageoriginal = "$AssetPath\$($entry.Foldername).jpg"
-            }
+                if ($LibraryFolders -eq 'true') {
+                    $LibraryName = $entry.'Library Name'
+                    $backgroundImageoriginal = "$AssetPath\$LibraryName\$($entry.RootFoldername).jpg"
+                }
+                Else {
+                    $backgroundImageoriginal = "$AssetPath\$($entry.RootFoldername).jpg"
+                }
 
-            $backgroundImage = "$TempPath\$($entry.Foldername).jpg"
-            $backgroundImage = $backgroundImage.Replace('[', '_').Replace(']', '_')
+                $backgroundImage = "$TempPath\$($entry.RootFoldername).jpg"
+                $backgroundImage = $backgroundImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
         
-            if (!(Get-ChildItem -LiteralPath $backgroundImageoriginal -ErrorAction SilentlyContinue)) {
-                if ($entry.'Library Type' -eq 'movie') {
-                    $posterurl = $null
-                    If ($entry.tmdbid) { 
-                        $entrytemp = Get-FanartTv -Type movies -id $entry.tmdbid -ErrorAction SilentlyContinue
-                        # nothing found via fanart.tv - try tmdb now
-                        if (!($entrytemp) -or !($entrytemp.movieposter)) {
-                            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($entry.tmdbid)?language=en-US" -Method GET -Headers $headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
-                            if ($response) {
+                if (!(Get-ChildItem -LiteralPath $backgroundImageoriginal -ErrorAction SilentlyContinue)) {
+                    if ($entry.'Library Type' -eq 'movie') {
+                        $posterurl = $null
+                        If ($entry.tmdbid) { 
+                            $entrytemp = Get-FanartTv -Type movies -id $entry.tmdbid -ErrorAction SilentlyContinue
+                            # nothing found via fanart.tv - try tmdb now
+                            if (!($entrytemp) -or !($entrytemp.movieposter)) {
+                                $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($entry.tmdbid)?language=en-US" -Method GET -Headers $headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
+                                if ($response) {
+                                    $posterurl = "https://image.tmdb.org/t/p/w500$($response.poster_path)"
+                                }
+                                Else {
+                                    # nothing found via tmbd - try imdb as last attempt
+                                    $response = Invoke-WebRequest -Uri "https://www.imdb.com/title/$($entry.imdb)/mediaviewer" -Method GET
+                                    $posterurl = $response.images.src[1]
+                                }
+                            }
+                            Else {
+                                if (!($entrytemp.movieposter | where lang -eq '00')) {
+                                    $posterurl = ($entrytemp.movieposter)[0].url
+                                }
+                                Else {
+                                    $posterurl = ($entrytemp.movieposter | where lang -eq '00')[0].url
+                                }
+                            }
+                        }
+                        Else { 
+                            $entrytemp = Get-FanartTv -Type movies -id $entry.imdbid -ErrorAction SilentlyContinue
+            
+                            if (!($entrytemp) -or !($entrytemp.movieposter)) {
+                                $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($entry.imdbid)?language=en-US" -Method GET -Headers $headers).content | ConvertFrom-Json
                                 $posterurl = "https://image.tmdb.org/t/p/w500$($response.poster_path)"
                             }
                             Else {
-                                # nothing found via tmbd - try imdb as last attempt
-                                $response = Invoke-WebRequest -Uri "https://www.imdb.com/title/$($entry.imdb)/mediaviewer" -Method GET
-                                $posterurl = $response.images.src[1]
-                            }
-                        }
-                        Else {
-                            if (!($entrytemp.movieposter | where lang -eq '00')) {
-                                $posterurl = ($entrytemp.movieposter)[0].url
-                            }
-                            Else {
-                                $posterurl = ($entrytemp.movieposter | where lang -eq '00')[0].url
+                                if (!($entrytemp.movieposter | where lang -eq '00')) {
+                                    $posterurl = ($entrytemp.movieposter)[0].url
+                                }
+                                Else {
+                                    $posterurl = ($entrytemp.movieposter | where lang -eq '00')[0].url
+                                }
                             }
                         }
                     }
-                    Else { 
-                        $entrytemp = Get-FanartTv -Type movies -id $entry.imdbid -ErrorAction SilentlyContinue
+                    if ($entry.'Library Type' -eq 'show') {
+                        $posterurl = $null
+                        $entrytemp = Get-FanartTv -Type tv -id $entry.tvdbid -ErrorAction SilentlyContinue
             
-                        if (!($entrytemp) -or !($entrytemp.movieposter)) {
-                            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($entry.imdbid)?language=en-US" -Method GET -Headers $headers).content | ConvertFrom-Json
-                            $posterurl = "https://image.tmdb.org/t/p/w500$($response.poster_path)"
+                        if (!($entrytemp) -or !($entrytemp.tvposter)) {
+                            $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/series/$($entry.tvdbid)" -Method GET -Headers $tvdbheader).content | ConvertFrom-Json
+                            $posterurl = $response.data.image
                         }
                         Else {
-                            if (!($entrytemp.movieposter | where lang -eq '00')) {
-                                $posterurl = ($entrytemp.movieposter)[0].url
+                            if (!($entrytemp.tvposter | where lang -eq '00')) {
+                                $posterurl = ($entrytemp.tvposter)[0].url
                             }
                             Else {
-                                $posterurl = ($entrytemp.movieposter | where lang -eq '00')[0].url
+                                $posterurl = ($entrytemp.tvposter | where lang -eq '00')[0].url
                             }
                         }
                     }
-                }
-                if ($entry.'Library Type' -eq 'show') {
-                    $posterurl = $null
-                    $entrytemp = Get-FanartTv -Type tv -id $entry.tvdbid -ErrorAction SilentlyContinue
-            
-                    if (!($entrytemp) -or !($entrytemp.tvposter)) {
-                        $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/series/$($entry.tvdbid)" -Method GET -Headers $tvdbheader).content | ConvertFrom-Json
-                        $posterurl = $response.data.image
+
+                    if ($Titletext.Length -gt $maxCharactersPerLine ) {
+                        $joinedTitle = Split-Title -title $Titletext -maxCharactersPerLine $maxCharactersPerLine
                     }
                     Else {
-                        if (!($entrytemp.tvposter | where lang -eq '00')) {
-                            $posterurl = ($entrytemp.tvposter)[0].url
-                        }
-                        Else {
-                            $posterurl = ($entrytemp.tvposter | where lang -eq '00')[0].url
-                        }
+                        $joinedTitle = $Titletext
                     }
-                }
+                    Invoke-WebRequest -Uri $posterurl -OutFile $backgroundImage 
+                    # Calculate the height to maintain the aspect ratio with a width of 1000 pixels
+                    [int]$currentWidth = & $magick identify -format '%w' "$backgroundImage"
+                    [int]$currentHeight = & $magick identify -format '%h' "$backgroundImage"
+                    $targetHeight = [math]::Round(($targetWidth / $currentWidth) * $currentHeight)
 
-                if ($Titletext.Length -gt $maxCharactersPerLine ) {
-                    $joinedTitle = Split-Title -title $Titletext -maxCharactersPerLine $maxCharactersPerLine
-                }
-                Else {
-                    $joinedTitle = $Titletext
-                }
-                Invoke-WebRequest -Uri $posterurl -OutFile $backgroundImage 
-                # Calculate the height to maintain the aspect ratio with a width of 1000 pixels
-                [int]$currentWidth = & $magick identify -format '%w' "$backgroundImage"
-                [int]$currentHeight = & $magick identify -format '%h' "$backgroundImage"
-                $targetHeight = [math]::Round(($targetWidth / $currentWidth) * $currentHeight)
+                    if ($currentWidth -lt $targetWidth) {
+                        # Resize the final image to maintain the aspect ratio with a width of 1000 pixels
+                        $resizeFinalArguments = "convert `"$backgroundImage`" -resize ${targetWidth}x${targetHeight} `"$backgroundImage`""
+                        Start-Process $magick -Wait -NoNewWindow -ArgumentList $resizeFinalArguments
+                    }
 
-                if ($currentWidth -lt $targetWidth) {
-                    # Resize the final image to maintain the aspect ratio with a width of 1000 pixels
-                    $resizeFinalArguments = "convert `"$backgroundImage`" -resize ${targetWidth}x${targetHeight} `"$backgroundImage`""
-                    Start-Process $magick -Wait -NoNewWindow -ArgumentList $resizeFinalArguments
+                    $Arguments = "convert `"$backgroundImage`" `"$overlay`" -geometry +0+450 -composite -bordercolor white -border 15 -font `"$font`" -fill white -pointsize 50 -gravity center -draw `"text 0,530 '$joinedTitle '`" `"$backgroundImage`""
+                    Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
+
+                    # Move file back to original naming with Brackets.
+                    Move-Item -LiteralPath $backgroundImage -destination $backgroundImageoriginal -Force -ErrorAction SilentlyContinue
                 }
-
-                $Arguments = "convert `"$backgroundImage`" `"$overlay`" -geometry +0+450 -composite -bordercolor white -border 15 -font `"$font`" -fill white -pointsize 50 -gravity center -draw `"text 0,530 '$joinedTitle '`" `"$backgroundImage`""
-                Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
-
-                # Move file back to original naming with Brackets.
-                Move-Item -LiteralPath $backgroundImage -destination $backgroundImageoriginal -Force -ErrorAction SilentlyContinue
+            }
+            Else {
+                Write-Host "Missing RootFolder for: $($entry.title) | tvdbid: $($entry.tvdbid) | imdbid: $($entry.imdbid) | tmdbid: $($entry.tmdbid) - you have to manually create the poster for it..." -ForegroundColor Red
+                "Missing RootFolder for: $($entry.title) | tvdbid: $($entry.tvdbid) | imdbid: $($entry.imdbid) | tmdbid: $($entry.tmdbid) - you have to manually create the poster for it..." | Out-File $TempPath\Scriptlog.log -Append
             }
         }
         catch {
             <#Do this if a terminating exception happens#>
-            $ErrorOutput = "Error retrieving Fanart for - Title: $($entry.Foldername) | tvdbid: $($entry.tvdbid) | imdbid: $($entry.imdbid) | tmdbid: $($entry.tmdbid) | $posterurl | Error: $_" 
+            $ErrorOutput = "Error retrieving Fanart for - Title: $($entry.RootFoldername) | tvdbid: $($entry.tvdbid) | imdbid: $($entry.imdbid) | tmdbid: $($entry.tmdbid) | $posterurl | Error: $_" 
             $ErrorOutput | Out-File $TempPath\Scriptlog.log -Append
         }
     }
