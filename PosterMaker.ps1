@@ -72,6 +72,13 @@ if (!(Test-Path $font)){
     Invoke-WebRequest -uri "https://github.com/fscorrupt/PosterMaker/blob/e60606eecfd1f096919355dac1e1b92c31fa106e/Rocky.ttf" -OutFile $font
 }
 
+Write-Host "Cleanup old log file..."
+"Cleanup old log file..." | Out-File $TempPath\Scriptlog.log -Append
+# cleanup old logfile
+if ((Test-Path $TempPath\Scriptlog.log)) {
+    Remove-Item $TempPath\Scriptlog.log
+}
+
 if ($PlexToken) {
     Write-Host "Plex token found, checking access now..."
     "Plex token found, checking access now..." | Out-File $TempPath\Scriptlog.log -Append
@@ -103,12 +110,6 @@ Else {
         pause
         exit
     }
-}
-Write-Host "Cleanup old log file..."
-"Cleanup old log file..." | Out-File $TempPath\Scriptlog.log -Append
-# cleanup old logfile
-if ((Test-Path $TempPath\Scriptlog.log)) {
-    Remove-Item $TempPath\Scriptlog.log
 }
 
 if (!(Test-Path $magick)) {
