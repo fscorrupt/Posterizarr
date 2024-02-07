@@ -47,7 +47,6 @@ $tvdbapi = $config.tvdbapi
 $tmdbtoken = $config.tmdbtoken
 $FanartTvAPIKey = $config.FanartTvAPIKey
 $LibstoExclude = $config.LibstoExclude
-$RootFolders = $config.RootFolders | ForEach-Object { AddTrailingSlash $_ }
 $TempPath = RemoveTrailingSlash $config.TempPath
 $AssetPath = RemoveTrailingSlash $config.AssetPath
 $font = "$TempPath\$($config.font)"
@@ -241,12 +240,15 @@ else {
     "Query plex libs..." | Out-File $TempPath\Scriptlog.log -Append
     $Libsoverview = @()
     foreach ($lib in $libs.MediaContainer.Directory) {
-        $libtemp = New-Object psobject
-        $libtemp | Add-Member -MemberType NoteProperty -Name "ID" -Value $lib.key
-        $libtemp | Add-Member -MemberType NoteProperty -Name "Name" -Value $lib.title
-        $Libsoverview += $libtemp
+        if ($lib.title -notin $LibstoExclude) {
+            $libtemp = New-Object psobject
+            $libtemp | Add-Member -MemberType NoteProperty -Name "ID" -Value $lib.key
+            $libtemp | Add-Member -MemberType NoteProperty -Name "Name" -Value $lib.title
+            $libtemp | Add-Member -MemberType NoteProperty -Name "Path" -Value $(AddTrailingSlash $lib.location.path)
+            $Libsoverview += $libtemp
+        }
     }
-    Write-Host "    Found '$($Libsoverview.count)' libs..."
+    Write-Host "    Found '$($Libsoverview.count)' libs and '$($LibstoExclude.count)' are excluded..."
     "Found '$($Libsoverview.count)' libs..." | Out-File $TempPath\Scriptlog.log -Append
     # Create Folder structure
     if (!(Test-Path $TempPath\assets)) {
@@ -282,23 +284,20 @@ else {
                 $tvdbpattern = 'tvdb://(\d+)'
                 if ($Metadata.MediaContainer.$contentquery.Location) {
                     $location = $Metadata.MediaContainer.$contentquery.Location.path
-                    foreach ($rootFolder in $rootFolders) {
-                        if ($location -like "$rootFolder*") {
-                            $extractedFolder = $location.Substring($rootFolder.Length)
-                        }
+                    if ($location -like "$($Library.path)*") {
+                        $extractedFolder = $location.Substring($($Library.path).Length)
                     }
                 }
                 Else {
                     $location = $Metadata.MediaContainer.$contentquery.media.part.file
-                    foreach ($rootFolder in $rootFolders) {
-                        if ($location -like "$rootFolder*") {
-                            $extractedFolder = $location.Substring($rootFolder.Length)
-                            if ($extractedFolder -like '*\*') {
-                                $extractedFolder = $extractedFolder.split('\')[0]
-                            }
-                            if ($extractedFolder -like '*/*') {
-                                $extractedFolder = $extractedFolder.split('/')[0]
-                            }
+                    
+                    if ($location -like "$($Library.path)*") {
+                        $extractedFolder = $location.Substring($($Library.path).Length)
+                        if ($extractedFolder -like '*\*') {
+                            $extractedFolder = $extractedFolder.split('\')[0]
+                        }
+                        if ($extractedFolder -like '*/*') {
+                            $extractedFolder = $extractedFolder.split('/')[0]
                         }
                     }
                 }
@@ -320,6 +319,7 @@ else {
                 $temp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value $imdbid
                 $temp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value $tmdbid
                 $temp | Add-Member -MemberType NoteProperty -Name "ratingKey" -Value $item.ratingKey
+                $temp | Add-Member -MemberType NoteProperty -Name "Path" -Value $Library.path
                 $temp | Add-Member -MemberType NoteProperty -Name "RootFoldername" -Value $extractedFolder
                 $Libraries += $temp
             }
@@ -439,8 +439,10 @@ else {
                     Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
 
                     # Create Folder Dir if Missing
-                    if (!(Test-Path $MoveTestPath) -and $LibraryFolders -eq $true){
-                        New-Item -ItemType Directory -Path $MoveTestPath -Force | out-null
+                    if ($LibraryFolders -eq $true){
+                        if (!(Test-Path $MoveTestPath -ErrorAction SilentlyContinue)){
+                            New-Item -ItemType Directory -Path $MoveTestPath -Force | out-null
+                        }
                     }
                     # Move file back to original naming with Brackets.
                     Move-Item -LiteralPath $backgroundImage -destination $backgroundImageoriginal -Force -ErrorAction SilentlyContinue
@@ -453,7 +455,7 @@ else {
         }
         catch {
             <#Do this if a terminating exception happens#>
-            $ErrorOutput = "Error retrieving Fanart for - Title: $($entry.RootFoldername) | tvdbid: $($entry.tvdbid) | imdbid: $($entry.imdbid) | tmdbid: $($entry.tmdbid) | $posterurl | Error: $_" 
+            $ErrorOutput = "Error for - Title: $($entry.RootFoldername) | tvdbid: $($entry.tvdbid) | imdbid: $($entry.imdbid) | tmdbid: $($entry.tmdbid) | $posterurl | Error Message: $_" 
             $ErrorOutput | Out-File $TempPath\Scriptlog.log -Append
         }
     }
