@@ -247,10 +247,10 @@ else {
             
             # Check if $lib.location.path is an array
             if ($lib.location.path -is [array]) {
-                $paths = $lib.location.path -join ', ' # Convert array to string
-                $libtemp | Add-Member -MemberType NoteProperty -Name "Path" -Value $(AddTrailingSlash $paths)
+                $paths = $lib.location.path -join ',' # Convert array to string
+                $libtemp | Add-Member -MemberType NoteProperty -Name "Path" -Value $paths
             } else {
-                $libtemp | Add-Member -MemberType NoteProperty -Name "Path" -Value $(AddTrailingSlash $lib.location.path)
+                $libtemp | Add-Member -MemberType NoteProperty -Name "Path" -Value $lib.location.path
             }
             
             $Libsoverview += $libtemp
@@ -292,21 +292,21 @@ else {
                 $tvdbpattern = 'tvdb://(\d+)'
                 if ($Metadata.MediaContainer.$contentquery.Location) {
                     $location = $Metadata.MediaContainer.$contentquery.Location.path
-                    $libpaths = $($Library.path).split(', ')
+                    $libpaths = $($Library.path).split(',')
                     foreach ($libpath in $libpaths){
                         if ($location -like "$libpath*") {
-                            $Matchedpath = $libpath
+                            $Matchedpath = AddTrailingSlash $libpath
                             $extractedFolder = $location.Substring($libpath.Length)
                         }
                     }
                 }
                 Else {
                     $location = $Metadata.MediaContainer.$contentquery.media.part.file
-                    $libpaths = $($Library.path).split(', ')
+                    $libpaths = $($Library.path).split(',')
                     foreach ($libpath in $libpaths){
                         if ($location -like "$libpath*") {
                             $extractedFolder = $location.Substring($libpath.Length)
-                            $Matchedpath = $libpath
+                            $Matchedpath = AddTrailingSlash $libpath
                             if ($extractedFolder -like '*\*') {
                                 $extractedFolder = $extractedFolder.split('\')[0]
                             }
