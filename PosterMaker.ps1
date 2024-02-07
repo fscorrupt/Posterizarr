@@ -292,7 +292,8 @@ else {
                 $tvdbpattern = 'tvdb://(\d+)'
                 if ($Metadata.MediaContainer.$contentquery.Location) {
                     $location = $Metadata.MediaContainer.$contentquery.Location.path
-                    foreach ($libpath in $($Library.path)){
+                    $libpaths = $($Library.path).split(', ')
+                    foreach ($libpath in $libpaths){
                         if ($location -like "$libpath*") {
                             $Matchedpath = $libpath
                             $extractedFolder = $location.Substring($libpath.Length)
@@ -301,7 +302,8 @@ else {
                 }
                 Else {
                     $location = $Metadata.MediaContainer.$contentquery.media.part.file
-                    foreach ($libpath in $($Library.path)){
+                    $libpaths = $($Library.path).split(', ')
+                    foreach ($libpath in $libpaths){
                         if ($location -like "$libpath*") {
                             $extractedFolder = $location.Substring($libpath.Length)
                             $Matchedpath = $libpath
