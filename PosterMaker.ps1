@@ -296,6 +296,7 @@ else {
                     foreach ($libpath in $libpaths){
                         if ($location -like "$libpath*") {
                             $Matchedpath = AddTrailingSlash $libpath
+                            $libpath = $Matchedpath
                             $extractedFolder = $location.Substring($libpath.Length)
                         }
                     }
@@ -305,8 +306,9 @@ else {
                     $libpaths = $($Library.path).split(',')
                     foreach ($libpath in $libpaths){
                         if ($location -like "$libpath*") {
-                            $extractedFolder = $location.Substring($libpath.Length)
                             $Matchedpath = AddTrailingSlash $libpath
+                            $libpath = $Matchedpath
+                            $extractedFolder = $location.Substring($libpath.Length)
                             if ($extractedFolder -like '*\*') {
                                 $extractedFolder = $extractedFolder.split('\')[0]
                             }
