@@ -36,8 +36,6 @@ Before using this script, make sure you have the following prerequisites install
    - `overlay`: Overlay file name.
    - `magickinstalllocation`: ImageMagick installation location.
    - `PlexUrl`: Plex server URL.
-   - `maxCharactersPerLine`: Maximum characters per line on the poster.
-   - `targetWidth`: Target width for the final poster.
    - `LibraryFolders`: true/false for the asset structure in one folder or splited in lib folders.
    - `PlexToken`: if you want to run this from remote, you have to specify the Plex Token.
 3. Rename the config file to `config.json`
