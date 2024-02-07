@@ -333,6 +333,8 @@ else {
     # Download poster foreach movie
     Write-Host "Starting poster creation now, this can take a while..." -ForegroundColor Yellow
     "Starting poster creation now, this can take a while..." | Out-File $TempPath\Scriptlog.log -Append
+    # Initialize counter variable
+    $posterCount = 0
     foreach ($entry in $Libraries) {
         try {
             if ($($entry.RootFoldername)) {
@@ -446,6 +448,7 @@ else {
                     }
                     # Move file back to original naming with Brackets.
                     Move-Item -LiteralPath $backgroundImage -destination $backgroundImageoriginal -Force -ErrorAction SilentlyContinue
+                    $posterCount++
                 }
             }
             Else {
@@ -459,6 +462,8 @@ else {
             $ErrorOutput | Out-File $TempPath\Scriptlog.log -Append
         }
     }
-    Write-Host "Finished, you can find all posters here: $AssetPath" -ForegroundColor Green
-    "Finished, you can find all posters here: $AssetPath" | Out-File $TempPath\Scriptlog.log -Append
+    Write-Host "Finished, Total posters created: $posterCount" -ForegroundColor Green
+    Write-Host "    You can find all posters here: $AssetPath" -ForegroundColor Yellow
+    "Finished, Total posters created: $posterCount" | Out-File $TempPath\Scriptlog.log -Append
+    "You can find all posters here: $AssetPath" | Out-File $TempPath\Scriptlog.log -Append
 }
