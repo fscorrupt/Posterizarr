@@ -1,7 +1,6 @@
 # !! IMPORTANT !!
 
-Only tested on linux with a Folder structure like `/mnt/unionfs/Movies`...
-So it may not work for you, script is in alpha state and build for my environment.
+Script is in alpha state.
 
 # Plex Poster Maker
 
