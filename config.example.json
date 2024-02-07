@@ -3,7 +3,6 @@
   "tmdbtoken": "TMDBTOKEN",
   "FanartTvAPIKey": "FANARTAPIKEY",
   "LibstoExclude": ["OverlayTest", "Youtube", "Audiobooks", "Kids Audiobooks", "Tech Trainings"],
-  "RootFolders": ["/mnt/unionfs/Shows/","/mnt/unionfs/Movies/","/mnt/unionfs/4kmovies/","/mnt/unionfs/Anime/","/mnt/unionfs/AnimeShows/","/mnt/unionfs/KidsMovies/","/mnt/unionfs/KidsShows/"],
   "TempPath": "C:\\PosterTemp",
   "AssetPath": "P:\\assets",
   "font": "Rocky.ttf",
