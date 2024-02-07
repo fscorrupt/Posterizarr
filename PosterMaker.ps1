@@ -244,7 +244,15 @@ else {
             $libtemp = New-Object psobject
             $libtemp | Add-Member -MemberType NoteProperty -Name "ID" -Value $lib.key
             $libtemp | Add-Member -MemberType NoteProperty -Name "Name" -Value $lib.title
-            $libtemp | Add-Member -MemberType NoteProperty -Name "Path" -Value $(AddTrailingSlash $lib.location.path)
+            
+            # Check if $lib.location.path is an array
+            if ($lib.location.path -is [array]) {
+                $paths = $lib.location.path -join ', ' # Convert array to string
+                $libtemp | Add-Member -MemberType NoteProperty -Name "Path" -Value $(AddTrailingSlash $paths)
+            } else {
+                $libtemp | Add-Member -MemberType NoteProperty -Name "Path" -Value $(AddTrailingSlash $lib.location.path)
+            }
+            
             $Libsoverview += $libtemp
         }
     }
@@ -284,20 +292,25 @@ else {
                 $tvdbpattern = 'tvdb://(\d+)'
                 if ($Metadata.MediaContainer.$contentquery.Location) {
                     $location = $Metadata.MediaContainer.$contentquery.Location.path
-                    if ($location -like "$($Library.path)*") {
-                        $extractedFolder = $location.Substring($($Library.path).Length)
+                    foreach ($libpath in $($Library.path)){
+                        if ($location -like "$libpath*") {
+                            $Matchedpath = $libpath
+                            $extractedFolder = $location.Substring($libpath.Length)
+                        }
                     }
                 }
                 Else {
                     $location = $Metadata.MediaContainer.$contentquery.media.part.file
-                    
-                    if ($location -like "$($Library.path)*") {
-                        $extractedFolder = $location.Substring($($Library.path).Length)
-                        if ($extractedFolder -like '*\*') {
-                            $extractedFolder = $extractedFolder.split('\')[0]
-                        }
-                        if ($extractedFolder -like '*/*') {
-                            $extractedFolder = $extractedFolder.split('/')[0]
+                    foreach ($libpath in $($Library.path)){
+                        if ($location -like "$libpath*") {
+                            $extractedFolder = $location.Substring($libpath.Length)
+                            $Matchedpath = $libpath
+                            if ($extractedFolder -like '*\*') {
+                                $extractedFolder = $extractedFolder.split('\')[0]
+                            }
+                            if ($extractedFolder -like '*/*') {
+                                $extractedFolder = $extractedFolder.split('/')[0]
+                            }
                         }
                     }
                 }
@@ -319,7 +332,7 @@ else {
                 $temp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value $imdbid
                 $temp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value $tmdbid
                 $temp | Add-Member -MemberType NoteProperty -Name "ratingKey" -Value $item.ratingKey
-                $temp | Add-Member -MemberType NoteProperty -Name "Path" -Value $Library.path
+                $temp | Add-Member -MemberType NoteProperty -Name "Path" -Value $Matchedpath
                 $temp | Add-Member -MemberType NoteProperty -Name "RootFoldername" -Value $extractedFolder
                 $Libraries += $temp
             }
