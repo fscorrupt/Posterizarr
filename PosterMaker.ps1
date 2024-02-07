@@ -29,7 +29,7 @@ function RemoveTrailingSlash($path) {
 if (!(Test-Path "$PSScriptRoot\config.json")){
     Write-Host "Config File missing, downloading it for you..."
     "Config File missing, downloading it for you..." | Out-File $TempPath\Scriptlog.log -Append 
-    Invoke-WebRequest -uri "https://github.com/fscorrupt/PosterMaker/blob/e60606eecfd1f096919355dac1e1b92c31fa106e/config.example.json" -OutFile "$PSScriptRoot\config.json"
+    Invoke-WebRequest -uri "https://github.com/fscorrupt/PosterMaker/blob/main/config.example.json" -OutFile "$PSScriptRoot\config.json"
     Write-Host "    Config File downloaded here: '$PSScriptRoot\config.json'"
     "Config File downloaded here: '$PSScriptRoot\config.json'" | Out-File $TempPath\Scriptlog.log -Append 
     
@@ -66,10 +66,10 @@ if (!(Test-Path $TempPath)) {
 
 # Test if files are present in Script root
 if (!(Test-Path $overlay)){
-    Invoke-WebRequest -uri "https://github.com/fscorrupt/PosterMaker/blob/e60606eecfd1f096919355dac1e1b92c31fa106e/overlay.png" -OutFile $overlay 
+    Invoke-WebRequest -uri "https://github.com/fscorrupt/PosterMaker/blob/main/overlay.png" -OutFile $overlay 
 }
 if (!(Test-Path $font)){
-    Invoke-WebRequest -uri "https://github.com/fscorrupt/PosterMaker/blob/e60606eecfd1f096919355dac1e1b92c31fa106e/Rocky.ttf" -OutFile $font
+    Invoke-WebRequest -uri "https://github.com/fscorrupt/PosterMaker/blob/main/Rocky.ttf" -OutFile $font
 }
 
 Write-Host "Cleanup old log file..."
