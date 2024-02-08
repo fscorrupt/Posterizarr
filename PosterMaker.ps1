@@ -292,7 +292,13 @@ else {
                 $tvdbpattern = 'tvdb://(\d+)'
                 if ($Metadata.MediaContainer.$contentquery.Location) {
                     $location = $Metadata.MediaContainer.$contentquery.Location.path
-                    if ($location.count -gt '1'){$location = $location[0]}
+                    if ($location.count -gt '1'){
+                        $location = $location[0]
+                        $MultibleVersions = $true
+                    }
+                    Else {
+                        $MultibleVersions = $false
+                    }
                     $libpaths = $($Library.path).split(',')
                     foreach ($libpath in $libpaths){
                         if ($location -like "$libpath*") {
@@ -304,7 +310,13 @@ else {
                 }
                 Else {
                     $location = $Metadata.MediaContainer.$contentquery.media.part.file
-                    if ($location.count -gt '1'){$location = $location[0]}
+                    if ($location.count -gt '1'){
+                        $location = $location[0]
+                        $MultibleVersions = $true
+                    }
+                    Else {
+                        $MultibleVersions = $false
+                    }
                     $libpaths = $($Library.path).split(',')
                     foreach ($libpath in $libpaths){
                         if ($location -like "$libpath*") {
@@ -340,6 +352,7 @@ else {
                 $temp | Add-Member -MemberType NoteProperty -Name "ratingKey" -Value $item.ratingKey
                 $temp | Add-Member -MemberType NoteProperty -Name "Path" -Value $Matchedpath
                 $temp | Add-Member -MemberType NoteProperty -Name "RootFoldername" -Value $extractedFolder
+                $temp | Add-Member -MemberType NoteProperty -Name "MultibleVersions" -Value $MultibleVersions
                 $Libraries += $temp
             }
         }
