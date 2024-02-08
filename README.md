@@ -1,29 +1,28 @@
-# !! IMPORTANT !!
-
-Script is in alpha state.
-
 # Plex Poster Maker
 
-This PowerShell script automates the process of generating posters for your Plex media library. The posters are created by using information from your Plex library, such as movie or show title, and fetching relevant artwork from Fanart.tv, TMDB, and TVDB. The script supports both automatic mode and manual mode for creating custom posters that could not generated automatically.
+This PowerShell script automates the process of generating posters for your Plex media library. Leveraging information from your Plex library, such as movie or show titles, it fetches relevant artwork from Fanart.tv, TMDB, and TVDB. The script offers both automatic and manual modes for generating posters, accommodating custom creations that cannot be automated.
 
-It also generates a csv file with all Movie/Show information that gets queried during Script run.
-First run can take a while, after that only missing posters are created (if posters are present in asset directory they get skipped).
+**Key Features:**
+- **Automatic Library Search**: The script autonomously searches for libraries within your Plex server, enhancing its usability.
+- **Handling Multiple Versions**: It adeptly manages multiple versions of a movie/show, ensuring comprehensive coverage.
+- **CSV Export**: Produces an impressive CSV file containing all queried movie/show information during the script's runtime.
+- **Logging Capabilities**: Records valuable information to a file named `Scriptlog.log` in the temporary folder, facilitating troubleshooting and analysis.
+- **Cross-platform Compatibility**: Ensures seamless operation across Linux, Docker, and Windows Plex servers, enhancing versatility.
 
-Only tested with **Powershell 5.1**.
+Upon initial execution, the script may take some time to run as it compiles necessary data. Subsequent runs efficiently create missing posters, bypassing existing assets in the directory.
 
-## Requirements
+**Requirements:**
+Before utilizing the script, ensure the following prerequisites are installed and configured:
 
-Before using this script, make sure you have the following prerequisites installed and configured:
-
-- **TMDB API Read Access Token:** [Get TMDB API Key](https://www.themoviedb.org/settings/api)
-- **Fanart API Key:** [Get Fanart API Key](https://fanart.tv/get-an-api-key)
-- **TVDB API Key:** [Get TVDB API Key](https://thetvdb.com/api-information/signup)
+- **TMDB API Read Access Token:** [Obtain TMDB API Key](https://www.themoviedb.org/settings/api)
+- **Fanart API Key:** [Obtain Fanart API Key](https://fanart.tv/get-an-api-key)
+- **TVDB API Key:** [Obtain TVDB API Key](https://thetvdb.com/api-information/signup)
 - **ImageMagick:** [Download ImageMagick](https://imagemagick.org/archive/binaries/ImageMagick-7.1.1-27-Q16-HDRI-x64-dll.exe)
-    - i have covered the install process in script.
+    - Installation is covered within the script.
+- Only tested with **Powershell 5.1**.
 
-## Configuration
-
-1. Open `config.example.json` located in the same directory as the script.
+**Configuration:**
+1. Open `config.example.json` located in the script directory.
 2. Update the following variables with your API keys and preferences:
    - `tvdbapi`: Your TVDB project API key.
    - `tmdbtoken`: Your TMDB token.
@@ -38,10 +37,18 @@ Before using this script, make sure you have the following prerequisites install
    - `PlexUrl`: Plex server URL.
    - `LibraryFolders`: true/false for the asset structure in one folder or splited in lib folders.
    - `PlexToken`: if you want to run this from remote, you have to specify the Plex Token.
-3. Rename the config file to `config.json`
-4. Copy the `overlay.png` and `Rocky.ttf` font to the same folder where you placed the config.json and script.
+3. Rename the config file to `config.json`.
+4. Place the `overlay.png` and `Rocky.ttf` font files in the same directory as the `config.json` and script.
 
-## Usage
+**Usage:**
+- **Automatic Mode**: Execute the script without any parameters to generate posters for your entire Plex library.
+- **Manual Mode**: Run the script with the `-Manual` switch to create custom posters manually.
+
+**Note:**
+- Ensure PowerShell execution policy allows script execution.
+- Bugs or issues encountered during usage can be reported for resolution.
+
+Feel free to customize the script further to meet your specific preferences or automation requirements.
 
 ### Automatic Mode
 
@@ -65,10 +72,6 @@ Run the script with the `-Manual` switch:
 
 Follow the prompts to enter the source picture path, media folder name, and movie/show title to manually create a custom poster.
 
-## Note
-
-- Ensure PowerShell execution policy allows script execution.
-- The script logs to a file named `Scriptlog.log` in the temporary folder.
 
 ### Example of Script folder:
 ![scriptimage](https://i.imgur.com/MOWuO2i.png)
