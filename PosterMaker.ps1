@@ -454,7 +454,7 @@ else {
                         Start-Process $magick -Wait -NoNewWindow -ArgumentList $resizeFinalArguments
                     }
 
-                    $Arguments = "convert `"$backgroundImage`" `"$overlay`" -geometry +0+450 -composite -bordercolor white -border 15 -font `"$font`" -fill white -pointsize `"$FontSize`" -gravity center -draw `"text 0,530 '$joinedTitle`'' `" `"$backgroundImage`""
+                    $Arguments = "convert `"$backgroundImage`" `"$overlay`" -geometry +0+450 -composite -bordercolor white -border 15 -font `"$font`" -fill white -pointsize `"$FontSize`" -gravity center -draw `"text 0,530 \""$joinedTitle\"" `" `"$backgroundImage`""
                     Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
 
                     # Create Folder Dir if Missing
