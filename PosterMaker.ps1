@@ -257,7 +257,7 @@ else {
         }
     }
     Write-Host "    Found '$($Libsoverview.count)' libs and '$($LibstoExclude.count)' are excluded..."
-    "Found '$($Libsoverview.count)' libs..." | Out-File $TempPath\Scriptlog.log -Append
+    "Found '$($Libsoverview.count)' libs and '$($LibstoExclude.count)' are excluded..."| Out-File $TempPath\Scriptlog.log -Append
     # Create Folder structure
     if (!(Test-Path $TempPath\assets)) {
         New-Item -ItemType Directory "$TempPath\assets" -Force | Out-Null
