@@ -26,7 +26,7 @@ function RemoveTrailingSlash($path) {
 }
 
 # Check if Config file is present
-if (!(Test-Path "$PSScriptRoot\config.json")){
+if (!(Test-Path "$PSScriptRoot\config.json")) {
     Write-Host "Config File missing, downloading it for you..."
     "Config File missing, downloading it for you..." | Out-File $TempPath\Scriptlog.log -Append 
     Invoke-WebRequest -uri "https://github.com/fscorrupt/PosterMaker/blob/main/config.example.json" -OutFile "$PSScriptRoot\config.json"
@@ -56,8 +56,9 @@ $magick = "$magickinstalllocation\magick.exe"
 $PlexToken = $config.PlexToken
 $PlexUrl = $config.PlexUrl
 $LibraryFolders = $config.LibraryFolders
+$SeasonPosters = $config.SeasonPosters
 $maxCharactersPerLine = 27 
-$targetWidth = 1000
+$targetWidth = 970
 $FontSize = $config.FontSize
 
 if (!(Test-Path $TempPath)) {
@@ -65,20 +66,20 @@ if (!(Test-Path $TempPath)) {
 }
 
 # Test if files are present in Script root
-if (!(Test-Path $overlay)){
+if (!(Test-Path $overlay)) {
     Invoke-WebRequest -uri "https://github.com/fscorrupt/PosterMaker/blob/main/overlay.png" -OutFile $overlay 
 }
-if (!(Test-Path $font)){
+if (!(Test-Path $font)) {
     Invoke-WebRequest -uri "https://github.com/fscorrupt/PosterMaker/blob/main/Rocky.ttf" -OutFile $font
 }
-
-Write-Host "Cleanup old log file..."
-"Cleanup old log file..." | Out-File $TempPath\Scriptlog.log -Append
-# cleanup old logfile
-if ((Test-Path $TempPath\Scriptlog.log)) {
-    Remove-Item $TempPath\Scriptlog.log
+if (!$Manual) {
+    Write-Host "Cleanup old log file..."
+    "Cleanup old log file..." | Out-File $TempPath\Scriptlog.log -Append
+    # cleanup old logfile
+    if ((Test-Path $TempPath\Scriptlog.log)) {
+        Remove-Item $TempPath\Scriptlog.log
+    }
 }
-
 if ($PlexToken) {
     Write-Host "Plex token found, checking access now..."
     "Plex token found, checking access now..." | Out-File $TempPath\Scriptlog.log -Append
@@ -191,6 +192,7 @@ if ($Manual) {
     $PicturePath = Read-Host "Enter path to source picture"
     $FolderName = Read-Host "Enter Media Foldername (how plex sees it)"
     $Titletext = Read-Host "Enter Movie/Show Title"
+    $CreateSeasonPoster = Read-Host "Create Season Poster? (y/n)"
 
     $PicturePath = $PicturePath.replace('"', '')
     $FolderName = $FolderName.replace('"', '')
@@ -199,21 +201,47 @@ if ($Manual) {
     if ($LibraryFolders -eq 'true') {
         $LibraryName = Read-Host "Enter Plex Library Name"
         $LibraryName = $LibraryName.replace('"', '')
-        $backgroundImageoriginal = "$AssetPath\$LibraryName\$FolderName.jpg"
+        $backgroundImageoriginal = "$AssetPath\$LibraryName\$FolderName\poster.jpg"
+        if ($CreateSeasonPoster -eq 'y') {
+            $SeasonPosterName = Read-Host "Enter Season Name"
+            if ($SeasonPosterName -match 'Season\s+(\d+)') {
+                $seasonNumber = $Matches[1]
+                $season = "Season" + $seasonNumber.PadLeft(2, '0')
+            }
+            if ($season -eq 'Specials') {
+                $season = "Season00"
+            }  
+            $backgroundImageoriginal = "$AssetPath\$LibraryName\$FolderName\$season.jpg"
+        }
     }
     Else {
-        $backgroundImageoriginal = "$AssetPath\$FolderName.jpg"
+        if ($CreateSeasonPoster -eq 'y') {
+            $SeasonPosterName = Read-Host "Enter Season Name"
+            if ($SeasonPosterName -match 'Season\s+(\d+)') {
+                $seasonNumber = $Matches[1]
+                $season = "Season" + $seasonNumber.PadLeft(2, '0')
+            }
+            if ($season -eq 'Specials') {
+                $season = "Season00"
+            }  
+            $backgroundImageoriginal = "$AssetPath\$($FolderName)_$season.jpg"
+        }
     }
 
     $backgroundImage = "$TempPath\$FolderName.jpg"
     $backgroundImage = $backgroundImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
 
     Write-Host "Creating poster now..." -ForegroundColor Cyan
-    if ($Titletext.Length -gt $maxCharactersPerLine ) {
-        $joinedTitle = Split-Title -title $Titletext -maxCharactersPerLine $maxCharactersPerLine
+    if ($CreateSeasonPoster -eq 'y') {
+        $joinedTitle = $SeasonPosterName
     }
     Else {
-        $joinedTitle = $Titletext
+        if ($Titletext.Length -gt $maxCharactersPerLine ) {
+            $joinedTitle = Split-Title -title $Titletext -maxCharactersPerLine $maxCharactersPerLine
+        }
+        Else {
+            $joinedTitle = $Titletext
+        }
     }
     Move-Item -LiteralPath $PicturePath -destination $backgroundImage -Force -ErrorAction SilentlyContinue
     
@@ -249,7 +277,8 @@ else {
             if ($lib.location.path -is [array]) {
                 $paths = $lib.location.path -join ',' # Convert array to string
                 $libtemp | Add-Member -MemberType NoteProperty -Name "Path" -Value $paths
-            } else {
+            }
+            else {
                 $libtemp | Add-Member -MemberType NoteProperty -Name "Path" -Value $lib.location.path
             }
             
@@ -257,7 +286,7 @@ else {
         }
     }
     Write-Host "    Found '$($Libsoverview.count)' libs and '$($LibstoExclude.count)' are excluded..."
-    "Found '$($Libsoverview.count)' libs and '$($LibstoExclude.count)' are excluded..."| Out-File $TempPath\Scriptlog.log -Append
+    "Found '$($Libsoverview.count)' libs and '$($LibstoExclude.count)' are excluded..." | Out-File $TempPath\Scriptlog.log -Append
     # Create Folder structure
     if (!(Test-Path $TempPath\assets)) {
         New-Item -ItemType Directory "$TempPath\assets" -Force | Out-Null
@@ -280,10 +309,19 @@ else {
                 $contentquery = 'Directory'
             }
             foreach ($item in $Libcontent.MediaContainer.$contentquery) {
+                $Seasondata = $null
                 if ($PlexToken) {
+                    if ($contentquery -eq 'Directory') {
+                        [xml]$Metadata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey)?X-Plex-Token=$PlexToken).content
+                        [xml]$Seasondata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey)/children?X-Plex-Token=$PlexToken).content
+                    }
                     [xml]$Metadata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey)?X-Plex-Token=$PlexToken).content
                 }
                 Else {
+                    if ($contentquery -eq 'Directory') {
+                        [xml]$Metadata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey)).content
+                        [xml]$Seasondata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey)/children?).content
+                    }
                     [xml]$Metadata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey)).content
                 }
                 $metadatatemp = $Metadata.MediaContainer.$contentquery.guid.id
@@ -292,7 +330,7 @@ else {
                 $tvdbpattern = 'tvdb://(\d+)'
                 if ($Metadata.MediaContainer.$contentquery.Location) {
                     $location = $Metadata.MediaContainer.$contentquery.Location.path
-                    if ($location.count -gt '1'){
+                    if ($location.count -gt '1') {
                         $location = $location[0]
                         $MultibleVersions = $true
                     }
@@ -300,7 +338,7 @@ else {
                         $MultibleVersions = $false
                     }
                     $libpaths = $($Library.path).split(',')
-                    foreach ($libpath in $libpaths){
+                    foreach ($libpath in $libpaths) {
                         if ($location -like "$libpath*") {
                             $Matchedpath = AddTrailingSlash $libpath
                             $libpath = $Matchedpath
@@ -310,7 +348,7 @@ else {
                 }
                 Else {
                     $location = $Metadata.MediaContainer.$contentquery.media.part.file
-                    if ($location.count -gt '1'){
+                    if ($location.count -gt '1') {
                         $location = $location[0]
                         $MultibleVersions = $true
                     }
@@ -318,7 +356,7 @@ else {
                         $MultibleVersions = $false
                     }
                     $libpaths = $($Library.path).split(',')
-                    foreach ($libpath in $libpaths){
+                    foreach ($libpath in $libpaths) {
                         if ($location -like "$libpath*") {
                             $Matchedpath = AddTrailingSlash $libpath
                             $libpath = $Matchedpath
@@ -332,7 +370,12 @@ else {
                         }
                     }
                 }
-                #$ID = ([regex]::Matches($metadatatemp, $tvdbpattern)).groups[0].groups[1].value
+                if ($Seasondata) {
+                    $pattern = '\d+'
+                    $SeasonsTemp = $Seasondata.MediaContainer.Directory | Where-Object { $_.Title -match $pattern -or $_.Title -like '*specials*' }
+                    $SeasonNames = $SeasonsTemp.Title -join ','
+                }
+
                 $matchesimdb = [regex]::Matches($metadatatemp, $imdbpattern)
                 $matchestmdb = [regex]::Matches($metadatatemp, $tmdbpattern)
                 $matchestvdb = [regex]::Matches($metadatatemp, $tvdbpattern)
@@ -340,11 +383,17 @@ else {
                 if ($matchestmdb.value) { $tmdbid = $matchestmdb.value.Replace('tmdb://', '') }Else { $tmdbid = $null }
                 if ($matchestvdb.value) { $tvdbid = $matchestvdb.value.Replace('tvdb://', '') }Else { $tvdbid = $null }
 
+                # check if there are more then 1 entry in id´s
+                if ($tvdbid.count -gt '1') { $tvdbid = $tvdbid[0] }
+                if ($tmdbid.count -gt '1') { $tmdbid = $tmdbid[0] }
+                if ($imdbid.count -gt '1') { $imdbid = $imdbid[0] }
+
                 $temp = New-Object psobject
                 $temp | Add-Member -MemberType NoteProperty -Name "Library Name" -Value $Library.Name
                 $temp | Add-Member -MemberType NoteProperty -Name "Library Type" -Value $Metadata.MediaContainer.$contentquery.type
                 $temp | Add-Member -MemberType NoteProperty -Name "title" -Value $item.title
                 $temp | Add-Member -MemberType NoteProperty -Name "originalTitle" -Value $item.originalTitle
+                $temp | Add-Member -MemberType NoteProperty -Name "SeasonNames" -Value $SeasonNames
                 $temp | Add-Member -MemberType NoteProperty -Name "year" -Value $item.year
                 $temp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $tvdbid
                 $temp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value $imdbid
@@ -367,6 +416,7 @@ else {
     "Starting poster creation now, this can take a while..." | Out-File $TempPath\Scriptlog.log -Append
     # Initialize counter variable
     $posterCount = 0
+    $SeasonCount = 0
     foreach ($entry in $Libraries) {
         try {
             if ($($entry.RootFoldername)) {
@@ -380,8 +430,12 @@ else {
 
                 if ($LibraryFolders -eq 'true') {
                     $LibraryName = $entry.'Library Name'
-                    $MoveTestPath = "$AssetPath\$LibraryName"
-                    $backgroundImageoriginal = "$AssetPath\$LibraryName\$($entry.RootFoldername).jpg"
+                    $EntryDir = "$AssetPath\$LibraryName\$($entry.RootFoldername)"
+                    $backgroundImageoriginal = "$EntryDir\poster.jpg"
+                    
+                    if (!(Get-ChildItem -LiteralPath $EntryDir -ErrorAction SilentlyContinue)) {
+                        New-Item -ItemType Directory $EntryDir -Force | out-null
+                    }
                 }
                 Else {
                     $backgroundImageoriginal = "$AssetPath\$($entry.RootFoldername).jpg"
@@ -389,7 +443,7 @@ else {
 
                 $backgroundImage = "$TempPath\$($entry.RootFoldername).jpg"
                 $backgroundImage = $backgroundImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
-        
+
                 if (!(Get-ChildItem -LiteralPath $backgroundImageoriginal -ErrorAction SilentlyContinue)) {
                     if ($entry.'Library Type' -eq 'movie') {
                         $posterurl = $null
@@ -463,7 +517,7 @@ else {
                     [int]$currentHeight = & $magick identify -format '%h' "$backgroundImage"
                     $targetHeight = [math]::Round(($targetWidth / $currentWidth) * $currentHeight)
 
-                    if ($currentWidth -lt $targetWidth) {
+                    if ($currentWidth -ne $targetWidth) {
                         # Resize the final image to maintain the aspect ratio with a width of 1000 pixels
                         $resizeFinalArguments = "convert `"$backgroundImage`" -resize ${targetWidth}x${targetHeight} `"$backgroundImage`""
                         Start-Process $magick -Wait -NoNewWindow -ArgumentList $resizeFinalArguments
@@ -472,15 +526,96 @@ else {
                     $Arguments = "convert `"$backgroundImage`" `"$overlay`" -geometry +0+450 -composite -bordercolor white -border 15 -font `"$font`" -fill white -pointsize `"$FontSize`" -gravity center -draw `"text 0,530 \""$joinedTitle\"" `" `"$backgroundImage`""
                     Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
 
-                    # Create Folder Dir if Missing
-                    if ($LibraryFolders -eq $true){
-                        if (!(Test-Path $MoveTestPath -ErrorAction SilentlyContinue)){
-                            New-Item -ItemType Directory -Path $MoveTestPath -Force | out-null
+                    # Move file back to original naming with Brackets.
+                    Move-Item -LiteralPath $backgroundImage $backgroundImageoriginal -Force -ErrorAction SilentlyContinue
+                    $posterCount++
+                }
+                # Create Season Posters
+                if ($SeasonPosters -eq 'true' -and $entry.'Library Type' -eq 'show') {
+                    $posterurl = $null
+                    $ismissing = $null
+                    if (!($entry.tvdbid)) {
+                        Write-Host "TVDBID missing for: $($entry.title)" -ForegroundColor Red
+                        "TVDBID missing for: $($entry.title)" | Out-File $TempPath\Scriptlog.log -Append
+                    }
+                    Else {
+                        $entrytemp = Get-FanartTv -Type tv -id $entry.tvdbid -ErrorAction SilentlyContinue
+            
+                        if (!($entrytemp) -or !($entrytemp.tvposter)) {
+                            $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/series/$($entry.tvdbid)" -Method GET -Headers $tvdbheader).content | ConvertFrom-Json
+                            $posterurl = $response.data.image
+                        }
+                        Else {
+                            if (!($entrytemp.tvposter | where lang -eq '00')) {
+                                $posterurl = ($entrytemp.tvposter)[0].url
+                            }
+                            Else {
+                                $posterurl = ($entrytemp.tvposter | where lang -eq '00')[0].url
+                            }
+                        }
+                        #Temp download
+                        $SeasonTempPoster = "$TempPath\SeasonTemp.jpg"
+                        if ((Get-ChildItem -LiteralPath $SeasonTempPoster -ErrorAction SilentlyContinue)) {
+                            Remove-Item  $SeasonTempPoster -Force | out-null
+                        }
+                        Function Downloadtempifmissing {
+                            if ($ismissing) {
+                                if ($posterurl){
+                                    Invoke-WebRequest -Uri $posterurl -OutFile $SeasonTempPoster
+                                }Else {
+                                    Write-Host "No Poster Url found for: $($entry.title) - Please manually Create Posters..." -ForegroundColor Red
+                                    "No Poster Url found for: $($entry.title) - Please manually Create Posters..." | Out-File $TempPath\Scriptlog.log -Append
+                                }
+                            }
+                        }
+
+                        $seasonNames = $entry.SeasonNames -split ','
+                        foreach ($season in $seasonNames) {
+                            $seasonTitle = $season
+                            if ($season -match 'Season\s+(\d+)') {
+                                $seasonNumber = $Matches[1]
+                                $season = "Season" + $seasonNumber.PadLeft(2, '0')
+                            }
+                            if ($season -eq 'Specials') {
+                                $season = "Season00"
+                            }    
+                            if ($LibraryFolders -eq 'true') {
+                                $SeasonImageoriginal = "$EntryDir\$season.jpg"
+                            }
+                            Else {
+                                $SeasonImageoriginal = "$AssetPath\$($entry.RootFoldername)_$season.jpg"
+                            }
+                            $SeasonImage = "$TempPath\$($entry.RootFoldername)_$season.jpg"
+                            $SeasonImage = $SeasonImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
+                            if (!(Get-ChildItem -LiteralPath $SeasonImageoriginal -ErrorAction SilentlyContinue)) {
+                                $ismissing = $true
+                                if (!(Get-ChildItem -LiteralPath $SeasonTempPoster -ErrorAction SilentlyContinue)) {
+                                    Downloadtempifmissing
+                                }
+                                Copy-Item -LiteralPath $SeasonTempPoster $SeasonImage -Force | out-null
+                                # Calculate the height to maintain the aspect ratio with a width of 1000 pixels
+                                [int]$currentWidth = & $magick identify -format '%w' "$SeasonImage"
+                                [int]$currentHeight = & $magick identify -format '%h' "$SeasonImage"
+                                $targetHeight = [math]::Round(($targetWidth / $currentWidth) * $currentHeight)
+                                
+                                if ($currentWidth -ne $targetWidth) {
+                                    # Resize the final image to maintain the aspect ratio with a width of 1000 pixels
+                                    $resizeFinalArguments = "convert `"$SeasonImage`" -resize ${targetWidth}x${targetHeight} `"$SeasonImage`""
+                                    Start-Process $magick -Wait -NoNewWindow -ArgumentList $resizeFinalArguments
+                                }
+                                
+                                $Arguments = "convert `"$SeasonImage`" `"$overlay`" -geometry +0+450 -composite -bordercolor white -border 15 -font `"$font`" -fill white -pointsize `"$FontSize`" -gravity center -draw `"text 0,530 \""$seasonTitle\"" `" `"$SeasonImage`""
+                                Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
+                                # Move file back to original naming with Brackets.
+                                Move-Item -LiteralPath $SeasonImage -destination $SeasonImageoriginal -Force -ErrorAction SilentlyContinue
+                                $SeasonCount++
+                            }
                         }
                     }
-                    # Move file back to original naming with Brackets.
-                    Move-Item -LiteralPath $backgroundImage -destination $backgroundImageoriginal -Force -ErrorAction SilentlyContinue
-                    $posterCount++
+                }
+                # Cleanup temp Poster
+                if ($SeasonTempPoster -and (Test-Path $SeasonTempPoster -ErrorAction SilentlyContinue)) {
+                    Remove-Item  $SeasonTempPoster -Force | out-null
                 }
             }
             Else {
@@ -494,8 +629,8 @@ else {
             $ErrorOutput | Out-File $TempPath\Scriptlog.log -Append
         }
     }
-    Write-Host "Finished, Total posters created: $posterCount" -ForegroundColor Green
+    Write-Host "Finished, Total posters created: $posterCount | Total Season Posters created: $SeasonCount" -ForegroundColor Green
     Write-Host "    You can find all posters here: $AssetPath" -ForegroundColor Yellow
-    "Finished, Total posters created: $posterCount" | Out-File $TempPath\Scriptlog.log -Append
+    "Finished, Total posters created: $posterCount | Total Season Posters created: $SeasonCount" | Out-File $TempPath\Scriptlog.log -Append
     "You can find all posters here: $AssetPath" | Out-File $TempPath\Scriptlog.log -Append
 }

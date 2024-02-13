@@ -35,7 +35,8 @@ Before utilizing the script, ensure the following prerequisites are installed an
    - `overlay`: Overlay file name.
    - `magickinstalllocation`: ImageMagick installation location.
    - `PlexUrl`: Plex server URL.
-   - `LibraryFolders`: true/false for the asset structure in one folder or splited in lib folders.
+   - `LibraryFolders`: true/false for the asset structure in one flat Folder or splited in lib folders like pmm needs it.
+   - `SeasonPosters`: true/false for also creating season posters.
    - `PlexToken`: if you want to run this from remote, you have to specify the Plex Token.
 3. Rename the config file to `config.json`.
 4. Place the `overlay.png` and `Rocky.ttf` font files in the same directory as the `config.json` and script.
@@ -82,6 +83,9 @@ Follow the prompts to enter the source picture path, media folder name, and movi
 ### Example of Posters after creation:
 ![assetimage](https://i.imgur.com/3Snagbg.png)
 
+### Example of Season Posters after creation:
+![assetimage](https://i.imgur.com/xCea7b1.png)
+
 ### Example of 4K Lib after pmm magic:
 ![4kimage](https://i.imgur.com/5psJmCU.png)
 
@@ -90,6 +94,9 @@ Follow the prompts to enter the source picture path, media folder name, and movi
 
 ### Example of TV Lib after pmm magic:
 ![tvimage](https://i.imgur.com/lR6lGzY.jpeg)
+
+### Example of TV Lib Seasons after pmm magic:
+![seasonimage](https://i.imgur.com/yR4xEtW.png)
 
 
 Feel free to customize the script further to suit your preferences or automation needs.
