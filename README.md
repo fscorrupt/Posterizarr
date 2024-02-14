@@ -36,7 +36,7 @@ Before utilizing the script, ensure the following prerequisites are installed an
    - `magickinstalllocation`: ImageMagick installation location.
    - `PlexUrl`: Plex server URL.
    - `LibraryFolders`: true/false for the asset structure in one flat Folder or splited in lib folders like pmm needs it.
-   - `SeasonPosters`: true/false for also creating season posters.
+   - `SeasonPosters`: true/false for also creating season posters (it just downloads movie/show poster and then applies the season text, so imageprocessing needs to be true)
    - `PlexToken`: if you want to run this from remote, you have to specify the Plex Token.
    - `ImageProcessing`: Set it to true if you want the imagemagick part, if false it only downloads the posters.
 3. Rename the config file to `config.json`.
