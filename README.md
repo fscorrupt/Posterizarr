@@ -38,6 +38,7 @@ Before utilizing the script, ensure the following prerequisites are installed an
    - `LibraryFolders`: true/false for the asset structure in one flat Folder or splited in lib folders like pmm needs it.
    - `SeasonPosters`: true/false for also creating season posters.
    - `PlexToken`: if you want to run this from remote, you have to specify the Plex Token.
+   - `ImageProcessing`: Set it to true if you want the imagemagick part, if false it only downloads the posters.
 3. Rename the config file to `config.json`.
 4. Place the `overlay.png` and `Rocky.ttf` font files in the same directory as the `config.json` and script.
 

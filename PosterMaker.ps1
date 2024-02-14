@@ -56,6 +56,7 @@ $magick = "$magickinstalllocation\magick.exe"
 $PlexToken = $config.PlexToken
 $PlexUrl = $config.PlexUrl
 $LibraryFolders = $config.LibraryFolders
+$ImageProcessing = $config.ImageProcessing
 $SeasonPosters = $config.SeasonPosters
 $maxCharactersPerLine = 27 
 $targetWidth = 970
@@ -230,35 +231,35 @@ if ($Manual) {
 
     $backgroundImage = "$TempPath\$FolderName.jpg"
     $backgroundImage = $backgroundImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
-
-    Write-Host "Creating poster now..." -ForegroundColor Cyan
-    if ($CreateSeasonPoster -eq 'y') {
-        $joinedTitle = $SeasonPosterName
-    }
-    Else {
-        if ($Titletext.Length -gt $maxCharactersPerLine ) {
-            $joinedTitle = Split-Title -title $Titletext -maxCharactersPerLine $maxCharactersPerLine
+    if ($ImageProcessing -eq 'true') {
+        Write-Host "Creating poster now..." -ForegroundColor Cyan
+        if ($CreateSeasonPoster -eq 'y') {
+            $joinedTitle = $SeasonPosterName
         }
         Else {
-            $joinedTitle = $Titletext
+            if ($Titletext.Length -gt $maxCharactersPerLine ) {
+                $joinedTitle = Split-Title -title $Titletext -maxCharactersPerLine $maxCharactersPerLine
+            }
+            Else {
+                $joinedTitle = $Titletext
+            }
         }
-    }
-    Move-Item -LiteralPath $PicturePath -destination $backgroundImage -Force -ErrorAction SilentlyContinue
+        Move-Item -LiteralPath $PicturePath -destination $backgroundImage -Force -ErrorAction SilentlyContinue
     
-    # Calculate the height to maintain the aspect ratio with a width of 1000 pixels
-    [int]$currentWidth = & $magick identify -format '%w' "$backgroundImage"
-    [int]$currentHeight = & $magick identify -format '%h' "$backgroundImage"
-    $targetHeight = [math]::Round(($targetWidth / $currentWidth) * $currentHeight)
+        # Calculate the height to maintain the aspect ratio with a width of 1000 pixels
+        [int]$currentWidth = & $magick identify -format '%w' "$backgroundImage"
+        [int]$currentHeight = & $magick identify -format '%h' "$backgroundImage"
+        $targetHeight = [math]::Round(($targetWidth / $currentWidth) * $currentHeight)
 
-    if ($currentWidth -lt $targetWidth) {
-        # Resize the final image to maintain the aspect ratio with a width of 1000 pixels
-        $resizeFinalArguments = "convert `"$backgroundImage`" -resize ${targetWidth}x${targetHeight} `"$backgroundImage`""
-        Start-Process $magick -Wait -NoNewWindow -ArgumentList $resizeFinalArguments
+        if ($currentWidth -lt $targetWidth) {
+            # Resize the final image to maintain the aspect ratio with a width of 1000 pixels
+            $resizeFinalArguments = "convert `"$backgroundImage`" -resize ${targetWidth}x${targetHeight} `"$backgroundImage`""
+            Start-Process $magick -Wait -NoNewWindow -ArgumentList $resizeFinalArguments
+        }
+
+        $Arguments = "convert `"$backgroundImage`" `"$overlay`" -geometry +0+450 -composite -bordercolor white -border 15 -font `"$font`" -fill white -pointsize 50 -gravity center -draw `"text 0,530 '$joinedTitle '`" `"$backgroundImage`""
+        Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
     }
-
-    $Arguments = "convert `"$backgroundImage`" `"$overlay`" -geometry +0+450 -composite -bordercolor white -border 15 -font `"$font`" -fill white -pointsize 50 -gravity center -draw `"text 0,530 '$joinedTitle '`" `"$backgroundImage`""
-    Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
-
     # Move file back to original naming with Brackets.
     Move-Item -LiteralPath $backgroundImage -destination $backgroundImageoriginal -Force -ErrorAction SilentlyContinue
     Write-Host "Poster created and moved to: $backgroundImageoriginal" -ForegroundColor Green
@@ -511,21 +512,22 @@ else {
                     Else {
                         $joinedTitle = $Titletext
                     }
-                    Invoke-WebRequest -Uri $posterurl -OutFile $backgroundImage 
-                    # Calculate the height to maintain the aspect ratio with a width of 1000 pixels
-                    [int]$currentWidth = & $magick identify -format '%w' "$backgroundImage"
-                    [int]$currentHeight = & $magick identify -format '%h' "$backgroundImage"
-                    $targetHeight = [math]::Round(($targetWidth / $currentWidth) * $currentHeight)
+                    Invoke-WebRequest -Uri $posterurl -OutFile $backgroundImage
+                    if ($ImageProcessing -eq 'true') {
+                        # Calculate the height to maintain the aspect ratio with a width of 1000 pixels
+                        [int]$currentWidth = & $magick identify -format '%w' "$backgroundImage"
+                        [int]$currentHeight = & $magick identify -format '%h' "$backgroundImage"
+                        $targetHeight = [math]::Round(($targetWidth / $currentWidth) * $currentHeight)
 
-                    if ($currentWidth -ne $targetWidth) {
-                        # Resize the final image to maintain the aspect ratio with a width of 1000 pixels
-                        $resizeFinalArguments = "convert `"$backgroundImage`" -resize ${targetWidth}x${targetHeight} `"$backgroundImage`""
-                        Start-Process $magick -Wait -NoNewWindow -ArgumentList $resizeFinalArguments
+                        if ($currentWidth -ne $targetWidth) {
+                            # Resize the final image to maintain the aspect ratio with a width of 1000 pixels
+                            $resizeFinalArguments = "convert `"$backgroundImage`" -resize ${targetWidth}x${targetHeight} `"$backgroundImage`""
+                            Start-Process $magick -Wait -NoNewWindow -ArgumentList $resizeFinalArguments
+                        }
+
+                        $Arguments = "convert `"$backgroundImage`" `"$overlay`" -geometry +0+450 -composite -bordercolor white -border 15 -font `"$font`" -fill white -pointsize `"$FontSize`" -gravity center -draw `"text 0,530 \""$joinedTitle\"" `" `"$backgroundImage`""
+                        Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
                     }
-
-                    $Arguments = "convert `"$backgroundImage`" `"$overlay`" -geometry +0+450 -composite -bordercolor white -border 15 -font `"$font`" -fill white -pointsize `"$FontSize`" -gravity center -draw `"text 0,530 \""$joinedTitle\"" `" `"$backgroundImage`""
-                    Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
-
                     # Move file back to original naming with Brackets.
                     Move-Item -LiteralPath $backgroundImage $backgroundImageoriginal -Force -ErrorAction SilentlyContinue
                     $posterCount++
@@ -593,19 +595,21 @@ else {
                                     Downloadtempifmissing
                                 }
                                 Copy-Item -LiteralPath $SeasonTempPoster $SeasonImage -Force | out-null
-                                # Calculate the height to maintain the aspect ratio with a width of 1000 pixels
-                                [int]$currentWidth = & $magick identify -format '%w' "$SeasonImage"
-                                [int]$currentHeight = & $magick identify -format '%h' "$SeasonImage"
-                                $targetHeight = [math]::Round(($targetWidth / $currentWidth) * $currentHeight)
+                                if ($ImageProcessing -eq 'true') {
+                                    # Calculate the height to maintain the aspect ratio with a width of 1000 pixels
+                                    [int]$currentWidth = & $magick identify -format '%w' "$SeasonImage"
+                                    [int]$currentHeight = & $magick identify -format '%h' "$SeasonImage"
+                                    $targetHeight = [math]::Round(($targetWidth / $currentWidth) * $currentHeight)
                                 
-                                if ($currentWidth -ne $targetWidth) {
-                                    # Resize the final image to maintain the aspect ratio with a width of 1000 pixels
-                                    $resizeFinalArguments = "convert `"$SeasonImage`" -resize ${targetWidth}x${targetHeight} `"$SeasonImage`""
-                                    Start-Process $magick -Wait -NoNewWindow -ArgumentList $resizeFinalArguments
+                                    if ($currentWidth -ne $targetWidth) {
+                                        # Resize the final image to maintain the aspect ratio with a width of 1000 pixels
+                                        $resizeFinalArguments = "convert `"$SeasonImage`" -resize ${targetWidth}x${targetHeight} `"$SeasonImage`""
+                                        Start-Process $magick -Wait -NoNewWindow -ArgumentList $resizeFinalArguments
+                                    }
+                                
+                                    $Arguments = "convert `"$SeasonImage`" `"$overlay`" -geometry +0+450 -composite -bordercolor white -border 15 -font `"$font`" -fill white -pointsize `"$FontSize`" -gravity center -draw `"text 0,530 \""$seasonTitle\"" `" `"$SeasonImage`""
+                                    Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
                                 }
-                                
-                                $Arguments = "convert `"$SeasonImage`" `"$overlay`" -geometry +0+450 -composite -bordercolor white -border 15 -font `"$font`" -fill white -pointsize `"$FontSize`" -gravity center -draw `"text 0,530 \""$seasonTitle\"" `" `"$SeasonImage`""
-                                Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
                                 # Move file back to original naming with Brackets.
                                 Move-Item -LiteralPath $SeasonImage -destination $SeasonImageoriginal -Force -ErrorAction SilentlyContinue
                                 $SeasonCount++
