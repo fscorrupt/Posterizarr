@@ -333,10 +333,10 @@ else {
                     $location = $Metadata.MediaContainer.$contentquery.Location.path
                     if ($location.count -gt '1') {
                         $location = $location[0]
-                        $MultibleVersions = $true
+                        $MultipleVersions = $true
                     }
                     Else {
-                        $MultibleVersions = $false
+                        $MultipleVersions = $false
                     }
                     $libpaths = $($Library.path).split(',')
                     foreach ($libpath in $libpaths) {
@@ -351,10 +351,10 @@ else {
                     $location = $Metadata.MediaContainer.$contentquery.media.part.file
                     if ($location.count -gt '1') {
                         $location = $location[0]
-                        $MultibleVersions = $true
+                        $MultipleVersions = $true
                     }
                     Else {
-                        $MultibleVersions = $false
+                        $MultipleVersions = $false
                     }
                     $libpaths = $($Library.path).split(',')
                     foreach ($libpath in $libpaths) {
@@ -402,7 +402,7 @@ else {
                 $temp | Add-Member -MemberType NoteProperty -Name "ratingKey" -Value $item.ratingKey
                 $temp | Add-Member -MemberType NoteProperty -Name "Path" -Value $Matchedpath
                 $temp | Add-Member -MemberType NoteProperty -Name "RootFoldername" -Value $extractedFolder
-                $temp | Add-Member -MemberType NoteProperty -Name "MultibleVersions" -Value $MultibleVersions
+                $temp | Add-Member -MemberType NoteProperty -Name "MultipleVersions" -Value $MultipleVersions
                 $Libraries += $temp
             }
         }
