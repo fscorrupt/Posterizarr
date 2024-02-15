@@ -452,9 +452,17 @@ else {
                             $entrytemp = Get-FanartTv -Type movies -id $entry.tmdbid -ErrorAction SilentlyContinue
                             # nothing found via fanart.tv - try tmdb now
                             if (!($entrytemp) -or !($entrytemp.movieposter)) {
-                                $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($entry.tmdbid)?language=en-US" -Method GET -Headers $headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
-                                if ($response) {
-                                    $posterurl = "https://image.tmdb.org/t/p/w500$($response.poster_path)"
+                                $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($entry.tmdbid)?append_to_response=images&language=xx&include_image_language=en,null" -Method GET -Headers $headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
+                                if ($response.images.posters) {
+                                    $NoLangPoster = ($response.images.posters | where iso_639_1 -eq $null)
+                                    if (!$NoLangPoster) {
+                                        $posterpath = (($response.images.posters | Sort-Object vote_count -Descending)[0]).file_path
+                                        $posterurl = "https://image.tmdb.org/t/p/original$posterpath"
+                                    }
+                                    Else {
+                                        $posterpath = (($response.images.posters | where iso_639_1 -eq $null | Sort-Object vote_count -Descending)[0]).file_path
+                                        $posterurl = "https://image.tmdb.org/t/p/original$posterpath"
+                                    }
                                 }
                                 Else {
                                     # nothing found via tmbd - try imdb as last attempt
@@ -464,7 +472,21 @@ else {
                             }
                             Else {
                                 if (!($entrytemp.movieposter | where lang -eq '00')) {
-                                    $posterurl = ($entrytemp.movieposter)[0].url
+                                    $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($entry.tmdbid)?append_to_response=images&language=xx&include_image_language=en,null" -Method GET -Headers $headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
+                                    if ($response.images.posters) {
+                                        $NoLangPoster = ($response.images.posters | where iso_639_1 -eq $null)
+                                        if (!$NoLangPoster) {
+                                            $posterpath = (($response.images.posters | Sort-Object vote_count -Descending)[0]).file_path
+                                            $posterurl = "https://image.tmdb.org/t/p/original$posterpath"
+                                        }
+                                        Else {
+                                            $posterpath = (($response.images.posters | where iso_639_1 -eq $null | Sort-Object vote_count -Descending)[0]).file_path
+                                            $posterurl = "https://image.tmdb.org/t/p/original$posterpath"
+                                        }
+                                    }
+                                    Else {
+                                        $posterurl = ($entrytemp.movieposter)[0].url
+                                    }
                                 }
                                 Else {
                                     $posterurl = ($entrytemp.movieposter | where lang -eq '00')[0].url
@@ -475,8 +497,18 @@ else {
                             $entrytemp = Get-FanartTv -Type movies -id $entry.imdbid -ErrorAction SilentlyContinue
             
                             if (!($entrytemp) -or !($entrytemp.movieposter)) {
-                                $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($entry.imdbid)?language=en-US" -Method GET -Headers $headers).content | ConvertFrom-Json
-                                $posterurl = "https://image.tmdb.org/t/p/w500$($response.poster_path)"
+                                $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($entry.imdbid)?append_to_response=images&language=xx&include_image_language=en,null" -Method GET -Headers $headers).content | ConvertFrom-Json
+                                if ($response.images.posters) {
+                                    $NoLangPoster = ($response.images.posters | where iso_639_1 -eq $null)
+                                    if (!$NoLangPoster) {
+                                        $posterpath = (($response.images.posters | Sort-Object vote_count -Descending)[0]).file_path
+                                        $posterurl = "https://image.tmdb.org/t/p/original$posterpath"
+                                    }
+                                    Else {
+                                        $posterpath = (($response.images.posters | where iso_639_1 -eq $null | Sort-Object vote_count -Descending)[0]).file_path
+                                        $posterurl = "https://image.tmdb.org/t/p/original$posterpath"
+                                    }
+                                }
                             }
                             Else {
                                 if (!($entrytemp.movieposter | where lang -eq '00')) {
@@ -493,17 +525,50 @@ else {
                         $entrytemp = Get-FanartTv -Type tv -id $entry.tvdbid -ErrorAction SilentlyContinue
             
                         if (!($entrytemp) -or !($entrytemp.tvposter)) {
-                            $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/series/$($entry.tvdbid)" -Method GET -Headers $tvdbheader).content | ConvertFrom-Json
-                            $posterurl = $response.data.image
+                            if ($entry.tmdbid) {
+                                $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($entry.tmdbid)?append_to_response=images&language=xx&include_image_language=en,null" -Method GET -Headers $headers).content | ConvertFrom-Json
+                                if ($response.images.posters) {
+                                    $NoLangPoster = ($response.images.posters | where iso_639_1 -eq $null)
+                                    if (!$NoLangPoster) {
+                                        $posterpath = (($response.images.posters | Sort-Object vote_count -Descending)[0]).file_path
+                                        $posterurl = "https://image.tmdb.org/t/p/original$posterpath"
+                                    }
+                                    Else {
+                                        $posterpath = (($response.images.posters | where iso_639_1 -eq $null | Sort-Object vote_count -Descending)[0]).file_path
+                                        $posterurl = "https://image.tmdb.org/t/p/original$posterpath"
+                                    }
+                                }
+                            }
+                            Else {
+                                $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/series/$($entry.tvdbid)" -Method GET -Headers $tvdbheader).content | ConvertFrom-Json
+                                $posterurl = $response.data.image
+                            }
                         }
                         Else {
                             if (!($entrytemp.tvposter | where lang -eq '00')) {
-                                $posterurl = ($entrytemp.tvposter)[0].url
+                                if ($entry.tmdbid) {
+                                    $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($entry.tmdbid)?append_to_response=images&language=xx&include_image_language=en,null" -Method GET -Headers $headers).content | ConvertFrom-Json
+                                    if ($response.images.posters) {
+                                        $NoLangPoster = ($response.images.posters | where iso_639_1 -eq $null)
+                                        if (!$NoLangPoster) {
+                                            $posterpath = (($response.images.posters | Sort-Object vote_count -Descending)[0]).file_path
+                                            $posterurl = "https://image.tmdb.org/t/p/original$posterpath"
+                                        }
+                                        Else {
+                                            $posterpath = (($response.images.posters | where iso_639_1 -eq $null | Sort-Object vote_count -Descending)[0]).file_path
+                                            $posterurl = "https://image.tmdb.org/t/p/original$posterpath"
+                                        }
+                                    }
+                                }
+                                Else {
+                                    $posterurl = ($entrytemp.tvposter)[0].url
+                                }
                             }
                             Else {
                                 $posterurl = ($entrytemp.tvposter | where lang -eq '00')[0].url
                             }
                         }
+
                     }
 
                     if ($Titletext.Length -gt $maxCharactersPerLine ) {
