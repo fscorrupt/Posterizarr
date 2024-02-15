@@ -6,6 +6,8 @@
   "TempPath": "C:\\PosterTemp",
   "AssetPath": "P:\\assets",
   "font": "Rocky.ttf",
+  "bordercolor": "white",
+  "borderwidth": "15",
   "overlay": "overlay.png",
   "PlexUrl": "http://192.168.1.93:32400",
   "PlexToken": "",

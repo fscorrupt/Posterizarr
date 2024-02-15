@@ -32,7 +32,9 @@ Before utilizing the script, ensure the following prerequisites are installed an
    - `TempPath`: Temporary folder path.
    - `AssetPath`: Path to store generated posters.
    - `font`: Font file name.
-   - `FontSize`: Size of Text in Poster
+   - `FontSize`: Size of Text in Poster.
+   - `bordercolor`: Color of the Boarder.
+   - `borderwidth`: Border width.
    - `overlay`: Overlay file name.
    - `magickinstalllocation`: ImageMagick installation location.
    - `PlexUrl`: Plex server URL.
