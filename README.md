@@ -72,7 +72,7 @@ The posters are all placed in `AssetPath\...` this can then be mounted in pmm to
 Run the script with the `-Manual` switch:
 
 ```powershell
-.\plex-poster-generator.ps1 -Manual
+.\PosterMaker.ps1 -Manual
 ```
 
 Follow the prompts to enter the source picture path, media folder name, and movie/show title to manually create a custom poster.
