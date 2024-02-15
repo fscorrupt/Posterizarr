@@ -8,6 +8,7 @@ This PowerShell script automates the process of generating posters for your Plex
 - **CSV Export**: Produces an impressive CSV file containing all queried movie/show information during the script's runtime.
 - **Logging Capabilities**: Records valuable information to a file named `Scriptlog.log` in the temporary folder, facilitating troubleshooting and analysis.
 - **Cross-platform Compatibility**: Ensures seamless operation across Linux, Docker, and Windows Plex servers, enhancing versatility.
+- **Poster Creation**: it Searches fanart/tmdb for textless posters, fallback is grabbing a poster from imdb for movies and tvdb for shows.
 
 Upon initial execution, the script may take some time to run as it compiles necessary data. Subsequent runs efficiently create missing posters, bypassing existing assets in the directory.
 
@@ -36,7 +37,7 @@ Before utilizing the script, ensure the following prerequisites are installed an
    - `magickinstalllocation`: ImageMagick installation location.
    - `PlexUrl`: Plex server URL.
    - `LibraryFolders`: true/false for the asset structure in one flat Folder or splited in lib folders like pmm needs it.
-   - `SeasonPosters`: true/false for also creating season posters (it just downloads movie/show poster and then applies the season text, so imageprocessing needs to be true)
+   - `SeasonPosters`: true/false for also creating season posters (if ImageProcessing is false, it queries fanart.tv for season posters, fallback is show poster, because tvdb/tmdb do not have season posters)
    - `PlexToken`: if you want to run this from remote, you have to specify the Plex Token.
    - `ImageProcessing`: Set it to true if you want the imagemagick part, if false it only downloads the posters.
 3. Rename the config file to `config.json`.
