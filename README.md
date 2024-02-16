@@ -3,10 +3,13 @@
 This PowerShell script automates the process of generating posters for your Plex media library. Leveraging information from your Plex library, such as movie or show titles, it fetches relevant artwork from Fanart.tv, TMDB, and TVDB. The script offers both automatic and manual modes for generating posters, accommodating custom creations that cannot be automated.
 
 **Key Features:**
+- **Resizing**: It automatically resizes every poster to 2000x3000.
 - **Automatic Library Search**: The script autonomously searches for libraries within your Plex server, enhancing its usability.
 - **Handling Multiple Versions**: It adeptly manages multiple versions of a movie/show, ensuring comprehensive coverage.
 - **CSV Export**: Produces an impressive CSV file containing all queried movie/show information during the script's runtime.
 - **Logging Capabilities**: Records valuable information to a file named `Scriptlog.log` in the temporary folder, facilitating troubleshooting and analysis.
+    
+    It also generates a log with the output of every imagemagick command `ImageMagickCommands.log`.
 - **Cross-platform Compatibility**: Ensures seamless operation across Linux, Docker, and Windows Plex servers, enhancing versatility.
 - **Poster Creation**: it Searches fanart/tmdb for textless posters, fallback is grabbing a poster from imdb for movies and tvdb for shows.
 
@@ -32,7 +35,10 @@ Before utilizing the script, ensure the following prerequisites are installed an
    - `TempPath`: Temporary folder path.
    - `AssetPath`: Path to store generated posters.
    - `font`: Font file name.
-   - `FontSize`: Size of Text in Poster.
+   - `fontcolor`: Color of Font Text.
+   - `fontAllCaps`: If true, text is in caps `MY TEXT` else it would be `My Text`.
+   - `minPointSize`: Min Size of Text in Poster.
+   - `maxPointSize`: Max Size of Text in Poster.
    - `bordercolor`: Color of the Boarder.
    - `borderwidth`: Border width.
    - `overlay`: Overlay file name.

@@ -25,6 +25,33 @@ function RemoveTrailingSlash($path) {
     return $path
 }
 
+# stolen and adapted from: https://github.com/bullmoose20/Plex-Stuff/blob/9d231d871a4676c8da7d4cbab482181a35756524/create_defaults/create_default_posters.ps1#L477 
+Function Get-OptimalPointSize {
+    param(
+        [string]$text,
+        [string]$fontImagemagick,
+        [int]$box_width,
+        [int]$box_height,
+        [int]$min_pointsize,
+        [int]$max_pointsize
+    )
+    # Construct the command with correct font option
+    $cmd = "magick -size ${box_width}x${box_height} -font `"$fontImagemagick`" -gravity center -fill black caption:`"$text`" -format `"%[caption:pointsize]`" info:"
+    $cmd | Out-File $TempPath\ImageMagickCommands.log -Append 
+    # Execute command and get point size
+    $current_pointsize = [int](Invoke-Expression $cmd | Out-String).Trim()
+    # Apply point size limits
+    if ($current_pointsize -gt $max_pointsize) {
+        $current_pointsize = $max_pointsize
+    }
+    elseif ($current_pointsize -lt $min_pointsize) {
+        $current_pointsize = $min_pointsize
+    }
+
+    # Return optimal point size
+    return $current_pointsize
+}
+
 # Check if Config file is present
 if (!(Test-Path "$PSScriptRoot\config.json")) {
     Write-Host "Config File missing, downloading it for you..."
@@ -50,6 +77,9 @@ $LibstoExclude = $config.LibstoExclude
 $TempPath = RemoveTrailingSlash $config.TempPath
 $AssetPath = RemoveTrailingSlash $config.AssetPath
 $font = "$TempPath\$($config.font)"
+$fontImagemagick = $font.replace('\','\\')
+$fontcolor = $config.fontcolor
+$fontAllCaps = $config.fontAllCaps
 $overlay = "$TempPath\$($config.overlay)"
 $magickinstalllocation = RemoveTrailingSlash $config.magickinstalllocation
 $magick = "$magickinstalllocation\magick.exe"
@@ -58,11 +88,13 @@ $PlexUrl = $config.PlexUrl
 $LibraryFolders = $config.LibraryFolders
 $ImageProcessing = $config.ImageProcessing
 $SeasonPosters = $config.SeasonPosters
-$maxCharactersPerLine = 27 
+$minPointSize = $config.minPointSize
+$maxPointSize = $config.maxPointSize
 $borderwidth = $config.borderwidth
 $bordercolor = $config.bordercolor
-$targetWidth = 1000 - ([int]$borderwidth*2)
-$FontSize = $config.FontSize
+$theMaxWidth = "1800"
+$theMaxHeight = "1000"
+$text_offset = "+350"
 
 if (!(Test-Path $TempPath)) {
     New-Item -ItemType Directory $TempPath -Force | out-null
@@ -81,6 +113,9 @@ if (!$Manual) {
     # cleanup old logfile
     if ((Test-Path $TempPath\Scriptlog.log)) {
         Remove-Item $TempPath\Scriptlog.log
+    }
+    if ((Test-Path $TempPath\ImageMagickCommands.log)) {
+        Remove-Item $TempPath\ImageMagickCommands.log
     }
 }
 if ($PlexToken) {
@@ -161,32 +196,6 @@ $tvdbheader = @{}
 $tvdbheader.Add("accept", "application/json")
 $tvdbheader.Add("Authorization", "Bearer $tvdbtoken")
 
-function Split-Title {
-    param (
-        [string]$title,
-        [int]$maxCharactersPerLine
-    )
-
-    $titleLines = @()
-    $currentLine = ""
-
-    foreach ($word in $title -split '\s+') {
-        if (($currentLine + ' ' + $word).Length -le $maxCharactersPerLine) {
-            $currentLine += ' ' + $word
-        }
-        else {
-            $titleLines += $currentLine.Trim()
-            $currentLine = $word
-        }
-    }
-
-    if ($currentLine -ne "") {
-        $titleLines += $currentLine.Trim()
-    }
-
-    return $titleLines -join "`n"
-}
-
 if ($Manual) {
     cls
     Write-Host ""
@@ -236,11 +245,16 @@ if ($Manual) {
     if ($ImageProcessing -eq 'true') {
         Write-Host "Creating poster now..." -ForegroundColor Cyan
         if ($CreateSeasonPoster -eq 'y') {
-            $joinedTitle = $SeasonPosterName
+            if ($fontAllCaps -eq 'true'){
+                $joinedTitle = $SeasonPosterName.ToUpper()
+            }
+            Else {
+                $joinedTitle = $SeasonPosterName
+            }
         }
         Else {
-            if ($Titletext.Length -gt $maxCharactersPerLine ) {
-                $joinedTitle = Split-Title -title $Titletext -maxCharactersPerLine $maxCharactersPerLine
+            if ($fontAllCaps -eq 'true'){
+                $joinedTitle = $Titletext.ToUpper()
             }
             Else {
                 $joinedTitle = $Titletext
@@ -248,19 +262,21 @@ if ($Manual) {
         }
         Move-Item -LiteralPath $PicturePath -destination $backgroundImage -Force -ErrorAction SilentlyContinue
     
-        # Calculate the height to maintain the aspect ratio with a width of 1000 pixels
-        [int]$currentWidth = & $magick identify -format '%w' "$backgroundImage"
-        [int]$currentHeight = & $magick identify -format '%h' "$backgroundImage"
-        $targetHeight = [math]::Round(($targetWidth / $currentWidth) * $currentHeight)
+        # Resize Image to 2000x3000 and apply boarder and overlay
+        $resizeFinalArguments = "convert `"$backgroundImage`" -resize 2000x3000^ -gravity center -extent 2000x3000 `"$overlay`" -gravity south -composite -shave $borderwidth`x$borderwidth -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$backgroundImage`""
+        $resizeFinalArguments | Out-File $TempPath\ImageMagickCommands.log -Append 
+        Start-Process $magick -Wait -NoNewWindow -ArgumentList $resizeFinalArguments
 
-        if ($currentWidth -lt $targetWidth) {
-            # Resize the final image to maintain the aspect ratio with a width of 1000 pixels
-            $resizeFinalArguments = "convert `"$backgroundImage`" -resize ${targetWidth}x${targetHeight} `"$backgroundImage`""
-            Start-Process $magick -Wait -NoNewWindow -ArgumentList $resizeFinalArguments
-        }
-
-        $Arguments = "convert `"$backgroundImage`" `"$overlay`" -geometry +0+450 -composite -bordercolor white -border 15 -font `"$font`" -fill white -pointsize 50 -gravity center -draw `"text 0,530 '$joinedTitle '`" `"$backgroundImage`""
+        $optimalFontSize = Get-OptimalPointSize -text $joinedTitle -font $fontImagemagick -box_width $theMaxWidth -box_height $theMaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
+        $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size 1900x1000 -background none caption:`"$joinedTitle`" -trim -gravity south -extent 1900x1000 `) -gravity south -geometry +0`"$text_offset`" -composite `"$backgroundImage`""
+        $Arguments | Out-File $TempPath\ImageMagickCommands.log -Append 
         Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
+    }
+    Else {
+        # Resize Image to 2000x3000
+        $Resizeargument = "convert `"$backgroundImage`" -resize 2000x3000^ -gravity center -extent 2000x3000 `"$backgroundImage`""
+        $Resizeargument | Out-File $TempPath\ImageMagickCommands.log -Append 
+        Start-Process $magick -Wait -NoNewWindow -ArgumentList $Resizeargument
     }
     # Move file back to original naming with Brackets.
     Move-Item -LiteralPath $backgroundImage -destination $backgroundImageoriginal -Force -ErrorAction SilentlyContinue
@@ -613,8 +629,8 @@ else {
 
                     }
 
-                    if ($Titletext.Length -gt $maxCharactersPerLine ) {
-                        $joinedTitle = Split-Title -title $Titletext -maxCharactersPerLine $maxCharactersPerLine
+                    if ($fontAllCaps -eq 'true'){
+                        $joinedTitle = $Titletext.ToUpper()
                     }
                     Else {
                         $joinedTitle = $Titletext
@@ -622,18 +638,19 @@ else {
                     Invoke-WebRequest -Uri $posterurl -OutFile $backgroundImage
                     if ($ImageProcessing -eq 'true') {
                         # Calculate the height to maintain the aspect ratio with a width of 1000 pixels
-                        [int]$currentWidth = & $magick identify -format '%w' "$backgroundImage"
-                        [int]$currentHeight = & $magick identify -format '%h' "$backgroundImage"
-                        $targetHeight = [math]::Round(($targetWidth / $currentWidth) * $currentHeight)
-
-                        if ($currentWidth -ne $targetWidth) {
-                            # Resize the final image to maintain the aspect ratio with a width of 1000 pixels
-                            $resizeFinalArguments = "convert `"$backgroundImage`" -resize ${targetWidth}x${targetHeight} `"$backgroundImage`""
-                            Start-Process $magick -Wait -NoNewWindow -ArgumentList $resizeFinalArguments
-                        }
-
-                        $Arguments = "convert `"$backgroundImage`" `"$overlay`" -geometry +0+450 -composite -bordercolor `"$bordercolor`" -border `"$borderwidth`" -font `"$font`" -fill white -pointsize `"$FontSize`" -gravity center -draw `"text 0,530 \""$joinedTitle\"" `" `"$backgroundImage`""
+                        $Arguments = "convert `"$backgroundImage`" -resize 2000x3000^ -gravity center -extent 2000x3000 `"$overlay`" -gravity south -composite -shave 30x30 -bordercolor `"white`" -border 30 `"$backgroundImage`""
+                        $Arguments | Out-File $TempPath\ImageMagickCommands.log -Append 
                         Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
+
+                        $optimalFontSize = Get-OptimalPointSize -text $joinedTitle -font $fontImagemagick -box_width $theMaxWidth -box_height $theMaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
+                        $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size 1900x1000 -background none caption:`"$joinedTitle`" -trim -gravity south -extent 1900x1000 `) -gravity south -geometry +0`"$text_offset`" -composite `"$backgroundImage`""
+                        $Arguments | Out-File $TempPath\ImageMagickCommands.log -Append 
+                        Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
+                    }
+                    Else {
+                        $Resizeargument = "convert `"$backgroundImage`" -resize 2000x3000^ -gravity center -extent 2000x3000 `"$backgroundImage`""
+                        $Resizeargument | Out-File $TempPath\ImageMagickCommands.log -Append 
+                        Start-Process $magick -Wait -NoNewWindow -ArgumentList $Resizeargument
                     }
                     # Move file back to original naming with Brackets.
                     Move-Item -LiteralPath $backgroundImage $backgroundImageoriginal -Force -ErrorAction SilentlyContinue
@@ -730,7 +747,12 @@ else {
 
                         $seasonNames = $entry.SeasonNames -split ','
                         foreach ($season in $seasonNames) {
-                            $seasonTitle = $season
+                            if ($fontAllCaps -eq 'true'){
+                                $seasonTitle = $season.ToUpper()
+                            }
+                            Else {
+                                $seasonTitle = $season
+                            }
                             if ($season -match 'Season\s+(\d+)') {
                                 $seasonNumber = $Matches[1]
                                 $season = "Season" + $seasonNumber.PadLeft(2, '0')
@@ -753,18 +775,15 @@ else {
                                         Downloadtempifmissing
                                     }
                                     Copy-Item -LiteralPath $SeasonTempPoster $SeasonImage -Force | out-null
-                                    # Calculate the height to maintain the aspect ratio with a width of 1000 pixels
-                                    [int]$currentWidth = & $magick identify -format '%w' "$SeasonImage"
-                                    [int]$currentHeight = & $magick identify -format '%h' "$SeasonImage"
-                                    $targetHeight = [math]::Round(($targetWidth / $currentWidth) * $currentHeight)
-                                
-                                    if ($currentWidth -ne $targetWidth) {
-                                        # Resize the final image to maintain the aspect ratio with a width of 1000 pixels
-                                        $resizeFinalArguments = "convert `"$SeasonImage`" -resize ${targetWidth}x${targetHeight} `"$SeasonImage`""
-                                        Start-Process $magick -Wait -NoNewWindow -ArgumentList $resizeFinalArguments
-                                    }
-                                
-                                    $Arguments = "convert `"$SeasonImage`" `"$overlay`" -geometry +0+450 -composite -bordercolor `"$bordercolor`" -border `"$borderwidth`" -font `"$font`" -fill white -pointsize `"$FontSize`" -gravity center -draw `"text 0,530 \""$seasonTitle\"" `" `"$SeasonImage`""
+                                    
+                                    # Resize Image to 2000x3000 and apply boarder and overlay
+                                    $resizeFinalArguments = "convert `"$SeasonImage`" -resize 2000x3000^ -gravity center -extent 2000x3000 `"$overlay`" -gravity south -composite -shave $borderwidth`x$borderwidth -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$SeasonImage`""
+                                    $resizeFinalArguments | Out-File $TempPath\ImageMagickCommands.log -Append 
+                                    Start-Process $magick -Wait -NoNewWindow -ArgumentList $resizeFinalArguments
+                                    
+                                    $optimalFontSize = Get-OptimalPointSize -text $seasonTitle -font $fontImagemagick -box_width $theMaxWidth -box_height $theMaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
+                                    $Arguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size 1900x1000 -background none caption:`"$seasonTitle`" -trim -gravity south -extent 1900x1000 `) -gravity south -geometry +0`"$text_offset`" -composite `"$SeasonImage`""
+                                    $Arguments | Out-File $TempPath\ImageMagickCommands.log -Append 
                                     Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
                                 }
                                 Else {
@@ -783,7 +802,12 @@ else {
                                     Else {
                                         Invoke-WebRequest -Uri $fallbackurl -OutFile $SeasonImage
                                     }
+                                    # Resize Image to 2000x3000
+                                    $Resizeargument = "convert `"$SeasonImage`" -resize 2000x3000^ -gravity center -extent 2000x3000 `"$SeasonImage`""
+                                    $Resizeargument | Out-File $TempPath\ImageMagickCommands.log -Append 
+                                    Start-Process $magick -Wait -NoNewWindow -ArgumentList $Resizeargument
                                 }
+
                                 # Move file back to original naming with Brackets.
                                 Move-Item -LiteralPath $SeasonImage -destination $SeasonImageoriginal -Force -ErrorAction SilentlyContinue
                                 $SeasonCount++
