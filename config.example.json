@@ -21,7 +21,7 @@
   "OverlayPart":{
     "ImageProcessing": "true",
     "fontAllCaps": "true",
-    "AddBoarder": "true",
+    "AddBorder": "true",
     "AddText": "true",
     "AddOverlay": "true",
     "fontcolor": "white",
