@@ -93,8 +93,8 @@ $maxPointSize = $config.maxPointSize
 $borderwidth = $config.borderwidth
 $bordercolor = $config.bordercolor
 $theMaxWidth = "1800"
-$theMaxHeight = "1000"
-$text_offset = "+350"
+$theMaxHeight = "600"
+$text_offset = "+300"
 
 if (!(Test-Path $TempPath)) {
     New-Item -ItemType Directory $TempPath -Force | out-null
