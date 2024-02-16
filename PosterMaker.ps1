@@ -56,7 +56,7 @@ Function Get-OptimalPointSize {
 if (!(Test-Path "$PSScriptRoot\config.json")) {
     Write-Host "Config File missing, downloading it for you..."
     "Config File missing, downloading it for you..." | Out-File $TempPath\Scriptlog.log -Append 
-    Invoke-WebRequest -uri "https://github.com/fscorrupt/PosterMaker/blob/main/config.example.json" -OutFile "$PSScriptRoot\config.json"
+    Invoke-WebRequest -uri "https://github.com/fscorrupt/PosterMaker/raw/main/config.example.json" -OutFile "$PSScriptRoot\config.json"
     Write-Host "    Config File downloaded here: '$PSScriptRoot\config.json'"
     "Config File downloaded here: '$PSScriptRoot\config.json'" | Out-File $TempPath\Scriptlog.log -Append 
     
@@ -96,16 +96,21 @@ $theMaxWidth = "1800"
 $theMaxHeight = "600"
 $text_offset = "+300"
 
+
+if (!(Test-Path $AssetPath)) {
+    New-Item -ItemType Directory -Path $AssetPath -Force | Out-Null
+}
+
 if (!(Test-Path $TempPath)) {
-    New-Item -ItemType Directory $TempPath -Force | out-null
+    New-Item -ItemType Directory -Path $TempPath -Force | out-null
 }
 
 # Test if files are present in Script root
 if (!(Test-Path $overlay)) {
-    Invoke-WebRequest -uri "https://github.com/fscorrupt/PosterMaker/blob/main/overlay.png" -OutFile $overlay 
+    Invoke-WebRequest -uri "https://github.com/fscorrupt/PosterMaker/raw/main/overlay.png" -OutFile $overlay 
 }
 if (!(Test-Path $font)) {
-    Invoke-WebRequest -uri "https://github.com/fscorrupt/PosterMaker/blob/main/Rocky.ttf" -OutFile $font
+    Invoke-WebRequest -uri "https://github.com/fscorrupt/PosterMaker/raw/main/Rocky.ttf" -OutFile $font
 }
 if (!$Manual) {
     Write-Host "Cleanup old log file..."
@@ -197,7 +202,7 @@ $tvdbheader.Add("accept", "application/json")
 $tvdbheader.Add("Authorization", "Bearer $tvdbtoken")
 
 if ($Manual) {
-    cls
+    Clear-Host
     Write-Host ""
     Write-Host "Manual Poster Creation Started" -ForegroundColor Yellow
     Write-Host ""
@@ -427,7 +432,7 @@ else {
     }
     Write-Host "    Found '$($Libraries.count)' Items..." -ForegroundColor Cyan
     "Found '$($Libraries.count)' Items..."  | Out-File $TempPath\Scriptlog.log -Append
-    $Libraries | Select-Object * | Export-Csv -Path "$TempPath\PlexLibexport.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
+    $Libraries | Select-Object * | Export-Csv -Path "$TempPath\PlexLibexport.csv" -NoTypeInformation -Delimiter '~' -Encoding UTF8 -Force
     Write-Host "Export everything to a csv: $TempPath\PlexLibexport.csv"
     "Export everything to a csv: $TempPath\PlexLibexport.csv" | Out-File $TempPath\Scriptlog.log -Append
     # Download poster foreach movie
@@ -477,13 +482,13 @@ else {
                                 }
                                 if ($response) {
                                     if ($response.images.posters) {
-                                        $NoLangPoster = ($response.images.posters | where iso_639_1 -eq $null)
+                                        $NoLangPoster = ($response.images.posters | Where-Object iso_639_1 -eq $null)
                                         if (!$NoLangPoster) {
                                             $posterpath = (($response.images.posters | Sort-Object vote_count -Descending)[0]).file_path
                                             $posterurl = "https://image.tmdb.org/t/p/original$posterpath"
                                         }
                                         Else {
-                                            $posterpath = (($response.images.posters | where iso_639_1 -eq $null | Sort-Object vote_count -Descending)[0]).file_path
+                                            $posterpath = (($response.images.posters | Where-Object iso_639_1 -eq $null | Sort-Object vote_count -Descending)[0]).file_path
                                             $posterurl = "https://image.tmdb.org/t/p/original$posterpath"
                                         }
                                     }
@@ -495,7 +500,7 @@ else {
                                 }
                             }
                             Else {
-                                if (!($entrytemp.movieposter | where lang -eq '00')) {
+                                if (!($entrytemp.movieposter | Where-Object lang -eq '00')) {
                                     try {
                                         $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($entry.tmdbid)?append_to_response=images&language=xx&include_image_language=en,null" -Method GET -Headers $headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
                                     }
@@ -503,13 +508,13 @@ else {
                                     }
                                     if ($response) {
                                         if ($response.images.posters) {
-                                            $NoLangPoster = ($response.images.posters | where iso_639_1 -eq $null)
+                                            $NoLangPoster = ($response.images.posters | Where-Object iso_639_1 -eq $null)
                                             if (!$NoLangPoster) {
                                                 $posterpath = (($response.images.posters | Sort-Object vote_count -Descending)[0]).file_path
                                                 $posterurl = "https://image.tmdb.org/t/p/original$posterpath"
                                             }
                                             Else {
-                                                $posterpath = (($response.images.posters | where iso_639_1 -eq $null | Sort-Object vote_count -Descending)[0]).file_path
+                                                $posterpath = (($response.images.posters | Where-Object iso_639_1 -eq $null | Sort-Object vote_count -Descending)[0]).file_path
                                                 $posterurl = "https://image.tmdb.org/t/p/original$posterpath"
                                             }
                                         }
@@ -522,7 +527,7 @@ else {
                                     }
                                 }
                                 Else {
-                                    $posterurl = ($entrytemp.movieposter | where lang -eq '00')[0].url
+                                    $posterurl = ($entrytemp.movieposter | Where-Object lang -eq '00')[0].url
                                 }
                             }
                         }
@@ -537,24 +542,24 @@ else {
                                 }
                                 if ($response) {
                                     if ($response.images.posters) {
-                                        $NoLangPoster = ($response.images.posters | where iso_639_1 -eq $null)
+                                        $NoLangPoster = ($response.images.posters | Where-Object iso_639_1 -eq $null)
                                         if (!$NoLangPoster) {
                                             $posterpath = (($response.images.posters | Sort-Object vote_count -Descending)[0]).file_path
                                             $posterurl = "https://image.tmdb.org/t/p/original$posterpath"
                                         }
                                         Else {
-                                            $posterpath = (($response.images.posters | where iso_639_1 -eq $null | Sort-Object vote_count -Descending)[0]).file_path
+                                            $posterpath = (($response.images.posters | Where-Object iso_639_1 -eq $null | Sort-Object vote_count -Descending)[0]).file_path
                                             $posterurl = "https://image.tmdb.org/t/p/original$posterpath"
                                         }
                                     }
                                 }
                             }
                             Else {
-                                if (!($entrytemp.movieposter | where lang -eq '00')) {
+                                if (!($entrytemp.movieposter | Where-Object lang -eq '00')) {
                                     $posterurl = ($entrytemp.movieposter)[0].url
                                 }
                                 Else {
-                                    $posterurl = ($entrytemp.movieposter | where lang -eq '00')[0].url
+                                    $posterurl = ($entrytemp.movieposter | Where-Object lang -eq '00')[0].url
                                 }
                             }
                         }
@@ -572,13 +577,13 @@ else {
                                 }
                                 if ($response) {
                                     if ($response.images.posters) {
-                                        $NoLangPoster = ($response.images.posters | where iso_639_1 -eq $null)
+                                        $NoLangPoster = ($response.images.posters | Where-Object iso_639_1 -eq $null)
                                         if (!$NoLangPoster) {
                                             $posterpath = (($response.images.posters | Sort-Object vote_count -Descending)[0]).file_path
                                             $posterurl = "https://image.tmdb.org/t/p/original$posterpath"
                                         }
                                         Else {
-                                            $posterpath = (($response.images.posters | where iso_639_1 -eq $null | Sort-Object vote_count -Descending)[0]).file_path
+                                            $posterpath = (($response.images.posters | Where-Object iso_639_1 -eq $null | Sort-Object vote_count -Descending)[0]).file_path
                                             $posterurl = "https://image.tmdb.org/t/p/original$posterpath"
                                         }
                                     }
@@ -594,7 +599,7 @@ else {
                             }
                         }
                         Else {
-                            if (!($entrytemp.tvposter | where lang -eq '00')) {
+                            if (!($entrytemp.tvposter | Where-Object lang -eq '00')) {
                                 if ($entry.tmdbid) {
                                     try {
                                         $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($entry.tmdbid)?append_to_response=images&language=xx&include_image_language=en,null" -Method GET -Headers $headers).content | ConvertFrom-Json
@@ -603,13 +608,13 @@ else {
                                     }
                                     if ($response) {
                                         if ($response.images.posters) {
-                                            $NoLangPoster = ($response.images.posters | where iso_639_1 -eq $null)
+                                            $NoLangPoster = ($response.images.posters | Where-Object iso_639_1 -eq $null)
                                             if (!$NoLangPoster) {
                                                 $posterpath = (($response.images.posters | Sort-Object vote_count -Descending)[0]).file_path
                                                 $posterurl = "https://image.tmdb.org/t/p/original$posterpath"
                                             }
                                             Else {
-                                                $posterpath = (($response.images.posters | where iso_639_1 -eq $null | Sort-Object vote_count -Descending)[0]).file_path
+                                                $posterpath = (($response.images.posters | Where-Object iso_639_1 -eq $null | Sort-Object vote_count -Descending)[0]).file_path
                                                 $posterurl = "https://image.tmdb.org/t/p/original$posterpath"
                                             }
                                         }
@@ -623,7 +628,7 @@ else {
                                 }
                             }
                             Else {
-                                $posterurl = ($entrytemp.tvposter | where lang -eq '00')[0].url
+                                $posterurl = ($entrytemp.tvposter | Where-Object lang -eq '00')[0].url
                             }
                         }
 
@@ -676,13 +681,13 @@ else {
                                 }
                                 if ($response) {
                                     if ($response.images.posters) {
-                                        $NoLangPoster = ($response.images.posters | where iso_639_1 -eq $null)
+                                        $NoLangPoster = ($response.images.posters | Where-Object iso_639_1 -eq $null)
                                         if (!$NoLangPoster) {
                                             $posterpath = (($response.images.posters | Sort-Object vote_count -Descending)[0]).file_path
                                             $posterurl = "https://image.tmdb.org/t/p/original$posterpath"
                                         }
                                         Else {
-                                            $posterpath = (($response.images.posters | where iso_639_1 -eq $null | Sort-Object vote_count -Descending)[0]).file_path
+                                            $posterpath = (($response.images.posters | Where-Object iso_639_1 -eq $null | Sort-Object vote_count -Descending)[0]).file_path
                                             $posterurl = "https://image.tmdb.org/t/p/original$posterpath"
                                         }
                                     }
@@ -698,7 +703,7 @@ else {
                             }
                         }
                         Else {
-                            if (!($entrytemp.tvposter | where lang -eq '00')) {
+                            if (!($entrytemp.tvposter | Where-Object lang -eq '00')) {
                                 if ($entry.tmdbid) {
                                     try {
                                         $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($entry.tmdbid)?append_to_response=images&language=xx&include_image_language=en,null" -Method GET -Headers $headers).content | ConvertFrom-Json
@@ -707,12 +712,12 @@ else {
                                     }
                                     if ($response) {
                                         if ($response.images.posters) {
-                                            $NoLangPoster = ($response.images.posters | where iso_639_1 -eq $null)
+                                            $NoLangPoster = ($response.images.posters | Where-Object iso_639_1 -eq $null)
                                             if (!$NoLangPoster) {
                                                 $posterurl = ($entrytemp.tvposter)[0].url
                                             }
                                             Else {
-                                                $posterpath = (($response.images.posters | where iso_639_1 -eq $null | Sort-Object vote_count -Descending)[0]).file_path
+                                                $posterpath = (($response.images.posters | Where-Object iso_639_1 -eq $null | Sort-Object vote_count -Descending)[0]).file_path
                                                 $posterurl = "https://image.tmdb.org/t/p/original$posterpath"
                                             }
                                         }
@@ -726,7 +731,7 @@ else {
                                 }
                             }
                             Else {
-                                $posterurl = ($entrytemp.tvposter | where lang -eq '00')[0].url
+                                $posterurl = ($entrytemp.tvposter | Where-Object lang -eq '00')[0].url
                             }
                         }
                         #Temp download
@@ -796,7 +801,7 @@ else {
                                         if ($season -eq 'Season00'){
                                             $seasonNumber = 0
                                         }
-                                        $posterurl = ($entrytemp.seasonposter | where {$_.lang -eq 'en' -and $_.Season -eq $seasonNumber} | Sort-Object likes)[0].url
+                                        $posterurl = ($entrytemp.seasonposter | Where-Object {$_.lang -eq 'en' -and $_.Season -eq $seasonNumber} | Sort-Object likes)[0].url
                                         Invoke-WebRequest -Uri $posterurl -OutFile $SeasonImage
                                     }
                                     Else {
