@@ -1,22 +1,36 @@
 {
-  "tvdbapi": "TVDBAPIKEY",
-  "tmdbtoken": "TMDBTOKEN",
-  "FanartTvAPIKey": "FANARTAPIKEY",
-  "LibstoExclude": ["OverlayTest", "Youtube", "Audiobooks", "Kids Audiobooks", "Tech Trainings"],
-  "TempPath": "C:\\PosterTemp",
-  "AssetPath": "P:\\assets",
-  "font": "Rocky.ttf",
-  "minPointSize": "45",
-  "maxPointSize": "150",
-  "fontcolor": "white",
-  "fontAllCaps": "true",
-  "bordercolor": "white",
-  "borderwidth": "30",
-  "overlay": "overlay.png",
-  "PlexUrl": "http://192.168.1.93:32400",
-  "PlexToken": "",
-  "LibraryFolders": "true",
-  "SeasonPosters": "true",
-  "magickinstalllocation": "C:\\PosterTemp\\ImageMagick-7.1.1-Q16-HDRI",
-  "ImageProcessing": "true"
+  "ApiPart":{
+    "tvdbapi": "TVDBAPIKEY",
+    "tmdbtoken": "TMDBTOKEN",
+    "FanartTvAPIKey": "FANARTAPIKEY",
+    "PlexToken": ""
+  },
+  "PlexPart":{
+    "LibstoExclude": ["Youtube", "Audiobooks", "Kids Audiobooks", "Tech Trainings"],
+    "PlexUrl": "http://192.168.1.93:32400"
+  },
+  "PrerequisitePart":{
+    "AssetPath": "P:\\assets",
+    "ScriptRoot": "C:\\PosterMaker",
+    "magickinstalllocation": "C:\\PosterTemp\\ImageMagick-7.1.1-Q16-HDRI",
+    "font": "Rocky.ttf",
+    "overlayfile": "overlay.png",
+    "LibraryFolders": "true",
+    "SeasonPosters": "true"
+  },
+  "OverlayPart":{
+    "ImageProcessing": "true",
+    "fontAllCaps": "true",
+    "AddBoarder": "true",
+    "AddText": "true",
+    "AddOverlay": "true",
+    "fontcolor": "white",
+    "bordercolor": "white",
+    "minPointSize": "45",
+    "maxPointSize": "150",
+    "borderwidth": "30",
+    "MaxWidth": "1800",
+    "MaxHeight": "600",
+    "text_offset": "+300"
+  }
 }

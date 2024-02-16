@@ -7,9 +7,10 @@ This PowerShell script automates the process of generating posters for your Plex
 - **Automatic Library Search**: The script autonomously searches for libraries within your Plex server, enhancing its usability.
 - **Handling Multiple Versions**: It adeptly manages multiple versions of a movie/show, ensuring comprehensive coverage.
 - **CSV Export**: Produces an impressive CSV file containing all queried movie/show information during the script's runtime.
-- **Logging Capabilities**: Records valuable information to a file named `Scriptlog.log` in the temporary folder, facilitating troubleshooting and analysis.
+- **Logging Capabilities**: Records valuable information to a file in `$ScriptRoot\logs\Scriptlog.log`, facilitating troubleshooting and analysis.
     
-    It also generates a log with the output of every imagemagick command `ImageMagickCommands.log`.
+    - It also generates a log with the output of every imagemagick command `$ScriptRoot\logs\ImageMagickCommands.log`.
+    - Every created poster is also logged in `$ScriptRoot\logs\PosterCreation.log`.
 - **Cross-platform Compatibility**: Ensures seamless operation across Linux, Docker, and Windows Plex servers, enhancing versatility.
 - **Poster Creation**: it Searches fanart/tmdb for textless posters, fallback is grabbing a poster from imdb for movies and tvdb for shows.
 
@@ -28,28 +29,42 @@ Before utilizing the script, ensure the following prerequisites are installed an
 **Configuration:**
 1. Open `config.example.json` located in the script directory.
 2. Update the following variables with your API keys and preferences:
+    
+    **ApiPart**
    - `tvdbapi`: Your TVDB project API key.
    - `tmdbtoken`: Your TMDB token.
    - `FanartTvAPIKey`: Your Fanart personal API key.
+   - `PlexToken`: if you want to run this from remote, you have to specify the Plex Token.
+   
+   **PlexPart**
    - `LibstoExclude`: Libraries to exclude from processing.
-   - `TempPath`: Temporary folder path.
-   - `AssetPath`: Path to store generated posters.
-   - `font`: Font file name.
-   - `fontcolor`: Color of Font Text.
-   - `fontAllCaps`: If true, text is in caps `MY TEXT` else it would be `My Text`.
-   - `minPointSize`: Min Size of Text in Poster.
-   - `maxPointSize`: Max Size of Text in Poster.
-   - `bordercolor`: Color of the Boarder.
-   - `borderwidth`: Border width.
-   - `overlay`: Overlay file name.
-   - `magickinstalllocation`: ImageMagick installation location.
    - `PlexUrl`: Plex server URL.
+
+   **PrerequisitePart**
+   - `AssetPath`: Path to store generated posters.
+   - `ScriptRoot`: Root of `PosterMaker.ps1`
+   - `magickinstalllocation`: ImageMagick installation location.
+   - `font`: Font file name.
+   - `overlayfile`: Overlay file name.
    - `LibraryFolders`: true/false for the asset structure in one flat Folder or splited in lib folders like pmm needs it.
    - `SeasonPosters`: true/false for also creating season posters (if ImageProcessing is false, it queries fanart.tv for season posters, fallback is show poster, because tvdb/tmdb do not have season posters)
-   - `PlexToken`: if you want to run this from remote, you have to specify the Plex Token.
+
+   **OverlayPart**
    - `ImageProcessing`: Set it to true if you want the imagemagick part, if false it only downloads the posters.
+   - `fontAllCaps`: If true, text is in caps `MY TEXT` else it would be `My Text`.
+   - `AddBorder`: true/false to add border to image
+   - `AddText`: true/false to add Text to image
+   - `AddOverlay`: true/false to add the overlayimage to image
+   - `fontcolor`: Color of Font Text.
+   - `bordercolor`: Color of Border.
+   - `minPointSize`: Min Size of Text in Poster.
+   - `maxPointSize`: Max Size of Text in Poster.
+   - `borderwidth`: Border width.
+   - `MaxWidth`: Max width of text_box
+   - `MaxHeight`: Max height of text_box
+   - `text_offset`: text_box offset from bottom of the picture
 3. Rename the config file to `config.json`.
-4. Place the `overlay.png` and `Rocky.ttf` font files in the same directory as the `config.json` and script.
+4. Place the `overlay.png` and `Rocky.ttf` font files in the temp directory `$ScriptRoot\temp`.
 
 **Usage:**
 - **Automatic Mode**: Execute the script without any parameters to generate posters for your entire Plex library.
@@ -85,10 +100,10 @@ Follow the prompts to enter the source picture path, media folder name, and movi
 
 
 ### Example of Script folder:
-![scriptimage](https://i.imgur.com/MOWuO2i.png)
+![scriptimage](https://i.imgur.com/bA1w9Ks.png)
 
 ### Example of script output:
-![outputimage](https://i.imgur.com/xzkYB6B.png)
+![outputimage](https://i.imgur.com/o23Mxo6.png)
 
 ### Example of Posters after creation:
 ![assetimage](https://i.imgur.com/3Snagbg.png)
