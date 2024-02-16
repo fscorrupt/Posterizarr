@@ -24,7 +24,6 @@ Before utilizing the script, ensure the following prerequisites are installed an
 - **TVDB API Key:** [Obtain TVDB API Key](https://thetvdb.com/api-information/signup)
 - **ImageMagick:** [Download ImageMagick](https://imagemagick.org/archive/binaries/ImageMagick-7.1.1-27-Q16-HDRI-x64-dll.exe)
     - Installation is covered within the script.
-- Only tested with **Powershell 5.1**.
 
 **Configuration:**
 1. Open `config.example.json` located in the script directory.
