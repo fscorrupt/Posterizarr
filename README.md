@@ -41,7 +41,6 @@ Before utilizing the script, ensure the following prerequisites are installed an
 
    **PrerequisitePart**
    - `AssetPath`: Path to store generated posters.
-   - `ScriptRoot`: Root of `PosterMaker.ps1`
    - `magickinstalllocation`: ImageMagick installation location.
    - `font`: Font file name.
    - `overlayfile`: Overlay file name.
