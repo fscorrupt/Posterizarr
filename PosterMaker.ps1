@@ -45,6 +45,9 @@ Function Get-OptimalPointSize {
         $current_pointsize = $max_pointsize
     }
     elseif ($current_pointsize -lt $min_pointsize) {
+        Write-Host "    Text current_pointsize: '$current_pointsize'" -ForegroundColor Red
+        Write-Host "    Text min_pointsize: '$min_pointsize'" -ForegroundColor Red
+        "    WARNING! Text truncated! optimalFontSize: $current_pointsize below min_pointsize: $min_pointsize" | Out-File $ScriptRoot\Logs\PosterCreation.log  -Append
         $current_pointsize = $min_pointsize
     }
 
@@ -332,11 +335,11 @@ if ($Manual) {
 
         if ($AddText -eq 'true'){
             $optimalFontSize = Get-OptimalPointSize -text $joinedTitle -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
-            Write-Host "    Optimal font size queried: '$optimalFontSize'"
-            "   Optimal font size queried: '$optimalFontSize'" | Out-File $ScriptRoot\Logs\PosterCreation.log  -Append
+            Write-Host "    Optimal font size set to: '$optimalFontSize'"
+            "    Optimal font size set to: '$optimalFontSize'" | Out-File $ScriptRoot\Logs\PosterCreation.log  -Append
             $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -composite `"$backgroundImage`""
             Write-Host "        Applying Font text: `"$joinedTitle`""
-            "   Applying Font text: `"$joinedTitle`"" | Out-File $ScriptRoot\Logs\PosterCreation.log  -Append
+            "    Applying Font text: `"$joinedTitle`"" | Out-File $ScriptRoot\Logs\PosterCreation.log  -Append
             $logEntry = "magick.exe $Arguments"
             $logEntry | Out-File $ScriptRoot\Logs\ImageMagickCommands.log -Append 
             Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
@@ -741,11 +744,11 @@ else {
 
                         if ($AddText -eq 'true'){
                             $optimalFontSize = Get-OptimalPointSize -text $joinedTitle -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
-                            Write-Host "    Optimal font size queried: '$optimalFontSize'"
-                            "   Optimal font size queried: '$optimalFontSize'" | Out-File $ScriptRoot\Logs\PosterCreation.log  -Append
+                            Write-Host "    Optimal font size set to: '$optimalFontSize'"
+                            "    Optimal font size set to: '$optimalFontSize'" | Out-File $ScriptRoot\Logs\PosterCreation.log  -Append
                             $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -composite `"$backgroundImage`""
                             Write-Host "    Applying Font text: `"$joinedTitle`""
-                            "   Applying Font text: `"$joinedTitle`"" | Out-File $ScriptRoot\Logs\PosterCreation.log  -Append
+                            "    Applying Font text: `"$joinedTitle`"" | Out-File $ScriptRoot\Logs\PosterCreation.log  -Append
                             $logEntry = "magick.exe $Arguments"
                             $logEntry | Out-File $ScriptRoot\Logs\ImageMagickCommands.log -Append 
                             Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
@@ -913,13 +916,13 @@ else {
                                     if ($AddText -eq 'true'){
                                         $optimalFontSize = Get-OptimalPointSize -text $seasonTitle -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
                                         
-                                        Write-Host "    Optimal font size queried: '$optimalFontSize'"
-                                        "   Optimal font size queried: '$optimalFontSize'" | Out-File $ScriptRoot\Logs\PosterCreation.log  -Append
+                                        Write-Host "    Optimal font size set to: '$optimalFontSize'"
+                                        "    Optimal font size set to: '$optimalFontSize'" | Out-File $ScriptRoot\Logs\PosterCreation.log  -Append
                                         
                                         $Arguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$seasonTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -composite `"$SeasonImage`""
                                         
                                         Write-Host "    Applying Font text: `"$seasonTitle`""
-                                        "   Applying Font text: `"$seasonTitle`"" | Out-File $ScriptRoot\Logs\PosterCreation.log  -Append
+                                        "    Applying Font text: `"$seasonTitle`"" | Out-File $ScriptRoot\Logs\PosterCreation.log  -Append
                                         $logEntry = "magick.exe $Arguments"
                                         $logEntry | Out-File $ScriptRoot\Logs\ImageMagickCommands.log -Append 
                                         Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
