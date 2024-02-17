@@ -875,13 +875,14 @@ else {
                 $backgroundImage = $backgroundImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
                 if (!(Get-ChildItem -LiteralPath $backgroundImageoriginal -ErrorAction SilentlyContinue)) {
                     if ($entry.'Library Type' -eq 'movie') {
-                        $posterurl = $null
+                        $global:posterurl = $null
                         # Define Global Variables
                         $global:tmdbid = $entry.tmdbid
                         $global:tvdbid = $entry.tvdbid
                         $global:imdbid = $entry.imdbid
                         $global:IsMovie = $true
                         $global:IsShow = $false
+                        
                         Write-Host "Start Poster Search for: $Titletext" -ForegroundColor Yellow
                         "Start Poster Search for: $Titletext" | Out-File $global:ScriptRoot\Logs\PosterCreation.log  -Append
                         if ($global:FavProvider -eq 'tmdb' -and $entry.tmdbid) {
@@ -911,7 +912,7 @@ else {
                         }
                     }
                     if ($entry.'Library Type' -eq 'show') {
-                        $posterurl = $null
+                        $global:posterurl = $null
                         # Define Global Variables
                         $global:tmdbid = $entry.tmdbid
                         $global:tvdbid = $entry.tvdbid
