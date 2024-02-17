@@ -23,6 +23,23 @@ function RemoveTrailingSlash($path) {
     }
     return $path
 }
+function CountStringOccurrences($filePath, $searchString) {
+    try {
+        $fileContent = Get-Content -Path $filePath -ErrorAction Stop
+        $matchingLines = $fileContent | Where-Object { $_ -match $searchString }
+        $count = $matchingLines.Count
+
+        if ($count -ne 0) {
+            Write-Host "    Number of lines containing '$searchString': $count" -ForegroundColor Yellow
+        } else {
+            Write-Host "    Number of lines containing '$searchString': $count" -ForegroundColor Green
+        }
+
+        "Number of lines containing '$searchString': $count" | Out-File $global:ScriptRoot\Logs\PosterCreation.log -Append
+    } catch {
+        Write-Host "Error: $_.Exception.Message" -ForegroundColor Red
+    }
+}
 # stolen and adapted from: https://github.com/bullmoose20/Plex-Stuff/blob/9d231d871a4676c8da7d4cbab482181a35756524/create_defaults/create_default_posters.ps1#L477 
 Function Get-OptimalPointSize {
     param(
@@ -382,6 +399,10 @@ function GetIMDBPoster {
         return $global:posterurl
     }
 }
+
+# Start the timer
+$startTime = Get-Date
+
 # Check if Config file is present
 if (!(Test-Path "$PSScriptRoot\config.json")) {
     Write-Host "Config File missing, downloading it for you..."
@@ -467,9 +488,9 @@ if (!(Test-Path $font)) {
 }
 
 if (!$Manual) {
-    Write-Host "Cleanup old log file..."
-    "Cleanup old log file..." | Out-File $global:ScriptRoot\Logs\Scriptlog.log  -Append
-    # cleanup old logfile
+    Write-Host "Cleanup old log files..."
+    "Cleanup old log files..." | Out-File $global:ScriptRoot\Logs\Scriptlog.log  -Append
+    # cleanup old log files
     if ((Test-Path $global:ScriptRoot\Logs\Scriptlog.log)) {
         Remove-Item $global:ScriptRoot\Logs\Scriptlog.log
     }
@@ -1168,6 +1189,13 @@ else {
     }
     Write-Host "Finished, Total posters created: $posterCount | Total Season Posters created: $SeasonCount" -ForegroundColor Green
     Write-Host "    You can find all posters here: $AssetPath" -ForegroundColor Yellow
-    "Finished, Total posters created: $posterCount | Total Season Posters created: $SeasonCount" | Out-File $global:ScriptRoot\Logs\Scriptlog.log  -Append
-    "You can find all posters here: $AssetPath" | Out-File $global:ScriptRoot\Logs\Scriptlog.log  -Append
-}
+    "Finished, Total posters created: $posterCount | Total Season Posters created: $SeasonCount" | Out-File $global:ScriptRoot\Logs\PosterCreation.log  -Append
+    "You can find all posters here: $AssetPath" | Out-File $global:ScriptRoot\Logs\PosterCreation.log  -Append
+    CountStringOccurrences -filePath $global:ScriptRoot\Logs\PosterCreation.log -searchString "WARNING! Text truncated!"
+    CountStringOccurrences -filePath $global:ScriptRoot\Logs\Scriptlog.log -searchString "Error for - Title:"
+    
+    # Calculate the total execution time
+    $executionTime = (Get-Date) - $startTime
+    # Display and log total execution time
+    Write-Host "    Script execution time: $($executionTime.TotalSeconds) seconds"
+    "Script execution time: $($executionTime.TotalSeconds) seconds" | Out-File $global:ScriptRoot\Logs\PosterCreation.log -Append}
