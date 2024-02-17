@@ -36,7 +36,7 @@ Function Get-OptimalPointSize {
         [int]$max_pointsize
     )
     # Construct the command with correct font option
-    $cmd = "magick -size ${box_width}x${box_height} -font `"$fontImagemagick`" -gravity center -fill black caption:`"$text`" -format `"%[caption:pointsize]`" info:"
+    $cmd = "magick.exe -size ${box_width}x${box_height} -font `"$fontImagemagick`" -gravity center -fill black caption:`"$text`" -format `"%[caption:pointsize]`" info:"
     $cmd | Out-File $ScriptRoot\Logs\ImageMagickCommands.log -Append 
     # Execute command and get point size
     $current_pointsize = [int](Invoke-Expression $cmd | Out-String).Trim()
@@ -76,7 +76,8 @@ $LibstoExclude = $config.PlexPart.LibstoExclude
 $PlexUrl = $config.PlexPart.PlexUrl
 # Prerequisites Part
 $AssetPath = RemoveTrailingSlash $config.PrerequisitePart.AssetPath
-$ScriptRoot = RemoveTrailingSlash $config.PrerequisitePart.ScriptRoot
+# $ScriptRoot = RemoveTrailingSlash $config.PrerequisitePart.ScriptRoot
+$ScriptRoot = $PSScriptRoot
 $magickinstalllocation = RemoveTrailingSlash $config.PrerequisitePart.magickinstalllocation
 $font = "$ScriptRoot\temp\$($config.PrerequisitePart.font)"
 $overlay = "$ScriptRoot\temp\$($config.PrerequisitePart.overlayfile)"
@@ -112,13 +113,21 @@ if (!(Test-Path $ScriptRoot\temp)) {
     New-Item -ItemType Directory -Path $ScriptRoot\temp -Force | out-null
 }
 
+if (!(Test-Path $AssetPath)) {
+    New-Item -ItemType Directory -Path $AssetPath -Force | out-null
+}
+
+# Delete all files and subfolders within the temp directory
+if (Test-Path $ScriptRoot\temp) {
+    Remove-Item -Path $ScriptRoot\temp\* -Recurse -Force
+}
 
 # Test if files are present in Script root
 if (!(Test-Path $overlay)) {
-    Invoke-WebRequest -uri "https://github.com/fscorrupt/PosterMaker/raw/main/overlay.png" -OutFile $overlay 
+    Invoke-WebRequest -uri "https://github.com/fscorrupt/PosterMaker/raw/main/overlay.png" -OutFile $ScriptRoot\temp\overlay.png 
 }
 if (!(Test-Path $font)) {
-    Invoke-WebRequest -uri "https://github.com/fscorrupt/PosterMaker/raw/main/Rocky.ttf" -OutFile $font
+    Invoke-WebRequest -uri "https://github.com/fscorrupt/PosterMaker/raw/main/Rocky.ttf" -OutFile $ScriptRoot\temp\Rocky.ttf
 }
 
 if (!$Manual) {
@@ -148,7 +157,6 @@ foreach ($file in $files) {
         "   Found font: '$($file.Name)' in ScriptRoot - copy it into temp folder..." | Out-File $ScriptRoot\Logs\Scriptlog.log  -Append
     }
 }
-
 
 if ($PlexToken) {
     Write-Host "Plex token found, checking access now..."
@@ -318,7 +326,8 @@ if ($Manual) {
             "    Resizing it" | Out-File $ScriptRoot\Logs\PosterCreation.log  -Append
         }
 
-        $Arguments | Out-File $ScriptRoot\Logs\ImageMagickCommands.log -Append 
+        $logEntry = "magick.exe $Arguments"
+        $logEntry | Out-File $ScriptRoot\Logs\ImageMagickCommands.log -Append 
         Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
 
         if ($AddText -eq 'true'){
@@ -328,7 +337,8 @@ if ($Manual) {
             $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -composite `"$backgroundImage`""
             Write-Host "        Applying Font text: `"$joinedTitle`""
             "   Applying Font text: `"$joinedTitle`"" | Out-File $ScriptRoot\Logs\PosterCreation.log  -Append
-            $Arguments | Out-File $ScriptRoot\Logs\ImageMagickCommands.log -Append 
+            $logEntry = "magick.exe $Arguments"
+            $logEntry | Out-File $ScriptRoot\Logs\ImageMagickCommands.log -Append 
             Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
         }
     }
@@ -337,7 +347,8 @@ if ($Manual) {
         $Resizeargument = "`"$backgroundImage`" -resize 2000x3000^ -gravity center -extent 2000x3000 `"$backgroundImage`""
         Write-Host "    Resizing it... "
         "   Resizing it... " | Out-File $ScriptRoot\Logs\PosterCreation.log  -Append
-        $Resizeargument | Out-File $ScriptRoot\Logs\ImageMagickCommands.log -Append 
+        $logEntry = "magick.exe $Resizeargument"
+        $logEntry | Out-File $ScriptRoot\Logs\ImageMagickCommands.log -Append 
         Start-Process $magick -Wait -NoNewWindow -ArgumentList $Resizeargument
     }
     # Move file back to original naming with Brackets.
@@ -371,7 +382,7 @@ else {
 
     Write-Host "Query all items from all Libs, this can take a while..." -ForegroundColor Yellow
     "Query all items from all Libs, this can take a while..." | Out-File $ScriptRoot\Logs\Scriptlog.log  -Append
-    #$Libraries = Import-Csv "$ScriptRoot\temp\PlexLibexport.csv" -Delimiter ';' 
+    #$Libraries = Import-Csv "$ScriptRoot\Logs\PlexLibexport.csv" -Delimiter ';' 
     #<#
     $Libraries = @()
     Foreach ($Library in $Libsoverview) {
@@ -412,10 +423,10 @@ else {
                     $location = $Metadata.MediaContainer.$contentquery.Location.path
                     if ($location.count -gt '1') {
                         $location = $location[0]
-                        $MultibleVersions = $true
+                        $MultipleVersions = $true
                     }
                     Else {
-                        $MultibleVersions = $false
+                        $MultipleVersions = $false
                     }
                     $libpaths = $($Library.path).split(',')
                     foreach ($libpath in $libpaths) {
@@ -430,10 +441,10 @@ else {
                     $location = $Metadata.MediaContainer.$contentquery.media.part.file
                     if ($location.count -gt '1') {
                         $location = $location[0]
-                        $MultibleVersions = $true
+                        $MultipleVersions = $true
                     }
                     Else {
-                        $MultibleVersions = $false
+                        $MultipleVersions = $false
                     }
                     $libpaths = $($Library.path).split(',')
                     foreach ($libpath in $libpaths) {
@@ -481,16 +492,16 @@ else {
                 $temp | Add-Member -MemberType NoteProperty -Name "ratingKey" -Value $item.ratingKey
                 $temp | Add-Member -MemberType NoteProperty -Name "Path" -Value $Matchedpath
                 $temp | Add-Member -MemberType NoteProperty -Name "RootFoldername" -Value $extractedFolder
-                $temp | Add-Member -MemberType NoteProperty -Name "MultibleVersions" -Value $MultibleVersions
+                $temp | Add-Member -MemberType NoteProperty -Name "MultipleVersions" -Value $MultipleVersions
                 $Libraries += $temp
             }
         }
     }
     Write-Host "    Found '$($Libraries.count)' Items..." -ForegroundColor Cyan
     "Found '$($Libraries.count)' Items..."  | Out-File $ScriptRoot\Logs\Scriptlog.log  -Append
-    $Libraries | Select-Object * | Export-Csv -Path "$ScriptRoot\temp\PlexLibexport.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
-    Write-Host "Export everything to a csv: $ScriptRoot\temp\PlexLibexport.csv"
-    "Export everything to a csv: $ScriptRoot\temp\PlexLibexport.csv" | Out-File $ScriptRoot\Logs\Scriptlog.log  -Append
+    $Libraries | Select-Object * | Export-Csv -Path "$ScriptRoot\Logs\PlexLibexport.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
+    Write-Host "Export everything to a csv: $ScriptRoot\Logs\PlexLibexport.csv"
+    "Export everything to a csv: $ScriptRoot\Logs\PlexLibexport.csv" | Out-File $ScriptRoot\Logs\Scriptlog.log  -Append
     #>
     # Download poster foreach movie
     Write-Host ''
@@ -724,7 +735,8 @@ else {
                             Write-Host "    Resizing it"
                             "    Resizing it" | Out-File $ScriptRoot\Logs\PosterCreation.log  -Append
                         }
-                        $Arguments | Out-File $ScriptRoot\Logs\ImageMagickCommands.log -Append 
+                        $logEntry = "magick.exe $Arguments"
+                        $logEntry | Out-File $ScriptRoot\Logs\ImageMagickCommands.log -Append 
                         Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
 
                         if ($AddText -eq 'true'){
@@ -734,7 +746,8 @@ else {
                             $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -composite `"$backgroundImage`""
                             Write-Host "    Applying Font text: `"$joinedTitle`""
                             "   Applying Font text: `"$joinedTitle`"" | Out-File $ScriptRoot\Logs\PosterCreation.log  -Append
-                            $Arguments | Out-File $ScriptRoot\Logs\ImageMagickCommands.log -Append 
+                            $logEntry = "magick.exe $Arguments"
+                            $logEntry | Out-File $ScriptRoot\Logs\ImageMagickCommands.log -Append 
                             Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
                         }
                     }
@@ -742,7 +755,8 @@ else {
                         $Resizeargument = "`"$backgroundImage`" -resize 2000x3000^ -gravity center -extent 2000x3000 `"$backgroundImage`""
                         Write-Host "    Resizing it... "
                         "   Resizing it... " | Out-File $ScriptRoot\Logs\PosterCreation.log  -Append
-                        $Resizeargument | Out-File $ScriptRoot\Logs\ImageMagickCommands.log -Append 
+                        $logEntry = "magick.exe $Resizeargument"
+                        $logEntry | Out-File $ScriptRoot\Logs\ImageMagickCommands.log -Append 
                         Start-Process $magick -Wait -NoNewWindow -ArgumentList $Resizeargument
                     }
                     # Move file back to original naming with Brackets.
@@ -892,7 +906,8 @@ else {
                                         "    Resizing it" | Out-File $ScriptRoot\Logs\PosterCreation.log  -Append
                                     }
 
-                                    $Arguments | Out-File $ScriptRoot\Logs\ImageMagickCommands.log -Append 
+                                    $logEntry = "magick.exe $Arguments"
+                                    $logEntry | Out-File $ScriptRoot\Logs\ImageMagickCommands.log -Append 
                                     Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
 
                                     if ($AddText -eq 'true'){
@@ -905,7 +920,8 @@ else {
                                         
                                         Write-Host "    Applying Font text: `"$seasonTitle`""
                                         "   Applying Font text: `"$seasonTitle`"" | Out-File $ScriptRoot\Logs\PosterCreation.log  -Append
-                                        $Arguments | Out-File $ScriptRoot\Logs\ImageMagickCommands.log -Append 
+                                        $logEntry = "magick.exe $Arguments"
+                                        $logEntry | Out-File $ScriptRoot\Logs\ImageMagickCommands.log -Append 
                                         Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
                                     }
                                 }
@@ -929,7 +945,8 @@ else {
                                     $Resizeargument = "`"$SeasonImage`" -resize 2000x3000^ -gravity center -extent 2000x3000 `"$SeasonImage`""
                                     Write-Host "    Resizing it... "
                                     "    Resizing it... " | Out-File $ScriptRoot\Logs\PosterCreation.log  -Append
-                                    $Resizeargument | Out-File $ScriptRoot\Logs\ImageMagickCommands.log -Append 
+                                    $logEntry = "magick.exe $Resizeargument"
+                                    $logEntry | Out-File $ScriptRoot\Logs\ImageMagickCommands.log -Append 
                                     Start-Process $magick -Wait -NoNewWindow -ArgumentList $Resizeargument
                                 }
 
