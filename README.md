@@ -1,12 +1,12 @@
 # Plex Poster Maker
 
-This PowerShell script automates the process of generating posters for your Plex media library. Leveraging information from your Plex library, such as movie or show titles, it fetches relevant artwork from Fanart.tv, TMDB, TVDB and IMDB (if nothing found via TMDB or Fanart.tv it trys TVDB and then IMDB). The script offers both automatic and manual modes for generating posters, accommodating custom creations that cannot be automated.
+This PowerShell script automates the process of generating posters for your Plex media library. Leveraging information from your Plex library, such as movie or show titles, it fetches relevant artwork from Fanart.tv, TMDB, and TVDB. The script offers both automatic and manual modes for generating posters, accommodating custom creations that cannot be automated.
 
 **Key Features:**
 - **Resizing**: It automatically resizes every poster to 2000x3000.
 - **Automatic Library Search**: The script autonomously searches for libraries within your Plex server, enhancing its usability.
 - **Handling Multiple Versions**: It adeptly manages multiple versions of a movie/show, ensuring comprehensive coverage.
-- **CSV Export**: Produces an impressive CSV file containing all queried movie/show information during the script's runtime.
+- **CSV Export**: Produces an impressive CSV file containing all queried movie/show information during the script's runtime in `$ScriptRoot\logs\PlexLibexport.csv`
 - **Logging Capabilities**: Records valuable information to a file in `$ScriptRoot\logs\Scriptlog.log`, facilitating troubleshooting and analysis.
     
     - It also generates a log with the output of every imagemagick command `$ScriptRoot\logs\ImageMagickCommands.log`.
@@ -49,7 +49,7 @@ Before utilizing the script, ensure the following prerequisites are installed an
    - `magickinstalllocation`: ImageMagick installation location.
    - `font`: Font file name.
    - `overlayfile`: Overlay file name.
-   - `LibraryFolders`: true/false for the asset structure in one flat Folder or splited in lib folders like pmm needs it.
+   - `LibraryFolders`: true/false for the asset structure in one flat Folder or split into library media folders like pmm needs it.
    - `SeasonPosters`: true/false for also creating season posters (if ImageProcessing is false, it queries fanart.tv for season posters, fallback is show poster, because tvdb/tmdb do not have season posters)
 
    **OverlayPart**
@@ -57,7 +57,7 @@ Before utilizing the script, ensure the following prerequisites are installed an
    - `fontAllCaps`: If true, text is in caps `MY TEXT` else it would be `My Text`.
    - `AddBorder`: true/false to add border to image
    - `AddText`: true/false to add Text to image
-   - `AddOverlay`: true/false to add the overlayimage to image
+   - `AddOverlay`: true/false to add the defined `overlayfile` to image
    - `fontcolor`: Color of Font Text.
    - `bordercolor`: Color of Border.
    - `minPointSize`: Min Size of Text in Poster.
@@ -67,7 +67,7 @@ Before utilizing the script, ensure the following prerequisites are installed an
    - `MaxHeight`: Max height of text_box
    - `text_offset`: text_box offset from bottom of the picture
 3. Rename the config file to `config.json`.
-4. Place the `overlay.png` and `Rocky.ttf` font files in the temp directory `$ScriptRoot\temp`.
+4. Place the `overlay.png`, or whatever file you defined earlier in `overlayfile`, and `Rocky.ttf` font, or whatever font you defined earlier in `font` files in the same directory as PosterMaker.ps1 which is `$ScriptRoot`.
 
 **Usage:**
 - **Automatic Mode**: Execute the script without any parameters to generate posters for your entire Plex library.
