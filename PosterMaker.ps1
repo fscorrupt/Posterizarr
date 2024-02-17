@@ -68,7 +68,7 @@ function GetTMDBPoster {
                 if (!$NoLangPoster) {
                     $posterpath = (($response.images.posters | Sort-Object vote_count -Descending)[0]).file_path
                     $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
-                    Write-Host "    Found Poster with text on TMDB: $global:posterurl"
+                    Write-Host "    Found Poster with text on TMDB: $global:posterurl" -ForegroundColor Blue
                     "    Found Poster with text on TMDB: $global:posterurl" | Out-File $global:ScriptRoot\Logs\PosterCreation.log  -Append
                     if ($global:FavProvider -eq 'tmdb') {
                         $global:Fallback = "fanart"
@@ -330,7 +330,7 @@ function GetTVDBPoster {
         if ($response) {
             if ($response.data.image) {
                 $global:posterurl = $response.data.image
-                Write-Host "    Found Poster with text on TVDB: $global:posterurl" 
+                Write-Host "    Found Poster with text on TVDB: $global:posterurl" -ForegroundColor Blue
                 "    Found Poster with text on TVDB: $global:posterurl" | Out-File $global:ScriptRoot\Logs\PosterCreation.log  -Append
                 return $global:posterurl
             }
@@ -355,7 +355,7 @@ function GetTVDBPoster {
         if ($response) {
             if ($response.data.image) {
                 $global:posterurl = $response.data.image
-                Write-Host "    Found Poster with text on TVDB: $global:posterurl"
+                Write-Host "    Found Poster with text on TVDB: $global:posterurl" -ForegroundColor Blue
                 "    Found Poster with text on TVDB: $global:posterurl" | Out-File $global:ScriptRoot\Logs\PosterCreation.log  -Append
                 return $global:posterurl
             }
