@@ -187,6 +187,7 @@ function GetFanartPoster {
         if (!$global:posterurl) {
             Write-Host "    No movie match or poster found on Fanart.tv" -ForegroundColor red
             "   No movie match or poster found on Fanart.tv" | Out-File $global:ScriptRoot\Logs\PosterCreation.log -Append
+            $global:Fallback = "tmdb"
         }
         Else {
             return $global:posterurl
