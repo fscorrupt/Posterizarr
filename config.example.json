@@ -3,7 +3,8 @@
     "tvdbapi": "TVDBAPIKEY",
     "tmdbtoken": "TMDBTOKEN",
     "FanartTvAPIKey": "FANARTAPIKEY",
-    "PlexToken": ""
+    "PlexToken": "",
+    "FavProvider": "fanart"
   },
   "PlexPart":{
     "LibstoExclude": ["Youtube", "Audiobooks", "Kids Audiobooks", "Tech Trainings"],

@@ -34,6 +34,11 @@ Before utilizing the script, ensure the following prerequisites are installed an
    - `tmdbtoken`: Your TMDB token.
    - `FanartTvAPIKey`: Your Fanart personal API key.
    - `PlexToken`: if you want to run this from remote, you have to specify the Plex Token.
+   - `FavProvider`: What provider should be picked first? 
+        - possible Values: 
+            - `fanart` (fallback is `tmdb`)
+            - `tmdb` (fallback is `fanart`)
+            - `tvdb` (does not have Textless Posters)
    
    **PlexPart**
    - `LibstoExclude`: Libraries to exclude from processing.
@@ -101,7 +106,7 @@ Follow the prompts to enter the source picture path, media folder name, and movi
 ![scriptimage](https://i.imgur.com/bA1w9Ks.png)
 
 ### Example of script output:
-![outputimage](https://i.imgur.com/o23Mxo6.png)
+![outputimage](https://i.imgur.com/faVNO6U.png)
 
 ### Example of Posters after creation:
 ![assetimage](https://i.imgur.com/3Snagbg.png)
