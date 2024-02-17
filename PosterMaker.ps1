@@ -43,8 +43,7 @@ Function Get-OptimalPointSize {
         $current_pointsize = $max_pointsize
     }
     elseif ($current_pointsize -lt $min_pointsize) {
-        Write-Host "    Text current_pointsize: '$current_pointsize'" -ForegroundColor Red
-        Write-Host "    Text min_pointsize: '$min_pointsize'" -ForegroundColor Red
+        Write-Host "    WARNING! Text truncated! optimalFontSize: $current_pointsize below min_pointsize: $min_pointsize" -ForegroundColor Red
         "    WARNING! Text truncated! optimalFontSize: $current_pointsize below min_pointsize: $min_pointsize" | Out-File $global:ScriptRoot\Logs\PosterCreation.log  -Append
         $current_pointsize = $min_pointsize
     }
@@ -186,7 +185,7 @@ function GetFanartPoster {
 
         if (!$global:posterurl) {
             Write-Host "    No movie match or poster found on Fanart.tv" -ForegroundColor red
-            "   No movie match or poster found on Fanart.tv" | Out-File $global:ScriptRoot\Logs\PosterCreation.log -Append
+            "    No movie match or poster found on Fanart.tv" | Out-File $global:ScriptRoot\Logs\PosterCreation.log -Append
             $global:Fallback = "tmdb"
         }
         Else {
@@ -239,7 +238,7 @@ function GetFanartPoster {
             }
             Else {
                 Write-Host "    No show match or poster found on Fanart.tv" -ForegroundColor red
-                "   No show match or poster found on Fanart.tv" | Out-File $global:ScriptRoot\Logs\PosterCreation.log -Append
+                "    No show match or poster found on Fanart.tv" | Out-File $global:ScriptRoot\Logs\PosterCreation.log -Append
             }
             $global:Fallback = "tmdb"
         }
@@ -280,7 +279,7 @@ function GetFanartSeasonPoster {
     
             if (!$global:posterurl) {
                 Write-Host "    No show match or poster found on Fanart.tv" -ForegroundColor red
-                "   No show match or poster found on Fanart.tv" | Out-File $global:ScriptRoot\Logs\PosterCreation.log -Append
+                "    No show match or poster found on Fanart.tv" | Out-File $global:ScriptRoot\Logs\PosterCreation.log -Append
                 $global:Fallback = "tmdb"
             }
             Else {
@@ -375,7 +374,7 @@ function GetIMDBPoster {
     $global:posterurl = $response.images.src[1]
     if (!$global:posterurl) {
         Write-Host "    No show match or poster found on IMDB" -ForegroundColor red
-        "   No show match or poster found on IMDB" | Out-File $global:ScriptRoot\Logs\PosterCreation.log -Append
+        "    No show match or poster found on IMDB" | Out-File $global:ScriptRoot\Logs\PosterCreation.log -Append
     }
     Else {
         Write-Host "    Found Poster with text on IMDB: $global:posterurl" -ForegroundColor Blue
@@ -491,7 +490,7 @@ foreach ($file in $files) {
     if (!(Test-Path -LiteralPath $destinationPath)) {
         Copy-Item -Path $file.FullName -Destination $destinationPath -Force | out-null
         Write-Host "    Found font: '$($file.Name)' in ScriptRoot - copy it into temp folder..."
-        "   Found font: '$($file.Name)' in ScriptRoot - copy it into temp folder..." | Out-File $global:ScriptRoot\Logs\Scriptlog.log  -Append
+        "    Found font: '$($file.Name)' in ScriptRoot - copy it into temp folder..." | Out-File $global:ScriptRoot\Logs\Scriptlog.log  -Append
     }
 }
 
@@ -672,7 +671,7 @@ if ($Manual) {
             Write-Host "    Optimal font size set to: '$optimalFontSize'"
             "    Optimal font size set to: '$optimalFontSize'" | Out-File $global:ScriptRoot\Logs\PosterCreation.log  -Append
             $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -composite `"$backgroundImage`""
-            Write-Host "        Applying Font text: `"$joinedTitle`""
+            Write-Host "    Applying Font text: `"$joinedTitle`""
             "    Applying Font text: `"$joinedTitle`"" | Out-File $global:ScriptRoot\Logs\PosterCreation.log  -Append
             $logEntry = "magick.exe $Arguments"
             $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
@@ -683,7 +682,7 @@ if ($Manual) {
         # Resize Image to 2000x3000
         $Resizeargument = "`"$backgroundImage`" -resize 2000x3000^ -gravity center -extent 2000x3000 `"$backgroundImage`""
         Write-Host "    Resizing it... "
-        "   Resizing it... " | Out-File $global:ScriptRoot\Logs\PosterCreation.log  -Append
+        "    Resizing it... " | Out-File $global:ScriptRoot\Logs\PosterCreation.log  -Append
         $logEntry = "magick.exe $Resizeargument"
         $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
         Start-Process $magick -Wait -NoNewWindow -ArgumentList $Resizeargument
@@ -998,7 +997,7 @@ else {
                     Else {
                         $Resizeargument = "`"$backgroundImage`" -resize 2000x3000^ -gravity center -extent 2000x3000 `"$backgroundImage`""
                         Write-Host "    Resizing it... "
-                        "   Resizing it... " | Out-File $global:ScriptRoot\Logs\PosterCreation.log  -Append
+                        "    Resizing it... " | Out-File $global:ScriptRoot\Logs\PosterCreation.log  -Append
                         $logEntry = "magick.exe $Resizeargument"
                         $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
                         Start-Process $magick -Wait -NoNewWindow -ArgumentList $Resizeargument
