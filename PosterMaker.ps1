@@ -900,9 +900,14 @@ else {
                             $global:posterurl = GetTMDBPoster
                         }
                         if (!$global:posterurl){
-                            Write-Host "    Searching on IMDB for a movie poster"
-                            "    Searching on IMDB for a movie poster" | Out-File $global:ScriptRoot\Logs\PosterCreation.log  -Append
-                            $global:posterurl = GetIMDBPoster 
+                            Write-Host "    Searching on TVDB for a movie poster"
+                            "    Searching on TVDB for a movie poster" | Out-File $global:ScriptRoot\Logs\PosterCreation.log  -Append
+                            $global:posterurl = GetTVDBPoster
+                            if (!$global:posterurl){ 
+                                Write-Host "    Searching on IMDB for a movie poster"
+                                "    Searching on IMDB for a movie poster" | Out-File $global:ScriptRoot\Logs\PosterCreation.log  -Append
+                                $global:posterurl = GetIMDBPoster
+                            }
                         }
                     }
                     if ($entry.'Library Type' -eq 'show') {
@@ -932,6 +937,11 @@ else {
                         }
                         if ($global:Fallback -eq 'tmdb' -and $entry.tmdbid) {
                             $global:posterurl = GetTMDBPoster
+                        }
+                        if (!$global:posterurl){
+                            Write-Host "    Searching on TVDB for a show poster"
+                            "    Searching on TVDB for a show poster" | Out-File $global:ScriptRoot\Logs\PosterCreation.log  -Append
+                            $global:posterurl = GetTVDBPoster
                         }
                     }
 
@@ -1059,8 +1069,14 @@ else {
                                         Invoke-WebRequest -Uri $global:posterurl -OutFile $global:SeasonTempPoster
                                     }
                                     Else {
-                                        Write-Host "No Poster Url found for: $($entry.title) - Please manually Create Posters..." -ForegroundColor Red
-                                        "No Poster Url found for: $($entry.title) - Please manually Create Posters..." | Out-File $global:ScriptRoot\Logs\Scriptlog.log  -Append
+                                        $global:posterurl = GetTVDBPoster
+                                        if (!$global:posterurl){
+                                            Write-Host "No Poster Url found for: $($entry.title) - Please manually Create Posters..." -ForegroundColor Red
+                                            "No Poster Url found for: $($entry.title) - Please manually Create Posters..." | Out-File $global:ScriptRoot\Logs\Scriptlog.log  -Append
+                                        }
+                                        Else{
+                                            Invoke-WebRequest -Uri $global:posterurl -OutFile $global:SeasonTempPoster
+                                        }
                                     }
                                 }
                                 if ($global:posterurl) {
