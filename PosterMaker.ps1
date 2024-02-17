@@ -370,7 +370,19 @@ function GetTVDBPoster {
         }
     }
 }
-
+function GetIMDBPoster {
+    $response = Invoke-WebRequest -Uri "https://www.imdb.com/title/$($global:imdbid)/mediaviewer" -Method GET
+    $global:posterurl = $response.images.src[1]
+    if (!$global:posterurl) {
+        Write-Host "    No show match or poster found on IMDB" -ForegroundColor red
+        "   No show match or poster found on IMDB" | Out-File $global:ScriptRoot\Logs\PosterCreation.log -Append
+    }
+    Else {
+        Write-Host "    Found Poster with text on IMDB: $global:posterurl" -ForegroundColor Blue
+        "    Found Poster with text on IMDB: $global:posterurl" | Out-File $global:ScriptRoot\Logs\PosterCreation.log  -Append
+        return $global:posterurl
+    }
+}
 # Check if Config file is present
 if (!(Test-Path "$PSScriptRoot\config.json")) {
     Write-Host "Config File missing, downloading it for you..."
@@ -886,6 +898,11 @@ else {
                         }
                         if ($global:Fallback -eq 'tmdb' -and $entry.tmdbid) {
                             $global:posterurl = GetTMDBPoster
+                        }
+                        if (!$global:posterurl){
+                            Write-Host "    Searching on IMDB for a movie poster"
+                            "    Searching on IMDB for a movie poster" | Out-File $global:ScriptRoot\Logs\PosterCreation.log  -Append
+                            $global:posterurl = GetIMDBPoster 
                         }
                     }
                     if ($entry.'Library Type' -eq 'show') {
