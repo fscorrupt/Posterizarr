@@ -11,7 +11,6 @@
   },
   "PrerequisitePart":{
     "AssetPath": "P:\\assets",
-    "ScriptRoot": "C:\\PosterMaker",
     "magickinstalllocation": "C:\\PosterTemp\\ImageMagick-7.1.1-Q16-HDRI",
     "font": "Rocky.ttf",
     "overlayfile": "overlay.png",
