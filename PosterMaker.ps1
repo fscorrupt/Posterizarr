@@ -1198,4 +1198,5 @@ else {
     $executionTime = (Get-Date) - $startTime
     # Display and log total execution time
     Write-Host "    Script execution time: $($executionTime.TotalSeconds) seconds"
-    "Script execution time: $($executionTime.TotalSeconds) seconds" | Out-File $global:ScriptRoot\Logs\PosterCreation.log -Append}
+    "Script execution time: $($executionTime.TotalSeconds) seconds" | Out-File $global:ScriptRoot\Logs\PosterCreation.log -Append
+    }
