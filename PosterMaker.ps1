@@ -45,8 +45,7 @@ Function Get-OptimalPointSize {
         $current_pointsize = $max_pointsize
     }
     elseif ($current_pointsize -lt $min_pointsize) {
-        Write-Host "    Text current_pointsize: '$current_pointsize'" -ForegroundColor Red
-        Write-Host "    Text min_pointsize: '$min_pointsize'" -ForegroundColor Red
+        Write-Host "    WARNING! Text truncated! optimalFontSize: $current_pointsize below min_pointsize: $min_pointsize" -ForegroundColor Red
         "    WARNING! Text truncated! optimalFontSize: $current_pointsize below min_pointsize: $min_pointsize" | Out-File $ScriptRoot\Logs\PosterCreation.log  -Append
         $current_pointsize = $min_pointsize
     }
