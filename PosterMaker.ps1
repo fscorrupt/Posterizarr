@@ -23,6 +23,23 @@ function RemoveTrailingSlash($path) {
     }
     return $path
 }
+function CountStringOccurrences($filePath, $searchString) {
+    try {
+        $fileContent = Get-Content -Path $filePath -ErrorAction Stop
+        $matchingLines = $fileContent | Where-Object { $_ -match $searchString }
+        $count = $matchingLines.Count
+
+        if ($count -ne 0) {
+            Write-Host "    Number of lines containing '$searchString': $count" -ForegroundColor Yellow
+        } else {
+            Write-Host "    Number of lines containing '$searchString': $count" -ForegroundColor Green
+        }
+
+        "Number of lines containing '$searchString': $count" | Out-File $global:ScriptRoot\Logs\PosterCreation.log -Append
+    } catch {
+        Write-Host "Error: $_.Exception.Message" -ForegroundColor Red
+    }
+}
 # stolen and adapted from: https://github.com/bullmoose20/Plex-Stuff/blob/9d231d871a4676c8da7d4cbab482181a35756524/create_defaults/create_default_posters.ps1#L477 
 Function Get-OptimalPointSize {
     param(
@@ -43,8 +60,7 @@ Function Get-OptimalPointSize {
         $current_pointsize = $max_pointsize
     }
     elseif ($current_pointsize -lt $min_pointsize) {
-        Write-Host "    Text current_pointsize: '$current_pointsize'" -ForegroundColor Red
-        Write-Host "    Text min_pointsize: '$min_pointsize'" -ForegroundColor Red
+        Write-Host "    WARNING! Text truncated! optimalFontSize: $current_pointsize below min_pointsize: $min_pointsize" -ForegroundColor Red
         "    WARNING! Text truncated! optimalFontSize: $current_pointsize below min_pointsize: $min_pointsize" | Out-File $global:ScriptRoot\Logs\PosterCreation.log  -Append
         $current_pointsize = $min_pointsize
     }
@@ -186,7 +202,7 @@ function GetFanartPoster {
 
         if (!$global:posterurl) {
             Write-Host "    No movie match or poster found on Fanart.tv" -ForegroundColor red
-            "   No movie match or poster found on Fanart.tv" | Out-File $global:ScriptRoot\Logs\PosterCreation.log -Append
+            "    No movie match or poster found on Fanart.tv" | Out-File $global:ScriptRoot\Logs\PosterCreation.log -Append
             $global:Fallback = "tmdb"
         }
         Else {
@@ -239,7 +255,7 @@ function GetFanartPoster {
             }
             Else {
                 Write-Host "    No show match or poster found on Fanart.tv" -ForegroundColor red
-                "   No show match or poster found on Fanart.tv" | Out-File $global:ScriptRoot\Logs\PosterCreation.log -Append
+                "    No show match or poster found on Fanart.tv" | Out-File $global:ScriptRoot\Logs\PosterCreation.log -Append
             }
             $global:Fallback = "tmdb"
         }
@@ -280,7 +296,7 @@ function GetFanartSeasonPoster {
     
             if (!$global:posterurl) {
                 Write-Host "    No show match or poster found on Fanart.tv" -ForegroundColor red
-                "   No show match or poster found on Fanart.tv" | Out-File $global:ScriptRoot\Logs\PosterCreation.log -Append
+                "    No show match or poster found on Fanart.tv" | Out-File $global:ScriptRoot\Logs\PosterCreation.log -Append
                 $global:Fallback = "tmdb"
             }
             Else {
@@ -375,7 +391,7 @@ function GetIMDBPoster {
     $global:posterurl = $response.images.src[1]
     if (!$global:posterurl) {
         Write-Host "    No show match or poster found on IMDB" -ForegroundColor red
-        "   No show match or poster found on IMDB" | Out-File $global:ScriptRoot\Logs\PosterCreation.log -Append
+        "    No show match or poster found on IMDB" | Out-File $global:ScriptRoot\Logs\PosterCreation.log -Append
     }
     Else {
         Write-Host "    Found Poster with text on IMDB: $global:posterurl" -ForegroundColor Blue
@@ -383,6 +399,10 @@ function GetIMDBPoster {
         return $global:posterurl
     }
 }
+
+# Start the timer
+$startTime = Get-Date
+
 # Check if Config file is present
 if (!(Test-Path "$PSScriptRoot\config.json")) {
     Write-Host "Config File missing, downloading it for you..."
@@ -468,9 +488,9 @@ if (!(Test-Path $font)) {
 }
 
 if (!$Manual) {
-    Write-Host "Cleanup old log file..."
-    "Cleanup old log file..." | Out-File $global:ScriptRoot\Logs\Scriptlog.log  -Append
-    # cleanup old logfile
+    Write-Host "Cleanup old log files..."
+    "Cleanup old log files..." | Out-File $global:ScriptRoot\Logs\Scriptlog.log  -Append
+    # cleanup old log files
     if ((Test-Path $global:ScriptRoot\Logs\Scriptlog.log)) {
         Remove-Item $global:ScriptRoot\Logs\Scriptlog.log
     }
@@ -491,7 +511,7 @@ foreach ($file in $files) {
     if (!(Test-Path -LiteralPath $destinationPath)) {
         Copy-Item -Path $file.FullName -Destination $destinationPath -Force | out-null
         Write-Host "    Found font: '$($file.Name)' in ScriptRoot - copy it into temp folder..."
-        "   Found font: '$($file.Name)' in ScriptRoot - copy it into temp folder..." | Out-File $global:ScriptRoot\Logs\Scriptlog.log  -Append
+        "    Found font: '$($file.Name)' in ScriptRoot - copy it into temp folder..." | Out-File $global:ScriptRoot\Logs\Scriptlog.log  -Append
     }
 }
 
@@ -672,7 +692,7 @@ if ($Manual) {
             Write-Host "    Optimal font size set to: '$optimalFontSize'"
             "    Optimal font size set to: '$optimalFontSize'" | Out-File $global:ScriptRoot\Logs\PosterCreation.log  -Append
             $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -composite `"$backgroundImage`""
-            Write-Host "        Applying Font text: `"$joinedTitle`""
+            Write-Host "    Applying Font text: `"$joinedTitle`""
             "    Applying Font text: `"$joinedTitle`"" | Out-File $global:ScriptRoot\Logs\PosterCreation.log  -Append
             $logEntry = "magick.exe $Arguments"
             $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
@@ -683,7 +703,7 @@ if ($Manual) {
         # Resize Image to 2000x3000
         $Resizeargument = "`"$backgroundImage`" -resize 2000x3000^ -gravity center -extent 2000x3000 `"$backgroundImage`""
         Write-Host "    Resizing it... "
-        "   Resizing it... " | Out-File $global:ScriptRoot\Logs\PosterCreation.log  -Append
+        "    Resizing it... " | Out-File $global:ScriptRoot\Logs\PosterCreation.log  -Append
         $logEntry = "magick.exe $Resizeargument"
         $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
         Start-Process $magick -Wait -NoNewWindow -ArgumentList $Resizeargument
@@ -834,8 +854,15 @@ else {
             }
         }
     }
+    # Store the initial count of items
+    $initialItemCount = $Libraries.Count
+    Write-Host '---------------------------------------------------------'
+    '---------------------------------------------------------' | Out-File $global:ScriptRoot\Logs\PosterCreation.log  -Append
     Write-Host "    Found '$($Libraries.count)' Items..." -ForegroundColor Cyan
     "Found '$($Libraries.count)' Items..."  | Out-File $global:ScriptRoot\Logs\Scriptlog.log  -Append
+    "Found '$($Libraries.count)' Items..."  | Out-File $global:ScriptRoot\Logs\PosterCreation.log  -Append
+    Write-Host '---------------------------------------------------------'
+    '---------------------------------------------------------' | Out-File $global:ScriptRoot\Logs\PosterCreation.log  -Append
     $Libraries | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\PlexLibexport.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
     Write-Host "Export everything to a csv: $global:ScriptRoot\Logs\PlexLibexport.csv"
     "Export everything to a csv: $global:ScriptRoot\Logs\PlexLibexport.csv" | Out-File $global:ScriptRoot\Logs\Scriptlog.log  -Append
@@ -875,14 +902,13 @@ else {
                 $backgroundImage = $backgroundImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
                 if (!(Get-ChildItem -LiteralPath $backgroundImageoriginal -ErrorAction SilentlyContinue)) {
                     if ($entry.'Library Type' -eq 'movie') {
-                        $global:posterurl = $null
+                        $posterurl = $null
                         # Define Global Variables
                         $global:tmdbid = $entry.tmdbid
                         $global:tvdbid = $entry.tvdbid
                         $global:imdbid = $entry.imdbid
                         $global:IsMovie = $true
                         $global:IsShow = $false
-                        
                         Write-Host "Start Poster Search for: $Titletext" -ForegroundColor Yellow
                         "Start Poster Search for: $Titletext" | Out-File $global:ScriptRoot\Logs\PosterCreation.log  -Append
                         if ($global:FavProvider -eq 'tmdb' -and $entry.tmdbid) {
@@ -912,7 +938,7 @@ else {
                         }
                     }
                     if ($entry.'Library Type' -eq 'show') {
-                        $global:posterurl = $null
+                        $posterurl = $null
                         # Define Global Variables
                         $global:tmdbid = $entry.tmdbid
                         $global:tvdbid = $entry.tvdbid
@@ -999,7 +1025,7 @@ else {
                     Else {
                         $Resizeargument = "`"$backgroundImage`" -resize 2000x3000^ -gravity center -extent 2000x3000 `"$backgroundImage`""
                         Write-Host "    Resizing it... "
-                        "   Resizing it... " | Out-File $global:ScriptRoot\Logs\PosterCreation.log  -Append
+                        "    Resizing it... " | Out-File $global:ScriptRoot\Logs\PosterCreation.log  -Append
                         $logEntry = "magick.exe $Resizeargument"
                         $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
                         Start-Process $magick -Wait -NoNewWindow -ArgumentList $Resizeargument
@@ -1168,8 +1194,28 @@ else {
             $ErrorOutput | Out-File $global:ScriptRoot\Logs\Scriptlog.log  -Append
         }
     }
+    Write-Host '---------------------------------------------------------'
+    '---------------------------------------------------------' | Out-File $global:ScriptRoot\Logs\PosterCreation.log  -Append
     Write-Host "Finished, Total posters created: $posterCount | Total Season Posters created: $SeasonCount" -ForegroundColor Green
     Write-Host "    You can find all posters here: $AssetPath" -ForegroundColor Yellow
-    "Finished, Total posters created: $posterCount | Total Season Posters created: $SeasonCount" | Out-File $global:ScriptRoot\Logs\Scriptlog.log  -Append
-    "You can find all posters here: $AssetPath" | Out-File $global:ScriptRoot\Logs\Scriptlog.log  -Append
+    "Finished, Total posters created: $posterCount | Total Season Posters created: $SeasonCount" | Out-File $global:ScriptRoot\Logs\PosterCreation.log  -Append
+    "You can find all posters here: $AssetPath" | Out-File $global:ScriptRoot\Logs\PosterCreation.log  -Append
+    # Compare with the final counts
+    $finalItemCount = $posterCount + $SeasonCount
+    if ($initialItemCount -eq $finalItemCount) {
+        Write-Host "    The count of items: $initialItemCount, matches the sum of posters and season posters: $posterCount + $SeasonCount = $finalItemCount." -ForegroundColor Green
+        "The count of items: $initialItemCount, matches the sum of posters and season posters: $posterCount + $SeasonCount = $finalItemCount." | Out-File $global:ScriptRoot\Logs\PosterCreation.log -Append
+    } else {
+        Write-Host "    Warning: The count of items: $initialItemCount, does not match the sum of posters and season posters: $posterCount + $SeasonCount = $finalItemCount!" -ForegroundColor Red
+        "Warning: The count of items: $initialItemCount, does not match the sum of posters and season posters: $posterCount + $SeasonCount = $finalItemCount!" | Out-File $global:ScriptRoot\Logs\PosterCreation.log -Append
+    }
+    CountStringOccurrences -filePath $global:ScriptRoot\Logs\PosterCreation.log -searchString "WARNING! Text truncated!"
+    CountStringOccurrences -filePath $global:ScriptRoot\Logs\Scriptlog.log -searchString "Error for - Title:"
+    # Calculate the total execution time
+    $executionTime = (Get-Date) - $startTime
+    # Format the execution time
+    $formattedTime = "{0:D2}:{1:D2}:{2:D2}" -f $executionTime.Hours, $executionTime.Minutes, $executionTime.Seconds
+    # Display and log total execution time
+    Write-Host "    Script execution time: $formattedTime" -ForegroundColor Green
+    "Script execution time: $formattedTime" | Out-File $global:ScriptRoot\Logs\PosterCreation.log -Append
 }
