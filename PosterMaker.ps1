@@ -142,6 +142,7 @@ function GetTMDBPoster {
                     $posterpath = (($response.images.posters | Where-Object iso_639_1 -eq $null | Sort-Object vote_count -Descending)[0]).file_path
                     $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
                     Write-log -Subtext "Found Textless Poster on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
+                    $global:CurrentProvider = 'TMDB'
                     return $global:posterurl
                 }
             }
@@ -192,6 +193,7 @@ function GetTMDBPoster {
                     }
                     Else {
                         Write-log -Subtext "Found Textless Poster on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
+                        $global:CurrentProvider = 'TMDB'
                     }
                     return $global:posterurl
                 }
@@ -229,6 +231,7 @@ function GetFanartPoster {
                     Else {
                         $global:posterurl = ($entrytemp.movieposter | Where-Object lang -eq '00')[0].url
                         Write-log -Subtext "Found Textless Poster on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
+                        $global:CurrentProvider = 'fanart'
                         break
                     }
                 }
@@ -275,6 +278,7 @@ function GetFanartPoster {
                         }
                         Else {
                             Write-log -Subtext "Found Textless Poster on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
+                            $global:CurrentProvider = 'fanart'
                         }
                         break
                     }
@@ -317,6 +321,7 @@ function GetFanartSeasonPoster {
                         Else {
                             $global:posterurl = ($entrytemp.tvposter | Where-Object lang -eq '00')[0].url
                             Write-log -Subtext "Found Textless Poster on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
+                            $global:CurrentProvider = 'fanart'
                             break
                         }
                     }
