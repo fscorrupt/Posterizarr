@@ -906,7 +906,6 @@ else {
                             $global:posterurl = GetTMDBPoster
                         }
                         if (!$global:posterurl) {
-                            Write-log -Subtext "Searching on TVDB for a movie poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
                             $global:posterurl = GetTVDBPoster
                             if (!$global:posterurl) { 
                                 Write-log -Subtext "Searching on IMDB for a movie poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
@@ -946,7 +945,6 @@ else {
                             $global:posterurl = GetTMDBPoster
                         }
                         if (!$global:posterurl) {
-                            Write-log -Subtext "Searching on TVDB for a show poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
                             $global:posterurl = GetTVDBPoster
                             if (!$global:posterurl) {
                                 Write-log -Subtext "Could not find a poster on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
@@ -1006,7 +1004,7 @@ else {
                         }
                         # Move file back to original naming with Brackets.
                         Move-Item -LiteralPath $backgroundImage $backgroundImageoriginal -Force -ErrorAction SilentlyContinue
-                        Write-log -Subtext "-----------------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Type Info
+                        Write-log -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Type Info
                         $posterCount++
                     }
                     Else{
