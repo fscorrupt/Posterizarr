@@ -976,6 +976,7 @@ else {
                     if ($global:posterurl) {
                         Invoke-WebRequest -Uri $global:posterurl -OutFile $backgroundImage
                         Write-Log -Subtext "Took poster from: $global:CurrentProvider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                        Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                         if ($global:ImageProcessing -eq 'true') {
                             Write-log -Subtext "Processing Poster for: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
 
@@ -1086,6 +1087,7 @@ else {
                                     if ($global:posterurl) {
                                         Invoke-WebRequest -Uri $global:posterurl -OutFile $global:SeasonTempPoster
                                         Write-Log -Subtext "Took poster from: $global:CurrentProvider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                        Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                     }
                                     Else {
                                         $global:posterurl = GetTVDBPoster
@@ -1096,6 +1098,7 @@ else {
                                         Else {
                                             Invoke-WebRequest -Uri $global:posterurl -OutFile $global:SeasonTempPoster
                                             Write-Log -Subtext "Took poster from: $global:CurrentProvider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                            Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                         }
                                     }
                                 }
@@ -1146,10 +1149,12 @@ else {
                                 if ($global:posterurl) {
                                     Invoke-WebRequest -Uri $global:posterurl -OutFile $SeasonImage
                                     Write-Log -Subtext "Took poster from: $global:CurrentProvider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                    Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                 }
                                 Else {
                                     Invoke-WebRequest -Uri $fallbackurl -OutFile $SeasonImage
                                     Write-Log -Subtext "Took poster from: $global:CurrentProvider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                    Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                 }
                                     
                                 # Resize Image to 2000x3000
