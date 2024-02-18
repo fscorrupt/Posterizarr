@@ -105,7 +105,7 @@ Follow the prompts to enter the source picture path, media folder name, and movi
 ![scriptimage](https://i.imgur.com/bA1w9Ks.png)
 
 ### Example of script output:
-![outputimage](https://i.imgur.com/faVNO6U.png)
+![outputimage](https://i.imgur.com/JJBY4Pz.png)
 
 ### Example of Posters after creation:
 ![assetimage](https://i.imgur.com/3Snagbg.png)
