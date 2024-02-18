@@ -129,6 +129,7 @@ function GetTMDBPoster {
                     $posterpath = (($response.images.posters | Sort-Object vote_count -Descending)[0]).file_path
                     $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
                     Write-log -Subtext "Found Poster with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                    $global:CurrentProvider = 'TMDB'
                     if ($global:FavProvider -eq 'tmdb') {
                         $global:Fallback = "fanart"
                     }
@@ -170,6 +171,7 @@ function GetTMDBPoster {
                     }
                     Else {
                         Write-log -Subtext "Found Poster with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                        $global:CurrentProvider = 'TMDB'
                     }
                     if ($global:FavProvider -eq 'tmdb') {
                         $global:Fallback = "fanart"
@@ -218,6 +220,7 @@ function GetFanartPoster {
                     if (!($entrytemp.movieposter | Where-Object lang -eq '00')) {
                         $global:posterurl = ($entrytemp.movieposter)[0].url
                         Write-log -Subtext "Found Poster with text on Fanart.tv"  -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                        $global:CurrentProvider = 'fanart'
                         if ($global:FavProvider -eq 'fanart') {
                             $global:Fallback = "tmdb"
                         }
@@ -259,6 +262,7 @@ function GetFanartPoster {
                         }
                         Else {
                             Write-log -Subtext "Found Poster with text on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                            $global:CurrentProvider = 'fanart'
                         }
                         if ($global:FavProvider -eq 'fanart') {
                             $global:Fallback = "tmdb"
@@ -306,6 +310,7 @@ function GetFanartSeasonPoster {
                         if (!($entrytemp.tvposter | Where-Object lang -eq '00')) {
                             $global:posterurl = ($entrytemp.tvposter)[0].url
                             Write-log -Subtext "Found Poster with text on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                            $global:CurrentProvider = 'fanart'
                             $global:Fallback = "tmdb"
                             break
                         }
@@ -368,6 +373,7 @@ function GetTVDBPoster {
             if ($response.data.image) {
                 $global:posterurl = $response.data.image
                 Write-log -Subtext "Found Poster with text on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                $global:CurrentProvider = 'TVDB'
                 return $global:posterurl
             }
             Else {
@@ -389,6 +395,7 @@ function GetTVDBPoster {
             if ($response.data.image) {
                 $global:posterurl = $response.data.image
                 Write-log -Subtext "Found Poster with text on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                $global:CurrentProvider = 'TVDB'
                 return $global:posterurl
             }
             Else {
@@ -408,6 +415,7 @@ function GetIMDBPoster {
     }
     Else {
         Write-log -Subtext "Found Poster with text on IMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+        $global:CurrentProvider = 'IMDB'
         return $global:posterurl
     }
 }
@@ -857,6 +865,7 @@ else {
         try {
             if ($($entry.RootFoldername)) {
                 $global:posterurl = $null
+                $global:CurrentProvider = $null
                 $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}]'
                 if ($entry.title -match $cjkPattern) {
                     $Titletext = $entry.originalTitle
@@ -961,6 +970,7 @@ else {
                     }
                     if ($global:posterurl) {
                         Invoke-WebRequest -Uri $global:posterurl -OutFile $backgroundImage
+                        Write-Log -Subtext "Took poster from: $global:CurrentProvider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                         if ($global:ImageProcessing -eq 'true') {
                             Write-log -Subtext "Processing Poster for: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
 
@@ -1070,6 +1080,7 @@ else {
                                     
                                     if ($global:posterurl) {
                                         Invoke-WebRequest -Uri $global:posterurl -OutFile $global:SeasonTempPoster
+                                        Write-Log -Subtext "Took poster from: $global:CurrentProvider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                     }
                                     Else {
                                         $global:posterurl = GetTVDBPoster
@@ -1079,6 +1090,7 @@ else {
                                         }
                                         Else {
                                             Invoke-WebRequest -Uri $global:posterurl -OutFile $global:SeasonTempPoster
+                                            Write-Log -Subtext "Took poster from: $global:CurrentProvider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                         }
                                     }
                                 }
@@ -1128,9 +1140,11 @@ else {
                                 $global:posterurl = GetFanartSeasonPoster
                                 if ($global:posterurl) {
                                     Invoke-WebRequest -Uri $global:posterurl -OutFile $SeasonImage
+                                    Write-Log -Subtext "Took poster from: $global:CurrentProvider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                 }
                                 Else {
                                     Invoke-WebRequest -Uri $fallbackurl -OutFile $SeasonImage
+                                    Write-Log -Subtext "Took poster from: $global:CurrentProvider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                 }
                                     
                                 # Resize Image to 2000x3000
