@@ -21,7 +21,7 @@ Upon initial execution, the script may take some time to run as it compiles nece
 **Requirements:**
 Before utilizing the script, ensure the following prerequisites are installed and configured:
 
-- **TMDB API Read Access Token:** [Obtain TMDB API Key](https://www.themoviedb.org/settings/api)
+- **TMDB API Read Access Token:** [Obtain TMDB API Token](https://www.themoviedb.org/settings/api)
 - **Fanart Personal API Key:** [Obtain Fanart API Key](https://fanart.tv/get-an-api-key)
 - **TVDB API Key:** [Obtain TVDB API Key](https://thetvdb.com/api-information/signup)
 - **ImageMagick:** [Download ImageMagick](https://imagemagick.org/archive/binaries/ImageMagick-7.1.1-27-Q16-HDRI-x64-dll.exe)
