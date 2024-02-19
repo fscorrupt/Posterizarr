@@ -887,6 +887,7 @@ else {
                 $global:posterurl = $null
                 $global:CurrentProvider = $null
                 $global:TextlessPoster = $null
+                $global:FallbackChoice = $null
                 $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}]'
                 if ($entry.title -match $cjkPattern) {
                     $Titletext = $entry.originalTitle
@@ -992,13 +993,16 @@ else {
                         if ($global:CurrentProvider -ne 'tmdb' -and $global:FavProvider -eq 'tmdb' -and $global:TMDBfallbackposterurl -and $global:posterurl -and !$global:TextlessPoster) {
                             $global:posterurl = $global:TMDBfallbackposterurl
                             Write-log -Subtext "Took TMDB Fallback poster cause its your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+                            $global:FallbackChoice = 'tmdb'
                         }
                         if ($global:CurrentProvider -ne 'fanart' -and $global:FavProvider -eq 'fanart' -and $global:fanartfallbackposterurl -and $global:posterurl -and !$global:TextlessPoster) {
                             $global:posterurl = $global:fanartfallbackposterurl
                             Write-log -Subtext "Took Fanart.tv Fallback poster cause its your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+                            $global:FallbackChoice = 'fanart'
                         }
                         if ($global:CurrentProvider -ne 'tvdb' -and $global:FavProvider -eq 'tvdb' -and $global:TvDBfallbackposterurl -and $global:posterurl -and !$global:TextlessPoster) {
                             $global:posterurl = $global:TVDBfallbackposterurl
+                            $global:FallbackChoice = 'tvdb'
                             Write-log -Subtext "Took TVDB Fallback poster cause its your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
                         }
 
@@ -1019,7 +1023,9 @@ else {
                     }
                     if ($global:posterurl) {
                         Invoke-WebRequest -Uri $global:posterurl -OutFile $backgroundImage
-                        Write-Log -Subtext "Took poster from: $global:CurrentProvider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+                        if (!$global:FallbackChoice){
+                            Write-Log -Subtext "Took poster from: $global:CurrentProvider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+                        }
                         Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                         if ($global:ImageProcessing -eq 'true') {
                             Write-log -Subtext "Processing Poster for: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
@@ -1130,7 +1136,9 @@ else {
                                     
                                     if ($global:posterurl) {
                                         Invoke-WebRequest -Uri $global:posterurl -OutFile $global:SeasonTempPoster
-                                        Write-Log -Subtext "Took poster from: $global:CurrentProvider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+                                        if (!$global:FallbackChoice){
+                                            Write-Log -Subtext "Took poster from: $global:CurrentProvider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+                                        }
                                         Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                     }
                                     Else {
@@ -1141,7 +1149,9 @@ else {
                                         }
                                         Else {
                                             Invoke-WebRequest -Uri $global:posterurl -OutFile $global:SeasonTempPoster
-                                            Write-Log -Subtext "Took poster from: $global:CurrentProvider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+                                            if (!$global:FallbackChoice){
+                                                Write-Log -Subtext "Took poster from: $global:CurrentProvider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+                                            }
                                             Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                         }
                                     }
@@ -1192,12 +1202,17 @@ else {
                                 $global:posterurl = GetFanartSeasonPoster
                                 if ($global:posterurl) {
                                     Invoke-WebRequest -Uri $global:posterurl -OutFile $SeasonImage
-                                    Write-Log -Subtext "Took poster from: $global:CurrentProvider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+                                    if (!$global:FallbackChoice){
+                                        Write-Log -Subtext "Took poster from: $global:CurrentProvider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+                                    }
+                                    
                                     Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                 }
                                 Else {
                                     Invoke-WebRequest -Uri $fallbackurl -OutFile $SeasonImage
-                                    Write-Log -Subtext "Took poster from: $global:CurrentProvider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+                                    if (!$global:FallbackChoice){
+                                        Write-Log -Subtext "Took poster from: $global:CurrentProvider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+                                    }
                                     Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                 }
                                     
