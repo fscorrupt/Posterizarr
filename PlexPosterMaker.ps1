@@ -987,6 +987,21 @@ else {
                         if ($global:Fallback -eq 'tmdb' -and $entry.tmdbid) {
                             $global:posterurl = GetTMDBPoster
                         }
+
+                        # Take Fallback Poster if its from Fav Provider.
+                        if ($global:CurrentProvider -ne 'tmdb' -and $global:FavProvider -eq 'tmdb' -and $global:TMDBfallbackposterurl -and $global:posterurl -and !$global:TextlessPoster) {
+                            $global:posterurl = $global:TMDBfallbackposterurl
+                            Write-log -Subtext "Took TMDB Fallback poster cause its your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+                        }
+                        if ($global:CurrentProvider -ne 'fanart' -and $global:FavProvider -eq 'fanart' -and $global:fanartfallbackposterurl -and $global:posterurl -and !$global:TextlessPoster) {
+                            $global:posterurl = $global:fanartfallbackposterurl
+                            Write-log -Subtext "Took Fanart.tv Fallback poster cause its your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+                        }
+                        if ($global:CurrentProvider -ne 'tvdb' -and $global:FavProvider -eq 'tvdb' -and $global:TvDBfallbackposterurl -and $global:posterurl -and !$global:TextlessPoster) {
+                            $global:posterurl = $global:TVDBfallbackposterurl
+                            Write-log -Subtext "Took TVDB Fallback poster cause its your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+                        }
+
                         if (!$global:posterurl) {
                             $global:posterurl = GetTVDBPoster
                             if (!$global:posterurl) {
