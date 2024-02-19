@@ -891,6 +891,8 @@ else {
                 $global:TMDBfallbackposterurl = $null
                 $global:TVDBfallbackposterurl  = $null
                 $global:fanartfallbackposterurl = $null
+                $global:fallbackurl = $null
+                
                 $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}]'
                 if ($entry.title -match $cjkPattern) {
                     $Titletext = $entry.originalTitle
@@ -1026,9 +1028,6 @@ else {
                     }
                     if ($global:posterurl) {
                         Invoke-WebRequest -Uri $global:posterurl -OutFile $backgroundImage
-                        if (!$global:FallbackChoice){
-                            Write-Log -Subtext "Took poster from: $global:CurrentProvider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
-                        }
                         Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                         if ($global:ImageProcessing -eq 'true') {
                             Write-log -Subtext "Processing Poster for: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
@@ -1139,9 +1138,6 @@ else {
                                     
                                     if ($global:posterurl) {
                                         Invoke-WebRequest -Uri $global:posterurl -OutFile $global:SeasonTempPoster
-                                        if (!$global:FallbackChoice){
-                                            Write-Log -Subtext "Took poster from: $global:CurrentProvider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
-                                        }
                                         Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                     }
                                     Else {
@@ -1152,9 +1148,6 @@ else {
                                         }
                                         Else {
                                             Invoke-WebRequest -Uri $global:posterurl -OutFile $global:SeasonTempPoster
-                                            if (!$global:FallbackChoice){
-                                                Write-Log -Subtext "Took poster from: $global:CurrentProvider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
-                                            }
                                             Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                         }
                                     }
@@ -1200,22 +1193,15 @@ else {
                             Else {
                                 # Get Season poster from fanart, fallback to poster if missing
                                 if ($global:posterurl) {
-                                    $fallbackurl = $global:posterurl
+                                    $global:fallbackurl = $global:posterurl
                                 }
                                 $global:posterurl = GetFanartSeasonPoster
                                 if ($global:posterurl) {
                                     Invoke-WebRequest -Uri $global:posterurl -OutFile $SeasonImage
-                                    if (!$global:FallbackChoice){
-                                        Write-Log -Subtext "Took poster from: $global:CurrentProvider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
-                                    }
-                                    
                                     Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                 }
                                 Else {
-                                    Invoke-WebRequest -Uri $fallbackurl -OutFile $SeasonImage
-                                    if (!$global:FallbackChoice){
-                                        Write-Log -Subtext "Took poster from: $global:CurrentProvider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
-                                    }
+                                    Invoke-WebRequest -Uri $global:fallbackurl -OutFile $SeasonImage
                                     Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                 }
                                     
