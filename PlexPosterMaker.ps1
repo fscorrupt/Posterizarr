@@ -888,6 +888,9 @@ else {
                 $global:CurrentProvider = $null
                 $global:TextlessPoster = $null
                 $global:FallbackChoice = $null
+                $global:TMDBfallbackposterurl = $null
+                $global:TVDBfallbackposterurl  = $null
+                $global:fanartfallbackposterurl = $null
                 $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}]'
                 if ($entry.title -match $cjkPattern) {
                     $Titletext = $entry.originalTitle
@@ -945,7 +948,7 @@ else {
                             $global:posterurl = $global:fanartfallbackposterurl
                             Write-log -Subtext "Took Fanart.tv Fallback poster cause its your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
                         }
-                        if ($global:CurrentProvider -ne 'tvdb' -and $global:FavProvider -eq 'tvdb' -and $global:TvDBfallbackposterurl -and $global:posterurl -and !$global:TextlessPoster){
+                        if ($global:CurrentProvider -ne 'tvdb' -and $global:FavProvider -eq 'tvdb' -and $global:TVDBfallbackposterurl -and $global:posterurl -and !$global:TextlessPoster){
                             $global:posterurl = $global:TVDBfallbackposterurl
                             Write-log -Subtext "Took TVDB Fallback poster cause its your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
                         }
@@ -1000,7 +1003,7 @@ else {
                             Write-log -Subtext "Took Fanart.tv Fallback poster cause its your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
                             $global:FallbackChoice = 'fanart'
                         }
-                        if ($global:CurrentProvider -ne 'tvdb' -and $global:FavProvider -eq 'tvdb' -and $global:TvDBfallbackposterurl -and $global:posterurl -and !$global:TextlessPoster) {
+                        if ($global:CurrentProvider -ne 'tvdb' -and $global:FavProvider -eq 'tvdb' -and $global:TVDBfallbackposterurl -and $global:posterurl -and !$global:TextlessPoster) {
                             $global:posterurl = $global:TVDBfallbackposterurl
                             $global:FallbackChoice = 'tvdb'
                             Write-log -Subtext "Took TVDB Fallback poster cause its your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
