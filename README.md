@@ -2,6 +2,9 @@
 
 This PowerShell script automates the process of generating posters for your Plex media library. Leveraging information from your Plex library, such as movie or show titles, it fetches relevant artwork from Fanart.tv, TMDB, TVDB and IMDB (if nothing found via TMDB or Fanart.tv it trys TVDB and then IMDB). The script offers both automatic and manual modes for generating posters, accommodating custom creations that cannot be automated.
 
+### ! Important !
+The `Temp` Folder gets cleared on every Script run, so do not put files into it.
+
 **Key Features:**
 - **Resizing**: It automatically resizes every poster to 2000x3000.
 - **Automatic Library Search**: The script autonomously searches for libraries within your Plex server, enhancing its usability.
@@ -45,7 +48,7 @@ Before utilizing the script, ensure the following prerequisites are installed an
 
    **PrerequisitePart**
    - `AssetPath`: Path to store generated posters.
-   - `magickinstalllocation`: ImageMagick installation location.
+   - `magickinstalllocation`: Path to ImageMagick installation location where the `Magick.exe` is present.
    - `font`: Font file name.
    - `overlayfile`: Overlay file name.
    - `LibraryFolders`: true/false for the asset structure in one flat Folder or split into library media folders like pmm needs it.
