@@ -1030,16 +1030,16 @@ else {
                         Invoke-WebRequest -Uri $global:posterurl -OutFile $backgroundImage
                         Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                         if ($global:posterurl -like 'https://image.tmdb.org*'){
-                            Write-Log -Subtext "Downlaoding Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                            Write-Log -Subtext "Downloading Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                         }
                         elseif ($global:posterurl -like 'https://assets.fanart.tv*'){
-                            Write-Log -Subtext "Downlaoding Poster from 'Fanart.tv'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                            Write-Log -Subtext "Downloading Poster from 'Fanart.tv'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                         }
                         elseif ($global:posterurl -like 'https://artworks.thetvdb.com*'){
-                            Write-Log -Subtext "Downlaoding Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                            Write-Log -Subtext "Downloading Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                         }
                         Else{
-                            Write-Log -Subtext "Downlaoding Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                            Write-Log -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                         }
                         if ($global:ImageProcessing -eq 'true') {
                             Write-log -Subtext "Processing Poster for: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
@@ -1152,16 +1152,16 @@ else {
                                         Invoke-WebRequest -Uri $global:posterurl -OutFile $global:SeasonTempPoster
                                         Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                         if ($global:posterurl -like 'https://image.tmdb.org*'){
-                                            Write-Log -Subtext "Downlaoding Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                            Write-Log -Subtext "Downloading Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                                         }
                                         elseif ($global:posterurl -like 'https://assets.fanart.tv*'){
-                                            Write-Log -Subtext "Downlaoding Poster from 'Fanart.tv'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                            Write-Log -Subtext "Downloading Poster from 'Fanart.tv'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                                         }
                                         elseif ($global:posterurl -like 'https://artworks.thetvdb.com*'){
-                                            Write-Log -Subtext "Downlaoding Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                            Write-Log -Subtext "Downloading Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                                         }
                                         Else{
-                                            Write-Log -Subtext "Downlaoding Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                            Write-Log -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                                         }
                                     }
                                     Else {
@@ -1174,16 +1174,16 @@ else {
                                             Invoke-WebRequest -Uri $global:posterurl -OutFile $global:SeasonTempPoster
                                             Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                             if ($global:posterurl -like 'https://image.tmdb.org*'){
-                                                Write-Log -Subtext "Downlaoding Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                                Write-Log -Subtext "Downloading Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                                             }
                                             elseif ($global:posterurl -like 'https://assets.fanart.tv*'){
-                                                Write-Log -Subtext "Downlaoding Poster from 'Fanart.tv'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                                Write-Log -Subtext "Downloading Poster from 'Fanart.tv'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                                             }
                                             elseif ($global:posterurl -like 'https://artworks.thetvdb.com*'){
-                                                Write-Log -Subtext "Downlaoding Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                                Write-Log -Subtext "Downloading Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                                             }
                                             Else{
-                                                Write-Log -Subtext "Downlaoding Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                                Write-Log -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                                             }
                                         }
                                     }
@@ -1236,32 +1236,32 @@ else {
                                     Invoke-WebRequest -Uri $global:posterurl -OutFile $SeasonImage
                                     Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                     if ($global:posterurl -like 'https://image.tmdb.org*'){
-                                        Write-Log -Subtext "Downlaoding Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                        Write-Log -Subtext "Downloading Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                                     }
                                     elseif ($global:posterurl -like 'https://assets.fanart.tv*'){
-                                        Write-Log -Subtext "Downlaoding Poster from 'Fanart.tv'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                        Write-Log -Subtext "Downloading Poster from 'Fanart.tv'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                                     }
                                     elseif ($global:posterurl -like 'https://artworks.thetvdb.com*'){
-                                        Write-Log -Subtext "Downlaoding Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                        Write-Log -Subtext "Downloading Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                                     }
                                     Else{
-                                        Write-Log -Subtext "Downlaoding Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                        Write-Log -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                                     }
                                 }
                                 Else {
                                     Invoke-WebRequest -Uri $global:fallbackurl -OutFile $SeasonImage
                                     Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                     if ($global:posterurl -like 'https://image.tmdb.org*'){
-                                        Write-Log -Subtext "Downlaoding Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                        Write-Log -Subtext "Downloading Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                                     }
                                     elseif ($global:posterurl -like 'https://assets.fanart.tv*'){
-                                        Write-Log -Subtext "Downlaoding Poster from 'Fanart.tv'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                        Write-Log -Subtext "Downloading Poster from 'Fanart.tv'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                                     }
                                     elseif ($global:posterurl -like 'https://artworks.thetvdb.com*'){
-                                        Write-Log -Subtext "Downlaoding Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                        Write-Log -Subtext "Downloading Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                                     }
                                     Else{
-                                        Write-Log -Subtext "Downlaoding Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                        Write-Log -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                                     }
                                 }
                                     
