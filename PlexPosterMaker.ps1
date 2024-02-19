@@ -627,7 +627,6 @@ $global:tvdbheader.Add("accept", "application/json")
 $global:tvdbheader.Add("Authorization", "Bearer $global:tvdbtoken")
 
 if ($Manual) {
-    Clear-Host
     Write-log -Message "Manual Poster Creation Started" -Path $global:ScriptRoot\Logs\Manuallog.log -Type Debug
     $PicturePath = Read-Host "Enter path to source picture"
     $FolderName = Read-Host "Enter Media Foldername (how plex sees it)"
