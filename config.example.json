@@ -4,7 +4,7 @@
     "tmdbtoken": "TMDBTOKEN",
     "FanartTvAPIKey": "FANARTAPIKEY",
     "PlexToken": "",
-    "FavProvider": "fanart"
+    "FavProvider": "tmdb"
   },
   "PlexPart":{
     "LibstoExclude": ["Youtube", "Audiobooks", "Kids Audiobooks", "Tech Trainings"],
