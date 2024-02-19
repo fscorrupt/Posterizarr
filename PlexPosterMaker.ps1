@@ -245,7 +245,7 @@ function GetFanartPoster {
         }
 
         if (!$global:posterurl) {
-            Write-log -Subtext "No movie match or poster found on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+            Write-log -Subtext "No movie match or poster found on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
             $global:Fallback = "tmdb"
         }
         Else {
@@ -298,7 +298,7 @@ function GetFanartPoster {
             if ($global:IsTemp -eq $true) {
             }
             Else {
-                Write-log -Subtext "No show match or poster found on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                Write-log -Subtext "No show match or poster found on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
             }
             $global:Fallback = "tmdb"
         }
@@ -339,7 +339,7 @@ function GetFanartSeasonPoster {
             }
     
             if (!$global:posterurl) {
-                Write-log -Subtext "No show match or poster found on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                Write-log -Subtext "No show match or poster found on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
                 $global:Fallback = "tmdb"
             }
             Else {
@@ -428,7 +428,7 @@ function GetIMDBPoster {
     $response = Invoke-WebRequest -Uri "https://www.imdb.com/title/$($global:imdbid)/mediaviewer" -Method GET
     $global:posterurl = $response.images.src[1]
     if (!$global:posterurl) {
-        Write-log -Subtext "No show match or poster found on IMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+        Write-log -Subtext "No show match or poster found on IMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
     }
     Else {
         Write-log -Subtext "Found Poster with text on IMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
