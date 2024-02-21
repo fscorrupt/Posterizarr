@@ -107,6 +107,7 @@ Function Get-OptimalPointSize {
     }
     elseif ($current_pointsize -lt $min_pointsize) {
         Write-log -Subtext "Text truncated! optimalFontSize: $current_pointsize below min_pointsize: $min_pointsize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+        $global:TruncatedCount++
         $current_pointsize = $min_pointsize
     }
 
@@ -126,7 +127,7 @@ function GetTMDBPoster {
             if ($response.images.posters) {
                 $NoLangPoster = ($response.images.posters | Where-Object iso_639_1 -eq $null)
                 if (!$NoLangPoster) {
-                    $posterpath = (($response.images.posters | Sort-Object vote_count -Descending)[0]).file_path
+                    $posterpath = (($response.images.posters | Sort-Object vote_average -Descending)[0]).file_path
                     $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
                     Write-log -Subtext "Found Poster with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
                     $global:CurrentProvider = 'TMDB'
@@ -140,7 +141,7 @@ function GetTMDBPoster {
                     }
                 }
                 Else {
-                    $posterpath = (($response.images.posters | Where-Object iso_639_1 -eq $null | Sort-Object vote_count -Descending)[0]).file_path
+                    $posterpath = (($response.images.posters | Where-Object iso_639_1 -eq $null | Sort-Object vote_average -Descending)[0]).file_path
                     $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
                     Write-log -Subtext "Found Textless Poster on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
                     $global:TextlessPoster = $true
@@ -168,7 +169,7 @@ function GetTMDBPoster {
             if ($response.images.posters) {
                 $NoLangPoster = ($response.images.posters | Where-Object iso_639_1 -eq $null)
                 if (!$NoLangPoster) {
-                    $posterpath = (($response.images.posters | Sort-Object vote_count -Descending)[0]).file_path
+                    $posterpath = (($response.images.posters | Sort-Object vote_average -Descending)[0]).file_path
                     $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
                     if ($global:IsTemp -eq $true -and !($global:DisplayOutput)) {
                     }
@@ -190,7 +191,7 @@ function GetTMDBPoster {
                     }
                 }
                 Else {
-                    $posterpath = (($response.images.posters | Where-Object iso_639_1 -eq $null | Sort-Object vote_count -Descending)[0]).file_path
+                    $posterpath = (($response.images.posters | Where-Object iso_639_1 -eq $null | Sort-Object vote_average -Descending)[0]).file_path
                     $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
                     if ($global:IsTemp -eq $true -and !($global:DisplayOutput)) {
                     }
@@ -304,6 +305,41 @@ function GetFanartPoster {
         }
         Else {
             return $global:posterurl
+        }
+    }
+}
+function GetTMDBSeasonPoster {
+    $global:Fallback = $null
+    if ($global:IsShow -eq $true) {
+        if ($global:SeasonPosters -eq $true) {
+            Write-log -Subtext "Searching on TMDB for a Season poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+            try {
+                $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=xx&include_image_language=en,null,de" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue    
+            }
+            catch {
+            }
+            if ($response) {
+                if ($response.seasons) {
+                    try {
+                        $posterpath = ($response.seasons | Where-Object { $_.name -eq $global:seasonTitle } -ErrorAction SilentlyContinue)[0].poster_path
+                    }
+                    catch {
+                        
+                    }
+                    if ($posterpath) {
+                        $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
+                        Write-log -Subtext "Found Poster on TMDB for Season: $global:seasonTitle" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
+                        $global:CurrentProvider = 'TMDB'
+                        return $global:posterurl
+                    }
+                    Else {
+                        Write-log -Subtext "No Season Poster found on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                    }
+                }
+            }
+            Else {
+                Write-log -Subtext "No Season Poster found on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+            }
         }
     }
 }
@@ -600,7 +636,7 @@ if (!(Test-Path $magick)) {
     $InstallArguments = "/verysilent /DIR=`"$magickinstalllocation`""
     Invoke-WebRequest https://imagemagick.org/archive/binaries/ImageMagick-7.1.1-27-Q16-HDRI-x64-dll.exe -OutFile $global:ScriptRoot\temp\ImageMagick-7.1.1-27-Q16-HDRI-x64-dll.exe
     Start-Process $global:ScriptRoot\temp\ImageMagick-7.1.1-27-Q16-HDRI-x64-dll.exe -ArgumentList $InstallArguments -NoNewWindow -Wait
-    if (Test-Path -LiteralPath $magickinstalllocation\magick.exe){
+    if (Test-Path -LiteralPath $magickinstalllocation\magick.exe) {
         Write-log -Subtext "ImageMagick installed here: $magickinstalllocation" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
     }
     Else {
@@ -896,6 +932,9 @@ else {
     # Initialize counter variable
     $posterCount = 0
     $SeasonCount = 0
+    $FallbackCount = 0
+    $global:TruncatedCount = 0
+    $TestlessCount = 0
     foreach ($entry in $Libraries) {
         try {
             if ($($entry.RootFoldername)) {
@@ -941,25 +980,29 @@ else {
                         $global:IsShow = $false
                         Write-log -Message "Start Poster Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                         switch -Wildcard ($global:FavProvider) {
-                            'TMDB' { if ($entry.tmdbid){$global:posterurl = GetTMDBPoster}Else {$global:posterurl = GetFanartPoster } }
+                            'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBPoster }Else { $global:posterurl = GetFanartPoster } }
                             'FANART' { $global:posterurl = GetFanartPoster }
-                            'TVDB' { if ($entry.tvdbid){$global:posterurl = GetTVDBPoster}Else {$global:posterurl = GetFanartPoster } }
+                            'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBPoster }Else { $global:posterurl = GetFanartPoster } }
                             Default { $global:posterurl = GetFanartPoster }
                         }
                         switch -Wildcard ($global:Fallback) {
-                            'TMDB' { if ($entry.tmdbid){$global:posterurl = GetTMDBPoster} }
+                            'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBPoster } }
                             'FANART' { $global:posterurl = GetFanartPoster }
                         }
                         
-                        if (!$global:TextlessPoster -and $global:fanartfallbackposterurl){
+                        if (!$global:TextlessPoster -and $global:fanartfallbackposterurl) {
                             $global:posterurl = $global:fanartfallbackposterurl
                             Write-log -Subtext "Took Fanart.tv Fallback poster cause its your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+                            $FallbackCount++
                         }
-                        if (!$global:TextlessPoster -and $global:TMDBfallbackposterurl){
+                        if (!$global:TextlessPoster -and $global:TMDBfallbackposterurl) {
                             $global:posterurl = $global:TMDBfallbackposterurl
                             Write-log -Subtext "Took TMDB Fallback poster cause its your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+                            $FallbackCount++
                         }
-
+                        if ($global:TextlessPoster -eq 'true' -and $global:posterurl) {
+                            $TestlessCount++
+                        }
                         if (!$global:posterurl) {
                             $global:posterurl = GetTVDBPoster
                             if (!$global:posterurl -and $global:imdbid) { 
@@ -984,20 +1027,24 @@ else {
 
                         Write-log -Message "Start Poster Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                         switch -Wildcard ($global:FavProvider) {
-                            'TMDB' { if ($entry.tmdbid){$global:posterurl = GetTMDBPoster}Else {$global:posterurl = GetFanartPoster } }
+                            'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBPoster }Else { $global:posterurl = GetFanartPoster } }
                             'FANART' { $global:posterurl = GetFanartPoster }
-                            'TVDB' { if ($entry.tvdbid){$global:posterurl = GetTVDBPoster}Else {$global:posterurl = GetFanartPoster } }
+                            'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBPoster }Else { $global:posterurl = GetFanartPoster } }
                             Default { $global:posterurl = GetFanartPoster }
                         }
-                        if (!$global:TextlessPoster -and $global:fanartfallbackposterurl){
+                        if (!$global:TextlessPoster -and $global:fanartfallbackposterurl) {
                             $global:posterurl = $global:fanartfallbackposterurl
                             Write-log -Subtext "Took Fanart.tv Fallback poster cause its your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+                            $FallbackCount++
                         }
-                        if (!$global:TextlessPoster -and $global:TMDBfallbackposterurl){
+                        if (!$global:TextlessPoster -and $global:TMDBfallbackposterurl) {
                             $global:posterurl = $global:TMDBfallbackposterurl
                             Write-log -Subtext "Took TMDB Fallback poster cause its your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+                            $FallbackCount++
                         }
-
+                        if ($global:TextlessPoster -eq 'true' -and $global:posterurl) {
+                            $TestlessCount++
+                        }
                         if (!$global:posterurl) {
                             $global:posterurl = GetTVDBPoster
                             if (!$global:posterurl) {
@@ -1016,16 +1063,16 @@ else {
                     if ($global:posterurl) {
                         Invoke-WebRequest -Uri $global:posterurl -OutFile $backgroundImage
                         Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-                        if ($global:posterurl -like 'https://image.tmdb.org*'){
+                        if ($global:posterurl -like 'https://image.tmdb.org*') {
                             Write-Log -Subtext "Downloading Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                         }
-                        elseif ($global:posterurl -like 'https://assets.fanart.tv*'){
+                        elseif ($global:posterurl -like 'https://assets.fanart.tv*') {
                             Write-Log -Subtext "Downloading Poster from 'Fanart.tv'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                         }
-                        elseif ($global:posterurl -like 'https://artworks.thetvdb.com*'){
+                        elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
                             Write-Log -Subtext "Downloading Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                         }
-                        Else{
+                        Else {
                             Write-Log -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                         }
                         if ($global:ImageProcessing -eq 'true') {
@@ -1074,7 +1121,7 @@ else {
                         Write-log -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Type Info
                         $posterCount++
                     }
-                    Else{
+                    Else {
                         Write-log -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Type Error
                         $Errorcount++
                     }
@@ -1090,9 +1137,11 @@ else {
                     $global:IsShow = $true
                     $global:IsTemp = $true
                     $global:Fallback = $null
+                    $Seasonpostersearchtext = $null
 
                     if (!(Get-ChildItem -LiteralPath "$EntryDir\poster.jpg" -ErrorAction SilentlyContinue) -and $LibraryFolders -eq 'true') {
                         Write-log -Message "Start Season Poster Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                        $Seasonpostersearchtext = $true
                         switch -Wildcard ($global:FavProvider) {
                             'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBPoster }Else { $global:posterurl = GetFanartPoster } }
                             'FANART' { $global:posterurl = GetFanartPoster }
@@ -1102,12 +1151,16 @@ else {
                         if (!$global:TextlessPoster -and $global:fanartfallbackposterurl) {
                             $global:posterurl = $global:fanartfallbackposterurl
                             Write-log -Subtext "Took Fanart.tv Fallback poster cause its your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+                            $FallbackCount++
                         }
                         if (!$global:TextlessPoster -and $global:TMDBfallbackposterurl) {
                             $global:posterurl = $global:TMDBfallbackposterurl
                             Write-log -Subtext "Took TMDB Fallback poster cause its your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+                            $FallbackCount++
                         }
-
+                        if ($global:TextlessPoster -eq 'true' -and $global:posterurl) {
+                            $TestlessCount++
+                        }
                         if (!$global:posterurl) {
                             $global:posterurl = GetTVDBPoster
                             if (!$global:posterurl) {
@@ -1118,6 +1171,7 @@ else {
                     }
                     if (!(Get-ChildItem -LiteralPath "$AssetPath\$($entry.RootFoldername).jpg" -ErrorAction SilentlyContinue) -and $LibraryFolders -eq 'false') {
                         Write-log -Message "Start Season Poster Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                        $Seasonpostersearchtext = $true
                         switch -Wildcard ($global:FavProvider) {
                             'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBPoster }Else { $global:posterurl = GetFanartPoster } }
                             'FANART' { $global:posterurl = GetFanartPoster }
@@ -1127,12 +1181,16 @@ else {
                         if (!$global:TextlessPoster -and $global:fanartfallbackposterurl) {
                             $global:posterurl = $global:fanartfallbackposterurl
                             Write-log -Subtext "Took Fanart.tv Fallback poster cause its your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+                            $FallbackCount++
                         }
                         if (!$global:TextlessPoster -and $global:TMDBfallbackposterurl) {
                             $global:posterurl = $global:TMDBfallbackposterurl
                             Write-log -Subtext "Took TMDB Fallback poster cause its your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+                            $FallbackCount++
                         }
-
+                        if ($global:TextlessPoster -eq 'true' -and $global:posterurl) {
+                            $TestlessCount++
+                        }
                         if (!$global:posterurl) {
                             $global:posterurl = GetTVDBPoster
                             if (!$global:posterurl) {
@@ -1172,61 +1230,65 @@ else {
                         $SeasonImage = $SeasonImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
                         if (!(Get-ChildItem -LiteralPath $SeasonImageoriginal -ErrorAction SilentlyContinue)) {
                             $global:ismissing = $true
+                            if (!$Seasonpostersearchtext) {
+                                Write-log -Message "Start Season Poster Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                $Seasonpostersearchtext = $true
+                            }
                             if ($global:ImageProcessing -eq 'true') {
-                                if (!(Get-ChildItem -LiteralPath $global:SeasonTempPoster -ErrorAction SilentlyContinue)) {
-                                    $global:DisplayOutput = $null
-                                    if ($global:posterurl) {
-                                        Invoke-WebRequest -Uri $global:posterurl -OutFile $global:SeasonTempPoster
-                                        Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-                                        if ($global:posterurl -like 'https://image.tmdb.org*'){
-                                            Write-Log -Subtext "Downloading Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
-                                        }
-                                        elseif ($global:posterurl -like 'https://assets.fanart.tv*'){
-                                            Write-Log -Subtext "Downloading Poster from 'Fanart.tv'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
-                                        }
-                                        elseif ($global:posterurl -like 'https://artworks.thetvdb.com*'){
-                                            Write-Log -Subtext "Downloading Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
-                                        }
-                                        Else{
-                                            Write-Log -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
-                                        }
+                                # Get Season poster from fanart, fallback to poster if missing
+                                if ($global:posterurl) {
+                                    $global:fallbackurl = $global:posterurl
+                                }
+                                if ($entry.tmdbid) {
+                                    $global:posterurl = GetTMDBSeasonPoster
+                                    if (!$global:posterurl) {
+                                        $global:posterurl = GetFanartSeasonPoster 
                                     }
-                                    Else {
-                                        switch -Wildcard ($global:FavProvider) {
-                                            'TMDB' { if ($entry.tmdbid){$global:posterurl = GetTMDBPoster}Else {$global:posterurl = GetFanartSeasonPoster } }
-                                            'FANART' { $global:posterurl = GetFanartSeasonPoster }
-                                            'TVDB' { if ($entry.tvdbid){$global:posterurl = GetTVDBPoster}Else {$global:posterurl = GetFanartSeasonPoster } }
-                                            Default { $global:posterurl = GetFanartSeasonPoster }
-                                            
-                                        }
-                                        if (!$global:posterurl) {
-                                            $global:posterurl = GetTVDBPoster
-                                        }
-                                        $global:DisplayOutput = $true
-                                        if (!$global:posterurl) {
-                                            Write-log -Message "No Poster Url found for: $($entry.title) - Please manually Create Posters..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
-                                            $Errorcount++
-                                        }
-                                        Else {
-                                            Invoke-WebRequest -Uri $global:posterurl -OutFile $global:SeasonTempPoster
-                                            Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-                                            if ($global:posterurl -like 'https://image.tmdb.org*'){
-                                                Write-Log -Subtext "Downloading Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
-                                            }
-                                            elseif ($global:posterurl -like 'https://assets.fanart.tv*'){
-                                                Write-Log -Subtext "Downloading Poster from 'Fanart.tv'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
-                                            }
-                                            elseif ($global:posterurl -like 'https://artworks.thetvdb.com*'){
-                                                Write-Log -Subtext "Downloading Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
-                                            }
-                                            Else{
-                                                Write-Log -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
-                                            }
-                                        }
+                                    if (!$global:posterurl) {
+                                        Write-log -Subtext "Searching on TVDB for a Fallback poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+                                        $global:posterurl = GetTVDBPoster 
+                                    }
+                                }
+                                Else {
+                                    $global:posterurl = GetFanartSeasonPoster 
+                                    if (!$global:posterurl) {
+                                        Write-log -Subtext "Searching on TVDB for a Fallback poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+                                        $global:posterurl = GetTVDBPoster 
                                     }
                                 }
                                 if ($global:posterurl) {
-                                    Copy-Item -LiteralPath $global:SeasonTempPoster $SeasonImage -Force | out-null
+                                    Invoke-WebRequest -Uri $global:posterurl -OutFile $SeasonImage
+                                    Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                    if ($global:posterurl -like 'https://image.tmdb.org*') {
+                                        Write-Log -Subtext "Downloading Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                    }
+                                    elseif ($global:posterurl -like 'https://assets.fanart.tv*') {
+                                        Write-Log -Subtext "Downloading Poster from 'Fanart.tv'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                    }
+                                    elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
+                                        Write-Log -Subtext "Downloading Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                    }
+                                    Else {
+                                        Write-Log -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                    }
+                                }
+                                Else {
+                                    Invoke-WebRequest -Uri $global:fallbackurl -OutFile $SeasonImage
+                                    Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                    if ($global:posterurl -like 'https://image.tmdb.org*') {
+                                        Write-Log -Subtext "Downloading Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                    }
+                                    elseif ($global:posterurl -like 'https://assets.fanart.tv*') {
+                                        Write-Log -Subtext "Downloading Poster from 'Fanart.tv'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                    }
+                                    elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
+                                        Write-Log -Subtext "Downloading Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                    }
+                                    Else {
+                                        Write-Log -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                    }
+                                }
+                                if (Get-ChildItem -LiteralPath $SeasonImage -ErrorAction SilentlyContinue) {
                                     # Resize Image to 2000x3000 and apply Border and overlay
                                     if ($AddBorder -eq 'true' -and $AddOverlay -eq 'true') {
                                         $Arguments = "`"$SeasonImage`" -resize 2000x3000^ -gravity center -extent 2000x3000 `"$overlay`" -gravity south -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$SeasonImage`""
@@ -1244,11 +1306,11 @@ else {
                                         $Arguments = "`"$SeasonImage`" -resize 2000x3000^ -gravity center -extent 2000x3000 `"$SeasonImage`""
                                         Write-log -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                     }
-
+                                
                                     $logEntry = "magick.exe $Arguments"
                                     $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
                                     Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
-
+                                
                                     if ($AddText -eq 'true') {
                                         $optimalFontSize = Get-OptimalPointSize -text $seasonTitle -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
                                         
@@ -1268,47 +1330,48 @@ else {
                                 if ($global:posterurl) {
                                     $global:fallbackurl = $global:posterurl
                                 }
-                                $global:posterurl = GetFanartSeasonPoster
+                                $global:posterurl = GetTMDBSeasonPoster
                                 if ($global:posterurl) {
                                     Invoke-WebRequest -Uri $global:posterurl -OutFile $SeasonImage
                                     Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-                                    if ($global:posterurl -like 'https://image.tmdb.org*'){
+                                    if ($global:posterurl -like 'https://image.tmdb.org*') {
                                         Write-Log -Subtext "Downloading Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                                     }
-                                    elseif ($global:posterurl -like 'https://assets.fanart.tv*'){
+                                    elseif ($global:posterurl -like 'https://assets.fanart.tv*') {
                                         Write-Log -Subtext "Downloading Poster from 'Fanart.tv'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                                     }
-                                    elseif ($global:posterurl -like 'https://artworks.thetvdb.com*'){
+                                    elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
                                         Write-Log -Subtext "Downloading Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                                     }
-                                    Else{
+                                    Else {
                                         Write-Log -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                                     }
                                 }
                                 Else {
                                     Invoke-WebRequest -Uri $global:fallbackurl -OutFile $SeasonImage
                                     Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-                                    if ($global:posterurl -like 'https://image.tmdb.org*'){
+                                    if ($global:posterurl -like 'https://image.tmdb.org*') {
                                         Write-Log -Subtext "Downloading Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                                     }
-                                    elseif ($global:posterurl -like 'https://assets.fanart.tv*'){
+                                    elseif ($global:posterurl -like 'https://assets.fanart.tv*') {
                                         Write-Log -Subtext "Downloading Poster from 'Fanart.tv'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                                     }
-                                    elseif ($global:posterurl -like 'https://artworks.thetvdb.com*'){
+                                    elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
                                         Write-Log -Subtext "Downloading Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                                     }
-                                    Else{
+                                    Else {
                                         Write-Log -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                                     }
                                 }
-                                    
-                                # Resize Image to 2000x3000
-                                $Resizeargument = "`"$SeasonImage`" -resize 2000x3000^ -gravity center -extent 2000x3000 `"$SeasonImage`""
-                                Write-log -Subtext "Resizing it... " -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-                                $logEntry = "magick.exe $Resizeargument"
-                                $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
-                                Start-Process $magick -Wait -NoNewWindow -ArgumentList $Resizeargument
-                            }
+                                if (Get-ChildItem -LiteralPath $SeasonImage -ErrorAction SilentlyContinue) {    
+                                    # Resize Image to 2000x3000
+                                    $Resizeargument = "`"$SeasonImage`" -resize 2000x3000^ -gravity center -extent 2000x3000 `"$SeasonImage`""
+                                    Write-log -Subtext "Resizing it... " -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                    $logEntry = "magick.exe $Resizeargument"
+                                    $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+                                    Start-Process $magick -Wait -NoNewWindow -ArgumentList $Resizeargument
+                                }
+                            }  
 
                             # Move file back to original naming with Brackets.
                             Move-Item -LiteralPath $SeasonImage -destination $SeasonImageoriginal -Force -ErrorAction SilentlyContinue
@@ -1342,7 +1405,15 @@ else {
     $FormattedTimespawn = $hours.ToString() + "h " + $minutes.ToString() + "m " + $seconds.ToString() + "s "
 
     Write-log -Message "Finished, Total posters created: $posterCount | Total Season Posters created: $SeasonCount" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
-    Write-log -Subtext "You can find all posters here: $AssetPath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+    if ($TestlessCount -ge '1') {
+        Write-log -Subtext "'$TestlessCount' times the script took a Textless poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+    }
+    if ($FallbackCount -ge '1') {
+        Write-log -Subtext "'$FallbackCount' times the script took a fallback poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+    }
+    if ($global:TruncatedCount -ge '1') {
+        Write-log -Subtext "'$global:TruncatedCount' times the script truncated the text in poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+    }
     if ($Errorcount -ge '1') {
         Write-log -Message "During execution '$Errorcount' Errors occurred, please check log for detailed description." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
     }
