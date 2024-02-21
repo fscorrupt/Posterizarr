@@ -1342,7 +1342,23 @@ else {
                                 if ($global:posterurl) {
                                     $global:fallbackurl = $global:posterurl
                                 }
-                                $global:posterurl = GetTMDBSeasonPoster
+                                if ($entry.tmdbid) {
+                                    $global:posterurl = GetTMDBSeasonPoster
+                                    if (!$global:posterurl) {
+                                        $global:posterurl = GetFanartSeasonPoster 
+                                    }
+                                    if (!$global:posterurl) {
+                                        Write-log -Subtext "Searching on TVDB for a Fallback poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+                                        $global:posterurl = GetTVDBPoster 
+                                    }
+                                }
+                                Else {
+                                    $global:posterurl = GetFanartSeasonPoster 
+                                    if (!$global:posterurl) {
+                                        Write-log -Subtext "Searching on TVDB for a Fallback poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+                                        $global:posterurl = GetTVDBPoster 
+                                    }
+                                }
                                 if ($global:posterurl) {
                                     Invoke-WebRequest -Uri $global:posterurl -OutFile $SeasonImage
                                     Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
