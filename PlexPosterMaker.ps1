@@ -1008,8 +1008,10 @@ else {
             $global:tvdbid = $entry.tvdbid
             $global:imdbid = $entry.imdbid
             $Seasonpostersearchtext = $null
+            $global:TMDBfallbackposterurl = $null
+            $global:fanartfallbackposterurl = $null
             $FanartSearched = $null
-            $posterurl = $null
+            $global:posterurl = $null
     
             $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}]'
             if ($entry.title -match $cjkPattern) {
