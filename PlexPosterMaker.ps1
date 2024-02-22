@@ -499,7 +499,6 @@ if (!(Test-Path "$PSScriptRoot\config.json")) {
 
 # load config file
 $config = Get-Content -Raw -Path "$PSScriptRoot\config.json" | ConvertFrom-Json
-$config = Get-Content -Raw -Path "C:\PosterTemp\config.json" | ConvertFrom-Json
 
 # Access variables from the config file
 # Api Part
