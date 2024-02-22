@@ -1146,10 +1146,10 @@ else {
                 $seasonNames = $entry.SeasonNames -split ','
                 foreach ($season in $seasonNames) {
                     if ($fontAllCaps -eq 'true') {
-                        $seasonTitle = $season.ToUpper()
+                        $global:seasonTitle = $season.ToUpper()
                     }
                     Else {
-                        $seasonTitle = $season
+                        $global:seasonTitle = $season
                     }
                     if ($season -match 'Season\s+(\d+)') {
                         $global:SeasonNumber = $Matches[1]
@@ -1240,13 +1240,13 @@ else {
                                     Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
                                         
                                     if ($AddText -eq 'true') {
-                                        $optimalFontSize = Get-OptimalPointSize -text $seasonTitle -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
+                                        $optimalFontSize = Get-OptimalPointSize -text $global:seasonTitle -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
                                                 
                                         Write-log -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                                 
-                                        $Arguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$seasonTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -composite `"$SeasonImage`""
+                                        $Arguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$global:seasonTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -composite `"$SeasonImage`""
                                                 
-                                        Write-log -Subtext "Applying Font text: `"$seasonTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                        Write-log -Subtext "Applying Font text: `"$global:seasonTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                         $logEntry = "magick.exe $Arguments"
                                         $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
                                         Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
