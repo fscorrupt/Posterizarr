@@ -5,6 +5,8 @@ This PowerShell script automates the process of generating posters for your Plex
 ### ! Important !
 The `Temp` Folder gets cleared on every Script run, so do not put files into it.
 
+Only tested with Powershell Version **5.1**.
+
 **Key Features:**
 - **Resizing**: It automatically resizes every poster to 2000x3000.
 - **Automatic Library Search**: The script autonomously searches for libraries within your Plex server, enhancing its usability.
@@ -26,6 +28,7 @@ Before utilizing the script, ensure the following prerequisites are installed an
 - **TVDB API Key:** [Obtain TVDB API Key](https://thetvdb.com/api-information/signup)
 - **ImageMagick:** [Download ImageMagick](https://imagemagick.org/archive/binaries/ImageMagick-7.1.1-27-Q16-HDRI-x64-dll.exe)
     - Installation is covered within the script.
+- **Powershell Version:** Only tested with Version **5.1**.
 
 **Configuration:**
 1. Open `config.example.json` located in the script directory.
