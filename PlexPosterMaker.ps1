@@ -267,14 +267,27 @@ function GetFanartShowPoster {
 function GetTMDBSeasonPoster {
     Write-log -Subtext "Searching on TMDB for a Season poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
     try {
-        $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=xx&include_image_language=en,null,de" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue    
+        if ($global:seasonTitle -like 'Season*' -or $global:seasonTitle -Like 'specials'){
+            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=xx&include_image_language=en,null,de" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
+        }
+        Else{
+            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
+            if ($global:seasonTitle -eq $response.seasons.name){
+                $tempSeasonName = "Season "+$response.seasons.season_number
+            }
+        }
     }
     catch {
     }
     if ($response) {
         if ($response.seasons) {
             try {
-                $posterpath = ($response.seasons | Where-Object { $_.name -eq $global:seasonTitle } -ErrorAction SilentlyContinue)[0].poster_path
+                if ($tempSeasonName){
+                    $posterpath = ($response.seasons | Where-Object { $_.name -eq $tempSeasonName } -ErrorAction SilentlyContinue)[0].poster_path
+                }
+                else {
+                    $posterpath = ($response.seasons | Where-Object { $_.name -eq $global:seasonTitle } -ErrorAction SilentlyContinue)[0].poster_path
+                }
             }
             catch {
                         
@@ -592,12 +605,12 @@ if ($Manual) {
             $SeasonPosterName = Read-Host "Enter Season Name"
             if ($SeasonPosterName -match 'Season\s+(\d+)') {
                 $global:SeasonNumber = $Matches[1]
-                $season = "Season" + $global:SeasonNumber.PadLeft(2, '0')
+                $global:season = "Season" + $global:SeasonNumber.PadLeft(2, '0')
             }
-            if ($season -eq 'Specials') {
-                $season = "Season00"
+            if ($SeasonPosterName -eq 'Specials') {
+                $global:season = "Season00"
             }  
-            $backgroundImageoriginal = "$AssetPath\$LibraryName\$FolderName\$season.jpg"
+            $backgroundImageoriginal = "$AssetPath\$LibraryName\$FolderName\$global:season.jpg"
         }
     }
     Else {
@@ -605,12 +618,12 @@ if ($Manual) {
             $SeasonPosterName = Read-Host "Enter Season Name"
             if ($SeasonPosterName -match 'Season\s+(\d+)') {
                 $global:SeasonNumber = $Matches[1]
-                $season = "Season" + $global:SeasonNumber.PadLeft(2, '0')
+                $global:season = "Season" + $global:SeasonNumber.PadLeft(2, '0')
             }
-            if ($season -eq 'Specials') {
-                $season = "Season00"
+            if ($SeasonPosterName -eq 'Specials') {
+                $global:season = "Season00"
             }  
-            $backgroundImageoriginal = "$AssetPath\$($FolderName)_$season.jpg"
+            $backgroundImageoriginal = "$AssetPath\$($FolderName)_$global:season.jpg"
         }
     }
 
@@ -784,8 +797,7 @@ else {
                     }
                 }
                 if ($Seasondata) {
-                    $pattern = '\d+'
-                    $SeasonsTemp = $Seasondata.MediaContainer.Directory | Where-Object { $_.Title -match $pattern -or $_.Title -like '*specials*' }
+                    $SeasonsTemp = $Seasondata.MediaContainer.Directory | Where-Object { $_.Title -ne 'All episodes' }
                     $SeasonNames = $SeasonsTemp.Title -join ','
                 }
 
@@ -1161,12 +1173,12 @@ else {
                         $global:season = "Season00"
                     }    
                     if ($LibraryFolders -eq 'true') {
-                        $SeasonImageoriginal = "$EntryDir\$season.jpg"
+                        $SeasonImageoriginal = "$EntryDir\$global:season.jpg"
                     }
                     Else {
-                        $SeasonImageoriginal = "$AssetPath\$($entry.RootFoldername)_$season.jpg"
+                        $SeasonImageoriginal = "$AssetPath\$($entry.RootFoldername)_$global:season.jpg"
                     }
-                    $SeasonImage = "$global:ScriptRoot\temp\$($entry.RootFoldername)_$season.jpg"
+                    $SeasonImage = "$global:ScriptRoot\temp\$($entry.RootFoldername)_$global:season.jpg"
                     $SeasonImage = $SeasonImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
                     if (!(Get-ChildItem -LiteralPath $SeasonImageoriginal -ErrorAction SilentlyContinue)) {
                         if (!$Seasonpostersearchtext) {
