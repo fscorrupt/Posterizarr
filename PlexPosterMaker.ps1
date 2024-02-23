@@ -284,6 +284,7 @@ function GetTMDBSeasonPoster {
             try {
                 if ($tempSeasonName){
                     $posterpath = ($response.seasons | Where-Object { $_.name -eq $tempSeasonName } -ErrorAction SilentlyContinue)[0].poster_path
+                    $global:seasonrematch = $tempSeasonName 
                 }
                 else {
                     $posterpath = ($response.seasons | Where-Object { $_.name -eq $global:seasonTitle } -ErrorAction SilentlyContinue)[0].poster_path
@@ -1157,19 +1158,19 @@ else {
             }
             # Now we can start the Season Part
             if ($global:SeasonPosters -eq 'true') {
-                $seasonNames = $entry.SeasonNames -split ','
-                foreach ($season in $seasonNames) {
+                $global:seasonNames = $entry.SeasonNames -split ','
+                foreach ($seasonentry in $global:seasonNames) {
                     if ($fontAllCaps -eq 'true') {
-                        $global:seasonTitle = $season.ToUpper()
+                        $global:seasonTitle = $seasonentry.ToUpper()
                     }
                     Else {
-                        $global:seasonTitle = $season
+                        $global:seasonTitle = $seasonentry
                     }
-                    if ($season -match 'Season\s+(\d+)') {
+                    if ($seasonentry  -match 'Season\s+(\d+)') {
                         $global:SeasonNumber = $Matches[1]
                         $global:season = "Season" + $global:SeasonNumber.PadLeft(2, '0')
                     }
-                    if ($season -eq 'Specials') {
+                    if ($seasonentry -eq 'Specials') {
                         $global:season = "Season00"
                     }    
                     if ($LibraryFolders -eq 'true') {
@@ -1187,6 +1188,20 @@ else {
                         }
                         if ($entry.tmdbid) {
                             $global:posterurl = GetTMDBSeasonPoster
+                            if ($global:seasonrematch){
+                                if ($global:seasonrematch  -match 'Season\s+(\d+)') {
+                                    $global:SeasonNumber = $Matches[1]
+                                    $global:season = "Season" + $global:SeasonNumber.PadLeft(2, '0')
+                                } 
+                                if ($LibraryFolders -eq 'true') {
+                                    $SeasonImageoriginal = "$EntryDir\$global:season.jpg"
+                                }
+                                Else {
+                                    $SeasonImageoriginal = "$AssetPath\$($entry.RootFoldername)_$global:season.jpg"
+                                }
+                                $SeasonImage = "$global:ScriptRoot\temp\$($entry.RootFoldername)_$global:season.jpg"
+                                $SeasonImage = $SeasonImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
+                            }
                             if ($global:posterurl){
                                 $global:TMDBfallbackposterurl = $global:posterurl
                             }
