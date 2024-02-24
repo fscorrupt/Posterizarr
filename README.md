@@ -31,6 +31,7 @@ Before utilizing the script, ensure the following prerequisites are installed an
     - Installation is covered within the script.
 - **Powershell Version:** Only tested with Version **5.1**.
 - **Tesseract:** [Download Tesseract](https://digi.bib.uni-mannheim.de/tesseract/tesseract-ocr-w64-setup-5.3.3.20231005.exe)
+    - GH Page if Download Url changes: [Link](https://github.com/UB-Mannheim/tesseract/wiki)
 
 **Configuration:**
 1. Open `config.example.json` located in the script directory.
