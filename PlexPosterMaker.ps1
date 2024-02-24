@@ -267,30 +267,31 @@ function GetFanartShowPoster {
 function GetTMDBSeasonPoster {
     Write-log -Subtext "Searching on TMDB for a Season poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
     try {
-        $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=xx&include_image_language=en,null,de" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue    
+        $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)/season/$SeasonNumber/images?append_to_response=images&language=xx&include_image_language=en,null,de" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue            
     }
     catch {
     }
     if ($response) {
-        if ($response.seasons) {
-            try {
-                $posterpath = ($response.seasons | Where-Object { $_.season_number -eq $global:SeasonNumber } -ErrorAction SilentlyContinue)[0].poster_path
-            }
-            catch {
-                        
-            }
-            if ($posterpath) {
+        if ($response.posters) {
+            $NoLangPoster = ($response.posters | Where-Object iso_639_1 -eq $null)
+            if (!$NoLangPoster) {
+                $posterpath = (($response.posters | Sort-Object vote_average -Descending)[0]).file_path
                 $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
-                Write-log -Subtext "Found Poster on TMDB for Season: $global:seasonTitle" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
+                Write-log -Subtext "Found Poster with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                $global:TextlessPoster = $false
                 return $global:posterurl
             }
             Else {
-                Write-log -Subtext "No Season Poster found on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                $posterpath = (($response.posters | Where-Object iso_639_1 -eq $null | Sort-Object vote_average -Descending)[0]).file_path
+                $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
+                Write-log -Subtext "Found Textless Poster on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
+                $global:TextlessPoster = $true
+                return $global:posterurl
             }
         }
-    }
-    Else {
-        Write-log -Subtext "TMDB Api Response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type error
+        Else {
+            Write-log -Subtext "TMDB Api Response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type error
+        }
     }
 }
 function GetFanartSeasonPoster {
@@ -1208,8 +1209,8 @@ else {
                         }
                         if ($entry.tmdbid) {
                             $global:posterurl = GetTMDBSeasonPoster
-                            if ($global:posterurl){
-                                $global:TMDBfallbackposterurl = $global:posterurl
+                            if ($global:TextlessPoster -eq 'true' -and $global:posterurl) {
+                                $TextlessCount++
                             }
                         } 
                         Else {
@@ -1237,7 +1238,7 @@ else {
                                 Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                 if ($global:posterurl -like 'https://image.tmdb.org*') {
                                     Write-Log -Subtext "Downloading Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
-                                    $PosterUnknownCount++
+                                    # $PosterUnknownCount++
                                     if ($global:FavProvider -ne 'TMDB') { $FallbackCount++ }
                                 }
                                 elseif ($global:posterurl -like 'https://assets.fanart.tv*') {
@@ -1297,7 +1298,7 @@ else {
                                 Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                 if ($global:posterurl -like 'https://image.tmdb.org*') {
                                     Write-Log -Subtext "Downloading Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
-                                    $PosterUnknownCount++
+                                    # $PosterUnknownCount++
                                     if ($global:FavProvider -ne 'TMDB') { $FallbackCount++ }
                                 }
                                 elseif ($global:posterurl -like 'https://assets.fanart.tv*') {
