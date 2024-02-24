@@ -8,7 +8,6 @@ The `Temp` Folder gets cleared on every Script run, so do not put files into it.
 Only tested with Powershell Version **5.1**.
 
 **Key Features:**
-- **Text Detection**: Detect Text on Image with Tesseract.
 - **Resizing**: It automatically resizes every poster to 2000x3000.
 - **Automatic Library Search**: The script autonomously searches for libraries within your Plex server, enhancing its usability.
 - **Handling Multiple Versions**: It adeptly manages multiple versions of a movie/show, ensuring comprehensive coverage.
@@ -30,8 +29,6 @@ Before utilizing the script, ensure the following prerequisites are installed an
 - **ImageMagick:** [Download ImageMagick](https://imagemagick.org/archive/binaries/ImageMagick-7.1.1-27-Q16-HDRI-x64-dll.exe)
     - Installation is covered within the script.
 - **Powershell Version:** Only tested with Version **5.1**.
-- **Tesseract:** [Download Tesseract](https://digi.bib.uni-mannheim.de/tesseract/tesseract-ocr-w64-setup-5.3.3.20231005.exe)
-    - GH Page if Download Url changes: [Link](https://github.com/UB-Mannheim/tesseract/wiki)
 
 **Configuration:**
 1. Open `config.example.json` located in the script directory.
@@ -55,7 +52,6 @@ Before utilizing the script, ensure the following prerequisites are installed an
    **PrerequisitePart**
    - `AssetPath`: Path to store generated posters.
    - `magickinstalllocation`: Path to ImageMagick installation location where the `Magick.exe` is located.
-   - `tesseractdir`: Path to Tesseract installation location where the `tesseract.exe` is located.
    - `font`: Font file name.
    - `overlayfile`: Overlay file name.
    - `LibraryFolders`: true/false for the asset structure in one flat Folder or split into library media folders like pmm needs it.
