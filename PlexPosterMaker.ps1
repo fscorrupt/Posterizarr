@@ -359,8 +359,8 @@ function GetTVDBShowPoster {
         if ($response) {
             if ($response.data) {
                 $defaultImageurl = $response.data.image
-                $NoLangImageUrl = ($response.data.artworks | where {$_.language -eq $null -and $_.type -eq '2'})[0].image
-                if ($NoLangImageUrl){
+                $NoLangImageUrl = ($response.data.artworks | where { $_.language -eq $null -and $_.type -eq '2' })[0].image
+                if ($NoLangImageUrl) {
                     $global:posterurl = $NoLangImageUrl
                     Write-log -Subtext "Found Textless Poster on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
                     $global:TextlessPoster = $true
@@ -1112,7 +1112,7 @@ else {
                 }
 
                 # try to find textless on TVDB
-                if ($global:TextlessPoster -ne 'true' -and $entry.tvdbid ){
+                if ($global:TextlessPoster -ne 'true' -and $entry.tvdbid ) {
                     $global:posterurl = GetTVDBShowPoster
                     $global:IsFallback = $true
                 }
