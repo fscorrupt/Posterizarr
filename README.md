@@ -15,7 +15,7 @@ Only tested with Powershell Version **5.1**.
 - **Logging Capabilities**: Records valuable information to a file in `$ScriptRoot\logs\Scriptlog.log`, facilitating troubleshooting and analysis.
     
     - It also generates a log with the output of every imagemagick command `$ScriptRoot\logs\ImageMagickCommands.log`.
-    - Also a `PosterChoices.csv` gets created where all the download choices and required information is stored.
+    - Additionally, a `PosterChoices.csv` file is generated to store all the selected download options and essential information.
 - **Cross-platform Compatibility**: Ensures seamless operation across Linux, Docker, and Windows Plex servers, enhancing versatility.
 - **Poster Creation**: it Searches fanart/tmdb for textless posters, fallback is grabbing a poster from imdb for movies and tvdb for shows.
 
