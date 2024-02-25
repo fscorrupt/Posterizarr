@@ -1206,9 +1206,21 @@ else {
                             $Seasonpostersearchtext = $true
                         }
                         if ($entry.tmdbid) {
+                            if ($global:TextlessPoster){
+                                $global:TMDBfallbackposterurl = $global:posterurl
+                            }
                             $global:posterurl = GetTMDBSeasonPoster
                             if ($global:TextlessPoster -eq 'true' -and $global:posterurl) {
                                 $TextlessCount++
+                            }
+                            Else {
+                                if ($global:TMDBfallbackposterurl){
+                                    $global:posterurl = $global:TMDBfallbackposterurl
+                                    $global:PosterWithText = $null
+                                    Write-Log -Subtext "Taking TMDB Fallback show Poster for - $global:season..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                    $TextlessCount++
+                                    $FallbackCount++
+                                }
                             }
                         } 
                         Else {
