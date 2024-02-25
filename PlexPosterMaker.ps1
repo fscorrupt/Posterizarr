@@ -1022,7 +1022,9 @@ else {
 
                         $movietemp = New-Object psobject
                         $movietemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
-                        $movietemp | Add-Member -MemberType NoteProperty -Name "Library Type" -Value 'Movie'
+                        $movietemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie'
+                        $movietemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
+                        $movietemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $LibraryName
                         $movietemp | Add-Member -MemberType NoteProperty -Name "Textless" -Value $(if ($global:TextlessPoster) { 'True' } else { 'False' })
                         $movietemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback) { 'True' } else { 'False' })
                         $movietemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
@@ -1226,7 +1228,9 @@ else {
 
                 $showtemp = New-Object psobject
                 $showtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
-                $showtemp | Add-Member -MemberType NoteProperty -Name "Library Type" -Value 'Show'
+                $showtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Show'
+                $showtemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
+                $showtemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $LibraryName
                 $showtemp | Add-Member -MemberType NoteProperty -Name "Textless" -Value $(if ($global:TextlessPoster) { 'True' } else { 'False' })
                 $showtemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback) { 'True' } else { 'False' })
                 $showtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
@@ -1431,8 +1435,10 @@ else {
                             $Errorcount++
                         }
                         $seasontemp = New-Object psobject
-                        $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Titletext +" | "+$global:season)
-                        $seasontemp | Add-Member -MemberType NoteProperty -Name "Library Type" -Value 'Season'
+                        $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Titletext + " | " + $global:season)
+                        $seasontemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Season'
+                        $seasontemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
+                        $seasontemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $LibraryName
                         $seasontemp | Add-Member -MemberType NoteProperty -Name "Textless" -Value $(if ($global:TextlessPoster) { 'True' } else { 'False' })
                         $seasontemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback) { 'True' } else { 'False' })
                         $seasontemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
