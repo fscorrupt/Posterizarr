@@ -1431,7 +1431,7 @@ else {
                             $Errorcount++
                         }
                         $seasontemp = New-Object psobject
-                        $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
+                        $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Titletext +" | "+$global:season)
                         $seasontemp | Add-Member -MemberType NoteProperty -Name "Library Type" -Value 'Season'
                         $seasontemp | Add-Member -MemberType NoteProperty -Name "Textless" -Value $(if ($global:TextlessPoster) { 'True' } else { 'False' })
                         $seasontemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback) { 'True' } else { 'False' })
@@ -1449,7 +1449,6 @@ else {
             $Errorcount++
         }
     }
-    pause
     $endTime = Get-Date
     $executionTime = New-TimeSpan -Start $startTime -End $endTime
     # Format the execution time
