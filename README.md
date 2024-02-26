@@ -44,7 +44,7 @@ Before utilizing the script, ensure the following prerequisites are installed an
         - possible Values: 
             - `fanart` (fallback is `tmdb`)
             - `tmdb` (fallback is `fanart`)
-            - `tvdb` (does not have Textless Posters)
+            - `tvdb`
    
    **PlexPart**
    - `LibstoExclude`: Libraries to exclude from processing.
