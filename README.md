@@ -112,25 +112,28 @@ Follow the prompts to enter the source picture path, media folder name, and movi
 ![scriptimage](https://i.imgur.com/bA1w9Ks.png)
 
 ### Example of script output:
-![outputimage](https://i.imgur.com/JJBY4Pz.png)
+![outputimage](https://i.imgur.com/hWdwSwv.png)
 
-### Example of Posters after creation:
-![assetimage](https://i.imgur.com/3Snagbg.png)
+### Example of PosterChoices.csv:
+![outputimage](https://i.imgur.com/IlXMjhL.png)
 
-### Example of Season Posters after creation:
-![assetimage](https://i.imgur.com/xCea7b1.png)
+### Example of Movie Posters after creation:
+![assetimage](https://i.imgur.com/lPm3gji.png)
+
+### Example of Show Posters after creation:
+![assetimage](https://i.imgur.com/yjhHeww.png)
 
 ### Example of 4K Lib after pmm magic:
-![4kimage](https://i.imgur.com/5psJmCU.png)
+![4kimage](https://i.imgur.com/n9zUoAN.png)
 
 ### Example of Movie Lib after pmm magic:
-![movieimage](https://i.imgur.com/Nfdten6.png)
+![movieimage](https://i.imgur.com/ji2Uoau.png)
 
 ### Example of TV Lib after pmm magic:
-![tvimage](https://i.imgur.com/lR6lGzY.jpeg)
+![tvimage](https://i.imgur.com/TCFRVu9.png)
 
 ### Example of TV Lib Seasons after pmm magic:
-![seasonimage](https://i.imgur.com/yR4xEtW.png)
+![seasonimage](https://i.imgur.com/gYCbunP.png)
 
 
 Feel free to customize the script further to suit your preferences or automation needs.
