@@ -135,10 +135,12 @@ function GetTMDBMoviePoster {
             }
             Else {
                 $posterpath = (($response.images.posters | Where-Object iso_639_1 -eq $null | Sort-Object vote_average -Descending)[0]).file_path
-                $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
-                Write-log -Subtext "Found Textless Poster on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
-                $global:TextlessPoster = $true
-                return $global:posterurl
+                if ($posterpath){
+                    $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
+                    Write-log -Subtext "Found Textless Poster on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
+                    $global:TextlessPoster = $true
+                    return $global:posterurl
+                }
             }
         }
     }
@@ -169,10 +171,12 @@ function GetTMDBShowPoster {
             }
             Else {
                 $posterpath = (($response.images.posters | Where-Object iso_639_1 -eq $null | Sort-Object vote_average -Descending)[0]).file_path
-                $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
-                Write-log -Subtext "Found Textless Poster on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
-                $global:TextlessPoster = $true
-                return $global:posterurl
+                if ($posterpath){
+                    $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
+                    Write-log -Subtext "Found Textless Poster on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
+                    $global:TextlessPoster = $true
+                    return $global:posterurl
+                }
             }
         }
     }
@@ -275,16 +279,16 @@ function GetTMDBSeasonPoster {
                 $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
                 Write-log -Subtext "Found Poster with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
                 $global:PosterWithText = $true
-                $global:TextlessPoster = $null
                 return $global:posterurl
             }
             Else {
                 $posterpath = (($response.posters | Where-Object iso_639_1 -eq $null | Sort-Object vote_average -Descending)[0]).file_path
-                $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
-                Write-log -Subtext "Found Textless Poster on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
-                $global:TextlessPoster = $true
-                $global:PosterWithText = $null
-                return $global:posterurl
+                if ($posterpath){
+                    $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
+                    Write-log -Subtext "Found Textless Poster on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
+                    $global:TextlessPoster = $true
+                    return $global:posterurl
+                }
             }
         }
         Else {
@@ -353,9 +357,9 @@ function GetTVDBShowPoster {
         if ($response) {
             if ($response.data) {
                 $defaultImageurl = $response.data.image
-                $NoLangImageUrl = ($response.data.artworks | where { $_.language -eq $null -and $_.type -eq '2' })[0].image
+                $NoLangImageUrl = $response.data.artworks | where { $_.language -eq $null -and $_.type -eq '2' }
                 if ($NoLangImageUrl) {
-                    $global:posterurl = $NoLangImageUrl
+                    $global:posterurl = $NoLangImageUrl[0].image
                     Write-log -Subtext "Found Textless Poster on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
                     $global:TextlessPoster = $true
                 }
@@ -1042,6 +1046,7 @@ else {
             $global:PosterWithText = $null
             $global:IsFallback = $null
             $global:IsTruncated = $null
+            $global:TextlessPoster = $null
     
             $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}]'
             if ($entry.title -match $cjkPattern) {
@@ -1074,6 +1079,10 @@ else {
                     'FANART' { $global:posterurl = GetFanartShowPoster }
                     'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBShowPoster }Else { Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning; $global:posterurl = GetFanartShowPoster } }
                     Default { $global:posterurl = GetFanartShowPoster }
+                }
+                switch -Wildcard ($global:Fallback) {
+                    'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBShowPoster } }
+                    'FANART' { $global:posterurl = GetFanartShowPoster }
                 }
                 if (!$global:TextlessPoster -and $global:fanartfallbackposterurl) {
                     $global:posterurl = $global:fanartfallbackposterurl
@@ -1109,6 +1118,12 @@ else {
                 }
                 Else {
                     $joinedTitle = $Titletext
+                }
+                if (!$global:TextlessPoster -eq 'True' -and $global:TMDBfallbackposterurl){
+                    $global:posterurl = $global:TMDBfallbackposterurl
+                }
+                if (!$global:TextlessPoster -eq 'True' -and $global:fanartfallbackposterurl){
+                    $global:posterurl = $global:fanartfallbackposterurl
                 }
                 if ($global:posterurl) {
                     Invoke-WebRequest -Uri $global:posterurl -OutFile $backgroundImage
@@ -1240,7 +1255,6 @@ else {
                             Else {
                                 if ($global:TMDBfallbackposterurl) {
                                     $global:posterurl = $global:TMDBfallbackposterurl
-                                    $global:PosterWithText = $null
                                     Write-Log -Subtext "Taking TMDB Fallback show Poster for - $global:season..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                                     $global:IsFallback = $true
                                 }
@@ -1415,10 +1429,10 @@ else {
     Write-log -Message "You can find a detailed Summery of Poster Choices here: $global:ScriptRoot\Logs\PosterChoices.csv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
     # Calculate Summery
     $SummeryCount = Import-Csv -LiteralPath "$global:ScriptRoot\Logs\PosterChoices.csv" -Delimiter ';'
-    $FallbackCount = $SummeryCount | Where-Object Fallback -eq 'True'
-    $TextlessCount = $SummeryCount | Where-Object Textless -eq 'True'
-    $TextTruncatedCount = $SummeryCount | Where-Object TextTruncated -eq 'True'
-    $TextCount = $SummeryCount | Where-Object Textless -eq 'False'
+    $FallbackCount = @($SummeryCount | Where-Object Fallback -eq 'True')
+    $TextlessCount = @($SummeryCount | Where-Object Textless -eq 'True')
+    $TextTruncatedCount = @($SummeryCount | Where-Object TextTruncated -eq 'True')
+    $TextCount = @($SummeryCount | Where-Object Textless -eq 'False')
 
     if ($TextlessCount) {
         Write-log -Subtext "'$($TextlessCount.count)' times the script took a Textless poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
