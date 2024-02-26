@@ -1243,7 +1243,6 @@ else {
                                     $global:PosterWithText = $null
                                     Write-Log -Subtext "Taking TMDB Fallback show Poster for - $global:season..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                                     $global:IsFallback = $true
-                                    $global:TextlessPoster = $true
                                 }
                             }
                         } 
