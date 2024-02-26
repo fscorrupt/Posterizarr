@@ -132,6 +132,7 @@ function GetTMDBMoviePoster {
                     $global:tmdbfallbackposterurl = $global:posterurl
                 }
                 Write-log -Subtext "Found Poster with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                $global:PosterWithText = $true
             }
             Else {
                 $posterpath = (($response.images.posters | Where-Object iso_639_1 -eq $null | Sort-Object vote_average -Descending)[0]).file_path
@@ -167,6 +168,7 @@ function GetTMDBShowPoster {
                     $global:tmdbfallbackposterurl = $global:posterurl
                 }
                 Write-log -Subtext "Found Poster with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                $global:PosterWithText = $true
                 return $global:posterurl
             }
             Else {
@@ -197,6 +199,7 @@ function GetFanartMoviePoster {
                 if (!($entrytemp.movieposter | Where-Object lang -eq '00')) {
                     $global:posterurl = ($entrytemp.movieposter)[0].url
                     Write-log -Subtext "Found Poster with text on Fanart.tv"  -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                    $global:PosterWithText = $true
                     if ($global:FavProvider -eq 'FANART') {
                         $global:Fallback = "TMDB"
                         $global:fanartfallbackposterurl = ($entrytemp.movieposter)[0].url
@@ -1248,6 +1251,8 @@ else {
                         if ($entry.tmdbid) {
                             if ($global:TextlessPoster) {
                                 $global:TMDBfallbackposterurl = $global:posterurl
+                                $global:TextlessFallbackPoster = $true
+                                $global:TextlessPoster = $null
                             }
                             $global:posterurl = GetTMDBSeasonPoster
                             if ($global:TextlessPoster -eq 'true' -and $global:posterurl) {
@@ -1257,6 +1262,9 @@ else {
                                     $global:posterurl = $global:TMDBfallbackposterurl
                                     Write-Log -Subtext "Taking TMDB Fallback show Poster for - $global:season..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                                     $global:IsFallback = $true
+                                    if ($global:TextlessFallbackPoster) {
+                                        $global:TextlessPoster = 'true'
+                                    } 
                                 }
                             }
                         } 
@@ -1280,6 +1288,9 @@ else {
                                 $global:IsFallback = $true
                                 $global:posterurl = $global:TMDBfallbackposterurl
                             }
+                        }
+                        if (!$global:TextlessPoster){
+                            $global:PosterWithText = $true
                         }
                         if ($global:posterurl) {
                             if ($global:ImageProcessing -eq 'true') {
