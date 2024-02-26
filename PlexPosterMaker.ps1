@@ -1235,15 +1235,17 @@ else {
                                 $global:TMDBfallbackposterurl = $global:posterurl
                             }
                             $global:posterurl = GetTMDBSeasonPoster
-
-                            if ($global:TMDBfallbackposterurl) {
-                                $global:posterurl = $global:TMDBfallbackposterurl
-                                $global:PosterWithText = $null
-                                Write-Log -Subtext "Taking TMDB Fallback show Poster for - $global:season..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
-                                $global:IsFallback = $true
-                                $global:TextlessPoster = $true
+                            if ($global:TextlessPoster -eq 'true' -and $global:posterurl) {
                             }
-
+                            Else {
+                                if ($global:TMDBfallbackposterurl) {
+                                    $global:posterurl = $global:TMDBfallbackposterurl
+                                    $global:PosterWithText = $null
+                                    Write-Log -Subtext "Taking TMDB Fallback show Poster for - $global:season..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                    $global:IsFallback = $true
+                                    $global:TextlessPoster = $true
+                                }
+                            }
                         } 
                         Else {
                             Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
