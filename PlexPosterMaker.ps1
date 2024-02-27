@@ -298,6 +298,7 @@ function GetTMDBSeasonPoster {
             Write-log -Subtext "TMDB Api Response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type error
         }
     }
+    Write-log -Subtext "No Season Poster on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
 }
 function GetFanartSeasonPoster {
     Write-log -Subtext "Searching on Fanart.tv for a season poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
@@ -1255,18 +1256,6 @@ else {
                                 $global:TextlessPoster = $null
                             }
                             $global:posterurl = GetTMDBSeasonPoster
-                            if ($global:TextlessPoster -eq 'true' -and $global:posterurl) {
-                            }
-                            Else {
-                                if ($global:TMDBfallbackposterurl) {
-                                    $global:posterurl = $global:TMDBfallbackposterurl
-                                    Write-Log -Subtext "Taking TMDB Fallback show Poster for - $global:season..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
-                                    $global:IsFallback = $true
-                                    if ($global:TextlessFallbackPoster) {
-                                        $global:TextlessPoster = 'true'
-                                    } 
-                                }
-                            }
                         } 
                         Else {
                             Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
@@ -1276,21 +1265,22 @@ else {
                         if (!$global:posterurl -and !$FanartSearched) {
                             $global:posterurl = GetFanartSeasonPoster 
                             if (!$global:posterurl -and $global:TMDBfallbackposterurl) {
-                                Write-Log -Subtext "Taking TMDB Fallback poster..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                                 $global:IsFallback = $true
-                                $global:posterurl = $global:TMDBfallbackposterurl
                             }
                         }
                         if (!$global:posterurl) {
                             $global:posterurl = GetTVDBShowPoster
                             if ($global:TMDBfallbackposterurl) {
-                                Write-Log -Subtext "Taking TMDB Fallback poster..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                                 $global:IsFallback = $true
-                                $global:posterurl = $global:TMDBfallbackposterurl
                             }
                         }
                         if (!$global:TextlessPoster){
                             $global:PosterWithText = $true
+                        }
+                        if ($global:TextlessFallbackPoster -and $global:PosterWithText){
+                            Write-Log -Subtext "Taking TMDB Fallback poster..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                            $global:posterurl = $global:TMDBfallbackposterurl
+                            $global:TextlessPoster = 'true'
                         }
                         if ($global:posterurl) {
                             if ($global:ImageProcessing -eq 'true') {
