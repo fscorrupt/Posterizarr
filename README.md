@@ -1,6 +1,6 @@
 # Plex Poster Maker
 
-This PowerShell script automates the process of generating posters for your Plex media library. Leveraging information from your Plex library, such as movie or show titles, it fetches relevant artwork from Fanart.tv, TMDB, TVDB and IMDB (if nothing found via TMDB or Fanart.tv it trys TVDB and then IMDB). The script offers both automatic and manual modes for generating posters, accommodating custom creations that cannot be automated.
+This PowerShell script automates the process of generating posters for your Plex media library. Leveraging information from your Plex library, such as movie or show titles, it fetches relevant artwork from Fanart.tv, TMDB, TVDB, and IMDB. The script is able to focus on specific language to grab; by default, it is xx, which means textless, and then fallbacks to en if not available. This is a setting a user can decide on, either to focus on textless or on text posters. It also offers both automatic and manual modes for generating posters, accommodating custom creations that cannot be automated.
 
 ### ! Important !
 The `Temp` Folder gets cleared on every Script run, so do not put files into it.
