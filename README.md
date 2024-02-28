@@ -40,7 +40,7 @@ Before utilizing the script, ensure the following prerequisites are installed an
    - `FanartTvAPIKey`: Your Fanart personal API key.
    - `PlexToken`: if you want to run this from remote, you have to specify the Plex Token.
    - `PreferedLanguageOrder`: default is `xx,en,de` (`xx` is Textless).
-        - If its set to `xx` the script will focus on grabbing textless posters, if you set `en` to the beginning it will focus on grabbing `en`.
+        - If its set to `xx` the script will focus on grabbing textless posters, if you set `en` to the beginning it will focus on grabbing `en`, example is in config file, lang codes can be found here: [Lang Codes](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2)
    - `FavProvider`: What provider should be picked first? 
         - possible Values: 
             - `fanart` (fallback is `tmdb`)
