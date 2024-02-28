@@ -5,7 +5,6 @@ This PowerShell script automates the process of generating posters for your Plex
 ### ! Important !
 The `Temp` Folder gets cleared on every Script run, so do not put files into it.
 
-Only tested with Powershell Version **5.1**.
 
 **Key Features:**
 - **Resizing**: It automatically resizes every poster to 2000x3000.
@@ -40,6 +39,8 @@ Before utilizing the script, ensure the following prerequisites are installed an
    - `tmdbtoken`: Your TMDB token.
    - `FanartTvAPIKey`: Your Fanart personal API key.
    - `PlexToken`: if you want to run this from remote, you have to specify the Plex Token.
+   - `PreferedLanguageOrder`: default is `xx,en,de` (`xx` is Textless).
+        - If its set to `xx` the script will focus on grabbing textless posters, if you set `en` to the beginning it will focus on grabbing `en`.
    - `FavProvider`: What provider should be picked first? 
         - possible Values: 
             - `fanart` (fallback is `tmdb`)

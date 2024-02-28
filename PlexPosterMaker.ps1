@@ -116,269 +116,571 @@ Function Get-OptimalPointSize {
 }
 function GetTMDBMoviePoster {
     Write-log -Subtext "Searching on TMDB for a movie poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
-    try {
-        $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($global:tmdbid)?append_to_response=images&language=xx&include_image_language=en,null,de" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue    
-    }
-    catch {
-    }
-    if ($response) {
-        if ($response.images.posters) {
-            $NoLangPoster = ($response.images.posters | Where-Object iso_639_1 -eq $null)
-            if (!$NoLangPoster) {
-                $posterpath = (($response.images.posters | Sort-Object vote_average -Descending)[0]).file_path
-                $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
-                if ($global:FavProvider -eq 'TMDB') {
-                    $global:Fallback = "fanart"
-                    $global:tmdbfallbackposterurl = $global:posterurl
-                }
-                Write-log -Subtext "Found Poster with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
-                $global:PosterWithText = $true
-            }
-            Else {
-                $posterpath = (($response.images.posters | Where-Object iso_639_1 -eq $null | Sort-Object vote_average -Descending)[0]).file_path
-                if ($posterpath){
+    if ($global:PreferTextless -eq 'True') {
+        try {
+            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($global:tmdbid)?append_to_response=images&language=xx&include_image_language=en,null,de" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue    
+        }
+        catch {
+        }
+        if ($response) {
+            if ($response.images.posters) {
+                $NoLangPoster = ($response.images.posters | Where-Object iso_639_1 -eq $null)
+                if (!$NoLangPoster) {
+                    $posterpath = (($response.images.posters | Sort-Object vote_average -Descending)[0]).file_path
                     $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
-                    Write-log -Subtext "Found Textless Poster on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
-                    $global:TextlessPoster = $true
-                    return $global:posterurl
+                    if ($global:FavProvider -eq 'TMDB') {
+                        $global:Fallback = "fanart"
+                        $global:tmdbfallbackposterurl = $global:posterurl
+                    }
+                    Write-log -Subtext "Found Poster with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                    $global:PosterWithText = $true
+                }
+                Else {
+                    $posterpath = (($response.images.posters | Where-Object iso_639_1 -eq $null | Sort-Object vote_average -Descending)[0]).file_path
+                    if ($posterpath) {
+                        $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
+                        Write-log -Subtext "Found Textless Poster on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
+                        $global:TextlessPoster = $true
+                        return $global:posterurl
+                    }
                 }
             }
         }
+        Else {
+            Write-log -Subtext "TMDB Api Response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+        }
     }
     Else {
-        Write-log -Subtext "TMDB Api Response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+        try {
+            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($global:tmdbid)?append_to_response=images&language=$($PreferedLanguageOrder[0])&include_image_language=$($global:PreferedLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue    
+        }
+        catch {
+        }
+        if ($response) {
+            if ($response.images.posters) {
+                foreach ($lang in $global:PreferedLanguageOrderTMDB) {
+                    if ($lang -eq 'null') {
+                        $FavPoster = ($response.images.posters | Where-Object iso_639_1 -eq $null)
+                    }
+                    Else {
+                        $FavPoster = ($response.images.posters | Where-Object iso_639_1 -eq $lang)
+                    }
+                    if ($FavPoster) {
+                        $posterpath = (($FavPoster | Sort-Object vote_average -Descending)[0]).file_path
+                        $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
+                        if ($lang -eq 'null') {
+                            Write-log -Subtext "Found Poster without Language on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                        }
+                        Else {
+                            Write-log -Subtext "Found Poster with Language '$lang' on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                        }
+                        if ($lang -ne 'null') {
+                            $global:PosterWithText = $true
+                        }
+                        return $global:posterurl
+                        break
+                    }
+                }
+            }
+        }
+        Else {
+            Write-log -Subtext "TMDB Api Response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+        }
     }
 }
 function GetTMDBShowPoster {
     Write-log -Subtext "Searching on TMDB for a show poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
-
-    try {
-        $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=xx&include_image_language=en,null,de" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue    
-    }
-    catch {
-    }
-    if ($response) {
-        if ($response.images.posters) {
-            $NoLangPoster = ($response.images.posters | Where-Object iso_639_1 -eq $null)
-            if (!$NoLangPoster) {
-                $posterpath = (($response.images.posters | Sort-Object vote_average -Descending)[0]).file_path
-                $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
-                if ($global:FavProvider -eq 'TMDB') {
-                    $global:Fallback = "fanart"
-                    $global:tmdbfallbackposterurl = $global:posterurl
-                }
-                Write-log -Subtext "Found Poster with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
-                $global:PosterWithText = $true
-                return $global:posterurl
-            }
-            Else {
-                $posterpath = (($response.images.posters | Where-Object iso_639_1 -eq $null | Sort-Object vote_average -Descending)[0]).file_path
-                if ($posterpath){
+    if ($global:PreferTextless -eq 'True') {
+        try {
+            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=xx&include_image_language=en,null,de" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue    
+        }
+        catch {
+        }
+        if ($response) {
+            if ($response.images.posters) {
+                $NoLangPoster = ($response.images.posters | Where-Object iso_639_1 -eq $null)
+                if (!$NoLangPoster) {
+                    $posterpath = (($response.images.posters | Sort-Object vote_average -Descending)[0]).file_path
                     $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
-                    Write-log -Subtext "Found Textless Poster on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
-                    $global:TextlessPoster = $true
+                    if ($global:FavProvider -eq 'TMDB') {
+                        $global:Fallback = "fanart"
+                        $global:tmdbfallbackposterurl = $global:posterurl
+                    }
+                    Write-log -Subtext "Found Poster with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                    $global:PosterWithText = $true
                     return $global:posterurl
+                }
+                Else {
+                    $posterpath = (($response.images.posters | Where-Object iso_639_1 -eq $null | Sort-Object vote_average -Descending)[0]).file_path
+                    if ($posterpath) {
+                        $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
+                        Write-log -Subtext "Found Textless Poster on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
+                        $global:TextlessPoster = $true
+                        return $global:posterurl
+                    }
                 }
             }
         }
+        Else {
+            Write-log -Subtext "TMDB Api Response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+        }
     }
     Else {
-        Write-log -Subtext "TMDB Api Response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+        try {
+            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=$($PreferedLanguageOrder[0])&include_image_language=$($global:PreferedLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
+        }
+        catch {
+        }
+        if ($response) {
+            if ($response.images.posters) {
+                foreach ($lang in $global:PreferedLanguageOrderTMDB) {
+                    if ($lang -eq 'null') {
+                        $FavPoster = ($response.images.posters | Where-Object iso_639_1 -eq $null)
+                    }
+                    Else {
+                        $FavPoster = ($response.images.posters | Where-Object iso_639_1 -eq $lang)
+                    }
+                    if ($FavPoster) {
+                        $posterpath = (($FavPoster | Sort-Object vote_average -Descending)[0]).file_path
+                        $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
+                        if ($lang -eq 'null') {
+                            Write-log -Subtext "Found Poster without Language on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                        }
+                        Else {
+                            Write-log -Subtext "Found Poster with Language '$lang' on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                        }
+                        if ($lang -ne 'null') {
+                            $global:PosterWithText = $true
+                        }
+                        return $global:posterurl
+                        break
+                    }
+                }
+            }
+        }
+        Else {
+            Write-log -Subtext "TMDB Api Response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+        }
+    }
+}
+function GetTMDBSeasonPoster {
+    Write-log -Subtext "Searching on TMDB for a Season poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+    if ($global:PreferTextless -eq 'True') {
+        try {
+            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)/season/$global:SeasonNumber/images?append_to_response=images&language=xx&include_image_language=en,null,de" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue            
+        }
+        catch {
+        }
+        if ($response) {
+            if ($response.posters) {
+                $NoLangPoster = ($response.posters | Where-Object iso_639_1 -eq $null)
+                if (!$NoLangPoster) {
+                    $posterpath = (($response.posters | Sort-Object vote_average -Descending)[0]).file_path
+                    $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
+                    Write-log -Subtext "Found Poster with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                    $global:PosterWithText = $true
+                    return $global:posterurl
+                }
+                Else {
+                    $posterpath = (($response.posters | Where-Object iso_639_1 -eq $null | Sort-Object vote_average -Descending)[0]).file_path
+                    if ($posterpath) {
+                        $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
+                        Write-log -Subtext "Found Textless Poster on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
+                        $global:TextlessPoster = $true
+                        return $global:posterurl
+                    }
+                }
+            }
+            Else {
+                Write-log -Subtext "TMDB Api Response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type error
+            }
+        }
+        Else {
+            Write-log -Subtext "No Season Poster on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+        }
+    }
+    Else {
+        try {
+            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)/season/$global:SeasonNumber/images?append_to_response=images&language=$($global:PreferedLanguageOrder[0])&include_image_language=$($global:PreferedLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue            
+        }
+        catch {
+        }
+        if ($response) {
+            if ($response.posters) {
+                foreach ($lang in $global:PreferedLanguageOrderTMDB) {
+                    if ($lang -eq 'null') {
+                        $FavPoster = ($response.posters | Where-Object iso_639_1 -eq $null)
+                    }
+                    Else {
+                        $FavPoster = ($response.posters | Where-Object iso_639_1 -eq $lang)
+                    }
+                    if ($FavPoster) {
+                        $posterpath = (($FavPoster | Sort-Object vote_average -Descending)[0]).file_path
+                        $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
+                        if ($lang -eq 'null') {
+                            Write-log -Subtext "Found Poster without Language on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                        }
+                        Else {
+                            Write-log -Subtext "Found Poster with Language '$lang' on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                        }
+                        if ($lang -ne 'null') {
+                            $global:PosterWithText = $true
+                        }
+                        return $global:posterurl
+                        break
+                    }
+                }
+            }
+            Else {
+                Write-log -Subtext "TMDB Api Response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type error
+            }
+        }
+        Else {
+            Write-log -Subtext "No Season Poster on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+        }
     }
 }
 function GetFanartMoviePoster {
     $global:Fallback = $null
     Write-log -Subtext "Searching on Fanart.tv for a movie poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
-    $ids = @($global:tmdbid, $global:tvdbid, $global:imdbid)
-    $entrytemp = $null
+    if ($global:PreferTextless -eq 'True') {
+        $ids = @($global:tmdbid, $global:tvdbid, $global:imdbid)
+        $entrytemp = $null
         
-    foreach ($id in $ids) {
-        if ($id) {
-            $entrytemp = Get-FanartTv -Type movies -id $id -ErrorAction SilentlyContinue
-            if ($entrytemp -and $entrytemp.movieposter) {
-                if (!($entrytemp.movieposter | Where-Object lang -eq '00')) {
-                    $global:posterurl = ($entrytemp.movieposter)[0].url
-                    Write-log -Subtext "Found Poster with text on Fanart.tv"  -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
-                    $global:PosterWithText = $true
-                    if ($global:FavProvider -eq 'FANART') {
-                        $global:Fallback = "TMDB"
-                        $global:fanartfallbackposterurl = ($entrytemp.movieposter)[0].url
+        foreach ($id in $ids) {
+            if ($id) {
+                $entrytemp = Get-FanartTv -Type movies -id $id -ErrorAction SilentlyContinue
+                if ($entrytemp -and $entrytemp.movieposter) {
+                    if (!($entrytemp.movieposter | Where-Object lang -eq '00')) {
+                        $global:posterurl = ($entrytemp.movieposter)[0].url
+                        Write-log -Subtext "Found Poster with text on Fanart.tv"  -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                        $global:PosterWithText = $true
+                        if ($global:FavProvider -eq 'FANART') {
+                            $global:Fallback = "TMDB"
+                            $global:fanartfallbackposterurl = ($entrytemp.movieposter)[0].url
+                        }
+                        break
                     }
-                    break
-                }
-                Else {
-                    $global:posterurl = ($entrytemp.movieposter | Where-Object lang -eq '00')[0].url
-                    Write-log -Subtext "Found Textless Poster on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
-                    $global:TextlessPoster = $true
-                    break
+                    Else {
+                        $global:posterurl = ($entrytemp.movieposter | Where-Object lang -eq '00')[0].url
+                        Write-log -Subtext "Found Textless Poster on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
+                        $global:TextlessPoster = $true
+                        break
+                    }
                 }
             }
         }
-    }
 
-    if (!$global:posterurl) {
-        Write-log -Subtext "No movie match or poster found on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
-        $global:Fallback = "TMDB"
+        if (!$global:posterurl) {
+            Write-log -Subtext "No movie match or poster found on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+            $global:Fallback = "TMDB"
+        }
+        Else {
+            return $global:posterurl
+        }
     }
     Else {
-        return $global:posterurl
+        $ids = @($global:tmdbid, $global:tvdbid, $global:imdbid)
+        $entrytemp = $null
+        
+        foreach ($id in $ids) {
+            if ($id) {
+                $entrytemp = Get-FanartTv -Type movies -id $id -ErrorAction SilentlyContinue
+                if ($entrytemp -and $entrytemp.movieposter) {
+                    foreach ($lang in $global:PreferedLanguageOrderFanart) {
+                        if (($entrytemp.movieposter | Where-Object lang -eq "$lang")) {
+                            $global:posterurl = ($entrytemp.movieposter)[0].url
+                            if ($lang -eq '00') {
+                                Write-log -Subtext "Found Poster without Language on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                            }
+                            Else {
+                                Write-log -Subtext "Found Poster with Language '$lang' on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                            }
+                            if ($lang -ne '00') {
+                                $global:PosterWithText = $true
+                            }
+                            break
+                        }
+                    }
+                }
+            }
+        }
+
+        if (!$global:posterurl) {
+            Write-log -Subtext "No movie match or poster found on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+            $global:Fallback = "TMDB"
+        }
+        Else {
+            return $global:posterurl
+        }
     }
 }
 function GetFanartShowPoster {
     $global:Fallback = $null
     Write-log -Subtext "Searching on Fanart.tv for a show poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+    if ($global:PreferTextless -eq 'True') {
+        $ids = @($global:tmdbid, $global:tvdbid, $global:imdbid)
+        $entrytemp = $null
 
-    $ids = @($global:tmdbid, $global:tvdbid, $global:imdbid)
-    $entrytemp = $null
+        foreach ($id in $ids) {
+            if ($id) {
+                $entrytemp = Get-FanartTv -Type tv -id $id -ErrorAction SilentlyContinue
+                if ($entrytemp -and $entrytemp.tvposter) {
+                    if (!($entrytemp.tvposter | Where-Object lang -eq '00')) {
+                        $global:posterurl = ($entrytemp.tvposter)[0].url
 
-    foreach ($id in $ids) {
-        if ($id) {
-            $entrytemp = Get-FanartTv -Type tv -id $id -ErrorAction SilentlyContinue
-            if ($entrytemp -and $entrytemp.tvposter) {
-                if (!($entrytemp.tvposter | Where-Object lang -eq '00')) {
-                    $global:posterurl = ($entrytemp.tvposter)[0].url
-
-                    Write-log -Subtext "Found Poster with text on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
-                    $global:PosterWithText = $true
-                    if ($global:FavProvider -eq 'FANART') {
-                        $global:Fallback = "TMDB"
-                        $global:fanartfallbackposterurl = ($entrytemp.tvposter)[0].url
+                        Write-log -Subtext "Found Poster with text on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                        $global:PosterWithText = $true
+                        if ($global:FavProvider -eq 'FANART') {
+                            $global:Fallback = "TMDB"
+                            $global:fanartfallbackposterurl = ($entrytemp.tvposter)[0].url
+                        }
+                        break
                     }
-                    break
-                }
-                Else {
-                    $global:posterurl = ($entrytemp.tvposter | Where-Object lang -eq '00')[0].url
-                    Write-log -Subtext "Found Textless Poster on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
-                    $global:TextlessPoster = $true
-                    break
+                    Else {
+                        $global:posterurl = ($entrytemp.tvposter | Where-Object lang -eq '00')[0].url
+                        Write-log -Subtext "Found Textless Poster on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
+                        $global:TextlessPoster = $true
+                        break
+                    }
                 }
             }
         }
-    }
 
-    if (!$global:posterurl) {
+        if (!$global:posterurl) {
 
-        Write-log -Subtext "No show match or poster found on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+            Write-log -Subtext "No show match or poster found on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
             
-        $global:Fallback = "TMDB"
-    }
-    Else {
-        return $global:posterurl
-    }
-    
-}
-function GetTMDBSeasonPoster {
-    Write-log -Subtext "Searching on TMDB for a Season poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
-    try {
-        $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)/season/$SeasonNumber/images?append_to_response=images&language=xx&include_image_language=en,null,de" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue            
-    }
-    catch {
-    }
-    if ($response) {
-        if ($response.posters) {
-            $NoLangPoster = ($response.posters | Where-Object iso_639_1 -eq $null)
-            if (!$NoLangPoster) {
-                $posterpath = (($response.posters | Sort-Object vote_average -Descending)[0]).file_path
-                $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
-                Write-log -Subtext "Found Poster with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
-                $global:PosterWithText = $true
-                return $global:posterurl
-            }
-            Else {
-                $posterpath = (($response.posters | Where-Object iso_639_1 -eq $null | Sort-Object vote_average -Descending)[0]).file_path
-                if ($posterpath){
-                    $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
-                    Write-log -Subtext "Found Textless Poster on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
-                    $global:TextlessPoster = $true
-                    return $global:posterurl
-                }
-            }
+            $global:Fallback = "TMDB"
         }
         Else {
-            Write-log -Subtext "TMDB Api Response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type error
+            return $global:posterurl
         }
     }
-    Write-log -Subtext "No Season Poster on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+    Else {
+        $ids = @($global:tmdbid, $global:tvdbid, $global:imdbid)
+        $entrytemp = $null
+
+        foreach ($id in $ids) {
+            if ($id) {
+                $entrytemp = Get-FanartTv -Type tv -id $id -ErrorAction SilentlyContinue
+                if ($entrytemp -and $entrytemp.tvposter) {
+                    foreach ($lang in $global:PreferedLanguageOrderFanart) {
+                        if (($entrytemp.tvposter | Where-Object lang -eq "$lang")) {
+                            $global:posterurl = ($entrytemp.tvposter)[0].url
+                            if ($lang -eq '00') {
+                                Write-log -Subtext "Found Poster without Language on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                            }
+                            Else {
+                                Write-log -Subtext "Found Poster with Language '$lang' on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                            }
+                            if ($lang -ne '00') {
+                                $global:PosterWithText = $true
+                            }
+                            break
+                        }
+                    }
+                }
+            }
+        }
+
+        if (!$global:posterurl) {
+
+            Write-log -Subtext "No show match or poster found on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+            
+            $global:Fallback = "TMDB"
+        }
+        Else {
+            return $global:posterurl
+        }
+    }
 }
 function GetFanartSeasonPoster {
     Write-log -Subtext "Searching on Fanart.tv for a season poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
     $ids = @($global:tmdbid, $global:tvdbid, $global:imdbid)
     $entrytemp = $null
-    
-    foreach ($id in $ids) {
-        if ($id) {
-            $entrytemp = Get-FanartTv -Type tv -id $id -ErrorAction SilentlyContinue
-            if ($entrytemp.seasonposter) {
-                $global:posterurl = ($entrytemp.seasonposter | Where-Object { $_.lang -eq 'en' -and $_.Season -eq $global:SeasonNumber } | Sort-Object likes)[0].url
-                break
-            }
-            Else {
-                $global:posterurl = $null
-                break
+    if ($global:PreferTextless -eq 'True') {
+        foreach ($id in $ids) {
+            if ($id) {
+                $entrytemp = Get-FanartTv -Type tv -id $id -ErrorAction SilentlyContinue
+                if ($entrytemp.seasonposter) {
+                    $global:posterurl = ($entrytemp.seasonposter | Where-Object { $_.lang -eq 'en' -and $_.Season -eq $global:SeasonNumber } | Sort-Object likes)[0].url
+                    break
+                }
+                Else {
+                    $global:posterurl = $null
+                    break
+                }
             }
         }
-    }
-    if ($global:posterurl) {
-        Write-log -Subtext "Found season poster on Fanart" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
-        return $global:posterurl
+        if ($global:posterurl) {
+            Write-log -Subtext "Found season poster on Fanart" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+            return $global:posterurl
+        }
+        Else {
+            Write-log -Subtext "No Season Poster on Fanart" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+        }
     }
     Else {
-        Write-log -Subtext "No Season Poster on Fanart" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+        foreach ($id in $ids) {
+            if ($id) {
+                $entrytemp = Get-FanartTv -Type tv -id $id -ErrorAction SilentlyContinue
+                if ($entrytemp.seasonposter) {
+                    foreach ($lang in $global:PreferedLanguageOrderFanart) {
+                        $global:posterurl = ($entrytemp.seasonposter | Where-Object { $_.lang -eq "$lang" -and $_.Season -eq $global:SeasonNumber } | Sort-Object likes)[0].url
+                        break
+                    }
+                }
+                Else {
+                    $global:posterurl = $null
+                    break
+                }
+            }
+        }
+        if ($global:posterurl) {
+            Write-log -Subtext "Found season poster on Fanart" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+            return $global:posterurl
+        }
+        Else {
+            Write-log -Subtext "No Season Poster on Fanart" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+        }
     }
-
 }
 function GetTVDBMoviePoster {
     if ($global:tvdbid) {
-        Write-log -Subtext "Searching on TVDB for a movie poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
-        try {
-            $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/movies/$($global:tvdbid)" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
-        }
-        catch {
-        }
-        if ($response) {
-            if ($response.data.image) {
-                $global:posterurl = $response.data.image
-                Write-log -Subtext "Found Poster with text on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
-                return $global:posterurl
+        if ($global:PreferTextless -eq 'True') {
+            Write-log -Subtext "Searching on TVDB for a movie poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+            try {
+                $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/movies/$($global:tvdbid)/extended" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
+            }
+            catch {
+            }
+            if ($response) {
+                if ($response.data.artworks) {
+                    $global:posterurl = ($response.data.artworks | Where-Object { $_.language -eq $null -and $_.type -eq '14' } | Sort-Object Score)[0].image
+                    Write-log -Subtext "Found Textless Poster on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                    return $global:posterurl
+                }
+                Else {
+                    Write-log -Subtext "No Poster found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                }
             }
             Else {
-                Write-log -Subtext "No Poster found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                Write-log -Subtext "TVDB Api Response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
             }
         }
         Else {
-            Write-log -Subtext "TVDB Api Response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+            Write-log -Subtext "Searching on TVDB for a movie poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+            try {
+                $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/movies/$($global:tvdbid)/extended" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
+            }
+            catch {
+            }
+            if ($response) {
+                if ($response.data.artworks) {
+                    foreach ($lang in $global:PreferedLanguageOrderTVDB) {
+                        if ($lang -eq 'null') {
+                            $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "" -and $_.type -eq '14' } | Sort-Object Score)
+                        }
+                        Else {
+                            $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "$lang*" -and $_.type -eq '14' } | Sort-Object Score)
+                        }
+                        if ($LangArtwork) {
+                            $global:posterurl = $LangArtwork[0].image
+                            if ($lang -eq 'null') {
+                                Write-log -Subtext "Found Poster without Language on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                            }
+                            Else {
+                                Write-log -Subtext "Found Poster with Language '$lang' on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                            }
+                            if ($lang -ne 'null') {
+                                $global:PosterWithText = $true
+                            }
+                            return $global:posterurl
+                            break
+                        }
+                    }
+                }
+                Else {
+                    Write-log -Subtext "No Poster found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                }
+            }
+            Else {
+                Write-log -Subtext "TVDB Api Response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+            }
         }
     }
 }
 function GetTVDBShowPoster {
     if ($global:tvdbid) {
         Write-log -Subtext "Searching on TVDB for a show poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
-        try {
-            $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/series/$($global:tvdbid)/artworks" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
-        }
-        catch {
-        }
-        if ($response) {
-            if ($response.data) {
-                $defaultImageurl = $response.data.image
-                $NoLangImageUrl = $response.data.artworks | where { $_.language -eq $null -and $_.type -eq '2' }
-                if ($NoLangImageUrl) {
-                    $global:posterurl = $NoLangImageUrl[0].image
-                    Write-log -Subtext "Found Textless Poster on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
-                    $global:TextlessPoster = $true
+        if ($global:PreferTextless -eq 'True') {
+            try {
+                $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/series/$($global:tvdbid)/artworks" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
+            }
+            catch {
+            }
+            if ($response) {
+                if ($response.data) {
+                    $defaultImageurl = $response.data.image
+                    $NoLangImageUrl = $response.data.artworks | where { $_.language -eq $null -and $_.type -eq '2' }
+                    if ($NoLangImageUrl) {
+                        $global:posterurl = $NoLangImageUrl[0].image
+                        Write-log -Subtext "Found Textless Poster on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                        $global:TextlessPoster = $true
+                    }
+                    Else {
+                        $global:posterurl = $defaultImageurl
+                        Write-log -Subtext "Found Poster with text on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                    }
+                    return $global:posterurl
                 }
                 Else {
-                    $global:posterurl = $defaultImageurl
-                    Write-log -Subtext "Found Poster with text on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                    Write-log -Subtext "No Poster found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
                 }
-                return $global:posterurl
             }
             Else {
-                Write-log -Subtext "No Poster found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                Write-log -Subtext "TVDB Api Response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
             }
         }
         Else {
-            Write-log -Subtext "TVDB Api Response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+            try {
+                $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/series/$($global:tvdbid)/artworks" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
+            }
+            catch {
+            }
+            if ($response) {
+                if ($response.data) {
+                    foreach ($lang in $global:PreferedLanguageOrderTVDB) {
+                        if ($lang -eq 'null') {
+                            $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "" -and $_.type -eq '2' } | Sort-Object Score)
+                        }
+                        Else {
+                            $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "$lang*" -and $_.type -eq '2' } | Sort-Object Score)
+                        }
+                        if ($LangArtwork) {
+                            $global:posterurl = $LangArtwork[0].image
+                            if ($lang -eq 'null') {
+                                Write-log -Subtext "Found Poster without Language on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                            }
+                            Else {
+                                Write-log -Subtext "Found Poster with Language '$lang' on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                            }
+                            if ($lang -ne 'null') {
+                                $global:PosterWithText = $true
+                            }
+                            return $global:posterurl
+                            break
+                        }
+                    }
+                }
+                Else {
+                    Write-log -Subtext "No Poster found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                }
+            }
+            Else {
+                Write-log -Subtext "TVDB Api Response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+            }
         }
     }
 }
@@ -414,10 +716,25 @@ $global:tmdbtoken = $config.ApiPart.tmdbtoken
 $FanartTvAPIKey = $config.ApiPart.FanartTvAPIKey
 $PlexToken = $config.ApiPart.PlexToken
 $global:FavProvider = $config.ApiPart.FavProvider.ToUpper()
-
-# default to fanart if favprovider missing
+$global:PreferedLanguageOrder = $config.ApiPart.PreferedLanguageOrder
+# default Lang order if missing in config
+if (!$global:PreferedLanguageOrder) {
+    Write-log -Message "Lang search Order not set in Config, setting it to 'xx,en,de' for you" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+    $global:PreferedLanguageOrder = "xx","en","de"
+}
+$global:PreferedLanguageOrderTMDB = $global:PreferedLanguageOrder.Replace('xx', 'null')
+$global:PreferedLanguageOrderFanart = $global:PreferedLanguageOrder.Replace('xx', '00')
+$global:PreferedLanguageOrderTVDB = $global:PreferedLanguageOrder.Replace('xx', 'null')
+if ($global:PreferedLanguageOrder[0] -eq 'xx') {
+    $global:PreferTextless = $true
+}
+Else {
+    $global:PreferTextless = $false
+}
+# default to TMDB if favprovider missing
 if (!$global:FavProvider) {
-    $global:FavProvider = 'FANART'
+    Write-log -Message "FavProvider not set in config, setting it to 'TMDB' for you" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+    $global:FavProvider = 'TMDB'
 }
 
 # Plex Part
@@ -719,7 +1036,7 @@ else {
     Write-log -Message "Query all items from all Libs, this can take a while..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
     #$Libraries = Import-Csv "C:\posterTemp\logs\PlexLibexport.csv" -Delimiter ';' 
     #<#
-    $Libraries = @()
+    #$Libraries = @()
     Foreach ($Library in $Libsoverview) {
         if ($Library.Name -notin $LibstoExclude) {
             if ($PlexToken) {
@@ -900,16 +1217,17 @@ else {
                         'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBMoviePoster } }
                         'FANART' { $global:posterurl = GetFanartMoviePoster }
                     }
-                        
-                    if (!$global:TextlessPoster -and $global:fanartfallbackposterurl) {
-                        $global:posterurl = $global:fanartfallbackposterurl
-                        Write-log -Subtext "Took Fanart.tv Fallback poster cause its your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
-                        $global:IsFallback = $true
-                    }
-                    if (!$global:TextlessPoster -and $global:TMDBfallbackposterurl) {
-                        $global:posterurl = $global:TMDBfallbackposterurl
-                        Write-log -Subtext "Took TMDB Fallback poster cause its your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
-                        $global:IsFallback = $true
+                    if ($global:PreferTextless -eq 'True') {
+                        if (!$global:TextlessPoster -and $global:fanartfallbackposterurl) {
+                            $global:posterurl = $global:fanartfallbackposterurl
+                            Write-log -Subtext "Took Fanart.tv Fallback poster cause its your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+                            $global:IsFallback = $true
+                        }
+                        if (!$global:TextlessPoster -and $global:TMDBfallbackposterurl) {
+                            $global:posterurl = $global:TMDBfallbackposterurl
+                            Write-log -Subtext "Took TMDB Fallback poster cause its your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+                            $global:IsFallback = $true
+                        }
                     }
                     if ($global:TextlessPoster -eq 'true' -and $global:posterurl) {
                     } 
@@ -1088,21 +1406,22 @@ else {
                     'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBShowPoster } }
                     'FANART' { $global:posterurl = GetFanartShowPoster }
                 }
-                if (!$global:TextlessPoster -and $global:fanartfallbackposterurl) {
-                    $global:posterurl = $global:fanartfallbackposterurl
-                    Write-log -Subtext "Took Fanart.tv Fallback poster cause its your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
-                    $global:IsFallback = $true
-                }
-                if (!$global:TextlessPoster -and $global:TMDBfallbackposterurl) {
-                    $global:posterurl = $global:TMDBfallbackposterurl
-                    Write-log -Subtext "Took TMDB Fallback poster cause its your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
-                    $global:IsFallback = $true
-                }
-
-                # try to find textless on TVDB
-                if ($global:TextlessPoster -ne 'true' -and $entry.tvdbid ) {
-                    $global:posterurl = GetTVDBShowPoster
-                    $global:IsFallback = $true
+                if ($global:PreferTextless -eq 'True') {
+                    if (!$global:TextlessPoster -and $global:fanartfallbackposterurl) {
+                        $global:posterurl = $global:fanartfallbackposterurl
+                        Write-log -Subtext "Took Fanart.tv Fallback poster cause its your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+                        $global:IsFallback = $true
+                    }
+                    if (!$global:TextlessPoster -and $global:TMDBfallbackposterurl) {
+                        $global:posterurl = $global:TMDBfallbackposterurl
+                        Write-log -Subtext "Took TMDB Fallback poster cause its your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+                        $global:IsFallback = $true
+                    }
+                    # try to find textless on TVDB
+                    if ($global:TextlessPoster -ne 'true' -and $entry.tvdbid ) {
+                        $global:posterurl = GetTVDBShowPoster
+                        $global:IsFallback = $true
+                    }
                 }
 
                 if (!$global:TextlessPoster -eq 'true' -and $global:posterurl) {
@@ -1123,10 +1442,10 @@ else {
                 Else {
                     $joinedTitle = $Titletext
                 }
-                if (!$global:TextlessPoster -eq 'True' -and $global:TMDBfallbackposterurl){
+                if (!$global:TextlessPoster -eq 'True' -and $global:TMDBfallbackposterurl) {
                     $global:posterurl = $global:TMDBfallbackposterurl
                 }
-                if (!$global:TextlessPoster -eq 'True' -and $global:fanartfallbackposterurl){
+                if (!$global:TextlessPoster -eq 'True' -and $global:fanartfallbackposterurl) {
                     $global:posterurl = $global:fanartfallbackposterurl
                 }
                 if ($global:posterurl) {
@@ -1274,10 +1593,10 @@ else {
                                 $global:IsFallback = $true
                             }
                         }
-                        if (!$global:TextlessPoster){
+                        if (!$global:TextlessPoster) {
                             $global:PosterWithText = $true
                         }
-                        if ($global:TextlessFallbackPoster -and $global:PosterWithText){
+                        if ($global:TextlessFallbackPoster -and $global:PosterWithText) {
                             Write-Log -Subtext "Taking TMDB Fallback poster..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                             $global:posterurl = $global:TMDBfallbackposterurl
                             $global:TextlessPoster = 'true'
