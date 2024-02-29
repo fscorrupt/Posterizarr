@@ -100,12 +100,12 @@ The posters are all placed in `AssetPath\...` this can then be mounted in pmm to
 
 ### Testing Mode
 
-Run the script with the `-Testing` - in this Mode, the Script will create white Posters with a short, middle and long text (also in Bold), this is handy to test your config before you do it on mass on the actual Posters. - you can see how and where the Text would get applied, also the Size of the Textbox.
+Run the script with the `-Testing` flag. In this mode, the script will create white posters with short, medium, and long texts (also in bold). This is handy for testing your configuration before applying it en masse to the actual posters. You can see how and where the text would be applied, as well as the size of the textbox.
 
 ```powershell
 .\PlexPosterMaker.ps1 -Testing
 ```
-![TestMode](https://i.imgur.com/JkLamCy.png)
+![TestMode](https://i.imgur.com/m76CoHh.png)
 
 ### Manual Mode
 

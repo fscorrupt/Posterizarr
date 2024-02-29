@@ -1122,8 +1122,8 @@ Elseif ($Testing){
     Write-log -Message "Poster Testing Started" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Debug
     Write-log -Subtext "I will now create a few posters for you with different text lengths using your current configuration settings." -Path $global:ScriptRoot\Logs\Manuallog.log -Type Warning
     $ShortText = "The Hobbit" 
-    $MiddleText = "The Hobbit is a great Movie" 
-    $LongText = "The Hobbit is a great Movie that we all loved and liked" 
+    $MiddleText = "The Hobbit is a great movie" 
+    $LongText = "The Hobbit is a great movie that we all loved and enjoyed watching" 
     $ShortTextBold = $ShortText.ToUpper()
     $MiddleTextBold = $MiddleText.ToUpper()
     $LongTextBold = $LongText.ToUpper()
