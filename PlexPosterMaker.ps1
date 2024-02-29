@@ -856,7 +856,49 @@ if (!(Test-Path $font)) {
     Invoke-WebRequest -uri "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/Rocky.ttf" -OutFile $global:ScriptRoot\temp\Rocky.ttf
 }
 
-if (!$Manual -or !$Testing) {
+# Display Current Config settings:
+Write-log -Message "Current Config.json Settings" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+Write-log -Subtext "___________________________________________" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+# Plex Part
+Write-log -Subtext "API Part" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+Write-log -Subtext "| TVDB API Key:             $($global:tvdbapi[0..7] -join '')****" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+Write-log -Subtext "| TMDB API Token:           $($global:tmdbtoken[0..7] -join '')****" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+Write-log -Subtext "| Fanart API Key:           $($FanartTvAPIKey[0..7] -join '')****" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+if ($PlexToken){
+    Write-log -Subtext "| Plex Token:               $($PlexToken[0..7] -join '')****" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+}
+Else {
+    Write-log -Subtext "| Plex Token:               No Token in Config" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+}
+Write-log -Subtext "| Fav Provider:             $global:FavProvider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+Write-log -Subtext "| Prefered Lang Order:      $($global:PreferedLanguageOrder -join ',')" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+Write-log -Subtext "Plex Part" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+Write-log -Subtext "| Exluded Libs:             $($LibstoExclude -join ',')" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+Write-log -Subtext "| Plex Url:                 $($PlexUrl[0..10] -join '')****" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+Write-log -Subtext "Prerequisites Part" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+Write-log -Subtext "| Asset Path:               $AssetPath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+Write-log -Subtext "| Script Root:              $global:ScriptRoot" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+Write-log -Subtext "| Magick Location:          $magickinstalllocation" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+Write-log -Subtext "| Used Font:                $font" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+Write-log -Subtext "| Used Overlay File:        $overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+Write-log -Subtext "| Create Library Folders:   $LibraryFolders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+Write-log -Subtext "| Create Season Posters:    $LibraryFolders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+Write-log -Subtext "OverLay Part" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+Write-log -Subtext "| Process Images:           $global:ImageProcessing" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+Write-log -Subtext "| All Caps on Text:         $fontAllCaps" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+Write-log -Subtext "| Add Border to Image:      $AddBorder" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+Write-log -Subtext "| Add Text to Image:        $AddText" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+Write-log -Subtext "| Font Color:               $fontcolor" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+Write-log -Subtext "| Border Color:             $bordercolor" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+Write-log -Subtext "| Min Font Size:            $minPointSize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+Write-log -Subtext "| Max Font Size:            $maxPointSize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+Write-log -Subtext "| Border Width:             $borderwidth" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+Write-log -Subtext "| Text Box Width:           $MaxWidth" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+Write-log -Subtext "| Text Box Height:          $MaxHeight" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+Write-log -Subtext "| Text Box Offset:          $text_offset" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+Write-log -Subtext "___________________________________________" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+
+if (!$Manual -and !$Testing) {
     # cleanup old logfile
     if ((Test-Path $global:ScriptRoot\Logs\Scriptlog.log)) {
         Remove-Item $global:ScriptRoot\Logs\Scriptlog.log
@@ -872,6 +914,8 @@ if (!$Manual -or !$Testing) {
     }
     Write-log -Message "Old log files cleared..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
 }
+
+Write-log -Message "Starting main Script now..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success    
 
 # Get files in script root with specified extensions
 $files = Get-ChildItem -Path $global:ScriptRoot -File | Where-Object { $_.Extension -in $fileExtensions } -ErrorAction SilentlyContinue
@@ -1076,7 +1120,7 @@ Elseif ($Testing){
     }
 
     Write-log -Message "Poster Testing Started" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Debug
-    Write-log -Subtext "I will now create a few posters for you with different Text Length with your current Config settings." -Path $global:ScriptRoot\Logs\Manuallog.log -Type Warning
+    Write-log -Subtext "I will now create a few posters for you with different text lengths using your current configuration settings." -Path $global:ScriptRoot\Logs\Manuallog.log -Type Warning
     $ShortText = "The Hobbit" 
     $MiddleText = "The Hobbit is a great Movie" 
     $LongText = "The Hobbit is a great Movie that we all loved and liked" 
