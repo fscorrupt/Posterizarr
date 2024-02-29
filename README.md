@@ -78,6 +78,7 @@ Before utilizing the script, ensure the following prerequisites are installed an
 
 **Usage:**
 - **Automatic Mode**: Execute the script without any parameters to generate posters for your entire Plex library.
+- **Testing Mode**: Run the script with the `-Testing` switch to create Test image before you start using it.
 - **Manual Mode**: Run the script with the `-Manual` switch to create custom posters manually.
 
 **Note:**
