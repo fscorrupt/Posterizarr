@@ -856,6 +856,23 @@ if (!(Test-Path $font)) {
     Invoke-WebRequest -uri "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/Rocky.ttf" -OutFile $global:ScriptRoot\temp\Rocky.ttf
 }
 
+if (!$Manual -and !$Testing) {
+    # cleanup old logfile
+    if ((Test-Path $global:ScriptRoot\Logs\Scriptlog.log)) {
+        Remove-Item $global:ScriptRoot\Logs\Scriptlog.log
+    }
+    if ((Test-Path $global:ScriptRoot\Logs\ImageMagickCommands.log)) {
+        Remove-Item $global:ScriptRoot\Logs\ImageMagickCommands.log
+    }
+    if ((Test-Path $global:ScriptRoot\Logs\Scriptlog.log)) {
+        Remove-Item $global:ScriptRoot\Logs\Scriptlog.log
+    }
+    if ((Test-Path "$global:ScriptRoot\Logs\PosterChoices.csv")) {
+        Remove-Item "$global:ScriptRoot\Logs\PosterChoices.csv"
+    }
+    Write-log -Message "Old log files cleared..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+}
+
 # Display Current Config settings:
 Write-log -Message "Current Config.json Settings" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
 Write-log -Subtext "___________________________________________" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
@@ -897,23 +914,6 @@ Write-log -Subtext "| Text Box Width:           $MaxWidth" -Path $global:ScriptR
 Write-log -Subtext "| Text Box Height:          $MaxHeight" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
 Write-log -Subtext "| Text Box Offset:          $text_offset" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
 Write-log -Subtext "___________________________________________" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
-
-if (!$Manual -and !$Testing) {
-    # cleanup old logfile
-    if ((Test-Path $global:ScriptRoot\Logs\Scriptlog.log)) {
-        Remove-Item $global:ScriptRoot\Logs\Scriptlog.log
-    }
-    if ((Test-Path $global:ScriptRoot\Logs\ImageMagickCommands.log)) {
-        Remove-Item $global:ScriptRoot\Logs\ImageMagickCommands.log
-    }
-    if ((Test-Path $global:ScriptRoot\Logs\Scriptlog.log)) {
-        Remove-Item $global:ScriptRoot\Logs\Scriptlog.log
-    }
-    if ((Test-Path "$global:ScriptRoot\Logs\PosterChoices.csv")) {
-        Remove-Item "$global:ScriptRoot\Logs\PosterChoices.csv"
-    }
-    Write-log -Message "Old log files cleared..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
-}
 
 Write-log -Message "Starting main Script now..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success    
 
