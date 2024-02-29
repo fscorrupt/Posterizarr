@@ -856,7 +856,7 @@ if (!(Test-Path $font)) {
     Invoke-WebRequest -uri "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/Rocky.ttf" -OutFile $global:ScriptRoot\temp\Rocky.ttf
 }
 
-if (!$Manual) {
+if (!$Manual -or !$Testing) {
     # cleanup old logfile
     if ((Test-Path $global:ScriptRoot\Logs\Scriptlog.log)) {
         Remove-Item $global:ScriptRoot\Logs\Scriptlog.log
