@@ -856,11 +856,27 @@ if (!(Test-Path $font)) {
     Invoke-WebRequest -uri "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/Rocky.ttf" -OutFile $global:ScriptRoot\temp\Rocky.ttf
 }
 
-if (!$Manual -and !$Testing) {
-    # cleanup old logfile
-    if ((Test-Path $global:ScriptRoot\Logs\Scriptlog.log)) {
-        Remove-Item $global:ScriptRoot\Logs\Scriptlog.log
+
+# cleanup old logfile
+if ($Manual) {
+    if ((Test-Path $global:ScriptRoot\Logs\Manuallog.log)) {
+        Remove-Item $global:ScriptRoot\Logs\Manuallog.log
+        Write-log -Message "Old log files cleared..." -Path $global:ScriptRoot\Logs\Manuallog.log -Type Warning
     }
+    if ((Test-Path $global:ScriptRoot\Logs\ImageMagickCommands.log)) {
+        Remove-Item $global:ScriptRoot\Logs\ImageMagickCommands.log
+    }
+}
+Elseif ($Testing) {
+    if ((Test-Path $global:ScriptRoot\Logs\Testinglog.log)) {
+        Remove-Item $global:ScriptRoot\Logs\Testinglog.log
+        Write-log -Message "Old log files cleared..." -Path $global:ScriptRoot\Logs\Testinglog.log -Type Warning
+    }
+    if ((Test-Path $global:ScriptRoot\Logs\ImageMagickCommands.log)) {
+        Remove-Item $global:ScriptRoot\Logs\ImageMagickCommands.log
+    }
+}
+Else {
     if ((Test-Path $global:ScriptRoot\Logs\ImageMagickCommands.log)) {
         Remove-Item $global:ScriptRoot\Logs\ImageMagickCommands.log
     }
@@ -873,49 +889,58 @@ if (!$Manual -and !$Testing) {
     Write-log -Message "Old log files cleared..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
 }
 
+$configLogging = "$global:ScriptRoot\Logs\Scriptlog.log"
+
+if ($Manual){
+    $configLogging = "$global:ScriptRoot\Logs\Manuallog.log"
+}
+if ($Testing){
+    $configLogging = "$global:ScriptRoot\Logs\Testinglog.log"
+}
+
 # Display Current Config settings:
-Write-log -Message "Current Config.json Settings" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
-Write-log -Subtext "___________________________________________" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+Write-log -Message "Current Config.json Settings" -Path $configLogging -Type Trace
+Write-log -Subtext "___________________________________________" -Path $configLogging -Type Debug
 # Plex Part
-Write-log -Subtext "API Part" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
-Write-log -Subtext "| TVDB API Key:             $($global:tvdbapi[0..7] -join '')****" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-Write-log -Subtext "| TMDB API Token:           $($global:tmdbtoken[0..7] -join '')****" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-Write-log -Subtext "| Fanart API Key:           $($FanartTvAPIKey[0..7] -join '')****" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+Write-log -Subtext "API Part" -Path $configLogging -Type Trace
+Write-log -Subtext "| TVDB API Key:             $($global:tvdbapi[0..7] -join '')****" -Path $configLogging -Type Info
+Write-log -Subtext "| TMDB API Token:           $($global:tmdbtoken[0..7] -join '')****" -Path $configLogging -Type Info
+Write-log -Subtext "| Fanart API Key:           $($FanartTvAPIKey[0..7] -join '')****" -Path $configLogging -Type Info
 if ($PlexToken){
-    Write-log -Subtext "| Plex Token:               $($PlexToken[0..7] -join '')****" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+    Write-log -Subtext "| Plex Token:               $($PlexToken[0..7] -join '')****" -Path $configLogging  -Type Info
 }
 Else {
-    Write-log -Subtext "| Plex Token:               No Token in Config" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+    Write-log -Subtext "| Plex Token:               No Token in Config" -Path $configLogging  -Type Info
 }
-Write-log -Subtext "| Fav Provider:             $global:FavProvider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-Write-log -Subtext "| Prefered Lang Order:      $($global:PreferedLanguageOrder -join ',')" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-Write-log -Subtext "Plex Part" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
-Write-log -Subtext "| Exluded Libs:             $($LibstoExclude -join ',')" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-Write-log -Subtext "| Plex Url:                 $($PlexUrl[0..10] -join '')****" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-Write-log -Subtext "Prerequisites Part" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
-Write-log -Subtext "| Asset Path:               $AssetPath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-Write-log -Subtext "| Script Root:              $global:ScriptRoot" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-Write-log -Subtext "| Magick Location:          $magickinstalllocation" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-Write-log -Subtext "| Used Font:                $font" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-Write-log -Subtext "| Used Overlay File:        $overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-Write-log -Subtext "| Create Library Folders:   $LibraryFolders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-Write-log -Subtext "| Create Season Posters:    $LibraryFolders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-Write-log -Subtext "OverLay Part" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
-Write-log -Subtext "| Process Images:           $global:ImageProcessing" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-Write-log -Subtext "| All Caps on Text:         $fontAllCaps" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-Write-log -Subtext "| Add Border to Image:      $AddBorder" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-Write-log -Subtext "| Add Text to Image:        $AddText" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-Write-log -Subtext "| Font Color:               $fontcolor" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-Write-log -Subtext "| Border Color:             $bordercolor" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-Write-log -Subtext "| Min Font Size:            $minPointSize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-Write-log -Subtext "| Max Font Size:            $maxPointSize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-Write-log -Subtext "| Border Width:             $borderwidth" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-Write-log -Subtext "| Text Box Width:           $MaxWidth" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-Write-log -Subtext "| Text Box Height:          $MaxHeight" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-Write-log -Subtext "| Text Box Offset:          $text_offset" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-Write-log -Subtext "___________________________________________" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+Write-log -Subtext "| Fav Provider:             $global:FavProvider" -Path $configLogging  -Type Info
+Write-log -Subtext "| Prefered Lang Order:      $($global:PreferedLanguageOrder -join ',')" -Path $configLogging  -Type Info
+Write-log -Subtext "Plex Part" -Path $configLogging  -Type Trace
+Write-log -Subtext "| Exluded Libs:             $($LibstoExclude -join ',')" -Path $configLogging -Type Info
+Write-log -Subtext "| Plex Url:                 $($PlexUrl[0..10] -join '')****" -Path $configLogging -Type Info
+Write-log -Subtext "Prerequisites Part" -Path $configLogging -Type Trace
+Write-log -Subtext "| Asset Path:               $AssetPath" -Path $configLogging -Type Info
+Write-log -Subtext "| Script Root:              $global:ScriptRoot" -Path configLogging -Type Info
+Write-log -Subtext "| Magick Location:          $magickinstalllocation" -Path $configLogging -Type Info
+Write-log -Subtext "| Used Font:                $font" -Path $configLogging -Type Info
+Write-log -Subtext "| Used Overlay File:        $overlay" -Path $configLogging -Type Info
+Write-log -Subtext "| Create Library Folders:   $LibraryFolders" -Path $configLogging -Type Info
+Write-log -Subtext "| Create Season Posters:    $LibraryFolders" -Path $configLogging -Type Info
+Write-log -Subtext "OverLay Part" -Path $configLogging -Type Trace
+Write-log -Subtext "| Process Images:           $global:ImageProcessing" -Path $configLogging -Type Info
+Write-log -Subtext "| All Caps on Text:         $fontAllCaps" -Path $configLogging -Type Info
+Write-log -Subtext "| Add Border to Image:      $AddBorder" -Path $configLogging -Type Info
+Write-log -Subtext "| Add Text to Image:        $AddText" -Path $configLogging -Type Info
+Write-log -Subtext "| Font Color:               $fontcolor" -Path $configLogging -Type Info
+Write-log -Subtext "| Border Color:             $bordercolor" -Path $configLogging -Type Info
+Write-log -Subtext "| Min Font Size:            $minPointSize" -Path $configLogging -Type Info
+Write-log -Subtext "| Max Font Size:            $maxPointSize" -Path $configLogging -Type Info
+Write-log -Subtext "| Border Width:             $borderwidth" -Path $configLogging -Type Info
+Write-log -Subtext "| Text Box Width:           $MaxWidth" -Path $configLogging -Type Info
+Write-log -Subtext "| Text Box Height:          $MaxHeight" -Path $configLogging -Type Info
+Write-log -Subtext "| Text Box Offset:          $text_offset" -Path $configLogging -Type Info
+Write-log -Subtext "___________________________________________" -Path $configLogging -Type Debug
 
-Write-log -Message "Starting main Script now..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success    
+Write-log -Message "Starting main Script now..." -Path $configLogging -Type Success    
 
 # Get files in script root with specified extensions
 $files = Get-ChildItem -Path $global:ScriptRoot -File | Where-Object { $_.Extension -in $fileExtensions } -ErrorAction SilentlyContinue
@@ -925,61 +950,61 @@ foreach ($file in $files) {
     $destinationPath = Join-Path -Path $global:ScriptRoot\temp -ChildPath $file.Name
     if (!(Test-Path -LiteralPath $destinationPath)) {
         Copy-Item -Path $file.FullName -Destination $destinationPath -Force | out-null
-        Write-log -Subtext "Found File: '$($file.Name)' in ScriptRoot - copy it into temp folder..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+        Write-log -Subtext "Found File: '$($file.Name)' in ScriptRoot - copy it into temp folder..." -Path $configLogging -Type Trace
     }
 }
 
 if ($PlexToken) {
-    Write-log -Message "Plex token found, checking access now..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+    Write-log -Message "Plex token found, checking access now..." -Path $configLogging -Type Info
     if ((Invoke-WebRequest "$PlexUrl/?X-Plex-Token=$PlexToken").StatusCode -eq 200) {
-        Write-log -Subtext "Plex access is working..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
+        Write-log -Subtext "Plex access is working..." -Path $configLogging -Type Success
         [xml]$Libs = (Invoke-WebRequest "$PlexUrl/library/sections/?X-Plex-Token=$PlexToken").content
     }
     Else {
-        Write-log -Message "Could not access plex with this url: $PlexUrl/?X-Plex-Token=$PlexToken" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
-        Write-log -Subtext "Please check token and access..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+        Write-log -Message "Could not access plex with this url: $PlexUrl/?X-Plex-Token=$PlexToken" -Path $configLogging -Type Error
+        Write-log -Subtext "Please check token and access..." -Path $configLogging -Type Error
         $Errorcount++
         pause
         exit
     }
 }
 Else {
-    Write-log -Message "Checking Plex access now..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+    Write-log -Message "Checking Plex access now..." -Path $configLogging -Type Info
     if ((Invoke-WebRequest "$PlexUrl").StatusCode -eq 200) {
-        Write-log -Subtext "Plex access is working..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
+        Write-log -Subtext "Plex access is working..." -Path $configLogging -Type Success
         [xml]$Libs = (Invoke-WebRequest "$PlexUrl/library/sections").content
     }
     Else {
-        Write-log -Message "Could not access plex with this url: $PlexUrl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+        Write-log -Message "Could not access plex with this url: $PlexUrl" -Path $configLogging -Type Error
         $Errorcount++
-        Write-log -Subtext "Please check access and settings in plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
-        Write-log -Message "To be able to connect to plex without Auth" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-        Write-log -Message "You have to enter your ip range in 'Settings -> Network -> List of IP addresses and networks that are allowed without auth: '192.168.1.0/255.255.255.0''" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+        Write-log -Subtext "Please check access and settings in plex..." -Path $configLogging -Type Error
+        Write-log -Message "To be able to connect to plex without Auth" -Path $configLogging -Type Info
+        Write-log -Message "You have to enter your ip range in 'Settings -> Network -> List of IP addresses and networks that are allowed without auth: '192.168.1.0/255.255.255.0''" -Path $configLogging -Type Info
         pause
         exit
     }
 }
 
 if (!(Test-Path $magick)) {
-    Write-log -Message "ImageMagick missing, downloading/installing it for you..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+    Write-log -Message "ImageMagick missing, downloading/installing it for you..." -Path $configLogging -Type Error
     $Errorcount++
     $InstallArguments = "/verysilent /DIR=`"$magickinstalllocation`""
     Invoke-WebRequest https://imagemagick.org/archive/binaries/ImageMagick-7.1.1-27-Q16-HDRI-x64-dll.exe -OutFile $global:ScriptRoot\temp\ImageMagick-7.1.1-27-Q16-HDRI-x64-dll.exe
     Start-Process $global:ScriptRoot\temp\ImageMagick-7.1.1-27-Q16-HDRI-x64-dll.exe -ArgumentList $InstallArguments -NoNewWindow -Wait
     if (Test-Path -LiteralPath $magickinstalllocation\magick.exe) {
-        Write-log -Subtext "ImageMagick installed here: $magickinstalllocation" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
+        Write-log -Subtext "ImageMagick installed here: $magickinstalllocation" -Path $configLogging -Type Success
     }
     Else {
-        Write-log -Subtext "Error During installation, please manually install Imagemagick" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+        Write-log -Subtext "Error During installation, please manually install Imagemagick" -Path $configLogging -Type Error
     }
 }
 # check if fanart Module is installed
 if (!(Get-InstalledModule -Name FanartTvAPI)) {
-    Write-log -Message "FanartTvAPI Module missing, installing it for you..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+    Write-log -Message "FanartTvAPI Module missing, installing it for you..." -Path $configLogging -Type Error
     $Errorcount++
     Install-Module -Name FanartTvAPI -Force -Confirm -AllowClobber
     
-    Write-log -Subtext "FanartTvAPI Module installed, importing it now..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
+    Write-log -Subtext "FanartTvAPI Module installed, importing it now..." -Path $configLogging -Type Success
     Import-Module -Name FanartTvAPI
 }
 # Add Fanart Api
@@ -1120,7 +1145,7 @@ Elseif ($Testing){
     }
 
     Write-log -Message "Poster Testing Started" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Debug
-    Write-log -Subtext "I will now create a few posters for you with different text lengths using your current configuration settings." -Path $global:ScriptRoot\Logs\Manuallog.log -Type Warning
+    Write-log -Subtext "I will now create a few posters for you with different text lengths using your current configuration settings." -Path $global:ScriptRoot\Logs\Testinglog.log -Type Warning
     $ShortText = "The Hobbit" 
     $MiddleText = "The Hobbit is a great movie" 
     $LongText = "The Hobbit is a great movie that we all loved and enjoyed watching" 
