@@ -91,19 +91,28 @@ Feel free to customize the script further to meet your specific preferences or a
 Run the script without any parameters:
 
 ```powershell
-.\PosterMaker.ps1
+.\PlexPosterMaker.ps1
 ```
 
 This will generate posters for your entire Plex library based on the configured settings.
 
 The posters are all placed in `AssetPath\...` this can then be mounted in pmm to use as asset folder.
 
+### Testing Mode
+
+Run the script with the `-Testing` - in this Mode, the Script will create white Posters with a short, middle and long text (also in Bold), this is handy to test your config before you do it on mass on the actual Posters. - you can see how and where the Text would get applied, also the Size of the Textbox.
+
+```powershell
+.\PlexPosterMaker.ps1 -Testing
+```
+![TestMode](https://i.imgur.com/JkLamCy.png)
+
 ### Manual Mode
 
 Run the script with the `-Manual` switch:
 
 ```powershell
-.\PosterMaker.ps1 -Manual
+.\PlexPosterMaker.ps1 -Manual
 ```
 
 Follow the prompts to enter the source picture path, media folder name, and movie/show title to manually create a custom poster.

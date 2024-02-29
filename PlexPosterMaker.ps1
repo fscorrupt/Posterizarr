@@ -1,6 +1,8 @@
 param (
-    [switch]$Manual
+    [switch]$Manual,
+    [switch]$Testing
 )
+
 $global:HeaderWritten = $null
 #################
 # What you need #
@@ -333,7 +335,6 @@ function GetTMDBSeasonPoster {
                             $global:PosterWithText = $true
                         }
                         return $global:posterurl
-                        $global:IsFallback = $true
                         break
                     }
                 }
@@ -531,7 +532,7 @@ function GetFanartShowPoster {
     }
 }
 function GetFanartSeasonPoster {
-    Write-log -Subtext "Searching on Fanart.tv for a season poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+    Write-log -Subtext "Searching on Fanart.tv for Season '$global:SeasonNumber' poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
     $ids = @($global:tmdbid, $global:tvdbid, $global:imdbid)
     $entrytemp = $null
     if ($global:PreferTextless -eq 'True') {
@@ -539,7 +540,30 @@ function GetFanartSeasonPoster {
             if ($id) {
                 $entrytemp = Get-FanartTv -Type tv -id $id -ErrorAction SilentlyContinue
                 if ($entrytemp.seasonposter) {
-                    $global:posterurl = ($entrytemp.seasonposter | Where-Object { $_.lang -eq 'en' -and $_.Season -eq $global:SeasonNumber } | Sort-Object likes)[0].url
+                    if ($global:SeasonNumber -match '\b\d{1,2}\b'){
+                        $global:posterurl = ($entrytemp.seasonposter | Where-Object { $_.lang -eq 'en' -and $_.Season -eq $global:SeasonNumber } | Sort-Object likes)[0].url
+                    }
+                    Else {
+                        Write-log -Subtext "Could not get a result with '$global:SeasonNumber' on Fanart, likley season number not in correct format, fallback to Show poster." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                        if ($entrytemp -and $entrytemp.tvposter) {
+                            $BackupPoster
+                            foreach ($lang in $global:PreferedLanguageOrderFanart) {
+                                if (($entrytemp.tvposter | Where-Object lang -eq "$lang")) {
+                                    $global:posterurl = ($entrytemp.tvposter)[0].url
+                                    if ($lang -eq '00') {
+                                        Write-log -Subtext "Found Poster without Language on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                                    }
+                                    Else {
+                                        Write-log -Subtext "Found Poster with Language '$lang' on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                                    }
+                                    if ($lang -ne '00') {
+                                        $global:PosterWithText = $true
+                                    }
+                                    break
+                                }
+                            }
+                        }
+                    }
                     break
                 }
                 Else {
@@ -548,7 +572,7 @@ function GetFanartSeasonPoster {
                 }
             }
         }
-        if ($global:posterurl) {
+        if ($global:posterurl -and !$BackupPoster) {
             Write-log -Subtext "Found season poster on Fanart" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
             return $global:posterurl
         }
@@ -562,33 +586,8 @@ function GetFanartSeasonPoster {
                 $entrytemp = Get-FanartTv -Type tv -id $id -ErrorAction SilentlyContinue
                 if ($entrytemp.seasonposter) {
                     foreach ($lang in $global:PreferedLanguageOrderFanart) {
-                        if ($global:SeasonNumber -match '\b\d{1,2}\b'){
-                            $global:posterurl = ($entrytemp.seasonposter | Where-Object { $_.lang -eq "$lang" -and $_.Season -eq $global:SeasonNumber } | Sort-Object likes)[0].url
-                        }
-                        Else {
-                            Write-log -Subtext "Could not get a result with '$global:SeasonNumber' on Fanart, likley season number not in correct format, fallback to Show poster." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
-                            if ($entrytemp -and $entrytemp.tvposter) {
-                                $BackupPoster
-                                foreach ($lang in $global:PreferedLanguageOrderFanart) {
-                                    if (($entrytemp.tvposter | Where-Object lang -eq "$lang")) {
-                                        $global:posterurl = ($entrytemp.tvposter)[0].url
-                                        if ($lang -eq '00') {
-                                            Write-log -Subtext "Found Poster without Language on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
-                                            $global:IsFallback = $true
-                                        }
-                                        Else {
-                                            Write-log -Subtext "Found Poster with Language '$lang' on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
-                                            $global:IsFallback = $true
-                                        }
-                                        if ($lang -ne '00') {
-                                            $global:PosterWithText = $true
-                                        }
-                                        break
-                                    }
-                                }
-                            }
-                        }
-
+                        $global:posterurl = ($entrytemp.seasonposter | Where-Object { $_.lang -eq "$lang" -and $_.Season -eq $global:SeasonNumber } | Sort-Object likes)[0].url
+                        break
                     }
                 }
                 Else {
@@ -759,7 +758,7 @@ $startTime = Get-Date
 # Check if Config file is present
 if (!(Test-Path "$PSScriptRoot\config.json")) {
     Write-log -Message "Config File missing, downloading it for you..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-    Invoke-WebRequest -uri "https://github.com/fscorrupt/PosterMaker/raw/main/config.example.json" -OutFile "$PSScriptRoot\config.json"
+    Invoke-WebRequest -uri "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/config.example.json" -OutFile "$PSScriptRoot\config.json"
     Write-log -Subtext "Config File downloaded here: '$PSScriptRoot\config.json'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
     Write-log -Subtext "Please configure the config file according to GH, exit script now..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
     pause
@@ -806,6 +805,7 @@ $global:ScriptRoot = $PSScriptRoot
 $magickinstalllocation = RemoveTrailingSlash $config.PrerequisitePart.magickinstalllocation
 $font = "$global:ScriptRoot\temp\$($config.PrerequisitePart.font)"
 $overlay = "$global:ScriptRoot\temp\$($config.PrerequisitePart.overlayfile)"
+$testimage = "$global:ScriptRoot\temp\Testimage.png"
 $LibraryFolders = $config.PrerequisitePart.LibraryFolders
 $global:SeasonPosters = $config.PrerequisitePart.SeasonPosters
 # Overlay Part
@@ -850,10 +850,10 @@ if (Test-Path $global:ScriptRoot\temp) {
 
 # Test if files are present in Script root
 if (!(Test-Path $overlay)) {
-    Invoke-WebRequest -uri "https://github.com/fscorrupt/PosterMaker/raw/main/overlay.png" -OutFile $global:ScriptRoot\temp\overlay.png 
+    Invoke-WebRequest -uri "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/overlay.png" -OutFile $global:ScriptRoot\temp\overlay.png 
 }
 if (!(Test-Path $font)) {
-    Invoke-WebRequest -uri "https://github.com/fscorrupt/PosterMaker/raw/main/Rocky.ttf" -OutFile $global:ScriptRoot\temp\Rocky.ttf
+    Invoke-WebRequest -uri "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/Rocky.ttf" -OutFile $global:ScriptRoot\temp\Rocky.ttf
 }
 
 if (!$Manual) {
@@ -1069,6 +1069,85 @@ if ($Manual) {
     # Move file back to original naming with Brackets.
     Move-Item -LiteralPath $backgroundImage -destination $backgroundImageoriginal -Force -ErrorAction SilentlyContinue
     Write-log -Subtext "Poster created and moved to: $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Manuallog.log -Type Success
+}
+Elseif ($Testing){
+    if (!(Test-Path $testimage)) {
+        Invoke-WebRequest -uri "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/testimage.png" -OutFile $global:ScriptRoot\temp\testimage.png 
+    }
+
+    Write-log -Message "Poster Testing Started" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Debug
+    Write-log -Subtext "I will now create a few posters for you with different Text Length with your current Config settings." -Path $global:ScriptRoot\Logs\Manuallog.log -Type Warning
+    $ShortText = "The Hobbit" 
+    $MiddleText = "The Hobbit is a great Movie" 
+    $LongText = "The Hobbit is a great Movie that we all loved and liked" 
+    $ShortTextBold = $ShortText.ToUpper()
+    $MiddleTextBold = $MiddleText.ToUpper()
+    $LongTextBold = $LongText.ToUpper()
+    $TestPosterShort = "$global:ScriptRoot\temp\ShortText.jpg"
+    $TestPosterMiddle = "$global:ScriptRoot\temp\MiddleText.jpg"
+    $TestPosterLong = "$global:ScriptRoot\temp\LongText.jpg"
+    $TestPosterShortBold = "$global:ScriptRoot\temp\ShortTextBold.jpg"
+    $TestPosterMiddleBold = "$global:ScriptRoot\temp\MiddleTextBold.jpg"
+    $TestPosterLongBold = "$global:ScriptRoot\temp\LongTextBold.jpg"
+
+    Copy-Item -LiteralPath $testimage $TestPosterShort
+    Copy-Item -LiteralPath $testimage $TestPosterMiddle
+    Copy-Item -LiteralPath $testimage $TestPosterLong
+    Copy-Item -LiteralPath $testimage $TestPosterShortBold
+    Copy-Item -LiteralPath $testimage $TestPosterMiddleBold
+    Copy-Item -LiteralPath $testimage $TestPosterLongBold
+    Remove-Item -LiteralPath $testimage | out-null
+
+    $optimalFontSizeShort = Get-OptimalPointSize -text $ShortText -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
+    $optimalFontSizeMiddle = Get-OptimalPointSize -text $MiddleText -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
+    $optimalFontSizeLong = Get-OptimalPointSize -text $LongText -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
+    
+    $optimalFontSizeShortBold = Get-OptimalPointSize -text $ShortTextBold -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
+    $optimalFontSizeMiddleBold = Get-OptimalPointSize -text $MiddleTextBold -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
+    $optimalFontSizeLongBold = Get-OptimalPointSize -text $LongTextBold -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
+
+    Write-log -Subtext "Optimal font size for Short text is: '$optimalFontSizeShort'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "    Applying Font text: `"$ShortText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "Optimal font size for Middle text is: '$optimalFontSizeMiddle'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "    Applying Font text: `"$MiddleText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "Optimal font size for Long text is: '$optimalFontSizeLong'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "    Applying Font text: `"$LongText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+
+    Write-log -Subtext "Optimal font size for Short Bold text is: '$optimalFontSizeShortBold'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "    Applying Bold Font text: `"$ShortTextBold`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "Optimal font size for Middle Bold text is: '$optimalFontSizeMiddleBold'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "    Applying Bold Font text: `"$MiddleTextBold`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "Optimal font size for Long Bold text is: '$optimalFontSizeLongBold'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "    Applying Bold Font text: `"$LongTextBold`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+
+    $ArgumentsShort = "`"$TestPosterShort`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeShort`" -fill `"#0000FF`" -size `"$boxsize`" -background `"#ACD7E6`" caption:`"$ShortText`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -composite `"$TestPosterShort`""
+    $ArgumentsMiddle = "`"$TestPosterMiddle`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeMiddle`" -fill `"#0000FF`" -size `"$boxsize`" -background `"#ACD7E6`" caption:`"$MiddleText`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -composite `"$TestPosterMiddle`""
+    $ArgumentsLong = "`"$TestPosterLong`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeLong`" -fill `"#0000FF`" -size `"$boxsize`" -background `"#ACD7E6`" caption:`"$LongText`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -composite `"$TestPosterLong`""
+    $ArgumentsShortBold = "`"$TestPosterShortBold`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeShortBold`" -fill `"#0000FF`" -size `"$boxsize`" -background `"#ACD7E6`" caption:`"$ShortTextBold`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -composite `"$TestPosterShortBold`""
+    $ArgumentsMiddleBold = "`"$TestPosterMiddleBold`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeMiddleBold`" -fill `"#0000FF`" -size `"$boxsize`" -background `"#ACD7E6`" caption:`"$MiddleTextBold`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -composite `"$TestPosterMiddleBold`""
+    $ArgumentsLongBold = "`"$TestPosterLongBold`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeLongBold`" -fill `"#0000FF`" -size `"$boxsize`" -background `"#ACD7E6`" caption:`"$LongTextBold`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -composite `"$TestPosterLongBold`""
+    
+    $logEntryShort = "magick.exe $ArgumentsShort"
+    $logEntryMiddle = "magick.exe $ArgumentsMiddle"
+    $logEntryLong = "magick.exe $ArgumentsLong"
+    $logEntryShortBold = "magick.exe $ArgumentsShortBold"
+    $logEntryMiddleBold = "magick.exe $ArgumentsMiddleBold"
+    $logEntryLongBold = "magick.exe $ArgumentsLongBold"
+
+    $logEntryShort | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $logEntryShortBold | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $logEntryMiddle | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $logEntryMiddleBold | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $logEntryLong | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $logEntryLongBold | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentsShort
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentsMiddle
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentsLong
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentsShortBold
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentsMiddleBold
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentsLongBold
+    Write-log -Subtext "Poster Tests finished, you can find them here: $global:ScriptRoot\temp" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Success
 }
 else {
     Write-log -Message "Query plex libs..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
