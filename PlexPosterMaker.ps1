@@ -805,7 +805,7 @@ $global:ScriptRoot = $PSScriptRoot
 $magickinstalllocation = RemoveTrailingSlash $config.PrerequisitePart.magickinstalllocation
 $font = "$global:ScriptRoot\temp\$($config.PrerequisitePart.font)"
 $overlay = "$global:ScriptRoot\temp\$($config.PrerequisitePart.overlayfile)"
-$testimage = "$global:ScriptRoot\temp\Testimage.png"
+$testimage = "$global:ScriptRoot\test\testimage.png"
 $LibraryFolders = $config.PrerequisitePart.LibraryFolders
 $global:SeasonPosters = $config.PrerequisitePart.SeasonPosters
 # Overlay Part
@@ -837,6 +837,10 @@ if (!(Test-Path $global:ScriptRoot\Logs)) {
 
 if (!(Test-Path $global:ScriptRoot\temp)) {
     New-Item -ItemType Directory -Path $global:ScriptRoot\temp -Force | out-null
+}
+
+if (!(Test-Path $global:ScriptRoot\test)) {
+    New-Item -ItemType Directory -Path $global:ScriptRoot\test -Force | out-null
 }
 
 if (!(Test-Path $AssetPath)) {
@@ -1140,32 +1144,27 @@ if ($Manual) {
     Write-log -Subtext "Poster created and moved to: $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Manuallog.log -Type Success
 }
 Elseif ($Testing){
-    if (!(Test-Path $testimage)) {
-        Invoke-WebRequest -uri "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/testimage.png" -OutFile $global:ScriptRoot\temp\testimage.png 
-    }
-
     Write-log -Message "Poster Testing Started" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Debug
     Write-log -Subtext "I will now create a few posters for you with different text lengths using your current configuration settings." -Path $global:ScriptRoot\Logs\Testinglog.log -Type Warning
+    if (!(Test-Path $testimage)) {
+        $ArgumentCreate = "-size 2000x3000 xc:pink -background none `"$testimage`""
+        $logEntryCreate = "magick.exe $ArgumentCreate"
+    #$logEntryCreate | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+        Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentCreate
+        Write-log -Subtext "Test Poster Created..." -Path $global:ScriptRoot\Logs\Testinglog.log -Type Trace
+    }
     $ShortText = "The Hobbit" 
     $MiddleText = "The Hobbit is a great movie" 
     $LongText = "The Hobbit is a great movie that we all loved and enjoyed watching" 
     $ShortTextBold = $ShortText.ToUpper()
     $MiddleTextBold = $MiddleText.ToUpper()
     $LongTextBold = $LongText.ToUpper()
-    $TestPosterShort = "$global:ScriptRoot\temp\ShortText.jpg"
-    $TestPosterMiddle = "$global:ScriptRoot\temp\MiddleText.jpg"
-    $TestPosterLong = "$global:ScriptRoot\temp\LongText.jpg"
-    $TestPosterShortBold = "$global:ScriptRoot\temp\ShortTextBold.jpg"
-    $TestPosterMiddleBold = "$global:ScriptRoot\temp\MiddleTextBold.jpg"
-    $TestPosterLongBold = "$global:ScriptRoot\temp\LongTextBold.jpg"
-
-    Copy-Item -LiteralPath $testimage $TestPosterShort
-    Copy-Item -LiteralPath $testimage $TestPosterMiddle
-    Copy-Item -LiteralPath $testimage $TestPosterLong
-    Copy-Item -LiteralPath $testimage $TestPosterShortBold
-    Copy-Item -LiteralPath $testimage $TestPosterMiddleBold
-    Copy-Item -LiteralPath $testimage $TestPosterLongBold
-    Remove-Item -LiteralPath $testimage | out-null
+    $TestPosterShort = "$global:ScriptRoot\test\ShortText.jpg"
+    $TestPosterMiddle = "$global:ScriptRoot\test\MiddleText.jpg"
+    $TestPosterLong = "$global:ScriptRoot\test\LongText.jpg"
+    $TestPosterShortBold = "$global:ScriptRoot\test\ShortTextBold.jpg"
+    $TestPosterMiddleBold = "$global:ScriptRoot\test\MiddleTextBold.jpg"
+    $TestPosterLongBold = "$global:ScriptRoot\test\LongTextBold.jpg"
 
     $optimalFontSizeShort = Get-OptimalPointSize -text $ShortText -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
     $optimalFontSizeMiddle = Get-OptimalPointSize -text $MiddleText -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
@@ -1174,6 +1173,55 @@ Elseif ($Testing){
     $optimalFontSizeShortBold = Get-OptimalPointSize -text $ShortTextBold -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
     $optimalFontSizeMiddleBold = Get-OptimalPointSize -text $MiddleTextBold -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
     $optimalFontSizeLongBold = Get-OptimalPointSize -text $LongTextBold -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
+    
+    if ($AddBorder -eq 'true' -and $AddOverlay -eq 'true') {
+        $ArgumentsShort = "`"$testimage`" `"$overlay`" -gravity south -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterShort`""
+        $ArgumentsMiddle = "`"$testimage`" `"$overlay`" -gravity south -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterMiddle`""
+        $ArgumentsLong = "`"$testimage`" `"$overlay`" -gravity south -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterLong`""
+        $ArgumentsShortBold = "`"$testimage`" `"$overlay`" -gravity south -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterShortBold`""
+        $ArgumentsMiddleBold = "`"$testimage`" `"$overlay`" -gravity south -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterMiddleBold`""
+        $ArgumentsLongBold = "`"$testimage`" `"$overlay`" -gravity south -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterLongBold`""
+        Write-log -Subtext "Adding Borders | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+    }
+    if ($AddBorder -eq 'true' -and $AddOverlay -eq 'false') {
+        $ArgumentsShort = "`"$testimage`" -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterShort`""
+        $ArgumentsMiddle = "`"$testimage`" -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterMiddle`""
+        $ArgumentsLong = "`"$testimage`" -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterLong`""
+        $ArgumentsShortBold = "`"$testimage`" -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterShortBold`""
+        $ArgumentsMiddleBold = "`"$testimage`" -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterMiddleBold`""
+        $ArgumentsLongBold = "`"$testimage`" -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterLongBold`""
+        Write-log -Subtext "Adding Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+    }
+    if ($AddBorder -eq 'false' -and $AddOverlay -eq 'true') {
+        $ArgumentsShort = "`"$testimage`" `"$overlay`" -gravity south -composite `"$TestPosterShort`""
+        $ArgumentsMiddle = "`"$testimage`" `"$overlay`" -gravity south -composite `"$TestPosterMiddle`""
+        $ArgumentsLong = "`"$testimage`" `"$overlay`" -gravity south -composite `"$TestPosterLong`""
+        $ArgumentsShortBold = "`"$testimage`" `"$overlay`" -gravity south -composite `"$TestPosterShortBold`""
+        $ArgumentsMiddleBold = "`"$testimage`" `"$overlay`" -gravity south -composite `"$TestPosterMiddleBold`""
+        $ArgumentsLongBold = "`"$testimage`" `"$overlay`" -gravity south -composite `"$TestPosterLongBold`""
+        Write-log -Subtext "Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+    }
+
+    $logEntryShort = "magick.exe $ArgumentsShort"
+    $logEntryMiddle = "magick.exe $ArgumentsMiddle"
+    $logEntryLong = "magick.exe $ArgumentsLong"
+    $logEntryShortBold = "magick.exe $ArgumentsShortBold"
+    $logEntryMiddleBold = "magick.exe $ArgumentsMiddleBold"
+    $logEntryLongBold = "magick.exe $ArgumentsLongBold"
+
+    $logEntryShort | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $logEntryShortBold | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $logEntryMiddle | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $logEntryMiddleBold | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $logEntryLong | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $logEntryLongBold | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentsShort
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentsMiddle
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentsLong
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentsShortBold
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentsMiddleBold
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentsLongBold
 
     Write-log -Subtext "Optimal font size for Short text is: '$optimalFontSizeShort'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
     Write-log -Subtext "    Applying Font text: `"$ShortText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
@@ -1217,6 +1265,7 @@ Elseif ($Testing){
     Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentsMiddleBold
     Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentsLongBold
     Write-log -Subtext "Poster Tests finished, you can find them here: $global:ScriptRoot\temp" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Success
+    Remove-Item -LiteralPath $testimage | out-null
 }
 else {
     Write-log -Message "Query plex libs..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info

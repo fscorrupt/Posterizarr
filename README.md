@@ -108,7 +108,7 @@ This is handy for testing your configuration before applying it en masse to the 
 ```powershell
 .\PlexPosterMaker.ps1 -Testing
 ```
-![TestMode](https://i.imgur.com/m76CoHh.png)
+![TestMode](https://i.imgur.com/83OIUKw.png)
 
 ### Manual Mode
 
