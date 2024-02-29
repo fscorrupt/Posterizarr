@@ -264,7 +264,7 @@ function GetTMDBShowPoster {
     }
 }
 function GetTMDBSeasonPoster {
-    Write-log -Subtext "Searching on TMDB for a Season poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+    Write-log -Subtext "Searching on TMDB for Season '$global:SeasonNumber' poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
     if ($global:PreferTextless -eq 'True') {
         try {
             $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)/season/$global:SeasonNumber/images?append_to_response=images&language=xx&include_image_language=en,null,de" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue            
@@ -301,9 +301,43 @@ function GetTMDBSeasonPoster {
     }
     Else {
         try {
-            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)/season/$global:SeasonNumber/images?append_to_response=images&language=$($global:PreferedLanguageOrder[0])&include_image_language=$($global:PreferedLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue            
+            if ($global:SeasonNumber -match '\b\d{1,2}\b'){
+                $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)/season/$global:SeasonNumber/images?append_to_response=images&language=$($global:PreferedLanguageOrder[0])&include_image_language=$($global:PreferedLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
+            }
+            Else {
+                $responseBackup = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=$($PreferedLanguageOrder[0])&include_image_language=$($global:PreferedLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
+            }
         }
         catch {
+        }
+        if ($responseBackup) {
+            if ($responseBackup.images.posters) {
+                Write-log -Subtext "Could not get a result with '$global:SeasonNumber' on TMDB, likley season number not in correct format, fallback to Show poster." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                foreach ($lang in $global:PreferedLanguageOrderTMDB) {
+                    if ($lang -eq 'null') {
+                        $FavPoster = ($responseBackup.images.posters | Where-Object iso_639_1 -eq $null)
+                    }
+                    Else {
+                        $FavPoster = ($responseBackup.images.posters | Where-Object iso_639_1 -eq $lang)
+                    }
+                    if ($FavPoster) {
+                        $posterpath = (($FavPoster | Sort-Object vote_average -Descending)[0]).file_path
+                        $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
+                        if ($lang -eq 'null') {
+                            Write-log -Subtext "Found Poster without Language on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                        }
+                        Else {
+                            Write-log -Subtext "Found Poster with Language '$lang' on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                        }
+                        if ($lang -ne 'null') {
+                            $global:PosterWithText = $true
+                        }
+                        return $global:posterurl
+                        $global:IsFallback = $true
+                        break
+                    }
+                }
+            }
         }
         if ($response) {
             if ($response.posters) {
@@ -338,6 +372,7 @@ function GetTMDBSeasonPoster {
         Else {
             Write-log -Subtext "No Season Poster on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
         }
+
     }
 }
 function GetFanartMoviePoster {
@@ -527,8 +562,33 @@ function GetFanartSeasonPoster {
                 $entrytemp = Get-FanartTv -Type tv -id $id -ErrorAction SilentlyContinue
                 if ($entrytemp.seasonposter) {
                     foreach ($lang in $global:PreferedLanguageOrderFanart) {
-                        $global:posterurl = ($entrytemp.seasonposter | Where-Object { $_.lang -eq "$lang" -and $_.Season -eq $global:SeasonNumber } | Sort-Object likes)[0].url
-                        break
+                        if ($global:SeasonNumber -match '\b\d{1,2}\b'){
+                            $global:posterurl = ($entrytemp.seasonposter | Where-Object { $_.lang -eq "$lang" -and $_.Season -eq $global:SeasonNumber } | Sort-Object likes)[0].url
+                        }
+                        Else {
+                            Write-log -Subtext "Could not get a result with '$global:SeasonNumber' on Fanart, likley season number not in correct format, fallback to Show poster." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                            if ($entrytemp -and $entrytemp.tvposter) {
+                                $BackupPoster
+                                foreach ($lang in $global:PreferedLanguageOrderFanart) {
+                                    if (($entrytemp.tvposter | Where-Object lang -eq "$lang")) {
+                                        $global:posterurl = ($entrytemp.tvposter)[0].url
+                                        if ($lang -eq '00') {
+                                            Write-log -Subtext "Found Poster without Language on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                                            $global:IsFallback = $true
+                                        }
+                                        Else {
+                                            Write-log -Subtext "Found Poster with Language '$lang' on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                                            $global:IsFallback = $true
+                                        }
+                                        if ($lang -ne '00') {
+                                            $global:PosterWithText = $true
+                                        }
+                                        break
+                                    }
+                                }
+                            }
+                        }
+
                     }
                 }
                 Else {
@@ -613,7 +673,7 @@ function GetTVDBMoviePoster {
 }
 function GetTVDBShowPoster {
     if ($global:tvdbid) {
-        Write-log -Subtext "Searching on TVDB for a show poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+        Write-log -Subtext "Searching on TVDB for a poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
         if ($global:PreferTextless -eq 'True') {
             try {
                 $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/series/$($global:tvdbid)/artworks" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
@@ -1574,6 +1634,11 @@ else {
                                 $global:TextlessFallbackPoster = $true
                                 $global:TextlessPoster = $null
                             }
+                            if ($global:PreferTextless -eq 'False') {
+                                $global:TMDBfallbackposterurl = $global:posterurl
+                                $global:TextFallbackPoster = $true
+                                $global:TextlessPoster = $null
+                            }
                             $global:posterurl = GetTMDBSeasonPoster
                         } 
                         Else {
@@ -1596,10 +1661,12 @@ else {
                         if (!$global:TextlessPoster) {
                             $global:PosterWithText = $true
                         }
-                        if ($global:TextlessFallbackPoster -and $global:PosterWithText) {
+                        if (($global:TextlessFallbackPoster -or $global:TextFallbackPoster) -and $global:PosterWithText) {
                             Write-Log -Subtext "Taking TMDB Fallback poster..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                             $global:posterurl = $global:TMDBfallbackposterurl
-                            $global:TextlessPoster = 'true'
+                            if ($global:TextlessFallbackPoster){
+                                $global:TextlessPoster = 'true'
+                            }
                         }
                         if ($global:posterurl) {
                             if ($global:ImageProcessing -eq 'true') {
