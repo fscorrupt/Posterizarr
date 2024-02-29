@@ -1264,7 +1264,7 @@ Elseif ($Testing){
     Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentsShortBold
     Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentsMiddleBold
     Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentsLongBold
-    Write-log -Subtext "Poster Tests finished, you can find them here: $global:ScriptRoot\temp" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Success
+    Write-log -Subtext "Poster Tests finished, you can find them here: $global:ScriptRoot\test" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Success
     Remove-Item -LiteralPath $testimage | out-null
 }
 else {
