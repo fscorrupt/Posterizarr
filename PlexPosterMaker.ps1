@@ -801,6 +801,15 @@ $LibstoExclude = $config.PlexPart.LibstoExclude
 $PlexUrl = $config.PlexPart.PlexUrl
 # Prerequisites Part
 $AssetPath = RemoveTrailingSlash $config.PrerequisitePart.AssetPath
+
+# Check if its a Network Share
+if ($AssetPath.StartsWith("\")) { 
+    # add \ if it only Starts with one
+    if (!$AssetPath.StartsWith("\\")) { 
+        $AssetPath = "\"+$AssetPath
+    }
+}
+
 $global:ScriptRoot = $PSScriptRoot
 $magickinstalllocation = RemoveTrailingSlash $config.PrerequisitePart.magickinstalllocation
 $font = "$global:ScriptRoot\temp\$($config.PrerequisitePart.font)"
@@ -928,7 +937,7 @@ Write-log -Subtext "| Magick Location:          $magickinstalllocation" -Path $c
 Write-log -Subtext "| Used Font:                $font" -Path $configLogging -Type Info
 Write-log -Subtext "| Used Overlay File:        $overlay" -Path $configLogging -Type Info
 Write-log -Subtext "| Create Library Folders:   $LibraryFolders" -Path $configLogging -Type Info
-Write-log -Subtext "| Create Season Posters:    $LibraryFolders" -Path $configLogging -Type Info
+Write-log -Subtext "| Create Season Posters:    $global:SeasonPosters" -Path $configLogging -Type Info
 Write-log -Subtext "OverLay Part" -Path $configLogging -Type Trace
 Write-log -Subtext "| Process Images:           $global:ImageProcessing" -Path $configLogging -Type Info
 Write-log -Subtext "| All Caps on Text:         $fontAllCaps" -Path $configLogging -Type Info
