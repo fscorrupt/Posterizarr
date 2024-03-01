@@ -835,6 +835,11 @@ $text_offset = $config.OverlayPart.text_offset
 $borderwidthsecond = $borderwidth + 'x' + $borderwidth
 $boxsize = $MaxWidth + 'x' + $MaxHeight
 
+$SeasonNames = $null
+$Seasondata = $null
+$SeasonsTemp = $null
+$SeasonNumbers = $null
+
 $fontImagemagick = $font.replace('\', '\\')
 $magick = "$magickinstalllocation\magick.exe"
 $fileExtensions = @(".otf", ".ttf", ".otc", ".ttc", ".png")
