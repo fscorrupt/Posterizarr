@@ -27,7 +27,7 @@ Before utilizing the script, ensure the following prerequisites are installed an
 - **Fanart Personal API Key:** [Obtain Fanart API Key](https://fanart.tv/get-an-api-key)
 - **TVDB API Key:** [Obtain TVDB API Key](https://thetvdb.com/api-information/signup)
 - **ImageMagick:** [Download ImageMagick](https://imagemagick.org/script/download.php#windows)
-    - Download and Install the Latest Imagemagick.
+    - Download and Install the Latest Imagemagick, installation is covered in Script **(You may need to run the Script as Admin on first run)**.
 - **Powershell Version:** 5.x or higher, ps core 6.x/7.x also works.
 
 **Configuration:**
