@@ -1002,8 +1002,10 @@ if (!(Test-Path $magick)) {
     Write-log -Message "ImageMagick missing, downloading/installing it for you..." -Path $configLogging -Type Error
     $Errorcount++
     $InstallArguments = "/verysilent /DIR=`"$magickinstalllocation`""
-    Invoke-WebRequest https://imagemagick.org/archive/binaries/ImageMagick-7.1.1-27-Q16-HDRI-x64-dll.exe -OutFile $global:ScriptRoot\temp\ImageMagick-7.1.1-27-Q16-HDRI-x64-dll.exe
-    Start-Process $global:ScriptRoot\temp\ImageMagick-7.1.1-27-Q16-HDRI-x64-dll.exe -ArgumentList $InstallArguments -NoNewWindow -Wait
+    $result = Invoke-WebRequest "https://imagemagick.org/archive/binaries/?C=M;O=D"
+    $LatestRelease = ($result.links | where href -like '*Q16-HDRI-x64-dll.exe' | Sort-Object)[0].href
+    Invoke-WebRequest "https://imagemagick.org/archive/binaries/$LatestRelease" -OutFile $global:ScriptRoot\temp\$LatestRelease
+    Start-Process $global:ScriptRoot\temp\$LatestRelease-ArgumentList $InstallArguments -NoNewWindow -Wait
     if (Test-Path -LiteralPath $magickinstalllocation\magick.exe) {
         Write-log -Subtext "ImageMagick installed here: $magickinstalllocation" -Path $configLogging -Type Success
     }
