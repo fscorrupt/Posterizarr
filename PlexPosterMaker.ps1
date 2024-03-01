@@ -1003,9 +1003,9 @@ if (!(Test-Path $magick)) {
     $Errorcount++
     $InstallArguments = "/verysilent /DIR=`"$magickinstalllocation`""
     $result = Invoke-WebRequest "https://imagemagick.org/archive/binaries/?C=M;O=D"
-    $LatestRelease = ($result.links | where href -like '*Q16-HDRI-x64-dll.exe' | Sort-Object)[0].href
+    $LatestRelease = ($result.links | Where-Object href -like '*Q16-HDRI-x64-dll.exe' | Sort-Object)[0].href
     Invoke-WebRequest "https://imagemagick.org/archive/binaries/$LatestRelease" -OutFile $global:ScriptRoot\temp\$LatestRelease
-    Start-Process $global:ScriptRoot\temp\$LatestRelease-ArgumentList $InstallArguments -NoNewWindow -Wait
+    Start-Process $global:ScriptRoot\temp\$LatestRelease -ArgumentList $InstallArguments -NoNewWindow -Wait
     if (Test-Path -LiteralPath $magickinstalllocation\magick.exe) {
         Write-log -Subtext "ImageMagick installed here: $magickinstalllocation" -Path $configLogging -Type Success
     }
