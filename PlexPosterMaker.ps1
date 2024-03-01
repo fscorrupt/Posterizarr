@@ -3,7 +3,9 @@ param (
     [switch]$Testing
 )
 
-$global:HeaderWritten = $null
+$Error.Clear()
+Remove-Variable * -ErrorAction SilentlyContinue
+
 #################
 # What you need #
 #####################################################################################################################
