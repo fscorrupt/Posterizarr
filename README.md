@@ -26,8 +26,8 @@ Before utilizing the script, ensure the following prerequisites are installed an
 - **TMDB API Read Access Token:** [Obtain TMDB API Token](https://www.themoviedb.org/settings/api)
 - **Fanart Personal API Key:** [Obtain Fanart API Key](https://fanart.tv/get-an-api-key)
 - **TVDB API Key:** [Obtain TVDB API Key](https://thetvdb.com/api-information/signup)
-- **ImageMagick:** [Download ImageMagick](https://imagemagick.org/archive/binaries/ImageMagick-7.1.1-27-Q16-HDRI-x64-dll.exe)
-    - Installation is covered within the script.
+- **ImageMagick:** [Download ImageMagick](https://imagemagick.org/script/download.php#windows)
+    - Download and Install the Latest Imagemagick.
 - **Powershell Version:** 5.x or higher, ps core 6.x/7.x also works.
 
 **Configuration:**
