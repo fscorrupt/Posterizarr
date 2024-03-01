@@ -2021,13 +2021,13 @@ else {
     $FormattedTimespawn = $hours.ToString() + "h " + $minutes.ToString() + "m " + $seconds.ToString() + "s "
 
     Write-log -Message "Finished, Total posters created: $posterCount | Total Season Posters created: $SeasonCount" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
-    Write-log -Message "You can find a detailed Summery of Poster Choices here: $global:ScriptRoot\Logs\PosterChoices.csv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-    # Calculate Summery
-    $SummeryCount = Import-Csv -LiteralPath "$global:ScriptRoot\Logs\PosterChoices.csv" -Delimiter ';'
-    $FallbackCount = @($SummeryCount | Where-Object Fallback -eq 'True')
-    $TextlessCount = @($SummeryCount | Where-Object Textless -eq 'True')
-    $TextTruncatedCount = @($SummeryCount | Where-Object TextTruncated -eq 'True')
-    $TextCount = @($SummeryCount | Where-Object Textless -eq 'False')
+    Write-log -Message "You can find a detailed Summary of Poster Choices here: $global:ScriptRoot\Logs\PosterChoices.csv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+    # Calculate Summary
+    $SummaryCount = Import-Csv -LiteralPath "$global:ScriptRoot\Logs\PosterChoices.csv" -Delimiter ';'
+    $FallbackCount = @($SummaryCount | Where-Object Fallback -eq 'True')
+    $TextlessCount = @($SummaryCount | Where-Object Textless -eq 'True')
+    $TextTruncatedCount = @($SummaryCount | Where-Object TextTruncated -eq 'True')
+    $TextCount = @($SummaryCount | Where-Object Textless -eq 'False')
 
     if ($TextlessCount) {
         Write-log -Subtext "'$($TextlessCount.count)' times the script took a Textless poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
