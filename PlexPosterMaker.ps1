@@ -928,7 +928,7 @@ Else {
 Write-log -Subtext "| Fav Provider:             $global:FavProvider" -Path $configLogging  -Type Info
 Write-log -Subtext "| Prefered Lang Order:      $($global:PreferedLanguageOrder -join ',')" -Path $configLogging  -Type Info
 Write-log -Subtext "Plex Part" -Path $configLogging  -Type Trace
-Write-log -Subtext "| Exluded Libs:             $($LibstoExclude -join ',')" -Path $configLogging -Type Info
+Write-log -Subtext "| Excluded Libs:             $($LibstoExclude -join ',')" -Path $configLogging -Type Info
 Write-log -Subtext "| Plex Url:                 $($PlexUrl[0..10] -join '')****" -Path $configLogging -Type Info
 Write-log -Subtext "Prerequisites Part" -Path $configLogging -Type Trace
 Write-log -Subtext "| Asset Path:               $AssetPath" -Path $configLogging -Type Info
@@ -1300,6 +1300,8 @@ else {
         }
     }
     Write-log -Subtext "Found '$($Libsoverview.count)' libs and '$($LibstoExclude.count)' are excluded..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+    $IncludedLibraryNames = $Libsoverview.Name -join ', '
+    Write-Log -Subtext "Included Libraries: $IncludedLibraryNames" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
 
     Write-log -Message "Query all items from all Libs, this can take a while..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
     #$Libraries = Import-Csv "C:\posterTemp\logs\PlexLibexport.csv" -Delimiter ';' 
@@ -2021,13 +2023,13 @@ else {
     $FormattedTimespawn = $hours.ToString() + "h " + $minutes.ToString() + "m " + $seconds.ToString() + "s "
 
     Write-log -Message "Finished, Total posters created: $posterCount | Total Season Posters created: $SeasonCount" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
-    Write-log -Message "You can find a detailed Summery of Poster Choices here: $global:ScriptRoot\Logs\PosterChoices.csv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-    # Calculate Summery
-    $SummeryCount = Import-Csv -LiteralPath "$global:ScriptRoot\Logs\PosterChoices.csv" -Delimiter ';'
-    $FallbackCount = @($SummeryCount | Where-Object Fallback -eq 'True')
-    $TextlessCount = @($SummeryCount | Where-Object Textless -eq 'True')
-    $TextTruncatedCount = @($SummeryCount | Where-Object TextTruncated -eq 'True')
-    $TextCount = @($SummeryCount | Where-Object Textless -eq 'False')
+    Write-log -Message "You can find a detailed Summary of Poster Choices here: $global:ScriptRoot\Logs\PosterChoices.csv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+    # Calculate Summary
+    $SummaryCount = Import-Csv -LiteralPath "$global:ScriptRoot\Logs\PosterChoices.csv" -Delimiter ';'
+    $FallbackCount = @($SummaryCount | Where-Object Fallback -eq 'True')
+    $TextlessCount = @($SummaryCount | Where-Object Textless -eq 'True')
+    $TextTruncatedCount = @($SummaryCount | Where-Object TextTruncated -eq 'True')
+    $TextCount = @($SummaryCount | Where-Object Textless -eq 'False')
 
     if ($TextlessCount) {
         Write-log -Subtext "'$($TextlessCount.count)' times the script took a Textless poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
