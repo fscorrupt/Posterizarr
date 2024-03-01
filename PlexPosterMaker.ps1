@@ -928,7 +928,7 @@ Else {
 Write-log -Subtext "| Fav Provider:             $global:FavProvider" -Path $configLogging  -Type Info
 Write-log -Subtext "| Prefered Lang Order:      $($global:PreferedLanguageOrder -join ',')" -Path $configLogging  -Type Info
 Write-log -Subtext "Plex Part" -Path $configLogging  -Type Trace
-Write-log -Subtext "| Exluded Libs:             $($LibstoExclude -join ',')" -Path $configLogging -Type Info
+Write-log -Subtext "| Excluded Libs:             $($LibstoExclude -join ',')" -Path $configLogging -Type Info
 Write-log -Subtext "| Plex Url:                 $($PlexUrl[0..10] -join '')****" -Path $configLogging -Type Info
 Write-log -Subtext "Prerequisites Part" -Path $configLogging -Type Trace
 Write-log -Subtext "| Asset Path:               $AssetPath" -Path $configLogging -Type Info
