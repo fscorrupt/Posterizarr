@@ -16,7 +16,7 @@ The `Temp` Folder gets cleared on every Script run, so do not put files into it.
     - It also generates a log with the output of every imagemagick command `$ScriptRoot\logs\ImageMagickCommands.log`.
     - Additionally, a `PosterChoices.csv` file is generated to store all the selected download options and essential information.
 - **Cross-platform Compatibility**: Ensures seamless operation across Linux, Docker, and Windows Plex servers, enhancing versatility.
-- **Poster Creation**: it Searches fanart/tmdb for textless posters, fallback is grabbing a poster from imdb for movies and tvdb for shows.
+- **Poster/Background Creation**: it Searches fanart/tmdb/tvdb for textless posters/backgrounds, fallback is grabbing a poster from imdb.
 
 Upon initial execution, the script may take some time to run as it compiles necessary data. Subsequent runs efficiently create missing posters, bypassing existing assets in the directory.
 
@@ -31,53 +31,71 @@ Before utilizing the script, ensure the following prerequisites are installed an
     - Download and Install the Latest Imagemagick, installation is covered in Script **(You may need to run the Script as Admin on first run)**.
 - **Powershell Version:** 5.x or higher, ps core 6.x/7.x also works.
 
-**Configuration:**
+## Configuration:
+
 1. Open `config.example.json` located in the script directory.
 2. Update the following variables with your API keys and preferences:
-    
-    **ApiPart**
-   - `tvdbapi`: Your TVDB project API key.
-   - `tmdbtoken`: Your TMDB token.
-   - `FanartTvAPIKey`: Your Fanart personal API key.
-   - `PlexToken`: if you want to run this from remote, you have to specify the Plex Token.
-   - `PreferedLanguageOrder`: default is `xx,en,de` (`xx` is Textless).
-        - If its set to `xx` the script will focus on grabbing textless posters, if you set `en` to the beginning it will focus on grabbing `en`, example is in config file, lang codes can be found here: [Lang Codes](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2)
-   - `FavProvider`: What provider should be picked first? 
-        - possible Values: 
-            - `fanart` (fallback is `tmdb`)
-            - `tmdb` (fallback is `fanart`)
-            - `tvdb`
-   
-   **PlexPart**
-   - `LibstoExclude`: Libraries to exclude from processing.
-   - `PlexUrl`: Plex server URL.
 
-   **PrerequisitePart**
-   - `AssetPath`: Path to store generated posters.
-   - `magickinstalllocation`: Path to ImageMagick installation location where the `Magick.exe` is located.
-   - `font`: Font file name.
-   - `overlayfile`: Overlay file name.
-   - `LibraryFolders`: true/false for the asset structure in one flat Folder or split into library media folders like pmm needs it.
-   - `SeasonPosters`: true/false for also creating season posters.
-   - `BackgroundPosters`: true/false for also creating background posters.
+### ApiPart
 
-   **OverlayPart**
-   - `ImageProcessing`: Set it to true if you want the imagemagick part, if false it only downloads the posters.
-   - `fontAllCaps`: If true, text is in caps `MY TEXT` else it would be `My Text`.
-   - `AddBorder`: true/false to add border to image
-   - `AddText`: true/false to add Text to image
-   - `AddOverlay`: true/false to add the defined `overlayfile` to image
-   - `AddBackgroundBorder`: true/false to add border to Background image
-   - `AddBackgroundText`: true/false to add Text to Background image
-   - `AddBackgroundOverlay`: true/false to add the defined `overlayfile` to Background image
-   - `fontcolor`: Color of Font Text.
-   - `bordercolor`: Color of Border.
-   - `minPointSize`: Min Size of Text in Poster.
-   - `maxPointSize`: Max Size of Text in Poster.
-   - `borderwidth`: Border width.
-   - `MaxWidth`: Max width of text_box
-   - `MaxHeight`: Max height of text_box
-   - `text_offset`: text_box offset from bottom of the picture
+- `tvdbapi`: Your TVDB project API key.
+- `tmdbtoken`: Your TMDB token.
+- `FanartTvAPIKey`: Your Fanart personal API key.
+- `PlexToken`: Leave empty if not applicable.
+- `FavProvider`: Set your preferred provider (fallback is `tmdb`).
+- `PreferedLanguageOrder`: Specify language preferences. Default is `xx,en,de` (`xx` is Textless). Example configurations can be found in the config file. Language codes can be found here: [Lang Codes](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2).
+
+### PlexPart
+
+- `LibstoExclude`: Libraries to exclude from processing.
+- `PlexUrl`: Plex server URL.
+
+### PrerequisitePart
+
+- `AssetPath`: Path to store generated posters.
+- `magickinstalllocation`: Path to ImageMagick installation location where `Magick.exe` is located.
+- `font`: Font file name.
+- `backgroundfont`: Background font file name.
+- `overlayfile`: Overlay file name.
+- `backgroundoverlayfile`: Background overlay file name.
+- `LibraryFolders`: Set to `true` for asset structure in one flat folder or `false` to split into library media folders like pmm needs it.
+- `SeasonPosters`: Set to `true` to also create season posters.
+- `BackgroundPosters`: Set to `true` to also create background posters.
+
+### OverlayPart
+
+- `ImageProcessing`: Set to `true` if you want the ImageMagick part; if false, it only downloads the posters.
+
+### PosterOverlayPart
+
+- `fontAllCaps`: Set to `true` for all caps text, else `false`.
+- `AddBorder`: Set to `true` to add a border to the image.
+- `AddText`: Set to `true` to add text to the image.
+- `AddOverlay`: Set to `true` to add the defined overlay file to the image.
+- `fontcolor`: Color of font text.
+- `bordercolor`: Color of border.
+- `minPointSize`: Minimum size of text in poster.
+- `maxPointSize`: Maximum size of text in poster.
+- `borderwidth`: Border width.
+- `MaxWidth`: Maximum width of text box.
+- `MaxHeight`: Maximum height of text box.
+- `text_offset`: Text box offset from the bottom of the picture.
+
+### BackgroundOverlayPart
+
+- `fontAllCaps`: Set to `true` for all caps text, else `false`.
+- `AddOverlay`: Set to `true` to add the defined background overlay file to the background image.
+- `AddBorder`: Set to `true` to add a border to the background image.
+- `AddText`: Set to `true` to add text to the background image.
+- `fontcolor`: Color of font text.
+- `bordercolor`: Color of border.
+- `minPointSize`: Minimum size of text in background image.
+- `maxPointSize`: Maximum size of text in background image.
+- `borderwidth`: Border width.
+- `MaxWidth`: Maximum width of text box in background image.
+- `MaxHeight`: Maximum height of text box in background image.
+- `text_offset`: Text box offset from the bottom of the background picture.
+
 3. Rename the config file to `config.json`.
 4. Place the `overlay.png`, or whatever file you defined earlier in `overlayfile`, and `Rocky.ttf` font, or whatever font you defined earlier in `font` files in the same directory as PosterMaker.ps1 which is `$ScriptRoot`.
 
@@ -106,7 +124,7 @@ The posters are all placed in `AssetPath\...` this can then be mounted in pmm to
 
 ### Testing Mode
 
-Run the script with the `-Testing` flag. In this mode, the script will create white posters with short, medium, and long texts (also in bold), using the values specified in the `config.json` file. 
+Run the script with the `-Testing` flag. In this mode, the script will create pink posters/backgrounds with short, medium, and long texts (also in bold), using the values specified in the `config.json` file. 
 
 This is handy for testing your configuration before applying it en masse to the actual posters. You can see how and where the text would be applied, as well as the size of the textbox.
 
