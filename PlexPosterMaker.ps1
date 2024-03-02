@@ -559,7 +559,6 @@ function GetTMDBShowBackground {
         }
     }
 }
-
 function GetFanartMoviePoster {
     $global:Fallback = $null
     Write-log -Subtext "Searching on Fanart.tv for a movie poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
@@ -2061,7 +2060,6 @@ else {
                     $global:imdbid = $entry.imdbid
                     $global:posterurl = $null
                     $global:PosterWithText = $null
-    
                     Write-log -Message "Start Poster Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                     switch -Wildcard ($global:FavProvider) {
                         'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBMoviePoster }Else { Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning; $global:posterurl = GetFanartMoviePoster } }
@@ -2190,6 +2188,7 @@ else {
                     }
                     Else {
                         Write-log -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Type Error
+                        Write-log -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Type Info
                         $Errorcount++
                     }
                 }
@@ -2217,7 +2216,6 @@ else {
                         $global:imdbid = $entry.imdbid
                         $global:posterurl = $null
                         $global:PosterWithText = $null
-        
                         Write-log -Message "Start Background Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                         switch -Wildcard ($global:FavProvider) {
                             'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBMovieBackground }Else { Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning; $global:posterurl = GetFanartMovieBackground } }
@@ -2343,6 +2341,7 @@ else {
                         }
                         Else {
                             Write-log -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Type Error
+                            Write-log -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Type Info
                             $Errorcount++
                         }
                     }
@@ -2527,24 +2526,25 @@ else {
                         Write-log -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Type Info
                         $posterCount++
                     }
+
+                    $showtemp = New-Object psobject
+                    $showtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
+                    $showtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Show'
+                    $showtemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
+                    $showtemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
+                    $showtemp | Add-Member -MemberType NoteProperty -Name "Textless" -Value $(if ($global:TextlessPoster) { 'True' } else { 'False' })
+                    $showtemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback) { 'True' } else { 'False' })
+                    $showtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
+                    $showtemp | Add-Member -MemberType NoteProperty -Name "Url" -Value $global:posterurl
+    
+                    # Export the array to a CSV file
+                    $showtemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                 }
                 Else {
                     Write-log -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Type Error
+                    Write-log -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Type Info
                     $Errorcount++
                 }
-
-                $showtemp = New-Object psobject
-                $showtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
-                $showtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Show'
-                $showtemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
-                $showtemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
-                $showtemp | Add-Member -MemberType NoteProperty -Name "Textless" -Value $(if ($global:TextlessPoster) { 'True' } else { 'False' })
-                $showtemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback) { 'True' } else { 'False' })
-                $showtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
-                $showtemp | Add-Member -MemberType NoteProperty -Name "Url" -Value $global:posterurl
-
-                # Export the array to a CSV file
-                $showtemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
 
             }
             if ($global:BackgroundPosters -eq 'true') {
@@ -2571,7 +2571,6 @@ else {
                     $global:imdbid = $entry.imdbid
                     $global:posterurl = $null
                     $global:PosterWithText = $null
-    
                     Write-log -Message "Start Background Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                     switch -Wildcard ($global:FavProvider) {
                         'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBShowBackground }Else { Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning; $global:posterurl = GetFanartShowBackground } }
@@ -2699,12 +2698,14 @@ else {
                     }
                     Else {
                         Write-log -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Type Error
+                        Write-log -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Type Info
                         $Errorcount++
                     }
                 }
             }
             # Now we can start the Season Part
             if ($global:SeasonPosters -eq 'true') {
+                $global:IsFallback = $null
                 $global:seasonNames = $entry.SeasonNames -split ','
                 $global:seasonNumbers = $entry.seasonNumbers -split ','
                 for ($i = 0; $i -lt $global:seasonNames.Count; $i++) {
@@ -2760,7 +2761,7 @@ else {
                                 $global:IsFallback = $true
                             }
                         }
-                        if (!$global:TextlessPoster) {
+                        if (!$global:TextlessPoster -and $global:posterurl) {
                             $global:PosterWithText = $true
                         }
                         if (($global:TextlessFallbackPoster -or $global:TextFallbackPoster) -and $global:PosterWithText) {
@@ -2882,23 +2883,24 @@ else {
                                 Move-Item -LiteralPath $SeasonImage -destination $SeasonImageoriginal -Force -ErrorAction SilentlyContinue
                                 $SeasonCount++
                             }
+                            $seasontemp = New-Object psobject
+                            $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Titletext + " | " + $global:season)
+                            $seasontemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Season'
+                            $seasontemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
+                            $seasontemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
+                            $seasontemp | Add-Member -MemberType NoteProperty -Name "Textless" -Value $(if ($global:TextlessPoster) { 'True' } else { 'False' })
+                            $seasontemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback) { 'True' } else { 'False' })
+                            $seasontemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
+                            $seasontemp | Add-Member -MemberType NoteProperty -Name "Url" -Value $global:posterurl
+        
+                            # Export the array to a CSV file
+                            $seasontemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                         }
                         Else {
                             Write-log -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Type Error
+                            Write-log -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Type Info
                             $Errorcount++
                         }
-                        $seasontemp = New-Object psobject
-                        $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Titletext + " | " + $global:season)
-                        $seasontemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Season'
-                        $seasontemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
-                        $seasontemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
-                        $seasontemp | Add-Member -MemberType NoteProperty -Name "Textless" -Value $(if ($global:TextlessPoster) { 'True' } else { 'False' })
-                        $seasontemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback) { 'True' } else { 'False' })
-                        $seasontemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
-                        $seasontemp | Add-Member -MemberType NoteProperty -Name "Url" -Value $global:posterurl
-        
-                        # Export the array to a CSV file
-                        $seasontemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                     }
                 }
             }
