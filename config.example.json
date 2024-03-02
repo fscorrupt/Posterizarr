@@ -15,20 +15,21 @@
     "AssetPath": "P:\\assets",
     "magickinstalllocation": "C:\\PosterTemp\\ImageMagick-7.1.1-Q16-HDRI",
     "font": "Rocky.ttf",
+    "backgroundfont": "Rocky.ttf",
     "overlayfile": "overlay.png",
+    "backgroundoverlayfile": "backgroundoverlay.png",
     "LibraryFolders": "true",
     "SeasonPosters": "true",
     "BackgroundPosters": "false"
   },
   "OverlayPart":{
-    "ImageProcessing": "true",
+    "ImageProcessing": "true"
+  },
+  "PosterOverlayPart":{
     "fontAllCaps": "true",
     "AddBorder": "true",
     "AddText": "true",
     "AddOverlay": "true",
-    "AddBackgroundOverlay": "false",
-    "AddBackgroundBorder": "false",
-    "AddBackgroundText": "false",
     "fontcolor": "white",
     "bordercolor": "white",
     "minPointSize": "45",
@@ -37,5 +38,19 @@
     "MaxWidth": "1900",
     "MaxHeight": "500",
     "text_offset": "+450"
+  },
+  "BackgroundOverlayPart":{
+    "fontAllCaps": "true",
+    "AddOverlay": "true",
+    "AddBorder": "true",
+    "AddText": "true",
+    "fontcolor": "white",
+    "bordercolor": "white",
+    "minPointSize": "100",
+    "maxPointSize": "300",
+    "borderwidth": "30",
+    "MaxWidth": "3640",
+    "MaxHeight": "500",
+    "text_offset": "+200"
   }
 }

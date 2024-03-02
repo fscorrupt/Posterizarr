@@ -1177,35 +1177,54 @@ if ($AssetPath.StartsWith("\")) {
 $global:ScriptRoot = $PSScriptRoot
 $magickinstalllocation = RemoveTrailingSlash $config.PrerequisitePart.magickinstalllocation
 $font = "$global:ScriptRoot\temp\$($config.PrerequisitePart.font)"
-$overlay = "$global:ScriptRoot\temp\$($config.PrerequisitePart.overlayfile)"
+$backgroundfont = "$global:ScriptRoot\temp\$($config.PrerequisitePart.backgroundfont)"
+$Posteroverlay = "$global:ScriptRoot\temp\$($config.PrerequisitePart.overlayfile)"
+$Backgroundoverlay = "$global:ScriptRoot\temp\$($config.PrerequisitePart.backgroundoverlayfile)"
 $testimage = "$global:ScriptRoot\test\testimage.png"
+$backgroundtestimage = "$global:ScriptRoot\test\backgroundtestimage.png"
 $LibraryFolders = $config.PrerequisitePart.LibraryFolders
 $global:SeasonPosters = $config.PrerequisitePart.SeasonPosters
 $global:BackgroundPosters = $config.PrerequisitePart.BackgroundPosters
 
-# Overlay Part
+# Poster Overlay Part
 $global:ImageProcessing = $config.OverlayPart.ImageProcessing
-$fontAllCaps = $config.OverlayPart.fontAllCaps
-$AddBorder = $config.OverlayPart.AddBorder
-$AddText = $config.OverlayPart.AddText
-$AddOverlay = $config.OverlayPart.AddOverlay
-$AddBackgroundOverlay = $config.OverlayPart.AddBackgroundOverlay
-$AddBackgroundBorder = $config.OverlayPart.AddBackgroundBorder
-$AddBackgroundText = $config.OverlayPart.AddBackgroundText
-$fontcolor = $config.OverlayPart.fontcolor
-$bordercolor = $config.OverlayPart.bordercolor
-$minPointSize = $config.OverlayPart.minPointSize
-$maxPointSize = $config.OverlayPart.maxPointSize
-$borderwidth = $config.OverlayPart.borderwidth
-$MaxWidth = $config.OverlayPart.MaxWidth
-$MaxHeight = $config.OverlayPart.MaxHeight
-$text_offset = $config.OverlayPart.text_offset
 
+# Poster Overlay Part
+$fontAllCaps = $config.PosterOverlayPart.fontAllCaps
+$AddBorder = $config.PosterOverlayPart.AddBorder
+$AddText = $config.PosterOverlayPart.AddText
+$AddOverlay = $config.PosterOverlayPart.AddOverlay
+$fontcolor = $config.PosterOverlayPart.fontcolor
+$bordercolor = $config.PosterOverlayPart.bordercolor
+$minPointSize = $config.PosterOverlayPart.minPointSize
+$maxPointSize = $config.PosterOverlayPart.maxPointSize
+$borderwidth = $config.PosterOverlayPart.borderwidth
+$MaxWidth = $config.PosterOverlayPart.MaxWidth
+$MaxHeight = $config.PosterOverlayPart.MaxHeight
+$text_offset = $config.PosterOverlayPart.text_offset
 $borderwidthsecond = $borderwidth + 'x' + $borderwidth
 $boxsize = $MaxWidth + 'x' + $MaxHeight
+
+# Background Overlay Part
+$BackgroundfontAllCaps = $config.PosterOverlayPart.fontAllCaps
+$AddBackgroundOverlay = $config.BackgroundOverlayPart.AddOverlay
+$AddBackgroundBorder = $config.BackgroundOverlayPart.AddBorder
+$AddBackgroundText = $config.BackgroundOverlayPart.AddText
+$Backgroundfontcolor = $config.BackgroundOverlayPart.fontcolor
+$Backgroundbordercolor = $config.BackgroundOverlayPart.bordercolor
+$BackgroundminPointSize = $config.BackgroundOverlayPart.minPointSize
+$BackgroundmaxPointSize = $config.BackgroundOverlayPart.maxPointSize
+$Backgroundborderwidth = $config.BackgroundOverlayPart.borderwidth
+$BackgroundMaxWidth = $config.BackgroundOverlayPart.MaxWidth
+$BackgroundMaxHeight = $config.BackgroundOverlayPart.MaxHeight
+$Backgroundtext_offset = $config.BackgroundOverlayPart.text_offset
+$Backgroundborderwidthsecond = $Backgroundborderwidth + 'x' + $Backgroundborderwidth
+$Backgroundboxsize = $BackgroundMaxWidth + 'x' + $BackgroundMaxHeight
+
 $PosterSize = "2000x3000"
 $BackgroundSize = "3840x2160"
 $fontImagemagick = $font.replace('\', '\\')
+$backgroundfontImagemagick = $backgroundfont.replace('\', '\\')
 $magick = "$magickinstalllocation\magick.exe"
 $fileExtensions = @(".otf", ".ttf", ".otc", ".ttc", ".png")
 $Errorcount = 0
@@ -1232,8 +1251,11 @@ if (Test-Path $global:ScriptRoot\temp) {
 }
 
 # Test if files are present in Script root
-if (!(Test-Path $overlay)) {
+if (!(Test-Path $Posteroverlay)) {
     Invoke-WebRequest -uri "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/overlay.png" -OutFile $global:ScriptRoot\temp\overlay.png 
+}
+if (!(Test-Path $Backgroundoverlay)) {
+    Invoke-WebRequest -uri "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/backgroundoverlay.png" -OutFile $global:ScriptRoot\temp\backgroundoverlay.png 
 }
 if (!(Test-Path $font)) {
     Invoke-WebRequest -uri "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/Rocky.ttf" -OutFile $global:ScriptRoot\temp\Rocky.ttf
@@ -1305,19 +1327,18 @@ Write-log -Subtext "| Asset Path:                   $AssetPath" -Path $configLog
 Write-log -Subtext "| Script Root:                  $global:ScriptRoot" -Path configLogging -Type Info
 Write-log -Subtext "| Magick Location:              $magickinstalllocation" -Path $configLogging -Type Info
 Write-log -Subtext "| Used Font:                    $font" -Path $configLogging -Type Info
-Write-log -Subtext "| Used Overlay File:            $overlay" -Path $configLogging -Type Info
+Write-log -Subtext "| Used Poster Overlay File:     $Posteroverlay" -Path $configLogging -Type Info
+Write-log -Subtext "| Used Background Overlay File: $Backgroundoverlay" -Path $configLogging -Type Info
 Write-log -Subtext "| Create Library Folders:       $LibraryFolders" -Path $configLogging -Type Info
 Write-log -Subtext "| Create Season Posters:        $global:SeasonPosters" -Path $configLogging -Type Info
 Write-log -Subtext "| Create Background Posters:    $global:BackgroundPosters" -Path $configLogging -Type Info
-Write-log -Subtext "OverLay Part" -Path $configLogging -Type Trace
+Write-log -Subtext "OverLay General Part" -Path $configLogging -Type Trace
 Write-log -Subtext "| Process Images:               $global:ImageProcessing" -Path $configLogging -Type Info
+Write-log -Subtext "OverLay Poster Part" -Path $configLogging -Type Trace
 Write-log -Subtext "| All Caps on Text:             $fontAllCaps" -Path $configLogging -Type Info
 Write-log -Subtext "| Add Border to Image:          $AddBorder" -Path $configLogging -Type Info
 Write-log -Subtext "| Add Text to Image:            $AddText" -Path $configLogging -Type Info
 Write-log -Subtext "| Add Overlay to Image:         $AddOverlay" -Path $configLogging -Type Info
-Write-log -Subtext "| Add Border to Background:     $AddBackgroundBorder" -Path $configLogging -Type Info
-Write-log -Subtext "| Add Text to Background:       $AddBackgroundText" -Path $configLogging -Type Info
-Write-log -Subtext "| Add Overlay to Background:    $AddBackgroundOverlay" -Path $configLogging -Type Info
 Write-log -Subtext "| Font Color:                   $fontcolor" -Path $configLogging -Type Info
 Write-log -Subtext "| Border Color:                 $bordercolor" -Path $configLogging -Type Info
 Write-log -Subtext "| Min Font Size:                $minPointSize" -Path $configLogging -Type Info
@@ -1326,8 +1347,20 @@ Write-log -Subtext "| Border Width:                 $borderwidth" -Path $configL
 Write-log -Subtext "| Text Box Width:               $MaxWidth" -Path $configLogging -Type Info
 Write-log -Subtext "| Text Box Height:              $MaxHeight" -Path $configLogging -Type Info
 Write-log -Subtext "| Text Box Offset:              $text_offset" -Path $configLogging -Type Info
+Write-log -Subtext "OverLay Background Part" -Path $configLogging -Type Trace
+Write-log -Subtext "| All Caps on Text:             $BackgroundfontAllCaps" -Path $configLogging -Type Info
+Write-log -Subtext "| Add Border to Background:     $AddBackgroundBorder" -Path $configLogging -Type Info
+Write-log -Subtext "| Add Text to Background:       $AddBackgroundText" -Path $configLogging -Type Info
+Write-log -Subtext "| Add Overlay to Background:    $AddBackgroundOverlay" -Path $configLogging -Type Info
+Write-log -Subtext "| Font Color:                   $Backgroundfontcolor" -Path $configLogging -Type Info
+Write-log -Subtext "| Border Color:                 $Backgroundbordercolor" -Path $configLogging -Type Info
+Write-log -Subtext "| Min Font Size:                $BackgroundminPointSize" -Path $configLogging -Type Info
+Write-log -Subtext "| Max Font Size:                $BackgroundmaxPointSize" -Path $configLogging -Type Info
+Write-log -Subtext "| Border Width:                 $Backgroundborderwidth" -Path $configLogging -Type Info
+Write-log -Subtext "| Text Box Width:               $BackgroundMaxWidth" -Path $configLogging -Type Info
+Write-log -Subtext "| Text Box Height:              $BackgroundMaxHeight" -Path $configLogging -Type Info
+Write-log -Subtext "| Text Box Offset:              $Backgroundtext_offset" -Path $configLogging -Type Info
 Write-log -Subtext "___________________________________________" -Path $configLogging -Type Debug
-
 Write-log -Message "Starting main Script now..." -Path $configLogging -Type Success    
 
 # Get files in script root with specified extensions
@@ -1487,7 +1520,7 @@ if ($Manual) {
 
         # Resize Image to 2000x3000 and apply Border and overlay
         if ($AddBorder -eq 'true' -and $AddOverlay -eq 'true') {
-            $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$overlay`" -gravity south -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$PosterImage`""
+            $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$PosterImage`""
             Write-log -Subtext "Resizing it | Adding Borders | Adding Overlay" -Path $global:ScriptRoot\Logs\Manuallog.log -Type Info
         }
         if ($AddBorder -eq 'true' -and $AddOverlay -eq 'false') {
@@ -1495,7 +1528,7 @@ if ($Manual) {
             Write-log -Subtext "Resizing it | Adding Borders" -Path $global:ScriptRoot\Logs\Manuallog.log -Type Info
         }
         if ($AddBorder -eq 'false' -and $AddOverlay -eq 'true') {
-            $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$overlay`" -gravity south -composite `"$PosterImage`""
+            $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -composite `"$PosterImage`""
             Write-log -Subtext "Resizing it | Adding Overlay" -Path $global:ScriptRoot\Logs\Manuallog.log -Type Info
         }
         if ($AddBorder -eq 'false' -and $AddOverlay -eq 'false') {
@@ -1532,12 +1565,20 @@ if ($Manual) {
 Elseif ($Testing) {
     Write-log -Message "Poster Testing Started" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Debug
     Write-log -Subtext "I will now create a few posters for you with different text lengths using your current configuration settings." -Path $global:ScriptRoot\Logs\Testinglog.log -Type Warning
+    # Poster Part
     if (!(Test-Path $testimage)) {
         $ArgumentCreate = "-size `"$PosterSize`" xc:pink -background none `"$testimage`""
         $logEntryCreate = "magick.exe $ArgumentCreate"
-        #$logEntryCreate | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+        $logEntryCreate | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
         Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentCreate
         Write-log -Subtext "Test Poster Created..." -Path $global:ScriptRoot\Logs\Testinglog.log -Type Trace
+    }
+    if (!(Test-Path $backgroundtestimage)) {
+        $backgroundArgumentCreate = "-size `"$BackgroundSize`" xc:pink -background none `"$backgroundtestimage`""
+        $backgroundlogEntryCreate = "magick.exe $backgroundArgumentCreate"
+        $backgroundlogEntryCreate | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+        Start-Process $magick -Wait -NoNewWindow -ArgumentList $backgroundArgumentCreate
+        Write-log -Subtext "Test background Created..." -Path $global:ScriptRoot\Logs\Testinglog.log -Type Trace
     }
     $ShortText = "The Hobbit" 
     $MiddleText = "The Hobbit is a great movie" 
@@ -1545,13 +1586,22 @@ Elseif ($Testing) {
     $ShortTextBold = $ShortText.ToUpper()
     $MiddleTextBold = $MiddleText.ToUpper()
     $LongTextBold = $LongText.ToUpper()
+    # Posters
     $TestPosterShort = "$global:ScriptRoot\test\ShortText.jpg"
     $TestPosterMiddle = "$global:ScriptRoot\test\MiddleText.jpg"
     $TestPosterLong = "$global:ScriptRoot\test\LongText.jpg"
     $TestPosterShortBold = "$global:ScriptRoot\test\ShortTextBold.jpg"
     $TestPosterMiddleBold = "$global:ScriptRoot\test\MiddleTextBold.jpg"
     $TestPosterLongBold = "$global:ScriptRoot\test\LongTextBold.jpg"
+    # Backgrounds
+    $backgroundTestPosterShort = "$global:ScriptRoot\test\backgroundShortText.jpg"
+    $backgroundTestPosterMiddle = "$global:ScriptRoot\test\backgroundMiddleText.jpg"
+    $backgroundTestPosterLong = "$global:ScriptRoot\test\backgroundLongText.jpg"
+    $backgroundTestPosterShortBold = "$global:ScriptRoot\test\backgroundShortTextBold.jpg"
+    $backgroundTestPosterMiddleBold = "$global:ScriptRoot\test\backgroundMiddleTextBold.jpg"
+    $backgroundTestPosterLongBold = "$global:ScriptRoot\test\backgroundLongTextBold.jpg"
 
+    # Optimal Poster Font Size
     $optimalFontSizeShort = Get-OptimalPointSize -text $ShortText -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
     $optimalFontSizeMiddle = Get-OptimalPointSize -text $MiddleText -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
     $optimalFontSizeLong = Get-OptimalPointSize -text $LongText -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
@@ -1560,14 +1610,25 @@ Elseif ($Testing) {
     $optimalFontSizeMiddleBold = Get-OptimalPointSize -text $MiddleTextBold -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
     $optimalFontSizeLongBold = Get-OptimalPointSize -text $LongTextBold -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
     
+    # Optimal Background Font Size
+    $backgroundoptimalFontSizeShort = Get-OptimalPointSize -text $ShortText -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
+    $backgroundoptimalFontSizeMiddle = Get-OptimalPointSize -text $MiddleText -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
+    $backgroundoptimalFontSizeLong = Get-OptimalPointSize -text $LongText -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
+    
+    $backgroundoptimalFontSizeShortBold = Get-OptimalPointSize -text $ShortTextBold -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
+    $backgroundoptimalFontSizeMiddleBold = Get-OptimalPointSize -text $MiddleTextBold -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
+    $backgroundoptimalFontSizeLongBold = Get-OptimalPointSize -text $LongTextBold -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
+    
+    # Border/Overlay Poster Part
+    Write-log -Subtext "Poster Part:" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Success
     if ($AddBorder -eq 'true' -and $AddOverlay -eq 'true') {
-        $ArgumentsShort = "`"$testimage`" `"$overlay`" -gravity south -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterShort`""
-        $ArgumentsMiddle = "`"$testimage`" `"$overlay`" -gravity south -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterMiddle`""
-        $ArgumentsLong = "`"$testimage`" `"$overlay`" -gravity south -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterLong`""
-        $ArgumentsShortBold = "`"$testimage`" `"$overlay`" -gravity south -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterShortBold`""
-        $ArgumentsMiddleBold = "`"$testimage`" `"$overlay`" -gravity south -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterMiddleBold`""
-        $ArgumentsLongBold = "`"$testimage`" `"$overlay`" -gravity south -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterLongBold`""
-        Write-log -Subtext "Adding Borders | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+        $ArgumentsShort = "`"$testimage`" `"$Posteroverlay`" -gravity south -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterShort`""
+        $ArgumentsMiddle = "`"$testimage`" `"$Posteroverlay`" -gravity south -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterMiddle`""
+        $ArgumentsLong = "`"$testimage`" `"$Posteroverlay`" -gravity south -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterLong`""
+        $ArgumentsShortBold = "`"$testimage`" `"$Posteroverlay`" -gravity south -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterShortBold`""
+        $ArgumentsMiddleBold = "`"$testimage`" `"$Posteroverlay`" -gravity south -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterMiddleBold`""
+        $ArgumentsLongBold = "`"$testimage`" `"$Posteroverlay`" -gravity south -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterLongBold`""
+        Write-log -Subtext "Adding Poster Borders | Adding Poster Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
     }
     if ($AddBorder -eq 'true' -and $AddOverlay -eq 'false') {
         $ArgumentsShort = "`"$testimage`" -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterShort`""
@@ -1576,18 +1637,19 @@ Elseif ($Testing) {
         $ArgumentsShortBold = "`"$testimage`" -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterShortBold`""
         $ArgumentsMiddleBold = "`"$testimage`" -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterMiddleBold`""
         $ArgumentsLongBold = "`"$testimage`" -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterLongBold`""
-        Write-log -Subtext "Adding Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+        Write-log -Subtext "Adding Poster Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
     }
     if ($AddBorder -eq 'false' -and $AddOverlay -eq 'true') {
-        $ArgumentsShort = "`"$testimage`" `"$overlay`" -gravity south -composite `"$TestPosterShort`""
-        $ArgumentsMiddle = "`"$testimage`" `"$overlay`" -gravity south -composite `"$TestPosterMiddle`""
-        $ArgumentsLong = "`"$testimage`" `"$overlay`" -gravity south -composite `"$TestPosterLong`""
-        $ArgumentsShortBold = "`"$testimage`" `"$overlay`" -gravity south -composite `"$TestPosterShortBold`""
-        $ArgumentsMiddleBold = "`"$testimage`" `"$overlay`" -gravity south -composite `"$TestPosterMiddleBold`""
-        $ArgumentsLongBold = "`"$testimage`" `"$overlay`" -gravity south -composite `"$TestPosterLongBold`""
-        Write-log -Subtext "Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+        $ArgumentsShort = "`"$testimage`" `"$Posteroverlay`" -gravity south -composite `"$TestPosterShort`""
+        $ArgumentsMiddle = "`"$testimage`" `"$Posteroverlay`" -gravity south -composite `"$TestPosterMiddle`""
+        $ArgumentsLong = "`"$testimage`" `"$Posteroverlay`" -gravity south -composite `"$TestPosterLong`""
+        $ArgumentsShortBold = "`"$testimage`" `"$Posteroverlay`" -gravity south -composite `"$TestPosterShortBold`""
+        $ArgumentsMiddleBold = "`"$testimage`" `"$Posteroverlay`" -gravity south -composite `"$TestPosterMiddleBold`""
+        $ArgumentsLongBold = "`"$testimage`" `"$Posteroverlay`" -gravity south -composite `"$TestPosterLongBold`""
+        Write-log -Subtext "Adding Poster Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
     }
 
+    # Poster Logging
     $logEntryShort = "magick.exe $ArgumentsShort"
     $logEntryMiddle = "magick.exe $ArgumentsMiddle"
     $logEntryLong = "magick.exe $ArgumentsLong"
@@ -1602,6 +1664,7 @@ Elseif ($Testing) {
     $logEntryLong | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
     $logEntryLongBold | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
 
+    # Test Poster creation
     Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentsShort
     Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentsMiddle
     Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentsLong
@@ -1609,20 +1672,89 @@ Elseif ($Testing) {
     Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentsMiddleBold
     Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentsLongBold
 
+    # Logging Poster
     Write-log -Subtext "Optimal font size for Short text is: '$optimalFontSizeShort'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
     Write-log -Subtext "    Applying Font text: `"$ShortText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
     Write-log -Subtext "Optimal font size for Middle text is: '$optimalFontSizeMiddle'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
     Write-log -Subtext "    Applying Font text: `"$MiddleText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
     Write-log -Subtext "Optimal font size for Long text is: '$optimalFontSizeLong'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
     Write-log -Subtext "    Applying Font text: `"$LongText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
-
+    
     Write-log -Subtext "Optimal font size for Short Bold text is: '$optimalFontSizeShortBold'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
     Write-log -Subtext "    Applying Bold Font text: `"$ShortTextBold`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
     Write-log -Subtext "Optimal font size for Middle Bold text is: '$optimalFontSizeMiddleBold'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
     Write-log -Subtext "    Applying Bold Font text: `"$MiddleTextBold`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
     Write-log -Subtext "Optimal font size for Long Bold text is: '$optimalFontSizeLongBold'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
     Write-log -Subtext "    Applying Bold Font text: `"$LongTextBold`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    
+    Write-log -Subtext "Background Part:" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Success
+    # Border/Overlay Background Part
+    if ($AddBackgroundBorder -eq 'true' -and $AddBackgroundOverlay -eq 'true') {
+        $backgroundArgumentsShort = "`"$backgroundtestimage`" `"$Backgroundoverlay`" -gravity south -composite -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundTestPosterShort`""
+        $backgroundArgumentsMiddle = "`"$backgroundtestimage`" `"$Backgroundoverlay`" -gravity south -composite -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundTestPosterMiddle`""
+        $backgroundArgumentsLong = "`"$backgroundtestimage`" `"$Backgroundoverlay`" -gravity south -composite -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundTestPosterLong`""
+        $backgroundArgumentsShortBold = "`"$backgroundtestimage`" `"$Backgroundoverlay`" -gravity south -composite -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundTestPosterShortBold`""
+        $backgroundArgumentsMiddleBold = "`"$backgroundtestimage`" `"$Backgroundoverlay`" -gravity south -composite -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundTestPosterMiddleBold`""
+        $backgroundArgumentsLongBold = "`"$backgroundtestimage`" `"$Backgroundoverlay`" -gravity south -composite -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundTestPosterLongBold`""
+        Write-log -Subtext "Adding Background Borders | Adding Background Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+    }
+    if ($AddBackgroundBorder -eq 'true' -and $AddBackgroundOverlay -eq 'false') {
+        $backgroundArgumentsShort = "`"$backgroundtestimage`" -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundTestPosterShort`""
+        $backgroundArgumentsMiddle = "`"$backgroundtestimage`" -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundTestPosterMiddle`""
+        $backgroundArgumentsLong = "`"$backgroundtestimage`" -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundTestPosterLong`""
+        $backgroundArgumentsShortBold = "`"$backgroundtestimage`" -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundTestPosterShortBold`""
+        $backgroundArgumentsMiddleBold = "`"$backgroundtestimage`" -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundTestPosterMiddleBold`""
+        $backgroundArgumentsLongBold = "`"$backgroundtestimage`" -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundTestPosterLongBold`""
+        Write-log -Subtext "Adding Background Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+    }
+    if ($AddBackgroundBorder -eq 'false' -and $AddBackgroundOverlay -eq 'true') {
+        $backgroundArgumentsShort = "`"$backgroundtestimage`" `"$Backgroundoverlay`" -gravity south -composite `"$backgroundTestPosterShort`""
+        $backgroundArgumentsMiddle = "`"$backgroundtestimage`" `"$Backgroundoverlay`" -gravity south -composite `"$backgroundTestPosterMiddle`""
+        $backgroundArgumentsLong = "`"$backgroundtestimage`" `"$Backgroundoverlay`" -gravity south -composite `"$backgroundTestPosterLong`""
+        $backgroundArgumentsShortBold = "`"$backgroundtestimage`" `"$Backgroundoverlay`" -gravity south -composite `"$backgroundTestPosterShortBold`""
+        $backgroundArgumentsMiddleBold = "`"$backgroundtestimage`" `"$Backgroundoverlay`" -gravity south -composite `"$backgroundTestPosterMiddleBold`""
+        $backgroundArgumentsLongBold = "`"$backgroundtestimage`" `"$Backgroundoverlay`" -gravity south -composite `"$backgroundTestPosterLongBold`""
+        Write-log -Subtext "Adding Background Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+    }
+    # Background Logging
+    $backgroundlogEntryShort = "magick.exe $backgroundArgumentsShort"
+    $backgroundlogEntryMiddle = "magick.exe $backgroundArgumentsMiddle"
+    $backgroundlogEntryLong = "magick.exe $backgroundArgumentsLong"
+    $backgroundlogEntryShortBold = "magick.exe $backgroundArgumentsShortBold"
+    $backgroundlogEntryMiddleBold = "magick.exe $backgroundArgumentsMiddleBold"
+    $backgroundlogEntryLongBold = "magick.exe $backgroundArgumentsLongBold"
 
+    $backgroundlogEntryShort | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $backgroundlogEntryShortBold | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $backgroundlogEntryMiddle | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $backgroundlogEntryMiddleBold | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $backgroundlogEntryLong | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $backgroundlogEntryLongBold | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+
+    # Test Background creation
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $backgroundArgumentsShort
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $backgroundArgumentsMiddle
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $backgroundArgumentsLong
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $backgroundArgumentsShortBold
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $backgroundArgumentsMiddleBold
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $backgroundArgumentsLongBold
+    
+    # Logging Background
+    Write-log -Subtext "Optimal font size for Short text is: '$backgroundoptimalFontSizeShort'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "    Applying Font text: `"$ShortText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "Optimal font size for Middle text is: '$backgroundoptimalFontSizeMiddle'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "    Applying Font text: `"$MiddleText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "Optimal font size for Long text is: '$backgroundoptimalFontSizeLong'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "    Applying Font text: `"$LongText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+
+    Write-log -Subtext "Optimal font size for Short Bold text is: '$backgroundoptimalFontSizeShortBold'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "    Applying Bold Font text: `"$ShortTextBold`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "Optimal font size for Middle Bold text is: '$backgroundoptimalFontSizeMiddleBold'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "    Applying Bold Font text: `"$MiddleTextBold`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "Optimal font size for Long Bold text is: '$backgroundoptimalFontSizeLongBold'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "    Applying Bold Font text: `"$LongTextBold`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+
+    # Text Poster overlay
     $ArgumentsShort = "`"$TestPosterShort`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeShort`" -fill `"#0000FF`" -size `"$boxsize`" -background `"#ACD7E6`" caption:`"$ShortText`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -composite `"$TestPosterShort`""
     $ArgumentsMiddle = "`"$TestPosterMiddle`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeMiddle`" -fill `"#0000FF`" -size `"$boxsize`" -background `"#ACD7E6`" caption:`"$MiddleText`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -composite `"$TestPosterMiddle`""
     $ArgumentsLong = "`"$TestPosterLong`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeLong`" -fill `"#0000FF`" -size `"$boxsize`" -background `"#ACD7E6`" caption:`"$LongText`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -composite `"$TestPosterLong`""
@@ -1630,6 +1762,15 @@ Elseif ($Testing) {
     $ArgumentsMiddleBold = "`"$TestPosterMiddleBold`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeMiddleBold`" -fill `"#0000FF`" -size `"$boxsize`" -background `"#ACD7E6`" caption:`"$MiddleTextBold`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -composite `"$TestPosterMiddleBold`""
     $ArgumentsLongBold = "`"$TestPosterLongBold`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeLongBold`" -fill `"#0000FF`" -size `"$boxsize`" -background `"#ACD7E6`" caption:`"$LongTextBold`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -composite `"$TestPosterLongBold`""
     
+    # Text background overlay
+    $backgroundArgumentsShort = "`"$backgroundTestPosterShort`" -gravity center -background none -layers Flatten ( -font `"$backgroundfontImagemagick`" -pointsize `"$backgroundoptimalFontSizeShort`" -fill `"#0000FF`" -size `"$Backgroundboxsize`" -background `"#ACD7E6`" caption:`"$ShortText`" -trim -gravity south -extent `"$Backgroundboxsize`" ) -gravity south -geometry +0+`"$Backgroundtext_offset`" -composite `"$backgroundTestPosterShort`""
+    $backgroundArgumentsMiddle = "`"$backgroundTestPosterMiddle`" -gravity center -background none -layers Flatten ( -font `"$backgroundfontImagemagick`" -pointsize `"$backgroundoptimalFontSizeMiddle`" -fill `"#0000FF`" -size `"$Backgroundboxsize`" -background `"#ACD7E6`" caption:`"$MiddleText`" -trim -gravity south -extent `"$Backgroundboxsize`" ) -gravity south -geometry +0+`"$Backgroundtext_offset`" -composite `"$backgroundTestPosterMiddle`""
+    $backgroundArgumentsLong = "`"$backgroundTestPosterLong`" -gravity center -background none -layers Flatten ( -font `"$backgroundfontImagemagick`" -pointsize `"$backgroundoptimalFontSizeLong`" -fill `"#0000FF`" -size `"$Backgroundboxsize`" -background `"#ACD7E6`" caption:`"$LongText`" -trim -gravity south -extent `"$Backgroundboxsize`" ) -gravity south -geometry +0+`"$Backgroundtext_offset`" -composite `"$backgroundTestPosterLong`""
+    $backgroundArgumentsShortBold = "`"$backgroundTestPosterShortBold`" -gravity center -background none -layers Flatten ( -font `"$backgroundfontImagemagick`" -pointsize `"$backgroundoptimalFontSizeShortBold`" -fill `"#0000FF`" -size `"$Backgroundboxsize`" -background `"#ACD7E6`" caption:`"$ShortTextBold`" -trim -gravity south -extent `"$Backgroundboxsize`" ) -gravity south -geometry +0+`"$Backgroundtext_offset`" -composite `"$backgroundTestPosterShortBold`""
+    $backgroundArgumentsMiddleBold = "`"$backgroundTestPosterMiddleBold`" -gravity center -background none -layers Flatten ( -font `"$backgroundfontImagemagick`" -pointsize `"$backgroundoptimalFontSizeMiddleBold`" -fill `"#0000FF`" -size `"$Backgroundboxsize`" -background `"#ACD7E6`" caption:`"$MiddleTextBold`" -trim -gravity south -extent `"$Backgroundboxsize`" ) -gravity south -geometry +0+`"$Backgroundtext_offset`" -composite `"$backgroundTestPosterMiddleBold`""
+    $backgroundArgumentsLongBold = "`"$backgroundTestPosterLongBold`" -gravity center -background none -layers Flatten ( -font `"$backgroundfontImagemagick`" -pointsize `"$backgroundoptimalFontSizeLongBold`" -fill `"#0000FF`" -size `"$Backgroundboxsize`" -background `"#ACD7E6`" caption:`"$LongTextBold`" -trim -gravity south -extent `"$Backgroundboxsize`" ) -gravity south -geometry +0+`"$Backgroundtext_offset`" -composite `"$backgroundTestPosterLongBold`""
+    
+    # Text Poster Logging
     $logEntryShort = "magick.exe $ArgumentsShort"
     $logEntryMiddle = "magick.exe $ArgumentsMiddle"
     $logEntryLong = "magick.exe $ArgumentsLong"
@@ -1644,14 +1785,40 @@ Elseif ($Testing) {
     $logEntryLong | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
     $logEntryLongBold | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
 
+    # Text background Logging
+    $backgroundlogEntryShort = "magick.exe $backgroundArgumentsShort"
+    $backgroundlogEntryMiddle = "magick.exe $backgroundArgumentsMiddle"
+    $backgroundlogEntryLong = "magick.exe $backgroundArgumentsLong"
+    $backgroundlogEntryShortBold = "magick.exe $backgroundArgumentsShortBold"
+    $backgroundlogEntryMiddleBold = "magick.exe $backgroundArgumentsMiddleBold"
+    $backgroundlogEntryLongBold = "magick.exe $backgroundArgumentsLongBold"
+
+    $backgroundlogEntryShort | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $backgroundlogEntryShortBold | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $backgroundlogEntryMiddle | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $backgroundlogEntryMiddleBold | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $backgroundlogEntryLong | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $backgroundlogEntryLongBold | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+
+    # Text Poster overlaying
     Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentsShort
     Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentsMiddle
     Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentsLong
     Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentsShortBold
     Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentsMiddleBold
     Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentsLongBold
-    Write-log -Subtext "Poster Tests finished, you can find them here: $global:ScriptRoot\test" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Success
+
+    # Text Background overlaying
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $backgroundArgumentsShort
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $backgroundArgumentsMiddle
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $backgroundArgumentsLong
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $backgroundArgumentsShortBold
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $backgroundArgumentsMiddleBold
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $backgroundArgumentsLongBold
+
+    Write-log -Subtext "Poster/Background Tests finished, you can find them here: $global:ScriptRoot\test" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Success
     Remove-Item -LiteralPath $testimage | out-null
+    Remove-Item -LiteralPath $backgroundtestimage | out-null
 }
 else {
     Write-log -Message "Query plex libs..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
@@ -1927,7 +2094,7 @@ else {
         
                             # Calculate the height to maintain the aspect ratio with a width of 1000 pixels
                             if ($AddBorder -eq 'true' -and $AddOverlay -eq 'true') {
-                                $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$overlay`" -gravity south -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$PosterImage`""
+                                $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$PosterImage`""
                                 Write-log -Subtext "Resizing it | Adding Borders | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                             }
                             if ($AddBorder -eq 'true' -and $AddOverlay -eq 'false') {
@@ -1935,7 +2102,7 @@ else {
                                 Write-log -Subtext "Resizing it | Adding Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                             }
                             if ($AddBorder -eq 'false' -and $AddOverlay -eq 'true') {
-                                $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$overlay`" -gravity south -composite `"$PosterImage`""
+                                $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -composite `"$PosterImage`""
                                 Write-log -Subtext "Resizing it | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                             }
                             if ($AddBorder -eq 'false' -and $AddOverlay -eq 'false') {
@@ -2047,7 +2214,7 @@ else {
                             
                         }
         
-                        if ($fontAllCaps -eq 'true') {
+                        if ($BackgroundfontAllCaps -eq 'true') {
                             $joinedTitle = $Titletext.ToUpper()
                         }
                         Else {
@@ -2083,15 +2250,15 @@ else {
             
                                 # Calculate the height to maintain the aspect ratio with a width of 1000 pixels
                                 if ($AddBackgroundBorder -eq 'true' -and $AddBackgroundOverlay -eq 'true') {
-                                    $Arguments = "`"$backgroundImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$overlay`" -gravity south -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$backgroundImage`""
+                                    $Arguments = "`"$backgroundImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$backgroundoverlay`" -gravity south -composite -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundImage`""
                                     Write-log -Subtext "Resizing it | Adding Borders | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                 }
                                 if ($AddBackgroundBorder -eq 'true' -and $AddBackgroundOverlay -eq 'false') {
-                                    $Arguments = "`"$backgroundImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$backgroundImage`""
+                                    $Arguments = "`"$backgroundImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundImage`""
                                     Write-log -Subtext "Resizing it | Adding Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                 }
                                 if ($AddBackgroundBorder -eq 'false' -and $AddBackgroundOverlay -eq 'true') {
-                                    $Arguments = "`"$backgroundImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$overlay`" -gravity south -composite `"$backgroundImage`""
+                                    $Arguments = "`"$backgroundImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$Backgroundoverlay`" -gravity south -composite `"$backgroundImage`""
                                     Write-log -Subtext "Resizing it | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                 }
                                 if ($AddBackgroundBorder -eq 'false' -and $AddBackgroundOverlay -eq 'false') {
@@ -2103,9 +2270,9 @@ else {
                                 Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
             
                                 if ($AddBackgroundText -eq 'true') {
-                                    $optimalFontSize = Get-OptimalPointSize -text $joinedTitle -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
+                                    $optimalFontSize = Get-OptimalPointSize -text $joinedTitle -font $fontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
                                     Write-log -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-                                    $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -composite `"$backgroundImage`""
+                                    $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -size `"$Backgroundboxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -composite `"$backgroundImage`""
                                     Write-log -Subtext "Applying Font text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                     $logEntry = "magick.exe $Arguments"
                                     $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
@@ -2282,7 +2449,7 @@ else {
     
                         # Calculate the height to maintain the aspect ratio with a width of 1000 pixels
                         if ($AddBorder -eq 'true' -and $AddOverlay -eq 'true') {
-                            $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$overlay`" -gravity south -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$PosterImage`""
+                            $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$PosterImage`""
                             Write-log -Subtext "Resizing it | Adding Borders | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                         }
                         if ($AddBorder -eq 'true' -and $AddOverlay -eq 'false') {
@@ -2290,7 +2457,7 @@ else {
                             Write-log -Subtext "Resizing it | Adding Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                         }
                         if ($AddBorder -eq 'false' -and $AddOverlay -eq 'true') {
-                            $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$overlay`" -gravity south -composite `"$PosterImage`""
+                            $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -composite `"$PosterImage`""
                             Write-log -Subtext "Resizing it | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                         }
                         if ($AddBorder -eq 'false' -and $AddOverlay -eq 'false') {
@@ -2405,7 +2572,7 @@ else {
                         
                     }
     
-                    if ($fontAllCaps -eq 'true') {
+                    if ($BackgroundfontAllCaps -eq 'true') {
                         $joinedTitle = $Titletext.ToUpper()
                     }
                     Else {
@@ -2441,15 +2608,15 @@ else {
         
                             # Calculate the height to maintain the aspect ratio with a width of 1000 pixels
                             if ($AddBackgroundBorder -eq 'true' -and $AddBackgroundOverlay -eq 'true') {
-                                $Arguments = "`"$backgroundImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$overlay`" -gravity south -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$backgroundImage`""
+                                $Arguments = "`"$backgroundImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$Backgroundoverlay`" -gravity south -composite -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundImage`""
                                 Write-log -Subtext "Resizing it | Adding Borders | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                             }
                             if ($AddBackgroundBorder -eq 'true' -and $AddBackgroundOverlay -eq 'false') {
-                                $Arguments = "`"$backgroundImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$backgroundImage`""
+                                $Arguments = "`"$backgroundImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundImage`""
                                 Write-log -Subtext "Resizing it | Adding Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                             }
                             if ($AddBackgroundBorder -eq 'false' -and $AddBackgroundOverlay -eq 'true') {
-                                $Arguments = "`"$backgroundImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$overlay`" -gravity south -composite `"$backgroundImage`""
+                                $Arguments = "`"$backgroundImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$Backgroundoverlay`" -gravity south -composite `"$backgroundImage`""
                                 Write-log -Subtext "Resizing it | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                             }
                             if ($AddBackgroundBorder -eq 'false' -and $AddBackgroundOverlay -eq 'false') {
@@ -2461,9 +2628,9 @@ else {
                             Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
         
                             if ($AddBackgroundText -eq 'true') {
-                                $optimalFontSize = Get-OptimalPointSize -text $joinedTitle -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
+                                $optimalFontSize = Get-OptimalPointSize -text $joinedTitle -font $fontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
                                 Write-log -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-                                $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -composite `"$backgroundImage`""
+                                $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -size `"$Backgroundboxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -composite `"$backgroundImage`""
                                 Write-log -Subtext "Applying Font text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                 $logEntry = "magick.exe $Arguments"
                                 $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
@@ -2601,7 +2768,7 @@ else {
                                 if (Get-ChildItem -LiteralPath $SeasonImage -ErrorAction SilentlyContinue) {
                                     # Resize Image to 2000x3000 and apply Border and overlay
                                     if ($AddBorder -eq 'true' -and $AddOverlay -eq 'true') {
-                                        $Arguments = "`"$SeasonImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$overlay`" -gravity south -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$SeasonImage`""
+                                        $Arguments = "`"$SeasonImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$SeasonImage`""
                                         Write-log -Subtext "Resizing it | Adding Borders | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                     }
                                     if ($AddBorder -eq 'true' -and $AddOverlay -eq 'false') {
@@ -2609,7 +2776,7 @@ else {
                                         Write-log -Subtext "Resizing it | Adding Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                     }
                                     if ($AddBorder -eq 'false' -and $AddOverlay -eq 'true') {
-                                        $Arguments = "`"$SeasonImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$overlay`" -gravity south -composite `"$SeasonImage`""
+                                        $Arguments = "`"$SeasonImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -composite `"$SeasonImage`""
                                         Write-log -Subtext "Resizing it | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                     }
                                     if ($AddBorder -eq 'false' -and $AddOverlay -eq 'false') {
