@@ -17,7 +17,8 @@
     "font": "Rocky.ttf",
     "overlayfile": "overlay.png",
     "LibraryFolders": "true",
-    "SeasonPosters": "true"
+    "SeasonPosters": "true",
+    "BackgroundPosters": "false"
   },
   "OverlayPart":{
     "ImageProcessing": "true",
@@ -25,13 +26,16 @@
     "AddBorder": "true",
     "AddText": "true",
     "AddOverlay": "true",
+    "AddBackgroundOverlay": "false",
+    "AddBackgroundBorder": "false",
+    "AddBackgroundText": "false",
     "fontcolor": "white",
     "bordercolor": "white",
     "minPointSize": "45",
     "maxPointSize": "150",
     "borderwidth": "30",
-    "MaxWidth": "1800",
-    "MaxHeight": "600",
-    "text_offset": "+300"
+    "MaxWidth": "1900",
+    "MaxHeight": "500",
+    "text_offset": "+450"
   }
 }

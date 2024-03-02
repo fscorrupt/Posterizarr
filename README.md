@@ -58,7 +58,8 @@ Before utilizing the script, ensure the following prerequisites are installed an
    - `font`: Font file name.
    - `overlayfile`: Overlay file name.
    - `LibraryFolders`: true/false for the asset structure in one flat Folder or split into library media folders like pmm needs it.
-   - `SeasonPosters`: true/false for also creating season posters (if ImageProcessing is false, it queries fanart.tv for season posters, fallback is show poster, because tvdb/tmdb do not have season posters)
+   - `SeasonPosters`: true/false for also creating season posters.
+   - `BackgroundPosters`: true/false for also creating background posters.
 
    **OverlayPart**
    - `ImageProcessing`: Set it to true if you want the imagemagick part, if false it only downloads the posters.
@@ -66,6 +67,9 @@ Before utilizing the script, ensure the following prerequisites are installed an
    - `AddBorder`: true/false to add border to image
    - `AddText`: true/false to add Text to image
    - `AddOverlay`: true/false to add the defined `overlayfile` to image
+   - `AddBackgroundBorder`: true/false to add border to Background image
+   - `AddBackgroundText`: true/false to add Text to Background image
+   - `AddBackgroundOverlay`: true/false to add the defined `overlayfile` to Background image
    - `fontcolor`: Color of Font Text.
    - `bordercolor`: Color of Border.
    - `minPointSize`: Min Size of Text in Poster.
