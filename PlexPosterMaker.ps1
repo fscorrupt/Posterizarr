@@ -220,6 +220,12 @@ function GetTMDBMovieBackground {
                     }
                 }
             }
+            Else {
+                Write-log -Subtext "No Background found on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                if ($global:FavProvider -eq 'TMDB') {
+                    $global:Fallback = "fanart"
+                }
+            }
         }
         Else {
             Write-log -Subtext "TMDB Api Response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
@@ -255,6 +261,16 @@ function GetTMDBMovieBackground {
                         return $global:posterurl
                         break
                     }
+                }
+                if (!$global:posterurl) {
+                    Write-log -Subtext "No Background found on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                    $global:Fallback = "fanart"
+                }
+            }
+            Else {
+                Write-log -Subtext "No Background found on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                if ($global:FavProvider -eq 'TMDB') {
+                    $global:Fallback = "fanart"
                 }
             }
         }
@@ -479,10 +495,20 @@ function GetTMDBShowBackground {
                         return $global:posterurl
                     }
                 }
+                if (!$global:posterurl) {
+                    Write-log -Subtext "No Background found on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                    $global:Fallback = "fanart"
+                }
             }
-        }
-        Else {
-            Write-log -Subtext "TMDB Api Response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+            Else {
+                Write-log -Subtext "No Background found on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                if ($global:FavProvider -eq 'TMDB') {
+                    $global:Fallback = "fanart"
+                }
+            }
+            Else {
+                Write-log -Subtext "TMDB Api Response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+            }
         }
     }
     Else {
@@ -516,6 +542,16 @@ function GetTMDBShowBackground {
                         break
                     }
                 }
+                if (!$global:posterurl) {
+                    Write-log -Subtext "No Background found on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                    $global:Fallback = "fanart"
+                }
+            }
+            Else {
+                Write-log -Subtext "No Background found on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                if ($global:FavProvider -eq 'TMDB') {
+                    $global:Fallback = "fanart"
+                }
             }
         }
         Else {
@@ -523,6 +559,7 @@ function GetTMDBShowBackground {
         }
     }
 }
+
 function GetFanartMoviePoster {
     $global:Fallback = $null
     Write-log -Subtext "Searching on Fanart.tv for a movie poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
@@ -948,6 +985,9 @@ function GetTVDBMovieBackground {
                             break
                         }
                     }
+                    if (!$global:posterurl){
+                        Write-log -Subtext "No background found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                    }
                 }
                 Else {
                     Write-log -Subtext "No Background found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
@@ -1093,6 +1133,9 @@ function GetTVDBShowBackground {
                             return $global:posterurl
                             break
                         }
+                    }
+                    if (!$global:posterurl){
+                        Write-log -Subtext "No background found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
                     }
                 }
                 Else {
@@ -2042,8 +2085,6 @@ else {
                             $global:IsFallback = $true
                         }
                     }
-                    if ($global:TextlessPoster -eq 'true' -and $global:posterurl) {
-                    } 
                     if (!$global:posterurl) {
                         $global:posterurl = GetTVDBMoviePoster
                         $global:IsFallback = $true
@@ -2053,7 +2094,6 @@ else {
                             $global:IsFallback = $true
                             if (!$global:posterurl) { 
                                 Write-log -Subtext "Could not find a poster on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
-                                $Errorcount++
                             }
                         }
                     }
@@ -2201,15 +2241,12 @@ else {
                                 $global:IsFallback = $true
                             }
                         }
-                        if ($global:TextlessPoster -eq 'true' -and $global:posterurl) {
-                        } 
                         if (!$global:posterurl) {
                             $global:posterurl = GetTVDBMovieBackground
                             $global:IsFallback = $true
                             
                             if (!$global:posterurl) { 
                                 Write-log -Subtext "Could not find a background on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
-                                $Errorcount++
                             }
                             
                         }
@@ -2403,7 +2440,6 @@ else {
                     $global:IsFallback = $true
                     if (!$global:posterurl) {
                         Write-log -Subtext "Could not find a poster on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
-                        $Errorcount++
                     }
                 }
                 if ($fontAllCaps -eq 'true') {
@@ -2567,7 +2603,6 @@ else {
                         
                         if (!$global:posterurl) { 
                             Write-log -Subtext "Could not find a background on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
-                            $Errorcount++
                         }
                         
                     }
