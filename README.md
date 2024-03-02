@@ -36,7 +36,7 @@ Before utilizing the script, ensure the following prerequisites are installed an
 1. Open `config.example.json` located in the script directory.
 2. Update the following variables with your API keys and preferences:
 
-### ApiPart
+**ApiPart:**
 
 - `tvdbapi`: Your TVDB project API key.
 - `tmdbtoken`: Your TMDB token.
@@ -45,12 +45,12 @@ Before utilizing the script, ensure the following prerequisites are installed an
 - `FavProvider`: Set your preferred provider (default is `tmdb`).
 - `PreferedLanguageOrder`: Specify language preferences. Default is `xx,en,de` (`xx` is Textless). Example configurations can be found in the config file. Language codes can be found here: [Lang Codes](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2).
 
-### PlexPart
+**PlexPart:**
 
 - `LibstoExclude`: Libraries to exclude from processing.
 - `PlexUrl`: Plex server URL.
 
-### PrerequisitePart
+**PrerequisitePart:**
 
 - `AssetPath`: Path to store generated posters.
 - `magickinstalllocation`: Path to ImageMagick installation location where `Magick.exe` is located.
@@ -62,11 +62,11 @@ Before utilizing the script, ensure the following prerequisites are installed an
 - `SeasonPosters`: Set to `true` to also create season posters.
 - `BackgroundPosters`: Set to `true` to also create background posters.
 
-### OverlayPart
+**OverlayPart:**
 
 - `ImageProcessing`: Set to `true` if you want the ImageMagick part; if false, it only downloads the posters.
 
-### PosterOverlayPart
+**PosterOverlayPart:**
 
 - `fontAllCaps`: Set to `true` for all caps text, else `false`.
 - `AddBorder`: Set to `true` to add a border to the image.
@@ -81,7 +81,7 @@ Before utilizing the script, ensure the following prerequisites are installed an
 - `MaxHeight`: Maximum height of text box.
 - `text_offset`: Text box offset from the bottom of the picture.
 
-### BackgroundOverlayPart
+**BackgroundOverlayPart:**
 
 - `fontAllCaps`: Set to `true` for all caps text, else `false`.
 - `AddOverlay`: Set to `true` to add the defined background overlay file to the background image.
