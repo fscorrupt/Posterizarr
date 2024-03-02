@@ -2371,7 +2371,7 @@ else {
     
                     Write-log -Message "Start Background Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                     switch -Wildcard ($global:FavProvider) {
-                        'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBShowBackground}Else { Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning; $global:posterurl = GetFanartShowBackground } }
+                        'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBShowBackground }Else { Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning; $global:posterurl = GetFanartShowBackground } }
                         'FANART' { $global:posterurl = GetFanartShowBackground }
                         'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBShowBackground }Else { Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning; $global:posterurl = GetFanartShowBackground } }
                         Default { $global:posterurl = GetFanartShowBackground }
@@ -2697,9 +2697,6 @@ else {
                         $seasontemp | Export-Csv -Path "$global:ScriptRoot\Logs\PosterChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                     }
                 }
-            }
-            if ($global:TitleCards -eq 'True'){
-
             }
         }
         Else {
