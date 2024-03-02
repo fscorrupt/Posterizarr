@@ -42,7 +42,7 @@ Before utilizing the script, ensure the following prerequisites are installed an
 - `tmdbtoken`: Your TMDB token.
 - `FanartTvAPIKey`: Your Fanart personal API key.
 - `PlexToken`: Leave empty if not applicable.
-- `FavProvider`: Set your preferred provider (fallback is `tmdb`).
+- `FavProvider`: Set your preferred provider (default is `tmdb`).
 - `PreferedLanguageOrder`: Specify language preferences. Default is `xx,en,de` (`xx` is Textless). Example configurations can be found in the config file. Language codes can be found here: [Lang Codes](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2).
 
 ### PlexPart
