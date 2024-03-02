@@ -2060,6 +2060,7 @@ else {
                     $global:imdbid = $entry.imdbid
                     $global:posterurl = $null
                     $global:PosterWithText = $null
+                    $global:Fallback = $null
                     Write-log -Message "Start Poster Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                     switch -Wildcard ($global:FavProvider) {
                         'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBMoviePoster }Else { Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning; $global:posterurl = GetFanartMoviePoster } }
