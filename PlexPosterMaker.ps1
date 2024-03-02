@@ -1083,7 +1083,7 @@ function GetTVDBShowBackground {
             if ($response) {
                 if ($response.data) {
                     $defaultImageurl = $response.data.image
-                    $NoLangImageUrl = $response.data.artworks | where { $_.language -eq $null -and $_.type -eq '3' }
+                    $NoLangImageUrl = $response.data.artworks | Where-Object { $_.language -eq $null -and $_.type -eq '3' }
                     if ($NoLangImageUrl) {
                         $global:posterurl = $NoLangImageUrl[0].image
                         Write-log -Subtext "Found Textless background on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
@@ -1270,6 +1270,12 @@ $backgroundfontImagemagick = $backgroundfont.replace('\', '\\')
 $magick = "$magickinstalllocation\magick.exe"
 $fileExtensions = @(".otf", ".ttf", ".otc", ".ttc", ".png")
 $Errorcount = 0
+
+# Initialize Other Variables
+$SeasonsTemp = $null
+$SeasonNames = $null
+$SeasonNumbers = $null
+$SeasonRatingkeys = $null
 
 if (!(Test-Path $global:ScriptRoot\Logs)) {
     New-Item -ItemType Directory -Path $global:ScriptRoot\Logs -Force | out-null
