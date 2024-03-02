@@ -506,9 +506,9 @@ function GetTMDBShowBackground {
                     $global:Fallback = "fanart"
                 }
             }
-            Else {
-                Write-log -Subtext "TMDB Api Response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
-            }
+        }
+        Else {
+            Write-log -Subtext "TMDB Api Response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
         }
     }
     Else {
@@ -985,7 +985,7 @@ function GetTVDBMovieBackground {
                             break
                         }
                     }
-                    if (!$global:posterurl){
+                    if (!$global:posterurl) {
                         Write-log -Subtext "No background found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
                     }
                 }
@@ -1134,7 +1134,7 @@ function GetTVDBShowBackground {
                             break
                         }
                     }
-                    if (!$global:posterurl){
+                    if (!$global:posterurl) {
                         Write-log -Subtext "No background found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
                     }
                 }
@@ -1331,8 +1331,8 @@ Else {
     if ((Test-Path $global:ScriptRoot\Logs\Scriptlog.log)) {
         Remove-Item $global:ScriptRoot\Logs\Scriptlog.log
     }
-    if ((Test-Path "$global:ScriptRoot\Logs\PosterChoices.csv")) {
-        Remove-Item "$global:ScriptRoot\Logs\PosterChoices.csv"
+    if ((Test-Path "$global:ScriptRoot\Logs\ImageChoices.csv")) {
+        Remove-Item "$global:ScriptRoot\Logs\ImageChoices.csv"
     }
     Write-log -Message "Old log files cleared..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
 }
@@ -2185,7 +2185,7 @@ else {
                         $movietemp | Add-Member -MemberType NoteProperty -Name "Url" -Value $global:posterurl
         
                         # Export the array to a CSV file
-                        $movietemp | Export-Csv -Path "$global:ScriptRoot\Logs\PosterChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
+                        $movietemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                         $posterCount++
                     }
                     Else {
@@ -2338,7 +2338,7 @@ else {
                             $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Url" -Value $global:posterurl
             
                             # Export the array to a CSV file
-                            $moviebackgroundtemp | Export-Csv -Path "$global:ScriptRoot\Logs\PosterChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
+                            $moviebackgroundtemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                             $posterCount++
                         }
                         Else {
@@ -2544,7 +2544,7 @@ else {
                 $showtemp | Add-Member -MemberType NoteProperty -Name "Url" -Value $global:posterurl
 
                 # Export the array to a CSV file
-                $showtemp | Export-Csv -Path "$global:ScriptRoot\Logs\PosterChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
+                $showtemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
 
             }
             if ($global:BackgroundPosters -eq 'true') {
@@ -2694,7 +2694,7 @@ else {
                         $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Url" -Value $global:posterurl
         
                         # Export the array to a CSV file
-                        $showbackgroundtemp | Export-Csv -Path "$global:ScriptRoot\Logs\PosterChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
+                        $showbackgroundtemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                         $posterCount++
                     }
                     Else {
@@ -2896,7 +2896,7 @@ else {
                         $seasontemp | Add-Member -MemberType NoteProperty -Name "Url" -Value $global:posterurl
         
                         # Export the array to a CSV file
-                        $seasontemp | Export-Csv -Path "$global:ScriptRoot\Logs\PosterChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
+                        $seasontemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                     }
                 }
             }
@@ -2914,30 +2914,30 @@ else {
     $seconds = $executionTime.Seconds
     $FormattedTimespawn = $hours.ToString() + "h " + $minutes.ToString() + "m " + $seconds.ToString() + "s "
 
-    Write-log -Message "Finished, Total posters created: $posterCount | Total Season Posters created: $SeasonCount" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
-    if ((Test-Path $global:ScriptRoot\Logs\PosterChoices.csv)) {
-        Write-log -Message "You can find a detailed Summary of Poster Choices here: $global:ScriptRoot\Logs\PosterChoices.csv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+    Write-log -Message "Finished, Total images created: $posterCount | Total Season images created: $SeasonCount" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
+    if ((Test-Path $global:ScriptRoot\Logs\ImageChoices.csv)) {
+        Write-log -Message "You can find a detailed Summary of image Choices here: $global:ScriptRoot\Logs\ImageChoices.csv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
         # Calculate Summary
-        $SummaryCount = Import-Csv -LiteralPath "$global:ScriptRoot\Logs\PosterChoices.csv" -Delimiter ';'
+        $SummaryCount = Import-Csv -LiteralPath "$global:ScriptRoot\Logs\ImageChoices.csv" -Delimiter ';'
         $FallbackCount = @($SummaryCount | Where-Object Fallback -eq 'True')
         $TextlessCount = @($SummaryCount | Where-Object Textless -eq 'True')
         $TextTruncatedCount = @($SummaryCount | Where-Object TextTruncated -eq 'True')
         $TextCount = @($SummaryCount | Where-Object Textless -eq 'False')
 
         if ($TextlessCount) {
-            Write-log -Subtext "'$($TextlessCount.count)' times the script took a Textless poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+            Write-log -Subtext "'$($TextlessCount.count)' times the script took a Textless image" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
         }
         if ($FallbackCount) {
-            Write-log -Subtext "'$($FallbackCount.count)' times the script took a fallback poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+            Write-log -Subtext "'$($FallbackCount.count)' times the script took a fallback image" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
         }
         if ($TextCount) {
-            Write-log -Subtext "'$($TextCount.count)' times the script took a poster with Text" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+            Write-log -Subtext "'$($TextCount.count)' times the script took a image with Text" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
         }
         if ($PosterUnknownCount -ge '1') {
             Write-log -Subtext "'$PosterUnknownCount' times the script took a season poster where we cant tell if it has text or not" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
         }
         if ($TextTruncatedCount) {
-            Write-log -Subtext "'$($TextTruncatedCount.count)' times the script truncated the text in poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+            Write-log -Subtext "'$($TextTruncatedCount.count)' times the script truncated the text in images" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
         }
     }
     if ($Errorcount -ge '1') {
