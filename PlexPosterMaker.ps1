@@ -3,9 +3,6 @@ param (
     [switch]$Testing
 )
 
-$Error.Clear()
-Remove-Variable * -ErrorAction SilentlyContinue
-
 #################
 # What you need #
 #####################################################################################################################
@@ -305,7 +302,7 @@ function GetTMDBSeasonPoster {
     }
     Else {
         try {
-            if ($global:SeasonNumber -match '\b\d{1,2}\b'){
+            if ($global:SeasonNumber -match '\b\d{1,2}\b') {
                 $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)/season/$global:SeasonNumber/images?append_to_response=images&language=$($global:PreferedLanguageOrder[0])&include_image_language=$($global:PreferedLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
             }
             Else {
@@ -542,7 +539,7 @@ function GetFanartSeasonPoster {
             if ($id) {
                 $entrytemp = Get-FanartTv -Type tv -id $id -ErrorAction SilentlyContinue
                 if ($entrytemp.seasonposter) {
-                    if ($global:SeasonNumber -match '\b\d{1,2}\b'){
+                    if ($global:SeasonNumber -match '\b\d{1,2}\b') {
                         $global:posterurl = ($entrytemp.seasonposter | Where-Object { $_.lang -eq 'en' -and $_.Season -eq $global:SeasonNumber } | Sort-Object likes)[0].url
                     }
                     Else {
@@ -767,6 +764,12 @@ if (!(Test-Path "$PSScriptRoot\config.json")) {
     exit
 }
 
+# Set possible leftovers to $null
+$SeasonNames = $null
+$Seasondata = $null
+$SeasonsTemp = $null
+$SeasonNumbers = $null
+
 # load config file
 $config = Get-Content -Raw -Path "$PSScriptRoot\config.json" | ConvertFrom-Json
 
@@ -781,7 +784,7 @@ $global:PreferedLanguageOrder = $config.ApiPart.PreferedLanguageOrder
 # default Lang order if missing in config
 if (!$global:PreferedLanguageOrder) {
     Write-log -Message "Lang search Order not set in Config, setting it to 'xx,en,de' for you" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
-    $global:PreferedLanguageOrder = "xx","en","de"
+    $global:PreferedLanguageOrder = "xx", "en", "de"
 }
 $global:PreferedLanguageOrderTMDB = $global:PreferedLanguageOrder.Replace('xx', 'null')
 $global:PreferedLanguageOrderFanart = $global:PreferedLanguageOrder.Replace('xx', '00')
@@ -808,7 +811,7 @@ $AssetPath = RemoveTrailingSlash $config.PrerequisitePart.AssetPath
 if ($AssetPath.StartsWith("\")) { 
     # add \ if it only Starts with one
     if (!$AssetPath.StartsWith("\\")) { 
-        $AssetPath = "\"+$AssetPath
+        $AssetPath = "\" + $AssetPath
     }
 }
 
@@ -906,10 +909,10 @@ Else {
 
 $configLogging = "$global:ScriptRoot\Logs\Scriptlog.log"
 
-if ($Manual){
+if ($Manual) {
     $configLogging = "$global:ScriptRoot\Logs\Manuallog.log"
 }
-if ($Testing){
+if ($Testing) {
     $configLogging = "$global:ScriptRoot\Logs\Testinglog.log"
 }
 
@@ -921,7 +924,7 @@ Write-log -Subtext "API Part" -Path $configLogging -Type Trace
 Write-log -Subtext "| TVDB API Key:             $($global:tvdbapi[0..7] -join '')****" -Path $configLogging -Type Info
 Write-log -Subtext "| TMDB API Token:           $($global:tmdbtoken[0..7] -join '')****" -Path $configLogging -Type Info
 Write-log -Subtext "| Fanart API Key:           $($FanartTvAPIKey[0..7] -join '')****" -Path $configLogging -Type Info
-if ($PlexToken){
+if ($PlexToken) {
     Write-log -Subtext "| Plex Token:               $($PlexToken[0..7] -join '')****" -Path $configLogging  -Type Info
 }
 Else {
@@ -1156,13 +1159,13 @@ if ($Manual) {
     Move-Item -LiteralPath $backgroundImage -destination $backgroundImageoriginal -Force -ErrorAction SilentlyContinue
     Write-log -Subtext "Poster created and moved to: $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Manuallog.log -Type Success
 }
-Elseif ($Testing){
+Elseif ($Testing) {
     Write-log -Message "Poster Testing Started" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Debug
     Write-log -Subtext "I will now create a few posters for you with different text lengths using your current configuration settings." -Path $global:ScriptRoot\Logs\Testinglog.log -Type Warning
     if (!(Test-Path $testimage)) {
         $ArgumentCreate = "-size 2000x3000 xc:pink -background none `"$testimage`""
         $logEntryCreate = "magick.exe $ArgumentCreate"
-    #$logEntryCreate | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+        #$logEntryCreate | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
         Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentCreate
         Write-log -Subtext "Test Poster Created..." -Path $global:ScriptRoot\Logs\Testinglog.log -Type Trace
     }
@@ -1876,7 +1879,7 @@ else {
                         if (($global:TextlessFallbackPoster -or $global:TextFallbackPoster) -and $global:PosterWithText) {
                             Write-Log -Subtext "Taking TMDB Fallback poster..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                             $global:posterurl = $global:TMDBfallbackposterurl
-                            if ($global:TextlessFallbackPoster){
+                            if ($global:TextlessFallbackPoster) {
                                 $global:TextlessPoster = 'true'
                             }
                         }
@@ -2025,28 +2028,30 @@ else {
     $FormattedTimespawn = $hours.ToString() + "h " + $minutes.ToString() + "m " + $seconds.ToString() + "s "
 
     Write-log -Message "Finished, Total posters created: $posterCount | Total Season Posters created: $SeasonCount" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
-    Write-log -Message "You can find a detailed Summary of Poster Choices here: $global:ScriptRoot\Logs\PosterChoices.csv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-    # Calculate Summary
-    $SummaryCount = Import-Csv -LiteralPath "$global:ScriptRoot\Logs\PosterChoices.csv" -Delimiter ';'
-    $FallbackCount = @($SummaryCount | Where-Object Fallback -eq 'True')
-    $TextlessCount = @($SummaryCount | Where-Object Textless -eq 'True')
-    $TextTruncatedCount = @($SummaryCount | Where-Object TextTruncated -eq 'True')
-    $TextCount = @($SummaryCount | Where-Object Textless -eq 'False')
+    if ((Test-Path $global:ScriptRoot\Logs\PosterChoices.csv)) {
+        Write-log -Message "You can find a detailed Summary of Poster Choices here: $global:ScriptRoot\Logs\PosterChoices.csv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+        # Calculate Summary
+        $SummaryCount = Import-Csv -LiteralPath "$global:ScriptRoot\Logs\PosterChoices.csv" -Delimiter ';'
+        $FallbackCount = @($SummaryCount | Where-Object Fallback -eq 'True')
+        $TextlessCount = @($SummaryCount | Where-Object Textless -eq 'True')
+        $TextTruncatedCount = @($SummaryCount | Where-Object TextTruncated -eq 'True')
+        $TextCount = @($SummaryCount | Where-Object Textless -eq 'False')
 
-    if ($TextlessCount) {
-        Write-log -Subtext "'$($TextlessCount.count)' times the script took a Textless poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
-    }
-    if ($FallbackCount) {
-        Write-log -Subtext "'$($FallbackCount.count)' times the script took a fallback poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
-    }
-    if ($TextCount) {
-        Write-log -Subtext "'$($TextCount.count)' times the script took a poster with Text" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
-    }
-    if ($PosterUnknownCount -ge '1') {
-        Write-log -Subtext "'$PosterUnknownCount' times the script took a season poster where we cant tell if it has text or not" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
-    }
-    if ($TextTruncatedCount) {
-        Write-log -Subtext "'$($TextTruncatedCount.count)' times the script truncated the text in poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+        if ($TextlessCount) {
+            Write-log -Subtext "'$($TextlessCount.count)' times the script took a Textless poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+        }
+        if ($FallbackCount) {
+            Write-log -Subtext "'$($FallbackCount.count)' times the script took a fallback poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+        }
+        if ($TextCount) {
+            Write-log -Subtext "'$($TextCount.count)' times the script took a poster with Text" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+        }
+        if ($PosterUnknownCount -ge '1') {
+            Write-log -Subtext "'$PosterUnknownCount' times the script took a season poster where we cant tell if it has text or not" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+        }
+        if ($TextTruncatedCount) {
+            Write-log -Subtext "'$($TextTruncatedCount.count)' times the script truncated the text in poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+        }
     }
     if ($Errorcount -ge '1') {
         Write-log -Message "During execution '$Errorcount' Errors occurred, please check log for detailed description." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
