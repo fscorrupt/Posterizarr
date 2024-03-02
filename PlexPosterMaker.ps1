@@ -1355,10 +1355,10 @@ Write-log -Subtext "| TVDB API Key:                 $($global:tvdbapi[0..7] -joi
 Write-log -Subtext "| TMDB API Token:               $($global:tmdbtoken[0..7] -join '')****" -Path $configLogging -Type Info
 Write-log -Subtext "| Fanart API Key:               $($FanartTvAPIKey[0..7] -join '')****" -Path $configLogging -Type Info
 if ($PlexToken) {
-    Write-log -Subtext "| Plex Token:               $($PlexToken[0..7] -join '')****" -Path $configLogging  -Type Info
+    Write-log -Subtext "| Plex Token:                   $($PlexToken[0..7] -join '')****" -Path $configLogging  -Type Info
 }
 Else {
-    Write-log -Subtext "| Plex Token:               No Token in Config" -Path $configLogging  -Type Info
+    Write-log -Subtext "| Plex Token:                   No Token in Config" -Path $configLogging  -Type Info
 }
 Write-log -Subtext "| Fav Provider:                 $global:FavProvider" -Path $configLogging  -Type Info
 Write-log -Subtext "| Prefered Lang Order:          $($global:PreferedLanguageOrder -join ',')" -Path $configLogging  -Type Info
@@ -1367,7 +1367,7 @@ Write-log -Subtext "| Excluded Libs:                $($LibstoExclude -join ',')"
 Write-log -Subtext "| Plex Url:                     $($PlexUrl[0..10] -join '')****" -Path $configLogging -Type Info
 Write-log -Subtext "Prerequisites Part" -Path $configLogging -Type Trace
 Write-log -Subtext "| Asset Path:                   $AssetPath" -Path $configLogging -Type Info
-Write-log -Subtext "| Script Root:                  $global:ScriptRoot" -Path configLogging -Type Info
+Write-log -Subtext "| Script Root:                  $global:ScriptRoot" -Path $configLogging -Type Info
 Write-log -Subtext "| Magick Location:              $magickinstalllocation" -Path $configLogging -Type Info
 Write-log -Subtext "| Used Font:                    $font" -Path $configLogging -Type Info
 Write-log -Subtext "| Used Poster Overlay File:     $Posteroverlay" -Path $configLogging -Type Info
@@ -2243,12 +2243,12 @@ else {
                         }
                         if (!$global:posterurl) {
                             $global:posterurl = GetTVDBMovieBackground
-                            $global:IsFallback = $true
-                            
-                            if (!$global:posterurl) { 
+                            if ($global:posterurl) { 
+                                $global:IsFallback = $true
+                            }
+                            else { 
                                 Write-log -Subtext "Could not find a background on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
                             }
-                            
                         }
         
                         if ($BackgroundfontAllCaps -eq 'true') {
@@ -2764,10 +2764,12 @@ else {
                             $global:PosterWithText = $true
                         }
                         if (($global:TextlessFallbackPoster -or $global:TextFallbackPoster) -and $global:PosterWithText) {
-                            Write-Log -Subtext "Taking TMDB Fallback poster..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
-                            $global:posterurl = $global:TMDBfallbackposterurl
-                            if ($global:TextlessFallbackPoster) {
-                                $global:TextlessPoster = 'true'
+                            if ($global:TMDBfallbackposterurl) {
+                                Write-Log -Subtext "Taking TMDB Fallback poster..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                $global:posterurl = $global:TMDBfallbackposterurl
+                                if ($global:TextlessFallbackPoster) {
+                                    $global:TextlessPoster = 'true'
+                                }
                             }
                         }
                         if ($global:posterurl) {
