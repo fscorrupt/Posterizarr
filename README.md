@@ -146,31 +146,31 @@ Follow the prompts to enter the source picture path, media folder name, and movi
 
 
 ### Example of Script folder:
-![scriptimage](/images/folder.png)
+![scriptimage](images/folder.png)
 
 ### Example of script output:
-![outputimage](/images/output.png)
+![outputimage](images/output.png)
 
 ### Example of ImageChoices.csv:
-![outputimage](/images/imagecsv.png)
+![outputimage](images/imagecsv.png)
 
 ### Example of Movie Posters after creation:
-![assetimage](/images/movies.png)
+![assetimage](images/movies.png)
 
 ### Example of Show Posters after creation:
-![assetimage](/images/shows.png)
+![assetimage](images/shows.png)
 
 ### Example of 4K Lib after pmm magic:
-![4kimage](/images/movies4kpmm.png)
+![4kimage](images/movies4kpmm.png)
 
 ### Example of Movie Lib after pmm magic:
-![movieimage](/images/moviespmm.png)
+![movieimage](images/moviespmm.png)
 
 ### Example of TV Lib after pmm magic:
-![tvimage](/images/showspmm.png)
+![tvimage](images/showspmm.png)
 
 ### Example of TV Lib Seasons after pmm magic:
-![seasonimage](/images/seasonspmm.png)
+![seasonimage](images/seasonspmm.png)
 
 
 Feel free to customize the script further to suit your preferences or automation needs.
