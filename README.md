@@ -44,7 +44,7 @@ Before utilizing the script, ensure the following prerequisites are installed an
 - `FanartTvAPIKey`: Your Fanart personal API key.
 - `PlexToken`: Leave empty if not applicable.
 - `FavProvider`: Set your preferred provider (default is `tmdb`).
-- `PreferedLanguageOrder`: Specify language preferences. Default is `xx,en,de` (`xx` is Textless). Example configurations can be found in the config file. Language codes can be found here: [Lang Codes](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2).
+- `PreferedLanguageOrder`: Specify language preferences. Default is `xx,en,de` (`xx` is Textless). Example configurations can be found in the config file. 2-digit language codes can be found here: [ISO 3166-1 Lang Codes](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2).
 
 **PlexPart:**
 
@@ -59,7 +59,7 @@ Before utilizing the script, ensure the following prerequisites are installed an
 - `backgroundfont`: Background font file name.
 - `overlayfile`: Overlay file name.
 - `backgroundoverlayfile`: Background overlay file name.
-- `LibraryFolders`: Set to `true` for asset structure in one flat folder or `false` to split into library media folders like pmm needs it.
+- `LibraryFolders`: Set to `true` for asset structure in one flat folder or `false` to split into library media folders like [Plex-Meta-Manager](https://metamanager.wiki/en/latest/pmm/guides/assets/#image-asset-directory-guide) needs it.
 - `SeasonPosters`: Set to `true` to also create season posters.
 - `BackgroundPosters`: Set to `true` to also create background posters.
 
@@ -121,7 +121,7 @@ Run the script without any parameters:
 
 This will generate posters for your entire Plex library based on the configured settings.
 
-The posters are all placed in `AssetPath\...`. This can then be mounted in pmm to use as the assets folder.
+The posters are all placed in `AssetPath\...`. This can then be mounted in Plex-Meta-Manager to use as the assets folder.
 
 ### Testing Mode
 
@@ -160,16 +160,16 @@ Follow the prompts to enter the source picture path, media folder name, and movi
 ### Example of Show Posters after creation:
 ![assetimage](images/shows.png)
 
-### Example of 4K Lib after pmm magic:
+### Example of 4K Lib after Plex-Meta-Manager magic:
 ![4kimage](images/movies4kpmm.png)
 
-### Example of Movie Lib after pmm magic:
+### Example of Movie Lib after Plex-Meta-Manager magic:
 ![movieimage](images/movies_pmm.png)
 
-### Example of TV Lib after pmm magic:
+### Example of TV Lib after Plex-Meta-Manager magic:
 ![tvimage](images/showspmm.png)
 
-### Example of TV Lib Seasons after pmm magic:
+### Example of TV Lib Seasons after Plex-Meta-Manager magic:
 ![seasonimage](images/seasonspmm.png)
 
 
