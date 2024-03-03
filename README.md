@@ -132,7 +132,19 @@ This is handy for testing your configuration before applying it en masse to the 
 ```powershell
 .\PlexPosterMaker.ps1 -Testing
 ```
-![TestMode](/images/testing.png)
+
+**Poster Test Example**
+
+![PosterTestMode](/images/testing.png)
+
+**Background Test Example**
+
+![BackgroundTestMode](/images/backgroundtesting.png)
+
+**Title Card Test Example**
+
+![TitleCardTestMode](/images/titlecardtesting.png)
+
 
 ### Manual Mode
 
