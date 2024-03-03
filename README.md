@@ -132,7 +132,7 @@ This is handy for testing your configuration before applying it en masse to the 
 ```powershell
 .\PlexPosterMaker.ps1 -Testing
 ```
-![TestMode](https://i.imgur.com/83OIUKw.png)
+![TestMode](/images/testing.png)
 
 ### Manual Mode
 
@@ -146,31 +146,31 @@ Follow the prompts to enter the source picture path, media folder name, and movi
 
 
 ### Example of Script folder:
-![scriptimage](https://i.imgur.com/bA1w9Ks.png)
+![scriptimage](/images/folder.png)
 
 ### Example of script output:
-![outputimage](https://i.imgur.com/hWdwSwv.png)
+![outputimage](/images/output.png)
 
 ### Example of ImageChoices.csv:
-![outputimage](https://i.imgur.com/IlXMjhL.png)
+![outputimage](/images/imagecsv.png)
 
 ### Example of Movie Posters after creation:
-![assetimage](https://i.imgur.com/lPm3gji.png)
+![assetimage](/images/movies.png)
 
 ### Example of Show Posters after creation:
-![assetimage](https://i.imgur.com/yjhHeww.png)
+![assetimage](/images/shows.png)
 
 ### Example of 4K Lib after pmm magic:
-![4kimage](https://i.imgur.com/n9zUoAN.png)
+![4kimage](/images/movies4kpmm.png)
 
 ### Example of Movie Lib after pmm magic:
-![movieimage](https://i.imgur.com/ji2Uoau.png)
+![movieimage](/images/moviespmm.png)
 
 ### Example of TV Lib after pmm magic:
-![tvimage](https://i.imgur.com/TCFRVu9.png)
+![tvimage](/images/showspmm.png)
 
 ### Example of TV Lib Seasons after pmm magic:
-![seasonimage](https://i.imgur.com/gYCbunP.png)
+![seasonimage](/images/seasonspmm.png)
 
 
 Feel free to customize the script further to suit your preferences or automation needs.
