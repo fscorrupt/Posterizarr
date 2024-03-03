@@ -1,6 +1,6 @@
 # Plex Poster Maker
 
-This PowerShell script automates the process of generating posters for your Plex media library. Leveraging information from your Plex library, such as movie or show titles, it fetches relevant artwork from Fanart.tv, TMDB, TVDB, and IMDB. The script is able to focus on specific language to grab; by default, it is xx, which means textless, and then fallbacks to en if not available. This is a setting a user can decide on, either to focus on textless or on text posters. It also offers both automatic and manual modes for generating posters, accommodating custom creations that cannot be automated.
+This PowerShell script automates the process of generating posters for your Plex media library. Leveraging information from your Plex library, such as movie or show titles, it fetches relevant artwork from Fanart.tv, TMDB, TVDB, and IMDB. The script is able to focus on specific language to grab; by default, it is `xx`, which means textless, and then fallbacks to `en` if not available. This is a setting a user can decide on, either to focus on textless or on text posters. It also offers both automatic and manual modes for generating posters, accommodating custom creations that cannot be automated.
 
 ### ! Important !
 The `Temp` Folder gets cleared on every Script run, so do not put files into it.
@@ -8,15 +8,16 @@ The `Temp` Folder gets cleared on every Script run, so do not put files into it.
 
 **Key Features:**
 - **Resizing**: It automatically resizes every poster to 2000x3000.
+- **Overlays**: It automatically adds borders, text, and a gradient overlay should you choose to downloaded images.
 - **Automatic Library Search**: The script autonomously searches for libraries within your Plex server, enhancing its usability.
 - **Handling Multiple Versions**: It adeptly manages multiple versions of a movie/show, ensuring comprehensive coverage.
 - **CSV Export**: Produces an impressive CSV file containing all queried movie/show information during the script's runtime in `$ScriptRoot\logs\PlexLibexport.csv`
 - **Logging Capabilities**: Records valuable information to a file in `$ScriptRoot\logs\Scriptlog.log`, facilitating troubleshooting and analysis.
     
     - It also generates a log with the output of every imagemagick command `$ScriptRoot\logs\ImageMagickCommands.log`.
-    - Additionally, a `PosterChoices.csv` file is generated to store all the selected download options and essential information.
+    - Additionally, an `ImageChoices.csv` file is generated to store all the selected download options and essential information.
 - **Cross-platform Compatibility**: Ensures seamless operation across Linux, Docker, and Windows Plex servers, enhancing versatility.
-- **Poster/Background Creation**: it Searches fanart/tmdb/tvdb for textless posters/backgrounds, fallback is grabbing a poster from imdb.
+- **Poster/Background Creation**: It searches fanart/tmdb/tvdb for textless posters/backgrounds and resizes the downloaded image to 3840x2160, fallback is grabbing a poster from imdb.
 
 Upon initial execution, the script may take some time to run as it compiles necessary data. Subsequent runs efficiently create missing posters, bypassing existing assets in the directory.
 
@@ -84,9 +85,9 @@ Before utilizing the script, ensure the following prerequisites are installed an
 **BackgroundOverlayPart:**
 
 - `fontAllCaps`: Set to `true` for all caps text, else `false`.
-- `AddOverlay`: Set to `true` to add the defined background overlay file to the background image.
 - `AddBorder`: Set to `true` to add a border to the background image.
 - `AddText`: Set to `true` to add text to the background image.
+- `AddOverlay`: Set to `true` to add the defined background overlay file to the background image.
 - `fontcolor`: Color of font text.
 - `bordercolor`: Color of border.
 - `minPointSize`: Minimum size of text in background image.
@@ -94,7 +95,7 @@ Before utilizing the script, ensure the following prerequisites are installed an
 - `borderwidth`: Border width.
 - `MaxWidth`: Maximum width of text box in background image.
 - `MaxHeight`: Maximum height of text box in background image.
-- `text_offset`: Text box offset from the bottom of the background picture.
+- `text_offset`: Text box offset from the bottom of the background image.
 
 3. Rename the config file to `config.json`.
 4. Place the `overlay.png`, or whatever file you defined earlier in `overlayfile`, and `Rocky.ttf` font, or whatever font you defined earlier in `font` files in the same directory as PosterMaker.ps1 which is `$ScriptRoot`.
@@ -120,11 +121,11 @@ Run the script without any parameters:
 
 This will generate posters for your entire Plex library based on the configured settings.
 
-The posters are all placed in `AssetPath\...` this can then be mounted in pmm to use as asset folder.
+The posters are all placed in `AssetPath\...`. This can then be mounted in pmm to use as the assets folder.
 
 ### Testing Mode
 
-Run the script with the `-Testing` flag. In this mode, the script will create pink posters/backgrounds with short, medium, and long texts (also in bold), using the values specified in the `config.json` file. 
+Run the script with the `-Testing` flag. In this mode, the script will create pink posters/backgrounds with short, medium, and long texts (also in CAPS), using the values specified in the `config.json` file. 
 
 This is handy for testing your configuration before applying it en masse to the actual posters. You can see how and where the text would be applied, as well as the size of the textbox.
 
@@ -150,7 +151,7 @@ Follow the prompts to enter the source picture path, media folder name, and movi
 ### Example of script output:
 ![outputimage](https://i.imgur.com/hWdwSwv.png)
 
-### Example of PosterChoices.csv:
+### Example of ImageChoices.csv:
 ![outputimage](https://i.imgur.com/IlXMjhL.png)
 
 ### Example of Movie Posters after creation:
