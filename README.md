@@ -8,7 +8,7 @@ The `Temp` Folder gets cleared on every Script run, so do not put files into it.
 
 **Key Features:**
 - **Resizing**: It automatically resizes every poster to 2000x3000.
-- **Overlays**: It automatically adds borders, text, and a gradient overlay should you choose to downloaded images.
+- **Overlays**: If you choose to, downloaded images will automatically have borders, text, and a gradient overlay applied.
 - **Automatic Library Search**: The script autonomously searches for libraries within your Plex server, enhancing its usability.
 - **Handling Multiple Versions**: It adeptly manages multiple versions of a movie/show, ensuring comprehensive coverage.
 - **CSV Export**: Produces an impressive CSV file containing all queried movie/show information during the script's runtime in `$ScriptRoot\logs\PlexLibexport.csv`
