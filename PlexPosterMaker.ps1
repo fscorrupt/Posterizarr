@@ -1481,6 +1481,13 @@ if (!(Get-InstalledModule -Name FanartTvAPI)) {
 # Add Fanart Api
 Add-FanartTvAPIKey -Api_Key $FanartTvAPIKey
 
+# Cheack TMDB Token before building the Header.
+if ($global:tmdbtoken.Length -le '35'){
+    Write-log -Message "TMDB Token is to short, you may have used Api key in config file, please change it to 'API Read Access Token'." -Path $configLogging -Type Error
+    pause
+    exit
+}
+
 # tmdb Header
 $global:headers = @{}
 $global:headers.Add("accept", "application/json")
