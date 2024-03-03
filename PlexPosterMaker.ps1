@@ -2584,6 +2584,7 @@ else {
                         $global:tvdbid = $entry.tvdbid
                         $global:imdbid = $entry.imdbid
                         $global:posterurl = $null
+                        $global:IsTruncated = $null
                         $global:PosterWithText = $null
                         Write-log -Message "Start Background Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                         switch -Wildcard ($global:FavProvider) {
@@ -3291,6 +3292,7 @@ else {
                     $global:titles = $null
                     $global:posterurl = $null
                     $global:FileNaming = $null
+                    $global:IsTruncated = $null
                     $EpisodeImageoriginal = $null
                     $EpisodeImage = $null
                     $global:Fallback = $null
