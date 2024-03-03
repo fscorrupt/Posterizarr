@@ -5,6 +5,8 @@ This PowerShell script automates the process of generating images for your Plex 
 ### ! Important !
 The `Temp` Folder gets cleared on every Script run, so do not put files into it.
 
+Please start the script as Admin on first run, otherwise the script is not able to install the prerequisites.
+
 
 **Key Features:**
 - **Resizing**: It automatically resizes every poster to 2000x3000.
