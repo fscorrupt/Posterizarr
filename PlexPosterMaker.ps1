@@ -559,6 +559,43 @@ function GetTMDBShowBackground {
         }
     }
 }
+function GetTMDBTitleCard {
+    Write-log -Subtext "Searching on TMDB for 'Season $global:season_number - Episode $global:episodenumber' Title Card" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+    try {
+        $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)/season/$($global:season_number)/episode/$($global:episodenumber)/images?append_to_response=images&language=xx&include_image_language=en,null,de" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue            
+    }
+    catch {
+    }
+    if ($response) {
+        if ($response.stills) {
+            $NoLangPoster = ($response.stills | Where-Object iso_639_1 -eq $null)
+            if (!$NoLangPoster) {
+                $posterpath = (($response.stills | Sort-Object vote_average -Descending)[0]).file_path
+                $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
+                Write-log -Subtext "Found Title Card with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                $global:PosterWithText = $true
+                return $global:posterurl
+            }
+            Else {
+                $posterpath = (($response.stills | Where-Object iso_639_1 -eq $null | Sort-Object vote_average -Descending)[0]).file_path
+                if ($posterpath) {
+                    $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
+                    Write-log -Subtext "Found Textless Title Card on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
+                    $global:TextlessPoster = $true
+                    return $global:posterurl
+                }
+            }
+        }
+        Else {
+            Write-log -Subtext "No Title Card on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type error
+            $global:Fallback = "TVDB"
+        }
+    }
+    Else {
+        Write-log -Subtext "TMDB Api Response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+        $global:Fallback = "TVDB"
+    }
+}
 function GetFanartMoviePoster {
     $global:Fallback = $null
     Write-log -Subtext "Searching on Fanart.tv for a movie poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
@@ -1147,6 +1184,36 @@ function GetTVDBShowBackground {
         }
     }
 }
+function GetTVDBTitleCard {
+    if ($global:tvdbid) {
+        Write-log -Subtext "Searching on TVDB for a Title Card" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+        try {
+            $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/series/$($global:tvdbid)/episodes/default?" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
+        }
+        catch {
+        }
+        if ($response) {
+            if ($response.data.episodes) {
+                $NoLangImageUrl = $response.data.episodes | where { $_.seasonNumber -eq $global:season_number -and $_.number -eq $global:episodenumber }
+                if ($NoLangImageUrl) {
+                    $global:posterurl = $NoLangImageUrl[0].image
+                    Write-log -Subtext "Found Textless Title Card on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                    $global:TextlessPoster = $true
+                }
+                Else {
+                    Write-log -Subtext "Found Title Card with text on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                }
+                return $global:posterurl
+            }
+            Else {
+                Write-log -Subtext "No Title Card found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+            }
+        }
+        Else {
+            Write-log -Subtext "TVDB Api Response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+        }
+    }
+}
 function GetIMDBPoster {
     $response = Invoke-WebRequest -Uri "https://www.imdb.com/title/$($global:imdbid)/mediaviewer" -Method GET
     $global:posterurl = $response.images.src[1]
@@ -1220,13 +1287,16 @@ $global:ScriptRoot = $PSScriptRoot
 $magickinstalllocation = RemoveTrailingSlash $config.PrerequisitePart.magickinstalllocation
 $font = "$global:ScriptRoot\temp\$($config.PrerequisitePart.font)"
 $backgroundfont = "$global:ScriptRoot\temp\$($config.PrerequisitePart.backgroundfont)"
+$titlecardfont = "$global:ScriptRoot\temp\$($config.PrerequisitePart.titlecardfont)"
 $Posteroverlay = "$global:ScriptRoot\temp\$($config.PrerequisitePart.overlayfile)"
 $Backgroundoverlay = "$global:ScriptRoot\temp\$($config.PrerequisitePart.backgroundoverlayfile)"
+$titlecardoverlay = "$global:ScriptRoot\temp\$($config.PrerequisitePart.titlecardoverlayfile)"
 $testimage = "$global:ScriptRoot\test\testimage.png"
 $backgroundtestimage = "$global:ScriptRoot\test\backgroundtestimage.png"
 $LibraryFolders = $config.PrerequisitePart.LibraryFolders
 $global:SeasonPosters = $config.PrerequisitePart.SeasonPosters
 $global:BackgroundPosters = $config.PrerequisitePart.BackgroundPosters
+$global:TitleCards = $config.PrerequisitePart.TitleCards
 
 # Poster Overlay Part
 $global:ImageProcessing = $config.OverlayPart.ImageProcessing
@@ -1248,7 +1318,7 @@ $borderwidthsecond = $borderwidth + 'x' + $borderwidth
 $boxsize = $MaxWidth + 'x' + $MaxHeight
 
 # Background Overlay Part
-$BackgroundfontAllCaps = $config.PosterOverlayPart.fontAllCaps
+$BackgroundfontAllCaps = $config.BackgroundOverlayPart.fontAllCaps
 $AddBackgroundOverlay = $config.BackgroundOverlayPart.AddOverlay
 $AddBackgroundBorder = $config.BackgroundOverlayPart.AddBorder
 $AddBackgroundText = $config.BackgroundOverlayPart.AddText
@@ -1263,10 +1333,41 @@ $Backgroundtext_offset = $config.BackgroundOverlayPart.text_offset
 $Backgroundborderwidthsecond = $Backgroundborderwidth + 'x' + $Backgroundborderwidth
 $Backgroundboxsize = $BackgroundMaxWidth + 'x' + $BackgroundMaxHeight
 
+# Title Card Overlay Part
+$AddTitleCardOverlay = $config.TitleCardOverlayPart.AddOverlay
+$AddTitleCardBorder = $config.TitleCardOverlayPart.AddBorder
+$TitleCardborderwidth = $config.TitleCardOverlayPart.borderwidth
+$TitleCardbordercolor = $config.TitleCardOverlayPart.bordercolor
+
+# Title Card Title Text Part
+$TitleCardEPTitlefontAllCaps = $config.TitleCardTitleTextPart.fontAllCaps
+$AddTitleCardEPTitleText = $config.TitleCardTitleTextPart.AddEPTitleText
+$TitleCardEPTitlefontcolor = $config.TitleCardTitleTextPart.fontcolor
+$TitleCardEPTitleminPointSize = $config.TitleCardTitleTextPart.minPointSize
+$TitleCardEPTitlemaxPointSize = $config.TitleCardTitleTextPart.maxPointSize
+$TitleCardEPTitleMaxWidth = $config.TitleCardTitleTextPart.MaxWidth
+$TitleCardEPTitleMaxHeight = $config.TitleCardTitleTextPart.MaxHeight
+$TitleCardEPTitletext_offset = $config.TitleCardTitleTextPart.text_offset
+
+# Title Card EP Text Part
+$TitleCardEPfontAllCaps = $config.TitleCardEPTextPart.fontAllCaps
+$AddTitleCardEPText = $config.TitleCardEPTextPart.AddEPText
+$TitleCardEPfontcolor = $config.TitleCardEPTextPart.fontcolor
+$TitleCardEPminPointSize = $config.TitleCardEPTextPart.minPointSize
+$TitleCardEPmaxPointSize = $config.TitleCardEPTextPart.maxPointSize
+$TitleCardEPMaxWidth = $config.TitleCardEPTextPart.MaxWidth
+$TitleCardEPMaxHeight = $config.TitleCardEPTextPart.MaxHeight
+$TitleCardEPtext_offset = $config.TitleCardEPTextPart.text_offset
+
+$TitleCardborderwidthsecond = $TitleCardborderwidth + 'x' + $TitleCardborderwidth
+$TitleCardEPTitleboxsize = $TitleCardEPTitleMaxWidth + 'x' + $TitleCardEPTitleMaxHeight
+$TitleCardEPboxsize = $TitleCardEPMaxWidth + 'x' + $TitleCardEPMaxHeight
+
 $PosterSize = "2000x3000"
 $BackgroundSize = "3840x2160"
 $fontImagemagick = $font.replace('\', '\\')
 $backgroundfontImagemagick = $backgroundfont.replace('\', '\\')
+$TitleCardfontImagemagick = $TitleCardfont.replace('\', '\\')
 $magick = "$magickinstalllocation\magick.exe"
 $fileExtensions = @(".otf", ".ttf", ".otc", ".ttc", ".png")
 $Errorcount = 0
@@ -1362,9 +1463,6 @@ Write-log -Subtext "| Fanart API Key:               $($FanartTvAPIKey[0..7] -joi
 if ($PlexToken) {
     Write-log -Subtext "| Plex Token:                   $($PlexToken[0..7] -join '')****" -Path $configLogging  -Type Info
 }
-Else {
-    Write-log -Subtext "| Plex Token:                   No Token in Config" -Path $configLogging  -Type Info
-}
 Write-log -Subtext "| Fav Provider:                 $global:FavProvider" -Path $configLogging  -Type Info
 Write-log -Subtext "| Prefered Lang Order:          $($global:PreferedLanguageOrder -join ',')" -Path $configLogging  -Type Info
 Write-log -Subtext "Plex Part" -Path $configLogging  -Type Trace
@@ -1374,12 +1472,16 @@ Write-log -Subtext "Prerequisites Part" -Path $configLogging -Type Trace
 Write-log -Subtext "| Asset Path:                   $AssetPath" -Path $configLogging -Type Info
 Write-log -Subtext "| Script Root:                  $global:ScriptRoot" -Path $configLogging -Type Info
 Write-log -Subtext "| Magick Location:              $magickinstalllocation" -Path $configLogging -Type Info
-Write-log -Subtext "| Used Font:                    $font" -Path $configLogging -Type Info
+Write-log -Subtext "| Used Poster Font:             $font" -Path $configLogging -Type Info
+Write-log -Subtext "| Used Background Font:         $backgroundfont" -Path $configLogging -Type Info
+Write-log -Subtext "| Used TitleCard Font:          $titlecardfont" -Path $configLogging -Type Info
 Write-log -Subtext "| Used Poster Overlay File:     $Posteroverlay" -Path $configLogging -Type Info
 Write-log -Subtext "| Used Background Overlay File: $Backgroundoverlay" -Path $configLogging -Type Info
+Write-log -Subtext "| Used TitleCard Overlay File:  $titlecardoverlay" -Path $configLogging -Type Info
 Write-log -Subtext "| Create Library Folders:       $LibraryFolders" -Path $configLogging -Type Info
 Write-log -Subtext "| Create Season Posters:        $global:SeasonPosters" -Path $configLogging -Type Info
 Write-log -Subtext "| Create Background Posters:    $global:BackgroundPosters" -Path $configLogging -Type Info
+Write-log -Subtext "| Create Title Cards:           $global:TitleCards" -Path $configLogging -Type Info
 Write-log -Subtext "OverLay General Part" -Path $configLogging -Type Trace
 Write-log -Subtext "| Process Images:               $global:ImageProcessing" -Path $configLogging -Type Info
 Write-log -Subtext "OverLay Poster Part" -Path $configLogging -Type Trace
@@ -1408,6 +1510,29 @@ Write-log -Subtext "| Border Width:                 $Backgroundborderwidth" -Pat
 Write-log -Subtext "| Text Box Width:               $BackgroundMaxWidth" -Path $configLogging -Type Info
 Write-log -Subtext "| Text Box Height:              $BackgroundMaxHeight" -Path $configLogging -Type Info
 Write-log -Subtext "| Text Box Offset:              $Backgroundtext_offset" -Path $configLogging -Type Info
+Write-log -Subtext "OverLay TitleCard Part" -Path $configLogging -Type Trace
+Write-log -Subtext "| Add Border to Background:     $AddTitleCardBorder" -Path $configLogging -Type Info
+Write-log -Subtext "| Border Color:                 $TitleCardbordercolor" -Path $configLogging -Type Info
+Write-log -Subtext "| Add Overlay to Background:    $AddTitleCardOverlay" -Path $configLogging -Type Info
+Write-log -Subtext "| Border Width:                 $TitleCardborderwidth" -Path $configLogging -Type Info
+Write-log -Subtext "OverLay TitleCard Title Part" -Path $configLogging -Type Trace
+Write-log -Subtext "| All Caps on Text:             $TitleCardEPTitlefontAllCaps" -Path $configLogging -Type Info
+Write-log -Subtext "| Add Title to TitleCard:       $AddTitleCardEPTitleText" -Path $configLogging -Type Info
+Write-log -Subtext "| Font Color:                   $TitleCardEPTitlefontcolor" -Path $configLogging -Type Info
+Write-log -Subtext "| Min Font Size:                $TitleCardEPTitleminPointSize" -Path $configLogging -Type Info
+Write-log -Subtext "| Max Font Size:                $TitleCardEPTitlemaxPointSize" -Path $configLogging -Type Info
+Write-log -Subtext "| Text Box Width:               $TitleCardEPTitleMaxWidth" -Path $configLogging -Type Info
+Write-log -Subtext "| Text Box Height:              $TitleCardEPTitleMaxHeight" -Path $configLogging -Type Info
+Write-log -Subtext "| Text Box Offset:              $TitleCardEPTitletext_offset" -Path $configLogging -Type Info
+Write-log -Subtext "OverLay TitleCard EP Part" -Path $configLogging -Type Trace
+Write-log -Subtext "| All Caps on Text:             $TitleCardEPfontAllCaps" -Path $configLogging -Type Info
+Write-log -Subtext "| Add Episode to TitleCard:     $AddTitleCardEPText" -Path $configLogging -Type Info
+Write-log -Subtext "| Font Color:                   $TitleCardEPfontcolor" -Path $configLogging -Type Info
+Write-log -Subtext "| Min Font Size:                $TitleCardEPminPointSize" -Path $configLogging -Type Info
+Write-log -Subtext "| Max Font Size:                $TitleCardEPmaxPointSize" -Path $configLogging -Type Info
+Write-log -Subtext "| Text Box Width:               $TitleCardEPMaxWidth" -Path $configLogging -Type Info
+Write-log -Subtext "| Text Box Height:              $TitleCardEPMaxHeight" -Path $configLogging -Type Info
+Write-log -Subtext "| Text Box Offset:              $TitleCardEPtext_offset" -Path $configLogging -Type Info
 Write-log -Subtext "___________________________________________" -Path $configLogging -Type Debug
 Write-log -Message "Starting main Script now..." -Path $configLogging -Type Success    
 
@@ -1422,6 +1547,32 @@ foreach ($file in $files) {
         Write-log -Subtext "Found File: '$($file.Name)' in ScriptRoot - copy it into temp folder..." -Path $configLogging -Type Trace
     }
 }
+
+# Load the System.Drawing.Common assembly
+Add-Type -AssemblyName System.Drawing
+$Posteroverlaydimensions = ([System.Drawing.Image]::FromFile($Posteroverlay)).Width.ToString() + "x" + ([System.Drawing.Image]::FromFile($Posteroverlay)).Height.ToString()
+$Backgroundoverlaydimensions = ([System.Drawing.Image]::FromFile($Backgroundoverlay)).Width.ToString() + "x" + ([System.Drawing.Image]::FromFile($Backgroundoverlay)).Height.ToString()
+$titlecardoverlaydimensions = ([System.Drawing.Image]::FromFile($titlecardoverlay)).Width.ToString() + "x" + ([System.Drawing.Image]::FromFile($titlecardoverlay)).Height.ToString()
+
+# Check Poster Overlay Size:
+if ($Posteroverlaydimensions -eq $PosterSize) {
+    Write-log -Subtext "Poster overlay is correctly sized at: $Postersize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
+}else{
+    Write-log -Subtext "Poster overlay is NOT correctly sized at: $Postersize. Actual dimensions: $Posteroverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+}
+# Check Background Overlay Size:
+if ($Backgroundoverlaydimensions -eq $BackgroundSize) {
+    Write-log -Subtext "Background overlay is correctly sized at: $BackgroundSize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
+}else{
+    Write-log -Subtext "Background overlay is NOT correctly sized at: $BackgroundSize. Actual dimensions: $Backgroundoverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+}
+# Check TitleCard Overlay Size:
+if ($titlecardoverlaydimensions -eq $BackgroundSize) {
+    Write-log -Subtext "TitleCard overlay is correctly sized at: $BackgroundSize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
+}else{
+    Write-log -Subtext "TitleCard overlay is NOT correctly sized at: $BackgroundSize. Actual dimensions: $titlecardoverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+}
+
 # Check Plex now:
 if ($PlexToken) {
     Write-log -Message "Plex token found, checking access now..." -Path $configLogging -Type Info
@@ -1480,6 +1631,13 @@ if (!(Get-InstalledModule -Name FanartTvAPI)) {
 }
 # Add Fanart Api
 Add-FanartTvAPIKey -Api_Key $FanartTvAPIKey
+
+# Check TMDB Token before building the Header.
+if ($global:tmdbtoken.Length -le '35') {
+    Write-log -Message "TMDB Token is to short, you may have used Api key in config file, please change it to 'API Read Access Token'." -Path $configLogging -Type Error
+    pause
+    exit
+}
 
 # tmdb Header
 $global:headers = @{}
@@ -1631,9 +1789,13 @@ Elseif ($Testing) {
     $ShortText = "The Hobbit" 
     $MiddleText = "The Hobbit is a great movie" 
     $LongText = "The Hobbit is a great movie that we all loved and enjoyed watching" 
+    $bullet = [char]0x2022
+    $Episodetext = "Season 1 $bullet Episode 1"
+
     $ShortTextBold = $ShortText.ToUpper()
     $MiddleTextBold = $MiddleText.ToUpper()
     $LongTextBold = $LongText.ToUpper()
+    $EpisodetextBold = $Episodetext.ToUpper()
     # Posters
     $TestPosterShort = "$global:ScriptRoot\test\ShortText.jpg"
     $TestPosterMiddle = "$global:ScriptRoot\test\MiddleText.jpg"
@@ -1648,6 +1810,13 @@ Elseif ($Testing) {
     $backgroundTestPosterShortBold = "$global:ScriptRoot\test\backgroundShortTextBold.jpg"
     $backgroundTestPosterMiddleBold = "$global:ScriptRoot\test\backgroundMiddleTextBold.jpg"
     $backgroundTestPosterLongBold = "$global:ScriptRoot\test\backgroundLongTextBold.jpg"
+    # TitleCards
+    $TitleCardTestPosterShort = "$global:ScriptRoot\test\TitleCardShortText.jpg"
+    $TitleCardTestPosterMiddle = "$global:ScriptRoot\test\TitleCardMiddleText.jpg"
+    $TitleCardTestPosterLong = "$global:ScriptRoot\test\TitleCardLongText.jpg"
+    $TitleCardTestPosterShortBold = "$global:ScriptRoot\test\TitleCardShortTextBold.jpg"
+    $TitleCardTestPosterMiddleBold = "$global:ScriptRoot\test\TitleCardMiddleTextBold.jpg"
+    $TitleCardTestPosterLongBold = "$global:ScriptRoot\test\TitleCardLongTextBold.jpg"
 
     # Optimal Poster Font Size
     $optimalFontSizeShort = Get-OptimalPointSize -text $ShortText -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
@@ -1667,6 +1836,17 @@ Elseif ($Testing) {
     $backgroundoptimalFontSizeMiddleBold = Get-OptimalPointSize -text $MiddleTextBold -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
     $backgroundoptimalFontSizeLongBold = Get-OptimalPointSize -text $LongTextBold -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
     
+    # Optimal TitleCard Font Size
+    $TitleCardoptimalFontSizeShort = Get-OptimalPointSize -text $ShortText -font $titlecardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
+    $TitleCardoptimalFontSizeMiddle = Get-OptimalPointSize -text $MiddleText -font $titlecardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
+    $TitleCardoptimalFontSizeLong = Get-OptimalPointSize -text $LongText -font $titlecardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
+    $TitleCardoptimalFontSizeEpisodetext = Get-OptimalPointSize -text $Episodetext -font $titlecardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize    
+        
+    $TitleCardoptimalFontSizeShortBold = Get-OptimalPointSize -text $ShortTextBold -font $titlecardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
+    $TitleCardoptimalFontSizeMiddleBold = Get-OptimalPointSize -text $MiddleTextBold -font $titlecardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
+    $TitleCardoptimalFontSizeLongBold = Get-OptimalPointSize -text $LongTextBold -font $titlecardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
+    $TitleCardoptimalFontSizeEpisodetextBold = Get-OptimalPointSize -text $EpisodetextBold -font $titlecardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize    
+
     # Border/Overlay Poster Part
     Write-log -Subtext "Poster Part:" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Success
     if ($AddBorder -eq 'true' -and $AddOverlay -eq 'true') {
@@ -1802,6 +1982,79 @@ Elseif ($Testing) {
     Write-log -Subtext "Optimal font size for Long Bold text is: '$backgroundoptimalFontSizeLongBold'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
     Write-log -Subtext "    Applying Bold Font text: `"$LongTextBold`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
 
+
+    Write-log -Subtext "TitleCard Part:" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Success
+    # Border/Overlay TitleCard Part
+    if ($Addtitlecardborder -eq 'true' -and $Addtitlecardoverlay -eq 'true') {
+        $titlecardArgumentsShort = "`"$backgroundtestimage`" `"$titlecardoverlay`" -gravity south -composite -shave `"$titlecardborderwidthsecond`"  -bordercolor `"$titlecardbordercolor`" -border `"$titlecardborderwidth`" `"$titlecardtestPosterShort`""
+        $titlecardArgumentsMiddle = "`"$backgroundtestimage`" `"$titlecardoverlay`" -gravity south -composite -shave `"$titlecardborderwidthsecond`"  -bordercolor `"$titlecardbordercolor`" -border `"$titlecardborderwidth`" `"$titlecardtestPosterMiddle`""
+        $titlecardArgumentsLong = "`"$backgroundtestimage`" `"$titlecardoverlay`" -gravity south -composite -shave `"$titlecardborderwidthsecond`"  -bordercolor `"$titlecardbordercolor`" -border `"$titlecardborderwidth`" `"$titlecardtestPosterLong`""
+        $titlecardArgumentsShortBold = "`"$backgroundtestimage`" `"$titlecardoverlay`" -gravity south -composite -shave `"$titlecardborderwidthsecond`"  -bordercolor `"$titlecardbordercolor`" -border `"$titlecardborderwidth`" `"$titlecardtestPosterShortBold`""
+        $titlecardArgumentsMiddleBold = "`"$backgroundtestimage`" `"$titlecardoverlay`" -gravity south -composite -shave `"$titlecardborderwidthsecond`"  -bordercolor `"$titlecardbordercolor`" -border `"$titlecardborderwidth`" `"$titlecardtestPosterMiddleBold`""
+        $titlecardArgumentsLongBold = "`"$backgroundtestimage`" `"$titlecardoverlay`" -gravity south -composite -shave `"$titlecardborderwidthsecond`"  -bordercolor `"$titlecardbordercolor`" -border `"$titlecardborderwidth`" `"$titlecardtestPosterLongBold`""
+        Write-log -Subtext "Adding Background Borders | Adding Background Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+    }
+    if ($Addtitlecardborder -eq 'true' -and $Addtitlecardoverlay -eq 'false') {
+        $titlecardArgumentsShort = "`"$backgroundtestimage`" -shave `"$titlecardborderwidthsecond`"  -bordercolor `"$titlecardbordercolor`" -border `"$titlecardborderwidth`" `"$titlecardtestPosterShort`""
+        $titlecardArgumentsMiddle = "`"$backgroundtestimage`" -shave `"$titlecardborderwidthsecond`"  -bordercolor `"$titlecardbordercolor`" -border `"$titlecardborderwidth`" `"$titlecardtestPosterMiddle`""
+        $titlecardArgumentsLong = "`"$backgroundtestimage`" -shave `"$titlecardborderwidthsecond`"  -bordercolor `"$titlecardbordercolor`" -border `"$titlecardborderwidth`" `"$titlecardtestPosterLong`""
+        $titlecardArgumentsShortBold = "`"$backgroundtestimage`" -shave `"$titlecardborderwidthsecond`"  -bordercolor `"$titlecardbordercolor`" -border `"$titlecardborderwidth`" `"$titlecardtestPosterShortBold`""
+        $titlecardArgumentsMiddleBold = "`"$backgroundtestimage`" -shave `"$titlecardborderwidthsecond`"  -bordercolor `"$titlecardbordercolor`" -border `"$titlecardborderwidth`" `"$titlecardtestPosterMiddleBold`""
+        $titlecardArgumentsLongBold = "`"$backgroundtestimage`" -shave `"$titlecardborderwidthsecond`"  -bordercolor `"$titlecardbordercolor`" -border `"$titlecardborderwidth`" `"$titlecardtestPosterLongBold`""
+        Write-log -Subtext "Adding Background Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+    }
+    if ($Addtitlecardborder -eq 'false' -and $Addtitlecardoverlay -eq 'true') {
+        $titlecardArgumentsShort = "`"$backgroundtestimage`" `"$titlecardoverlay`" -gravity south -composite `"$titlecardtestPosterShort`""
+        $titlecardArgumentsMiddle = "`"$backgroundtestimage`" `"$titlecardoverlay`" -gravity south -composite `"$titlecardtestPosterMiddle`""
+        $titlecardArgumentsLong = "`"$backgroundtestimage`" `"$titlecardoverlay`" -gravity south -composite `"$titlecardtestPosterLong`""
+        $titlecardArgumentsShortBold = "`"$backgroundtestimage`" `"$titlecardoverlay`" -gravity south -composite `"$titlecardtestPosterShortBold`""
+        $titlecardArgumentsMiddleBold = "`"$backgroundtestimage`" `"$titlecardoverlay`" -gravity south -composite `"$titlecardtestPosterMiddleBold`""
+        $titlecardArgumentsLongBold = "`"$backgroundtestimage`" `"$titlecardoverlay`" -gravity south -composite `"$titlecardtestPosterLongBold`""
+        Write-log -Subtext "Adding Background Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+    }
+    # Background Logging
+    $titlecardlogEntryShort = "magick.exe $titlecardArgumentsShort"
+    $titlecardlogEntryMiddle = "magick.exe $titlecardArgumentsMiddle"
+    $titlecardlogEntryLong = "magick.exe $titlecardArgumentsLong"
+    $titlecardlogEntryShortBold = "magick.exe $titlecardArgumentsShortBold"
+    $titlecardlogEntryMiddleBold = "magick.exe $titlecardArgumentsMiddleBold"
+    $titlecardlogEntryLongBold = "magick.exe $titlecardArgumentsLongBold"
+
+    $titlecardlogEntryShort | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $titlecardlogEntryShortBold | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $titlecardlogEntryMiddle | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $titlecardlogEntryMiddleBold | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $titlecardlogEntryLong | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $titlecardlogEntryLongBold | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+
+    # Test Background creation
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $titlecardArgumentsShort
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $titlecardArgumentsMiddle
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $titlecardArgumentsLong
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $titlecardArgumentsShortBold
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $titlecardArgumentsMiddleBold
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $titlecardArgumentsLongBold
+
+    # Logging Background
+    Write-log -Subtext "Optimal font size for Short text is: '$titlecardoptimalFontSizeShort'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "    Applying Font text: `"$ShortText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "Optimal font size for Middle text is: '$titlecardoptimalFontSizeMiddle'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "    Applying Font text: `"$MiddleText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "Optimal font size for Long text is: '$titlecardoptimalFontSizeLong'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "    Applying Font text: `"$LongText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "Optimal font size for Episode text is: '$TitleCardoptimalFontSizeEpisodetext'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "    Applying Bold Font text: `"$Episodetext`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+
+    Write-log -Subtext "Optimal font size for Short Bold text is: '$titlecardoptimalFontSizeShortBold'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "    Applying Bold Font text: `"$ShortTextBold`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "Optimal font size for Middle Bold text is: '$titlecardoptimalFontSizeMiddleBold'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "    Applying Bold Font text: `"$MiddleTextBold`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "Optimal font size for Long Bold text is: '$titlecardoptimalFontSizeLongBold'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "    Applying Bold Font text: `"$LongTextBold`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "Optimal font size for Episode text is: '$TitleCardoptimalFontSizeEpisodetextBold'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "    Applying Bold Font text: `"$EpisodetextBold`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+
+
     # Text Poster overlay
     $ArgumentsShort = "`"$TestPosterShort`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeShort`" -fill `"#0000FF`" -size `"$boxsize`" -background `"#ACD7E6`" caption:`"$ShortText`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -composite `"$TestPosterShort`""
     $ArgumentsMiddle = "`"$TestPosterMiddle`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeMiddle`" -fill `"#0000FF`" -size `"$boxsize`" -background `"#ACD7E6`" caption:`"$MiddleText`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -composite `"$TestPosterMiddle`""
@@ -1818,6 +2071,23 @@ Elseif ($Testing) {
     $backgroundArgumentsMiddleBold = "`"$backgroundTestPosterMiddleBold`" -gravity center -background none -layers Flatten ( -font `"$backgroundfontImagemagick`" -pointsize `"$backgroundoptimalFontSizeMiddleBold`" -fill `"#0000FF`" -size `"$Backgroundboxsize`" -background `"#ACD7E6`" caption:`"$MiddleTextBold`" -trim -gravity south -extent `"$Backgroundboxsize`" ) -gravity south -geometry +0+`"$Backgroundtext_offset`" -composite `"$backgroundTestPosterMiddleBold`""
     $backgroundArgumentsLongBold = "`"$backgroundTestPosterLongBold`" -gravity center -background none -layers Flatten ( -font `"$backgroundfontImagemagick`" -pointsize `"$backgroundoptimalFontSizeLongBold`" -fill `"#0000FF`" -size `"$Backgroundboxsize`" -background `"#ACD7E6`" caption:`"$LongTextBold`" -trim -gravity south -extent `"$Backgroundboxsize`" ) -gravity south -geometry +0+`"$Backgroundtext_offset`" -composite `"$backgroundTestPosterLongBold`""
     
+    # Text TitleCard Title overlay
+    $TitleCardTitleArgumentsShort = "`"$titlecardtestPosterShort`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeShort`" -fill `"#0000FF`" -size `"$TitleCardEPTitleboxsize`" -background `"#ACD7E6`" caption:`"$ShortText`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -composite `"$titlecardtestPosterShort`""
+    $TitleCardTitleArgumentsMiddle = "`"$titlecardtestPosterMiddle`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeMiddle`" -fill `"#0000FF`" -size `"$TitleCardEPTitleboxsize`" -background `"#ACD7E6`" caption:`"$MiddleText`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -composite `"$titlecardtestPosterMiddle`""
+    $TitleCardTitleArgumentsLong = "`"$titlecardtestPosterLong`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeLong`" -fill `"#0000FF`" -size `"$TitleCardEPTitleboxsize`" -background `"#ACD7E6`" caption:`"$LongText`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -composite `"$titlecardtestPosterLong`""
+    $TitleCardTitleArgumentsShortBold = "`"$titlecardtestPosterShortBold`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeShortBold`" -fill `"#0000FF`" -size `"$TitleCardEPTitleboxsize`" -background `"#ACD7E6`" caption:`"$ShortTextBold`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -composite `"$titlecardtestPosterShortBold`""
+    $TitleCardTitleArgumentsMiddleBold = "`"$titlecardtestPosterMiddleBold`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeMiddleBold`" -fill `"#0000FF`" -size `"$TitleCardEPTitleboxsize`" -background `"#ACD7E6`" caption:`"$MiddleTextBold`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -composite `"$titlecardtestPosterMiddleBold`""
+    $TitleCardTitleArgumentsLongBold = "`"$titlecardtestPosterLongBold`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeLongBold`" -fill `"#0000FF`" -size `"$TitleCardEPTitleboxsize`" -background `"#ACD7E6`" caption:`"$LongTextBold`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -composite `"$titlecardtestPosterLongBold`""
+        
+    # Text TitleCard EP overlay
+    $TitleCardEPArgumentsShort = "`"$titlecardtestPosterShort`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeEpisodetext`" -fill `"#0000FF`" -size `"$TitleCardEPboxsize`" -background `"#ACD7E6`" caption:`"$Episodetext`" -trim -gravity south -extent `"$TitleCardEPboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -composite `"$titlecardtestPosterShort`""
+    $TitleCardEPArgumentsMiddle = "`"$titlecardtestPosterMiddle`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeEpisodetext`" -fill `"#0000FF`" -size `"$TitleCardEPboxsize`" -background `"#ACD7E6`" caption:`"$Episodetext`" -trim -gravity south -extent `"$TitleCardEPboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -composite `"$titlecardtestPosterMiddle`""
+    $TitleCardEPArgumentsLong = "`"$titlecardtestPosterLong`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeEpisodetext`" -fill `"#0000FF`" -size `"$TitleCardEPboxsize`" -background `"#ACD7E6`" caption:`"$Episodetext`" -trim -gravity south -extent `"$TitleCardEPboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -composite `"$titlecardtestPosterLong`""
+    $TitleCardEPArgumentsShortBold = "`"$titlecardtestPosterShortBold`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeEpisodetextBold`" -fill `"#0000FF`" -size `"$TitleCardEPboxsize`" -background `"#ACD7E6`" caption:`"$EpisodetextBold`" -trim -gravity south -extent `"$TitleCardEPboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -composite `"$titlecardtestPosterShortBold`""
+    $TitleCardEPArgumentsMiddleBold = "`"$titlecardtestPosterMiddleBold`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeEpisodetextBold`" -fill `"#0000FF`" -size `"$TitleCardEPboxsize`" -background `"#ACD7E6`" caption:`"$EpisodetextBold`" -trim -gravity south -extent `"$TitleCardEPboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -composite `"$titlecardtestPosterMiddleBold`""
+    $TitleCardEPArgumentsLongBold = "`"$titlecardtestPosterLongBold`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeEpisodetextBold`" -fill `"#0000FF`" -size `"$TitleCardEPboxsize`" -background `"#ACD7E6`" caption:`"$EpisodetextBold`" -trim -gravity south -extent `"$TitleCardEPboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -composite `"$titlecardtestPosterLongBold`""
+                
+
     # Text Poster Logging
     $logEntryShort = "magick.exe $ArgumentsShort"
     $logEntryMiddle = "magick.exe $ArgumentsMiddle"
@@ -1847,6 +2117,42 @@ Elseif ($Testing) {
     $backgroundlogEntryMiddleBold | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
     $backgroundlogEntryLong | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
     $backgroundlogEntryLongBold | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    
+    # Title Text Titlecard Logging
+    $TitleCardTitlelogEntryShort = "magick.exe $TitleCardTitleArgumentsShort"
+    $TitleCardTitlelogEntryMiddle = "magick.exe $TitleCardTitleArgumentsMiddle"
+    $TitleCardTitlelogEntryLong = "magick.exe $TitleCardTitleArgumentsLong"
+    $TitleCardTitlelogEntryshortBold = "magick.exe $TitleCardTitleArgumentsShortBold"
+    $TitleCardTitlelogEntrymiddleBold = "magick.exe $TitleCardTitleArgumentsMiddleBold"
+    $TitleCardTitlelogEntryLongBold = "magick.exe $TitleCardTitleArgumentsLongBold"
+
+    # Episode Text Titlecard Logging
+    $TitleCardEPlogEntryShort = "magick.exe $TitleCardEPArgumentsShort"
+    $TitleCardEPlogEntryMiddle = "magick.exe $TitleCardEPArgumentsMiddle"
+    $TitleCardEPlogEntryLong = "magick.exe $TitleCardEPArgumentsLong"
+    $TitleCardEPlogEntryepisode = "magick.exe $TitleCardEPArgumentsEpisode"
+    $TitleCardEPlogEntryshortBold = "magick.exe $TitleCardEPArgumentsShortBold"
+    $TitleCardEPlogEntrymiddleBold = "magick.exe $TitleCardEPArgumentsMiddleBold"
+    $TitleCardEPlogEntryLongBold = "magick.exe $TitleCardEPArgumentsLongBold"
+    $TitleCardEPlogEntryepisodeBold = "magick.exe $TitleCardEPArgumentsEpisodeBold"
+
+    $TitleCardTitlelogEntryShort | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $TitleCardTitlelogEntryShortBold | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $TitleCardTitlelogEntryMiddle | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $TitleCardTitlelogEntryMiddleBold | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $TitleCardTitlelogEntryLong | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $TitleCardTitlelogEntryLongBold | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+    $TitleCardTitlelogEntryEpisode | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append  
+    $TitleCardTitlelogEntryepisodeBold | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+
+    $TitleCardEPlogEntryShort | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $TitleCardEPlogEntryShortBold | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $TitleCardEPlogEntryMiddle | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $TitleCardEPlogEntryMiddleBold | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $TitleCardEPlogEntryLong | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $TitleCardEPlogEntryLongBold | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+    $TitleCardEPlogEntryepisode | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append  
+    $TitleCardEPlogEntryepisodeBold | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
 
     # Text Poster overlaying
     Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentsShort
@@ -1863,6 +2169,22 @@ Elseif ($Testing) {
     Start-Process $magick -Wait -NoNewWindow -ArgumentList $backgroundArgumentsShortBold
     Start-Process $magick -Wait -NoNewWindow -ArgumentList $backgroundArgumentsMiddleBold
     Start-Process $magick -Wait -NoNewWindow -ArgumentList $backgroundArgumentsLongBold
+
+    # Title Text TitleCard overlaying
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $TitleCardTitleArgumentsShort
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $TitleCardTitleArgumentsMiddle
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $TitleCardTitleArgumentsLong
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $TitleCardTitleArgumentsShortBold
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $TitleCardTitleArgumentsMiddleBold
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $TitleCardTitleArgumentsLongBold
+
+    # Episode Text TitleCard overlaying
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $TitleCardEPArgumentsShort
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $TitleCardEPArgumentsMiddle
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $TitleCardEPArgumentsLong
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $TitleCardEPArgumentsShortBold
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $TitleCardEPArgumentsMiddleBold
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $TitleCardEPArgumentsLongBold
 
     Write-log -Subtext "Poster/Background Tests finished, you can find them here: $global:ScriptRoot\test" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Success
     Remove-Item -LiteralPath $testimage | out-null
@@ -2015,14 +2337,54 @@ else {
     $Libraries | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\PlexLibexport.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
     Write-log -Message "Export everything to a csv: $global:ScriptRoot\Logs\PlexLibexport.csv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
     #>
-    # Download poster foreach movie
-    Write-log -Message "Starting poster creation now, this can take a while..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+
     # Initialize counter variable
     $posterCount = 0
     $SeasonCount = 0
+    $EpisodeCount = 0
+    $BackgroundCount = 00
     $PosterUnknownCount = 0
     $AllShows = $Libraries | Where-Object { $_.'Library Type' -eq 'show' }
     $AllMovies = $Libraries | Where-Object { $_.'Library Type' -eq 'movie' }
+
+    # Getting information of all Episodes
+    if ($global:TitleCards -eq 'True') {
+        Write-log -Message "Query episodes data from all Libs, this can take a while..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+        # Query episode info
+        $Episodedata = @()
+        foreach ($showentry in $AllShows) {
+            # Getting child entries for each season
+            $splittedkeys = $showentry.SeasonRatingKeys.split(',')
+            foreach ($key in $splittedkeys) {
+                if ($PlexToken) {
+                    if ($contentquery -eq 'Directory') {
+                        [xml]$Seasondata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey)/children?X-Plex-Token=$PlexToken).content
+                    }
+                }
+                Else {
+                    if ($contentquery -eq 'Directory') {
+                        #[xml]$Seasondata = (Invoke-WebRequest $PlexUrl/library/metadata/$key/children?).content
+                        [xml]$Seasondata = (Invoke-WebRequest "http://192.168.1.93:32400/library/metadata/$key/children?").content
+                    }
+                }
+                $tempseasondata = New-Object psobject
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Show Name" -Value $Seasondata.MediaContainer.grandparentTitle
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Type" -Value $Seasondata.MediaContainer.viewGroup
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $showentry.tvdbid
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "imdbid" -Value $showentry.imdbid
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value $showentry.tmdbid
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Season Number" -Value $Seasondata.MediaContainer.parentIndex
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Episodes" -Value $($Seasondata.MediaContainer.video.index -join ',')
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Seasondata.MediaContainer.video.title -join ';')
+                $Episodedata += $tempseasondata
+            }
+        }
+        $Episodedata | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\PlexEpisodeExport.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
+        Write-log -Subtext "Found '$($Episodedata.Episodes.split(',').count)' Episodes..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+    }
+    # Query episode info
+    # Download poster foreach movie
+    Write-log -Message "Starting poster creation now, this can take a while..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
     Write-log -Message "Starting Movie Poster Creation part..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
     # Movie Part
     foreach ($entry in $AllMovies) {
@@ -2345,6 +2707,7 @@ else {
                             # Export the array to a CSV file
                             $moviebackgroundtemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                             $posterCount++
+                            $BackgroundCount++
                         }
                         Else {
                             Write-log -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Type Error
@@ -2374,12 +2737,14 @@ else {
             $global:tvdbid = $entry.tvdbid
             $global:imdbid = $entry.imdbid
             $Seasonpostersearchtext = $null
+            $Episodepostersearchtext = $null
             $global:TMDBfallbackposterurl = $null
             $global:fanartfallbackposterurl = $null
             $FanartSearched = $null
             $global:posterurl = $null
             $global:PosterWithText = $null
             $global:IsFallback = $null
+            $global:Fallback = $null
             $global:IsTruncated = $null
             $global:TextlessPoster = $null
     
@@ -2554,6 +2919,7 @@ else {
                 }
 
             }
+            # Now we can start the Background Part
             if ($global:BackgroundPosters -eq 'true') {
                 if ($LibraryFolders -eq 'true') {
                     $LibraryName = $entry.'Library Name'
@@ -2687,6 +3053,7 @@ else {
                         }
                         # Move file back to original naming with Brackets.
                         Move-Item -LiteralPath $backgroundImage $backgroundImageoriginal -Force -ErrorAction SilentlyContinue
+                        $BackgroundCount++
                         Write-log -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Type Info
 
                         $showbackgroundtemp = New-Object psobject
@@ -2888,7 +3255,9 @@ else {
                             if (Get-ChildItem -LiteralPath $SeasonImage -ErrorAction SilentlyContinue) {
                                 # Move file back to original naming with Brackets.
                                 Move-Item -LiteralPath $SeasonImage -destination $SeasonImageoriginal -Force -ErrorAction SilentlyContinue
+                                Write-log -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Type Info
                                 $SeasonCount++
+                                $posterCount++
                             }
                             $seasontemp = New-Object psobject
                             $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Titletext + " | " + $global:season)
@@ -2911,6 +3280,212 @@ else {
                     }
                 }
             }
+            # Now we can start the Episode Part
+            if ($global:TitleCards -eq 'true') {
+                # Loop through each episode
+                foreach ($episode in $Episodedata) {
+                    $global:season_number = $null
+                    $global:episodenumber = $null
+                    $global:titles = $null
+                    $global:posterurl = $null
+                    $global:FileNaming = $null
+                    $EpisodeImageoriginal = $null
+                    $EpisodeImage = $null
+                    $global:Fallback = $null
+
+                    if ($episode.tmdbid -eq $entry.tmdbid -or $episode.tvdbid -eq $entry.tvdbid) {
+                        $global:season_number = $episode."Season Number"
+                        $global:episode_numbers = $episode."Episodes".Split(",")
+                        $global:titles = $episode."Title".Split(";")
+            
+                        for ($i = 0; $i -lt $global:episode_numbers.Count; $i++) {
+                            $global:EPTitle = $($global:titles[$i].Trim())
+                            $global:episodenumber = $($global:episode_numbers[$i].Trim())
+                            $global:FileNaming = "S" + $global:season_number.PadLeft(2, '0') + "E" + $global:episodenumber.PadLeft(2, '0')
+                            $bullet = [char]0x2022
+                            $global:SeasonEPNumber = "Season $global:season_number $bullet Episode $global:episodenumber"
+                                    
+                            if ($LibraryFolders -eq 'true') {
+                                $EpisodeImageoriginal = "$EntryDir\$global:FileNaming.jpg"
+                            }
+                            Else {
+                                $EpisodeImageoriginal = "$AssetPath\$($entry.RootFoldername)_$global:FileNaming.jpg"
+                            }
+                            $EpisodeImage = "$global:ScriptRoot\temp\$($entry.RootFoldername)_$global:FileNaming.jpg"
+                            $EpisodeImage = $EpisodeImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
+                            if (!(Get-ChildItem -LiteralPath $EpisodeImageoriginal -ErrorAction SilentlyContinue)) {
+                                if (!$Episodepostersearchtext) {
+                                    Write-log -Message "Start Title Card Search for: $global:SeasonEPNumber" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                    $Episodepostersearchtext = $true
+                                }
+                                # now search for season poster, fallback to show backdrop.
+                                if ($global:FavProvider -eq 'TMDB') {
+                                    if ($episode.tmdbid) {
+                                        $global:posterurl = GetTMDBTitleCard
+                                        if ($global:Fallback -eq "TVDB") {
+                                            $global:posterurl = GetTVDBTitleCard
+                                        }
+                                        if (!$global:posterurl ) {
+                                            Write-log -Subtext "No Title Cards for this Episode on TVDB or TMDB..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                                            $Errorcount++
+                                        }
+                                    }
+                                    else {
+                                        Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                                        $global:posterurl = GetTVDBTitleCard
+                                        if (!$global:posterurl ) {
+                                            Write-log -Subtext "No Title Cards for this Episode on TVDB or TMDB..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                                            $Errorcount++
+                                        }
+                                    }
+                                }
+                                Else {
+                                    if ($episode.tvdbid) {
+                                        $global:posterurl = GetTVDBTitleCard
+                                        if ($global:Fallback -eq "TMDB") {
+                                            $global:posterurl = GetTMDBTitleCard
+                                        }
+                                        if (!$global:posterurl ) {
+                                            Write-log -Subtext "No Title Cards for this Episode on TVDB or TMDB..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                                            $Errorcount++
+                                        }
+                                    }
+                                    else {
+                                        Write-Log -Subtext "Can't search on TVDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                                        $global:posterurl = GetTMDBTitleCard
+                                        if (!$global:posterurl ) {
+                                            Write-log -Subtext "No Title Cards for this Episode on TVDB or TMDB..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                                            $Errorcount++
+                                        }
+                                    }
+                                }
+                                if ($global:posterurl) {
+                                    if ($global:ImageProcessing -eq 'true') {
+                                        Invoke-WebRequest -Uri $global:posterurl -OutFile $EpisodeImage
+                                        Write-Log -Subtext "Title Card url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                        if ($global:posterurl -like 'https://image.tmdb.org*') {
+                                            Write-Log -Subtext "Downloading Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                            if ($global:FavProvider -ne 'TMDB') { 
+                                                $global:IsFallback = $true
+                                            }
+                                        }
+                                        if ($global:posterurl -like 'https://artworks.thetvdb.com*') {
+                                            Write-Log -Subtext "Downloading Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                            if ($global:FavProvider -ne 'TVDB') { 
+                                                $global:IsFallback = $true
+                                            }
+                                        }
+                                        if (Get-ChildItem -LiteralPath $EpisodeImage -ErrorAction SilentlyContinue) {
+                                            # Resize Image to 2000x3000 and apply Border and overlay
+                                            if ($AddTitleCardBorder -eq 'true' -and $AddTitleCardOverlay -eq 'true') {
+                                                $Arguments = "`"$EpisodeImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$TitleCardoverlay`" -gravity south -composite -shave `"$TitleCardborderwidthsecond`"  -bordercolor `"$TitleCardbordercolor`" -border `"$TitleCardborderwidth`" `"$EpisodeImage`""
+                                                Write-log -Subtext "Resizing it | Adding Borders | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                            }
+                                            if ($AddTitleCardBorder -eq 'true' -and $AddTitleCardOverlay -eq 'false') {
+                                                $Arguments = "`"$EpisodeImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" -shave `"$TitleCardborderwidthsecond`"  -bordercolor `"$TitleCardbordercolor`" -border `"$TitleCardborderwidth`" `"$EpisodeImage`""
+                                                Write-log -Subtext "Resizing it | Adding Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                            }
+                                            if ($AddTitleCardBorder -eq 'false' -and $AddTitleCardOverlay -eq 'true') {
+                                                $Arguments = "`"$EpisodeImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$TitleCardoverlay`" -gravity south -composite `"$EpisodeImage`""
+                                                Write-log -Subtext "Resizing it | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                            }
+                                            if ($AddTitleCardBorder -eq 'false' -and $AddTitleCardOverlay -eq 'false') {
+                                                $Arguments = "`"$EpisodeImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$EpisodeImage`""
+                                                Write-log -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                            }
+                                            $logEntry = "magick.exe $Arguments"
+                                            $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+                                            Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
+                                                    
+                                            if ($AddTitleCardEPTitleText -eq 'true') {
+                                                if ($TitleCardEPTitlefontAllCaps -eq 'true') {
+                                                    $global:EPTitle = $global:EPTitle.ToUpper()
+                                                }
+                                                $optimalFontSize = Get-OptimalPointSize -text $global:EPTitle -font $TitleCardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
+                                                                
+                                                Write-log -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                                                
+                                                $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -composite `"$EpisodeImage`""
+                                                                
+                                                Write-log -Subtext "Applying Font text: `"$global:EPTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                                $logEntry = "magick.exe $Arguments"
+                                                $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+                                                Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
+                                                        
+                                            }
+                                            if ($AddTitleCardEPText -eq 'true') {
+                                                if ($TitleCardEPfontAllCaps -eq 'true') {
+                                                    $global:SeasonEPNumber = $global:SeasonEPNumber.ToUpper()
+                                                }
+                                                $optimalFontSize = Get-OptimalPointSize -text  $global:SeasonEPNumber -font $TitleCardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize
+                                                                
+                                                Write-log -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                                                
+                                                $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPfontcolor`" -size `"$TitleCardEPboxsize`" -background none caption:`" $global:SeasonEPNumber`" -trim -gravity south -extent `"$TitleCardEPboxsize`" `) -gravity south -geometry +0`"$TitleCardEPtext_offset`" -composite `"$EpisodeImage`""
+                                                                
+                                                Write-log -Subtext "Applying Font text: `" $global:SeasonEPNumber`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                                $logEntry = "magick.exe $Arguments"
+                                                $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+                                                Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
+                                            }
+                                        }
+                                    }
+                                    Else {
+                                        Invoke-WebRequest -Uri $global:posterurl -OutFile $EpisodeImage
+                                        Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                        if ($global:posterurl -like 'https://image.tmdb.org*') {
+                                            Write-Log -Subtext "Downloading Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                            if ($global:FavProvider -ne 'TMDB') { 
+                                                $global:IsFallback = $true
+                                            }
+                                        }
+                                        if ($global:posterurl -like 'https://artworks.thetvdb.com*') {
+                                            Write-Log -Subtext "Downloading Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                            if ($global:FavProvider -ne 'TVDB') { 
+                                                $global:IsFallback = $true
+                                            }
+                                        }                                           
+                                        if (Get-ChildItem -LiteralPath $EpisodeImage -ErrorAction SilentlyContinue) {    
+                                            # Resize Image to 2000x3000
+                                            $Resizeargument = "`"$EpisodeImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$EpisodeImage`""
+                                            Write-log -Subtext "Resizing it... " -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                            $logEntry = "magick.exe $Resizeargument"
+                                            $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+                                            Start-Process $magick -Wait -NoNewWindow -ArgumentList $Resizeargument
+                                        }
+                                    }
+                                    if (Get-ChildItem -LiteralPath $EpisodeImage -ErrorAction SilentlyContinue) {
+                                        # Move file back to original naming with Brackets.
+                                        Move-Item -LiteralPath $EpisodeImage -destination $EpisodeImageoriginal -Force -ErrorAction SilentlyContinue
+                                        Write-log -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Type Info
+                                        $EpisodeCount++
+                                        $posterCount++
+                                    }
+                                    $episodetemp = New-Object psobject
+                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($global:FileNaming + " | " + $global:EPTitle)
+                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Episode'
+                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
+                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
+                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "Textless" -Value $(if ($global:TextlessPoster) { 'True' } else { 'False' })
+                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback) { 'True' } else { 'False' })
+                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
+                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "Url" -Value $global:posterurl
+                            
+                                    # Export the array to a CSV file
+                                    $episodetemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
+                                }
+                                Else {
+                                    Write-log -Subtext "Missing poster URL for: $($global:SeasonEPNumber)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Type Error
+                                    Write-log -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Type Info
+                                    $Errorcount++
+                                }
+                                        
+                            }
+                        }
+                    }
+
+                }
+            }
         }
         Else {
             Write-log -Message "Missing RootFolder for: $($entry.title) - you have to manually create the poster for it..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
@@ -2925,7 +3500,10 @@ else {
     $seconds = $executionTime.Seconds
     $FormattedTimespawn = $hours.ToString() + "h " + $minutes.ToString() + "m " + $seconds.ToString() + "s "
 
-    Write-log -Message "Finished, Total images created: $posterCount | Total Season images created: $SeasonCount" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
+    Write-log -Message "Finished, Total images created: $posterCount" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
+    if ($posterCount -ge '1'){
+        Write-log -Message "Show/Movie Posters created: $($posterCount-$SeasonCount-$BackgroundCount-$EpisodeCount)| Season images created: $SeasonCount | Background images created: $BackgroundCount | TitleCards created: $EpisodeCount" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
+    }
     if ((Test-Path $global:ScriptRoot\Logs\ImageChoices.csv)) {
         Write-log -Message "You can find a detailed Summary of image Choices here: $global:ScriptRoot\Logs\ImageChoices.csv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
         # Calculate Summary

@@ -1,6 +1,6 @@
 # Plex Poster Maker
 
-This PowerShell script automates the process of generating posters for your Plex media library. Leveraging information from your Plex library, such as movie or show titles, it fetches relevant artwork from Fanart.tv, TMDB, TVDB, and IMDB. The script is able to focus on specific language to grab; by default, it is `xx`, which means textless, and then fallbacks to `en` if not available. This is a setting a user can decide on, either to focus on textless or on text posters. It also offers both automatic and manual modes for generating posters, accommodating custom creations that cannot be automated.
+This PowerShell script automates the process of generating images for your Plex media library. Leveraging information from your Plex library, such as movie or show titles | season and episode data, it fetches relevant artwork from Fanart.tv, TMDB, TVDB, and IMDB. The script is able to focus on specific language to grab; by default, it is `xx`, which means textless, and then fallbacks to `en` if not available. This is a setting a user can decide on, either to focus on textless or on text posters. It also offers both automatic and manual modes for generating posters, accommodating custom creations that cannot be automated.
 
 ### ! Important !
 The `Temp` Folder gets cleared on every Script run, so do not put files into it.
@@ -17,7 +17,7 @@ The `Temp` Folder gets cleared on every Script run, so do not put files into it.
     - It also generates a log with the output of every imagemagick command `$ScriptRoot\logs\ImageMagickCommands.log`.
     - Additionally, an `ImageChoices.csv` file is generated to store all the selected download options and essential information.
 - **Cross-platform Compatibility**: Ensures seamless operation across Linux, Docker, and Windows Plex servers, enhancing versatility.
-- **Poster/Background Creation**: It searches fanart/tmdb/tvdb for textless posters/backgrounds and resizes the downloaded image to 3840x2160, fallback is grabbing a poster from imdb.
+- **Poster/Background/TitleCard Creation**: It searches fanart/tmdb/tvdb for textless posters/backgrounds/titlecards and resizes the downloaded image to 3840x2160, fallback is grabbing a poster from imdb.
 
 Upon initial execution, the script may take some time to run as it compiles necessary data. Subsequent runs efficiently create missing posters, bypassing existing assets in the directory.
 
@@ -37,65 +37,94 @@ Before utilizing the script, ensure the following prerequisites are installed an
 1. Open `config.example.json` located in the script directory.
 2. Update the following variables with your API keys and preferences:
 
-**ApiPart:**
+    **ApiPart:**
 
-- `tvdbapi`: Your TVDB project API key.
-- `tmdbtoken`: Your TMDB token.
-- `FanartTvAPIKey`: Your Fanart personal API key.
-- `PlexToken`: Leave empty if not applicable.
-- `FavProvider`: Set your preferred provider (default is `tmdb`).
-- `PreferedLanguageOrder`: Specify language preferences. Default is `xx,en,de` (`xx` is Textless). Example configurations can be found in the config file. 2-digit language codes can be found here: [ISO 3166-1 Lang Codes](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2).
+    - `tvdbapi`: Your TVDB project API key.
+    - `tmdbtoken`: Your TMDB token.
+    - `FanartTvAPIKey`: Your Fanart personal API key.
+    - `PlexToken`: Leave empty if not applicable.
+    - `FavProvider`: Set your preferred provider (default is `tmdb`).
+    - `PreferedLanguageOrder`: Specify language preferences. Default is `xx,en,de` (`xx` is Textless). Example configurations can be found in the config file. 2-digit language codes can be found here: [ISO 3166-1 Lang Codes](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2).
 
-**PlexPart:**
+    **PlexPart:**
 
-- `LibstoExclude`: Libraries to exclude from processing.
-- `PlexUrl`: Plex server URL.
+    - `LibstoExclude`: Libraries to exclude from processing.
+    - `PlexUrl`: Plex server URL.
 
-**PrerequisitePart:**
+    **PrerequisitePart:**
 
-- `AssetPath`: Path to store generated posters.
-- `magickinstalllocation`: Path to ImageMagick installation location where `Magick.exe` is located.
-- `font`: Font file name.
-- `backgroundfont`: Background font file name.
-- `overlayfile`: Overlay file name.
-- `backgroundoverlayfile`: Background overlay file name.
-- `LibraryFolders`: Set to `true` for asset structure in one flat folder or `false` to split into library media folders like [Plex-Meta-Manager](https://metamanager.wiki/en/latest/pmm/guides/assets/#image-asset-directory-guide) needs it.
-- `SeasonPosters`: Set to `true` to also create season posters.
-- `BackgroundPosters`: Set to `true` to also create background posters.
+    - `AssetPath`: Path to store generated posters.
+    - `magickinstalllocation`: Path to ImageMagick installation location where `Magick.exe` is located.
+    - `font`: Font file name.
+    - `backgroundfont`: Background font file name.
+    - `overlayfile`: Overlay file name.
+    - `backgroundoverlayfile`: Background overlay file name.
+    - `LibraryFolders`: Set to `true` for asset structure in one flat folder or `false` to split into library media folders like [Plex-Meta-Manager](https://metamanager.wiki/en/latest/pmm/guides/assets/#image-asset-directory-guide) needs it.
+    - `SeasonPosters`: Set to `true` to also create season posters.
+    - `BackgroundPosters`: Set to `true` to also create background posters.
 
-**OverlayPart:**
+    **OverlayPart:**
 
-- `ImageProcessing`: Set to `true` if you want the ImageMagick part; if false, it only downloads the posters.
+    - `ImageProcessing`: Set to `true` if you want the ImageMagick part; if false, it only downloads the posters.
 
-**PosterOverlayPart:**
+    **PosterOverlayPart:**
 
-- `fontAllCaps`: Set to `true` for all caps text, else `false`.
-- `AddBorder`: Set to `true` to add a border to the image.
-- `AddText`: Set to `true` to add text to the image.
-- `AddOverlay`: Set to `true` to add the defined overlay file to the image.
-- `fontcolor`: Color of font text.
-- `bordercolor`: Color of border.
-- `minPointSize`: Minimum size of text in poster.
-- `maxPointSize`: Maximum size of text in poster.
-- `borderwidth`: Border width.
-- `MaxWidth`: Maximum width of text box.
-- `MaxHeight`: Maximum height of text box.
-- `text_offset`: Text box offset from the bottom of the picture.
+    - `fontAllCaps`: Set to `true` for all caps text, else `false`.
+    - `AddBorder`: Set to `true` to add a border to the image.
+    - `AddText`: Set to `true` to add text to the image.
+    - `AddOverlay`: Set to `true` to add the defined overlay file to the image.
+    - `fontcolor`: Color of font text.
+    - `bordercolor`: Color of border.
+    - `minPointSize`: Minimum size of text in poster.
+    - `maxPointSize`: Maximum size of text in poster.
+    - `borderwidth`: Border width.
+    - `MaxWidth`: Maximum width of text box.
+    - `MaxHeight`: Maximum height of text box.
+    - `text_offset`: Text box offset from the bottom of the picture.
 
-**BackgroundOverlayPart:**
+    **BackgroundOverlayPart:**
 
-- `fontAllCaps`: Set to `true` for all caps text, else `false`.
-- `AddBorder`: Set to `true` to add a border to the background image.
-- `AddText`: Set to `true` to add text to the background image.
-- `AddOverlay`: Set to `true` to add the defined background overlay file to the background image.
-- `fontcolor`: Color of font text.
-- `bordercolor`: Color of border.
-- `minPointSize`: Minimum size of text in background image.
-- `maxPointSize`: Maximum size of text in background image.
-- `borderwidth`: Border width.
-- `MaxWidth`: Maximum width of text box in background image.
-- `MaxHeight`: Maximum height of text box in background image.
-- `text_offset`: Text box offset from the bottom of the background image.
+    - `fontAllCaps`: Set to `true` for all caps text, else `false`.
+    - `AddBorder`: Set to `true` to add a border to the background image.
+    - `AddText`: Set to `true` to add text to the background image.
+    - `AddOverlay`: Set to `true` to add the defined background overlay file to the background image.
+    - `fontcolor`: Color of font text.
+    - `bordercolor`: Color of border.
+    - `minPointSize`: Minimum size of text in background image.
+    - `maxPointSize`: Maximum size of text in background image.
+    - `borderwidth`: Border width.
+    - `MaxWidth`: Maximum width of text box in background image.
+    - `MaxHeight`: Maximum height of text box in background image.
+    - `text_offset`: Text box offset from the bottom of the background image.
+
+    **TitleCardOverlayPart:**
+
+    - `AddOverlay`: Set to `true` to add the defined TitleCard overlay file to the TitleCard image.
+    - `AddBorder`: Set to `true` to add a border to the TitleCard image.
+    - `borderwidth`: Border width.
+    - `bordercolor`: Color of border.
+
+    **TitleCardTitleTextPart:**
+
+    - `AddEPTitleText`: Set to `true` to add episode title text to the TitleCard image.
+    - `fontAllCaps`: Set to `true` for all caps text, else `false`.
+    - `fontcolor`: Color of font text.
+    - `minPointSize`: Minimum size of text in TitleCard image.
+    - `maxPointSize`: Maximum size of text in TitleCard image.
+    - `MaxWidth`: Maximum width of text box in TitleCard image.
+    - `MaxHeight`: Maximum height of text box in TitleCard image.
+    - `text_offset`: Text box offset from the bottom of the TitleCard image.
+
+    **TitleCardEpisodeTextPart:**
+
+    - `AddEPText`: Set to `true` to add episode text to the TitleCard image.
+    - `fontAllCaps`: Set to `true` for all caps text, else `false`.
+    - `fontcolor`: Color of font text.
+    - `minPointSize`: Minimum size of text in TitleCard image.
+    - `maxPointSize`: Maximum size of text in TitleCard image.
+    - `MaxWidth`: Maximum width of text box in TitleCard image.
+    - `MaxHeight`: Maximum height of text box in TitleCard image.
+    - `text_offset`: Text box offset from the bottom of the TitleCard image.
 
 3. Rename the config file to `config.json`.
 4. Place the `overlay.png`, or whatever file you defined earlier in `overlayfile`, and `Rocky.ttf` font, or whatever font you defined earlier in `font` files in the same directory as PosterMaker.ps1 which is `$ScriptRoot`.
@@ -146,7 +175,7 @@ This is handy for testing your configuration before applying it en masse to the 
 ![TitleCardTestMode](/images/titlecardtesting.png)
 
 
-### Manual Mode
+### Manual Mode (Currently only movie/show/season poster creation integrated)
 
 Run the script with the `-Manual` switch:
 
@@ -171,6 +200,12 @@ Follow the prompts to enter the source picture path, media folder name, and movi
 
 ### Example of Show Posters after creation:
 ![assetimage](images/shows.png)
+
+### Example of TitleCards after creation:
+![assetimage](images/titlecards.png)
+
+### Example of Backgrounds after creation:
+![assetimage](images/backgrounds.png)
 
 ### Example of 4K Lib after Plex-Meta-Manager magic:
 ![4kimage](images/movies4kpmm.png)

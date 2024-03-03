@@ -16,11 +16,14 @@
     "magickinstalllocation": "C:\\PosterTemp\\ImageMagick-7.1.1-Q16-HDRI",
     "font": "Rocky.ttf",
     "backgroundfont": "Rocky.ttf",
+    "titlecardfont": "Rocky.ttf",
     "overlayfile": "overlay.png",
     "backgroundoverlayfile": "backgroundoverlay.png",
+    "titlecardoverlayfile": "backgroundoverlay.png",
     "LibraryFolders": "true",
     "SeasonPosters": "true",
-    "BackgroundPosters": "false"
+    "BackgroundPosters": "false",
+    "TitleCards": "false"
   },
   "OverlayPart":{
     "ImageProcessing": "true"
@@ -52,5 +55,31 @@
     "MaxWidth": "3640",
     "MaxHeight": "500",
     "text_offset": "+200"
+  },
+  "TitleCardOverlayPart":{
+    "AddOverlay": "true",
+    "AddBorder": "true",
+    "bordercolor": "white",
+    "borderwidth": "30"
+  },
+  "TitleCardTitleTextPart":{
+    "fontAllCaps": "true",
+    "AddEPTitleText": "true",
+    "fontcolor": "white",
+    "minPointSize": "50",
+    "maxPointSize": "150",
+    "MaxWidth": "3640",
+    "MaxHeight": "280",
+    "text_offset": "+300"
+  },
+  "TitleCardEPTextPart":{
+    "fontAllCaps": "true",
+    "AddEPText": "true",
+    "fontcolor": "white",
+    "minPointSize": "50",
+    "maxPointSize": "80",
+    "MaxWidth": "1000",
+    "MaxHeight": "120",
+    "text_offset": "+150"
   }
 }
