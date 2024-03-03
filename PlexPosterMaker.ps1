@@ -1047,7 +1047,7 @@ function GetTVDBShowPoster {
             if ($response) {
                 if ($response.data) {
                     $defaultImageurl = $response.data.image
-                    $NoLangImageUrl = $response.data.artworks | where { $_.language -eq $null -and $_.type -eq '2' }
+                    $NoLangImageUrl = $response.data.artworks | Where-Object { $_.language -eq $null -and $_.type -eq '2' }
                     if ($NoLangImageUrl) {
                         $global:posterurl = $NoLangImageUrl[0].image
                         Write-log -Subtext "Found Textless Poster on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
@@ -1194,7 +1194,7 @@ function GetTVDBTitleCard {
         }
         if ($response) {
             if ($response.data.episodes) {
-                $NoLangImageUrl = $response.data.episodes | where { $_.seasonNumber -eq $global:season_number -and $_.number -eq $global:episodenumber }
+                $NoLangImageUrl = $response.data.episodes | Where-Object { $_.seasonNumber -eq $global:season_number -and $_.number -eq $global:episodenumber }
                 if ($NoLangImageUrl) {
                     $global:posterurl = $NoLangImageUrl[0].image
                     Write-log -Subtext "Found Textless Title Card on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
