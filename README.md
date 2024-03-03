@@ -164,7 +164,7 @@ Follow the prompts to enter the source picture path, media folder name, and movi
 ![4kimage](images/movies4kpmm.png)
 
 ### Example of Movie Lib after pmm magic:
-![movieimage](images/moviespmm.png)
+![movieimage](images/movies_pmm.png)
 
 ### Example of TV Lib after pmm magic:
 ![tvimage](images/showspmm.png)
