@@ -86,25 +86,6 @@ function RemoveTrailingSlash($path) {
     }
     return $path
 }
-Function CheckImageDimensions {
-    param(
-        [string]$imagePath,
-        [int]$expectedWidth,
-        [int]$expectedHeight
-    )
-
-    $image = [System.Drawing.Image]::FromFile($imagePath)
-    $actualWidth = $image.Width
-    $actualHeight = $image.Height
-
-    $dimensionsMatch = $actualWidth -eq $expectedWidth -and $actualHeight -eq $expectedHeight
-
-    return [PSCustomObject]@{
-        DimensionsMatch = $dimensionsMatch
-        ActualWidth = $actualWidth
-        ActualHeight = $actualHeight
-    }
-}
 Function Get-OptimalPointSize {
     param(
         [string]$text,
@@ -1440,22 +1421,6 @@ foreach ($file in $files) {
         Copy-Item -Path $file.FullName -Destination $destinationPath -Force | out-null
         Write-log -Subtext "Found File: '$($file.Name)' in ScriptRoot - copy it into temp folder..." -Path $configLogging -Type Trace
     }
-}
-# Check Poster Overlay Size:
-$width, $height = $PosterSize -split 'x'
-$result = CheckImageDimensions -imagePath $Posteroverlay -expectedWidth $width -expectedHeight $height
-if ($($result.DimensionsMatch)) {
-    Write-log -Subtext "Poster overlay is correctly sized at: $Postersize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
-}else{
-    Write-log -Subtext "Poster overlay is NOT correctly sized at: $Postersize. Actual dimensions: $($result.ActualWidth)x$($result.ActualHeight)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
-}
-# Check Background Overlay Size:
-$width, $height = $BackgroundSize -split 'x'
-$result = CheckImageDimensions -imagePath $Backgroundoverlay -expectedWidth $width -expectedHeight $height
-if ($($result.DimensionsMatch)) {
-    Write-log -Subtext "Background overlay is correctly sized at: $BackgroundSize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
-}else{
-    Write-log -Subtext "Background overlay is NOT correctly sized at: $BackgroundSize. Actual dimensions: $($result.ActualWidth)x$($result.ActualHeight)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
 }
 # Check Plex now:
 if ($PlexToken) {
