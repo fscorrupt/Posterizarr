@@ -5,7 +5,7 @@ This PowerShell script automates the process of generating images for your Plex 
 ### ! Important !
 The `Temp` Folder gets cleared on every Script run, so do not put files into it.
 
-Please start the script as Admin on first run, otherwise the script is not able to install the prerequisites.
+**Please start the script as Admin on first run, otherwise the script is not able to install the prerequisites.**
 
 
 **Key Features:**
