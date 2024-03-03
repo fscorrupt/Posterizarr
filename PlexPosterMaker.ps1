@@ -2942,6 +2942,7 @@ else {
                     $global:tmdbid = $entry.tmdbid
                     $global:tvdbid = $entry.tvdbid
                     $global:imdbid = $entry.imdbid
+                    $global:IsTruncated = $null
                     $global:posterurl = $null
                     $global:PosterWithText = $null
                     Write-log -Message "Start Background Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
@@ -3080,6 +3081,7 @@ else {
             # Now we can start the Season Part
             if ($global:SeasonPosters -eq 'true') {
                 $global:IsFallback = $null
+                $global:IsTruncated = $null
                 $global:seasonNames = $entry.SeasonNames -split ','
                 $global:seasonNumbers = $entry.seasonNumbers -split ','
                 for ($i = 0; $i -lt $global:seasonNames.Count; $i++) {
