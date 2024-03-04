@@ -50,7 +50,6 @@ Before utilizing the script, ensure the following prerequisites are installed an
     - `FavProvider`: Set your preferred provider (default is `tmdb`).
     - `PreferedLanguageOrder`: Specify language preferences. Default is `xx,en,de` (`xx` is Textless). Example configurations can be found in the config file. 2-digit language codes can be found here: [ISO 3166-1 Lang Codes](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2).
     </details>
-    <br>
     <details close>
     <summary>PlexPart:</summary>
     <br>
@@ -58,7 +57,6 @@ Before utilizing the script, ensure the following prerequisites are installed an
     - `LibstoExclude`: Libraries to exclude from processing.
     - `PlexUrl`: Plex server URL.
     </details>
-    <br>
     <details close>
     <summary>PrerequisitePart:</summary>
     <br>
@@ -73,14 +71,12 @@ Before utilizing the script, ensure the following prerequisites are installed an
     - `SeasonPosters`: Set to `true` to also create season posters.
     - `BackgroundPosters`: Set to `true` to also create background posters.
     </details>
-    <br>
     <details close>
     <summary>OverlayPart:</summary>
     <br>
 
     - `ImageProcessing`: Set to `true` if you want the ImageMagick part; if false, it only downloads the posters.
     </details>
-    <br>
     <details close>
     <summary>PosterOverlayPart:</summary>
     <br>
@@ -98,7 +94,6 @@ Before utilizing the script, ensure the following prerequisites are installed an
     - `MaxHeight`: Maximum height of text box.
     - `text_offset`: Text box offset from the bottom of the picture.
     </details>
-    <br>
     <details close>
     <summary>BackgroundOverlayPart:</summary>
     <br>
@@ -116,7 +111,6 @@ Before utilizing the script, ensure the following prerequisites are installed an
     - `MaxHeight`: Maximum height of text box in background image.
     - `text_offset`: Text box offset from the bottom of the background image.
     </details>
-    <br>
     <details close>
     <summary>TitleCardOverlayPart:</summary>
     <br>
@@ -126,7 +120,6 @@ Before utilizing the script, ensure the following prerequisites are installed an
     - `borderwidth`: Border width.
     - `bordercolor`: Color of border.
     </details>
-    <br>
     <details close>
     <summary>TitleCardTitleTextPart:</summary>
     <br>
@@ -140,7 +133,6 @@ Before utilizing the script, ensure the following prerequisites are installed an
     - `MaxHeight`: Maximum height of text box in TitleCard image.
     - `text_offset`: Text box offset from the bottom of the TitleCard image.
     </details>
-    <br>
     <details close>
     <summary>TitleCardEpisodeTextPart:</summary>
     <br>
@@ -196,7 +188,7 @@ This is handy for testing your configuration before applying it en masse to the 
 **Images from Testing Mode**
 
 <details close>
-<summary>Poster Example 🖼️</summary>
+<summary>🖼️Posters</summary>
 <br>
 <p>
   <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
@@ -204,9 +196,9 @@ This is handy for testing your configuration before applying it en masse to the 
   </a>
 </p>
 </details>
-<br>
+
 <details close>
-<summary>Background Example 🖼️</summary>
+<summary>🖼️Backgrounds</summary>
 <br>
 <p>
   <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
@@ -214,9 +206,9 @@ This is handy for testing your configuration before applying it en masse to the 
   </a>
 </p>
 </details>
-<br>
+
 <details close>
-<summary>TitleCard Example 🖼️</summary>
+<summary>🖼️TitleCards</summary>
 <br>
 <p>
   <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
@@ -236,21 +228,21 @@ Run the script with the `-Manual` switch:
 
 Follow the prompts to enter the source picture path, media folder name, and movie/show title to manually create a custom poster.
 
+### Example Pictures:
 
-### Example of Script folder:
 <details close>
-<summary>Picture 🖼️</summary>
+<summary>🖼️Script folder:</summary>
 <br>
 <p>
   <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
     <img alt="folder" height="100%" src="/images/folder.png">
   </a>
 </p>
+
 </details>
 
-### Example of script output:
 <details close>
-<summary>Picture 🖼️</summary>
+<summary>🖼️script output:</summary>
 <br>
 <p>
   <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
@@ -258,10 +250,8 @@ Follow the prompts to enter the source picture path, media folder name, and movi
   </a>
 </p>
 </details>
-
-### Example of ImageChoices.csv:
 <details close>
-<summary>Picture 🖼️</summary>
+<summary>🖼️ImageChoices.csv:</summary>
 <br>
 <p>
   <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
@@ -269,10 +259,8 @@ Follow the prompts to enter the source picture path, media folder name, and movi
   </a>
 </p>
 </details>
-
-### Example of Movie Posters after creation:
 <details close>
-<summary>Picture 🖼️</summary>
+<summary>🖼️Movie Posters after creation:</summary>
 <br>
 <p>
   <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
@@ -280,10 +268,8 @@ Follow the prompts to enter the source picture path, media folder name, and movi
   </a>
 </p>
 </details>
-
-### Example of Show Posters after creation:
 <details close>
-<summary>Picture 🖼️</summary>
+<summary>🖼️Show Posters after creation:</summary>
 <br>
 <p>
   <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
@@ -291,11 +277,8 @@ Follow the prompts to enter the source picture path, media folder name, and movi
   </a>
 </p>
 </details>
-
-
-### Example of TitleCards after creation:
 <details close>
-<summary>Picture 🖼️</summary>
+<summary>🖼️TitleCards after creation:</summary>
 <br>
 <p>
   <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
@@ -303,10 +286,8 @@ Follow the prompts to enter the source picture path, media folder name, and movi
   </a>
 </p>
 </details>
-
-### Example of Backgrounds after creation:
 <details close>
-<summary>Picture 🖼️</summary>
+<summary>🖼️Backgrounds after creation:</summary>
 <br>
 <p>
   <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
@@ -314,10 +295,8 @@ Follow the prompts to enter the source picture path, media folder name, and movi
   </a>
 </p>
 </details>
-
-### Example of 4K Lib after Plex-Meta-Manager magic:
 <details close>
-<summary>Picture 🖼️</summary>
+<summary>🖼️4K Lib after Plex-Meta-Manager magic:</summary>
 <br>
 <p>
   <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
@@ -325,10 +304,8 @@ Follow the prompts to enter the source picture path, media folder name, and movi
   </a>
 </p>
 </details>
-
-### Example of Movie Lib after Plex-Meta-Manager magic:
 <details close>
-<summary>Picture 🖼️</summary>
+<summary>🖼️Movie Lib after Plex-Meta-Manager magic:</summary>
 <br>
 <p>
   <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
@@ -336,10 +313,8 @@ Follow the prompts to enter the source picture path, media folder name, and movi
   </a>
 </p>
 </details>
-
-### Example of TV Lib after Plex-Meta-Manager magic:
 <details close>
-<summary>Picture 🖼️</summary>
+<summary>🖼️TV Lib after Plex-Meta-Manager magic:</summary>
 <br>
 <p>
   <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
@@ -347,10 +322,8 @@ Follow the prompts to enter the source picture path, media folder name, and movi
   </a>
 </p>
 </details>
-
-### Example of TV Lib Seasons after Plex-Meta-Manager magic:
 <details close>
-<summary>Picture 🖼️</summary>
+<summary>🖼️TV Lib Seasons after Plex-Meta-Manager magic:</summary>
 <br>
 <p>
   <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
@@ -359,7 +332,8 @@ Follow the prompts to enter the source picture path, media folder name, and movi
 </p>
 </details>
 
-### ....
+### Enjoy
+
 Feel free to customize the script further to suit your preferences or automation needs.
 
 PR´s are also welcome!
