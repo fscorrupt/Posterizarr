@@ -54,7 +54,8 @@ function Write-Log {
     }
     $Timestamp = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
     $PaddedType = $Type.PadRight(8)
-    $TypeFormatted = "[{0}] {1}" -f $Timestamp, $PaddedType.ToUpper()
+    $Linenumber = "L"+"."+"$($MyInvocation.ScriptLineNumber)"
+    $TypeFormatted = "[{0}] {1}|{2}" -f $Timestamp, $PaddedType.ToUpper(),$Linenumber
 
     if ($Message) {
         $FormattedLine1 = "{0}| {1}" -f ($TypeFormatted, $Message)
