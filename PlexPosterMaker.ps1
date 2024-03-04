@@ -560,7 +560,7 @@ function GetTMDBShowBackground {
     }
 }
 function GetTMDBTitleCard {
-    Write-log -Subtext "Searching on TMDB for 'Season $global:season_number - Episode $global:episodenumber' Title Card" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+    Write-log -Subtext "Searching on TMDB for: $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
     try {
         $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)/season/$($global:season_number)/episode/$($global:episodenumber)/images?append_to_response=images&language=xx&include_image_language=en,null,de" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue            
     }
@@ -2358,13 +2358,12 @@ else {
             foreach ($key in $splittedkeys) {
                 if ($PlexToken) {
                     if ($contentquery -eq 'Directory') {
-                        [xml]$Seasondata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey)/children?X-Plex-Token=$PlexToken).content
+                        [xml]$Seasondata = (Invoke-WebRequest $PlexUrl/library/metadata/$key/children?X-Plex-Token=$PlexToken).content
                     }
                 }
                 Else {
                     if ($contentquery -eq 'Directory') {
-                        #[xml]$Seasondata = (Invoke-WebRequest $PlexUrl/library/metadata/$key/children?).content
-                        [xml]$Seasondata = (Invoke-WebRequest "http://192.168.1.93:32400/library/metadata/$key/children?").content
+                        [xml]$Seasondata = (Invoke-WebRequest $PlexUrl/library/metadata/$key/children?).content
                     }
                 }
                 $tempseasondata = New-Object psobject
@@ -3298,6 +3297,7 @@ else {
                     $global:Fallback = $null
 
                     if ($episode.tmdbid -eq $entry.tmdbid -or $episode.tvdbid -eq $entry.tvdbid) {
+                        $global:show_name = $episode."Show Name"
                         $global:season_number = $episode."Season Number"
                         $global:episode_numbers = $episode."Episodes".Split(",")
                         $global:titles = $episode."Title".Split(";")
@@ -3319,7 +3319,7 @@ else {
                             $EpisodeImage = $EpisodeImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
                             if (!(Get-ChildItem -LiteralPath $EpisodeImageoriginal -ErrorAction SilentlyContinue)) {
                                 if (!$Episodepostersearchtext) {
-                                    Write-log -Message "Start Title Card Search for: $global:SeasonEPNumber" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                    Write-log -Message "Start Title Card Search for: $global:show_name - $global:SeasonEPNumber" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                     $Episodepostersearchtext = $true
                                 }
                                 # now search for season poster, fallback to show backdrop.
@@ -3427,7 +3427,7 @@ else {
                                                                 
                                                 $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPfontcolor`" -size `"$TitleCardEPboxsize`" -background none caption:`" $global:SeasonEPNumber`" -trim -gravity south -extent `"$TitleCardEPboxsize`" `) -gravity south -geometry +0`"$TitleCardEPtext_offset`" -composite `"$EpisodeImage`""
                                                                 
-                                                Write-log -Subtext "Applying Font text: `" $global:SeasonEPNumber`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                                Write-log -Subtext "Applying Font text: `"$global:SeasonEPNumber`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                                 $logEntry = "magick.exe $Arguments"
                                                 $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
                                                 Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
