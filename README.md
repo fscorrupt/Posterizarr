@@ -200,7 +200,7 @@ This is handy for testing your configuration before applying it en masse to the 
 <br>
 <p>
   <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
-    <img alt="testing" height="520px" src="/images/testing.png">
+    <img alt="testing" height="100%" src="/images/testing.png">
   </a>
 </p>
 </details>
@@ -210,7 +210,7 @@ This is handy for testing your configuration before applying it en masse to the 
 <br>
 <p>
   <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
-    <img alt="backgroundtesting" height="520px" src="/images/backgroundtesting.png">
+    <img alt="backgroundtesting" height="100%" src="/images/backgroundtesting.png">
   </a>
 </p>
 </details>
@@ -220,7 +220,7 @@ This is handy for testing your configuration before applying it en masse to the 
 <br>
 <p>
   <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
-    <img alt="titlecardtesting" height="520px" src="/images/titlecardtesting.png">
+    <img alt="titlecardtesting" height="100%" src="/images/titlecardtesting.png">
   </a>
 </p>
 </details>
