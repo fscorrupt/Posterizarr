@@ -49,10 +49,10 @@ Before utilizing the script, ensure the following prerequisites are installed an
     <summary>ApiPart:</summary>
     <br>
 
-    - `tvdbapi`: Your TVDB project API key.
-    - `tmdbtoken`: Your TMDB token.
+    - `tvdbapi`: Your TVDB Project API key.
+    - `tmdbtoken`: Your TMDB API Read Access Token.
     - `FanartTvAPIKey`: Your Fanart personal API key.
-    - `PlexToken`: Leave empty if not applicable.
+    - `PlexToken`: Your Plex token (Leave empty if not applicable).
     - `FavProvider`: Set your preferred provider (default is `tmdb`).
     - `PreferedLanguageOrder`: Specify language preferences. Default is `xx,en,de` (`xx` is Textless). Example configurations can be found in the config file. 2-digit language codes can be found here: [ISO 3166-1 Lang Codes](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2).
     </details>
@@ -60,8 +60,8 @@ Before utilizing the script, ensure the following prerequisites are installed an
     <summary>PlexPart:</summary>
     <br>
 
-    - `LibstoExclude`: Libraries to exclude from processing.
-    - `PlexUrl`: Plex server URL.
+    - `LibstoExclude`: Libraries, by name, to exclude from processing.
+    - `PlexUrl`: Plex server URL (i.e. "http://192.168.1.1:32400" or "http://myplexserver.com:32400").
     </details>
     <details close>
     <summary>PrerequisitePart:</summary>
@@ -73,9 +73,11 @@ Before utilizing the script, ensure the following prerequisites are installed an
     - `backgroundfont`: Background font file name.
     - `overlayfile`: Overlay file name.
     - `backgroundoverlayfile`: Background overlay file name.
-    - `LibraryFolders`: Set to `true` for asset structure in one flat folder or `false` to split into library media folders like [Plex-Meta-Manager](https://metamanager.wiki/en/latest/pmm/guides/assets/#image-asset-directory-guide) needs it.
+    - `titlecardoverlayfile` : Title Card overlay file name.
+    - `LibraryFolders`: Set to `false` for asset structure in one flat folder or `true` to split into library media folders like [Plex-Meta-Manager](https://metamanager.wiki/en/latest/pmm/guides/assets/#image-asset-directory-guide) needs it.
     - `SeasonPosters`: Set to `true` to also create season posters.
     - `BackgroundPosters`: Set to `true` to also create background posters.
+    - `TitleCards` : Set to `true` to also create title cards.
     </details>
     <details close>
     <summary>OverlayPart:</summary>
