@@ -2344,7 +2344,7 @@ else {
     $posterCount = 0
     $SeasonCount = 0
     $EpisodeCount = 0
-    $BackgroundCount = 00
+    $BackgroundCount = 0
     $PosterUnknownCount = 0
     $AllShows = $Libraries | Where-Object { $_.'Library Type' -eq 'show' }
     $AllMovies = $Libraries | Where-Object { $_.'Library Type' -eq 'movie' }
