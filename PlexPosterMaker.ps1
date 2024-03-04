@@ -1203,11 +1203,8 @@ function GetTVDBTitleCard {
                     $global:posterurl = $NoLangImageUrl[0].image
                     Write-log -Subtext "Found Textless Title Card on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
                     $global:TextlessPoster = $true
+                    return $global:posterurl
                 }
-                Else {
-                    Write-log -Subtext "Found Title Card with text on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
-                }
-                return $global:posterurl
             }
             Else {
                 Write-log -Subtext "No Title Card found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
@@ -2351,6 +2348,7 @@ else {
     $AllShows = $Libraries | Where-Object { $_.'Library Type' -eq 'show' }
     $AllMovies = $Libraries | Where-Object { $_.'Library Type' -eq 'movie' }
 
+    #<#
     # Getting information of all Episodes
     if ($global:TitleCards -eq 'True') {
         Write-log -Message "Query episodes data from all Libs, this can take a while..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
@@ -2385,6 +2383,7 @@ else {
         $Episodedata | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\PlexEpisodeExport.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
         Write-log -Subtext "Found '$($Episodedata.Episodes.split(',').count)' Episodes..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
     }
+    #>
     # Query episode info
     # Download poster foreach movie
     Write-log -Message "Starting poster creation now, this can take a while..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
@@ -3089,6 +3088,7 @@ else {
                 $global:seasonNames = $entry.SeasonNames -split ','
                 $global:seasonNumbers = $entry.seasonNumbers -split ','
                 for ($i = 0; $i -lt $global:seasonNames.Count; $i++) {
+                    $global:IsTruncated = $null
                     if ($fontAllCaps -eq 'true') {
                         $global:seasonTitle = $global:seasonNames[$i].ToUpper()
                     }
