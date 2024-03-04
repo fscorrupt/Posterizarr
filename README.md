@@ -39,7 +39,9 @@ Before utilizing the script, ensure the following prerequisites are installed an
 1. Open `config.example.json` located in the script directory.
 2. Update the following variables with your API keys and preferences:
 
-    **ApiPart:**
+    <details close>
+    <summary>ApiPart:</summary>
+    <br>
 
     - `tvdbapi`: Your TVDB project API key.
     - `tmdbtoken`: Your TMDB token.
@@ -47,13 +49,19 @@ Before utilizing the script, ensure the following prerequisites are installed an
     - `PlexToken`: Leave empty if not applicable.
     - `FavProvider`: Set your preferred provider (default is `tmdb`).
     - `PreferedLanguageOrder`: Specify language preferences. Default is `xx,en,de` (`xx` is Textless). Example configurations can be found in the config file. 2-digit language codes can be found here: [ISO 3166-1 Lang Codes](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2).
-
-    **PlexPart:**
+    </details>
+    <br>
+    <details close>
+    <summary>PlexPart:</summary>
+    <br>
 
     - `LibstoExclude`: Libraries to exclude from processing.
     - `PlexUrl`: Plex server URL.
-
-    **PrerequisitePart:**
+    </details>
+    <br>
+    <details close>
+    <summary>PrerequisitePart:</summary>
+    <br>
 
     - `AssetPath`: Path to store generated posters.
     - `magickinstalllocation`: Path to ImageMagick installation location where `Magick.exe` is located.
@@ -64,12 +72,18 @@ Before utilizing the script, ensure the following prerequisites are installed an
     - `LibraryFolders`: Set to `true` for asset structure in one flat folder or `false` to split into library media folders like [Plex-Meta-Manager](https://metamanager.wiki/en/latest/pmm/guides/assets/#image-asset-directory-guide) needs it.
     - `SeasonPosters`: Set to `true` to also create season posters.
     - `BackgroundPosters`: Set to `true` to also create background posters.
-
-    **OverlayPart:**
+    </details>
+    <br>
+    <details close>
+    <summary>OverlayPart:</summary>
+    <br>
 
     - `ImageProcessing`: Set to `true` if you want the ImageMagick part; if false, it only downloads the posters.
-
-    **PosterOverlayPart:**
+    </details>
+    <br>
+    <details close>
+    <summary>PosterOverlayPart:</summary>
+    <br>
 
     - `fontAllCaps`: Set to `true` for all caps text, else `false`.
     - `AddBorder`: Set to `true` to add a border to the image.
@@ -83,8 +97,11 @@ Before utilizing the script, ensure the following prerequisites are installed an
     - `MaxWidth`: Maximum width of text box.
     - `MaxHeight`: Maximum height of text box.
     - `text_offset`: Text box offset from the bottom of the picture.
-
-    **BackgroundOverlayPart:**
+    </details>
+    <br>
+    <details close>
+    <summary>BackgroundOverlayPart:</summary>
+    <br>
 
     - `fontAllCaps`: Set to `true` for all caps text, else `false`.
     - `AddBorder`: Set to `true` to add a border to the background image.
@@ -98,15 +115,21 @@ Before utilizing the script, ensure the following prerequisites are installed an
     - `MaxWidth`: Maximum width of text box in background image.
     - `MaxHeight`: Maximum height of text box in background image.
     - `text_offset`: Text box offset from the bottom of the background image.
-
-    **TitleCardOverlayPart:**
+    </details>
+    <br>
+    <details close>
+    <summary>TitleCardOverlayPart:</summary>
+    <br>
 
     - `AddOverlay`: Set to `true` to add the defined TitleCard overlay file to the TitleCard image.
     - `AddBorder`: Set to `true` to add a border to the TitleCard image.
     - `borderwidth`: Border width.
     - `bordercolor`: Color of border.
-
-    **TitleCardTitleTextPart:**
+    </details>
+    <br>
+    <details close>
+    <summary>TitleCardTitleTextPart:</summary>
+    <br>
 
     - `AddEPTitleText`: Set to `true` to add episode title text to the TitleCard image.
     - `fontAllCaps`: Set to `true` for all caps text, else `false`.
@@ -116,8 +139,11 @@ Before utilizing the script, ensure the following prerequisites are installed an
     - `MaxWidth`: Maximum width of text box in TitleCard image.
     - `MaxHeight`: Maximum height of text box in TitleCard image.
     - `text_offset`: Text box offset from the bottom of the TitleCard image.
-
-    **TitleCardEpisodeTextPart:**
+    </details>
+    <br>
+    <details close>
+    <summary>TitleCardEpisodeTextPart:</summary>
+    <br>
 
     - `AddEPText`: Set to `true` to add episode text to the TitleCard image.
     - `fontAllCaps`: Set to `true` for all caps text, else `false`.
@@ -127,6 +153,8 @@ Before utilizing the script, ensure the following prerequisites are installed an
     - `MaxWidth`: Maximum width of text box in TitleCard image.
     - `MaxHeight`: Maximum height of text box in TitleCard image.
     - `text_offset`: Text box offset from the bottom of the TitleCard image.
+    </details>
+    <br>
 
 3. Rename the config file to `config.json`.
 4. Place the `overlay.png`, or whatever file you defined earlier in `overlayfile`, and `Rocky.ttf` font, or whatever font you defined earlier in `font` files in the same directory as PosterMaker.ps1 which is `$ScriptRoot`.
@@ -164,17 +192,38 @@ This is handy for testing your configuration before applying it en masse to the 
 .\PlexPosterMaker.ps1 -Testing
 ```
 
-**Poster Test Example**
 
-![PosterTestMode](/images/testing.png)
+**Images from Testing Mode**
 
-**Background Test Example**
-
-![BackgroundTestMode](/images/backgroundtesting.png)
-
-**Title Card Test Example**
-
-![TitleCardTestMode](/images/titlecardtesting.png)
+<details close>
+<summary>Poster Example 🖼️</summary>
+<br>
+<p>
+  <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
+    <img alt="testing" height="520px" src="/images/testing.png">
+  </a>
+</p>
+</details>
+<br>
+<details close>
+<summary>Background Example 🖼️</summary>
+<br>
+<p>
+  <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
+    <img alt="backgroundtesting" height="520px" src="/images/backgroundtesting.png">
+  </a>
+</p>
+</details>
+<br>
+<details close>
+<summary>TitleCard Example 🖼️</summary>
+<br>
+<p>
+  <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
+    <img alt="titlecardtesting" height="520px" src="/images/titlecardtesting.png">
+  </a>
+</p>
+</details>
 
 
 ### Manual Mode (Currently only movie/show/season poster creation integrated)
@@ -189,37 +238,128 @@ Follow the prompts to enter the source picture path, media folder name, and movi
 
 
 ### Example of Script folder:
-![scriptimage](images/folder.png)
+<details close>
+<summary>Picture 🖼️</summary>
+<br>
+<p>
+  <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
+    <img alt="folder" height="100%" src="/images/folder.png">
+  </a>
+</p>
+</details>
 
 ### Example of script output:
-![outputimage](images/output.png)
+<details close>
+<summary>Picture 🖼️</summary>
+<br>
+<p>
+  <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
+    <img alt="output" height="100%" src="/images/output.png">
+  </a>
+</p>
+</details>
 
 ### Example of ImageChoices.csv:
-![outputimage](images/imagecsv.png)
+<details close>
+<summary>Picture 🖼️</summary>
+<br>
+<p>
+  <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
+    <img alt="imagecsv" height="100%" src="/images/imagecsv.png">
+  </a>
+</p>
+</details>
 
 ### Example of Movie Posters after creation:
-![assetimage](images/movies.png)
+<details close>
+<summary>Picture 🖼️</summary>
+<br>
+<p>
+  <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
+    <img alt="movies" height="520px" src="/images/movies.png">
+  </a>
+</p>
+</details>
 
 ### Example of Show Posters after creation:
-![assetimage](images/shows.png)
+<details close>
+<summary>Picture 🖼️</summary>
+<br>
+<p>
+  <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
+    <img alt="shows" height="520px" src="/images/shows.png">
+  </a>
+</p>
+</details>
+
 
 ### Example of TitleCards after creation:
-![assetimage](images/titlecards.png)
+<details close>
+<summary>Picture 🖼️</summary>
+<br>
+<p>
+  <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
+    <img alt="titlecards" height="520px" src="/images/titlecards.png">
+  </a>
+</p>
+</details>
 
 ### Example of Backgrounds after creation:
-![assetimage](images/backgrounds.png)
+<details close>
+<summary>Picture 🖼️</summary>
+<br>
+<p>
+  <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
+    <img alt="backgrounds" height="520px" src="/images/backgrounds.png">
+  </a>
+</p>
+</details>
 
 ### Example of 4K Lib after Plex-Meta-Manager magic:
-![4kimage](images/movies4kpmm.png)
+<details close>
+<summary>Picture 🖼️</summary>
+<br>
+<p>
+  <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
+    <img alt="movies4kpmm" height="100%" src="/images/movies4kpmm.png">
+  </a>
+</p>
+</details>
 
 ### Example of Movie Lib after Plex-Meta-Manager magic:
-![movieimage](images/movies_pmm.png)
+<details close>
+<summary>Picture 🖼️</summary>
+<br>
+<p>
+  <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
+    <img alt="movies_pmm" height="100%" src="/images/movies_pmm.png">
+  </a>
+</p>
+</details>
 
 ### Example of TV Lib after Plex-Meta-Manager magic:
-![tvimage](images/showspmm.png)
+<details close>
+<summary>Picture 🖼️</summary>
+<br>
+<p>
+  <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
+    <img alt="showspmm" height="520px" src="/images/showspmm.png">
+  </a>
+</p>
+</details>
 
 ### Example of TV Lib Seasons after Plex-Meta-Manager magic:
-![seasonimage](images/seasonspmm.png)
+<details close>
+<summary>Picture 🖼️</summary>
+<br>
+<p>
+  <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
+    <img alt="seasonspmm" height="100%" src="/images/seasonspmm.png">
+  </a>
+</p>
+</details>
 
-
+### ....
 Feel free to customize the script further to suit your preferences or automation needs.
+
+PR´s are also welcome!
