@@ -1412,7 +1412,7 @@ if (!(Test-Path $font)) {
 }
 
 
-# cleanup old logfile
+# cleanup old log files
 if ($Manual) {
     if ((Test-Path $global:ScriptRoot\Logs\Manuallog.log)) {
         Remove-Item $global:ScriptRoot\Logs\Manuallog.log
@@ -1426,6 +1426,10 @@ Elseif ($Testing) {
     if ((Test-Path $global:ScriptRoot\Logs\Testinglog.log)) {
         Remove-Item $global:ScriptRoot\Logs\Testinglog.log
         Write-log -Message "Old log files cleared..." -Path $global:ScriptRoot\Logs\Testinglog.log -Type Warning
+    }
+    # Delete all files and subfolders within the test directory
+    if (Test-Path $global:ScriptRoot\test) {
+        Remove-Item -Path $global:ScriptRoot\test\* -Recurse -Force
     }
     if ((Test-Path $global:ScriptRoot\Logs\ImageMagickCommands.log)) {
         Remove-Item $global:ScriptRoot\Logs\ImageMagickCommands.log
@@ -1798,12 +1802,12 @@ Elseif ($Testing) {
     $LongTextCAPS = $LongText.ToUpper()
     $EpisodetextCAPS = $Episodetext.ToUpper()
     # Posters
-    $TestPosterShort = "$global:ScriptRoot\test\ShortText.jpg"
-    $TestPosterMedium = "$global:ScriptRoot\test\MediumText.jpg"
-    $TestPosterLong = "$global:ScriptRoot\test\LongText.jpg"
-    $TestPosterShortCAPS = "$global:ScriptRoot\test\ShortTextCAPS.jpg"
-    $TestPosterMediumCAPS = "$global:ScriptRoot\test\MediumTextCAPS.jpg"
-    $TestPosterLongCAPS = "$global:ScriptRoot\test\LongTextCAPS.jpg"
+    $TestPosterShort = "$global:ScriptRoot\test\posterShortText.jpg"
+    $TestPosterMedium = "$global:ScriptRoot\test\posterMediumText.jpg"
+    $TestPosterLong = "$global:ScriptRoot\test\posterLongText.jpg"
+    $TestPosterShortCAPS = "$global:ScriptRoot\test\posterShortTextCAPS.jpg"
+    $TestPosterMediumCAPS = "$global:ScriptRoot\test\posterMediumTextCAPS.jpg"
+    $TestPosterLongCAPS = "$global:ScriptRoot\test\posterLongTextCAPS.jpg"
     # Backgrounds
     $backgroundTestPosterShort = "$global:ScriptRoot\test\backgroundShortText.jpg"
     $backgroundTestPosterMedium = "$global:ScriptRoot\test\backgroundMediumText.jpg"
@@ -2217,8 +2221,6 @@ else {
     Write-Log -Subtext "Included Libraries: $IncludedLibraryNames" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
 
     Write-log -Message "Query all items from all Libs, this can take a while..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-    #$Libraries = Import-Csv "C:\posterTemp\logs\PlexLibexport.csv" -Delimiter ';' 
-    #<#
     $Libraries = @()
     Foreach ($Library in $Libsoverview) {
         if ($Library.Name -notin $LibstoExclude) {
@@ -2337,7 +2339,6 @@ else {
     Write-log -Subtext "Found '$($Libraries.count)' Items..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
     $Libraries | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\PlexLibexport.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
     Write-log -Message "Export everything to a csv: $global:ScriptRoot\Logs\PlexLibexport.csv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-    #>
 
     # Initialize counter variable
     $posterCount = 0
@@ -2348,7 +2349,6 @@ else {
     $AllShows = $Libraries | Where-Object { $_.'Library Type' -eq 'show' }
     $AllMovies = $Libraries | Where-Object { $_.'Library Type' -eq 'movie' }
 
-    #<#
     # Getting information of all Episodes
     if ($global:TitleCards -eq 'True') {
         Write-log -Message "Query episodes data from all Libs, this can take a while..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
@@ -2383,7 +2383,6 @@ else {
         $Episodedata | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\PlexEpisodeExport.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
         Write-log -Subtext "Found '$($Episodedata.Episodes.split(',').count)' Episodes..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
     }
-    #>
     # Query episode info
     # Download poster foreach movie
     Write-log -Message "Starting poster creation now, this can take a while..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
