@@ -100,7 +100,7 @@ Function Get-OptimalPointSize {
         [int]$max_pointsize
     )
     # stolen and adapted from: https://github.com/bullmoose20/Plex-Stuff/blob/9d231d871a4676c8da7d4cbab482181a35756524/create_defaults/create_default_posters.ps1#L477 
-    
+    $global:IsTruncated = $null
     # Construct the command with correct font option
     $cmd = "magick.exe -size ${box_width}x${box_height} -font `"$fontImagemagick`" -gravity center -fill black caption:`"$text`" -format `"%[caption:pointsize]`" info:"
     $cmd | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
@@ -2397,7 +2397,6 @@ else {
                 $global:TMDBfallbackposterurl = $null
                 $global:fanartfallbackposterurl = $null
                 $global:IsFallback = $null
-                $global:IsTruncated = $null
     
                 $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}]'
                 if ($entry.title -match $cjkPattern) {
@@ -2586,7 +2585,6 @@ else {
                         $global:tvdbid = $entry.tvdbid
                         $global:imdbid = $entry.imdbid
                         $global:posterurl = $null
-                        $global:IsTruncated = $null
                         $global:PosterWithText = $null
                         Write-log -Message "Start Background Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                         switch -Wildcard ($global:FavProvider) {
@@ -2748,7 +2746,6 @@ else {
             $global:PosterWithText = $null
             $global:IsFallback = $null
             $global:Fallback = $null
-            $global:IsTruncated = $null
             $global:TextlessPoster = $null
     
             $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}]'
@@ -2945,7 +2942,6 @@ else {
                     $global:tmdbid = $entry.tmdbid
                     $global:tvdbid = $entry.tvdbid
                     $global:imdbid = $entry.imdbid
-                    $global:IsTruncated = $null
                     $global:posterurl = $null
                     $global:PosterWithText = $null
                     Write-log -Message "Start Background Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
@@ -3084,11 +3080,9 @@ else {
             # Now we can start the Season Part
             if ($global:SeasonPosters -eq 'true') {
                 $global:IsFallback = $null
-                $global:IsTruncated = $null
                 $global:seasonNames = $entry.SeasonNames -split ','
                 $global:seasonNumbers = $entry.seasonNumbers -split ','
                 for ($i = 0; $i -lt $global:seasonNames.Count; $i++) {
-                    $global:IsTruncated = $null
                     if ($fontAllCaps -eq 'true') {
                         $global:seasonTitle = $global:seasonNames[$i].ToUpper()
                     }
@@ -3295,7 +3289,6 @@ else {
                     $global:titles = $null
                     $global:posterurl = $null
                     $global:FileNaming = $null
-                    $global:IsTruncated = $null
                     $EpisodeImageoriginal = $null
                     $EpisodeImage = $null
                     $global:Fallback = $null
