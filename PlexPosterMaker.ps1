@@ -560,7 +560,7 @@ function GetTMDBShowBackground {
     }
 }
 function GetTMDBTitleCard {
-    Write-log -Subtext "Searching on TMDB for 'Season $global:season_number - Episode $global:episodenumber' Title Card" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+    Write-log -Subtext "Searching on TMDB for: $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
     try {
         $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)/season/$($global:season_number)/episode/$($global:episodenumber)/images?append_to_response=images&language=xx&include_image_language=en,null,de" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue            
     }
@@ -1750,7 +1750,7 @@ if ($Manual) {
             $optimalFontSize = Get-OptimalPointSize -text $joinedTitle -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
             Write-log -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Manuallog.log -Type Info
             $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -composite `"$PosterImage`""
-            Write-log -Subtext "    Applying Font text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Manuallog.log -Type Info
+            Write-log -Subtext "    Applying Poster text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Manuallog.log -Type Info
             $logEntry = "magick.exe $Arguments"
             $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
             Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
@@ -1787,404 +1787,404 @@ Elseif ($Testing) {
         Write-log -Subtext "Test background Created..." -Path $global:ScriptRoot\Logs\Testinglog.log -Type Trace
     }
     $ShortText = "The Hobbit" 
-    $MiddleText = "The Hobbit is a great movie" 
+    $MediumText = "The Hobbit is a great movie" 
     $LongText = "The Hobbit is a great movie that we all loved and enjoyed watching" 
     $bullet = [char]0x2022
     $Episodetext = "Season 1 $bullet Episode 1"
 
-    $ShortTextBold = $ShortText.ToUpper()
-    $MiddleTextBold = $MiddleText.ToUpper()
-    $LongTextBold = $LongText.ToUpper()
-    $EpisodetextBold = $Episodetext.ToUpper()
+    $ShortTextCAPS = $ShortText.ToUpper()
+    $MediumTextCAPS = $MediumText.ToUpper()
+    $LongTextCAPS = $LongText.ToUpper()
+    $EpisodetextCAPS = $Episodetext.ToUpper()
     # Posters
     $TestPosterShort = "$global:ScriptRoot\test\ShortText.jpg"
-    $TestPosterMiddle = "$global:ScriptRoot\test\MiddleText.jpg"
+    $TestPosterMedium = "$global:ScriptRoot\test\MediumText.jpg"
     $TestPosterLong = "$global:ScriptRoot\test\LongText.jpg"
-    $TestPosterShortBold = "$global:ScriptRoot\test\ShortTextBold.jpg"
-    $TestPosterMiddleBold = "$global:ScriptRoot\test\MiddleTextBold.jpg"
-    $TestPosterLongBold = "$global:ScriptRoot\test\LongTextBold.jpg"
+    $TestPosterShortCAPS = "$global:ScriptRoot\test\ShortTextCAPS.jpg"
+    $TestPosterMediumCAPS = "$global:ScriptRoot\test\MediumTextCAPS.jpg"
+    $TestPosterLongCAPS = "$global:ScriptRoot\test\LongTextCAPS.jpg"
     # Backgrounds
     $backgroundTestPosterShort = "$global:ScriptRoot\test\backgroundShortText.jpg"
-    $backgroundTestPosterMiddle = "$global:ScriptRoot\test\backgroundMiddleText.jpg"
+    $backgroundTestPosterMedium = "$global:ScriptRoot\test\backgroundMediumText.jpg"
     $backgroundTestPosterLong = "$global:ScriptRoot\test\backgroundLongText.jpg"
-    $backgroundTestPosterShortBold = "$global:ScriptRoot\test\backgroundShortTextBold.jpg"
-    $backgroundTestPosterMiddleBold = "$global:ScriptRoot\test\backgroundMiddleTextBold.jpg"
-    $backgroundTestPosterLongBold = "$global:ScriptRoot\test\backgroundLongTextBold.jpg"
+    $backgroundTestPosterShortCAPS = "$global:ScriptRoot\test\backgroundShortTextCAPS.jpg"
+    $backgroundTestPosterMediumCAPS = "$global:ScriptRoot\test\backgroundMediumTextCAPS.jpg"
+    $backgroundTestPosterLongCAPS = "$global:ScriptRoot\test\backgroundLongTextCAPS.jpg"
     # TitleCards
     $TitleCardTestPosterShort = "$global:ScriptRoot\test\TitleCardShortText.jpg"
-    $TitleCardTestPosterMiddle = "$global:ScriptRoot\test\TitleCardMiddleText.jpg"
+    $TitleCardTestPosterMedium = "$global:ScriptRoot\test\TitleCardMediumText.jpg"
     $TitleCardTestPosterLong = "$global:ScriptRoot\test\TitleCardLongText.jpg"
-    $TitleCardTestPosterShortBold = "$global:ScriptRoot\test\TitleCardShortTextBold.jpg"
-    $TitleCardTestPosterMiddleBold = "$global:ScriptRoot\test\TitleCardMiddleTextBold.jpg"
-    $TitleCardTestPosterLongBold = "$global:ScriptRoot\test\TitleCardLongTextBold.jpg"
+    $TitleCardTestPosterShortCAPS = "$global:ScriptRoot\test\TitleCardShortTextCAPS.jpg"
+    $TitleCardTestPosterMediumCAPS = "$global:ScriptRoot\test\TitleCardMediumTextCAPS.jpg"
+    $TitleCardTestPosterLongCAPS = "$global:ScriptRoot\test\TitleCardLongTextCAPS.jpg"
 
     # Optimal Poster Font Size
     $optimalFontSizeShort = Get-OptimalPointSize -text $ShortText -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
-    $optimalFontSizeMiddle = Get-OptimalPointSize -text $MiddleText -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
+    $optimalFontSizeMedium = Get-OptimalPointSize -text $MediumText -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
     $optimalFontSizeLong = Get-OptimalPointSize -text $LongText -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
     
-    $optimalFontSizeShortBold = Get-OptimalPointSize -text $ShortTextBold -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
-    $optimalFontSizeMiddleBold = Get-OptimalPointSize -text $MiddleTextBold -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
-    $optimalFontSizeLongBold = Get-OptimalPointSize -text $LongTextBold -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
+    $optimalFontSizeShortCAPS = Get-OptimalPointSize -text $ShortTextCAPS -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
+    $optimalFontSizeMediumCAPS = Get-OptimalPointSize -text $MediumTextCAPS -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
+    $optimalFontSizeLongCAPS = Get-OptimalPointSize -text $LongTextCAPS -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
     
     # Optimal Background Font Size
     $backgroundoptimalFontSizeShort = Get-OptimalPointSize -text $ShortText -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
-    $backgroundoptimalFontSizeMiddle = Get-OptimalPointSize -text $MiddleText -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
+    $backgroundoptimalFontSizeMedium = Get-OptimalPointSize -text $MediumText -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
     $backgroundoptimalFontSizeLong = Get-OptimalPointSize -text $LongText -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
     
-    $backgroundoptimalFontSizeShortBold = Get-OptimalPointSize -text $ShortTextBold -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
-    $backgroundoptimalFontSizeMiddleBold = Get-OptimalPointSize -text $MiddleTextBold -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
-    $backgroundoptimalFontSizeLongBold = Get-OptimalPointSize -text $LongTextBold -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
+    $backgroundoptimalFontSizeShortCAPS = Get-OptimalPointSize -text $ShortTextCAPS -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
+    $backgroundoptimalFontSizeMediumCAPS = Get-OptimalPointSize -text $MediumTextCAPS -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
+    $backgroundoptimalFontSizeLongCAPS = Get-OptimalPointSize -text $LongTextCAPS -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
     
     # Optimal TitleCard Font Size
     $TitleCardoptimalFontSizeShort = Get-OptimalPointSize -text $ShortText -font $titlecardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
-    $TitleCardoptimalFontSizeMiddle = Get-OptimalPointSize -text $MiddleText -font $titlecardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
+    $TitleCardoptimalFontSizeMedium = Get-OptimalPointSize -text $MediumText -font $titlecardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
     $TitleCardoptimalFontSizeLong = Get-OptimalPointSize -text $LongText -font $titlecardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
     $TitleCardoptimalFontSizeEpisodetext = Get-OptimalPointSize -text $Episodetext -font $titlecardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize    
         
-    $TitleCardoptimalFontSizeShortBold = Get-OptimalPointSize -text $ShortTextBold -font $titlecardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
-    $TitleCardoptimalFontSizeMiddleBold = Get-OptimalPointSize -text $MiddleTextBold -font $titlecardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
-    $TitleCardoptimalFontSizeLongBold = Get-OptimalPointSize -text $LongTextBold -font $titlecardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
-    $TitleCardoptimalFontSizeEpisodetextBold = Get-OptimalPointSize -text $EpisodetextBold -font $titlecardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize    
+    $TitleCardoptimalFontSizeShortCAPS = Get-OptimalPointSize -text $ShortTextCAPS -font $titlecardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
+    $TitleCardoptimalFontSizeMediumCAPS = Get-OptimalPointSize -text $MediumTextCAPS -font $titlecardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
+    $TitleCardoptimalFontSizeLongCAPS = Get-OptimalPointSize -text $LongTextCAPS -font $titlecardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
+    $TitleCardoptimalFontSizeEpisodetextCAPS = Get-OptimalPointSize -text $EpisodetextCAPS -font $titlecardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize    
 
     # Border/Overlay Poster Part
     Write-log -Subtext "Poster Part:" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Success
     if ($AddBorder -eq 'true' -and $AddOverlay -eq 'true') {
         $ArgumentsShort = "`"$testimage`" `"$Posteroverlay`" -gravity south -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterShort`""
-        $ArgumentsMiddle = "`"$testimage`" `"$Posteroverlay`" -gravity south -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterMiddle`""
+        $ArgumentsMedium = "`"$testimage`" `"$Posteroverlay`" -gravity south -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterMedium`""
         $ArgumentsLong = "`"$testimage`" `"$Posteroverlay`" -gravity south -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterLong`""
-        $ArgumentsShortBold = "`"$testimage`" `"$Posteroverlay`" -gravity south -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterShortBold`""
-        $ArgumentsMiddleBold = "`"$testimage`" `"$Posteroverlay`" -gravity south -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterMiddleBold`""
-        $ArgumentsLongBold = "`"$testimage`" `"$Posteroverlay`" -gravity south -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterLongBold`""
+        $ArgumentsShortCAPS = "`"$testimage`" `"$Posteroverlay`" -gravity south -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterShortCAPS`""
+        $ArgumentsMediumCAPS = "`"$testimage`" `"$Posteroverlay`" -gravity south -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterMediumCAPS`""
+        $ArgumentsLongCAPS = "`"$testimage`" `"$Posteroverlay`" -gravity south -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterLongCAPS`""
         Write-log -Subtext "Adding Poster Borders | Adding Poster Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
     }
     if ($AddBorder -eq 'true' -and $AddOverlay -eq 'false') {
         $ArgumentsShort = "`"$testimage`" -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterShort`""
-        $ArgumentsMiddle = "`"$testimage`" -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterMiddle`""
+        $ArgumentsMedium = "`"$testimage`" -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterMedium`""
         $ArgumentsLong = "`"$testimage`" -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterLong`""
-        $ArgumentsShortBold = "`"$testimage`" -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterShortBold`""
-        $ArgumentsMiddleBold = "`"$testimage`" -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterMiddleBold`""
-        $ArgumentsLongBold = "`"$testimage`" -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterLongBold`""
+        $ArgumentsShortCAPS = "`"$testimage`" -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterShortCAPS`""
+        $ArgumentsMediumCAPS = "`"$testimage`" -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterMediumCAPS`""
+        $ArgumentsLongCAPS = "`"$testimage`" -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterLongCAPS`""
         Write-log -Subtext "Adding Poster Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
     }
     if ($AddBorder -eq 'false' -and $AddOverlay -eq 'true') {
         $ArgumentsShort = "`"$testimage`" `"$Posteroverlay`" -gravity south -composite `"$TestPosterShort`""
-        $ArgumentsMiddle = "`"$testimage`" `"$Posteroverlay`" -gravity south -composite `"$TestPosterMiddle`""
+        $ArgumentsMedium = "`"$testimage`" `"$Posteroverlay`" -gravity south -composite `"$TestPosterMedium`""
         $ArgumentsLong = "`"$testimage`" `"$Posteroverlay`" -gravity south -composite `"$TestPosterLong`""
-        $ArgumentsShortBold = "`"$testimage`" `"$Posteroverlay`" -gravity south -composite `"$TestPosterShortBold`""
-        $ArgumentsMiddleBold = "`"$testimage`" `"$Posteroverlay`" -gravity south -composite `"$TestPosterMiddleBold`""
-        $ArgumentsLongBold = "`"$testimage`" `"$Posteroverlay`" -gravity south -composite `"$TestPosterLongBold`""
+        $ArgumentsShortCAPS = "`"$testimage`" `"$Posteroverlay`" -gravity south -composite `"$TestPosterShortCAPS`""
+        $ArgumentsMediumCAPS = "`"$testimage`" `"$Posteroverlay`" -gravity south -composite `"$TestPosterMediumCAPS`""
+        $ArgumentsLongCAPS = "`"$testimage`" `"$Posteroverlay`" -gravity south -composite `"$TestPosterLongCAPS`""
         Write-log -Subtext "Adding Poster Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
     }
 
     # Poster Logging
     $logEntryShort = "magick.exe $ArgumentsShort"
-    $logEntryMiddle = "magick.exe $ArgumentsMiddle"
+    $logEntryMedium = "magick.exe $ArgumentsMedium"
     $logEntryLong = "magick.exe $ArgumentsLong"
-    $logEntryShortBold = "magick.exe $ArgumentsShortBold"
-    $logEntryMiddleBold = "magick.exe $ArgumentsMiddleBold"
-    $logEntryLongBold = "magick.exe $ArgumentsLongBold"
+    $logEntryShortCAPS = "magick.exe $ArgumentsShortCAPS"
+    $logEntryMediumCAPS = "magick.exe $ArgumentsMediumCAPS"
+    $logEntryLongCAPS = "magick.exe $ArgumentsLongCAPS"
 
     $logEntryShort | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
-    $logEntryShortBold | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
-    $logEntryMiddle | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
-    $logEntryMiddleBold | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $logEntryShortCAPS | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $logEntryMedium | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $logEntryMediumCAPS | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
     $logEntryLong | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
-    $logEntryLongBold | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $logEntryLongCAPS | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
 
     # Test Poster creation
     Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentsShort
-    Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentsMiddle
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentsMedium
     Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentsLong
-    Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentsShortBold
-    Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentsMiddleBold
-    Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentsLongBold
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentsShortCAPS
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentsMediumCAPS
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentsLongCAPS
 
     # Logging Poster
     Write-log -Subtext "Optimal font size for Short text is: '$optimalFontSizeShort'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
-    Write-log -Subtext "    Applying Font text: `"$ShortText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
-    Write-log -Subtext "Optimal font size for Middle text is: '$optimalFontSizeMiddle'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
-    Write-log -Subtext "    Applying Font text: `"$MiddleText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "    Applying text: `"$ShortText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "Optimal font size for Medium text is: '$optimalFontSizeMedium'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "    Applying text: `"$MediumText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
     Write-log -Subtext "Optimal font size for Long text is: '$optimalFontSizeLong'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
-    Write-log -Subtext "    Applying Font text: `"$LongText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "    Applying text: `"$LongText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
     
-    Write-log -Subtext "Optimal font size for Short Bold text is: '$optimalFontSizeShortBold'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
-    Write-log -Subtext "    Applying Bold Font text: `"$ShortTextBold`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
-    Write-log -Subtext "Optimal font size for Middle Bold text is: '$optimalFontSizeMiddleBold'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
-    Write-log -Subtext "    Applying Bold Font text: `"$MiddleTextBold`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
-    Write-log -Subtext "Optimal font size for Long Bold text is: '$optimalFontSizeLongBold'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
-    Write-log -Subtext "    Applying Bold Font text: `"$LongTextBold`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "Optimal font size for Short CAPS text is: '$optimalFontSizeShortCAPS'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "    Applying CAPS text: `"$ShortTextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "Optimal font size for Medium CAPS text is: '$optimalFontSizeMediumCAPS'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "    Applying CAPS text: `"$MediumTextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "Optimal font size for Long CAPS text is: '$optimalFontSizeLongCAPS'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "    Applying CAPS text: `"$LongTextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
     
     Write-log -Subtext "Background Part:" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Success
     # Border/Overlay Background Part
     if ($AddBackgroundBorder -eq 'true' -and $AddBackgroundOverlay -eq 'true') {
         $backgroundArgumentsShort = "`"$backgroundtestimage`" `"$Backgroundoverlay`" -gravity south -composite -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundTestPosterShort`""
-        $backgroundArgumentsMiddle = "`"$backgroundtestimage`" `"$Backgroundoverlay`" -gravity south -composite -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundTestPosterMiddle`""
+        $backgroundArgumentsMedium = "`"$backgroundtestimage`" `"$Backgroundoverlay`" -gravity south -composite -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundTestPosterMedium`""
         $backgroundArgumentsLong = "`"$backgroundtestimage`" `"$Backgroundoverlay`" -gravity south -composite -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundTestPosterLong`""
-        $backgroundArgumentsShortBold = "`"$backgroundtestimage`" `"$Backgroundoverlay`" -gravity south -composite -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundTestPosterShortBold`""
-        $backgroundArgumentsMiddleBold = "`"$backgroundtestimage`" `"$Backgroundoverlay`" -gravity south -composite -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundTestPosterMiddleBold`""
-        $backgroundArgumentsLongBold = "`"$backgroundtestimage`" `"$Backgroundoverlay`" -gravity south -composite -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundTestPosterLongBold`""
+        $backgroundArgumentsShortCAPS = "`"$backgroundtestimage`" `"$Backgroundoverlay`" -gravity south -composite -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundTestPosterShortCAPS`""
+        $backgroundArgumentsMediumCAPS = "`"$backgroundtestimage`" `"$Backgroundoverlay`" -gravity south -composite -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundTestPosterMediumCAPS`""
+        $backgroundArgumentsLongCAPS = "`"$backgroundtestimage`" `"$Backgroundoverlay`" -gravity south -composite -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundTestPosterLongCAPS`""
         Write-log -Subtext "Adding Background Borders | Adding Background Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
     }
     if ($AddBackgroundBorder -eq 'true' -and $AddBackgroundOverlay -eq 'false') {
         $backgroundArgumentsShort = "`"$backgroundtestimage`" -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundTestPosterShort`""
-        $backgroundArgumentsMiddle = "`"$backgroundtestimage`" -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundTestPosterMiddle`""
+        $backgroundArgumentsMedium = "`"$backgroundtestimage`" -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundTestPosterMedium`""
         $backgroundArgumentsLong = "`"$backgroundtestimage`" -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundTestPosterLong`""
-        $backgroundArgumentsShortBold = "`"$backgroundtestimage`" -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundTestPosterShortBold`""
-        $backgroundArgumentsMiddleBold = "`"$backgroundtestimage`" -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundTestPosterMiddleBold`""
-        $backgroundArgumentsLongBold = "`"$backgroundtestimage`" -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundTestPosterLongBold`""
+        $backgroundArgumentsShortCAPS = "`"$backgroundtestimage`" -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundTestPosterShortCAPS`""
+        $backgroundArgumentsMediumCAPS = "`"$backgroundtestimage`" -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundTestPosterMediumCAPS`""
+        $backgroundArgumentsLongCAPS = "`"$backgroundtestimage`" -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundTestPosterLongCAPS`""
         Write-log -Subtext "Adding Background Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
     }
     if ($AddBackgroundBorder -eq 'false' -and $AddBackgroundOverlay -eq 'true') {
         $backgroundArgumentsShort = "`"$backgroundtestimage`" `"$Backgroundoverlay`" -gravity south -composite `"$backgroundTestPosterShort`""
-        $backgroundArgumentsMiddle = "`"$backgroundtestimage`" `"$Backgroundoverlay`" -gravity south -composite `"$backgroundTestPosterMiddle`""
+        $backgroundArgumentsMedium = "`"$backgroundtestimage`" `"$Backgroundoverlay`" -gravity south -composite `"$backgroundTestPosterMedium`""
         $backgroundArgumentsLong = "`"$backgroundtestimage`" `"$Backgroundoverlay`" -gravity south -composite `"$backgroundTestPosterLong`""
-        $backgroundArgumentsShortBold = "`"$backgroundtestimage`" `"$Backgroundoverlay`" -gravity south -composite `"$backgroundTestPosterShortBold`""
-        $backgroundArgumentsMiddleBold = "`"$backgroundtestimage`" `"$Backgroundoverlay`" -gravity south -composite `"$backgroundTestPosterMiddleBold`""
-        $backgroundArgumentsLongBold = "`"$backgroundtestimage`" `"$Backgroundoverlay`" -gravity south -composite `"$backgroundTestPosterLongBold`""
+        $backgroundArgumentsShortCAPS = "`"$backgroundtestimage`" `"$Backgroundoverlay`" -gravity south -composite `"$backgroundTestPosterShortCAPS`""
+        $backgroundArgumentsMediumCAPS = "`"$backgroundtestimage`" `"$Backgroundoverlay`" -gravity south -composite `"$backgroundTestPosterMediumCAPS`""
+        $backgroundArgumentsLongCAPS = "`"$backgroundtestimage`" `"$Backgroundoverlay`" -gravity south -composite `"$backgroundTestPosterLongCAPS`""
         Write-log -Subtext "Adding Background Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
     }
     # Background Logging
     $backgroundlogEntryShort = "magick.exe $backgroundArgumentsShort"
-    $backgroundlogEntryMiddle = "magick.exe $backgroundArgumentsMiddle"
+    $backgroundlogEntryMedium = "magick.exe $backgroundArgumentsMedium"
     $backgroundlogEntryLong = "magick.exe $backgroundArgumentsLong"
-    $backgroundlogEntryShortBold = "magick.exe $backgroundArgumentsShortBold"
-    $backgroundlogEntryMiddleBold = "magick.exe $backgroundArgumentsMiddleBold"
-    $backgroundlogEntryLongBold = "magick.exe $backgroundArgumentsLongBold"
+    $backgroundlogEntryShortCAPS = "magick.exe $backgroundArgumentsShortCAPS"
+    $backgroundlogEntryMediumCAPS = "magick.exe $backgroundArgumentsMediumCAPS"
+    $backgroundlogEntryLongCAPS = "magick.exe $backgroundArgumentsLongCAPS"
 
     $backgroundlogEntryShort | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
-    $backgroundlogEntryShortBold | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
-    $backgroundlogEntryMiddle | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
-    $backgroundlogEntryMiddleBold | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $backgroundlogEntryShortCAPS | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $backgroundlogEntryMedium | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $backgroundlogEntryMediumCAPS | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
     $backgroundlogEntryLong | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
-    $backgroundlogEntryLongBold | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+    $backgroundlogEntryLongCAPS | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
 
     # Test Background creation
     Start-Process $magick -Wait -NoNewWindow -ArgumentList $backgroundArgumentsShort
-    Start-Process $magick -Wait -NoNewWindow -ArgumentList $backgroundArgumentsMiddle
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $backgroundArgumentsMedium
     Start-Process $magick -Wait -NoNewWindow -ArgumentList $backgroundArgumentsLong
-    Start-Process $magick -Wait -NoNewWindow -ArgumentList $backgroundArgumentsShortBold
-    Start-Process $magick -Wait -NoNewWindow -ArgumentList $backgroundArgumentsMiddleBold
-    Start-Process $magick -Wait -NoNewWindow -ArgumentList $backgroundArgumentsLongBold
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $backgroundArgumentsShortCAPS
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $backgroundArgumentsMediumCAPS
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $backgroundArgumentsLongCAPS
     
     # Logging Background
     Write-log -Subtext "Optimal font size for Short text is: '$backgroundoptimalFontSizeShort'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
-    Write-log -Subtext "    Applying Font text: `"$ShortText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
-    Write-log -Subtext "Optimal font size for Middle text is: '$backgroundoptimalFontSizeMiddle'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
-    Write-log -Subtext "    Applying Font text: `"$MiddleText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "    Applying text: `"$ShortText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "Optimal font size for Medium text is: '$backgroundoptimalFontSizeMedium'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "    Applying text: `"$MediumText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
     Write-log -Subtext "Optimal font size for Long text is: '$backgroundoptimalFontSizeLong'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
-    Write-log -Subtext "    Applying Font text: `"$LongText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "    Applying text: `"$LongText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
 
-    Write-log -Subtext "Optimal font size for Short Bold text is: '$backgroundoptimalFontSizeShortBold'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
-    Write-log -Subtext "    Applying Bold Font text: `"$ShortTextBold`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
-    Write-log -Subtext "Optimal font size for Middle Bold text is: '$backgroundoptimalFontSizeMiddleBold'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
-    Write-log -Subtext "    Applying Bold Font text: `"$MiddleTextBold`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
-    Write-log -Subtext "Optimal font size for Long Bold text is: '$backgroundoptimalFontSizeLongBold'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
-    Write-log -Subtext "    Applying Bold Font text: `"$LongTextBold`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "Optimal font size for Short CAPS text is: '$backgroundoptimalFontSizeShortCAPS'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "    Applying CAPS text: `"$ShortTextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "Optimal font size for Medium CAPS text is: '$backgroundoptimalFontSizeMediumCAPS'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "    Applying CAPS text: `"$MediumTextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "Optimal font size for Long CAPS text is: '$backgroundoptimalFontSizeLongCAPS'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "    Applying CAPS text: `"$LongTextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
 
 
     Write-log -Subtext "TitleCard Part:" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Success
     # Border/Overlay TitleCard Part
     if ($Addtitlecardborder -eq 'true' -and $Addtitlecardoverlay -eq 'true') {
         $titlecardArgumentsShort = "`"$backgroundtestimage`" `"$titlecardoverlay`" -gravity south -composite -shave `"$titlecardborderwidthsecond`"  -bordercolor `"$titlecardbordercolor`" -border `"$titlecardborderwidth`" `"$titlecardtestPosterShort`""
-        $titlecardArgumentsMiddle = "`"$backgroundtestimage`" `"$titlecardoverlay`" -gravity south -composite -shave `"$titlecardborderwidthsecond`"  -bordercolor `"$titlecardbordercolor`" -border `"$titlecardborderwidth`" `"$titlecardtestPosterMiddle`""
+        $titlecardArgumentsMedium = "`"$backgroundtestimage`" `"$titlecardoverlay`" -gravity south -composite -shave `"$titlecardborderwidthsecond`"  -bordercolor `"$titlecardbordercolor`" -border `"$titlecardborderwidth`" `"$titlecardtestPosterMedium`""
         $titlecardArgumentsLong = "`"$backgroundtestimage`" `"$titlecardoverlay`" -gravity south -composite -shave `"$titlecardborderwidthsecond`"  -bordercolor `"$titlecardbordercolor`" -border `"$titlecardborderwidth`" `"$titlecardtestPosterLong`""
-        $titlecardArgumentsShortBold = "`"$backgroundtestimage`" `"$titlecardoverlay`" -gravity south -composite -shave `"$titlecardborderwidthsecond`"  -bordercolor `"$titlecardbordercolor`" -border `"$titlecardborderwidth`" `"$titlecardtestPosterShortBold`""
-        $titlecardArgumentsMiddleBold = "`"$backgroundtestimage`" `"$titlecardoverlay`" -gravity south -composite -shave `"$titlecardborderwidthsecond`"  -bordercolor `"$titlecardbordercolor`" -border `"$titlecardborderwidth`" `"$titlecardtestPosterMiddleBold`""
-        $titlecardArgumentsLongBold = "`"$backgroundtestimage`" `"$titlecardoverlay`" -gravity south -composite -shave `"$titlecardborderwidthsecond`"  -bordercolor `"$titlecardbordercolor`" -border `"$titlecardborderwidth`" `"$titlecardtestPosterLongBold`""
+        $titlecardArgumentsShortCAPS = "`"$backgroundtestimage`" `"$titlecardoverlay`" -gravity south -composite -shave `"$titlecardborderwidthsecond`"  -bordercolor `"$titlecardbordercolor`" -border `"$titlecardborderwidth`" `"$titlecardtestPosterShortCAPS`""
+        $titlecardArgumentsMediumCAPS = "`"$backgroundtestimage`" `"$titlecardoverlay`" -gravity south -composite -shave `"$titlecardborderwidthsecond`"  -bordercolor `"$titlecardbordercolor`" -border `"$titlecardborderwidth`" `"$titlecardtestPosterMediumCAPS`""
+        $titlecardArgumentsLongCAPS = "`"$backgroundtestimage`" `"$titlecardoverlay`" -gravity south -composite -shave `"$titlecardborderwidthsecond`"  -bordercolor `"$titlecardbordercolor`" -border `"$titlecardborderwidth`" `"$titlecardtestPosterLongCAPS`""
         Write-log -Subtext "Adding Background Borders | Adding Background Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
     }
     if ($Addtitlecardborder -eq 'true' -and $Addtitlecardoverlay -eq 'false') {
         $titlecardArgumentsShort = "`"$backgroundtestimage`" -shave `"$titlecardborderwidthsecond`"  -bordercolor `"$titlecardbordercolor`" -border `"$titlecardborderwidth`" `"$titlecardtestPosterShort`""
-        $titlecardArgumentsMiddle = "`"$backgroundtestimage`" -shave `"$titlecardborderwidthsecond`"  -bordercolor `"$titlecardbordercolor`" -border `"$titlecardborderwidth`" `"$titlecardtestPosterMiddle`""
+        $titlecardArgumentsMedium = "`"$backgroundtestimage`" -shave `"$titlecardborderwidthsecond`"  -bordercolor `"$titlecardbordercolor`" -border `"$titlecardborderwidth`" `"$titlecardtestPosterMedium`""
         $titlecardArgumentsLong = "`"$backgroundtestimage`" -shave `"$titlecardborderwidthsecond`"  -bordercolor `"$titlecardbordercolor`" -border `"$titlecardborderwidth`" `"$titlecardtestPosterLong`""
-        $titlecardArgumentsShortBold = "`"$backgroundtestimage`" -shave `"$titlecardborderwidthsecond`"  -bordercolor `"$titlecardbordercolor`" -border `"$titlecardborderwidth`" `"$titlecardtestPosterShortBold`""
-        $titlecardArgumentsMiddleBold = "`"$backgroundtestimage`" -shave `"$titlecardborderwidthsecond`"  -bordercolor `"$titlecardbordercolor`" -border `"$titlecardborderwidth`" `"$titlecardtestPosterMiddleBold`""
-        $titlecardArgumentsLongBold = "`"$backgroundtestimage`" -shave `"$titlecardborderwidthsecond`"  -bordercolor `"$titlecardbordercolor`" -border `"$titlecardborderwidth`" `"$titlecardtestPosterLongBold`""
+        $titlecardArgumentsShortCAPS = "`"$backgroundtestimage`" -shave `"$titlecardborderwidthsecond`"  -bordercolor `"$titlecardbordercolor`" -border `"$titlecardborderwidth`" `"$titlecardtestPosterShortCAPS`""
+        $titlecardArgumentsMediumCAPS = "`"$backgroundtestimage`" -shave `"$titlecardborderwidthsecond`"  -bordercolor `"$titlecardbordercolor`" -border `"$titlecardborderwidth`" `"$titlecardtestPosterMediumCAPS`""
+        $titlecardArgumentsLongCAPS = "`"$backgroundtestimage`" -shave `"$titlecardborderwidthsecond`"  -bordercolor `"$titlecardbordercolor`" -border `"$titlecardborderwidth`" `"$titlecardtestPosterLongCAPS`""
         Write-log -Subtext "Adding Background Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
     }
     if ($Addtitlecardborder -eq 'false' -and $Addtitlecardoverlay -eq 'true') {
         $titlecardArgumentsShort = "`"$backgroundtestimage`" `"$titlecardoverlay`" -gravity south -composite `"$titlecardtestPosterShort`""
-        $titlecardArgumentsMiddle = "`"$backgroundtestimage`" `"$titlecardoverlay`" -gravity south -composite `"$titlecardtestPosterMiddle`""
+        $titlecardArgumentsMedium = "`"$backgroundtestimage`" `"$titlecardoverlay`" -gravity south -composite `"$titlecardtestPosterMedium`""
         $titlecardArgumentsLong = "`"$backgroundtestimage`" `"$titlecardoverlay`" -gravity south -composite `"$titlecardtestPosterLong`""
-        $titlecardArgumentsShortBold = "`"$backgroundtestimage`" `"$titlecardoverlay`" -gravity south -composite `"$titlecardtestPosterShortBold`""
-        $titlecardArgumentsMiddleBold = "`"$backgroundtestimage`" `"$titlecardoverlay`" -gravity south -composite `"$titlecardtestPosterMiddleBold`""
-        $titlecardArgumentsLongBold = "`"$backgroundtestimage`" `"$titlecardoverlay`" -gravity south -composite `"$titlecardtestPosterLongBold`""
+        $titlecardArgumentsShortCAPS = "`"$backgroundtestimage`" `"$titlecardoverlay`" -gravity south -composite `"$titlecardtestPosterShortCAPS`""
+        $titlecardArgumentsMediumCAPS = "`"$backgroundtestimage`" `"$titlecardoverlay`" -gravity south -composite `"$titlecardtestPosterMediumCAPS`""
+        $titlecardArgumentsLongCAPS = "`"$backgroundtestimage`" `"$titlecardoverlay`" -gravity south -composite `"$titlecardtestPosterLongCAPS`""
         Write-log -Subtext "Adding Background Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
     }
     # Background Logging
     $titlecardlogEntryShort = "magick.exe $titlecardArgumentsShort"
-    $titlecardlogEntryMiddle = "magick.exe $titlecardArgumentsMiddle"
+    $titlecardlogEntryMedium = "magick.exe $titlecardArgumentsMedium"
     $titlecardlogEntryLong = "magick.exe $titlecardArgumentsLong"
-    $titlecardlogEntryShortBold = "magick.exe $titlecardArgumentsShortBold"
-    $titlecardlogEntryMiddleBold = "magick.exe $titlecardArgumentsMiddleBold"
-    $titlecardlogEntryLongBold = "magick.exe $titlecardArgumentsLongBold"
+    $titlecardlogEntryShortCAPS = "magick.exe $titlecardArgumentsShortCAPS"
+    $titlecardlogEntryMediumCAPS = "magick.exe $titlecardArgumentsMediumCAPS"
+    $titlecardlogEntryLongCAPS = "magick.exe $titlecardArgumentsLongCAPS"
 
     $titlecardlogEntryShort | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
-    $titlecardlogEntryShortBold | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
-    $titlecardlogEntryMiddle | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
-    $titlecardlogEntryMiddleBold | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $titlecardlogEntryShortCAPS | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $titlecardlogEntryMedium | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $titlecardlogEntryMediumCAPS | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
     $titlecardlogEntryLong | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
-    $titlecardlogEntryLongBold | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+    $titlecardlogEntryLongCAPS | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
 
     # Test Background creation
     Start-Process $magick -Wait -NoNewWindow -ArgumentList $titlecardArgumentsShort
-    Start-Process $magick -Wait -NoNewWindow -ArgumentList $titlecardArgumentsMiddle
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $titlecardArgumentsMedium
     Start-Process $magick -Wait -NoNewWindow -ArgumentList $titlecardArgumentsLong
-    Start-Process $magick -Wait -NoNewWindow -ArgumentList $titlecardArgumentsShortBold
-    Start-Process $magick -Wait -NoNewWindow -ArgumentList $titlecardArgumentsMiddleBold
-    Start-Process $magick -Wait -NoNewWindow -ArgumentList $titlecardArgumentsLongBold
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $titlecardArgumentsShortCAPS
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $titlecardArgumentsMediumCAPS
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $titlecardArgumentsLongCAPS
 
     # Logging Background
     Write-log -Subtext "Optimal font size for Short text is: '$titlecardoptimalFontSizeShort'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
-    Write-log -Subtext "    Applying Font text: `"$ShortText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
-    Write-log -Subtext "Optimal font size for Middle text is: '$titlecardoptimalFontSizeMiddle'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
-    Write-log -Subtext "    Applying Font text: `"$MiddleText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "    Applying text: `"$ShortText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "Optimal font size for Medium text is: '$titlecardoptimalFontSizeMedium'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "    Applying text: `"$MediumText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
     Write-log -Subtext "Optimal font size for Long text is: '$titlecardoptimalFontSizeLong'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
-    Write-log -Subtext "    Applying Font text: `"$LongText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "    Applying text: `"$LongText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
     Write-log -Subtext "Optimal font size for Episode text is: '$TitleCardoptimalFontSizeEpisodetext'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
-    Write-log -Subtext "    Applying Bold Font text: `"$Episodetext`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "    Applying text: `"$Episodetext`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
 
-    Write-log -Subtext "Optimal font size for Short Bold text is: '$titlecardoptimalFontSizeShortBold'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
-    Write-log -Subtext "    Applying Bold Font text: `"$ShortTextBold`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
-    Write-log -Subtext "Optimal font size for Middle Bold text is: '$titlecardoptimalFontSizeMiddleBold'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
-    Write-log -Subtext "    Applying Bold Font text: `"$MiddleTextBold`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
-    Write-log -Subtext "Optimal font size for Long Bold text is: '$titlecardoptimalFontSizeLongBold'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
-    Write-log -Subtext "    Applying Bold Font text: `"$LongTextBold`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
-    Write-log -Subtext "Optimal font size for Episode text is: '$TitleCardoptimalFontSizeEpisodetextBold'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
-    Write-log -Subtext "    Applying Bold Font text: `"$EpisodetextBold`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "Optimal font size for Short CAPS text is: '$titlecardoptimalFontSizeShortCAPS'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "    Applying CAPS text: `"$ShortTextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "Optimal font size for Medium CAPS text is: '$titlecardoptimalFontSizeMediumCAPS'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "    Applying CAPS text: `"$MediumTextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "Optimal font size for Long CAPS text is: '$titlecardoptimalFontSizeLongCAPS'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "    Applying CAPS text: `"$LongTextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "Optimal font size for Episode CAPS text is: '$TitleCardoptimalFontSizeEpisodetextCAPS'" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
+    Write-log -Subtext "    Applying CAPS text: `"$EpisodetextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
 
 
     # Text Poster overlay
     $ArgumentsShort = "`"$TestPosterShort`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeShort`" -fill `"#0000FF`" -size `"$boxsize`" -background `"#ACD7E6`" caption:`"$ShortText`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -composite `"$TestPosterShort`""
-    $ArgumentsMiddle = "`"$TestPosterMiddle`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeMiddle`" -fill `"#0000FF`" -size `"$boxsize`" -background `"#ACD7E6`" caption:`"$MiddleText`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -composite `"$TestPosterMiddle`""
+    $ArgumentsMedium = "`"$TestPosterMedium`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeMedium`" -fill `"#0000FF`" -size `"$boxsize`" -background `"#ACD7E6`" caption:`"$MediumText`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -composite `"$TestPosterMedium`""
     $ArgumentsLong = "`"$TestPosterLong`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeLong`" -fill `"#0000FF`" -size `"$boxsize`" -background `"#ACD7E6`" caption:`"$LongText`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -composite `"$TestPosterLong`""
-    $ArgumentsShortBold = "`"$TestPosterShortBold`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeShortBold`" -fill `"#0000FF`" -size `"$boxsize`" -background `"#ACD7E6`" caption:`"$ShortTextBold`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -composite `"$TestPosterShortBold`""
-    $ArgumentsMiddleBold = "`"$TestPosterMiddleBold`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeMiddleBold`" -fill `"#0000FF`" -size `"$boxsize`" -background `"#ACD7E6`" caption:`"$MiddleTextBold`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -composite `"$TestPosterMiddleBold`""
-    $ArgumentsLongBold = "`"$TestPosterLongBold`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeLongBold`" -fill `"#0000FF`" -size `"$boxsize`" -background `"#ACD7E6`" caption:`"$LongTextBold`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -composite `"$TestPosterLongBold`""
+    $ArgumentsShortCAPS = "`"$TestPosterShortCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeShortCAPS`" -fill `"#0000FF`" -size `"$boxsize`" -background `"#ACD7E6`" caption:`"$ShortTextCAPS`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -composite `"$TestPosterShortCAPS`""
+    $ArgumentsMediumCAPS = "`"$TestPosterMediumCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeMediumCAPS`" -fill `"#0000FF`" -size `"$boxsize`" -background `"#ACD7E6`" caption:`"$MediumTextCAPS`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -composite `"$TestPosterMediumCAPS`""
+    $ArgumentsLongCAPS = "`"$TestPosterLongCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeLongCAPS`" -fill `"#0000FF`" -size `"$boxsize`" -background `"#ACD7E6`" caption:`"$LongTextCAPS`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -composite `"$TestPosterLongCAPS`""
     
     # Text background overlay
     $backgroundArgumentsShort = "`"$backgroundTestPosterShort`" -gravity center -background none -layers Flatten ( -font `"$backgroundfontImagemagick`" -pointsize `"$backgroundoptimalFontSizeShort`" -fill `"#0000FF`" -size `"$Backgroundboxsize`" -background `"#ACD7E6`" caption:`"$ShortText`" -trim -gravity south -extent `"$Backgroundboxsize`" ) -gravity south -geometry +0+`"$Backgroundtext_offset`" -composite `"$backgroundTestPosterShort`""
-    $backgroundArgumentsMiddle = "`"$backgroundTestPosterMiddle`" -gravity center -background none -layers Flatten ( -font `"$backgroundfontImagemagick`" -pointsize `"$backgroundoptimalFontSizeMiddle`" -fill `"#0000FF`" -size `"$Backgroundboxsize`" -background `"#ACD7E6`" caption:`"$MiddleText`" -trim -gravity south -extent `"$Backgroundboxsize`" ) -gravity south -geometry +0+`"$Backgroundtext_offset`" -composite `"$backgroundTestPosterMiddle`""
+    $backgroundArgumentsMedium = "`"$backgroundTestPosterMedium`" -gravity center -background none -layers Flatten ( -font `"$backgroundfontImagemagick`" -pointsize `"$backgroundoptimalFontSizeMedium`" -fill `"#0000FF`" -size `"$Backgroundboxsize`" -background `"#ACD7E6`" caption:`"$MediumText`" -trim -gravity south -extent `"$Backgroundboxsize`" ) -gravity south -geometry +0+`"$Backgroundtext_offset`" -composite `"$backgroundTestPosterMedium`""
     $backgroundArgumentsLong = "`"$backgroundTestPosterLong`" -gravity center -background none -layers Flatten ( -font `"$backgroundfontImagemagick`" -pointsize `"$backgroundoptimalFontSizeLong`" -fill `"#0000FF`" -size `"$Backgroundboxsize`" -background `"#ACD7E6`" caption:`"$LongText`" -trim -gravity south -extent `"$Backgroundboxsize`" ) -gravity south -geometry +0+`"$Backgroundtext_offset`" -composite `"$backgroundTestPosterLong`""
-    $backgroundArgumentsShortBold = "`"$backgroundTestPosterShortBold`" -gravity center -background none -layers Flatten ( -font `"$backgroundfontImagemagick`" -pointsize `"$backgroundoptimalFontSizeShortBold`" -fill `"#0000FF`" -size `"$Backgroundboxsize`" -background `"#ACD7E6`" caption:`"$ShortTextBold`" -trim -gravity south -extent `"$Backgroundboxsize`" ) -gravity south -geometry +0+`"$Backgroundtext_offset`" -composite `"$backgroundTestPosterShortBold`""
-    $backgroundArgumentsMiddleBold = "`"$backgroundTestPosterMiddleBold`" -gravity center -background none -layers Flatten ( -font `"$backgroundfontImagemagick`" -pointsize `"$backgroundoptimalFontSizeMiddleBold`" -fill `"#0000FF`" -size `"$Backgroundboxsize`" -background `"#ACD7E6`" caption:`"$MiddleTextBold`" -trim -gravity south -extent `"$Backgroundboxsize`" ) -gravity south -geometry +0+`"$Backgroundtext_offset`" -composite `"$backgroundTestPosterMiddleBold`""
-    $backgroundArgumentsLongBold = "`"$backgroundTestPosterLongBold`" -gravity center -background none -layers Flatten ( -font `"$backgroundfontImagemagick`" -pointsize `"$backgroundoptimalFontSizeLongBold`" -fill `"#0000FF`" -size `"$Backgroundboxsize`" -background `"#ACD7E6`" caption:`"$LongTextBold`" -trim -gravity south -extent `"$Backgroundboxsize`" ) -gravity south -geometry +0+`"$Backgroundtext_offset`" -composite `"$backgroundTestPosterLongBold`""
+    $backgroundArgumentsShortCAPS = "`"$backgroundTestPosterShortCAPS`" -gravity center -background none -layers Flatten ( -font `"$backgroundfontImagemagick`" -pointsize `"$backgroundoptimalFontSizeShortCAPS`" -fill `"#0000FF`" -size `"$Backgroundboxsize`" -background `"#ACD7E6`" caption:`"$ShortTextCAPS`" -trim -gravity south -extent `"$Backgroundboxsize`" ) -gravity south -geometry +0+`"$Backgroundtext_offset`" -composite `"$backgroundTestPosterShortCAPS`""
+    $backgroundArgumentsMediumCAPS = "`"$backgroundTestPosterMediumCAPS`" -gravity center -background none -layers Flatten ( -font `"$backgroundfontImagemagick`" -pointsize `"$backgroundoptimalFontSizeMediumCAPS`" -fill `"#0000FF`" -size `"$Backgroundboxsize`" -background `"#ACD7E6`" caption:`"$MediumTextCAPS`" -trim -gravity south -extent `"$Backgroundboxsize`" ) -gravity south -geometry +0+`"$Backgroundtext_offset`" -composite `"$backgroundTestPosterMediumCAPS`""
+    $backgroundArgumentsLongCAPS = "`"$backgroundTestPosterLongCAPS`" -gravity center -background none -layers Flatten ( -font `"$backgroundfontImagemagick`" -pointsize `"$backgroundoptimalFontSizeLongCAPS`" -fill `"#0000FF`" -size `"$Backgroundboxsize`" -background `"#ACD7E6`" caption:`"$LongTextCAPS`" -trim -gravity south -extent `"$Backgroundboxsize`" ) -gravity south -geometry +0+`"$Backgroundtext_offset`" -composite `"$backgroundTestPosterLongCAPS`""
     
     # Text TitleCard Title overlay
     $TitleCardTitleArgumentsShort = "`"$titlecardtestPosterShort`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeShort`" -fill `"#0000FF`" -size `"$TitleCardEPTitleboxsize`" -background `"#ACD7E6`" caption:`"$ShortText`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -composite `"$titlecardtestPosterShort`""
-    $TitleCardTitleArgumentsMiddle = "`"$titlecardtestPosterMiddle`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeMiddle`" -fill `"#0000FF`" -size `"$TitleCardEPTitleboxsize`" -background `"#ACD7E6`" caption:`"$MiddleText`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -composite `"$titlecardtestPosterMiddle`""
+    $TitleCardTitleArgumentsMedium = "`"$titlecardtestPosterMedium`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeMedium`" -fill `"#0000FF`" -size `"$TitleCardEPTitleboxsize`" -background `"#ACD7E6`" caption:`"$MediumText`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -composite `"$titlecardtestPosterMedium`""
     $TitleCardTitleArgumentsLong = "`"$titlecardtestPosterLong`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeLong`" -fill `"#0000FF`" -size `"$TitleCardEPTitleboxsize`" -background `"#ACD7E6`" caption:`"$LongText`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -composite `"$titlecardtestPosterLong`""
-    $TitleCardTitleArgumentsShortBold = "`"$titlecardtestPosterShortBold`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeShortBold`" -fill `"#0000FF`" -size `"$TitleCardEPTitleboxsize`" -background `"#ACD7E6`" caption:`"$ShortTextBold`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -composite `"$titlecardtestPosterShortBold`""
-    $TitleCardTitleArgumentsMiddleBold = "`"$titlecardtestPosterMiddleBold`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeMiddleBold`" -fill `"#0000FF`" -size `"$TitleCardEPTitleboxsize`" -background `"#ACD7E6`" caption:`"$MiddleTextBold`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -composite `"$titlecardtestPosterMiddleBold`""
-    $TitleCardTitleArgumentsLongBold = "`"$titlecardtestPosterLongBold`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeLongBold`" -fill `"#0000FF`" -size `"$TitleCardEPTitleboxsize`" -background `"#ACD7E6`" caption:`"$LongTextBold`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -composite `"$titlecardtestPosterLongBold`""
+    $TitleCardTitleArgumentsShortCAPS = "`"$titlecardtestPosterShortCAPS`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeShortCAPS`" -fill `"#0000FF`" -size `"$TitleCardEPTitleboxsize`" -background `"#ACD7E6`" caption:`"$ShortTextCAPS`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -composite `"$titlecardtestPosterShortCAPS`""
+    $TitleCardTitleArgumentsMediumCAPS = "`"$titlecardtestPosterMediumCAPS`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeMediumCAPS`" -fill `"#0000FF`" -size `"$TitleCardEPTitleboxsize`" -background `"#ACD7E6`" caption:`"$MediumTextCAPS`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -composite `"$titlecardtestPosterMediumCAPS`""
+    $TitleCardTitleArgumentsLongCAPS = "`"$titlecardtestPosterLongCAPS`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeLongCAPS`" -fill `"#0000FF`" -size `"$TitleCardEPTitleboxsize`" -background `"#ACD7E6`" caption:`"$LongTextCAPS`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -composite `"$titlecardtestPosterLongCAPS`""
         
     # Text TitleCard EP overlay
     $TitleCardEPArgumentsShort = "`"$titlecardtestPosterShort`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeEpisodetext`" -fill `"#0000FF`" -size `"$TitleCardEPboxsize`" -background `"#ACD7E6`" caption:`"$Episodetext`" -trim -gravity south -extent `"$TitleCardEPboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -composite `"$titlecardtestPosterShort`""
-    $TitleCardEPArgumentsMiddle = "`"$titlecardtestPosterMiddle`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeEpisodetext`" -fill `"#0000FF`" -size `"$TitleCardEPboxsize`" -background `"#ACD7E6`" caption:`"$Episodetext`" -trim -gravity south -extent `"$TitleCardEPboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -composite `"$titlecardtestPosterMiddle`""
+    $TitleCardEPArgumentsMedium = "`"$titlecardtestPosterMedium`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeEpisodetext`" -fill `"#0000FF`" -size `"$TitleCardEPboxsize`" -background `"#ACD7E6`" caption:`"$Episodetext`" -trim -gravity south -extent `"$TitleCardEPboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -composite `"$titlecardtestPosterMedium`""
     $TitleCardEPArgumentsLong = "`"$titlecardtestPosterLong`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeEpisodetext`" -fill `"#0000FF`" -size `"$TitleCardEPboxsize`" -background `"#ACD7E6`" caption:`"$Episodetext`" -trim -gravity south -extent `"$TitleCardEPboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -composite `"$titlecardtestPosterLong`""
-    $TitleCardEPArgumentsShortBold = "`"$titlecardtestPosterShortBold`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeEpisodetextBold`" -fill `"#0000FF`" -size `"$TitleCardEPboxsize`" -background `"#ACD7E6`" caption:`"$EpisodetextBold`" -trim -gravity south -extent `"$TitleCardEPboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -composite `"$titlecardtestPosterShortBold`""
-    $TitleCardEPArgumentsMiddleBold = "`"$titlecardtestPosterMiddleBold`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeEpisodetextBold`" -fill `"#0000FF`" -size `"$TitleCardEPboxsize`" -background `"#ACD7E6`" caption:`"$EpisodetextBold`" -trim -gravity south -extent `"$TitleCardEPboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -composite `"$titlecardtestPosterMiddleBold`""
-    $TitleCardEPArgumentsLongBold = "`"$titlecardtestPosterLongBold`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeEpisodetextBold`" -fill `"#0000FF`" -size `"$TitleCardEPboxsize`" -background `"#ACD7E6`" caption:`"$EpisodetextBold`" -trim -gravity south -extent `"$TitleCardEPboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -composite `"$titlecardtestPosterLongBold`""
+    $TitleCardEPArgumentsShortCAPS = "`"$titlecardtestPosterShortCAPS`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeEpisodetextCAPS`" -fill `"#0000FF`" -size `"$TitleCardEPboxsize`" -background `"#ACD7E6`" caption:`"$EpisodetextCAPS`" -trim -gravity south -extent `"$TitleCardEPboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -composite `"$titlecardtestPosterShortCAPS`""
+    $TitleCardEPArgumentsMediumCAPS = "`"$titlecardtestPosterMediumCAPS`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeEpisodetextCAPS`" -fill `"#0000FF`" -size `"$TitleCardEPboxsize`" -background `"#ACD7E6`" caption:`"$EpisodetextCAPS`" -trim -gravity south -extent `"$TitleCardEPboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -composite `"$titlecardtestPosterMediumCAPS`""
+    $TitleCardEPArgumentsLongCAPS = "`"$titlecardtestPosterLongCAPS`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeEpisodetextCAPS`" -fill `"#0000FF`" -size `"$TitleCardEPboxsize`" -background `"#ACD7E6`" caption:`"$EpisodetextCAPS`" -trim -gravity south -extent `"$TitleCardEPboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -composite `"$titlecardtestPosterLongCAPS`""
                 
 
     # Text Poster Logging
     $logEntryShort = "magick.exe $ArgumentsShort"
-    $logEntryMiddle = "magick.exe $ArgumentsMiddle"
+    $logEntryMedium = "magick.exe $ArgumentsMedium"
     $logEntryLong = "magick.exe $ArgumentsLong"
-    $logEntryShortBold = "magick.exe $ArgumentsShortBold"
-    $logEntryMiddleBold = "magick.exe $ArgumentsMiddleBold"
-    $logEntryLongBold = "magick.exe $ArgumentsLongBold"
+    $logEntryShortCAPS = "magick.exe $ArgumentsShortCAPS"
+    $logEntryMediumCAPS = "magick.exe $ArgumentsMediumCAPS"
+    $logEntryLongCAPS = "magick.exe $ArgumentsLongCAPS"
 
     $logEntryShort | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
-    $logEntryShortBold | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
-    $logEntryMiddle | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
-    $logEntryMiddleBold | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $logEntryShortCAPS | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $logEntryMedium | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $logEntryMediumCAPS | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
     $logEntryLong | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
-    $logEntryLongBold | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $logEntryLongCAPS | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
 
     # Text background Logging
     $backgroundlogEntryShort = "magick.exe $backgroundArgumentsShort"
-    $backgroundlogEntryMiddle = "magick.exe $backgroundArgumentsMiddle"
+    $backgroundlogEntryMedium = "magick.exe $backgroundArgumentsMedium"
     $backgroundlogEntryLong = "magick.exe $backgroundArgumentsLong"
-    $backgroundlogEntryShortBold = "magick.exe $backgroundArgumentsShortBold"
-    $backgroundlogEntryMiddleBold = "magick.exe $backgroundArgumentsMiddleBold"
-    $backgroundlogEntryLongBold = "magick.exe $backgroundArgumentsLongBold"
+    $backgroundlogEntryShortCAPS = "magick.exe $backgroundArgumentsShortCAPS"
+    $backgroundlogEntryMediumCAPS = "magick.exe $backgroundArgumentsMediumCAPS"
+    $backgroundlogEntryLongCAPS = "magick.exe $backgroundArgumentsLongCAPS"
 
     $backgroundlogEntryShort | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
-    $backgroundlogEntryShortBold | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
-    $backgroundlogEntryMiddle | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
-    $backgroundlogEntryMiddleBold | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $backgroundlogEntryShortCAPS | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $backgroundlogEntryMedium | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $backgroundlogEntryMediumCAPS | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
     $backgroundlogEntryLong | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
-    $backgroundlogEntryLongBold | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $backgroundlogEntryLongCAPS | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
     
     # Title Text Titlecard Logging
     $TitleCardTitlelogEntryShort = "magick.exe $TitleCardTitleArgumentsShort"
-    $TitleCardTitlelogEntryMiddle = "magick.exe $TitleCardTitleArgumentsMiddle"
+    $TitleCardTitlelogEntryMedium = "magick.exe $TitleCardTitleArgumentsMedium"
     $TitleCardTitlelogEntryLong = "magick.exe $TitleCardTitleArgumentsLong"
-    $TitleCardTitlelogEntryshortBold = "magick.exe $TitleCardTitleArgumentsShortBold"
-    $TitleCardTitlelogEntrymiddleBold = "magick.exe $TitleCardTitleArgumentsMiddleBold"
-    $TitleCardTitlelogEntryLongBold = "magick.exe $TitleCardTitleArgumentsLongBold"
+    $TitleCardTitlelogEntryshortCAPS = "magick.exe $TitleCardTitleArgumentsShortCAPS"
+    $TitleCardTitlelogEntryMediumCAPS = "magick.exe $TitleCardTitleArgumentsMediumCAPS"
+    $TitleCardTitlelogEntryLongCAPS = "magick.exe $TitleCardTitleArgumentsLongCAPS"
 
     # Episode Text Titlecard Logging
     $TitleCardEPlogEntryShort = "magick.exe $TitleCardEPArgumentsShort"
-    $TitleCardEPlogEntryMiddle = "magick.exe $TitleCardEPArgumentsMiddle"
+    $TitleCardEPlogEntryMedium = "magick.exe $TitleCardEPArgumentsMedium"
     $TitleCardEPlogEntryLong = "magick.exe $TitleCardEPArgumentsLong"
     $TitleCardEPlogEntryepisode = "magick.exe $TitleCardEPArgumentsEpisode"
-    $TitleCardEPlogEntryshortBold = "magick.exe $TitleCardEPArgumentsShortBold"
-    $TitleCardEPlogEntrymiddleBold = "magick.exe $TitleCardEPArgumentsMiddleBold"
-    $TitleCardEPlogEntryLongBold = "magick.exe $TitleCardEPArgumentsLongBold"
-    $TitleCardEPlogEntryepisodeBold = "magick.exe $TitleCardEPArgumentsEpisodeBold"
+    $TitleCardEPlogEntryshortCAPS = "magick.exe $TitleCardEPArgumentsShortCAPS"
+    $TitleCardEPlogEntryMediumCAPS = "magick.exe $TitleCardEPArgumentsMediumCAPS"
+    $TitleCardEPlogEntryLongCAPS = "magick.exe $TitleCardEPArgumentsLongCAPS"
+    $TitleCardEPlogEntryepisodeCAPS = "magick.exe $TitleCardEPArgumentsEpisodeCAPS"
 
     $TitleCardTitlelogEntryShort | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
-    $TitleCardTitlelogEntryShortBold | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
-    $TitleCardTitlelogEntryMiddle | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
-    $TitleCardTitlelogEntryMiddleBold | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $TitleCardTitlelogEntryShortCAPS | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $TitleCardTitlelogEntryMedium | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $TitleCardTitlelogEntryMediumCAPS | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
     $TitleCardTitlelogEntryLong | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
-    $TitleCardTitlelogEntryLongBold | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+    $TitleCardTitlelogEntryLongCAPS | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
     $TitleCardTitlelogEntryEpisode | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append  
-    $TitleCardTitlelogEntryepisodeBold | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $TitleCardTitlelogEntryepisodeCAPS | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
 
     $TitleCardEPlogEntryShort | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
-    $TitleCardEPlogEntryShortBold | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
-    $TitleCardEPlogEntryMiddle | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
-    $TitleCardEPlogEntryMiddleBold | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $TitleCardEPlogEntryShortCAPS | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $TitleCardEPlogEntryMedium | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $TitleCardEPlogEntryMediumCAPS | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
     $TitleCardEPlogEntryLong | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
-    $TitleCardEPlogEntryLongBold | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+    $TitleCardEPlogEntryLongCAPS | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
     $TitleCardEPlogEntryepisode | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append  
-    $TitleCardEPlogEntryepisodeBold | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+    $TitleCardEPlogEntryepisodeCAPS | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
 
     # Text Poster overlaying
     Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentsShort
-    Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentsMiddle
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentsMedium
     Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentsLong
-    Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentsShortBold
-    Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentsMiddleBold
-    Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentsLongBold
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentsShortCAPS
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentsMediumCAPS
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentsLongCAPS
 
     # Text Background overlaying
     Start-Process $magick -Wait -NoNewWindow -ArgumentList $backgroundArgumentsShort
-    Start-Process $magick -Wait -NoNewWindow -ArgumentList $backgroundArgumentsMiddle
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $backgroundArgumentsMedium
     Start-Process $magick -Wait -NoNewWindow -ArgumentList $backgroundArgumentsLong
-    Start-Process $magick -Wait -NoNewWindow -ArgumentList $backgroundArgumentsShortBold
-    Start-Process $magick -Wait -NoNewWindow -ArgumentList $backgroundArgumentsMiddleBold
-    Start-Process $magick -Wait -NoNewWindow -ArgumentList $backgroundArgumentsLongBold
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $backgroundArgumentsShortCAPS
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $backgroundArgumentsMediumCAPS
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $backgroundArgumentsLongCAPS
 
     # Title Text TitleCard overlaying
     Start-Process $magick -Wait -NoNewWindow -ArgumentList $TitleCardTitleArgumentsShort
-    Start-Process $magick -Wait -NoNewWindow -ArgumentList $TitleCardTitleArgumentsMiddle
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $TitleCardTitleArgumentsMedium
     Start-Process $magick -Wait -NoNewWindow -ArgumentList $TitleCardTitleArgumentsLong
-    Start-Process $magick -Wait -NoNewWindow -ArgumentList $TitleCardTitleArgumentsShortBold
-    Start-Process $magick -Wait -NoNewWindow -ArgumentList $TitleCardTitleArgumentsMiddleBold
-    Start-Process $magick -Wait -NoNewWindow -ArgumentList $TitleCardTitleArgumentsLongBold
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $TitleCardTitleArgumentsShortCAPS
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $TitleCardTitleArgumentsMediumCAPS
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $TitleCardTitleArgumentsLongCAPS
 
     # Episode Text TitleCard overlaying
     Start-Process $magick -Wait -NoNewWindow -ArgumentList $TitleCardEPArgumentsShort
-    Start-Process $magick -Wait -NoNewWindow -ArgumentList $TitleCardEPArgumentsMiddle
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $TitleCardEPArgumentsMedium
     Start-Process $magick -Wait -NoNewWindow -ArgumentList $TitleCardEPArgumentsLong
-    Start-Process $magick -Wait -NoNewWindow -ArgumentList $TitleCardEPArgumentsShortBold
-    Start-Process $magick -Wait -NoNewWindow -ArgumentList $TitleCardEPArgumentsMiddleBold
-    Start-Process $magick -Wait -NoNewWindow -ArgumentList $TitleCardEPArgumentsLongBold
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $TitleCardEPArgumentsShortCAPS
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $TitleCardEPArgumentsMediumCAPS
+    Start-Process $magick -Wait -NoNewWindow -ArgumentList $TitleCardEPArgumentsLongCAPS
 
     Write-log -Subtext "Poster/Background Tests finished, you can find them here: $global:ScriptRoot\test" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Success
     Remove-Item -LiteralPath $testimage | out-null
@@ -2358,13 +2358,12 @@ else {
             foreach ($key in $splittedkeys) {
                 if ($PlexToken) {
                     if ($contentquery -eq 'Directory') {
-                        [xml]$Seasondata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey)/children?X-Plex-Token=$PlexToken).content
+                        [xml]$Seasondata = (Invoke-WebRequest $PlexUrl/library/metadata/$key/children?X-Plex-Token=$PlexToken).content
                     }
                 }
                 Else {
                     if ($contentquery -eq 'Directory') {
-                        #[xml]$Seasondata = (Invoke-WebRequest $PlexUrl/library/metadata/$key/children?).content
-                        [xml]$Seasondata = (Invoke-WebRequest "http://192.168.1.93:32400/library/metadata/$key/children?").content
+                        [xml]$Seasondata = (Invoke-WebRequest $PlexUrl/library/metadata/$key/children?).content
                     }
                 }
                 $tempseasondata = New-Object psobject
@@ -2524,7 +2523,7 @@ else {
                                 $optimalFontSize = Get-OptimalPointSize -text $joinedTitle -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
                                 Write-log -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                 $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -composite `"$PosterImage`""
-                                Write-log -Subtext "Applying Font text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                Write-log -Subtext "Applying Poster text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                 $logEntry = "magick.exe $Arguments"
                                 $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
                                 Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
@@ -2678,7 +2677,7 @@ else {
                                     $optimalFontSize = Get-OptimalPointSize -text $joinedTitle -font $fontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
                                     Write-log -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                     $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -size `"$Backgroundboxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -composite `"$backgroundImage`""
-                                    Write-log -Subtext "Applying Font text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                    Write-log -Subtext "Applying Background text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                     $logEntry = "magick.exe $Arguments"
                                     $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
                                     Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
@@ -2880,7 +2879,7 @@ else {
                             $optimalFontSize = Get-OptimalPointSize -text $joinedTitle -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
                             Write-log -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                             $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -composite `"$PosterImage`""
-                            Write-log -Subtext "Applying Font text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                            Write-log -Subtext "Applying Poster text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                             $logEntry = "magick.exe $Arguments"
                             $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
                             Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
@@ -3040,7 +3039,7 @@ else {
                                 $optimalFontSize = Get-OptimalPointSize -text $joinedTitle -font $fontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
                                 Write-log -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                 $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -size `"$Backgroundboxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -composite `"$backgroundImage`""
-                                Write-log -Subtext "Applying Font text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                Write-log -Subtext "Applying Background text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                 $logEntry = "magick.exe $Arguments"
                                 $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
                                 Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
@@ -3210,7 +3209,7 @@ else {
                                                 
                                         $Arguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$global:seasonTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -composite `"$SeasonImage`""
                                                 
-                                        Write-log -Subtext "Applying Font text: `"$global:seasonTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                        Write-log -Subtext "Applying seasonTitle text: `"$global:seasonTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                         $logEntry = "magick.exe $Arguments"
                                         $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
                                         Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
@@ -3298,6 +3297,7 @@ else {
                     $global:Fallback = $null
 
                     if ($episode.tmdbid -eq $entry.tmdbid -or $episode.tvdbid -eq $entry.tvdbid) {
+                        $global:show_name = $episode."Show Name"
                         $global:season_number = $episode."Season Number"
                         $global:episode_numbers = $episode."Episodes".Split(",")
                         $global:titles = $episode."Title".Split(";")
@@ -3319,7 +3319,7 @@ else {
                             $EpisodeImage = $EpisodeImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
                             if (!(Get-ChildItem -LiteralPath $EpisodeImageoriginal -ErrorAction SilentlyContinue)) {
                                 if (!$Episodepostersearchtext) {
-                                    Write-log -Message "Start Title Card Search for: $global:SeasonEPNumber" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                    Write-log -Message "Start Title Card Search for: $global:show_name - $global:SeasonEPNumber" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                     $Episodepostersearchtext = $true
                                 }
                                 # now search for season poster, fallback to show backdrop.
@@ -3411,7 +3411,7 @@ else {
                                                                 
                                                 $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -composite `"$EpisodeImage`""
                                                                 
-                                                Write-log -Subtext "Applying Font text: `"$global:EPTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                                Write-log -Subtext "Applying EPTitle text: `"$global:EPTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                                 $logEntry = "magick.exe $Arguments"
                                                 $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
                                                 Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
@@ -3427,7 +3427,7 @@ else {
                                                                 
                                                 $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPfontcolor`" -size `"$TitleCardEPboxsize`" -background none caption:`" $global:SeasonEPNumber`" -trim -gravity south -extent `"$TitleCardEPboxsize`" `) -gravity south -geometry +0`"$TitleCardEPtext_offset`" -composite `"$EpisodeImage`""
                                                                 
-                                                Write-log -Subtext "Applying Font text: `" $global:SeasonEPNumber`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                                Write-log -Subtext "Applying SeasonEPNumber text: `"$global:SeasonEPNumber`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                                 $logEntry = "magick.exe $Arguments"
                                                 $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
                                                 Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
