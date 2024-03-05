@@ -36,6 +36,9 @@ function Write-Log {
         'Trace' { $Color = "cyan" }
         'Success' { $Color = "green" }
     }
+    if (!(Test-Path -path $path)){
+        New-Item -Path $Path -Force | out-null
+    }
     # ASCII art header
     if (-not $global:HeaderWritten) {
         $Header = @"
@@ -1228,9 +1231,10 @@ function GetIMDBPoster {
 }
 
 $startTime = Get-Date
+$global:OSType = [System.Environment]::OSVersion.Platform
 
 # Check if Config file is present
-if (!(Test-Path "$PSScriptRoot\config.json")) {
+if (!(Test-Path $(Join-Path $PSScriptRoot 'config.json'))) {
     Write-log -Message "Config File missing, downloading it for you..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
     Invoke-WebRequest -uri "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/config.example.json" -OutFile "$PSScriptRoot\config.json"
     Write-log -Subtext "Config File downloaded here: '$PSScriptRoot\config.json'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
@@ -1240,7 +1244,7 @@ if (!(Test-Path "$PSScriptRoot\config.json")) {
 }
 
 # load config file
-$config = Get-Content -Raw -Path "$PSScriptRoot\config.json" | ConvertFrom-Json
+$config = Get-Content -Raw -Path $(Join-Path $PSScriptRoot 'config.json') | ConvertFrom-Json
 
 # Access variables from the config file
 # Api Part
@@ -1285,7 +1289,6 @@ if ($AssetPath.StartsWith("\")) {
 }
 
 $global:ScriptRoot = $PSScriptRoot
-$magickinstalllocation = RemoveTrailingSlash $config.PrerequisitePart.magickinstalllocation
 # Construct cross-platform paths
 $font = Join-Path $global:ScriptRoot 'temp' $config.PrerequisitePart.font
 $backgroundfont = Join-Path $global:ScriptRoot 'temp' $config.PrerequisitePart.backgroundfont
@@ -1370,7 +1373,14 @@ $BackgroundSize = "3840x2160"
 $fontImagemagick = $font.replace('\', '\\')
 $backgroundfontImagemagick = $backgroundfont.replace('\', '\\')
 $TitleCardfontImagemagick = $TitleCardfont.replace('\', '\\')
-$magick = Join-Path $magickinstalllocation 'magick.exe'
+if ($global:OSType -ne "Win32NT"){
+    $magickinstalllocation = $PSScriptRoot
+    $magick = Join-Path $PSScriptRoot 'magick'
+}
+Else {
+    $magickinstalllocation = RemoveTrailingSlash $config.PrerequisitePart.magickinstalllocation
+    $magick = Join-Path $magickinstalllocation 'magick.exe'
+}
 $fileExtensions = @(".otf", ".ttf", ".otc", ".ttc", ".png")
 $Errorcount = 0
 
@@ -1396,6 +1406,10 @@ if ($Testing) {
 # Create directories if they don't exist
 foreach ($path in $LogsPath, $TempPath, $TestPath, $AssetPath) {
     if (!(Test-Path $path)) {
+        if ($global:OSType -ne "Win32NT" -and $path -eq 'P:\assets'){
+            Write-Log -Message 'Please change default asset Path...' -Path $configLogging -Type Error
+            Exit
+        }
         New-Item -ItemType Directory -Path $path -Force | Out-Null
     }
 }
@@ -1555,38 +1569,49 @@ if ($PlexToken) {
 }
 Else {
     Write-log -Message "Checking Plex access now..." -Path $configLogging -Type Info
-    if ((Invoke-WebRequest "$PlexUrl").StatusCode -eq 200) {
-        Write-log -Subtext "Plex access is working..." -Path $configLogging -Type Success
-        [xml]$Libs = (Invoke-WebRequest "$PlexUrl/library/sections").content
-    }
-    Else {
+    try {
+        $result = Invoke-WebRequest -Uri $PlexUrl -ErrorAction SilentlyContinue
+    } catch {
         Write-log -Message "Could not access plex with this url: $PlexUrl" -Path $configLogging -Type Error
+        Write-log -Message "Error Message: $_" -Path $configLogging -Type Error
         $Errorcount++
-        Write-log -Subtext "Please check access and settings in plex..." -Path $configLogging -Type Error
+        Write-log -Subtext "Please check access and settings in plex..." -Path $configLogging -Type Warning
         Write-log -Message "To be able to connect to plex without Auth" -Path $configLogging -Type Info
         Write-log -Message "You have to enter your ip range in 'Settings -> Network -> List of IP addresses and networks that are allowed without auth: '192.168.1.0/255.255.255.0''" -Path $configLogging -Type Info
         pause
         exit
     }
+    if ($result.StatusCode -eq 200) {
+        Write-log -Subtext "Plex access is working..." -Path $configLogging -Type Success
+        [xml]$Libs = (Invoke-WebRequest "$PlexUrl/library/sections").content
+    }
 }
 
 if (!(Test-Path $magick)) {
-    Write-log -Message "ImageMagick missing, downloading/installing it for you..." -Path $configLogging -Type Error
-    $Errorcount++
-    $InstallArguments = "/verysilent /DIR=`"$magickinstalllocation`""
-    $result = Invoke-WebRequest "https://imagemagick.org/archive/binaries/?C=M;O=D"
-    $LatestRelease = ($result.links | Where-Object href -like '*Q16-HDRI-x64-dll.exe' | Sort-Object)[0].href
-    # Construct the download path
-    $DownloadPath = Join-Path -Path $global:ScriptRoot -ChildPath (Join-Path -Path 'temp' -ChildPath $LatestRelease)
-    Invoke-WebRequest "https://imagemagick.org/archive/binaries/$LatestRelease" -OutFile $DownloadPath
-    # Construct the installation path
-    $InstallerPath = Join-Path -Path $global:ScriptRoot -ChildPath (Join-Path -Path 'temp' -ChildPath $LatestRelease)
-    Start-Process $InstallerPath -ArgumentList $InstallArguments -NoNewWindow -Wait
-    if (Test-Path -LiteralPath $magick) {
-        Write-log -Subtext "ImageMagick installed here: $magickinstalllocation" -Path $configLogging -Type Success
+    if ($global:OSType -ne "Win32NT") {
+        Write-log -Message "ImageMagick missing, downloading the portable version for you..." -Path $configLogging -Type Warning
+        Invoke-WebRequest -Uri "https://imagemagick.org/archive/binaries/magick" -OutFile "$global:ScriptRoot/magick"
+        chmod +x "$global:ScriptRoot/magick"
+        Write-log -Subtext "made the portable magick executeable..." -Path $configLogging -Type Success
     }
     Else {
-        Write-log -Subtext "Error During installation, please manually install Imagemagick" -Path $configLogging -Type Error
+        Write-log -Message "ImageMagick missing, downloading/installing it for you..." -Path $configLogging -Type Error
+        $Errorcount++
+        $InstallArguments = "/verysilent /DIR=`"$magickinstalllocation`""
+        $result = Invoke-WebRequest "https://imagemagick.org/archive/binaries/?C=M;O=D"
+        $LatestRelease = ($result.links | Where-Object href -like '*Q16-HDRI-x64-dll.exe' | Sort-Object)[0].href
+        # Construct the download path
+        $DownloadPath = Join-Path -Path $global:ScriptRoot -ChildPath (Join-Path -Path 'temp' -ChildPath $LatestRelease)
+        Invoke-WebRequest "https://imagemagick.org/archive/binaries/$LatestRelease" -OutFile $DownloadPath
+        # Construct the installation path
+        $InstallerPath = Join-Path -Path $global:ScriptRoot -ChildPath (Join-Path -Path 'temp' -ChildPath $LatestRelease)
+        Start-Process $InstallerPath -ArgumentList $InstallArguments -NoNewWindow -Wait
+        if (Test-Path -LiteralPath $magick) {
+            Write-log -Subtext "ImageMagick installed here: $magickinstalllocation" -Path $configLogging -Type Success
+        }
+        Else {
+            Write-log -Subtext "Error During installation, please manually install Imagemagick" -Path $configLogging -Type Error
+        }
     }
 }
 
