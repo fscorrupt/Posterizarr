@@ -1248,6 +1248,7 @@ if (!(Test-Path $(Join-Path $PSScriptRoot 'config.json'))) {
 }
 
 # load config file
+$global:ScriptRoot = $PSScriptRoot
 $config = Get-Content -Raw -Path $(Join-Path $PSScriptRoot 'config.json') | ConvertFrom-Json
 
 # Access variables from the config file
@@ -1292,7 +1293,6 @@ if ($AssetPath.StartsWith("\")) {
     }
 }
 
-$global:ScriptRoot = $PSScriptRoot
 # Construct cross-platform paths
 if ($global:OSType -ne "Win32NT") {
     $joinsymbol = "/"
