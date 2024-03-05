@@ -596,11 +596,13 @@ function GetTMDBTitleCard {
         Else {
             Write-log -Subtext "No Title Card found on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type error
             $global:Fallback = "TVDB"
+            $Errorcount++
         }
     }
     Else {
         Write-log -Subtext "TMDB Api Response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
         $global:Fallback = "TVDB"
+        $Errorcount++
     }
 }
 function GetFanartMoviePoster {
@@ -1211,10 +1213,12 @@ function GetTVDBTitleCard {
             }
             Else {
                 Write-log -Subtext "No Title Card found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                $Errorcount++
             }
         }
         Else {
             Write-log -Subtext "TVDB Api Response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+            $Errorcount++
         }
     }
 }
@@ -2248,6 +2252,7 @@ else {
     Write-log -Subtext "Found '$($Libsoverview.count)' libs and '$($LibstoExclude.count)' are excluded..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
     $IncludedLibraryNames = $Libsoverview.Name -join ', '
     Write-Log -Subtext "Included Libraries: $IncludedLibraryNames" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+
     Write-log -Message "Query all items from all Libs, this can take a while..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
     $Libraries = @()
     Foreach ($Library in $Libsoverview) {
@@ -2367,7 +2372,7 @@ else {
     Write-log -Subtext "Found '$($Libraries.count)' Items..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
     $Libraries | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\PlexLibexport.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
     Write-log -Message "Export everything to a csv: $global:ScriptRoot\Logs\PlexLibexport.csv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-    
+
     # Initialize counter variable
     $posterCount = 0
     $SeasonCount = 0
@@ -3311,7 +3316,10 @@ else {
                 # Loop through each episode
                 foreach ($episode in $Episodedata) {
                     $global:season_number = $null
+                    $Episodepostersearchtext = $null
+                    $global:show_name = $null
                     $global:episodenumber = $null
+                    $global:episode_numbers = $null
                     $global:titles = $null
                     $global:posterurl = $null
                     $global:FileNaming = $null
@@ -3324,8 +3332,10 @@ else {
                         $global:season_number = $episode."Season Number"
                         $global:episode_numbers = $episode."Episodes".Split(",")
                         $global:titles = $episode."Title".Split(";")
-            
                         for ($i = 0; $i -lt $global:episode_numbers.Count; $i++) {
+                            $global:Fallback = $null
+                            $global:posterurl = $null
+
                             $global:EPTitle = $($global:titles[$i].Trim())
                             $global:episodenumber = $($global:episode_numbers[$i].Trim())
                             $global:FileNaming = "S" + $global:season_number.PadLeft(2, '0') + "E" + $global:episodenumber.PadLeft(2, '0')
@@ -3353,7 +3363,21 @@ else {
                                             $global:posterurl = GetTVDBTitleCard
                                         }
                                         if (!$global:posterurl ) {
-                                            $Errorcount++
+                                            # Lets just try to grab a background poster.
+                                            Write-log -Subtext "Fallback to Show Background..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+                                            $global:posterurl = GetTMDBShowBackground
+                                            if ($global:posterurl){
+                                                Write-log -Subtext "Using the Show Background Poster as TitleCard Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                                                $global:IsFallback = $true
+                                            }
+                                            Else {
+                                                # Lets just try to grab a background poster.
+                                                $global:posterurl = GetTVDBShowBackground
+                                                if ($global:posterurl){
+                                                    Write-log -Subtext "Using the Show Background Poster as TitleCard Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                                                    $global:IsFallback = $true
+                                                }
+                                            }
                                         }
                                     }
                                     else {
@@ -3361,7 +3385,13 @@ else {
                                         $global:posterurl = GetTVDBTitleCard
                                         if (!$global:posterurl ) {
                                             Write-log -Subtext "No Title Cards for this Episode on TVDB or TMDB..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
-                                            $Errorcount++
+                                            # Lets just try to grab a background poster.
+                                            Write-log -Subtext "Fallback to Show Background..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+                                            $global:posterurl = GetTVDBShowBackground
+                                            if ($global:posterurl){
+                                                Write-log -Subtext "Using the Show Background Poster as TitleCard Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                                                $global:IsFallback = $true
+                                            }
                                         }
                                     }
                                 }
@@ -3372,14 +3402,34 @@ else {
                                             $global:posterurl = GetTMDBTitleCard
                                         }
                                         if (!$global:posterurl ) {
-                                            $Errorcount++
+                                            # Lets just try to grab a background poster.
+                                            Write-log -Subtext "Fallback to Show Background..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+                                            $global:posterurl = GetTVDBShowBackground
+                                            if ($global:posterurl) {
+                                                Write-log -Subtext "Using the Show Background Poster as TitleCard Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                                                $global:IsFallback = $true
+                                            }
+                                            Else {
+                                                # Lets just try to grab a background poster.
+                                                $global:posterurl = GetTMDBShowBackground
+                                                if ($global:posterurl) {
+                                                    Write-log -Subtext "Using the Show Background Poster as TitleCard Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                                                    $global:IsFallback = $true
+                                                }
+                                            }
                                         }
                                     }
                                     else {
                                         Write-Log -Subtext "Can't search on TVDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
                                         $global:posterurl = GetTMDBTitleCard
                                         if (!$global:posterurl ) {
-                                            $Errorcount++
+                                            # Lets just try to grab a background poster.
+                                            Write-log -Subtext "Fallback to Show Background..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+                                            $global:posterurl = GetTMDBShowBackground
+                                            if ($global:posterurl) {
+                                                Write-log -Subtext "Using the Show Background Poster as TitleCard Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                                                $global:IsFallback = $true
+                                            }
                                         }
                                     }
                                 }
