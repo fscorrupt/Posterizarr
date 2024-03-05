@@ -1290,14 +1290,20 @@ if ($AssetPath.StartsWith("\")) {
 
 $global:ScriptRoot = $PSScriptRoot
 # Construct cross-platform paths
-$font = Join-Path $global:ScriptRoot 'temp' $config.PrerequisitePart.font
-$backgroundfont = Join-Path $global:ScriptRoot 'temp' $config.PrerequisitePart.backgroundfont
-$titlecardfont = Join-Path $global:ScriptRoot 'temp' $config.PrerequisitePart.titlecardfont
-$Posteroverlay = Join-Path $global:ScriptRoot 'temp' $config.PrerequisitePart.overlayfile
-$Backgroundoverlay = Join-Path $global:ScriptRoot 'temp' $config.PrerequisitePart.backgroundoverlayfile
-$titlecardoverlay = Join-Path $global:ScriptRoot 'temp' $config.PrerequisitePart.titlecardoverlayfile
-$testimage = Join-Path $global:ScriptRoot 'test' 'testimage.png'
-$backgroundtestimage = Join-Path $global:ScriptRoot 'test' 'backgroundtestimage.png'
+if ($global:OSType -ne "Win32NT"){
+    $joinsymbol = "/"
+}
+Else {
+    $joinsymbol = "\"
+}
+$font = Join-Path -Path $global:ScriptRoot -ChildPath ('temp', $config.PrerequisitePart.font -join $($joinsymbol))
+$backgroundfont = Join-Path -Path $global:ScriptRoot -ChildPath ('temp', $config.PrerequisitePart.backgroundfont -join $($joinsymbol))
+$titlecardfont = Join-Path -Path $global:ScriptRoot -ChildPath ('temp', $config.PrerequisitePart.titlecardfont -join $($joinsymbol))
+$Posteroverlay = Join-Path -Path $global:ScriptRoot -ChildPath ('temp', $config.PrerequisitePart.overlayfile -join $($joinsymbol))
+$Backgroundoverlay = Join-Path -Path $global:ScriptRoot -ChildPath ('temp', $config.PrerequisitePart.backgroundoverlayfile -join $($joinsymbol))
+$titlecardoverlay = Join-Path -Path $global:ScriptRoot -ChildPath ('temp', $config.PrerequisitePart.titlecardoverlayfile -join $($joinsymbol))
+$testimage = Join-Path -Path $global:ScriptRoot -ChildPath ('test', 'testimage.png' -join $($joinsymbol))
+$backgroundtestimage = Join-Path -Path $global:ScriptRoot -ChildPath ('test', 'backgroundtestimage.png' -join $($joinsymbol))
 $LibraryFolders = $config.PrerequisitePart.LibraryFolders
 $global:SeasonPosters = $config.PrerequisitePart.SeasonPosters
 $global:BackgroundPosters = $config.PrerequisitePart.BackgroundPosters
