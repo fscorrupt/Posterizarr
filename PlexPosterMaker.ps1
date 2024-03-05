@@ -102,7 +102,7 @@ Function Get-OptimalPointSize {
     # stolen and adapted from: https://github.com/bullmoose20/Plex-Stuff/blob/9d231d871a4676c8da7d4cbab482181a35756524/create_defaults/create_default_posters.ps1#L477 
     $global:IsTruncated = $null
     # Construct the command with correct font option
-    $cmd = "magick.exe -size ${box_width}x${box_height} -font `"$fontImagemagick`" -gravity center -fill black caption:`"$text`" -format `"%[caption:pointsize]`" info:"
+    $cmd = "& `"$magick`" -size ${box_width}x${box_height} -font `"$fontImagemagick`" -gravity center -fill black caption:`"$text`" -format `"%[caption:pointsize]`" info:"
     $cmd | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
     # Execute command and get point size
     $current_pointsize = [int](Invoke-Expression $cmd | Out-String).Trim()
@@ -1286,14 +1286,15 @@ if ($AssetPath.StartsWith("\")) {
 
 $global:ScriptRoot = $PSScriptRoot
 $magickinstalllocation = RemoveTrailingSlash $config.PrerequisitePart.magickinstalllocation
-$font = "$global:ScriptRoot\temp\$($config.PrerequisitePart.font)"
-$backgroundfont = "$global:ScriptRoot\temp\$($config.PrerequisitePart.backgroundfont)"
-$titlecardfont = "$global:ScriptRoot\temp\$($config.PrerequisitePart.titlecardfont)"
-$Posteroverlay = "$global:ScriptRoot\temp\$($config.PrerequisitePart.overlayfile)"
-$Backgroundoverlay = "$global:ScriptRoot\temp\$($config.PrerequisitePart.backgroundoverlayfile)"
-$titlecardoverlay = "$global:ScriptRoot\temp\$($config.PrerequisitePart.titlecardoverlayfile)"
-$testimage = "$global:ScriptRoot\test\testimage.png"
-$backgroundtestimage = "$global:ScriptRoot\test\backgroundtestimage.png"
+# Construct cross-platform paths
+$font = Join-Path $global:ScriptRoot 'temp' $config.PrerequisitePart.font
+$backgroundfont = Join-Path $global:ScriptRoot 'temp' $config.PrerequisitePart.backgroundfont
+$titlecardfont = Join-Path $global:ScriptRoot 'temp' $config.PrerequisitePart.titlecardfont
+$Posteroverlay = Join-Path $global:ScriptRoot 'temp' $config.PrerequisitePart.overlayfile
+$Backgroundoverlay = Join-Path $global:ScriptRoot 'temp' $config.PrerequisitePart.backgroundoverlayfile
+$titlecardoverlay = Join-Path $global:ScriptRoot 'temp' $config.PrerequisitePart.titlecardoverlayfile
+$testimage = Join-Path $global:ScriptRoot 'test' 'testimage.png'
+$backgroundtestimage = Join-Path $global:ScriptRoot 'test' 'backgroundtestimage.png'
 $LibraryFolders = $config.PrerequisitePart.LibraryFolders
 $global:SeasonPosters = $config.PrerequisitePart.SeasonPosters
 $global:BackgroundPosters = $config.PrerequisitePart.BackgroundPosters
@@ -1369,7 +1370,7 @@ $BackgroundSize = "3840x2160"
 $fontImagemagick = $font.replace('\', '\\')
 $backgroundfontImagemagick = $backgroundfont.replace('\', '\\')
 $TitleCardfontImagemagick = $TitleCardfont.replace('\', '\\')
-$magick = "$magickinstalllocation\magick.exe"
+$magick = Join-Path $magickinstalllocation 'magick.exe'
 $fileExtensions = @(".otf", ".ttf", ".otc", ".ttc", ".png")
 $Errorcount = 0
 
@@ -1379,83 +1380,66 @@ $SeasonNames = $null
 $SeasonNumbers = $null
 $SeasonRatingkeys = $null
 
-if (!(Test-Path $global:ScriptRoot\Logs)) {
-    New-Item -ItemType Directory -Path $global:ScriptRoot\Logs -Force | out-null
+# Define cross-platform paths
+$LogsPath = Join-Path $global:ScriptRoot 'Logs'
+$TempPath = Join-Path $global:ScriptRoot 'temp'
+$TestPath = Join-Path $global:ScriptRoot 'test'
+$configLogging = Join-Path $LogsPath 'Scriptlog.log'
+
+if ($Manual) {
+    $configLogging = Join-Path $LogsPath 'Manuallog.log'
+}
+if ($Testing) {
+    $configLogging = Join-Path $LogsPath 'Testinglog.log'
 }
 
-if (!(Test-Path $global:ScriptRoot\temp)) {
-    New-Item -ItemType Directory -Path $global:ScriptRoot\temp -Force | out-null
-}
-
-if (!(Test-Path $global:ScriptRoot\test)) {
-    New-Item -ItemType Directory -Path $global:ScriptRoot\test -Force | out-null
-}
-
-if (!(Test-Path $AssetPath)) {
-    New-Item -ItemType Directory -Path $AssetPath -Force | out-null
+# Create directories if they don't exist
+foreach ($path in $LogsPath, $TempPath, $TestPath, $AssetPath) {
+    if (!(Test-Path $path)) {
+        New-Item -ItemType Directory -Path $path -Force | Out-Null
+    }
 }
 
 # Delete all files and subfolders within the temp directory
-if (Test-Path $global:ScriptRoot\temp) {
-    Remove-Item -Path $global:ScriptRoot\temp\* -Recurse -Force
+if (Test-Path $TempPath) {
+    Remove-Item -Path (Join-Path $TempPath '*') -Recurse -Force
 }
 
-# Test if files are present in Script root
-if (!(Test-Path $Posteroverlay)) {
-    Invoke-WebRequest -uri "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/overlay.png" -OutFile $global:ScriptRoot\temp\overlay.png 
-}
-if (!(Test-Path $Backgroundoverlay)) {
-    Invoke-WebRequest -uri "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/backgroundoverlay.png" -OutFile $global:ScriptRoot\temp\backgroundoverlay.png 
-}
-if (!(Test-Path $font)) {
-    Invoke-WebRequest -uri "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/Rocky.ttf" -OutFile $global:ScriptRoot\temp\Rocky.ttf
-}
-
-
-# cleanup old log files
-if ($Manual) {
-    if ((Test-Path $global:ScriptRoot\Logs\Manuallog.log)) {
-        Remove-Item $global:ScriptRoot\Logs\Manuallog.log
-        Write-log -Message "Old log files cleared..." -Path $global:ScriptRoot\Logs\Manuallog.log -Type Warning
-    }
-    if ((Test-Path $global:ScriptRoot\Logs\ImageMagickCommands.log)) {
-        Remove-Item $global:ScriptRoot\Logs\ImageMagickCommands.log
-    }
-}
-Elseif ($Testing) {
-    if ((Test-Path $global:ScriptRoot\Logs\Testinglog.log)) {
-        Remove-Item $global:ScriptRoot\Logs\Testinglog.log
-        Write-log -Message "Old log files cleared..." -Path $global:ScriptRoot\Logs\Testinglog.log -Type Warning
-    }
-    # Delete all files and subfolders within the test directory
-    if (Test-Path $global:ScriptRoot\test) {
-        Remove-Item -Path $global:ScriptRoot\test\* -Recurse -Force
-    }
-    if ((Test-Path $global:ScriptRoot\Logs\ImageMagickCommands.log)) {
-        Remove-Item $global:ScriptRoot\Logs\ImageMagickCommands.log
-    }
-}
-Else {
-    if ((Test-Path $global:ScriptRoot\Logs\ImageMagickCommands.log)) {
-        Remove-Item $global:ScriptRoot\Logs\ImageMagickCommands.log
-    }
-    if ((Test-Path $global:ScriptRoot\Logs\Scriptlog.log)) {
-        Remove-Item $global:ScriptRoot\Logs\Scriptlog.log
-    }
-    if ((Test-Path "$global:ScriptRoot\Logs\ImageChoices.csv")) {
-        Remove-Item "$global:ScriptRoot\Logs\ImageChoices.csv"
-    }
-    Write-log -Message "Old log files cleared..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
-}
-
-$configLogging = "$global:ScriptRoot\Logs\Scriptlog.log"
-
-if ($Manual) {
-    $configLogging = "$global:ScriptRoot\Logs\Manuallog.log"
-}
 if ($Testing) {
-    $configLogging = "$global:ScriptRoot\Logs\Testinglog.log"
+    if ((Test-Path $TestPath)) {
+        Remove-Item -Path (Join-Path $TestPath '*') -Recurse -Force
+    }
 }
+
+# Test and download files if they don't exist
+function Test-And-Download {
+    param(
+        [string]$url,
+        [string]$destination
+    )
+
+    if (!(Test-Path $destination)) {
+        Invoke-WebRequest -Uri $url -OutFile $destination
+    }
+}
+
+Test-And-Download -url "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/overlay.png" -destination (Join-Path $TempPath 'overlay.png')
+Test-And-Download -url "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/backgroundoverlay.png" -destination (Join-Path $TempPath 'backgroundoverlay.png')
+Test-And-Download -url "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/Rocky.ttf" -destination (Join-Path $TempPath 'Rocky.ttf')
+
+# Cleanup old log files
+$logFilesToDelete = @("Manuallog.log", "Testinglog.log", "ImageMagickCommands.log", "Scriptlog.log", "ImageChoices.csv", "PlexLibexport.csv", "PlexEpisodeExport.csv")
+
+foreach ($logFile in $logFilesToDelete) {
+    $logFilePath = Join-Path $LogsPath $logFile
+    if (Test-Path $logFilePath) {
+        Remove-Item $logFilePath
+    }
+}
+
+# Write log message
+$logMessage = "Old log files cleared..."
+Write-Log -Message $logMessage -Path $configLogging -Type Warning
 
 # Display Current Config settings:
 Write-log -Message "Current Config.json Settings" -Path $configLogging -Type Trace
@@ -1546,37 +1530,13 @@ $files = Get-ChildItem -Path $global:ScriptRoot -File | Where-Object { $_.Extens
 
 # Copy files to the destination directory
 foreach ($file in $files) {
-    $destinationPath = Join-Path -Path $global:ScriptRoot\temp -ChildPath $file.Name
+    $destinationPath = Join-Path -Path (Join-Path -Path $global:ScriptRoot -ChildPath 'temp') -ChildPath $file.Name
     if (!(Test-Path -LiteralPath $destinationPath)) {
-        Copy-Item -Path $file.FullName -Destination $destinationPath -Force | out-null
-        Write-log -Subtext "Found File: '$($file.Name)' in ScriptRoot - copy it into temp folder..." -Path $configLogging -Type Trace
+        Copy-Item -Path $file.FullName -Destination $destinationPath -Force | Out-Null
+        Write-Log -Subtext "Found File: '$($file.Name)' in ScriptRoot - copy it into temp folder..." -Path $configLogging -Type Trace
     }
 }
 
-# Load the System.Drawing.Common assembly
-Add-Type -AssemblyName System.Drawing
-$Posteroverlaydimensions = ([System.Drawing.Image]::FromFile($Posteroverlay)).Width.ToString() + "x" + ([System.Drawing.Image]::FromFile($Posteroverlay)).Height.ToString()
-$Backgroundoverlaydimensions = ([System.Drawing.Image]::FromFile($Backgroundoverlay)).Width.ToString() + "x" + ([System.Drawing.Image]::FromFile($Backgroundoverlay)).Height.ToString()
-$titlecardoverlaydimensions = ([System.Drawing.Image]::FromFile($titlecardoverlay)).Width.ToString() + "x" + ([System.Drawing.Image]::FromFile($titlecardoverlay)).Height.ToString()
-
-# Check Poster Overlay Size:
-if ($Posteroverlaydimensions -eq $PosterSize) {
-    Write-log -Subtext "Poster overlay is correctly sized at: $Postersize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
-}else{
-    Write-log -Subtext "Poster overlay is NOT correctly sized at: $Postersize. Actual dimensions: $Posteroverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
-}
-# Check Background Overlay Size:
-if ($Backgroundoverlaydimensions -eq $BackgroundSize) {
-    Write-log -Subtext "Background overlay is correctly sized at: $BackgroundSize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
-}else{
-    Write-log -Subtext "Background overlay is NOT correctly sized at: $BackgroundSize. Actual dimensions: $Backgroundoverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
-}
-# Check TitleCard Overlay Size:
-if ($titlecardoverlaydimensions -eq $BackgroundSize) {
-    Write-log -Subtext "TitleCard overlay is correctly sized at: $BackgroundSize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
-}else{
-    Write-log -Subtext "TitleCard overlay is NOT correctly sized at: $BackgroundSize. Actual dimensions: $titlecardoverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
-}
 
 # Check Plex now:
 if ($PlexToken) {
@@ -1616,15 +1576,43 @@ if (!(Test-Path $magick)) {
     $InstallArguments = "/verysilent /DIR=`"$magickinstalllocation`""
     $result = Invoke-WebRequest "https://imagemagick.org/archive/binaries/?C=M;O=D"
     $LatestRelease = ($result.links | Where-Object href -like '*Q16-HDRI-x64-dll.exe' | Sort-Object)[0].href
-    Invoke-WebRequest "https://imagemagick.org/archive/binaries/$LatestRelease" -OutFile $global:ScriptRoot\temp\$LatestRelease
-    Start-Process $global:ScriptRoot\temp\$LatestRelease -ArgumentList $InstallArguments -NoNewWindow -Wait
-    if (Test-Path -LiteralPath $magickinstalllocation\magick.exe) {
+    # Construct the download path
+    $DownloadPath = Join-Path -Path $global:ScriptRoot -ChildPath (Join-Path -Path 'temp' -ChildPath $LatestRelease)
+    Invoke-WebRequest "https://imagemagick.org/archive/binaries/$LatestRelease" -OutFile $DownloadPath
+    # Construct the installation path
+    $InstallerPath = Join-Path -Path $global:ScriptRoot -ChildPath (Join-Path -Path 'temp' -ChildPath $LatestRelease)
+    Start-Process $InstallerPath -ArgumentList $InstallArguments -NoNewWindow -Wait
+    if (Test-Path -LiteralPath $magick) {
         Write-log -Subtext "ImageMagick installed here: $magickinstalllocation" -Path $configLogging -Type Success
     }
     Else {
         Write-log -Subtext "Error During installation, please manually install Imagemagick" -Path $configLogging -Type Error
     }
 }
+
+$Posteroverlaydimensions = & $magick $Posteroverlay -format "%wx%h" info:
+$Backgroundoverlaydimensions = & $magick $Backgroundoverlay -format "%wx%h" info:
+$titlecardoverlaydimensions = & $magick $titlecardoverlay -format "%wx%h" info:
+
+# Check Poster Overlay Size:
+if ($Posteroverlaydimensions -eq $PosterSize) {
+    Write-log -Subtext "Poster overlay is correctly sized at: $Postersize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
+}else{
+    Write-log -Subtext "Poster overlay is NOT correctly sized at: $Postersize. Actual dimensions: $Posteroverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+}
+# Check Background Overlay Size:
+if ($Backgroundoverlaydimensions -eq $BackgroundSize) {
+    Write-log -Subtext "Background overlay is correctly sized at: $BackgroundSize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
+}else{
+    Write-log -Subtext "Background overlay is NOT correctly sized at: $BackgroundSize. Actual dimensions: $Backgroundoverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+}
+# Check TitleCard Overlay Size:
+if ($titlecardoverlaydimensions -eq $BackgroundSize) {
+    Write-log -Subtext "TitleCard overlay is correctly sized at: $BackgroundSize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
+}else{
+    Write-log -Subtext "TitleCard overlay is NOT correctly sized at: $BackgroundSize. Actual dimensions: $titlecardoverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+}
+
 # check if fanart Module is installed
 if (!(Get-InstalledModule -Name FanartTvAPI)) {
     Write-log -Message "FanartTvAPI Module missing, installing it for you..." -Path $configLogging -Type Error
@@ -1707,7 +1695,7 @@ if ($Manual) {
         }
     }
 
-    $PosterImage = "$global:ScriptRoot\temp\$FolderName.jpg"
+    $PosterImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$FolderName.jpg"
     $PosterImage = $PosterImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
     if ($global:ImageProcessing -eq 'true') {
         if ($CreateSeasonPoster -eq 'y') {
@@ -1747,7 +1735,7 @@ if ($Manual) {
             Write-log -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Manuallog.log -Type Info
         }
 
-        $logEntry = "magick.exe $Arguments"
+        $logEntry = "`"$magick`" $Arguments"
         $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
         Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
 
@@ -1756,7 +1744,7 @@ if ($Manual) {
             Write-log -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Manuallog.log -Type Info
             $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -composite `"$PosterImage`""
             Write-log -Subtext "    Applying Poster text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Manuallog.log -Type Info
-            $logEntry = "magick.exe $Arguments"
+            $logEntry = "`"$magick`" $Arguments"
             $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
             Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
         }
@@ -1765,7 +1753,7 @@ if ($Manual) {
         # Resize Image to 2000x3000
         $Resizeargument = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$PosterImage`""
         Write-log -Subtext "Resizing it... " -Path $global:ScriptRoot\Logs\Manuallog.log -Type Info
-        $logEntry = "magick.exe $Resizeargument"
+        $logEntry = "`"$magick`" $Resizeargument"
         $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
         Start-Process $magick -Wait -NoNewWindow -ArgumentList $Resizeargument
     }
@@ -1779,17 +1767,17 @@ Elseif ($Testing) {
     # Poster Part
     if (!(Test-Path $testimage)) {
         $ArgumentCreate = "-size `"$PosterSize`" xc:pink -background none `"$testimage`""
-        $logEntryCreate = "magick.exe $ArgumentCreate"
+        $logEntryCreate = "`"$magick`" $ArgumentCreate"
         $logEntryCreate | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
         Start-Process $magick -Wait -NoNewWindow -ArgumentList $ArgumentCreate
         Write-log -Subtext "Test Poster Created..." -Path $global:ScriptRoot\Logs\Testinglog.log -Type Trace
     }
     if (!(Test-Path $backgroundtestimage)) {
         $backgroundArgumentCreate = "-size `"$BackgroundSize`" xc:pink -background none `"$backgroundtestimage`""
-        $backgroundlogEntryCreate = "magick.exe $backgroundArgumentCreate"
+        $backgroundlogEntryCreate = "`"$magick`" $backgroundArgumentCreate"
         $backgroundlogEntryCreate | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
         Start-Process $magick -Wait -NoNewWindow -ArgumentList $backgroundArgumentCreate
-        Write-log -Subtext "Test background Created..." -Path $global:ScriptRoot\Logs\Testinglog.log -Type Trace
+        Write-log -Subtext "Test Background/TitleCard Created..." -Path $global:ScriptRoot\Logs\Testinglog.log -Type Trace
     }
     $ShortText = "The Hobbit" 
     $MediumText = "The Hobbit is a great movie" 
@@ -1802,27 +1790,30 @@ Elseif ($Testing) {
     $LongTextCAPS = $LongText.ToUpper()
     $EpisodetextCAPS = $Episodetext.ToUpper()
     # Posters
-    $TestPosterShort = "$global:ScriptRoot\test\posterShortText.jpg"
-    $TestPosterMedium = "$global:ScriptRoot\test\posterMediumText.jpg"
-    $TestPosterLong = "$global:ScriptRoot\test\posterLongText.jpg"
-    $TestPosterShortCAPS = "$global:ScriptRoot\test\posterShortTextCAPS.jpg"
-    $TestPosterMediumCAPS = "$global:ScriptRoot\test\posterMediumTextCAPS.jpg"
-    $TestPosterLongCAPS = "$global:ScriptRoot\test\posterLongTextCAPS.jpg"
-    # Backgrounds
-    $backgroundTestPosterShort = "$global:ScriptRoot\test\backgroundShortText.jpg"
-    $backgroundTestPosterMedium = "$global:ScriptRoot\test\backgroundMediumText.jpg"
-    $backgroundTestPosterLong = "$global:ScriptRoot\test\backgroundLongText.jpg"
-    $backgroundTestPosterShortCAPS = "$global:ScriptRoot\test\backgroundShortTextCAPS.jpg"
-    $backgroundTestPosterMediumCAPS = "$global:ScriptRoot\test\backgroundMediumTextCAPS.jpg"
-    $backgroundTestPosterLongCAPS = "$global:ScriptRoot\test\backgroundLongTextCAPS.jpg"
-    # TitleCards
-    $TitleCardTestPosterShort = "$global:ScriptRoot\test\TitleCardShortText.jpg"
-    $TitleCardTestPosterMedium = "$global:ScriptRoot\test\TitleCardMediumText.jpg"
-    $TitleCardTestPosterLong = "$global:ScriptRoot\test\TitleCardLongText.jpg"
-    $TitleCardTestPosterShortCAPS = "$global:ScriptRoot\test\TitleCardShortTextCAPS.jpg"
-    $TitleCardTestPosterMediumCAPS = "$global:ScriptRoot\test\TitleCardMediumTextCAPS.jpg"
-    $TitleCardTestPosterLongCAPS = "$global:ScriptRoot\test\TitleCardLongTextCAPS.jpg"
+    $TestPosterShort = Join-Path $global:ScriptRoot 'test' 'posterShortText.jpg'
+    $TestPosterMedium = Join-Path $global:ScriptRoot 'test' 'posterMediumText.jpg'
+    $TestPosterLong = Join-Path $global:ScriptRoot 'test' 'posterLongText.jpg'
+    $TestPosterShortCAPS = Join-Path $global:ScriptRoot 'test' 'posterShortTextCAPS.jpg'
+    $TestPosterMediumCAPS = Join-Path $global:ScriptRoot 'test' 'posterMediumTextCAPS.jpg'
+    $TestPosterLongCAPS = Join-Path $global:ScriptRoot 'test' 'posterLongTextCAPS.jpg'
 
+    # Backgrounds
+    $backgroundTestPosterShort = Join-Path $global:ScriptRoot 'test' 'backgroundShortText.jpg'
+    $backgroundTestPosterMedium = Join-Path $global:ScriptRoot 'test' 'backgroundMediumText.jpg'
+    $backgroundTestPosterLong = Join-Path $global:ScriptRoot 'test' 'backgroundLongText.jpg'
+    $backgroundTestPosterShortCAPS = Join-Path $global:ScriptRoot 'test' 'backgroundShortTextCAPS.jpg'
+    $backgroundTestPosterMediumCAPS = Join-Path $global:ScriptRoot 'test' 'backgroundMediumTextCAPS.jpg'
+    $backgroundTestPosterLongCAPS = Join-Path $global:ScriptRoot 'test' 'backgroundLongTextCAPS.jpg'
+
+    # TitleCards
+    $TitleCardTestPosterShort = Join-Path $global:ScriptRoot 'test' 'TitleCardShortText.jpg'
+    $TitleCardTestPosterMedium = Join-Path $global:ScriptRoot 'test' 'TitleCardMediumText.jpg'
+    $TitleCardTestPosterLong = Join-Path $global:ScriptRoot 'test' 'TitleCardLongText.jpg'
+    $TitleCardTestPosterShortCAPS = Join-Path $global:ScriptRoot 'test' 'TitleCardShortTextCAPS.jpg'
+    $TitleCardTestPosterMediumCAPS = Join-Path $global:ScriptRoot 'test' 'TitleCardMediumTextCAPS.jpg'
+    $TitleCardTestPosterLongCAPS = Join-Path $global:ScriptRoot 'test' 'TitleCardLongTextCAPS.jpg'
+
+    Write-log -Subtext "Calculating Optimal Font Sizes. This may take a while..." -Path $global:ScriptRoot\Logs\Testinglog.log -Type Trace
     # Optimal Poster Font Size
     $optimalFontSizeShort = Get-OptimalPointSize -text $ShortText -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
     $optimalFontSizeMedium = Get-OptimalPointSize -text $MediumText -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
@@ -1831,7 +1822,8 @@ Elseif ($Testing) {
     $optimalFontSizeShortCAPS = Get-OptimalPointSize -text $ShortTextCAPS -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
     $optimalFontSizeMediumCAPS = Get-OptimalPointSize -text $MediumTextCAPS -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
     $optimalFontSizeLongCAPS = Get-OptimalPointSize -text $LongTextCAPS -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
-    
+    Write-log -Subtext "Finished Optimal Font Sizes for posters..." -Path $global:ScriptRoot\Logs\Testinglog.log -Type Trace
+
     # Optimal Background Font Size
     $backgroundoptimalFontSizeShort = Get-OptimalPointSize -text $ShortText -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
     $backgroundoptimalFontSizeMedium = Get-OptimalPointSize -text $MediumText -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
@@ -1840,7 +1832,8 @@ Elseif ($Testing) {
     $backgroundoptimalFontSizeShortCAPS = Get-OptimalPointSize -text $ShortTextCAPS -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
     $backgroundoptimalFontSizeMediumCAPS = Get-OptimalPointSize -text $MediumTextCAPS -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
     $backgroundoptimalFontSizeLongCAPS = Get-OptimalPointSize -text $LongTextCAPS -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
-    
+    Write-log -Subtext "Finished Optimal Font Sizes for backgrounds..." -Path $global:ScriptRoot\Logs\Testinglog.log -Type Trace
+
     # Optimal TitleCard Font Size
     $TitleCardoptimalFontSizeShort = Get-OptimalPointSize -text $ShortText -font $titlecardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
     $TitleCardoptimalFontSizeMedium = Get-OptimalPointSize -text $MediumText -font $titlecardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
@@ -1851,6 +1844,7 @@ Elseif ($Testing) {
     $TitleCardoptimalFontSizeMediumCAPS = Get-OptimalPointSize -text $MediumTextCAPS -font $titlecardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
     $TitleCardoptimalFontSizeLongCAPS = Get-OptimalPointSize -text $LongTextCAPS -font $titlecardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
     $TitleCardoptimalFontSizeEpisodetextCAPS = Get-OptimalPointSize -text $EpisodetextCAPS -font $titlecardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize    
+    Write-log -Subtext "Finished Optimal Font Sizes for titlecards..." -Path $global:ScriptRoot\Logs\Testinglog.log -Type Trace
 
     # Border/Overlay Poster Part
     Write-log -Subtext "Poster Part:" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Success
@@ -1883,12 +1877,12 @@ Elseif ($Testing) {
     }
 
     # Poster Logging
-    $logEntryShort = "magick.exe $ArgumentsShort"
-    $logEntryMedium = "magick.exe $ArgumentsMedium"
-    $logEntryLong = "magick.exe $ArgumentsLong"
-    $logEntryShortCAPS = "magick.exe $ArgumentsShortCAPS"
-    $logEntryMediumCAPS = "magick.exe $ArgumentsMediumCAPS"
-    $logEntryLongCAPS = "magick.exe $ArgumentsLongCAPS"
+    $logEntryShort = "`"$magick`" $ArgumentsShort"
+    $logEntryMedium = "`"$magick`" $ArgumentsMedium"
+    $logEntryLong = "`"$magick`" $ArgumentsLong"
+    $logEntryShortCAPS = "`"$magick`" $ArgumentsShortCAPS"
+    $logEntryMediumCAPS = "`"$magick`" $ArgumentsMediumCAPS"
+    $logEntryLongCAPS = "`"$magick`" $ArgumentsLongCAPS"
 
     $logEntryShort | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
     $logEntryShortCAPS | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
@@ -1950,12 +1944,12 @@ Elseif ($Testing) {
         Write-log -Subtext "Adding Background Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
     }
     # Background Logging
-    $backgroundlogEntryShort = "magick.exe $backgroundArgumentsShort"
-    $backgroundlogEntryMedium = "magick.exe $backgroundArgumentsMedium"
-    $backgroundlogEntryLong = "magick.exe $backgroundArgumentsLong"
-    $backgroundlogEntryShortCAPS = "magick.exe $backgroundArgumentsShortCAPS"
-    $backgroundlogEntryMediumCAPS = "magick.exe $backgroundArgumentsMediumCAPS"
-    $backgroundlogEntryLongCAPS = "magick.exe $backgroundArgumentsLongCAPS"
+    $backgroundlogEntryShort = "`"$magick`" $backgroundArgumentsShort"
+    $backgroundlogEntryMedium = "`"$magick`" $backgroundArgumentsMedium"
+    $backgroundlogEntryLong = "`"$magick`" $backgroundArgumentsLong"
+    $backgroundlogEntryShortCAPS = "`"$magick`" $backgroundArgumentsShortCAPS"
+    $backgroundlogEntryMediumCAPS = "`"$magick`" $backgroundArgumentsMediumCAPS"
+    $backgroundlogEntryLongCAPS = "`"$magick`" $backgroundArgumentsLongCAPS"
 
     $backgroundlogEntryShort | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
     $backgroundlogEntryShortCAPS | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
@@ -2018,12 +2012,12 @@ Elseif ($Testing) {
         Write-log -Subtext "Adding Background Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
     }
     # Background Logging
-    $titlecardlogEntryShort = "magick.exe $titlecardArgumentsShort"
-    $titlecardlogEntryMedium = "magick.exe $titlecardArgumentsMedium"
-    $titlecardlogEntryLong = "magick.exe $titlecardArgumentsLong"
-    $titlecardlogEntryShortCAPS = "magick.exe $titlecardArgumentsShortCAPS"
-    $titlecardlogEntryMediumCAPS = "magick.exe $titlecardArgumentsMediumCAPS"
-    $titlecardlogEntryLongCAPS = "magick.exe $titlecardArgumentsLongCAPS"
+    $titlecardlogEntryShort = "`"$magick`" $titlecardArgumentsShort"
+    $titlecardlogEntryMedium = "`"$magick`" $titlecardArgumentsMedium"
+    $titlecardlogEntryLong = "`"$magick`" $titlecardArgumentsLong"
+    $titlecardlogEntryShortCAPS = "`"$magick`" $titlecardArgumentsShortCAPS"
+    $titlecardlogEntryMediumCAPS = "`"$magick`" $titlecardArgumentsMediumCAPS"
+    $titlecardlogEntryLongCAPS = "`"$magick`" $titlecardArgumentsLongCAPS"
 
     $titlecardlogEntryShort | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
     $titlecardlogEntryShortCAPS | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
@@ -2094,12 +2088,12 @@ Elseif ($Testing) {
                 
 
     # Text Poster Logging
-    $logEntryShort = "magick.exe $ArgumentsShort"
-    $logEntryMedium = "magick.exe $ArgumentsMedium"
-    $logEntryLong = "magick.exe $ArgumentsLong"
-    $logEntryShortCAPS = "magick.exe $ArgumentsShortCAPS"
-    $logEntryMediumCAPS = "magick.exe $ArgumentsMediumCAPS"
-    $logEntryLongCAPS = "magick.exe $ArgumentsLongCAPS"
+    $logEntryShort = "`"$magick`" $ArgumentsShort"
+    $logEntryMedium = "`"$magick`" $ArgumentsMedium"
+    $logEntryLong = "`"$magick`" $ArgumentsLong"
+    $logEntryShortCAPS = "`"$magick`" $ArgumentsShortCAPS"
+    $logEntryMediumCAPS = "`"$magick`" $ArgumentsMediumCAPS"
+    $logEntryLongCAPS = "`"$magick`" $ArgumentsLongCAPS"
 
     $logEntryShort | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
     $logEntryShortCAPS | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
@@ -2109,12 +2103,12 @@ Elseif ($Testing) {
     $logEntryLongCAPS | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
 
     # Text background Logging
-    $backgroundlogEntryShort = "magick.exe $backgroundArgumentsShort"
-    $backgroundlogEntryMedium = "magick.exe $backgroundArgumentsMedium"
-    $backgroundlogEntryLong = "magick.exe $backgroundArgumentsLong"
-    $backgroundlogEntryShortCAPS = "magick.exe $backgroundArgumentsShortCAPS"
-    $backgroundlogEntryMediumCAPS = "magick.exe $backgroundArgumentsMediumCAPS"
-    $backgroundlogEntryLongCAPS = "magick.exe $backgroundArgumentsLongCAPS"
+    $backgroundlogEntryShort = "`"$magick`" $backgroundArgumentsShort"
+    $backgroundlogEntryMedium = "`"$magick`" $backgroundArgumentsMedium"
+    $backgroundlogEntryLong = "`"$magick`" $backgroundArgumentsLong"
+    $backgroundlogEntryShortCAPS = "`"$magick`" $backgroundArgumentsShortCAPS"
+    $backgroundlogEntryMediumCAPS = "`"$magick`" $backgroundArgumentsMediumCAPS"
+    $backgroundlogEntryLongCAPS = "`"$magick`" $backgroundArgumentsLongCAPS"
 
     $backgroundlogEntryShort | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
     $backgroundlogEntryShortCAPS | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
@@ -2124,22 +2118,22 @@ Elseif ($Testing) {
     $backgroundlogEntryLongCAPS | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
     
     # Title Text Titlecard Logging
-    $TitleCardTitlelogEntryShort = "magick.exe $TitleCardTitleArgumentsShort"
-    $TitleCardTitlelogEntryMedium = "magick.exe $TitleCardTitleArgumentsMedium"
-    $TitleCardTitlelogEntryLong = "magick.exe $TitleCardTitleArgumentsLong"
-    $TitleCardTitlelogEntryshortCAPS = "magick.exe $TitleCardTitleArgumentsShortCAPS"
-    $TitleCardTitlelogEntryMediumCAPS = "magick.exe $TitleCardTitleArgumentsMediumCAPS"
-    $TitleCardTitlelogEntryLongCAPS = "magick.exe $TitleCardTitleArgumentsLongCAPS"
+    $TitleCardTitlelogEntryShort = "`"$magick`" $TitleCardTitleArgumentsShort"
+    $TitleCardTitlelogEntryMedium = "`"$magick`" $TitleCardTitleArgumentsMedium"
+    $TitleCardTitlelogEntryLong = "`"$magick`" $TitleCardTitleArgumentsLong"
+    $TitleCardTitlelogEntryshortCAPS = "`"$magick`" $TitleCardTitleArgumentsShortCAPS"
+    $TitleCardTitlelogEntryMediumCAPS = "`"$magick`" $TitleCardTitleArgumentsMediumCAPS"
+    $TitleCardTitlelogEntryLongCAPS = "`"$magick`" $TitleCardTitleArgumentsLongCAPS"
 
     # Episode Text Titlecard Logging
-    $TitleCardEPlogEntryShort = "magick.exe $TitleCardEPArgumentsShort"
-    $TitleCardEPlogEntryMedium = "magick.exe $TitleCardEPArgumentsMedium"
-    $TitleCardEPlogEntryLong = "magick.exe $TitleCardEPArgumentsLong"
-    $TitleCardEPlogEntryepisode = "magick.exe $TitleCardEPArgumentsEpisode"
-    $TitleCardEPlogEntryshortCAPS = "magick.exe $TitleCardEPArgumentsShortCAPS"
-    $TitleCardEPlogEntryMediumCAPS = "magick.exe $TitleCardEPArgumentsMediumCAPS"
-    $TitleCardEPlogEntryLongCAPS = "magick.exe $TitleCardEPArgumentsLongCAPS"
-    $TitleCardEPlogEntryepisodeCAPS = "magick.exe $TitleCardEPArgumentsEpisodeCAPS"
+    $TitleCardEPlogEntryShort = "`"$magick`" $TitleCardEPArgumentsShort"
+    $TitleCardEPlogEntryMedium = "`"$magick`" $TitleCardEPArgumentsMedium"
+    $TitleCardEPlogEntryLong = "`"$magick`" $TitleCardEPArgumentsLong"
+    $TitleCardEPlogEntryepisode = "`"$magick`" $TitleCardEPArgumentsEpisode"
+    $TitleCardEPlogEntryshortCAPS = "`"$magick`" $TitleCardEPArgumentsShortCAPS"
+    $TitleCardEPlogEntryMediumCAPS = "`"$magick`" $TitleCardEPArgumentsMediumCAPS"
+    $TitleCardEPlogEntryLongCAPS = "`"$magick`" $TitleCardEPArgumentsLongCAPS"
+    $TitleCardEPlogEntryepisodeCAPS = "`"$magick`" $TitleCardEPArgumentsEpisodeCAPS"
 
     $TitleCardTitlelogEntryShort | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
     $TitleCardTitlelogEntryShortCAPS | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
@@ -2191,7 +2185,7 @@ Elseif ($Testing) {
     Start-Process $magick -Wait -NoNewWindow -ArgumentList $TitleCardEPArgumentsMediumCAPS
     Start-Process $magick -Wait -NoNewWindow -ArgumentList $TitleCardEPArgumentsLongCAPS
 
-    Write-log -Subtext "Poster/Background Tests finished, you can find them here: $global:ScriptRoot\test" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Success
+    Write-log -Subtext "Poster/Background/TitleCard Tests finished, you can find them here: $(Join-Path $global:ScriptRoot 'test')" -Path (Join-Path $global:ScriptRoot 'Logs\Testinglog.log') -Type Success
     Remove-Item -LiteralPath $testimage | out-null
     Remove-Item -LiteralPath $backgroundtestimage | out-null
 }
@@ -2418,7 +2412,7 @@ else {
                     $PosterImageoriginal = "$AssetPath\$($entry.RootFoldername).jpg"
                 }
     
-                $PosterImage = "$global:ScriptRoot\temp\$($entry.RootFoldername).jpg"
+                $PosterImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername).jpg"
                 $PosterImage = $PosterImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
     
                 if (!(Get-ChildItem -LiteralPath $PosterImageoriginal -ErrorAction SilentlyContinue)) {
@@ -2516,7 +2510,7 @@ else {
                                 $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$PosterImage`""
                                 Write-log -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                             }
-                            $logEntry = "magick.exe $Arguments"
+                            $logEntry = "`"$magick`" $Arguments"
                             $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
                             Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
         
@@ -2525,7 +2519,7 @@ else {
                                 Write-log -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                 $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -composite `"$PosterImage`""
                                 Write-log -Subtext "Applying Poster text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-                                $logEntry = "magick.exe $Arguments"
+                                $logEntry = "`"$magick`" $Arguments"
                                 $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
                                 Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
                             }
@@ -2533,7 +2527,7 @@ else {
                         Else {
                             $Resizeargument = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$PosterImage`""
                             Write-log -Subtext "Resizing it... " -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-                            $logEntry = "magick.exe $Resizeargument"
+                            $logEntry = "`"$magick`" $Resizeargument"
                             $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
                             Start-Process $magick -Wait -NoNewWindow -ArgumentList $Resizeargument
                         }
@@ -2575,7 +2569,7 @@ else {
                         $backgroundImageoriginal = "$AssetPath\$($entry.RootFoldername)_background.jpg"
                     }
         
-                    $backgroundImage = "$global:ScriptRoot\temp\$($entry.RootFoldername)_background.jpg"
+                    $backgroundImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_background.jpg"
                     $backgroundImage = $backgroundImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
 
                     if (!(Get-ChildItem -LiteralPath $backgroundImageoriginal -ErrorAction SilentlyContinue)) {
@@ -2669,7 +2663,7 @@ else {
                                     $Arguments = "`"$backgroundImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$backgroundImage`""
                                     Write-log -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                 }
-                                $logEntry = "magick.exe $Arguments"
+                                $logEntry = "`"$magick`" $Arguments"
                                 $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
                                 Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
             
@@ -2678,7 +2672,7 @@ else {
                                     Write-log -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                     $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -size `"$Backgroundboxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -composite `"$backgroundImage`""
                                     Write-log -Subtext "Applying Background text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-                                    $logEntry = "magick.exe $Arguments"
+                                    $logEntry = "`"$magick`" $Arguments"
                                     $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
                                     Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
                                 }
@@ -2686,7 +2680,7 @@ else {
                             Else {
                                 $Resizeargument = "`"$backgroundImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$backgroundImage`""
                                 Write-log -Subtext "Resizing it... " -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-                                $logEntry = "magick.exe $Resizeargument"
+                                $logEntry = "`"$magick`" $Resizeargument"
                                 $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
                                 Start-Process $magick -Wait -NoNewWindow -ArgumentList $Resizeargument
                             }
@@ -2768,7 +2762,7 @@ else {
                 $PosterImageoriginal = "$AssetPath\$($entry.RootFoldername).jpg"
             }
     
-            $PosterImage = "$global:ScriptRoot\temp\$($entry.RootFoldername).jpg"
+            $PosterImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername).jpg"
             $PosterImage = $PosterImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
             
             if (!(Get-ChildItem -LiteralPath $PosterImageoriginal -ErrorAction SilentlyContinue)) {
@@ -2870,7 +2864,7 @@ else {
                             $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$PosterImage`""
                             Write-log -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                         }
-                        $logEntry = "magick.exe $Arguments"
+                        $logEntry = "`"$magick`" $Arguments"
                         $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
                         Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
     
@@ -2879,7 +2873,7 @@ else {
                             Write-log -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                             $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -composite `"$PosterImage`""
                             Write-log -Subtext "Applying Poster text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-                            $logEntry = "magick.exe $Arguments"
+                            $logEntry = "`"$magick`" $Arguments"
                             $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
                             Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
                         }
@@ -2887,7 +2881,7 @@ else {
                     Else {
                         $Resizeargument = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$PosterImage`""
                         Write-log -Subtext "Resizing it... " -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-                        $logEntry = "magick.exe $Resizeargument"
+                        $logEntry = "`"$magick`" $Resizeargument"
                         $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
                         Start-Process $magick -Wait -NoNewWindow -ArgumentList $Resizeargument
                     }
@@ -2933,7 +2927,7 @@ else {
                     $backgroundImageoriginal = "$AssetPath\$($entry.RootFoldername)_background.jpg"
                 }
     
-                $backgroundImage = "$global:ScriptRoot\temp\$($entry.RootFoldername)_background.jpg"
+                $backgroundImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_background.jpg"
                 $backgroundImage = $backgroundImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
 
                 if (!(Get-ChildItem -LiteralPath $backgroundImageoriginal -ErrorAction SilentlyContinue)) {
@@ -3029,7 +3023,7 @@ else {
                                 $Arguments = "`"$backgroundImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$backgroundImage`""
                                 Write-log -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                             }
-                            $logEntry = "magick.exe $Arguments"
+                            $logEntry = "`"$magick`" $Arguments"
                             $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
                             Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
         
@@ -3038,7 +3032,7 @@ else {
                                 Write-log -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                 $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -size `"$Backgroundboxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -composite `"$backgroundImage`""
                                 Write-log -Subtext "Applying Background text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-                                $logEntry = "magick.exe $Arguments"
+                                $logEntry = "`"$magick`" $Arguments"
                                 $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
                                 Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
                             }
@@ -3046,7 +3040,7 @@ else {
                         Else {
                             $Resizeargument = "`"$backgroundImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$backgroundImage`""
                             Write-log -Subtext "Resizing it... " -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-                            $logEntry = "magick.exe $Resizeargument"
+                            $logEntry = "`"$magick`" $Resizeargument"
                             $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
                             Start-Process $magick -Wait -NoNewWindow -ArgumentList $Resizeargument
                         }
@@ -3097,7 +3091,7 @@ else {
                     Else {
                         $SeasonImageoriginal = "$AssetPath\$($entry.RootFoldername)_$global:season.jpg"
                     }
-                    $SeasonImage = "$global:ScriptRoot\temp\$($entry.RootFoldername)_$global:season.jpg"
+                    $SeasonImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_$global:season.jpg"
                     $SeasonImage = $SeasonImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
                     if (!(Get-ChildItem -LiteralPath $SeasonImageoriginal -ErrorAction SilentlyContinue)) {
                         if (!$Seasonpostersearchtext) {
@@ -3195,7 +3189,7 @@ else {
                                         Write-log -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                     }
                                         
-                                    $logEntry = "magick.exe $Arguments"
+                                    $logEntry = "`"$magick`" $Arguments"
                                     $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
                                     Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
                                         
@@ -3207,7 +3201,7 @@ else {
                                         $Arguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$global:seasonTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -composite `"$SeasonImage`""
                                                 
                                         Write-log -Subtext "Applying seasonTitle text: `"$global:seasonTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-                                        $logEntry = "magick.exe $Arguments"
+                                        $logEntry = "`"$magick`" $Arguments"
                                         $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
                                         Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
                                     }
@@ -3246,7 +3240,7 @@ else {
                                     # Resize Image to 2000x3000
                                     $Resizeargument = "`"$SeasonImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$SeasonImage`""
                                     Write-log -Subtext "Resizing it... " -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-                                    $logEntry = "magick.exe $Resizeargument"
+                                    $logEntry = "`"$magick`" $Resizeargument"
                                     $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
                                     Start-Process $magick -Wait -NoNewWindow -ArgumentList $Resizeargument
                                 }
@@ -3311,7 +3305,7 @@ else {
                             Else {
                                 $EpisodeImageoriginal = "$AssetPath\$($entry.RootFoldername)_$global:FileNaming.jpg"
                             }
-                            $EpisodeImage = "$global:ScriptRoot\temp\$($entry.RootFoldername)_$global:FileNaming.jpg"
+                            $EpisodeImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_$global:FileNaming.jpg"
                             $EpisodeImage = $EpisodeImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
                             if (!(Get-ChildItem -LiteralPath $EpisodeImageoriginal -ErrorAction SilentlyContinue)) {
                                 if (!$Episodepostersearchtext) {
@@ -3393,7 +3387,7 @@ else {
                                                 $Arguments = "`"$EpisodeImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$EpisodeImage`""
                                                 Write-log -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                             }
-                                            $logEntry = "magick.exe $Arguments"
+                                            $logEntry = "`"$magick`" $Arguments"
                                             $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
                                             Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
                                                     
@@ -3408,7 +3402,7 @@ else {
                                                 $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -composite `"$EpisodeImage`""
                                                                 
                                                 Write-log -Subtext "Applying EPTitle text: `"$global:EPTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-                                                $logEntry = "magick.exe $Arguments"
+                                                $logEntry = "`"$magick`" $Arguments"
                                                 $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
                                                 Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
                                                         
@@ -3424,7 +3418,7 @@ else {
                                                 $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPfontcolor`" -size `"$TitleCardEPboxsize`" -background none caption:`" $global:SeasonEPNumber`" -trim -gravity south -extent `"$TitleCardEPboxsize`" `) -gravity south -geometry +0`"$TitleCardEPtext_offset`" -composite `"$EpisodeImage`""
                                                                 
                                                 Write-log -Subtext "Applying SeasonEPNumber text: `"$global:SeasonEPNumber`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-                                                $logEntry = "magick.exe $Arguments"
+                                                $logEntry = "`"$magick`" $Arguments"
                                                 $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
                                                 Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
                                             }
@@ -3449,7 +3443,7 @@ else {
                                             # Resize Image to 2000x3000
                                             $Resizeargument = "`"$EpisodeImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$EpisodeImage`""
                                             Write-log -Subtext "Resizing it... " -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-                                            $logEntry = "magick.exe $Resizeargument"
+                                            $logEntry = "`"$magick`" $Resizeargument"
                                             $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
                                             Start-Process $magick -Wait -NoNewWindow -ArgumentList $Resizeargument
                                         }
