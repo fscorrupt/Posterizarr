@@ -36,7 +36,7 @@ function Write-Log {
         'Trace' { $Color = "cyan" }
         'Success' { $Color = "green" }
     }
-    if (!(Test-Path -path $path)){
+    if (!(Test-Path -path $path)) {
         New-Item -Path $Path -Force | out-null
     }
     # ASCII art header
@@ -57,11 +57,11 @@ function Write-Log {
     }
     $Timestamp = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
     $PaddedType = $Type.PadRight(8)
-    $Linenumber = "L"+"."+"$($MyInvocation.ScriptLineNumber)"
-    if ($Linenumber.Length -eq '5'){
-        $Linenumber = $Linenumber+" "
+    $Linenumber = "L" + "." + "$($MyInvocation.ScriptLineNumber)"
+    if ($Linenumber.Length -eq '5') {
+        $Linenumber = $Linenumber + " "
     }
-    $TypeFormatted = "[{0}] {1}|{2}" -f $Timestamp, $PaddedType.ToUpper(),$Linenumber
+    $TypeFormatted = "[{0}] {1}|{2}" -f $Timestamp, $PaddedType.ToUpper(), $Linenumber
 
     if ($Message) {
         $FormattedLine1 = "{0}| {1}" -f ($TypeFormatted, $Message)
@@ -594,7 +594,7 @@ function GetTMDBTitleCard {
             }
         }
         Else {
-            Write-log -Subtext "No Title Card on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type error
+            Write-log -Subtext "No Title Card found on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type error
             $global:Fallback = "TVDB"
         }
     }
@@ -1193,7 +1193,7 @@ function GetTVDBShowBackground {
 }
 function GetTVDBTitleCard {
     if ($global:tvdbid) {
-        Write-log -Subtext "Searching on TVDB for a Title Card" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+        Write-log -Subtext "Searching on TVDB for: $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
         try {
             $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/series/$($global:tvdbid)/episodes/default?" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
         }
@@ -1201,12 +1201,12 @@ function GetTVDBTitleCard {
         }
         if ($response) {
             if ($response.data.episodes) {
-                $NoLangImageUrl = $response.data.episodes | Where-Object { $_.seasonNumber -eq $global:season_number -and $_.number -eq $global:episodenumber }
+                $global:NoLangImageUrl = $response.data.episodes | Where-Object { $_.seasonNumber -eq $global:season_number -and $_.number -eq $global:episodenumber }
                 if ($NoLangImageUrl) {
-                    $global:posterurl = $NoLangImageUrl[0].image
+                    $global:posterurl = $global:NoLangImageUrl.image
                     Write-log -Subtext "Found Textless Title Card on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
                     $global:TextlessPoster = $true
-                    return $global:posterurl
+                    return $global:NoLangImageUrl.image
                 }
             }
             Else {
@@ -1290,7 +1290,7 @@ if ($AssetPath.StartsWith("\")) {
 
 $global:ScriptRoot = $PSScriptRoot
 # Construct cross-platform paths
-if ($global:OSType -ne "Win32NT"){
+if ($global:OSType -ne "Win32NT") {
     $joinsymbol = "/"
 }
 Else {
@@ -1379,7 +1379,7 @@ $BackgroundSize = "3840x2160"
 $fontImagemagick = $font.replace('\', '\\')
 $backgroundfontImagemagick = $backgroundfont.replace('\', '\\')
 $TitleCardfontImagemagick = $TitleCardfont.replace('\', '\\')
-if ($global:OSType -ne "Win32NT"){
+if ($global:OSType -ne "Win32NT") {
     $magickinstalllocation = $PSScriptRoot
     $magick = Join-Path $PSScriptRoot 'magick'
 }
@@ -1412,7 +1412,7 @@ if ($Testing) {
 # Create directories if they don't exist
 foreach ($path in $LogsPath, $TempPath, $TestPath, $AssetPath) {
     if (!(Test-Path $path)) {
-        if ($global:OSType -ne "Win32NT" -and $path -eq 'P:\assets'){
+        if ($global:OSType -ne "Win32NT" -and $path -eq 'P:\assets') {
             Write-Log -Message 'Please change default asset Path...' -Path $configLogging -Type Error
             Exit
         }
@@ -1448,7 +1448,7 @@ Test-And-Download -url "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/
 Test-And-Download -url "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/Rocky.ttf" -destination (Join-Path $TempPath 'Rocky.ttf')
 
 # Cleanup old log files
-$logFilesToDelete = @("Manuallog.log", "Testinglog.log", "ImageMagickCommands.log", "Scriptlog.log", "ImageChoices.csv", "PlexLibexport.csv", "PlexEpisodeExport.csv")
+$logFilesToDelete = @("Manuallog.log", "Testinglog.log", "ImageMagickCommands.log", "Scriptlog.log")
 
 foreach ($logFile in $logFilesToDelete) {
     $logFilePath = Join-Path $LogsPath $logFile
@@ -1577,7 +1577,8 @@ Else {
     Write-log -Message "Checking Plex access now..." -Path $configLogging -Type Info
     try {
         $result = Invoke-WebRequest -Uri $PlexUrl -ErrorAction SilentlyContinue
-    } catch {
+    }
+    catch {
         Write-log -Message "Could not access plex with this url: $PlexUrl" -Path $configLogging -Type Error
         Write-log -Message "Error Message: $_" -Path $configLogging -Type Error
         $Errorcount++
@@ -1628,19 +1629,22 @@ $titlecardoverlaydimensions = & $magick $titlecardoverlay -format "%wx%h" info:
 # Check Poster Overlay Size:
 if ($Posteroverlaydimensions -eq $PosterSize) {
     Write-log -Subtext "Poster overlay is correctly sized at: $Postersize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
-}else{
+}
+else {
     Write-log -Subtext "Poster overlay is NOT correctly sized at: $Postersize. Actual dimensions: $Posteroverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
 }
 # Check Background Overlay Size:
 if ($Backgroundoverlaydimensions -eq $BackgroundSize) {
     Write-log -Subtext "Background overlay is correctly sized at: $BackgroundSize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
-}else{
+}
+else {
     Write-log -Subtext "Background overlay is NOT correctly sized at: $BackgroundSize. Actual dimensions: $Backgroundoverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
 }
 # Check TitleCard Overlay Size:
 if ($titlecardoverlaydimensions -eq $BackgroundSize) {
     Write-log -Subtext "TitleCard overlay is correctly sized at: $BackgroundSize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
-}else{
+}
+else {
     Write-log -Subtext "TitleCard overlay is NOT correctly sized at: $BackgroundSize. Actual dimensions: $titlecardoverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
 }
 
@@ -2244,7 +2248,6 @@ else {
     Write-log -Subtext "Found '$($Libsoverview.count)' libs and '$($LibstoExclude.count)' are excluded..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
     $IncludedLibraryNames = $Libsoverview.Name -join ', '
     Write-Log -Subtext "Included Libraries: $IncludedLibraryNames" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
-
     Write-log -Message "Query all items from all Libs, this can take a while..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
     $Libraries = @()
     Foreach ($Library in $Libsoverview) {
@@ -2364,7 +2367,7 @@ else {
     Write-log -Subtext "Found '$($Libraries.count)' Items..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
     $Libraries | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\PlexLibexport.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
     Write-log -Message "Export everything to a csv: $global:ScriptRoot\Logs\PlexLibexport.csv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-
+    
     # Initialize counter variable
     $posterCount = 0
     $SeasonCount = 0
@@ -2397,7 +2400,6 @@ else {
                 $tempseasondata | Add-Member -MemberType NoteProperty -Name "Show Name" -Value $Seasondata.MediaContainer.grandparentTitle
                 $tempseasondata | Add-Member -MemberType NoteProperty -Name "Type" -Value $Seasondata.MediaContainer.viewGroup
                 $tempseasondata | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $showentry.tvdbid
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "imdbid" -Value $showentry.imdbid
                 $tempseasondata | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value $showentry.tmdbid
                 $tempseasondata | Add-Member -MemberType NoteProperty -Name "Season Number" -Value $Seasondata.MediaContainer.parentIndex
                 $tempseasondata | Add-Member -MemberType NoteProperty -Name "Episodes" -Value $($Seasondata.MediaContainer.video.index -join ',')
@@ -2753,7 +2755,7 @@ else {
         }
     }
 
-    Write-log -Message "Starting Show/Season Poster Creation part..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
+    Write-log -Message "Starting Show/Season Poster/Background/TitleCard Creation part..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
     # Show Part
     foreach ($entry in $AllShows) {
         if ($($entry.RootFoldername)) {
@@ -3343,7 +3345,7 @@ else {
                                     Write-log -Message "Start Title Card Search for: $global:show_name - $global:SeasonEPNumber" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                     $Episodepostersearchtext = $true
                                 }
-                                # now search for season poster, fallback to show backdrop.
+                                # now search for TitleCards
                                 if ($global:FavProvider -eq 'TMDB') {
                                     if ($episode.tmdbid) {
                                         $global:posterurl = GetTMDBTitleCard
@@ -3351,7 +3353,6 @@ else {
                                             $global:posterurl = GetTVDBTitleCard
                                         }
                                         if (!$global:posterurl ) {
-                                            Write-log -Subtext "No Title Cards for this Episode on TVDB or TMDB..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
                                             $Errorcount++
                                         }
                                     }
@@ -3371,7 +3372,6 @@ else {
                                             $global:posterurl = GetTMDBTitleCard
                                         }
                                         if (!$global:posterurl ) {
-                                            Write-log -Subtext "No Title Cards for this Episode on TVDB or TMDB..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
                                             $Errorcount++
                                         }
                                     }
@@ -3379,7 +3379,6 @@ else {
                                         Write-Log -Subtext "Can't search on TVDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
                                         $global:posterurl = GetTMDBTitleCard
                                         if (!$global:posterurl ) {
-                                            Write-log -Subtext "No Title Cards for this Episode on TVDB or TMDB..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
                                             $Errorcount++
                                         }
                                     }
@@ -3500,7 +3499,6 @@ else {
                                     $episodetemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                                 }
                                 Else {
-                                    Write-log -Subtext "Missing poster URL for: $($global:SeasonEPNumber)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Type Error
                                     Write-log -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Type Info
                                     $Errorcount++
                                 }
@@ -3526,7 +3524,7 @@ else {
     $FormattedTimespawn = $hours.ToString() + "h " + $minutes.ToString() + "m " + $seconds.ToString() + "s "
 
     Write-log -Message "Finished, Total images created: $posterCount" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
-    if ($posterCount -ge '1'){
+    if ($posterCount -ge '1') {
         Write-log -Message "Show/Movie Posters created: $($posterCount-$SeasonCount-$BackgroundCount-$EpisodeCount)| Season images created: $SeasonCount | Background images created: $BackgroundCount | TitleCards created: $EpisodeCount" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
     }
     if ((Test-Path $global:ScriptRoot\Logs\ImageChoices.csv)) {
