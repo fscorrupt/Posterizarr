@@ -1610,7 +1610,7 @@ if (!(Test-Path $magick)) {
         $Errorcount++
         $InstallArguments = "/verysilent /DIR=`"$magickinstalllocation`""
         $result = Invoke-WebRequest "https://imagemagick.org/archive/binaries/?C=M;O=D"
-        $LatestRelease = ($result.links | Where-Object href -like '*Q16-HDRI-x64-dll.exe' | Sort-Object)[0].href
+        $LatestRelease = ($result.links.href | Where-Object {$_ -like '*Q16-HDRI-x64-dll.exe'} | Sort-Object | Select-Object -Last 1)
         # Construct the download path
         $DownloadPath = Join-Path -Path $global:ScriptRoot -ChildPath (Join-Path -Path 'temp' -ChildPath $LatestRelease)
         Invoke-WebRequest "https://imagemagick.org/archive/binaries/$LatestRelease" -OutFile $DownloadPath
