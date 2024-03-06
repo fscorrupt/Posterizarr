@@ -3124,6 +3124,7 @@ else {
             # Now we can start the Season Part
             if ($global:SeasonPosters -eq 'true') {
                 $global:IsFallback = $null
+                $global:TextlessPoster = $null
                 $global:seasonNames = $entry.SeasonNames -split ','
                 $global:seasonNumbers = $entry.seasonNumbers -split ','
                 for ($i = 0; $i -lt $global:seasonNames.Count; $i++) {
