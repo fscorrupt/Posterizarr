@@ -1248,6 +1248,7 @@ $startTime = Get-Date
 $global:OSType = [System.Environment]::OSVersion.Platform
 if ($env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker-Alpine*'){
     $global:OSType = "DockerAlpine"
+    $ProgressPreference = 'SilentlyContinue'
 }
 
 # Check if Config file is present
@@ -1397,8 +1398,13 @@ $fontImagemagick = $font.replace('\', '\\')
 $backgroundfontImagemagick = $backgroundfont.replace('\', '\\')
 $TitleCardfontImagemagick = $TitleCardfont.replace('\', '\\')
 if ($global:OSType -ne "Win32NT") {
-    $magickinstalllocation = $PSScriptRoot
-    $magick = Join-Path $PSScriptRoot 'magick'
+    if ($global:OSType -eq "DockerAlpine"){
+        $magick = 'magick'
+    }
+    Else{
+        $magickinstalllocation = $PSScriptRoot
+        $magick = Join-Path $PSScriptRoot 'magick'
+    }
 }
 Else {
     $magickinstalllocation = RemoveTrailingSlash $config.PrerequisitePart.magickinstalllocation
@@ -1617,10 +1623,12 @@ Else {
 
 if (!(Test-Path $magick)) {
     if ($global:OSType -ne "Win32NT") {
-        Write-log -Message "ImageMagick missing, downloading the portable version for you..." -Path $configLogging -Type Warning
-        Invoke-WebRequest -Uri "https://imagemagick.org/archive/binaries/magick" -OutFile "$global:ScriptRoot/magick"
-        chmod +x "$global:ScriptRoot/magick"
-        Write-log -Subtext "made the portable magick executeable..." -Path $configLogging -Type Success
+        if ($global:OSType -ne "DockerAlpine"){
+            Write-log -Message "ImageMagick missing, downloading the portable version for you..." -Path $configLogging -Type Warning
+            Invoke-WebRequest -Uri "https://imagemagick.org/archive/binaries/magick" -OutFile "$global:ScriptRoot/magick"
+            chmod +x "$global:ScriptRoot/magick"
+            Write-log -Subtext "made the portable magick executeable..." -Path $configLogging -Type Success
+        }
     }
     Else {
         Write-log -Message "ImageMagick missing, downloading/installing it for you..." -Path $configLogging -Type Error
