@@ -1246,6 +1246,9 @@ function GetIMDBPoster {
 
 $startTime = Get-Date
 $global:OSType = [System.Environment]::OSVersion.Platform
+if ($env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker-Alpine*'){
+    $global:OSType = "DockerAlpine"
+}
 
 # Check if Config file is present
 if (!(Test-Path $(Join-Path $PSScriptRoot 'config.json'))) {
