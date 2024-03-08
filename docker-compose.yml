@@ -1,0 +1,23 @@
+---
+version: "3"
+services:
+  ppm:
+    hostname: "ppm"
+    container_name: "ppm"
+    environment:
+      - "PGID=1000"
+      - "PUID=1000"
+      - "TZ=Europe/Berlin"
+      - "UMASK=022"
+      - "TERM=xterm"
+      - "RUN_TIME=10:30,19:30"
+    image: "ghcr.io/fscorrupt/docker-ppm:latest"
+    restart: "unless-stopped"
+    networks:
+      - "proxy"
+    volumes:
+      - "/opt/appdata/ppm:/config:rw"
+networks:
+  proxy:
+    driver: bridge
+    external: true

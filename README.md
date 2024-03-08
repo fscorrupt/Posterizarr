@@ -2,7 +2,9 @@
 
 This PowerShell script automates the process of generating images for your Plex media library. Leveraging information from your Plex library, such as movie or show titles | season and episode data, it fetches relevant artwork from Fanart.tv, TMDB, TVDB, and IMDB. The script is able to focus on specific language to grab; by default, it is `xx`, which means textless, and then fallbacks to `en` if not available. This is a setting a user can decide on, either to focus on textless or on text posters. It also offers both automatic and manual modes for generating posters, accommodating custom creations that cannot be automated.
 
-```Plex Poster Maker is cross-platform ready, meaning it can run on both Linux and Windows operating systems.```
+```Plex Poster Maker is cross-platform ready, meaning it can run on both Linux, Docker and on Windows operating systems.```
+
+[Click here for Docker instructions.](#docker)
 
 **Suported Poster Types:**
 - Movie/Show Posters
@@ -195,8 +197,26 @@ This is handy for testing your configuration before applying it en masse to the 
 .\PlexPosterMaker.ps1 -Testing
 ```
 
+### Docker
+- [Docker-Compose Example File](docker-compose.yml)
+  - Change `RUN_TIME` in yaml to your needs **24H Time Format**
+    - The Script gets executed on the Times you specified
+    - Before starting the scheduled run it checks if another PPM process is running, if yes - the scheduled run will be skipped.
+  - Change `volume` and `network` to fit your environment (Make sure you have the same network as your plex container when you use local IP of plex)
+  - Change `TimeZone` to yours, otherwise it will get scheduled to a different time you may want it to.
 
-**Images from Testing Mode**
+  if you manually watn to run the Script you can do it this way:
+
+  **Automatic Mode:**
+  ```sh
+  docker exec -it ppm pwsh /config/PlexPosterMaker.ps1
+  ```
+  **Testing Mode:**
+  ```sh
+  docker exec -it ppm pwsh /config/PlexPosterMaker.ps1 -Testing
+  ```
+### Images from Testing Mode
+
 
 <details close>
 <summary>🖼️Posters</summary>
