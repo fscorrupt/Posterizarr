@@ -213,11 +213,11 @@ This is handy for testing your configuration before applying it en masse to the 
 
   **Automatic Mode:**
   ```sh
-  docker exec -it ppm pwsh /config/PlexPosterMaker.ps1
+  docker exec -it ppm pwsh PlexPosterMaker.ps1
   ```
   **Testing Mode:**
   ```sh
-  docker exec -it ppm pwsh /config/PlexPosterMaker.ps1 -Testing
+  docker exec -it ppm pwsh PlexPosterMaker.ps1 -Testing
   ```
 ### Images from Testing Mode
 
