@@ -93,7 +93,7 @@ function RemoveTrailingSlash($path) {
     }
     return $path
 }
-Function Get-OptimalPointSize {
+function Get-OptimalPointSize {
     param(
         [string]$text,
         [string]$fontImagemagick,
@@ -1297,6 +1297,41 @@ if (!$global:FavProvider) {
 $LibstoExclude = $config.PlexPart.LibstoExclude
 $PlexUrl = $config.PlexPart.PlexUrl
 # Prerequisites Part
+# Rotate logs
+$logFolder = Join-Path $global:ScriptRoot "Logs"
+$folderPattern = "Logs_*"
+$maxLogs = [int]$config.PrerequisitePart.maxLogs  # Cast to integer
+$RotationFolderName = "RotatedLogs"
+# Check if the cast was successful
+if ($null -eq $maxLogs) {
+    Write-Warning "Invalid value for maxLogs. Setting it to 1."
+    $maxLogs = 1
+}
+# Ensure $maxLogs is at least 1
+if ($maxLogs -le 0) {
+    Write-Warning "Invalid value for maxLogs. Setting it to 1."
+    $maxLogs = 1
+}
+
+# Check if the log folder exists
+if (Test-Path -Path $logFolder -PathType Container) {
+    # Rename the existing log folder with a timestamp
+    $timestamp = Get-Date -Format 'yyyyMMdd_HHmmss'
+    Rename-Item -Path $logFolder -NewName "$logFolder`_$timestamp"
+    if (!(Test-Path $(Join-Path $global:ScriptRoot $RotationFolderName))){
+        New-Item -ItemType Directory -Path $global:ScriptRoot -Name $RotationFolderName -Force | Out-Null
+    }
+    Move-Item -Path "$logFolder`_$timestamp" $(Join-Path $global:ScriptRoot $RotationFolderName)
+}
+
+# Delete excess log folders
+$logFolders = Get-ChildItem -Path $(Join-Path $global:ScriptRoot $RotationFolderName) -Directory | Where-Object { $_.Name -match $folderPattern } | Sort-Object CreationTime -Descending | Select-Object -First $maxLogs
+foreach ($folder in (Get-ChildItem -Path $(Join-Path $global:ScriptRoot $RotationFolderName) -Directory | Where-Object { $_.Name -match $folderPattern })) {
+    if ($folder.FullName -notin $logFolders.FullName) {
+        Remove-Item -Path $folder.FullName -Recurse -Force
+    }
+}
+
 $AssetPath = RemoveTrailingSlash $config.PrerequisitePart.AssetPath
 
 # Check if its a Network Share
