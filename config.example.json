@@ -14,6 +14,7 @@
   "PrerequisitePart":{
     "AssetPath": "P:\\assets",
     "magickinstalllocation": "C:\\PosterTemp\\ImageMagick-7.1.1-Q16-HDRI",
+    "maxLogs": "5",
     "font": "Rocky.ttf",
     "backgroundfont": "Rocky.ttf",
     "titlecardfont": "Rocky.ttf",
