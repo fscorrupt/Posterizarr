@@ -2291,7 +2291,15 @@ Elseif ($Testing) {
     Start-Process $magick -Wait -NoNewWindow -ArgumentList $TitleCardEPArgumentsMediumCAPS
     Start-Process $magick -Wait -NoNewWindow -ArgumentList $TitleCardEPArgumentsLongCAPS
 
+    $endTime = Get-Date
+    $executionTime = New-TimeSpan -Start $startTime -End $endTime
+    # Format the execution time
+    $hours = [math]::Floor($executionTime.TotalHours)
+    $minutes = $executionTime.Minutes
+    $seconds = $executionTime.Seconds
+    $FormattedTimespawn = $hours.ToString() + "h " + $minutes.ToString() + "m " + $seconds.ToString() + "s "
     Write-log -Subtext "Poster/Background/TitleCard Tests finished, you can find them here: $(Join-Path $global:ScriptRoot 'test')" -Path (Join-Path $global:ScriptRoot 'Logs\Testinglog.log') -Type Success
+    Write-log -Message "Script execution time: $FormattedTimespawn" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Success
     Remove-Item -LiteralPath $testimage | out-null
     Remove-Item -LiteralPath $backgroundtestimage | out-null
 }
