@@ -1302,6 +1302,11 @@ $logFolder = Join-Path $global:ScriptRoot "Logs"
 $folderPattern = "Logs_*"
 $maxLogs = [int]$config.PrerequisitePart.maxLogs  # Cast to integer
 $RotationFolderName = "RotatedLogs"
+$RotationFolder = Join-Path $global:ScriptRoot $RotationFolderName
+# Create Folder if missing
+if (!(Test-Path -path $RotationFolder)) {
+    New-Item -ItemType Directory -Path $global:ScriptRoot -Name $RotationFolderName -Force | Out-Null
+}
 # Check if the cast was successful
 if ($null -eq $maxLogs) {
     Write-Warning "Invalid value for maxLogs. Setting it to 1."
@@ -1318,10 +1323,10 @@ if (Test-Path -Path $logFolder -PathType Container) {
     # Rename the existing log folder with a timestamp
     $timestamp = Get-Date -Format 'yyyyMMdd_HHmmss'
     Rename-Item -Path $logFolder -NewName "$logFolder`_$timestamp"
-    if (!(Test-Path $(Join-Path $global:ScriptRoot $RotationFolderName))){
+    if (!(Test-Path $RotationFolder)){
         New-Item -ItemType Directory -Path $global:ScriptRoot -Name $RotationFolderName -Force | Out-Null
     }
-    Move-Item -Path "$logFolder`_$timestamp" $(Join-Path $global:ScriptRoot $RotationFolderName)
+    Move-Item -Path "$logFolder`_$timestamp" $RotationFolder
 }
 
 # Delete excess log folders
@@ -1666,22 +1671,24 @@ if (!(Test-Path $magick)) {
         }
     }
     Else {
-        Write-log -Message "ImageMagick missing, downloading/installing it for you..." -Path $configLogging -Type Error
+        Write-log -Message "ImageMagick missing, downloading it for you..." -Path $configLogging -Type Error
         $Errorcount++
-        $InstallArguments = "/verysilent /DIR=`"$magickinstalllocation`""
         $result = Invoke-WebRequest "https://imagemagick.org/archive/binaries/?C=M;O=D"
-        $LatestRelease = ($result.links.href | Where-Object {$_ -like '*Q16-HDRI-x64-dll.exe'} | Sort-Object | Select-Object -Last 1)
+        $LatestRelease = ($result.links.href | Where-Object {$_ -like '*portable-Q16-HDRI-x64.zip'} | Sort-Object -Descending)[0]
         # Construct the download path
         $DownloadPath = Join-Path -Path $global:ScriptRoot -ChildPath (Join-Path -Path 'temp' -ChildPath $LatestRelease)
         Invoke-WebRequest "https://imagemagick.org/archive/binaries/$LatestRelease" -OutFile $DownloadPath
-        # Construct the installation path
-        $InstallerPath = Join-Path -Path $global:ScriptRoot -ChildPath (Join-Path -Path 'temp' -ChildPath $LatestRelease)
-        Start-Process $InstallerPath -ArgumentList $InstallArguments -NoNewWindow -Wait
-        if (Test-Path -LiteralPath $magick) {
-            Write-log -Subtext "ImageMagick installed here: $magickinstalllocation" -Path $configLogging -Type Success
+        # Construct the portable path
+        Expand-Archive -Path $DownloadPath -DestinationPath $magickinstalllocation -Force
+        if ((Get-ChildItem -Directory -LiteralPath $magickinstalllocation).name -eq $($LatestRelease.replace('.zip',''))){
+            Copy-item -Force -Recurse "$magickinstalllocation\$((Get-ChildItem -Directory -LiteralPath $magickinstalllocation).name)\*" $magickinstalllocation
+            Remove-Item -Recurse -LiteralPath "$magickinstalllocation\$((Get-ChildItem -Directory -LiteralPath $magickinstalllocation).name)" -Force
+        }
+        if (Test-Path -LiteralPath $magickinstalllocation\magick.exe) {
+            Write-log -Subtext "Placed Portable ImageMagick here: $magickinstalllocation" -Path $configLogging -Type Success
         }
         Else {
-            Write-log -Subtext "Error During installation, please manually install Imagemagick" -Path $configLogging -Type Error
+            Write-log -Subtext "Error During extraction, please manually install/copy portable Imagemagick from here: https://imagemagick.org/archive/binaries/$LatestRelease" -Path $configLogging -Type Error
         }
     }
 }
@@ -1692,24 +1699,24 @@ $titlecardoverlaydimensions = & $magick $titlecardoverlay -format "%wx%h" info:
 
 # Check Poster Overlay Size:
 if ($Posteroverlaydimensions -eq $PosterSize) {
-    Write-log -Subtext "Poster overlay is correctly sized at: $Postersize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
+    Write-log -Message "Poster overlay is correctly sized at: $Postersize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
 }
 else {
-    Write-log -Subtext "Poster overlay is NOT correctly sized at: $Postersize. Actual dimensions: $Posteroverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+    Write-log -Message "Poster overlay is NOT correctly sized at: $Postersize. Actual dimensions: $Posteroverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
 }
 # Check Background Overlay Size:
 if ($Backgroundoverlaydimensions -eq $BackgroundSize) {
-    Write-log -Subtext "Background overlay is correctly sized at: $BackgroundSize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
+    Write-log -Message "Background overlay is correctly sized at: $BackgroundSize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
 }
 else {
-    Write-log -Subtext "Background overlay is NOT correctly sized at: $BackgroundSize. Actual dimensions: $Backgroundoverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+    Write-log -Message "Background overlay is NOT correctly sized at: $BackgroundSize. Actual dimensions: $Backgroundoverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
 }
 # Check TitleCard Overlay Size:
 if ($titlecardoverlaydimensions -eq $BackgroundSize) {
-    Write-log -Subtext "TitleCard overlay is correctly sized at: $BackgroundSize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
+    Write-log -Message "TitleCard overlay is correctly sized at: $BackgroundSize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
 }
 else {
-    Write-log -Subtext "TitleCard overlay is NOT correctly sized at: $BackgroundSize. Actual dimensions: $titlecardoverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+    Write-log -Message "TitleCard overlay is NOT correctly sized at: $BackgroundSize. Actual dimensions: $titlecardoverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
 }
 
 # check if fanart Module is installed

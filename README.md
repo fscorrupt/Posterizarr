@@ -39,7 +39,7 @@ Before utilizing the script, ensure the following prerequisites are installed an
 - **TVDB API Key:** [Obtain TVDB API Key](https://thetvdb.com/api-information/signup)
     - **Do not** use `"Legacy API Key"`, it only works with a Project Api Key.
 - **ImageMagick:** [Download ImageMagick](https://imagemagick.org/script/download.php#windows)
-    - Download and Install the Latest Imagemagick, installation is covered in Script **(You may need to run the Script as Admin on first run)**.
+    - **Version 7.x is required** - Download and Install the Latest Imagemagick, installation of portable version is covered in Script **(You may need to run the Script as Admin on first run)**.
 - **Powershell Version:** 5.x or higher, ps core 6.x/7.x also works.
 
 ## Configuration:
