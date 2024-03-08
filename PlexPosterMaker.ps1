@@ -1249,7 +1249,7 @@ $global:OSType = [System.Environment]::OSVersion.Platform
 if ($env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker-Alpine*'){
     $global:OSType = "DockerAlpine"
     $ProgressPreference = 'SilentlyContinue'
-    $global:ScriptRoot = "$PSScriptRoot\config"
+    $global:ScriptRoot = "./config"
 }
 Else {
     $global:ScriptRoot = $PSScriptRoot
