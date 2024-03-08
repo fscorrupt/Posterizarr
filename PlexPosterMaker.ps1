@@ -1319,7 +1319,7 @@ if (Test-Path -Path $logFolder -PathType Container) {
     $timestamp = Get-Date -Format 'yyyyMMdd_HHmmss'
     Rename-Item -Path $logFolder -NewName "$logFolder`_$timestamp"
     if (!(Test-Path $(Join-Path $global:ScriptRoot $RotationFolderName))){
-        New-Item -ItemType Directory -Path $global:ScriptRoot -Name $RotationFolderName -Force
+        New-Item -ItemType Directory -Path $global:ScriptRoot -Name $RotationFolderName -Force | Out-Null
     }
     Move-Item -Path "$logFolder`_$timestamp" $(Join-Path $global:ScriptRoot $RotationFolderName)
 }
