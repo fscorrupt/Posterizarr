@@ -1249,21 +1249,24 @@ $global:OSType = [System.Environment]::OSVersion.Platform
 if ($env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker-Alpine*'){
     $global:OSType = "DockerAlpine"
     $ProgressPreference = 'SilentlyContinue'
+    $global:ScriptRoot = "$PSScriptRoot\config"
+}
+Else {
+    $global:ScriptRoot = $PSScriptRoot
 }
 
 # Check if Config file is present
-if (!(Test-Path $(Join-Path $PSScriptRoot 'config.json'))) {
+if (!(Test-Path $(Join-Path $global:ScriptRoot 'config.json'))) {
     Write-log -Message "Config File missing, downloading it for you..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-    Invoke-WebRequest -uri "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/config.example.json" -OutFile "$PSScriptRoot\config.json"
-    Write-log -Subtext "Config File downloaded here: '$PSScriptRoot\config.json'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+    Invoke-WebRequest -uri "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/config.example.json" -OutFile "$global:ScriptRoot\config.json"
+    Write-log -Subtext "Config File downloaded here: '$global:ScriptRoot\config.json'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
     Write-log -Subtext "Please configure the config file according to GH, exit script now..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
     pause
     exit
 }
 
 # load config file
-$global:ScriptRoot = $PSScriptRoot
-$config = Get-Content -Raw -Path $(Join-Path $PSScriptRoot 'config.json') | ConvertFrom-Json
+$config = Get-Content -Raw -Path $(Join-Path $global:ScriptRoot 'config.json') | ConvertFrom-Json
 
 # Access variables from the config file
 # Api Part
@@ -1442,8 +1445,8 @@ if ($global:OSType -ne "Win32NT") {
         $magick = 'magick'
     }
     Else{
-        $magickinstalllocation = $PSScriptRoot
-        $magick = Join-Path $PSScriptRoot 'magick'
+        $magickinstalllocation = $global:ScriptRoot
+        $magick = Join-Path $global:ScriptRoot 'magick'
     }
 }
 Else {
