@@ -199,13 +199,13 @@ This is handy for testing your configuration before applying it en masse to the 
 
 ### Docker
 - [Docker-Compose Example File](docker-compose.yml)
-  - Change `RUN_TIME` in yaml to your needs **24H Time Format**
+  - Change `RUN_TIME` in yaml to your needs **- You need to use 24H Time Format**
     - The Script gets executed on the Times you specified
     - Before starting the scheduled run it checks if another PPM process is running, if yes - the scheduled run will be skipped.
   - Change `volume` and `network` to fit your environment (Make sure you have the same network as your plex container when you use local IP of plex)
   - Change `TimeZone` to yours, otherwise it will get scheduled to a different time you may want it to.
 
-  if you manually watn to run the Script you can do it this way:
+  if you manually want to run the Script you can do it this way:
 
   **Automatic Mode:**
   ```sh
