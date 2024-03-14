@@ -2392,7 +2392,7 @@ Elseif ($Testing) {
                 "url": "https://github.com/fscorrupt/Plex-Poster-Maker"
                 },
                 "description": "PPM Test run took: $FormattedTimespawn",
-                "timestamp": "$(((Get-Date).AddHours(-1)).ToString("yyyy-MM-ddTHH:mm:ss.Mss"))",
+                "timestamp": "$(((Get-Date).ToUniversalTime()).ToString("yyyy-MM-ddTHH:mm:ss.fffZ"))",
                 "color": $(if ($Errorcount -ge '1') {16711680}Elseif ($Testing){8388736}Elseif ($FallbackCount.count -gt '1' -or $PosterUnknownCount -ge '1' -or $TextTruncatedCount.count -gt '1'){15120384}Else{5763719}),
                 "fields": [
                 {
@@ -2450,7 +2450,7 @@ Elseif ($Testing) {
                     "url": "https://github.com/fscorrupt/Plex-Poster-Maker"
                     },
                     "description": "PPM Test run took: $FormattedTimespawn",
-                    "timestamp": "$(((Get-Date).AddHours(-1)).ToString("yyyy-MM-ddTHH:mm:ss.Mss"))",
+                    "timestamp": "$(((Get-Date).ToUniversalTime()).ToString("yyyy-MM-ddTHH:mm:ss.fffZ"))",
                     "color": $(if ($Errorcount -ge '1') {16711680}Elseif ($Testing){8388736}Elseif ($FallbackCount.count -gt '1' -or $PosterUnknownCount -ge '1' -or $TextTruncatedCount.count -gt '1'){15120384}Else{5763719}),
                     "fields": [
                     {
@@ -3914,7 +3914,7 @@ else {
                 "url": "https://github.com/fscorrupt/Plex-Poster-Maker"
                 },
                 "description": "PPM run took: $FormattedTimespawn $(if ($Errorcount -ge '1') {"\n During execution Errors occurred, please check log for detailed description."})",
-                "timestamp": "$(((Get-Date).AddHours(-1)).ToString("yyyy-MM-ddTHH:mm:ss.Mss"))",
+                "timestamp": "$(((Get-Date).ToUniversalTime()).ToString("yyyy-MM-ddTHH:mm:ss.fffZ"))",
                 "color": $(if ($Errorcount -ge '1') {16711680}Elseif ($Testing){8388736}Elseif ($FallbackCount.count -gt '1' -or $PosterUnknownCount -ge '1' -or $TextTruncatedCount.count -gt '1'){15120384}Else{5763719}),
                 "fields": [
                 {
@@ -4008,7 +4008,7 @@ else {
                 "url": "https://github.com/fscorrupt/Plex-Poster-Maker"
                 },
                 "description": "PPM run took: $FormattedTimespawn $(if ($Errorcount -ge '1') {"\n During execution Errors occurred, please check log for detailed description."})",
-                "timestamp": "$(((Get-Date).AddHours(-1)).ToString("yyyy-MM-ddTHH:mm:ss.Mss"))",
+                "timestamp": "$(((Get-Date).ToUniversalTime()).ToString("yyyy-MM-ddTHH:mm:ss.fffZ"))",
                 "color": $(if ($Errorcount -ge '1') {16711680}Elseif ($Testing){8388736}Elseif ($FallbackCount.count -gt '1' -or $PosterUnknownCount -ge '1' -or $TextTruncatedCount.count -gt '1'){15120384}Else{5763719}),
                 "fields": [
                 {
