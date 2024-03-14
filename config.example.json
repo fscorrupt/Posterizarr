@@ -32,7 +32,8 @@
     "TitleCards": "false"
   },
   "OverlayPart":{
-    "ImageProcessing": "true"
+    "ImageProcessing": "true",
+    "outputQuality": "92%"
   },
   "PosterOverlayPart": {
     "fontAllCaps": "true",
