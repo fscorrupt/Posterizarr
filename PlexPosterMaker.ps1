@@ -1267,7 +1267,7 @@ function Push-ObjectToDiscord {
 
 $startTime = Get-Date
 $global:OSType = [System.Environment]::OSVersion.Platform
-if ($env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker-Alpine*'){
+if ($env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker-Alpine*') {
     $global:OSType = "DockerAlpine"
     $ProgressPreference = 'SilentlyContinue'
     $global:ScriptRoot = "./config"
@@ -1292,12 +1292,12 @@ $config = Get-Content -Raw -Path $(Join-Path $global:ScriptRoot 'config.json') |
 # Access variables from the config file
 # Notification Part
 $global:SendNotification = $config.Notification.SendNotification
-if ($env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker-Alpine*'){
+if ($env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker-Alpine*') {
     $global:NotifyUrl = AddTrailingSlash -path $config.Notification.AppriseUrl
-    if ($global:NotifyUrl -eq 'discord://{WebhookID}/{WebhookToken}/' -and $global:SendNotification -eq 'True'){
+    if ($global:NotifyUrl -eq 'discord://{WebhookID}/{WebhookToken}/' -and $global:SendNotification -eq 'True') {
         # Try the normal discord url
         $global:NotifyUrl = $config.Notification.Discord
-        if ($global:NotifyUrl -eq 'https://discordapp.com/api/webhooks/{WebhookID}/{WebhookToken}' -and $global:SendNotification -eq 'True'){
+        if ($global:NotifyUrl -eq 'https://discordapp.com/api/webhooks/{WebhookID}/{WebhookToken}' -and $global:SendNotification -eq 'True') {
             Write-log -Message "Found default Notification Url, please update url in config..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
             Pause
             exit
@@ -1306,7 +1306,7 @@ if ($env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker-Alpine*'){
 }
 Else {
     $global:NotifyUrl = $config.Notification.Discord
-    if ($global:NotifyUrl -eq 'https://discordapp.com/api/webhooks/{WebhookID}/{WebhookToken}' -and $global:SendNotification -eq 'True'){
+    if ($global:NotifyUrl -eq 'https://discordapp.com/api/webhooks/{WebhookID}/{WebhookToken}' -and $global:SendNotification -eq 'True') {
         Write-log -Message "Found default Notification Url, please update url in config..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
         Pause
         exit
@@ -1370,7 +1370,7 @@ if (Test-Path -Path $logFolder -PathType Container) {
     # Rename the existing log folder with a timestamp
     $timestamp = Get-Date -Format 'yyyyMMdd_HHmmss'
     Rename-Item -Path $logFolder -NewName "Logs`_$timestamp"
-    if (!(Test-Path $RotationFolder)){
+    if (!(Test-Path $RotationFolder)) {
         New-Item -ItemType Directory -Path $global:ScriptRoot -Name $RotationFolderName -Force | Out-Null
     }
     Move-Item -Path "$logFolder`_$timestamp" $RotationFolder
@@ -1486,10 +1486,10 @@ $fontImagemagick = $font.replace('\', '\\')
 $backgroundfontImagemagick = $backgroundfont.replace('\', '\\')
 $TitleCardfontImagemagick = $TitleCardfont.replace('\', '\\')
 if ($global:OSType -ne "Win32NT") {
-    if ($global:OSType -eq "DockerAlpine"){
+    if ($global:OSType -eq "DockerAlpine") {
         $magick = 'magick'
     }
-    Else{
+    Else {
         $magickinstalllocation = $global:ScriptRoot
         $magick = Join-Path $global:ScriptRoot 'magick'
     }
@@ -1561,7 +1561,8 @@ Test-And-Download -url "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/
 # Cleanup old log files
 if ($Testing) {
     $logFilesToDelete = @("Manuallog.log", "Testinglog.log", "ImageMagickCommands.log", "Scriptlog.log")
-}else{
+}
+else {
     $logFilesToDelete = @("Manuallog.log", "Testinglog.log", "ImageMagickCommands.log", "Scriptlog.log", "ImageChoices.csv")
 }
 
@@ -1711,7 +1712,7 @@ Else {
 
 if (!(Test-Path $magick)) {
     if ($global:OSType -ne "Win32NT") {
-        if ($global:OSType -ne "DockerAlpine"){
+        if ($global:OSType -ne "DockerAlpine") {
             Write-log -Message "ImageMagick missing, downloading the portable version for you..." -Path $configLogging -Type Warning
             Invoke-WebRequest -Uri "https://imagemagick.org/archive/binaries/magick" -OutFile "$global:ScriptRoot/magick"
             chmod +x "$global:ScriptRoot/magick"
@@ -1722,13 +1723,13 @@ if (!(Test-Path $magick)) {
         Write-log -Message "ImageMagick missing, downloading it for you..." -Path $configLogging -Type Error
         $Errorcount++
         $result = Invoke-WebRequest "https://imagemagick.org/archive/binaries/?C=M;O=D"
-        $LatestRelease = ($result.links.href | Where-Object {$_ -like '*portable-Q16-HDRI-x64.zip'} | Sort-Object -Descending)[0]
+        $LatestRelease = ($result.links.href | Where-Object { $_ -like '*portable-Q16-HDRI-x64.zip' } | Sort-Object -Descending)[0]
         # Construct the download path
         $DownloadPath = Join-Path -Path $global:ScriptRoot -ChildPath (Join-Path -Path 'temp' -ChildPath $LatestRelease)
         Invoke-WebRequest "https://imagemagick.org/archive/binaries/$LatestRelease" -OutFile $DownloadPath
         # Construct the portable path
         Expand-Archive -Path $DownloadPath -DestinationPath $magickinstalllocation -Force
-        if ((Get-ChildItem -Directory -LiteralPath $magickinstalllocation).name -eq $($LatestRelease.replace('.zip',''))){
+        if ((Get-ChildItem -Directory -LiteralPath $magickinstalllocation).name -eq $($LatestRelease.replace('.zip', ''))) {
             Copy-item -Force -Recurse "$magickinstalllocation\$((Get-ChildItem -Directory -LiteralPath $magickinstalllocation).name)\*" $magickinstalllocation
             Remove-Item -Recurse -LiteralPath "$magickinstalllocation\$((Get-ChildItem -Directory -LiteralPath $magickinstalllocation).name)" -Force
         }
@@ -1944,60 +1945,81 @@ Elseif ($Testing) {
     $LongTextCAPS = $LongText.ToUpper()
     $EpisodetextCAPS = $Episodetext.ToUpper()
     # Posters
-    $TestPosterShort = Join-Path $global:ScriptRoot 'test' 'posterShortText.jpg'
-    $TestPosterMedium = Join-Path $global:ScriptRoot 'test' 'posterMediumText.jpg'
-    $TestPosterLong = Join-Path $global:ScriptRoot 'test' 'posterLongText.jpg'
-    $TestPosterShortCAPS = Join-Path $global:ScriptRoot 'test' 'posterShortTextCAPS.jpg'
-    $TestPosterMediumCAPS = Join-Path $global:ScriptRoot 'test' 'posterMediumTextCAPS.jpg'
-    $TestPosterLongCAPS = Join-Path $global:ScriptRoot 'test' 'posterLongTextCAPS.jpg'
+    $TestPosterShort = Join-Path -Path $global:ScriptRoot -ChildPath "test\posterShortText.jpg"
+    $TestPosterMedium = Join-Path -Path $global:ScriptRoot -ChildPath "test\posterMediumText.jpg"
+    $TestPosterLong = Join-Path -Path $global:ScriptRoot -ChildPath "test\posterLongText.jpg"
+    $TestPosterShortCAPS = Join-Path -Path $global:ScriptRoot -ChildPath "test\posterShortTextCAPS.jpg"
+    $TestPosterMediumCAPS = Join-Path -Path $global:ScriptRoot -ChildPath "test\posterMediumTextCAPS.jpg"
+    $TestPosterLongCAPS = Join-Path -Path $global:ScriptRoot -ChildPath "test\posterLongTextCAPS.jpg"
 
     # Backgrounds
-    $backgroundTestPosterShort = Join-Path $global:ScriptRoot 'test' 'backgroundShortText.jpg'
-    $backgroundTestPosterMedium = Join-Path $global:ScriptRoot 'test' 'backgroundMediumText.jpg'
-    $backgroundTestPosterLong = Join-Path $global:ScriptRoot 'test' 'backgroundLongText.jpg'
-    $backgroundTestPosterShortCAPS = Join-Path $global:ScriptRoot 'test' 'backgroundShortTextCAPS.jpg'
-    $backgroundTestPosterMediumCAPS = Join-Path $global:ScriptRoot 'test' 'backgroundMediumTextCAPS.jpg'
-    $backgroundTestPosterLongCAPS = Join-Path $global:ScriptRoot 'test' 'backgroundLongTextCAPS.jpg'
+    $backgroundTestPosterShort = Join-Path -Path $global:ScriptRoot -ChildPath "test\backgroundShortText.jpg"
+    $backgroundTestPosterMedium = Join-Path -Path $global:ScriptRoot -ChildPath "test\backgroundMediumText.jpg"
+    $backgroundTestPosterLong = Join-Path -Path $global:ScriptRoot -ChildPath "test\backgroundLongText.jpg"
+    $backgroundTestPosterShortCAPS = Join-Path -Path $global:ScriptRoot -ChildPath "test\backgroundShortTextCAPS.jpg"
+    $backgroundTestPosterMediumCAPS = Join-Path -Path $global:ScriptRoot -ChildPath "test\backgroundMediumTextCAPS.jpg"
+    $backgroundTestPosterLongCAPS = Join-Path -Path $global:ScriptRoot -ChildPath "test\backgroundLongTextCAPS.jpg"
 
     # TitleCards
-    $TitleCardTestPosterShort = Join-Path $global:ScriptRoot 'test' 'TitleCardShortText.jpg'
-    $TitleCardTestPosterMedium = Join-Path $global:ScriptRoot 'test' 'TitleCardMediumText.jpg'
-    $TitleCardTestPosterLong = Join-Path $global:ScriptRoot 'test' 'TitleCardLongText.jpg'
-    $TitleCardTestPosterShortCAPS = Join-Path $global:ScriptRoot 'test' 'TitleCardShortTextCAPS.jpg'
-    $TitleCardTestPosterMediumCAPS = Join-Path $global:ScriptRoot 'test' 'TitleCardMediumTextCAPS.jpg'
-    $TitleCardTestPosterLongCAPS = Join-Path $global:ScriptRoot 'test' 'TitleCardLongTextCAPS.jpg'
+    $TitleCardTestPosterShort = Join-Path -Path $global:ScriptRoot -ChildPath "test\TitleCardShortText.jpg"
+    $TitleCardTestPosterMedium = Join-Path -Path $global:ScriptRoot -ChildPath "test\TitleCardMediumText.jpg"
+    $TitleCardTestPosterLong = Join-Path -Path $global:ScriptRoot -ChildPath "test\TitleCardLongText.jpg"
+    $TitleCardTestPosterShortCAPS = Join-Path -Path $global:ScriptRoot -ChildPath "test\TitleCardShortTextCAPS.jpg"
+    $TitleCardTestPosterMediumCAPS = Join-Path -Path $global:ScriptRoot -ChildPath "test\TitleCardMediumTextCAPS.jpg"
+    $TitleCardTestPosterLongCAPS = Join-Path -Path $global:ScriptRoot -ChildPath "test\TitleCardLongTextCAPS.jpg"
 
     Write-log -Subtext "Calculating Optimal Font Sizes. This may take a while..." -Path $global:ScriptRoot\Logs\Testinglog.log -Type Trace
+    $TruncatedCount = 0
     # Optimal Poster Font Size
     $optimalFontSizeShort = Get-OptimalPointSize -text $ShortText -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
+    if ($global:IsTruncated) { $TruncatedCount++ }
     $optimalFontSizeMedium = Get-OptimalPointSize -text $MediumText -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
+    if ($global:IsTruncated) { $TruncatedCount++ }
     $optimalFontSizeLong = Get-OptimalPointSize -text $LongText -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
-    
+    if ($global:IsTruncated) { $TruncatedCount++ }
+
     $optimalFontSizeShortCAPS = Get-OptimalPointSize -text $ShortTextCAPS -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
+    if ($global:IsTruncated) { $TruncatedCount++ }
     $optimalFontSizeMediumCAPS = Get-OptimalPointSize -text $MediumTextCAPS -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
+    if ($global:IsTruncated) { $TruncatedCount++ }
     $optimalFontSizeLongCAPS = Get-OptimalPointSize -text $LongTextCAPS -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
+    if ($global:IsTruncated) { $TruncatedCount++ }
     Write-log -Subtext "Finished Optimal Font Sizes for posters..." -Path $global:ScriptRoot\Logs\Testinglog.log -Type Trace
 
     # Optimal Background Font Size
     $backgroundoptimalFontSizeShort = Get-OptimalPointSize -text $ShortText -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
+    if ($global:IsTruncated) { $TruncatedCount++ }
     $backgroundoptimalFontSizeMedium = Get-OptimalPointSize -text $MediumText -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
+    if ($global:IsTruncated) { $TruncatedCount++ }
     $backgroundoptimalFontSizeLong = Get-OptimalPointSize -text $LongText -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
+    if ($global:IsTruncated) { $TruncatedCount++ }
     
     $backgroundoptimalFontSizeShortCAPS = Get-OptimalPointSize -text $ShortTextCAPS -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
+    if ($global:IsTruncated) { $TruncatedCount++ }
     $backgroundoptimalFontSizeMediumCAPS = Get-OptimalPointSize -text $MediumTextCAPS -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
+    if ($global:IsTruncated) { $TruncatedCount++ }
     $backgroundoptimalFontSizeLongCAPS = Get-OptimalPointSize -text $LongTextCAPS -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
+    if ($global:IsTruncated) { $TruncatedCount++ }
     Write-log -Subtext "Finished Optimal Font Sizes for backgrounds..." -Path $global:ScriptRoot\Logs\Testinglog.log -Type Trace
 
     # Optimal TitleCard Font Size
     $TitleCardoptimalFontSizeShort = Get-OptimalPointSize -text $ShortText -font $titlecardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
+    if ($global:IsTruncated) { $TruncatedCount++ }
     $TitleCardoptimalFontSizeMedium = Get-OptimalPointSize -text $MediumText -font $titlecardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
+    if ($global:IsTruncated) { $TruncatedCount++ }
     $TitleCardoptimalFontSizeLong = Get-OptimalPointSize -text $LongText -font $titlecardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
+    if ($global:IsTruncated) { $TruncatedCount++ }
     $TitleCardoptimalFontSizeEpisodetext = Get-OptimalPointSize -text $Episodetext -font $titlecardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize    
+    if ($global:IsTruncated) { $TruncatedCount++ }
         
     $TitleCardoptimalFontSizeShortCAPS = Get-OptimalPointSize -text $ShortTextCAPS -font $titlecardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
+    if ($global:IsTruncated) { $TruncatedCount++ }
     $TitleCardoptimalFontSizeMediumCAPS = Get-OptimalPointSize -text $MediumTextCAPS -font $titlecardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
+    if ($global:IsTruncated) { $TruncatedCount++ }
     $TitleCardoptimalFontSizeLongCAPS = Get-OptimalPointSize -text $LongTextCAPS -font $titlecardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
+    if ($global:IsTruncated) { $TruncatedCount++ }
     $TitleCardoptimalFontSizeEpisodetextCAPS = Get-OptimalPointSize -text $EpisodetextCAPS -font $titlecardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize    
+    if ($global:IsTruncated) { $TruncatedCount++ }
     Write-log -Subtext "Finished Optimal Font Sizes for titlecards..." -Path $global:ScriptRoot\Logs\Testinglog.log -Type Trace
 
     # Border/Overlay Poster Part
@@ -2350,6 +2372,137 @@ Elseif ($Testing) {
     Write-log -Message "Script execution time: $FormattedTimespawn" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Success
     Remove-Item -LiteralPath $testimage | out-null
     Remove-Item -LiteralPath $backgroundtestimage | out-null
+    $gettestimages = Get-ChildItem $global:ScriptRoot\test
+    $titlecardscount = ($gettestimages | Where-Object { $_.name -like 'Title*' }).count
+    $backgroundsscount = ($gettestimages | Where-Object { $_.name -like 'back*' }).count
+    $posterscount = ($gettestimages | Where-Object { $_.name -like 'poster*' }).count
+    if ($global:NotifyUrl -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -notlike 'PSDocker-Alpine*') {
+        $jsonPayload = @"
+        {
+            "username": "Plex-Poster-Maker",
+            "avatar_url": "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/images/webhook.png",
+            "content": "",
+            "embeds": [
+            {
+                "author": {
+                "name": "PPM @Github",
+                "url": "https://github.com/fscorrupt/Plex-Poster-Maker"
+                },
+                "description": "PPM Test run took: $FormattedTimespawn",
+                "timestamp": "$(((Get-Date).AddHours(-1)).ToString("yyyy-MM-ddTHH:mm:ss.Mss"))",
+                "color": $(if ($Errorcount -ge '1') {16711680}Elseif ($Testing){8388736}Elseif ($FallbackCount.count -gt '1' -or $PosterUnknownCount -ge '1' -or $TextTruncatedCount.count -gt '1'){15120384}Else{5763719}),
+                "fields": [
+                {
+                    "name": "Truncated",
+                    "value": "$TruncatedCount",
+                    "inline": false
+                },
+                {
+                    "name": "-------------------------------------------------------------------",
+                    "value": "",
+                    "inline": false
+                },
+                {
+                    "name": "Posters",
+                    "value": "$posterscount",
+                    "inline": true
+                },
+                {
+                    "name": "Backgrounds",
+                    "value": "$backgroundsscount",
+                    "inline": true
+                },
+                {
+                    "name": "TitleCards",
+                    "value": "$titlecardscount",
+                    "inline": true
+                }
+                ],
+                "thumbnail": {
+                    "url": "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/images/webhook.png"
+                },
+                "footer": {
+                "text": "Finished"
+                }
+                
+            }
+            ]
+        }
+"@
+        if ($global:SendNotification -eq 'True') {        
+            Push-ObjectToDiscord -strDiscordWebhook $global:NotifyUrl -objPayload $jsonPayload
+        }
+    }
+    if ($global:NotifyUrl -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker-Alpine*') {
+        if ($global:NotifyUrl -like '*discord*') {
+            $jsonPayload = @"
+            {
+                "username": "Plex-Poster-Maker",
+                "avatar_url": "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/images/webhook.png",
+                "content": "",
+                "embeds": [
+                {
+                    "author": {
+                    "name": "PPM @Github",
+                    "url": "https://github.com/fscorrupt/Plex-Poster-Maker"
+                    },
+                    "description": "PPM Test run took: $FormattedTimespawn",
+                    "timestamp": "$(((Get-Date).AddHours(-1)).ToString("yyyy-MM-ddTHH:mm:ss.Mss"))",
+                    "color": $(if ($Errorcount -ge '1') {16711680}Elseif ($Testing){8388736}Elseif ($FallbackCount.count -gt '1' -or $PosterUnknownCount -ge '1' -or $TextTruncatedCount.count -gt '1'){15120384}Else{5763719}),
+                    "fields": [
+                    {
+                        "name": "Truncated",
+                        "value": "$TruncatedCount",
+                        "inline": false
+                    },
+                    {
+                        "name": "-------------------------------------------------------------------",
+                        "value": "",
+                        "inline": false
+                    },
+                    {
+                        "name": "Posters",
+                        "value": "$posterscount",
+                        "inline": true
+                    },
+                    {
+                        "name": "Backgrounds",
+                        "value": "$backgroundsscount",
+                        "inline": true
+                    },
+                    {
+                        "name": "TitleCards",
+                        "value": "$titlecardscount",
+                        "inline": true
+                    }
+                    ],
+                    "thumbnail": {
+                        "url": "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/images/webhook.png"
+                    },
+                    "footer": {
+                    "text": "Finished"
+                    }
+                    
+                }
+                ]
+            }
+"@
+            $global:NotifyUrl = $global:NotifyUrl.replace('discord://', 'https://discord.com/api/webhooks/')
+            if ($global:SendNotification -eq 'True') {
+                Push-ObjectToDiscord -strDiscordWebhook $global:NotifyUrl -objPayload $jsonPayload
+            }
+        }
+        Else {
+            if ($global:SendNotification -eq 'True') {
+                if ($TruncatedCount -ge '1') {
+                    apprise --notification-type="error" --title="Plex-Poster-Maker" --body="PPM test run took: $FormattedTimespawn`nDuring execution '$TruncatedCount' times the text got truncated, please check log for detailed description." "$global:NotifyUrl" 
+                }
+                Else {
+                    apprise --notification-type="success" --title="Plex-Poster-Maker" --body="PPM test run took: $FormattedTimespawn" "$global:NotifyUrl"
+                }
+            }
+        }
+    }
 }
 else {
     Write-log -Message "Query plex libs..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
@@ -2579,7 +2732,7 @@ else {
                 $PosterImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername).jpg"
                 $PosterImage = $PosterImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
     
-                if (!(Get-ChildItem -LiteralPath $TestPath | Where-Object {$_.Name -like "*$Testfile*"} -ErrorAction SilentlyContinue)) {
+                if (!(Get-ChildItem -LiteralPath $TestPath | Where-Object { $_.Name -like "*$Testfile*" } -ErrorAction SilentlyContinue)) {
                     # Define Global Variables
                     $global:tmdbid = $entry.tmdbid
                     $global:tvdbid = $entry.tvdbid
@@ -2740,7 +2893,7 @@ else {
                     $backgroundImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_background.jpg"
                     $backgroundImage = $backgroundImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
 
-                    if (!(Get-ChildItem -LiteralPath $TestPath | Where-Object {$_.Name -like "*$Testfile*"} -ErrorAction SilentlyContinue)) {
+                    if (!(Get-ChildItem -LiteralPath $TestPath | Where-Object { $_.Name -like "*$Testfile*" } -ErrorAction SilentlyContinue)) {
                         # Define Global Variables
                         $global:tmdbid = $entry.tmdbid
                         $global:tvdbid = $entry.tvdbid
@@ -2938,7 +3091,7 @@ else {
             $PosterImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername).jpg"
             $PosterImage = $PosterImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
             
-            if (!(Get-ChildItem -LiteralPath $TestPath | Where-Object {$_.Name -like "*$Testfile*"} -ErrorAction SilentlyContinue)) {
+            if (!(Get-ChildItem -LiteralPath $TestPath | Where-Object { $_.Name -like "*$Testfile*" } -ErrorAction SilentlyContinue)) {
                 Write-log -Message "Start Poster Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                 switch -Wildcard ($global:FavProvider) {
                     'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBShowPoster }Else { Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning; $global:posterurl = GetFanartShowPoster } }
@@ -3108,7 +3261,7 @@ else {
                 $backgroundImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_background.jpg"
                 $backgroundImage = $backgroundImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
 
-                if (!(Get-ChildItem -LiteralPath $TestPath | Where-Object {$_.Name -like "*$Testfile*"} -ErrorAction SilentlyContinue)) {
+                if (!(Get-ChildItem -LiteralPath $TestPath | Where-Object { $_.Name -like "*$Testfile*" } -ErrorAction SilentlyContinue)) {
                     # Define Global Variables
                     $global:tmdbid = $entry.tmdbid
                     $global:tvdbid = $entry.tvdbid
@@ -3276,7 +3429,7 @@ else {
                     }
                     $SeasonImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_$global:season.jpg"
                     $SeasonImage = $SeasonImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
-                    if (!(Get-ChildItem -LiteralPath $TestPath | Where-Object {$_.Name -like "*$Testfile*"} -ErrorAction SilentlyContinue)) {
+                    if (!(Get-ChildItem -LiteralPath $TestPath | Where-Object { $_.Name -like "*$Testfile*" } -ErrorAction SilentlyContinue)) {
                         if (!$Seasonpostersearchtext) {
                             Write-log -Message "Start Season Poster Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                             $Seasonpostersearchtext = $true
@@ -3284,15 +3437,15 @@ else {
                         # do a specific order
                         if ($entry.tmdbid) {
                             $global:posterurl = GetTMDBSeasonPoster
-                            if (!$global:posterurl){
+                            if (!$global:posterurl) {
                                 $global:posterurl = GetFanartSeasonPoster
                                 $global:IsFallback = $true
                             }
-                            if ($global:posterurl -and $global:PreferTextless -eq 'True' -and $global:PosterWithText){
+                            if ($global:posterurl -and $global:PreferTextless -eq 'True' -and $global:PosterWithText) {
                                 $global:posterurl = GetFanartSeasonPoster
                                 $global:IsFallback = $true
                             }
-                            if (!$global:posterurl -and $entry.tvdb){
+                            if (!$global:posterurl -and $entry.tvdb) {
                                 $global:IsFallback = $true
                                 $global:posterurl = GetTVDBShowPoster
                             }
@@ -3300,14 +3453,14 @@ else {
                         Else {
                             Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
                             $global:posterurl = GetFanartSeasonPoster
-                            if (!$global:posterurl){
+                            if (!$global:posterurl) {
                                 $global:IsFallback = $true
-                                if ($entry.tvdb){
+                                if ($entry.tvdb) {
                                     $global:posterurl = GetTVDBShowPoster
                                 }
                             }
                         }
-                        if ($global:TMDBSeasonFallback -and $global:PosterWithText){
+                        if ($global:TMDBSeasonFallback -and $global:PosterWithText) {
                             $global:posterurl = $global:TMDBSeasonFallback
                             Write-Log -Subtext "Taking Season Poster with text as fallback from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                             $global:IsFallback = $true
@@ -3487,7 +3640,7 @@ else {
                             }
                             $EpisodeImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_$global:FileNaming.jpg"
                             $EpisodeImage = $EpisodeImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
-                            if (!(Get-ChildItem -LiteralPath $TestPath | Where-Object {$_.Name -like "*$Testfile*"} -ErrorAction SilentlyContinue)) {
+                            if (!(Get-ChildItem -LiteralPath $TestPath | Where-Object { $_.Name -like "*$Testfile*" } -ErrorAction SilentlyContinue)) {
                                 if (!$Episodepostersearchtext) {
                                     Write-log -Message "Start Title Card Search for: $global:show_name - $global:SeasonEPNumber" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                     $Episodepostersearchtext = $true
@@ -3503,14 +3656,14 @@ else {
                                             # Lets just try to grab a background poster.
                                             Write-log -Subtext "Fallback to Show Background..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
                                             $global:posterurl = GetTMDBShowBackground
-                                            if ($global:posterurl){
+                                            if ($global:posterurl) {
                                                 Write-log -Subtext "Using the Show Background Poster as TitleCard Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
                                                 $global:IsFallback = $true
                                             }
                                             Else {
                                                 # Lets just try to grab a background poster.
                                                 $global:posterurl = GetTVDBShowBackground
-                                                if ($global:posterurl){
+                                                if ($global:posterurl) {
                                                     Write-log -Subtext "Using the Show Background Poster as TitleCard Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
                                                     $global:IsFallback = $true
                                                 }
@@ -3525,7 +3678,7 @@ else {
                                             # Lets just try to grab a background poster.
                                             Write-log -Subtext "Fallback to Show Background..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
                                             $global:posterurl = GetTVDBShowBackground
-                                            if ($global:posterurl){
+                                            if ($global:posterurl) {
                                                 Write-log -Subtext "Using the Show Background Poster as TitleCard Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
                                                 $global:IsFallback = $true
                                             }
@@ -3749,7 +3902,7 @@ else {
             $jsonPayload = @"
         {
             "username": "Plex-Poster-Maker",
-            "avatar_url": "https://i.imgur.com/SbTVPxb.png",
+            "avatar_url": "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/images/webhook.png",
             "content": "",
             "embeds": [
             {
@@ -3813,7 +3966,7 @@ else {
                 }
                 ],
                 "thumbnail": {
-                    "url": "https://i.imgur.com/SbTVPxb.png"
+                    "url": "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/images/webhook.png"
                 },
                 "footer": {
                 "text": "Finished"
@@ -3823,8 +3976,8 @@ else {
             ]
         }
 "@
-            $global:NotifyUrl = $global:NotifyUrl.replace('discord://','https://discord.com/api/webhooks/')
-            if ($global:SendNotification -eq 'True'){
+            $global:NotifyUrl = $global:NotifyUrl.replace('discord://', 'https://discord.com/api/webhooks/')
+            if ($global:SendNotification -eq 'True') {
                 Push-ObjectToDiscord -strDiscordWebhook $global:NotifyUrl -objPayload $jsonPayload
             }
         }
@@ -3843,7 +3996,7 @@ else {
         $jsonPayload = @"
         {
             "username": "Plex-Poster-Maker",
-            "avatar_url": "https://i.imgur.com/SbTVPxb.png",
+            "avatar_url": "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/images/webhook.png",
             "content": "",
             "embeds": [
             {
@@ -3907,7 +4060,7 @@ else {
                 }
                 ],
                 "thumbnail": {
-                    "url": "https://i.imgur.com/SbTVPxb.png"
+                    "url": "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/images/webhook.png"
                 },
                 "footer": {
                 "text": "Finished"
@@ -3917,7 +4070,7 @@ else {
             ]
         }
 "@
-        if ($global:SendNotification -eq 'True'){        
+        if ($global:SendNotification -eq 'True') {        
             Push-ObjectToDiscord -strDiscordWebhook $global:NotifyUrl -objPayload $jsonPayload
         }
     }
