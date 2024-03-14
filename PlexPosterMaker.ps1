@@ -1293,7 +1293,7 @@ $config = Get-Content -Raw -Path $(Join-Path $global:ScriptRoot 'config.json') |
 # Notification Part
 $global:SendNotification = $config.Notification.SendNotification
 if ($env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker-Alpine*') {
-    $global:NotifyUrl = AddTrailingSlash -path $config.Notification.AppriseUrl
+    $global:NotifyUrl = $config.Notification.AppriseUrl
     if ($global:NotifyUrl -eq 'discord://{WebhookID}/{WebhookToken}/' -and $global:SendNotification -eq 'True') {
         # Try the normal discord url
         $global:NotifyUrl = $config.Notification.Discord
@@ -1302,6 +1302,9 @@ if ($env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker-Alpine*') {
             Pause
             exit
         }
+    }
+    if (!$global:NotifyUrl -and $global:SendNotification -eq 'True'){
+        $global:NotifyUrl = $config.Notification.Discord
     }
 }
 Else {
