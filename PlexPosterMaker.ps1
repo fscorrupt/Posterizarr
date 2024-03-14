@@ -3829,11 +3829,13 @@ else {
             }
         }
         Else {
-            if ($Errorcount -ge '1') {
-                apprise --notification-type="error" --title="Plex-Poster-Maker" --body="PPM run took: $FormattedTimespawn`nIt Created '$posterCount' Images`n`nDuring execution '$Errorcount' Errors occurred, please check log for detailed description." "$global:appriseNotify" 
-            }
-            Else {
-                apprise --notification-type="success" --title="Plex-Poster-Maker" --body="PPM run took: $FormattedTimespawn`nIt Created '$posterCount' Images" "$global:appriseNotify"
+            if ($global:SendNotification -eq 'True') {
+                if ($Errorcount -ge '1') {
+                    apprise --notification-type="error" --title="Plex-Poster-Maker" --body="PPM run took: $FormattedTimespawn`nIt Created '$posterCount' Images`n`nDuring execution '$Errorcount' Errors occurred, please check log for detailed description." "$global:appriseNotify" 
+                }
+                Else {
+                    apprise --notification-type="success" --title="Plex-Poster-Maker" --body="PPM run took: $FormattedTimespawn`nIt Created '$posterCount' Images" "$global:appriseNotify"
+                }
             }
         }
     }
