@@ -28,7 +28,7 @@ This PowerShell script automates the process of generating images for your Plex 
     
     - It also generates a log with the output of every imagemagick command `$ScriptRoot\logs\ImageMagickCommands.log`.
     - Additionally, an `ImageChoices.csv` file is generated to store all the selected download options and essential information.
-    - Send notification via apprise or discord.
+    - Send notification via apprise or discord [Click here for Example pictures.](#webhook).
 - **Cross-platform Compatibility**: Ensures seamless operation across Linux, Docker, and Windows Plex servers, enhancing versatility.
 - **Poster/Background/TitleCard Creation**: It searches fanart/tmdb/tvdb for textless posters/backgrounds/titlecards and resizes the downloaded image to 3840x2160, fallback is grabbing a poster from imdb.
 
@@ -272,6 +272,19 @@ Run the script with the `-Manual` switch:
 ```
 
 Follow the prompts to enter the source picture path, media folder name, and movie/show title to manually create a custom poster.
+
+### Webhook
+
+<details close>
+<summary>🖼️Discord Webhook:</summary>
+<br>
+<p>
+  <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
+    <img alt="webhook" height="100%" src="/images/webhookexample.png">
+  </a>
+</p>
+
+</details>
 
 ### Example Pictures:
 
