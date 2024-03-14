@@ -11,6 +11,11 @@
     "LibstoExclude": ["Youtube", "Audiobooks", "Kids Audiobooks", "Tech Trainings"],
     "PlexUrl": "http://192.168.1.93:32400"
   },
+  "Notification":{
+    "SendNotification":"False",
+    "AppriseUrl": "discord://{WebhookID}/{WebhookToken}/",
+    "Discord": "https://discordapp.com/api/webhooks/{WebhookID}/{WebhookToken}"
+  },
   "PrerequisitePart":{
     "AssetPath": "P:\\assets",
     "magickinstalllocation": "C:\\PosterTemp\\ImageMagickPortable",

@@ -13,12 +13,12 @@ This PowerShell script automates the process of generating images for your Plex 
 - TitleCards
 
 ### ! Important !
-The `Temp` Folder gets cleared on every Script run, so do not put files into it.
+- The `Temp` Folder gets cleared on every Script run, so do not put files into it.
+- **[Apprise](https://github.com/caronc/apprise/wiki)** integration only works in docker container, please use discord on other platforms **(discord also works on docker)**.
+- **Please start the script as Admin on first run, otherwise the script is not able to install the prerequisites.**
 
-**Please start the script as Admin on first run, otherwise the script is not able to install the prerequisites.**
 
-
-**Key Features:**
+### **Key Features:**
 - **Resizing**: It automatically resizes every poster to 2000x3000.
 - **Overlays**: If you choose to, downloaded images will automatically have borders, text, and a gradient overlay applied.
 - **Automatic Library Search**: The script autonomously searches for libraries within your Plex server, enhancing its usability.
@@ -28,6 +28,7 @@ The `Temp` Folder gets cleared on every Script run, so do not put files into it.
     
     - It also generates a log with the output of every imagemagick command `$ScriptRoot\logs\ImageMagickCommands.log`.
     - Additionally, an `ImageChoices.csv` file is generated to store all the selected download options and essential information.
+    - Send notification via apprise or discord.
 - **Cross-platform Compatibility**: Ensures seamless operation across Linux, Docker, and Windows Plex servers, enhancing versatility.
 - **Poster/Background/TitleCard Creation**: It searches fanart/tmdb/tvdb for textless posters/backgrounds/titlecards and resizes the downloaded image to 3840x2160, fallback is grabbing a poster from imdb.
 
@@ -63,6 +64,14 @@ Before utilizing the script, ensure the following prerequisites are installed an
             -    `fanart`
             -    `tvdb`      
     - `PreferedLanguageOrder`: Specify language preferences. Default is `xx,en,de` (`xx` is Textless). Example configurations can be found in the config file. 2-digit language codes can be found here: [ISO 3166-1 Lang Codes](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2).
+    </details>
+    <details close>
+        <summary>Notification:</summary>
+    <br>
+
+    - `SendNotification`: Set to `true` if you want to send notifications via discord or apprise, else `false`.
+    - `AppriseUrl`: **Only possible on Docker** -Url for apprise provider -> [See Docs](https://github.com/caronc/apprise/wiki).
+    - `Discord`: Discord Webhook Url.
     </details>
     <details close>
     <summary>PlexPart:</summary>

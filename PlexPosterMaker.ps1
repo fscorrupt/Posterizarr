@@ -1244,6 +1244,27 @@ function GetIMDBPoster {
     }
 }
 
+function Push-ObjectToDiscord {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [string]$strDiscordWebhook,
+        
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [object]$objPayload
+    )
+    try {
+        $null = Invoke-RestMethod -Method Post -Uri $strDiscordWebhook -Body $objPayload -ContentType 'Application/Json'
+        Start-Sleep -Seconds 1
+    }
+    catch {
+        Write-Host "Unable to send to Discord. $($_)" -ForegroundColor Red
+        Write-Host $objPayload
+    }
+}
+
 $startTime = Get-Date
 $global:OSType = [System.Environment]::OSVersion.Platform
 if ($env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker-Alpine*'){
@@ -1269,6 +1290,29 @@ if (!(Test-Path $(Join-Path $global:ScriptRoot 'config.json'))) {
 $config = Get-Content -Raw -Path $(Join-Path $global:ScriptRoot 'config.json') | ConvertFrom-Json
 
 # Access variables from the config file
+# Notification Part
+$global:SendNotification = $config.Notification.SendNotification
+if ($env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker-Alpine*'){
+    $global:NotifyUrl = AddTrailingSlash -path $config.Notification.AppriseUrl
+    if ($global:NotifyUrl -eq 'discord://{WebhookID}/{WebhookToken}/' -and $global:SendNotification -eq 'True'){
+        # Try the normal discord url
+        $global:NotifyUrl = $config.Notification.Discord
+        if ($global:NotifyUrl -eq 'https://discordapp.com/api/webhooks/{WebhookID}/{WebhookToken}' -and $global:SendNotification -eq 'True'){
+            Write-log -Message "Found default Notification Url, please update url in config..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+            Pause
+            exit
+        }
+    }
+}
+Else {
+    $global:NotifyUrl = $config.Notification.Discord
+    if ($global:NotifyUrl -eq 'https://discordapp.com/api/webhooks/{WebhookID}/{WebhookToken}' -and $global:SendNotification -eq 'True'){
+        Write-log -Message "Found default Notification Url, please update url in config..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+        Pause
+        exit
+    }
+}
+
 # Api Part
 $global:tvdbapi = $config.ApiPart.tvdbapi
 $global:tmdbtoken = $config.ApiPart.tmdbtoken
@@ -2518,19 +2562,23 @@ else {
                     $LibraryName = $entry.'Library Name'
                     $EntryDir = "$AssetPath\$LibraryName\$($entry.RootFoldername)"
                     $PosterImageoriginal = "$EntryDir\poster.jpg"
-                    
+                    $TestPath = $EntryDir
+                    $Testfile = "poster"
+
                     if (!(Get-ChildItem -LiteralPath $EntryDir -ErrorAction SilentlyContinue)) {
                         New-Item -ItemType Directory -path $EntryDir -Force | out-null
                     }
                 }
                 Else {
                     $PosterImageoriginal = "$AssetPath\$($entry.RootFoldername).jpg"
+                    $TestPath = $AssetPath
+                    $Testfile = $($entry.RootFoldername)
                 }
     
                 $PosterImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername).jpg"
                 $PosterImage = $PosterImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
     
-                if (!(Get-ChildItem -LiteralPath $PosterImageoriginal -ErrorAction SilentlyContinue)) {
+                if (!(Get-ChildItem -LiteralPath $TestPath | Where-Object {$_.Name -like "*$Testfile*"} -ErrorAction SilentlyContinue)) {
                     # Define Global Variables
                     $global:tmdbid = $entry.tmdbid
                     $global:tvdbid = $entry.tvdbid
@@ -2675,6 +2723,8 @@ else {
                         $LibraryName = $entry.'Library Name'
                         $EntryDir = "$AssetPath\$LibraryName\$($entry.RootFoldername)"
                         $backgroundImageoriginal = "$EntryDir\background.jpg"
+                        $TestPath = $EntryDir
+                        $Testfile = "background"
                         
                         if (!(Get-ChildItem -LiteralPath $EntryDir -ErrorAction SilentlyContinue)) {
                             New-Item -ItemType Directory -path $EntryDir -Force | out-null
@@ -2682,12 +2732,14 @@ else {
                     }
                     Else {
                         $backgroundImageoriginal = "$AssetPath\$($entry.RootFoldername)_background.jpg"
+                        $TestPath = $AssetPath
+                        $Testfile = "$($entry.RootFoldername)_background"
                     }
         
                     $backgroundImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_background.jpg"
                     $backgroundImage = $backgroundImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
 
-                    if (!(Get-ChildItem -LiteralPath $backgroundImageoriginal -ErrorAction SilentlyContinue)) {
+                    if (!(Get-ChildItem -LiteralPath $TestPath | Where-Object {$_.Name -like "*$Testfile*"} -ErrorAction SilentlyContinue)) {
                         # Define Global Variables
                         $global:tmdbid = $entry.tmdbid
                         $global:tvdbid = $entry.tvdbid
@@ -2855,6 +2907,7 @@ else {
             $global:IsFallback = $null
             $global:Fallback = $null
             $global:TextlessPoster = $null
+            $global:tvdbalreadysearched = $null
     
             $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}]'
             if ($entry.title -match $cjkPattern) {
@@ -2868,6 +2921,8 @@ else {
                 $LibraryName = $entry.'Library Name'
                 $EntryDir = "$AssetPath\$LibraryName\$($entry.RootFoldername)"
                 $PosterImageoriginal = "$EntryDir\poster.jpg"
+                $TestPath = $EntryDir
+                $Testfile = "poster"
                         
                 if (!(Get-ChildItem -LiteralPath $EntryDir -ErrorAction SilentlyContinue)) {
                     New-Item -ItemType Directory -path $EntryDir -Force | out-null
@@ -2875,12 +2930,14 @@ else {
             }
             Else {
                 $PosterImageoriginal = "$AssetPath\$($entry.RootFoldername).jpg"
+                $TestPath = $AssetPath
+                $Testfile = $($entry.RootFoldername)
             }
     
             $PosterImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername).jpg"
             $PosterImage = $PosterImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
             
-            if (!(Get-ChildItem -LiteralPath $PosterImageoriginal -ErrorAction SilentlyContinue)) {
+            if (!(Get-ChildItem -LiteralPath $TestPath | Where-Object {$_.Name -like "*$Testfile*"} -ErrorAction SilentlyContinue)) {
                 Write-log -Message "Start Poster Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                 switch -Wildcard ($global:FavProvider) {
                     'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBShowPoster }Else { Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning; $global:posterurl = GetFanartShowPoster } }
@@ -2907,6 +2964,7 @@ else {
                     if ($global:TextlessPoster -ne 'true' -and $entry.tvdbid ) {
                         $global:posterurl = GetTVDBShowPoster
                         $global:IsFallback = $true
+                        $global:tvdbalreadysearched = $true
                     }
                 }
 
@@ -2914,10 +2972,10 @@ else {
                     $global:PosterWithText = $true
                 } 
 
-                if (!$global:posterurl) {
+                if (!$global:posterurl -and $global:tvdbalreadysearched -ne "True") {
                     $global:posterurl = GetTVDBShowPoster
                     $global:IsFallback = $true
-                    if (!$global:posterurl) {
+                    if (!$global:posterurl -and !$global:TMDBfallbackposterurl -and !$global:fanartfallbackposterurl) {
                         Write-log -Subtext "Could not find a poster on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
                     }
                 }
@@ -3033,19 +3091,23 @@ else {
                     $LibraryName = $entry.'Library Name'
                     $EntryDir = "$AssetPath\$LibraryName\$($entry.RootFoldername)"
                     $backgroundImageoriginal = "$EntryDir\background.jpg"
-                    
+                    $TestPath = $EntryDir
+                    $Testfile = "background"
+
                     if (!(Get-ChildItem -LiteralPath $EntryDir -ErrorAction SilentlyContinue)) {
                         New-Item -ItemType Directory -path $EntryDir -Force | out-null
                     }
                 }
                 Else {
                     $backgroundImageoriginal = "$AssetPath\$($entry.RootFoldername)_background.jpg"
+                    $TestPath = $AssetPath
+                    $Testfile = "$($entry.RootFoldername)_background"
                 }
     
                 $backgroundImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_background.jpg"
                 $backgroundImage = $backgroundImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
 
-                if (!(Get-ChildItem -LiteralPath $backgroundImageoriginal -ErrorAction SilentlyContinue)) {
+                if (!(Get-ChildItem -LiteralPath $TestPath | Where-Object {$_.Name -like "*$Testfile*"} -ErrorAction SilentlyContinue)) {
                     # Define Global Variables
                     $global:tmdbid = $entry.tmdbid
                     $global:tvdbid = $entry.tvdbid
@@ -3203,13 +3265,17 @@ else {
 
                     if ($LibraryFolders -eq 'true') {
                         $SeasonImageoriginal = "$EntryDir\$global:season.jpg"
+                        $TestPath = $EntryDir
+                        $Testfile = "$global:season"
                     }
                     Else {
                         $SeasonImageoriginal = "$AssetPath\$($entry.RootFoldername)_$global:season.jpg"
+                        $TestPath = $AssetPath
+                        $Testfile = "$($entry.RootFoldername)_$global:season"
                     }
                     $SeasonImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_$global:season.jpg"
                     $SeasonImage = $SeasonImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
-                    if (!(Get-ChildItem -LiteralPath $SeasonImageoriginal -ErrorAction SilentlyContinue)) {
+                    if (!(Get-ChildItem -LiteralPath $TestPath | Where-Object {$_.Name -like "*$Testfile*"} -ErrorAction SilentlyContinue)) {
                         if (!$Seasonpostersearchtext) {
                             Write-log -Message "Start Season Poster Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                             $Seasonpostersearchtext = $true
@@ -3217,9 +3283,17 @@ else {
                         # do a specific order
                         if ($entry.tmdbid) {
                             $global:posterurl = GetTMDBSeasonPoster
-                            if (!$global:posterurl -or $global:PosterWithText){
+                            if (!$global:posterurl){
                                 $global:posterurl = GetFanartSeasonPoster
                                 $global:IsFallback = $true
+                            }
+                            if ($global:posterurl -and $global:PreferTextless -eq 'True' -and $global:PosterWithText){
+                                $global:posterurl = GetFanartSeasonPoster
+                                $global:IsFallback = $true
+                            }
+                            if (!$global:posterurl -and $entry.tvdb){
+                                $global:IsFallback = $true
+                                $global:posterurl = GetTVDBShowPoster
                             }
                         }
                         Else {
@@ -3402,13 +3476,17 @@ else {
                                     
                             if ($LibraryFolders -eq 'true') {
                                 $EpisodeImageoriginal = "$EntryDir\$global:FileNaming.jpg"
+                                $TestPath = $EntryDir
+                                $Testfile = "$global:FileNaming"
                             }
                             Else {
                                 $EpisodeImageoriginal = "$AssetPath\$($entry.RootFoldername)_$global:FileNaming.jpg"
+                                $TestPath = $AssetPath
+                                $Testfile = "$($entry.RootFoldername)_$global:FileNaming"
                             }
                             $EpisodeImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_$global:FileNaming.jpg"
                             $EpisodeImage = $EpisodeImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
-                            if (!(Get-ChildItem -LiteralPath $EpisodeImageoriginal -ErrorAction SilentlyContinue)) {
+                            if (!(Get-ChildItem -LiteralPath $TestPath | Where-Object {$_.Name -like "*$Testfile*"} -ErrorAction SilentlyContinue)) {
                                 if (!$Episodepostersearchtext) {
                                     Write-log -Message "Start Title Card Search for: $global:show_name - $global:SeasonEPNumber" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                     $Episodepostersearchtext = $true
@@ -3664,4 +3742,180 @@ else {
         Write-log -Message "During execution '$Errorcount' Errors occurred, please check log for detailed description." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
     }
     Write-log -Message "Script execution time: $FormattedTimespawn" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+    # Send Notification when running in Docker
+    if ($global:NotifyUrl -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker-Alpine*') {
+        if ($global:NotifyUrl -like '*discord*') {
+            $jsonPayload = @"
+        {
+            "username": "Plex-Poster-Maker",
+            "avatar_url": "https://i.imgur.com/SbTVPxb.png",
+            "content": "",
+            "embeds": [
+            {
+                "author": {
+                "name": "PPM @Github",
+                "url": "https://github.com/fscorrupt/Plex-Poster-Maker"
+                },
+                "description": "PPM run took: $FormattedTimespawn $(if ($Errorcount -ge '1') {"\n During execution Errors occurred, please check log for detailed description."})",
+                "timestamp": "$(((Get-Date).AddHours(-1)).ToString("yyyy-MM-ddTHH:mm:ss.Mss"))",
+                "color": $(if ($Errorcount -ge '1') {16711680}Elseif ($Testing){8388736}Elseif ($FallbackCount.count -gt '1' -or $PosterUnknownCount -ge '1' -or $TextTruncatedCount.count -gt '1'){15120384}Else{5763719}),
+                "fields": [
+                {
+                    "name": "Errors",
+                    "value": "$Errorcount",
+                    "inline": false
+                },
+                {
+                    "name": "Fallbacks",
+                    "value": "$($FallbackCount.count)",
+                    "inline": true
+                },
+                {
+                    "name": "Textless",
+                    "value": "$($TextlessCount.count)",
+                    "inline": true
+                },
+                {
+                    "name": "Truncated",
+                    "value": "$($TextTruncatedCount.count)",
+                    "inline": true
+                },
+                {
+                    "name": "Unknown",
+                    "value": "$PosterUnknownCount",
+                    "inline": true
+                },
+                {
+                    "name": "-------------------------------------------------------------------",
+                    "value": "",
+                    "inline": false
+                },
+                {
+                    "name": "Posters",
+                    "value": "$($posterCount-$SeasonCount-$BackgroundCount-$EpisodeCount)",
+                    "inline": false
+                },
+                {
+                    "name": "Backgrounds",
+                    "value": "$BackgroundCount",
+                    "inline": true
+                },
+                {
+                    "name": "Seasons",
+                    "value": "$SeasonCount",
+                    "inline": true
+                },
+                {
+                    "name": "TitleCards",
+                    "value": "$EpisodeCount",
+                    "inline": true
+                }
+                ],
+                "thumbnail": {
+                    "url": "https://i.imgur.com/SbTVPxb.png"
+                },
+                "footer": {
+                "text": "Finished"
+                }
+                
+            }
+            ]
+        }
+"@
+            $global:NotifyUrl = $global:NotifyUrl.replace('discord://','https://discord.com/api/webhooks/')
+            if ($global:SendNotification -eq 'True'){
+                Push-ObjectToDiscord -strDiscordWebhook $global:NotifyUrl -objPayload $jsonPayload
+            }
+        }
+        Else {
+            if ($Errorcount -ge '1') {
+                apprise --notification-type="error" --title="Plex-Poster-Maker" --body="PPM run took: $FormattedTimespawn`nIt Created '$posterCount' Images`n`nDuring execution '$Errorcount' Errors occurred, please check log for detailed description." "$global:appriseNotify" 
+            }
+            Else {
+                apprise --notification-type="success" --title="Plex-Poster-Maker" --body="PPM run took: $FormattedTimespawn`nIt Created '$posterCount' Images" "$global:appriseNotify"
+            }
+        }
+    }
+    if ($global:NotifyUrl -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -notlike 'PSDocker-Alpine*') {
+        $jsonPayload = @"
+        {
+            "username": "Plex-Poster-Maker",
+            "avatar_url": "https://i.imgur.com/SbTVPxb.png",
+            "content": "",
+            "embeds": [
+            {
+                "author": {
+                "name": "PPM @Github",
+                "url": "https://github.com/fscorrupt/Plex-Poster-Maker"
+                },
+                "description": "PPM run took: $FormattedTimespawn $(if ($Errorcount -ge '1') {"\n During execution Errors occurred, please check log for detailed description."})",
+                "timestamp": "$(((Get-Date).AddHours(-1)).ToString("yyyy-MM-ddTHH:mm:ss.Mss"))",
+                "color": $(if ($Errorcount -ge '1') {16711680}Elseif ($Testing){8388736}Elseif ($FallbackCount.count -gt '1' -or $PosterUnknownCount -ge '1' -or $TextTruncatedCount.count -gt '1'){15120384}Else{5763719}),
+                "fields": [
+                {
+                    "name": "Errors",
+                    "value": "$Errorcount",
+                    "inline": false
+                },
+                {
+                    "name": "Fallbacks",
+                    "value": "$($FallbackCount.count)",
+                    "inline": true
+                },
+                {
+                    "name": "Textless",
+                    "value": "$($TextlessCount.count)",
+                    "inline": true
+                },
+                {
+                    "name": "Truncated",
+                    "value": "$($TextTruncatedCount.count)",
+                    "inline": true
+                },
+                {
+                    "name": "Unknown",
+                    "value": "$PosterUnknownCount",
+                    "inline": true
+                },
+                {
+                    "name": "-------------------------------------------------------------------",
+                    "value": "",
+                    "inline": false
+                },
+                {
+                    "name": "Posters",
+                    "value": "$($posterCount-$SeasonCount-$BackgroundCount-$EpisodeCount)",
+                    "inline": false
+                },
+                {
+                    "name": "Backgrounds",
+                    "value": "$BackgroundCount",
+                    "inline": true
+                },
+                {
+                    "name": "Seasons",
+                    "value": "$SeasonCount",
+                    "inline": true
+                },
+                {
+                    "name": "TitleCards",
+                    "value": "$EpisodeCount",
+                    "inline": true
+                }
+                ],
+                "thumbnail": {
+                    "url": "https://i.imgur.com/SbTVPxb.png"
+                },
+                "footer": {
+                "text": "Finished"
+                }
+                
+            }
+            ]
+        }
+"@
+        if ($global:SendNotification -eq 'True'){        
+            Push-ObjectToDiscord -strDiscordWebhook $global:NotifyUrl -objPayload $jsonPayload
+        }
+    }
 }
