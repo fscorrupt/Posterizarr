@@ -1299,7 +1299,7 @@ function CheckJson {
         foreach ($partKey in $defaultConfig.PSObject.Properties.Name) {
             # Check if the part exists in the current configuration
             if (-not $config.$partKey) {
-                # Add the entire part from the default configuration if it doesn't exist
+                # Show user what is missing and exit script
                 Write-log -Message "Missing Property in Config file: $partKey" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
                 Write-log -Subtext "Please adjust config according to GH Readme, exiting now..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
                 pause
@@ -1308,7 +1308,7 @@ function CheckJson {
             else {
                 # Check each key in the part
                 foreach ($propertyKey in $defaultConfig.$partKey.PSObject.Properties.Name) {
-                    # Check if the key exists in the current configuration part
+                    # Show user what is missing and exit script
                     if (-not $config.$partKey.PSObject.Properties.Name.Contains($propertyKey)) {
                         Write-log -Message "Missing Subentry in Config file: $partKey.$propertyKey" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
                         Write-log -Subtext "Please adjust config according to GH Readme, exiting now..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
