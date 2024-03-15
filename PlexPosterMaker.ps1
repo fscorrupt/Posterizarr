@@ -1352,7 +1352,7 @@ CheckJson -jsonExampleUrl "https://github.com/fscorrupt/Plex-Poster-Maker/raw/ma
 
 # Check if Script is Latest
 $LatestScriptVersion = Invoke-RestMethod -Uri "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/Release.txt" -Method Get -ErrorAction Stop
-if ($CurrentScriptVersion -eq $LatestScriptVersion){
+if ($CurrentScriptVersion -eq $LatestScriptVersion) {
     Write-log -Message "You are Running Latest Script Version - v$CurrentScriptVersion" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
 }
 Else {
