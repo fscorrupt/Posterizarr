@@ -3,6 +3,8 @@ param (
     [switch]$Testing
 )
 
+$CurrentScriptVersion = "1.0.1"
+
 #################
 # What you need #
 #####################################################################################################################
@@ -1347,6 +1349,15 @@ if (!(Test-Path $(Join-Path $global:ScriptRoot 'config.json'))) {
 
 # Test Json if something is missing
 CheckJson -jsonExampleUrl "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/config.example.json" -jsonFilePath $(Join-Path $global:ScriptRoot 'config.json')
+
+# Check if Script is Latest
+$LatestScriptVersion = Invoke-RestMethod -Uri "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/Release.txt" -Method Get -ErrorAction Stop
+if ($CurrentScriptVersion -eq $LatestScriptVersion){
+    Write-log -Message "You are Running Latest Script Version - v$CurrentScriptVersion" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+}
+Else {
+    Write-log -Message "You are Running Script in Version: v$CurrentScriptVersion - Latest Version is: v$LatestScriptVersion" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+}
 
 # load config file
 $config = Get-Content -Raw -Path $(Join-Path $global:ScriptRoot 'config.json') | ConvertFrom-Json
