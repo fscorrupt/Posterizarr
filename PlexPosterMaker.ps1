@@ -3,7 +3,7 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.3"
+$CurrentScriptVersion = "1.0.4"
 $global:HeaderWritten = $false
 
 #################
@@ -1367,7 +1367,7 @@ $config = Get-Content -Raw -Path $(Join-Path $global:ScriptRoot 'config.json') |
 # Notification Part
 $global:SendNotification = $config.Notification.SendNotification
 
-if ($global:OSType -eq 'Unix' -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker-Alpine*') {
+if ($global:OSType -eq 'DockerAlpine') {
     $Platform = 'Docker'
 }
 elseif ($global:OSType -eq 'Unix' -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -notlike 'PSDocker-Alpine*') {
