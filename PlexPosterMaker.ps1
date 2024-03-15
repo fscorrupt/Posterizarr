@@ -4,6 +4,7 @@ param (
 )
 
 $CurrentScriptVersion = "1.0.2"
+$global:HeaderWritten = $false
 
 #################
 # What you need #
