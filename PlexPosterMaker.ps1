@@ -3,7 +3,7 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.2"
+$CurrentScriptVersion = "1.0.3"
 $global:HeaderWritten = $false
 
 #################
@@ -1366,6 +1366,20 @@ $config = Get-Content -Raw -Path $(Join-Path $global:ScriptRoot 'config.json') |
 # Access variables from the config file
 # Notification Part
 $global:SendNotification = $config.Notification.SendNotification
+
+if ($global:OSType -eq 'Unix' -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker-Alpine*') {
+    $Platform = 'Docker'
+}
+elseif ($global:OSType -eq 'Unix' -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -notlike 'PSDocker-Alpine*') {
+    $Platform = 'Linux'
+}
+elseif ($global:OSType -eq 'Win32NT') {
+    $Platform = 'Windows'
+}
+Else {
+    $Platform = 'Unknown'
+}
+
 if ($env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker-Alpine*') {
     $global:NotifyUrl = $config.Notification.AppriseUrl
     if ($global:NotifyUrl -eq 'discord://{WebhookID}/{WebhookToken}/' -and $global:SendNotification -eq 'True') {
@@ -2673,13 +2687,18 @@ Elseif ($Testing) {
                 "color": $(if ($Errorcount -ge '1') {16711680}Elseif ($Testing){8388736}Elseif ($FallbackCount.count -gt '1' -or $PosterUnknownCount -ge '1' -or $TextTruncatedCount.count -gt '1'){15120384}Else{5763719}),
                 "fields": [
                 {
+                    "name": "",
+                    "value": ":bar_chart:",
+                    "inline": false
+                },
+                {
                     "name": "Truncated",
                     "value": "$TruncatedCount",
                     "inline": false
                 },
                 {
-                    "name": "-------------------------------------------------------------------",
-                    "value": "",
+                    "name": "",
+                    "value": ":frame_photo:",
                     "inline": false
                 },
                 {
@@ -2702,7 +2721,7 @@ Elseif ($Testing) {
                     "url": "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/images/webhook.png"
                 },
                 "footer": {
-                "text": "Finished"
+                    "text": "$Platform  | current - v$CurrentScriptVersion  | latest - v$LatestScriptVersion"
                 }
                 
             }
@@ -2731,13 +2750,18 @@ Elseif ($Testing) {
                     "color": $(if ($Errorcount -ge '1') {16711680}Elseif ($Testing){8388736}Elseif ($FallbackCount.count -gt '1' -or $PosterUnknownCount -ge '1' -or $TextTruncatedCount.count -gt '1'){15120384}Else{5763719}),
                     "fields": [
                     {
+                        "name": "",
+                        "value": ":bar_chart:",
+                        "inline": false
+                    },
+                    {
                         "name": "Truncated",
                         "value": "$TruncatedCount",
                         "inline": false
                     },
                     {
-                        "name": "-------------------------------------------------------------------",
-                        "value": "",
+                        "name": "",
+                        "value": ":frame_photo:",
                         "inline": false
                     },
                     {
@@ -2760,7 +2784,7 @@ Elseif ($Testing) {
                         "url": "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/images/webhook.png"
                     },
                     "footer": {
-                    "text": "Finished"
+                        "text": "$Platform  | current - v$CurrentScriptVersion  | latest - v$LatestScriptVersion"
                     }
                     
                 }
@@ -4197,6 +4221,11 @@ else {
                 "color": $(if ($Errorcount -ge '1') {16711680}Elseif ($Testing){8388736}Elseif ($FallbackCount.count -gt '1' -or $PosterUnknownCount -ge '1' -or $TextTruncatedCount.count -gt '1'){15120384}Else{5763719}),
                 "fields": [
                 {
+                    "name": "",
+                    "value": ":bar_chart:",
+                    "inline": false
+                },
+                {
                     "name": "Errors",
                     "value": "$Errorcount",
                     "inline": false
@@ -4222,8 +4251,8 @@ else {
                     "inline": true
                 },
                 {
-                    "name": "-------------------------------------------------------------------",
-                    "value": "",
+                    "name": "",
+                    "value": ":frame_photo:",
                     "inline": false
                 },
                 {
@@ -4251,7 +4280,7 @@ else {
                     "url": "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/images/webhook.png"
                 },
                 "footer": {
-                "text": "Finished"
+                    "text": "$Platform  | current - v$CurrentScriptVersion  | latest - v$LatestScriptVersion"
                 }
                 
             }
@@ -4291,6 +4320,11 @@ else {
                 "color": $(if ($Errorcount -ge '1') {16711680}Elseif ($Testing){8388736}Elseif ($FallbackCount.count -gt '1' -or $PosterUnknownCount -ge '1' -or $TextTruncatedCount.count -gt '1'){15120384}Else{5763719}),
                 "fields": [
                 {
+                    "name": "",
+                    "value": ":bar_chart:",
+                    "inline": false
+                },
+                {
                     "name": "Errors",
                     "value": "$Errorcount",
                     "inline": false
@@ -4316,8 +4350,8 @@ else {
                     "inline": true
                 },
                 {
-                    "name": "-------------------------------------------------------------------",
-                    "value": "",
+                    "name": "",
+                    "value": ":frame_photo:",
                     "inline": false
                 },
                 {
@@ -4345,7 +4379,7 @@ else {
                     "url": "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/images/webhook.png"
                 },
                 "footer": {
-                "text": "Finished"
+                    "text": "$Platform  | current - v$CurrentScriptVersion  | latest - v$LatestScriptVersion"
                 }
                 
             }
