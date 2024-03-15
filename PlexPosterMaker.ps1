@@ -3,7 +3,7 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.1"
+$CurrentScriptVersion = "1.0.2"
 
 #################
 # What you need #
@@ -2392,7 +2392,7 @@ Elseif ($Testing) {
     }
     Else {
         Write-log -Subtext "    Applying textbox only to Background..." -Path $global:ScriptRoot\Logs\Testinglog.log -Type Info
-        $BackgroundArgumentsNoText = "`"$BackgroundTestPosterTextless`" -size `"$boxsize`" xc:`"#ACD7E6`" -gravity south -geometry +0+`"$text_offset`" -compose over -composite `"$BackgroundTestPosterTextless`""
+        $BackgroundArgumentsNoText = "`"$BackgroundTestPosterTextless`" -size `"$Backgroundboxsize`" xc:`"#ACD7E6`" -gravity south -geometry +0+`"$Backgroundtext_offset`" -compose over -composite `"$BackgroundTestPosterTextless`""
         Start-Process $magick -Wait -NoNewWindow -ArgumentList $BackgroundArgumentsNoText
     }
     Write-log -Subtext "TitleCard Part:" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Success
