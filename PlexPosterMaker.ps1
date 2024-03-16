@@ -1337,21 +1337,20 @@ function CheckJsonPaths {
     )
 
     $paths = @($font, $backgroundfont, $titlecardfont, $Posteroverlay, $Backgroundoverlay, $titlecardoverlay)
+    
     $errorCount = 0
-
     foreach ($path in $paths) {
         if (-not (Test-Path $path)) {
-            Write-Log -Message "Path/File does not exist: $path" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+            Write-Log -Message "Could not find file in: $path" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+            Write-Log -Subtext "Check config for typos and make sure that the file is present in scriptroot." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
             $errorCount++
         }
     }
 
-    if ($errorCount -eq 0) {
-        Write-Log -Message 'All paths/files exist.' -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-    } else {
-        Write-Log -Message "$errorCount paths/files do not exist." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+    if ($errorCount -ge 1) {
+        pause
         exit
-    }
+    } 
 }
 
 $startTime = Get-Date
