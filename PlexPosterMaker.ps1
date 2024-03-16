@@ -3,7 +3,7 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.4"
+$CurrentScriptVersion = "1.0.5"
 $global:HeaderWritten = $false
 
 #################
@@ -1326,6 +1326,32 @@ function CheckJson {
         Write-Host "Failed to download the default configuration JSON file from the URL."
     }
 }
+function CheckJsonPaths {
+    param (
+        [string]$font,
+        [string]$backgroundfont,
+        [string]$titlecardfont,
+        [string]$Posteroverlay,
+        [string]$Backgroundoverlay,
+        [string]$titlecardoverlay
+    )
+
+    $paths = @($font, $backgroundfont, $titlecardfont, $Posteroverlay, $Backgroundoverlay, $titlecardoverlay)
+    
+    $errorCount = 0
+    foreach ($path in $paths) {
+        if (-not (Test-Path $path)) {
+            Write-Log -Message "Could not find file in: $path" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+            Write-Log -Subtext "Check config for typos and make sure that the file is present in scriptroot." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+            $errorCount++
+        }
+    }
+
+    if ($errorCount -ge 1) {
+        pause
+        exit
+    } 
+}
 
 $startTime = Get-Date
 $global:OSType = [System.Environment]::OSVersion.Platform
@@ -1337,7 +1363,6 @@ if ($env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker-Alpine*') {
 Else {
     $global:ScriptRoot = $PSScriptRoot
 }
-
 # Check if Config file is present
 if (!(Test-Path $(Join-Path $global:ScriptRoot 'config.json'))) {
     Write-log -Message "Config File missing, downloading it for you..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
@@ -1508,7 +1533,6 @@ $global:TitleCards = $config.PrerequisitePart.TitleCards
 # Poster Overlay Part
 $global:ImageProcessing = $config.OverlayPart.ImageProcessing
 $global:outputQuality = $config.OverlayPart.outputQuality
-
 # Poster Overlay Part
 $fontAllCaps = $config.PosterOverlayPart.fontAllCaps
 $AddBorder = $config.PosterOverlayPart.AddBorder
@@ -1764,6 +1788,8 @@ foreach ($file in $files) {
     }
 }
 
+# Call the function with your variables
+CheckJsonPaths -font $font -backgroundfont $backgroundfont -titlecardfont $titlecardfont -Posteroverlay $Posteroverlay -Backgroundoverlay $Backgroundoverlay -titlecardoverlay $titlecardoverlay
 
 # Check Plex now:
 if ($PlexToken) {
