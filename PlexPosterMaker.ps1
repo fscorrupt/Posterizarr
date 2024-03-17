@@ -3,7 +3,7 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.5"
+$CurrentScriptVersion = "1.0.6"
 $global:HeaderWritten = $false
 
 #################
@@ -59,7 +59,8 @@ function Write-Log {
         $global:HeaderWritten = $true
     }
     $Timestamp = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
-    $PaddedType = $Type.PadRight(8)
+    $PaddedType = "[" + $Type + "]"
+    $PaddedType = $PaddedType.PadRight(10)
     $Linenumber = "L" + "." + "$($MyInvocation.ScriptLineNumber)"
     if ($Linenumber.Length -eq '5') {
         $Linenumber = $Linenumber + " "
@@ -1794,7 +1795,7 @@ CheckJsonPaths -font $font -backgroundfont $backgroundfont -titlecardfont $title
 # Check Plex now:
 if ($PlexToken) {
     Write-log -Message "Plex token found, checking access now..." -Path $configLogging -Type Info
-    if ((Invoke-WebRequest "$PlexUrl/?X-Plex-Token=$PlexToken").StatusCode -eq 200) {
+    if ((Invoke-WebRequest "$PlexUrl/library/sections/?X-Plex-Token=$PlexToken").StatusCode -eq 200) {
         Write-log -Subtext "Plex access is working..." -Path $configLogging -Type Success
         [xml]$Libs = (Invoke-WebRequest "$PlexUrl/library/sections/?X-Plex-Token=$PlexToken").content
     }
@@ -2055,7 +2056,7 @@ Elseif ($Testing) {
     $MediumText = "The Hobbit is a great movie" 
     $LongText = "The Hobbit is a great movie that we all loved and enjoyed watching" 
     $bullet = [char]0x2022
-    $Episodetext = "Season 1 $bullet Episode 1"
+    $Episodetext = "Season 9999 $bullet Episode 9999"
 
     $ShortTextCAPS = $ShortText.ToUpper()
     $MediumTextCAPS = $MediumText.ToUpper()
