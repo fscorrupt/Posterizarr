@@ -3,7 +3,7 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.6"
+$CurrentScriptVersion = "1.0.5"
 $global:HeaderWritten = $false
 
 #################
@@ -59,14 +59,13 @@ function Write-Log {
         $global:HeaderWritten = $true
     }
     $Timestamp = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
-    # $Type = "[" + $Type + "]"
-    $PaddedType = "[" + $Type + "]"
-    $PaddedType = $PaddedType.PadRight(10)
+    $PaddedType = $Type.PadRight(8)
     $Linenumber = "L" + "." + "$($MyInvocation.ScriptLineNumber)"
     if ($Linenumber.Length -eq '5') {
         $Linenumber = $Linenumber + " "
     }
     $TypeFormatted = "[{0}] {1}|{2}" -f $Timestamp, $PaddedType.ToUpper(), $Linenumber
+
     if ($Message) {
         $FormattedLine1 = "{0}| {1}" -f ($TypeFormatted, $Message)
         $FormattedLineWritehost = "{0}| " -f ($TypeFormatted)
@@ -2056,7 +2055,7 @@ Elseif ($Testing) {
     $MediumText = "The Hobbit is a great movie" 
     $LongText = "The Hobbit is a great movie that we all loved and enjoyed watching" 
     $bullet = [char]0x2022
-    $Episodetext = "Season 9999 $bullet Episode 9999"
+    $Episodetext = "Season 1 $bullet Episode 1"
 
     $ShortTextCAPS = $ShortText.ToUpper()
     $MediumTextCAPS = $MediumText.ToUpper()
