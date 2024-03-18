@@ -3,7 +3,7 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.8"
+$CurrentScriptVersion = "1.0.9"
 $global:HeaderWritten = $false
 
 #################
