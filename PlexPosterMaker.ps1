@@ -3783,7 +3783,7 @@ else {
                                 $global:posterurl = GetFanartSeasonPoster
                                 $global:IsFallback = $true
                             }
-                            if (!$global:posterurl -and $entry.tvdb) {
+                            if (!$global:posterurl -and $entry.tvdbid) {
                                 $global:IsFallback = $true
                                 $global:posterurl = GetTVDBShowPoster
                             }
@@ -3793,7 +3793,7 @@ else {
                             $global:posterurl = GetFanartSeasonPoster
                             if (!$global:posterurl) {
                                 $global:IsFallback = $true
-                                if ($entry.tvdb) {
+                                if ($entry.tvdbid) {
                                     $global:posterurl = GetTVDBShowPoster
                                 }
                             }
