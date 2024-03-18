@@ -1376,11 +1376,9 @@ function CheckJson {
         foreach ($partKey in $defaultConfig.PSObject.Properties.Name) {
             # Check if the part exists in the current configuration
             if (-not $config.$partKey) {
-														   
                 Write-Log -Message "Missing Main Attribute in your Config file: $partKey." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
                 Write-Log -Message "In GH Readme, look for $partKey, then review your config file and adjust it accordingly." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
                 Write-Log -Message "GH Readme -> https://github.com/fscorrupt/Plex-Poster-Maker/blob/main/README.md#configuration, exiting now..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
-					 
                 Exit
             }
             else {
@@ -1391,7 +1389,6 @@ function CheckJson {
                         Write-Log -Message "Missing Sub-Attribute in your Config file: $partKey.$propertyKey." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
                         Write-Log -Message "In GH Readme, look for $partKey and $propertyKey, then review your config file and adjust it accordingly." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
                         Write-Log -Message "GH Readme -> https://github.com/fscorrupt/Plex-Poster-Maker/blob/main/README.md#configuration, exiting now..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
-							 
                         Exit
                     }
                 }
@@ -1429,7 +1426,6 @@ function CheckJsonPaths {
     }
 
     if ($errorCount -ge 1) {
-			 
         exit
     } 
 }
@@ -1450,7 +1446,6 @@ if (!(Test-Path $(Join-Path $global:ScriptRoot 'config.json'))) {
     Invoke-WebRequest -uri "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/config.example.json" -OutFile "$global:ScriptRoot\config.json"
     Write-Log -Subtext "Config File downloaded here: '$global:ScriptRoot\config.json'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
     Write-Log -Subtext "Please configure the config file according to GH, exit script now..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
-		 
     exit
 }
 
@@ -1883,7 +1878,6 @@ if ($PlexToken) {
         Write-Log -Message "Could not access plex with this url: $PlexUrl/library/sections/?X-Plex-Token=$PlexToken" -Path $configLogging -Type Error
         Write-Log -Subtext "Please check token and access..." -Path $configLogging -Type Error
         $Errorcount++
-			 
         exit
     }
 }
@@ -1899,7 +1893,6 @@ Else {
         Write-Log -Subtext "Please check access and settings in plex..." -Path $configLogging -Type Warning
         Write-Log -Message "To be able to connect to plex without Auth" -Path $configLogging -Type Info
         Write-Log -Message "You have to enter your ip range in 'Settings -> Network -> List of IP addresses and networks that are allowed without auth: '192.168.1.0/255.255.255.0''" -Path $configLogging -Type Info
-			 
         exit
     }
     if ($result.StatusCode -eq 200) {
@@ -1981,7 +1974,6 @@ Add-FanartTvAPIKey -Api_Key $FanartTvAPIKey
 # Check TMDB Token before building the Header.
 if ($global:tmdbtoken.Length -le '35') {
     Write-Log -Message "TMDB Token is to short, you may have used Api key in config file, please change it to 'API Read Access Token'." -Path $configLogging -Type Error
-		 
     exit
 }
 
@@ -4198,7 +4190,7 @@ else {
                                                                 
                                                 Write-Log -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                                                 
-                                                $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPfontcolor`" -size `"$TitleCardEPboxsize`" -background none caption:`" $global:SeasonEPNumber`" -trim -gravity south -extent `"$TitleCardEPboxsize`" `) -gravity south -geometry +0`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPfontcolor`" -size `"$TitleCardEPboxsize`" -background none caption:`"$global:SeasonEPNumber`" -trim -gravity south -extent `"$TitleCardEPboxsize`" `) -gravity south -geometry +0`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
                                                                 
                                                 Write-Log -Subtext "Applying SeasonEPNumber text: `"$global:SeasonEPNumber`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                                 $logEntry = "`"$magick`" $Arguments"
