@@ -1800,7 +1800,7 @@ if ($PlexToken) {
         [xml]$Libs = (Invoke-WebRequest "$PlexUrl/library/sections/?X-Plex-Token=$PlexToken").content
     }
     Else {
-        Write-log -Message "Could not access plex with this url: $PlexUrl/?X-Plex-Token=$PlexToken" -Path $configLogging -Type Error
+        Write-log -Message "Could not access plex with this url: $PlexUrl/library/sections/?X-Plex-Token=$PlexToken" -Path $configLogging -Type Error
         Write-log -Subtext "Please check token and access..." -Path $configLogging -Type Error
         $Errorcount++
         pause
@@ -1810,10 +1810,10 @@ if ($PlexToken) {
 Else {
     Write-log -Message "Checking Plex access now..." -Path $configLogging -Type Info
     try {
-        $result = Invoke-WebRequest -Uri $PlexUrl -ErrorAction SilentlyContinue
+        $result = Invoke-WebRequest -Uri "$PlexUrl/library/sections" -ErrorAction SilentlyContinue
     }
     catch {
-        Write-log -Message "Could not access plex with this url: $PlexUrl" -Path $configLogging -Type Error
+        Write-log -Message "Could not access plex with this url: $PlexUrl/library/sections" -Path $configLogging -Type Error
         Write-log -Message "Error Message: $_" -Path $configLogging -Type Error
         $Errorcount++
         Write-log -Subtext "Please check access and settings in plex..." -Path $configLogging -Type Warning
