@@ -3,7 +3,7 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.7"
+$CurrentScriptVersion = "1.0.8"
 $global:HeaderWritten = $false
 
 #################
@@ -855,9 +855,20 @@ function GetFanartSeasonPoster {
                         $NoLangPoster = ($entrytemp.seasonposter | Where-Object { $_.lang -eq '00' -and $_.Season -eq $global:SeasonNumber } | Sort-Object likes)
                         if ($NoLangPoster) {
                             $global:posterurl = ($NoLangPoster | Sort-Object likes)[0].url
+                            Write-Log -Subtext "Found Season Poster without Language on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                            $global:TextlessPoster = $true
                         }
                         Else {
                             Write-Log -Subtext "No Texless Season Poster on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                            foreach ($lang in $global:PreferedLanguageOrderFanart) {
+                                $FoundPoster = ($entrytemp.seasonposter | Where-Object { $_.lang -eq "$lang" -and $_.Season -eq $global:SeasonNumber } | Sort-Object likes)
+                                if ($FoundPoster) {
+                                    $global:posterurl = $FoundPoster[0].url
+                                    Write-Log -Subtext "Found season Poster with Language '$lang' on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                                    $global:PosterWithText = $true
+                                    break
+                                }
+                            }
                         }
                     }
                     Else {
@@ -1137,6 +1148,62 @@ function GetTVDBShowPoster {
             Else {
                 Write-Log -Subtext "TVDB Api Response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
             }
+        }
+    }
+}
+function GetTVDBSeasonPoster {
+    if ($global:tvdbid) {
+        Write-Log -Subtext "Searching on TVDB for a Season poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+        try {
+            $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/series/$($global:tvdbid)/extended" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
+        }
+        catch {
+        }
+        if ($response) {
+            if ($response.data.seasons) {
+                # Select season id from current Seasonnumber
+                $SeasonID = $response.data.seasons | Where-Object { $_.number -eq $global:SeasonNumber -and $_.type.type -eq 'official' }
+                if (!$SeasonID) {
+                    $SeasonID = $response.data.seasons | Where-Object { $_.number -eq $global:SeasonNumber -and $_.type.type -eq 'alternate' }
+                }
+                try {
+                    $Seasonresponse = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/seasons/$($SeasonID.id)/extended" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
+                }
+                catch {
+                }
+                if ($Seasonresponse) {
+                    foreach ($lang in $global:PreferedLanguageOrderTVDB) {
+                        if ($lang -eq 'null') {
+                            $LangArtwork = ($Seasonresponse.data.artwork | Where-Object { $_.language -like "" -and $_.type -eq '7' } | Sort-Object Score -Descending)
+                        }
+                        Else {
+                            $LangArtwork = ($Seasonresponse.data.artwork  | Where-Object { $_.language -like "$lang*" -and $_.type -eq '7' } | Sort-Object Score -Descending)
+                        }
+                        if ($LangArtwork) {
+                            $global:posterurl = $LangArtwork[0].image
+                            if ($lang -eq 'null') {
+                                Write-Log -Subtext "Found Season Poster without Language on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                                $global:TextlessPoster = $true
+                            }
+                            Else {
+                                Write-Log -Subtext "Found Season Poster with Language '$lang' on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                            }
+                            if ($lang -ne 'null') {
+                                $global:PosterWithText = $true
+                            }
+                            return $global:posterurl
+                            break
+                        }
+                    }
+                }
+                return $global:posterurl
+            }
+            Else {
+                Write-Log -Subtext "No Poster found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+            }
+        }
+        Else {
+            Write-Log -Subtext "TVDB Api Response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
         }
     }
 }
@@ -3791,9 +3858,9 @@ else {
                                 $global:posterurl = GetFanartSeasonPoster
                                 $global:IsFallback = $true
                             }
-                            if (!$global:posterurl -and $entry.tvdbid) {
+                            if ((!$global:posterurl -or !$global:TextlessPoster) -and $entry.tvdbid) {
                                 $global:IsFallback = $true
-                                $global:posterurl = GetTVDBShowPoster
+                                $global:posterurl = GetTVDBSeasonPoster
                             }
                         }
                         Else {
@@ -3802,7 +3869,7 @@ else {
                             if (!$global:posterurl) {
                                 $global:IsFallback = $true
                                 if ($entry.tvdbid) {
-                                    $global:posterurl = GetTVDBShowPoster
+                                    $global:posterurl = GetTVDBSeasonPoster
                                 }
                             }
                         }
