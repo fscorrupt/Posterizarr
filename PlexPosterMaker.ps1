@@ -3,7 +3,7 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.11"
+$CurrentScriptVersion = "1.0.12"
 $global:HeaderWritten = $false
 
 #################
@@ -1343,33 +1343,24 @@ function GetPlexArtwork {
         break
     }
 
-    Add-Type -AssemblyName System.Drawing
-    # Load the downloaded image
-    $img = New-Object -TypeName System.Drawing.Bitmap -ArgumentList $TempImage
+    $magickcommand = "& `"$magick`" identify -verbose `"$TempImage`""
+    $magickcommand | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
 
     # Get the EXIF data
-    $exif_data = $img.PropertyItems
     $ExifFound = $null
-    $global:PlexartworkDownloaded = $null
-    if ($exif_data) {
-        foreach ($item in $exif_data) {
-            $value = [System.Text.Encoding]::Ascii.GetString($item.Value)
+    # Execute command and get exif data
+    $value = (Invoke-Expression $magickcommand | Select-String -Pattern 'overlay|titlecard')
 
-            if ($value -match "overlay" -or $value -match "titlecard") {
-                $ExifFound = $True
-            }
-        }
-        if ($ExifFound) {
-            Write-Log -Subtext "Artwork has exif data from pmm/tcm, cant take it..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
-            $img.Dispose()
-            Remove-Item -LiteralPath $TempImage | out-null
-        }
-        Else {
-            Write-Log -Subtext "No pmm/tcm exif data found, taking Plex artwork..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
-            $global:PlexartworkDownloaded = $true
-            $global:posterurl = $ArtUrl
-            $img.Dispose()
-        }
+    $global:PlexartworkDownloaded = $null
+    if ($value) {
+        $ExifFound = $True
+        Write-Log -Subtext "Artwork has exif data from pmm/tcm, cant take it..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+        Remove-Item -LiteralPath $TempImage | out-null
+    }
+    Else {
+        Write-Log -Subtext "No pmm/tcm exif data found, taking Plex artwork..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
+        $global:PlexartworkDownloaded = $true
+        $global:posterurl = $ArtUrl
     }
 }
 function Push-ObjectToDiscord {
