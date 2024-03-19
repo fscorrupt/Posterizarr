@@ -1,6 +1,6 @@
 # Plex Poster Maker
 
-This PowerShell script automates the process of generating images for your Plex media library. Leveraging information from your Plex library, such as movie or show titles | season and episode data, it fetches relevant artwork from Fanart.tv, TMDB, TVDB, and IMDB. The script is able to focus on specific language to grab; by default, it is `xx`, which means textless, and then fallbacks to `en` if not available. This is a setting a user can decide on, either to focus on textless or on text posters. It also offers both automatic and manual modes for generating posters, accommodating custom creations that cannot be automated.
+This PowerShell script automates the process of generating images for your Plex media library. Leveraging information from your Plex library, such as movie or show titles | season and episode data, it fetches relevant artwork from Fanart.tv, TMDB, TVDB, Plex and IMDB. The script is able to focus on specific language to grab; by default, it is `xx`, which means textless, and then fallbacks to `en` if not available. This is a setting a user can decide on, either to focus on textless or on text posters. It also offers both automatic and manual modes for generating posters, accommodating custom creations that cannot be automated.
 
 ```Plex Poster Maker is cross-platform ready, meaning it can run on both Linux, Docker and on Windows operating systems.```
 
@@ -30,7 +30,7 @@ This PowerShell script automates the process of generating images for your Plex 
     - Additionally, an `ImageChoices.csv` file is generated to store all the selected download options and essential information.
     - Send notification via apprise or discord [Click here for Example pictures.](#webhook).
 - **Cross-platform Compatibility**: Ensures seamless operation across Linux, Docker, and Windows Plex servers, enhancing versatility.
-- **Poster/Background/TitleCard Creation**: It searches fanart/tmdb/tvdb for textless posters/backgrounds/titlecards and resizes the downloaded image to 3840x2160, fallback is grabbing a poster from imdb.
+- **Poster/Background/TitleCard Creation**: It searches fanart/tmdb/tvdb/Plex for posters/backgrounds/titlecards and resizes the downloaded image to 3840x2160, fallback is grabbing a poster from imdb.
 
 Upon initial execution, the script may take some time to run as it compiles necessary data. Subsequent runs efficiently create missing posters, bypassing existing assets in the directory.
 
@@ -63,6 +63,7 @@ Before utilizing the script, ensure the following prerequisites are installed an
             -    `tmdb`
             -    `fanart`
             -    `tvdb`      
+            -    `plex`     
     - `PreferedLanguageOrder`: Specify language preferences. Default is `xx,en,de` (`xx` is Textless). Example configurations can be found in the config file. 2-digit language codes can be found here: [ISO 3166-1 Lang Codes](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2).
     </details>
     <details close>

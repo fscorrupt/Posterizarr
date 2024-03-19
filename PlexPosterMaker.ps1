@@ -3,7 +3,7 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.10"
+$CurrentScriptVersion = "1.0.11"
 $global:HeaderWritten = $false
 
 #################
@@ -1325,6 +1325,51 @@ function GetIMDBPoster {
     Else {
         Write-Log -Subtext "Found Poster with text on IMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
         return $global:posterurl
+    }
+}
+function GetPlexArtwork {
+    param(
+        [string]$Type,
+        [string]$ArtUrl,
+        [string]$TempImage
+    )
+    Write-Log -Subtext "Searching on Plex for$Type" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+    try {
+        Invoke-WebRequest -Uri $ArtUrl -OutFile $TempImage
+    }
+    catch {
+        Write-Log -Subtext "Could not download Artwork from plex, Error Message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+        $errorCount++
+        break
+    }
+
+    Add-Type -AssemblyName System.Drawing
+    # Load the downloaded image
+    $img = New-Object -TypeName System.Drawing.Bitmap -ArgumentList $TempImage
+
+    # Get the EXIF data
+    $exif_data = $img.PropertyItems
+    $ExifFound = $null
+    $global:PlexartworkDownloaded = $null
+    if ($exif_data) {
+        foreach ($item in $exif_data) {
+            $value = [System.Text.Encoding]::Ascii.GetString($item.Value)
+
+            if ($value -match "overlay" -or $value -match "titlecard") {
+                $ExifFound = $True
+            }
+        }
+        if ($ExifFound) {
+            Write-Log -Subtext "Artwork has exif data from pmm/tcm, cant take it..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+            $img.Dispose()
+            Remove-Item -LiteralPath $TempImage | out-null
+        }
+        Else {
+            Write-Log -Subtext "No pmm/tcm exif data found, taking Plex artwork..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
+            $global:PlexartworkDownloaded = $true
+            $global:posterurl = $ArtUrl
+            $img.Dispose()
+        }
     }
 }
 function Push-ObjectToDiscord {
@@ -3018,6 +3063,7 @@ else {
                     $SeasonNames = $SeasonsTemp.Title -join ','
                     $SeasonNumbers = $SeasonsTemp.index -join ','
                     $SeasonRatingkeys = $SeasonsTemp.ratingKey -join ','
+                    $SeasonPosterUrl = ($SeasonsTemp | where { $_.type -eq "season" }).thumb -join ','
                 }
                 $matchesimdb = [regex]::Matches($metadatatemp, $imdbpattern)
                 $matchestmdb = [regex]::Matches($metadatatemp, $tmdbpattern)
@@ -3047,6 +3093,9 @@ else {
                 $temp | Add-Member -MemberType NoteProperty -Name "Path" -Value $Matchedpath
                 $temp | Add-Member -MemberType NoteProperty -Name "RootFoldername" -Value $extractedFolder
                 $temp | Add-Member -MemberType NoteProperty -Name "MultipleVersions" -Value $MultipleVersions
+                $temp | Add-Member -MemberType NoteProperty -Name "PlexPosterUrl" -Value $Metadata.MediaContainer.$contentquery.thumb
+                $temp | Add-Member -MemberType NoteProperty -Name "PlexBackgroundUrl" -Value $Metadata.MediaContainer.$contentquery.art
+                $temp | Add-Member -MemberType NoteProperty -Name "PlexSeasonUrls" -Value $SeasonPosterUrl
                 $Libraries += $temp
             }
         }
@@ -3091,6 +3140,7 @@ else {
                 $tempseasondata | Add-Member -MemberType NoteProperty -Name "Season Number" -Value $Seasondata.MediaContainer.parentIndex
                 $tempseasondata | Add-Member -MemberType NoteProperty -Name "Episodes" -Value $($Seasondata.MediaContainer.video.index -join ',')
                 $tempseasondata | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Seasondata.MediaContainer.video.title -join ';')
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "PlexTitleCardUrls" -Value $($Seasondata.MediaContainer.video.thumb -join ',')
                 $Episodedata += $tempseasondata
             }
         }
@@ -3147,11 +3197,18 @@ else {
                     $global:posterurl = $null
                     $global:PosterWithText = $null
                     $global:Fallback = $null
+                    if ($PlexToken) {
+                        $Arturl = $plexurl + $entry.PlexPosterUrl + "?X-Plex-Token=$PlexToken"
+                    }
+                    Else {
+                        $Arturl = $plexurl + $entry.PlexPosterUrl
+                    }
                     Write-Log -Message "Start Poster Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                     switch -Wildcard ($global:FavProvider) {
                         'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBMoviePoster }Else { Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning; $global:posterurl = GetFanartMoviePoster } }
                         'FANART' { $global:posterurl = GetFanartMoviePoster }
                         'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBMoviePoster }Else { Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning; $global:posterurl = GetFanartMoviePoster } }
+                        'PLEX' { GetPlexArtwork -Type ' a Movie Poster' -ArtUrl $Arturl -TempImage $PosterImage }
                         Default { $global:posterurl = GetFanartMoviePoster }
                     }
                     switch -Wildcard ($global:Fallback) {
@@ -3173,6 +3230,10 @@ else {
                     if (!$global:posterurl) {
                         $global:posterurl = GetTVDBMoviePoster
                         $global:IsFallback = $true
+                        if (!$global:posterurl) {
+                            GetPlexArtwork -Type ' a Movie Poster' -ArtUrl $Arturl -TempImage $PosterImage
+                            $global:IsFallback = $true
+                        }
                         if (!$global:posterurl -and $global:imdbid) { 
                             Write-Log -Subtext "Searching on IMDB for a movie poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
                             $global:posterurl = GetIMDBPoster
@@ -3189,8 +3250,10 @@ else {
                     Else {
                         $joinedTitle = $Titletext
                     }
-                    if ($global:posterurl) {
-                        Invoke-WebRequest -Uri $global:posterurl -OutFile $PosterImage
+                    if ($global:posterurl -or $global:PlexartworkDownloaded ) {
+                        if (!$global:PlexartworkDownloaded) {
+                            Invoke-WebRequest -Uri $global:posterurl -OutFile $PosterImage
+                        }
                         Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                         if ($global:posterurl -like 'https://image.tmdb.org*') {
                             if ($global:PosterWithText) {
@@ -3210,6 +3273,9 @@ else {
                         }
                         elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
                             Write-Log -Subtext "Downloading Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                        }
+                        elseif ($global:posterurl -like "$PlexUrl*") {
+                            Write-Log -Subtext "Downloading Poster from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                         }
                         Else {
                             Write-Log -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
@@ -3307,11 +3373,18 @@ else {
                         $global:imdbid = $entry.imdbid
                         $global:posterurl = $null
                         $global:PosterWithText = $null
+                        if ($PlexToken) {
+                            $Arturl = $plexurl + $entry.PlexBackgroundUrl + "?X-Plex-Token=$PlexToken"
+                        }
+                        Else {
+                            $Arturl = $plexurl + $entry.PlexBackgroundUrl
+                        }
                         Write-Log -Message "Start Background Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                         switch -Wildcard ($global:FavProvider) {
                             'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBMovieBackground }Else { Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning; $global:posterurl = GetFanartMovieBackground } }
                             'FANART' { $global:posterurl = GetFanartMovieBackground }
                             'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBMovieBackground }Else { Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning; $global:posterurl = GetFanartMovieBackground } }
+                            'PLEX' { GetPlexArtwork -Type ' a Movie Background' -ArtUrl $Arturl -TempImage $backgroundImage }
                             Default { $global:posterurl = GetFanartMovieBackground }
                         }
                         switch -Wildcard ($global:Fallback) {
@@ -3346,8 +3419,10 @@ else {
                         Else {
                             $joinedTitle = $Titletext
                         }
-                        if ($global:posterurl) {
-                            Invoke-WebRequest -Uri $global:posterurl -OutFile $backgroundImage
+                        if ($global:posterurl -or $global:PlexartworkDownloaded ) {
+                            if (!$global:PlexartworkDownloaded) {
+                                Invoke-WebRequest -Uri $global:posterurl -OutFile $backgroundImage
+                            }
                             Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                             if ($global:posterurl -like 'https://image.tmdb.org*') {
                                 if ($global:PosterWithText) {
@@ -3367,6 +3442,9 @@ else {
                             }
                             elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
                                 Write-Log -Subtext "Downloading background from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                            }
+                            elseif ($global:posterurl -like "$PlexUrl*") {
+                                Write-Log -Subtext "Downloading Background from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                             }
                             Else {
                                 Write-Log -Subtext "Downloading background from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
@@ -3497,13 +3575,19 @@ else {
     
             $PosterImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername).jpg"
             $PosterImage = $PosterImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
-            
+            if ($PlexToken) {
+                $Arturl = $plexurl + $entry.PlexPosterUrl + "?X-Plex-Token=$PlexToken"
+            }
+            Else {
+                $Arturl = $plexurl + $entry.PlexPosterUrl
+            }
             if (!(Get-ChildItem -LiteralPath $TestPath | Where-Object { $_.Name -like "*$Testfile*" } -ErrorAction SilentlyContinue)) {
                 Write-Log -Message "Start Poster Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                 switch -Wildcard ($global:FavProvider) {
                     'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBShowPoster }Else { Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning; $global:posterurl = GetFanartShowPoster } }
                     'FANART' { $global:posterurl = GetFanartShowPoster }
                     'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBShowPoster }Else { Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning; $global:posterurl = GetFanartShowPoster } }
+                    'PLEX' { GetPlexArtwork -Type ' a Show Poster' -ArtUrl $Arturl -TempImage $PosterImage }
                     Default { $global:posterurl = GetFanartShowPoster }
                 }
                 switch -Wildcard ($global:Fallback) {
@@ -3552,8 +3636,10 @@ else {
                 if (!$global:TextlessPoster -eq 'True' -and $global:fanartfallbackposterurl) {
                     $global:posterurl = $global:fanartfallbackposterurl
                 }
-                if ($global:posterurl) {
-                    Invoke-WebRequest -Uri $global:posterurl -OutFile $PosterImage
+                if ($global:posterurl -or $global:PlexartworkDownloaded ) {
+                    if (!$global:PlexartworkDownloaded) {
+                        Invoke-WebRequest -Uri $global:posterurl -OutFile $PosterImage
+                    }
                     Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                     if ($global:posterurl -like 'https://image.tmdb.org*') {
                         if ($global:PosterWithText) {
@@ -3573,6 +3659,9 @@ else {
                     }
                     elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
                         Write-Log -Subtext "Downloading Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                    }
+                    elseif ($global:posterurl -like "$PlexUrl*") {
+                        Write-Log -Subtext "Downloading Poster from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                     }
                     Else {
                         Write-Log -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
@@ -3675,11 +3764,20 @@ else {
                     $global:imdbid = $entry.imdbid
                     $global:posterurl = $null
                     $global:PosterWithText = $null
+
+                    if ($PlexToken) {
+                        $Arturl = $plexurl + $entry.PlexBackgroundUrl + "?X-Plex-Token=$PlexToken"
+                    }
+                    Else {
+                        $Arturl = $plexurl + $entry.PlexBackgroundUrl
+                    }
+
                     Write-Log -Message "Start Background Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                     switch -Wildcard ($global:FavProvider) {
                         'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBShowBackground }Else { Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning; $global:posterurl = GetFanartShowBackground } }
                         'FANART' { $global:posterurl = GetFanartShowBackground }
                         'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBShowBackground }Else { Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning; $global:posterurl = GetFanartShowBackground } }
+                        'PLEX' { GetPlexArtwork -Type ' a Show Background' -ArtUrl $Arturl -TempImage $backgroundImage }
                         Default { $global:posterurl = GetFanartShowBackground }
                     }
                     switch -Wildcard ($global:Fallback) {
@@ -3716,8 +3814,10 @@ else {
                     Else {
                         $joinedTitle = $Titletext
                     }
-                    if ($global:posterurl) {
-                        Invoke-WebRequest -Uri $global:posterurl -OutFile $backgroundImage
+                    if ($global:posterurl -or $global:PlexartworkDownloaded ) {
+                        if (!$global:PlexartworkDownloaded) {
+                            Invoke-WebRequest -Uri $global:posterurl -OutFile $backgroundImage
+                        }
                         Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                         if ($global:posterurl -like 'https://image.tmdb.org*') {
                             if ($global:PosterWithText) {
@@ -3737,6 +3837,9 @@ else {
                         }
                         elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
                             Write-Log -Subtext "Downloading background from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                        }
+                        elseif ($global:posterurl -like "$PlexUrl*") {
+                            Write-Log -Subtext "Downloading Background from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                         }
                         Else {
                             Write-Log -Subtext "Downloading background from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
@@ -3814,6 +3917,7 @@ else {
                 $global:TextlessPoster = $null
                 $global:seasonNames = $entry.SeasonNames -split ','
                 $global:seasonNumbers = $entry.seasonNumbers -split ','
+                $global:PlexSeasonUrls = $entry.PlexSeasonUrls -split ','
                 for ($i = 0; $i -lt $global:seasonNames.Count; $i++) {
                     $global:posterurl = $null
                     $global:TMDBSeasonFallback = $null
@@ -3824,6 +3928,7 @@ else {
                         $global:seasonTitle = $global:seasonNames[$i]
                     }
                     $global:SeasonNumber = $global:seasonNumbers[$i]
+                    $global:PlexSeasonUrl = $global:PlexSeasonUrls[$i]
                     $global:season = "Season" + $global:SeasonNumber.PadLeft(2, '0')
 
                     if ($LibraryFolders -eq 'true') {
@@ -3839,6 +3944,12 @@ else {
                     $SeasonImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_$global:season.jpg"
                     $SeasonImage = $SeasonImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
                     if (!(Get-ChildItem -LiteralPath $TestPath | Where-Object { $_.Name -like "*$Testfile*" } -ErrorAction SilentlyContinue)) {
+                        if ($PlexToken) {
+                            $Arturl = $plexurl + $global:PlexSeasonUrl + "?X-Plex-Token=$PlexToken"
+                        }
+                        Else {
+                            $Arturl = $plexurl + $global:PlexSeasonUrl
+                        }
                         if (!$Seasonpostersearchtext) {
                             Write-Log -Message "Start Season Poster Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                             $Seasonpostersearchtext = $true
@@ -3858,6 +3969,10 @@ else {
                                 $global:IsFallback = $true
                                 $global:posterurl = GetTVDBSeasonPoster
                             }
+                            if (!$global:posterurl) {
+                                $global:IsFallback = $true
+                                GetPlexArtwork -Type ' a Season Poster' -ArtUrl $Arturl -TempImage $SeasonImage 
+                            }
                         }
                         Else {
                             Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
@@ -3867,6 +3982,10 @@ else {
                                 if ($entry.tvdbid) {
                                     $global:posterurl = GetTVDBSeasonPoster
                                 }
+                                if (!$global:posterurl) {
+                                    $global:IsFallback = $true
+                                    GetPlexArtwork -Type ' a Season Poster' -ArtUrl $Arturl -TempImage $SeasonImage 
+                                }
                             }
                         }
                         if ($global:TMDBSeasonFallback -and $global:PosterWithText) {
@@ -3874,9 +3993,11 @@ else {
                             Write-Log -Subtext "Taking Season Poster with text as fallback from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                             $global:IsFallback = $true
                         }
-                        if ($global:posterurl) {
+                        if ($global:posterurl -or $global:PlexartworkDownloaded ) {
                             if ($global:ImageProcessing -eq 'true') {
-                                Invoke-WebRequest -Uri $global:posterurl -OutFile $SeasonImage
+                                if (!$global:PlexartworkDownloaded) {
+                                    Invoke-WebRequest -Uri $global:posterurl -OutFile $SeasonImage
+                                }
                                 Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                 if ($global:posterurl -like 'https://image.tmdb.org*') {
                                     Write-Log -Subtext "Downloading Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
@@ -3893,6 +4014,12 @@ else {
                                 elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
                                     Write-Log -Subtext "Downloading Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                                     if ($global:FavProvider -ne 'TVDB') { 
+                                        $global:IsFallback = $true
+                                    }
+                                }
+                                elseif ($global:posterurl -like "$PlexUrl*") {
+                                    Write-Log -Subtext "Downloading Poster from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                    if ($global:FavProvider -ne 'PLEX') { 
                                         $global:IsFallback = $true
                                     }
                                 }
@@ -3941,7 +4068,9 @@ else {
                                 }
                             }
                             Else {
-                                Invoke-WebRequest -Uri $global:posterurl -OutFile $SeasonImage
+                                if (!$global:PlexartworkDownloaded) {
+                                    Invoke-WebRequest -Uri $global:posterurl -OutFile $SeasonImage
+                                }
                                 Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                 if ($global:posterurl -like 'https://image.tmdb.org*') {
                                     Write-Log -Subtext "Downloading Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
@@ -3959,6 +4088,12 @@ else {
                                 elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
                                     Write-Log -Subtext "Downloading Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                                     if ($global:FavProvider -ne 'TVDB') { 
+                                        $global:IsFallback = $true
+                                    }
+                                }
+                                elseif ($global:posterurl -like "$PlexUrl*") {
+                                    Write-Log -Subtext "Downloading Poster from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                    if ($global:FavProvider -ne 'PLEX') { 
                                         $global:IsFallback = $true
                                     }
                                 }
@@ -4027,10 +4162,12 @@ else {
                         $global:season_number = $episode."Season Number"
                         $global:episode_numbers = $episode."Episodes".Split(",")
                         $global:titles = $episode."Title".Split(";")
+                        $global:PlexTitleCardUrls = $episode."PlexTitleCardUrls".Split(",")
                         for ($i = 0; $i -lt $global:episode_numbers.Count; $i++) {
                             $global:Fallback = $null
                             $global:posterurl = $null
 
+                            $global:PlexTitleCardUrl = $($global:PlexTitleCardUrls[$i].Trim())
                             $global:EPTitle = $($global:titles[$i].Trim())
                             $global:episodenumber = $($global:episode_numbers[$i].Trim())
                             $global:FileNaming = "S" + $global:season_number.PadLeft(2, '0') + "E" + $global:episodenumber.PadLeft(2, '0')
@@ -4054,12 +4191,22 @@ else {
                                     Write-Log -Message "Start Title Card Search for: $global:show_name - $global:SeasonEPNumber" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                     $Episodepostersearchtext = $true
                                 }
+                                if ($PlexToken) {
+                                    $Arturl = $plexurl + $global:PlexTitleCardUrl + "?X-Plex-Token=$PlexToken"
+                                }
+                                Else {
+                                    $Arturl = $plexurl + $global:PlexTitleCardUrl
+                                }
                                 # now search for TitleCards
                                 if ($global:FavProvider -eq 'TMDB') {
                                     if ($episode.tmdbid) {
                                         $global:posterurl = GetTMDBTitleCard
                                         if ($global:Fallback -eq "TVDB") {
                                             $global:posterurl = GetTVDBTitleCard
+                                        }
+                                        if (!$global:posterurl) {
+                                            $global:IsFallback = $true
+                                            GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage 
                                         }
                                         if (!$global:posterurl ) {
                                             # Lets just try to grab a background poster.
@@ -4082,6 +4229,10 @@ else {
                                     else {
                                         Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
                                         $global:posterurl = GetTVDBTitleCard
+                                        if (!$global:posterurl) {
+                                            $global:IsFallback = $true
+                                            GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage 
+                                        }
                                         if (!$global:posterurl ) {
                                             Write-Log -Subtext "No Title Cards for this Episode on TVDB or TMDB..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
                                             # Lets just try to grab a background poster.
@@ -4099,6 +4250,10 @@ else {
                                         $global:posterurl = GetTVDBTitleCard
                                         if ($global:Fallback -eq "TMDB") {
                                             $global:posterurl = GetTMDBTitleCard
+                                        }
+                                        if (!$global:posterurl) {
+                                            $global:IsFallback = $true
+                                            GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage 
                                         }
                                         if (!$global:posterurl ) {
                                             # Lets just try to grab a background poster.
@@ -4121,6 +4276,10 @@ else {
                                     else {
                                         Write-Log -Subtext "Can't search on TVDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
                                         $global:posterurl = GetTMDBTitleCard
+                                        if (!$global:posterurl) {
+                                            $global:IsFallback = $true
+                                            GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage 
+                                        }
                                         if (!$global:posterurl ) {
                                             # Lets just try to grab a background poster.
                                             Write-Log -Subtext "Fallback to Show Background..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
@@ -4132,9 +4291,11 @@ else {
                                         }
                                     }
                                 }
-                                if ($global:posterurl) {
+                                if ($global:posterurl -or $global:PlexartworkDownloaded ) {
                                     if ($global:ImageProcessing -eq 'true') {
-                                        Invoke-WebRequest -Uri $global:posterurl -OutFile $EpisodeImage
+                                        if (!$global:PlexartworkDownloaded) {
+                                            Invoke-WebRequest -Uri $global:posterurl -OutFile $EpisodeImage
+                                        }
                                         Write-Log -Subtext "Title Card url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                         if ($global:posterurl -like 'https://image.tmdb.org*') {
                                             Write-Log -Subtext "Downloading Title Card from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
@@ -4145,6 +4306,12 @@ else {
                                         if ($global:posterurl -like 'https://artworks.thetvdb.com*') {
                                             Write-Log -Subtext "Downloading Title Card from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                                             if ($global:FavProvider -ne 'TVDB') { 
+                                                $global:IsFallback = $true
+                                            }
+                                        }
+                                        if ($global:posterurl -like "$PlexUrl*") {
+                                            Write-Log -Subtext "Downloading Title Card from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                            if ($global:FavProvider -ne 'PLEX') { 
                                                 $global:IsFallback = $true
                                             }
                                         }
@@ -4204,7 +4371,9 @@ else {
                                         }
                                     }
                                     Else {
-                                        Invoke-WebRequest -Uri $global:posterurl -OutFile $EpisodeImage
+                                        if (!$global:PlexartworkDownloaded) {
+                                            Invoke-WebRequest -Uri $global:posterurl -OutFile $EpisodeImage
+                                        }
                                         Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                         if ($global:posterurl -like 'https://image.tmdb.org*') {
                                             Write-Log -Subtext "Downloading Title Card from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
@@ -4215,6 +4384,12 @@ else {
                                         if ($global:posterurl -like 'https://artworks.thetvdb.com*') {
                                             Write-Log -Subtext "Downloading Title Card from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                                             if ($global:FavProvider -ne 'TVDB') { 
+                                                $global:IsFallback = $true
+                                            }
+                                        }
+                                        if ($global:posterurl -like "$PlexUrl*") {
+                                            Write-Log -Subtext "Downloading Title Card from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                            if ($global:FavProvider -ne 'PLEX') { 
                                                 $global:IsFallback = $true
                                             }
                                         }                                           
