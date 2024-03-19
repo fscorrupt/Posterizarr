@@ -3,7 +3,7 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.8"
+$CurrentScriptVersion = "1.0.9"
 $global:HeaderWritten = $false
 
 #################
@@ -1376,11 +1376,9 @@ function CheckJson {
         foreach ($partKey in $defaultConfig.PSObject.Properties.Name) {
             # Check if the part exists in the current configuration
             if (-not $config.$partKey) {
-														   
                 Write-Log -Message "Missing Main Attribute in your Config file: $partKey." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
                 Write-Log -Message "In GH Readme, look for $partKey, then review your config file and adjust it accordingly." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
-                Write-Log -Message "GH Readme -> https://github.com/fscorrupt/Plex-Poster-Maker/blob/main/README.md#configuration, exiting now..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
-					 
+                Write-Log -Message "GH Readme -> https://github.com/fscorrupt/Plex-Poster-Maker/blob/main/README.md#configuration, Exiting now..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
                 Exit
             }
             else {
@@ -1390,8 +1388,7 @@ function CheckJson {
                     if (-not $config.$partKey.PSObject.Properties.Name.Contains($propertyKey)) {
                         Write-Log -Message "Missing Sub-Attribute in your Config file: $partKey.$propertyKey." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
                         Write-Log -Message "In GH Readme, look for $partKey and $propertyKey, then review your config file and adjust it accordingly." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
-                        Write-Log -Message "GH Readme -> https://github.com/fscorrupt/Plex-Poster-Maker/blob/main/README.md#configuration, exiting now..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
-							 
+                        Write-Log -Message "GH Readme -> https://github.com/fscorrupt/Plex-Poster-Maker/blob/main/README.md#configuration, Exiting now..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
                         Exit
                     }
                 }
@@ -1429,8 +1426,7 @@ function CheckJsonPaths {
     }
 
     if ($errorCount -ge 1) {
-			 
-        exit
+        Exit
     } 
 }
 
@@ -1449,9 +1445,8 @@ if (!(Test-Path $(Join-Path $global:ScriptRoot 'config.json'))) {
     Write-Log -Message "Config File missing, downloading it for you..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
     Invoke-WebRequest -uri "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/config.example.json" -OutFile "$global:ScriptRoot\config.json"
     Write-Log -Subtext "Config File downloaded here: '$global:ScriptRoot\config.json'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-    Write-Log -Subtext "Please configure the config file according to GH, exit script now..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
-		 
-    exit
+    Write-Log -Subtext "Please configure the config file according to GH, Exit script now..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+    Exit
 }
 
 # Test Json if something is missing
@@ -1494,7 +1489,7 @@ if ($env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker-Alpine*') {
         if ($global:NotifyUrl -eq 'https://discordapp.com/api/webhooks/{WebhookID}/{WebhookToken}' -and $global:SendNotification -eq 'True') {
             Write-Log -Message "Found default Notification Url, please update url in config..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
             Pause
-            exit
+            Exit
         }
     }
     if (!$global:NotifyUrl -and $global:SendNotification -eq 'True') {
@@ -1506,7 +1501,7 @@ Else {
     if ($global:NotifyUrl -eq 'https://discordapp.com/api/webhooks/{WebhookID}/{WebhookToken}' -and $global:SendNotification -eq 'True') {
         Write-Log -Message "Found default Notification Url, please update url in config..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
         Pause
-        exit
+        Exit
     }
 }
 
@@ -1883,8 +1878,7 @@ if ($PlexToken) {
         Write-Log -Message "Could not access plex with this url: $PlexUrl/library/sections/?X-Plex-Token=$PlexToken" -Path $configLogging -Type Error
         Write-Log -Subtext "Please check token and access..." -Path $configLogging -Type Error
         $Errorcount++
-			 
-        exit
+        Exit
     }
 }
 Else {
@@ -1899,8 +1893,7 @@ Else {
         Write-Log -Subtext "Please check access and settings in plex..." -Path $configLogging -Type Warning
         Write-Log -Message "To be able to connect to plex without Auth" -Path $configLogging -Type Info
         Write-Log -Message "You have to enter your ip range in 'Settings -> Network -> List of IP addresses and networks that are allowed without auth: '192.168.1.0/255.255.255.0''" -Path $configLogging -Type Info
-			 
-        exit
+        Exit
     }
     if ($result.StatusCode -eq 200) {
         Write-Log -Subtext "Plex access is working..." -Path $configLogging -Type Success
@@ -1981,8 +1974,7 @@ Add-FanartTvAPIKey -Api_Key $FanartTvAPIKey
 # Check TMDB Token before building the Header.
 if ($global:tmdbtoken.Length -le '35') {
     Write-Log -Message "TMDB Token is to short, you may have used Api key in config file, please change it to 'API Read Access Token'." -Path $configLogging -Type Error
-		 
-    exit
+    Exit
 }
 
 # tmdb Header
@@ -4141,13 +4133,13 @@ else {
                                         Invoke-WebRequest -Uri $global:posterurl -OutFile $EpisodeImage
                                         Write-Log -Subtext "Title Card url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                         if ($global:posterurl -like 'https://image.tmdb.org*') {
-                                            Write-Log -Subtext "Downloading Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                            Write-Log -Subtext "Downloading Title Card from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                                             if ($global:FavProvider -ne 'TMDB') { 
                                                 $global:IsFallback = $true
                                             }
                                         }
                                         if ($global:posterurl -like 'https://artworks.thetvdb.com*') {
-                                            Write-Log -Subtext "Downloading Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                            Write-Log -Subtext "Downloading Title Card from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                                             if ($global:FavProvider -ne 'TVDB') { 
                                                 $global:IsFallback = $true
                                             }
@@ -4198,7 +4190,7 @@ else {
                                                                 
                                                 Write-Log -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                                                 
-                                                $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPfontcolor`" -size `"$TitleCardEPboxsize`" -background none caption:`" $global:SeasonEPNumber`" -trim -gravity south -extent `"$TitleCardEPboxsize`" `) -gravity south -geometry +0`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPfontcolor`" -size `"$TitleCardEPboxsize`" -background none caption:`"$global:SeasonEPNumber`" -trim -gravity south -extent `"$TitleCardEPboxsize`" `) -gravity south -geometry +0`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
                                                                 
                                                 Write-Log -Subtext "Applying SeasonEPNumber text: `"$global:SeasonEPNumber`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                                 $logEntry = "`"$magick`" $Arguments"
@@ -4211,13 +4203,13 @@ else {
                                         Invoke-WebRequest -Uri $global:posterurl -OutFile $EpisodeImage
                                         Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                         if ($global:posterurl -like 'https://image.tmdb.org*') {
-                                            Write-Log -Subtext "Downloading Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                            Write-Log -Subtext "Downloading Title Card from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                                             if ($global:FavProvider -ne 'TMDB') { 
                                                 $global:IsFallback = $true
                                             }
                                         }
                                         if ($global:posterurl -like 'https://artworks.thetvdb.com*') {
-                                            Write-Log -Subtext "Downloading Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                            Write-Log -Subtext "Downloading Title Card from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                                             if ($global:FavProvider -ne 'TVDB') { 
                                                 $global:IsFallback = $true
                                             }
