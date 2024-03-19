@@ -4133,13 +4133,13 @@ else {
                                         Invoke-WebRequest -Uri $global:posterurl -OutFile $EpisodeImage
                                         Write-Log -Subtext "Title Card url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                         if ($global:posterurl -like 'https://image.tmdb.org*') {
-                                            Write-Log -Subtext "Downloading Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                            Write-Log -Subtext "Downloading Title Card from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                                             if ($global:FavProvider -ne 'TMDB') { 
                                                 $global:IsFallback = $true
                                             }
                                         }
                                         if ($global:posterurl -like 'https://artworks.thetvdb.com*') {
-                                            Write-Log -Subtext "Downloading Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                            Write-Log -Subtext "Downloading Title Card from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                                             if ($global:FavProvider -ne 'TVDB') { 
                                                 $global:IsFallback = $true
                                             }
@@ -4203,13 +4203,13 @@ else {
                                         Invoke-WebRequest -Uri $global:posterurl -OutFile $EpisodeImage
                                         Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                         if ($global:posterurl -like 'https://image.tmdb.org*') {
-                                            Write-Log -Subtext "Downloading Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                            Write-Log -Subtext "Downloading Title Card from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                                             if ($global:FavProvider -ne 'TMDB') { 
                                                 $global:IsFallback = $true
                                             }
                                         }
                                         if ($global:posterurl -like 'https://artworks.thetvdb.com*') {
-                                            Write-Log -Subtext "Downloading Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                            Write-Log -Subtext "Downloading Title Card from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                                             if ($global:FavProvider -ne 'TVDB') { 
                                                 $global:IsFallback = $true
                                             }
