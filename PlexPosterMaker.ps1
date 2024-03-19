@@ -3,7 +3,7 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.12"
+$CurrentScriptVersion = "1.0.13"
 $global:HeaderWritten = $false
 
 #################
@@ -1349,16 +1349,16 @@ function GetPlexArtwork {
     # Get the EXIF data
     $ExifFound = $null
     # Execute command and get exif data
-    $value = (Invoke-Expression $magickcommand | Select-String -Pattern 'overlay|titlecard')
+    $value = (Invoke-Expression $magickcommand | Select-String -Pattern 'overlay|titlecard|created with ppm')
 
     $global:PlexartworkDownloaded = $null
     if ($value) {
         $ExifFound = $True
-        Write-Log -Subtext "Artwork has exif data from pmm/tcm, cant take it..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+        Write-Log -Subtext "Artwork has exif data from ppm/pmm/tcm, cant take it..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
         Remove-Item -LiteralPath $TempImage | out-null
     }
     Else {
-        Write-Log -Subtext "No pmm/tcm exif data found, taking Plex artwork..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
+        Write-Log -Subtext "No ppm/pmm/tcm exif data found, taking Plex artwork..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
         $global:PlexartworkDownloaded = $true
         $global:posterurl = $ArtUrl
     }
@@ -2101,6 +2101,11 @@ if ($Manual) {
         }
         Move-Item -LiteralPath $PicturePath -destination $PosterImage -Force -ErrorAction SilentlyContinue
         Write-Log -Subtext "Processing Poster for: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Manuallog.log -Type Info
+
+        $CommentArguments = "convert `"$PosterImage`" -set `"comment`" `"created with ppm`" `"$PosterImage`""
+        $CommentlogEntry = "`"$magick`" $CommentArguments"
+        $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+        Start-Process $magick -Wait -NoNewWindow -ArgumentList $CommentArguments
 
         # Resize Image to 2000x3000 and apply Border and overlay
         if ($AddBorder -eq 'true' -and $AddOverlay -eq 'true') {
@@ -3273,7 +3278,11 @@ else {
                         }
                         if ($global:ImageProcessing -eq 'true') {
                             Write-Log -Subtext "Processing Poster for: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-        
+                            $CommentArguments = "convert `"$PosterImage`" -set `"comment`" `"created with ppm`" `"$PosterImage`""
+                            $CommentlogEntry = "`"$magick`" $CommentArguments"
+                            $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+                            Start-Process $magick -Wait -NoNewWindow -ArgumentList $CommentArguments
+
                             # Calculate the height to maintain the aspect ratio with a width of 1000 pixels
                             if ($AddBorder -eq 'true' -and $AddOverlay -eq 'true') {
                                 $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$PosterImage`""
@@ -3442,7 +3451,11 @@ else {
                             }
                             if ($global:ImageProcessing -eq 'true') {
                                 Write-Log -Subtext "Processing background for: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-            
+                                $CommentArguments = "convert `"$backgroundImage`" -set `"comment`" `"created with ppm`" `"$backgroundImage`""
+                                $CommentlogEntry = "`"$magick`" $CommentArguments"
+                                $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+                                Start-Process $magick -Wait -NoNewWindow -ArgumentList $CommentArguments
+
                                 # Calculate the height to maintain the aspect ratio with a width of 1000 pixels
                                 if ($AddBackgroundBorder -eq 'true' -and $AddBackgroundOverlay -eq 'true') {
                                     $Arguments = "`"$backgroundImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$backgroundoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundImage`""
@@ -3660,7 +3673,11 @@ else {
                     }
                     if ($global:ImageProcessing -eq 'true') {
                         Write-Log -Subtext "Processing Poster for: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-    
+                        $CommentArguments = "convert `"$PosterImage`" -set `"comment`" `"created with ppm`" `"$PosterImage`""
+                        $CommentlogEntry = "`"$magick`" $CommentArguments"
+                        $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+                        Start-Process $magick -Wait -NoNewWindow -ArgumentList $CommentArguments
+
                         # Calculate the height to maintain the aspect ratio with a width of 1000 pixels
                         if ($AddBorder -eq 'true' -and $AddOverlay -eq 'true') {
                             $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$PosterImage`""
@@ -3837,7 +3854,11 @@ else {
                         }
                         if ($global:ImageProcessing -eq 'true') {
                             Write-Log -Subtext "Processing background for: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-        
+                            $CommentArguments = "convert `"$backgroundImage`" -set `"comment`" `"created with ppm`" `"$backgroundImage`""
+                            $CommentlogEntry = "`"$magick`" $CommentArguments"
+                            $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+                            Start-Process $magick -Wait -NoNewWindow -ArgumentList $CommentArguments
+
                             # Calculate the height to maintain the aspect ratio with a width of 1000 pixels
                             if ($AddBackgroundBorder -eq 'true' -and $AddBackgroundOverlay -eq 'true') {
                                 $Arguments = "`"$backgroundImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$Backgroundoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundImage`""
@@ -4022,6 +4043,11 @@ else {
                                     }
                                 }
                                 if (Get-ChildItem -LiteralPath $SeasonImage -ErrorAction SilentlyContinue) {
+                                    $CommentArguments = "convert `"$SeasonImage`" -set `"comment`" `"created with ppm`" `"$SeasonImage`""
+                                    $CommentlogEntry = "`"$magick`" $CommentArguments"
+                                    $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+                                    Start-Process $magick -Wait -NoNewWindow -ArgumentList $CommentArguments
+
                                     # Resize Image to 2000x3000 and apply Border and overlay
                                     if ($AddBorder -eq 'true' -and $AddOverlay -eq 'true') {
                                         $Arguments = "`"$SeasonImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$SeasonImage`""
@@ -4307,6 +4333,11 @@ else {
                                             }
                                         }
                                         if (Get-ChildItem -LiteralPath $EpisodeImage -ErrorAction SilentlyContinue) {
+                                            $CommentArguments = "convert `"$EpisodeImage`" -set `"comment`" `"created with ppm`" `"$EpisodeImage`""
+                                            $CommentlogEntry = "`"$magick`" $CommentArguments"
+                                            $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+                                            Start-Process $magick -Wait -NoNewWindow -ArgumentList $CommentArguments
+
                                             # Resize Image to 2000x3000 and apply Border and overlay
                                             if ($AddTitleCardBorder -eq 'true' -and $AddTitleCardOverlay -eq 'true') {
                                                 $Arguments = "`"$EpisodeImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$TitleCardoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$TitleCardborderwidthsecond`"  -bordercolor `"$TitleCardbordercolor`" -border `"$TitleCardborderwidth`" `"$EpisodeImage`""
@@ -4450,12 +4481,15 @@ else {
         $TextlessCount = @($SummaryCount | Where-Object Textless -eq 'True')
         $TextTruncatedCount = @($SummaryCount | Where-Object TextTruncated -eq 'True')
         $TextCount = @($SummaryCount | Where-Object Textless -eq 'False')
-
+        if ($TextlessCount -or $FallbackCount -or $TextCount -or $PosterUnknownCount -or $TextTruncatedCount) {
+            Write-Log -Message "This is a subset summary over all image choices from the ImageChoices.csv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+        }
         if ($TextlessCount) {
             Write-Log -Subtext "'$($TextlessCount.count)' times the script took a Textless image" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
         }
         if ($FallbackCount) {
             Write-Log -Subtext "'$($FallbackCount.count)' times the script took a fallback image" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+            Write-Log -Subtext "'$($posterCount-$($FallbackCount.count))' times the script took the image from fav provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
         }
         if ($TextCount) {
             Write-Log -Subtext "'$($TextCount.count)' times the script took a image with Text" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
