@@ -3,7 +3,7 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.9"
+$CurrentScriptVersion = "1.0.10"
 $global:HeaderWritten = $false
 
 #################
@@ -1294,11 +1294,15 @@ function GetTVDBTitleCard {
         if ($response) {
             if ($response.data.episodes) {
                 $global:NoLangImageUrl = $response.data.episodes | Where-Object { $_.seasonNumber -eq $global:season_number -and $_.number -eq $global:episodenumber }
-                if ($NoLangImageUrl) {
+                if ($global:NoLangImageUrl.image) {
                     $global:posterurl = $global:NoLangImageUrl.image
-                    Write-Log -Subtext "Found Textless Title Card on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
+                    Write-Log -Subtext "Found Title Card on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
                     $global:TextlessPoster = $true
                     return $global:NoLangImageUrl.image
+                }
+                Else {
+                    Write-Log -Subtext "No Title Card found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                    $Errorcount++
                 }
             }
             Else {
