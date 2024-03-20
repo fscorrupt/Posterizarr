@@ -4,17 +4,16 @@ This PowerShell script automates the process of generating images for your Plex 
 
 > [!NOTE]
 Plex Poster Maker is cross-platform ready, meaning it can run on both Linux, Docker and on Windows operating systems.
+> 
+> **Suported Poster Types:**
+>- Movie/Show Posters
+>- Movie/Show Backgrounds
+>- Season Posters
+>- TitleCards
 
 > [!TIP]
 > Here is a starting guide [walkthrough.md](walkthrough.md)
 
-[Docker instructions.](#docker)
-
-**Suported Poster Types:**
-- Movie/Show Posters
-- Movie/Show Backgrounds
-- Season Posters
-- TitleCards
 
 > [!WARNING]
 >- The `Temp` Folder gets cleared on every Script run, so do not put files into it.
