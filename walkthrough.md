@@ -69,7 +69,7 @@
         - FanartTvAPIKey
         - PlexToken
     - There is only one setting you have to adjust if you are happy with the defaults, this is the path to asset dir.
-        - On Linux/Docker type it like this: `/PathToAsset/Dir`
+        - On Linux type it like this: `/PathToAsset/Dir`
         - On Windows like this: `C:\\PathToAsset\\Dir` 
             - **Important** - you have to use double `\\` in Json.
 1. Please start the Script **(On first run as Administrator/Sudo, cause it has to install a Powershell Module)**
