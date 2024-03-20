@@ -41,8 +41,8 @@ Before utilizing the script, ensure the following prerequisites are installed an
 - **Fanart Personal API Key:** [Obtain Fanart API Key](https://fanart.tv/get-an-api-key)
 - **TVDB API Key:** [Obtain TVDB API Key](https://thetvdb.com/api-information/signup)
     - **Do not** use `"Legacy API Key"`, it only works with a Project Api Key.
-- **ImageMagick:** [Download ImageMagick](https://imagemagick.org/script/download.php#windows)
-    - **Version 7.x is required** - Download and Install the Latest Imagemagick, installation of portable version is covered in Script **(You may need to run the Script as Admin on first run)**.
+- **ImageMagick:** 
+    - **Version 7.x is required** - The script handles downloading and using a portable version of ImageMagick for all platforms. **(You may need to run the Script as Admin on first run)**. If you prefer to reference your own installation or prefer to download and install it yourself, goto: [Download ImageMagick](https://imagemagick.org/script/download.php)
 - **Powershell Version:** 5.x or higher, ps core 6.x/7.x also works.
 
 ## Configuration:
@@ -86,7 +86,7 @@ Before utilizing the script, ensure the following prerequisites are installed an
     <br>
 
     - `AssetPath`: Path to store generated posters.
-    - `magickinstalllocation`: Path to ImageMagick installation location where `Magick.exe` is located (Only required if you manually installed it)
+    - `magickinstalllocation`: Path to ImageMagick installation location where `magick.exe` is located (Otherwise leave value as `"./"`)
     - `maxLogs`: Number of Log folders you want to keep in `RotatedLogs` Folder (Log History).
     - `font`: Font file name.
     - `backgroundfont`: Background font file name.
