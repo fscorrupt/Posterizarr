@@ -193,7 +193,6 @@ Upon initial execution, the script may take some time to run as it compiles nece
 >- Ensure PowerShell execution policy allows script execution.
 >- Bugs or issues encountered during usage can be reported for resolution.
 
-Feel free to customize the script further to meet your specific preferences or automation requirements.
 
 ### Automatic Mode
 
@@ -399,6 +398,6 @@ Follow the prompts to enter the source picture path, media folder name, and movi
 
 ### Enjoy
 
-Feel free to customize the script further to suit your preferences or automation needs.
+Feel free to customize the script further to meet your specific preferences or automation requirements.
 
 PR´s are also welcome!
