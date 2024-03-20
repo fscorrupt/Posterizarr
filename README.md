@@ -2,11 +2,13 @@
 
 This PowerShell script automates the process of generating images for your Plex media library. Leveraging information from your Plex library, such as movie or show titles | season and episode data, it fetches relevant artwork from Fanart.tv, TMDB, TVDB, Plex and IMDB. The script is able to focus on specific language to grab; by default, it is `xx`, which means textless, and then fallbacks to `en` if not available. This is a setting a user can decide on, either to focus on textless or on text posters. It also offers both automatic and manual modes for generating posters, accommodating custom creations that cannot be automated.
 
-```Plex Poster Maker is cross-platform ready, meaning it can run on both Linux, Docker and on Windows operating systems.```
+> [!NOTE]
+Plex Poster Maker is cross-platform ready, meaning it can run on both Linux, Docker and on Windows operating systems.
 
-### Here is a starting guide [walkthrough.md](walkthrough.md)
+> [!TIP]
+> Here is a starting guide [walkthrough.md](walkthrough.md)
 
-[Click here for Docker instructions.](#docker)
+[Docker instructions.](#docker)
 
 **Suported Poster Types:**
 - Movie/Show Posters
@@ -14,10 +16,10 @@ This PowerShell script automates the process of generating images for your Plex 
 - Season Posters
 - TitleCards
 
-### ! Important !
-- The `Temp` Folder gets cleared on every Script run, so do not put files into it.
-- **[Apprise](https://github.com/caronc/apprise/wiki)** integration only works in docker container, please use discord on other platforms **(discord also works on docker)**.
-- **Please start the script as Admin on first run, otherwise the script is not able to install the prerequisites.**
+> [!WARNING]
+>- The `Temp` Folder gets cleared on every Script run, so do not put files into it.
+>- **[Apprise](https://github.com/caronc/apprise/wiki)** integration only works in docker container, please use discord on other platforms **(discord also works on docker)**.
+>- **Please start the script as Admin on first run, otherwise the script is not able to install the prerequisites.**
 
 
 ### **Key Features:**
@@ -36,16 +38,18 @@ This PowerShell script automates the process of generating images for your Plex 
 
 Upon initial execution, the script may take some time to run as it compiles necessary data. Subsequent runs efficiently create missing posters, bypassing existing assets in the directory.
 
-**Requirements:**
-Before utilizing the script, ensure the following prerequisites are installed and configured:
+> [!IMPORTANT]
+>**Requirements:**
+>
+>Before utilizing the script, ensure the following prerequisites are installed and configured:
 
-- **TMDB API Read Access Token:** [Obtain TMDB API Token](https://www.themoviedb.org/settings/api)
-- **Fanart Personal API Key:** [Obtain Fanart API Key](https://fanart.tv/get-an-api-key)
-- **TVDB API Key:** [Obtain TVDB API Key](https://thetvdb.com/api-information/signup)
+>- **TMDB API Read Access Token:** [Obtain TMDB API Token](https://www.themoviedb.org/settings/api)
+>- **Fanart Personal API Key:** [Obtain Fanart API Key](https://fanart.tv/get-an-api-key)
+>- **TVDB API Key:** [Obtain TVDB API Key](https://thetvdb.com/api-information/signup)
     - **Do not** use `"Legacy API Key"`, it only works with a Project Api Key.
-- **ImageMagick:** 
+>- **ImageMagick:** 
     - **Version 7.x is required** - The script handles downloading and using a portable version of ImageMagick for all platforms. **(You may need to run the Script as Admin on first run)**. If you prefer to reference your own installation or prefer to download and install it yourself, goto: [Download ImageMagick](https://imagemagick.org/script/download.php)
-- **Powershell Version:** 5.x or higher, ps core 6.x/7.x also works.
+>- **Powershell Version:** 5.x or higher, ps core 6.x/7.x also works.
 
 ## Configuration:
 
@@ -186,9 +190,9 @@ Before utilizing the script, ensure the following prerequisites are installed an
 - **Testing Mode**: Run the script with the `-Testing` switch to create Test posters before you start using it.
 - **Manual Mode**: Run the script with the `-Manual` switch to create custom posters manually.
 
-**Note:**
-- Ensure PowerShell execution policy allows script execution.
-- Bugs or issues encountered during usage can be reported for resolution.
+> [!NOTE]
+>- Ensure PowerShell execution policy allows script execution.
+>- Bugs or issues encountered during usage can be reported for resolution.
 
 Feel free to customize the script further to meet your specific preferences or automation requirements.
 
