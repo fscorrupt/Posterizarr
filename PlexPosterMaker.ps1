@@ -3,7 +3,7 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.15"
+$CurrentScriptVersion = "1.0.16"
 $global:HeaderWritten = $false
 
 #################
@@ -4405,7 +4405,7 @@ else {
                                         if (!$global:PlexartworkDownloaded) {
                                             Invoke-WebRequest -Uri $global:posterurl -OutFile $EpisodeImage
                                         }
-                                        Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                        Write-Log -Subtext "Title Card url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                         if ($global:posterurl -like 'https://image.tmdb.org*') {
                                             Write-Log -Subtext "Downloading Title Card from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
                                             if ($global:FavProvider -ne 'TMDB') { 
