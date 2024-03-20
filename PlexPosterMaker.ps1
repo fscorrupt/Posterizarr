@@ -3158,6 +3158,7 @@ else {
                 $global:TMDBfallbackposterurl = $null
                 $global:fanartfallbackposterurl = $null
                 $global:IsFallback = $null
+                $global:PlexartworkDownloaded = $null
     
                 $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}]'
                 if ($entry.title -match $cjkPattern) {
@@ -3557,6 +3558,7 @@ else {
             $global:Fallback = $null
             $global:TextlessPoster = $null
             $global:tvdbalreadysearched = $null
+            $global:PlexartworkDownloaded = $null
     
             $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}]'
             if ($entry.title -match $cjkPattern) {
