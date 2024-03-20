@@ -3,7 +3,7 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.16"
+$CurrentScriptVersion = "1.0.17"
 $global:HeaderWritten = $false
 
 #################
@@ -2966,7 +2966,12 @@ else {
             else {
                 $libtemp | Add-Member -MemberType NoteProperty -Name "Path" -Value $lib.location.path
             }
-            
+            # Check if Libname has chars we cant use for Folders
+            if ($lib.title -notmatch "^[^\/:*?`"<>\|\\}]+$") {
+                Write-Log -Message  "Lib: '$($lib.title)' contains invalid characters." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                Write-Log -Subtext "Please rename your lib and remove all chars that are listed here: '/, :, *, ?, `", <, >, |, \, or }'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                Exit
+            }
             $Libsoverview += $libtemp
         }
     }
