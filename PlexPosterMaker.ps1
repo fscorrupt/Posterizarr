@@ -3,7 +3,7 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.14"
+$CurrentScriptVersion = "1.0.15"
 $global:HeaderWritten = $false
 
 #################
@@ -1346,12 +1346,9 @@ function GetPlexArtwork {
     $magickcommand = "& `"$magick`" identify -verbose `"$TempImage`""
     $magickcommand | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
 
-    # Get the EXIF data
-    $ExifFound = $null
     # Execute command and get exif data
     $value = (Invoke-Expression $magickcommand | Select-String -Pattern 'overlay|titlecard|created with ppm')
 
-    $global:PlexartworkDownloaded = $null
     if ($value) {
         $ExifFound = $True
         Write-Log -Subtext "Artwork has exif data from ppm/pmm/tcm, cant take it..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
@@ -4190,7 +4187,12 @@ else {
                         for ($i = 0; $i -lt $global:episode_numbers.Count; $i++) {
                             $global:Fallback = $null
                             $global:posterurl = $null
-
+                            $Episodepostersearchtext = $null
+                            $ExifFound = $null
+                            $global:PlexartworkDownloaded = $null
+                            $value = $null
+                            $magickcommand = $null
+                            $Arturl = $null
                             $global:PlexTitleCardUrl = $($global:PlexTitleCardUrls[$i].Trim())
                             $global:EPTitle = $($global:titles[$i].Trim())
                             $global:episodenumber = $($global:episode_numbers[$i].Trim())
