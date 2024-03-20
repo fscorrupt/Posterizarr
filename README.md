@@ -86,7 +86,7 @@ Before utilizing the script, ensure the following prerequisites are installed an
     <br>
 
     - `AssetPath`: Path to store generated posters.
-    - `magickinstalllocation`: Path to ImageMagick installation location where `magick.exe` is located (Otherwise leave value as `"./"`)
+    - `magickinstalllocation`: Path to ImageMagick installation location where `magick.exe` is located (Otherwise leave value as `"./magick"`)
     - `maxLogs`: Number of Log folders you want to keep in `RotatedLogs` Folder (Log History).
     - `font`: Font file name.
     - `backgroundfont`: Background font file name.
