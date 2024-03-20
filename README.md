@@ -210,7 +210,8 @@ The posters are all placed in `AssetPath\...`. This can then be mounted in Plex-
 
 Run the script with the `-Testing` flag. In this mode, the script will create pink posters/backgrounds with short, medium, and long texts (also in CAPS), using the values specified in the `config.json` file. 
 
-This is handy for testing your configuration before applying it en masse to the actual posters. You can see how and where the text would be applied, as well as the size of the textbox.
+> [!TIP]
+>This is handy for testing your configuration before applying it en masse to the actual posters. You can see how and where the text would be applied, as well as the size of the textbox.
 
 ```powershell
 .\PlexPosterMaker.ps1 -Testing
