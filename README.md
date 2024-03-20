@@ -219,6 +219,7 @@ This is handy for testing your configuration before applying it en masse to the 
     - Before starting the scheduled run it checks if another PPM process is running, if yes - the scheduled run will be skipped.
   - Change `volume` and `network` to fit your environment (Make sure you have the same network as your plex container when you use local IP of plex)
   - Change `TimeZone` to yours, otherwise it will get scheduled to a different time you may want it to.
+  - You may also have to change `PUID/PGID`
 
   if you manually want to run the Script you can do it this way:
 
