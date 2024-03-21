@@ -1,13 +1,14 @@
 ## Getting Started
 
-1. Make sure to obtain all those api keys, you need them later for the `config.json`.
+1. Make sure to obtain all the api keys and tokens as you will need them later on for the `config.json`.
     - **TMDB API Read Access Token:** [Obtain TMDB API Token](https://www.themoviedb.org/settings/api)
+        - **NOTE** the **TMDB API Read Access Token** is the really, really long one
     - **Fanart Personal API Key:** [Obtain Fanart API Key](https://fanart.tv/get-an-api-key)
     - **TVDB API Key:** [Obtain TVDB API Key](https://thetvdb.com/api-information/signup)
         - **Do not** use `"Legacy API Key"`, it only works with a Project Api Key.
     - **Plex Token:** [Optain Plex Token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/)
 
-1. For Docker please contuine here: [Docker](#docker)
+1. For Docker please continue here: [Docker](#docker)
 
 1. Please install Powershell
     - [Linux](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-linux?view=powershell-7.4)
@@ -30,11 +31,12 @@
     - Clone the Repo:
         ```bash
         git clone https://github.com/fscorrupt/Plex-Poster-Maker.git
+        ```
     - After that you can switch into the cloned Repo/Folder
         ```bash
         cd Plex-Poster-Maker
         ```
-    - You should see somthing like this:
+    - You should see something like this:
         ```
         .
         ├── backgroundoverlay.png
@@ -62,17 +64,17 @@
         ├── README.md
         ├── Release.txt
         └── Rocky.ttf
-1. Copy the `config.example.json` and create a `config.json`
-    - Enter all the api keys from **step 1** under the `ApiPart` [Detailed Config Description](https://github.com/fscorrupt/Plex-Poster-Maker?tab=readme-ov-file#configuration)
+1. Copy the `config.example.json` to `config.json` and adjust the settings.
+    - Enter all the api keys and tokens from **Getting Started - Step 1** under the `ApiPart` [Detailed Config Description](https://github.com/fscorrupt/Plex-Poster-Maker?tab=readme-ov-file#configuration)
         - tvdbapi
         - tmdbtoken
         - FanartTvAPIKey
         - PlexToken
-    - There is only one setting you have to adjust if you are happy with the defaults, this is the path to asset dir.
-        - On Linux type it like this: `/PathToAsset/Dir`
-        - On Windows like this: `C:\\PathToAsset\\Dir` 
+    - If you are happy with the default values, you should still ensure that the AssetPath value is set properly.
+        - On Linux, like this: `/PathToAsset/Dir`
+        - On Windows, like this: `C:\\PathToAsset\\Dir` 
             - **Important** - you have to use double `\\` in Json.
-1. Please start the Script **(On first run as Administrator/Sudo, cause it has to install a Powershell Module)**
+1. Please start the Script **(On first run, ensure its run as Administrator/Sudo, because it has to install a Powershell Module)**
     - Linux: 
         ```
         cd /opt/appdata/Plex-Poster-Maker
@@ -85,11 +87,11 @@
         cd C:\Github\Plex-Poster-Maker
         .\PlexPosterMaker.ps1
         ```
-1. After that it is recommended to run the script in testing Mode.
+1. After that it is recommended to run the script in `-Testing` Mode.
     
-    *In this Mode the script will create all kind of posters according to the config settings, so you can see how it would look before you mass run it against your lib.*
+    *In this Mode, the script will create sample posters according to the config settings so you can see how it would look before you mass run it against your libraries. These samples will be created in the `test` directory*
     
-    *You can find examples and more infos here:* 
+    *You can find examples and more information here:* 
     
     *[Info about Testing mode](https://github.com/fscorrupt/Plex-Poster-Maker?tab=readme-ov-file#testing-mode)*
     
@@ -97,22 +99,26 @@
     
     - Linux:
         ```
+        cd /opt/appdata/Plex-Poster-Maker
         pwsh PlexPosterMaker.ps1 -Testing
         ```
     - Windows:
         ```
+        cd C:\Github\Plex-Poster-Maker
         .\PlexPosterMaker.ps1 -Testing
         ```
-5. You can now fine tune all the `widht,height,color` of `borders,textboxes and text` in config.json
-    - After each change of a setting just rerun the script in testing mode so you can see how it looks.
-6. Final step is to set a schedule and let the script run.
-    - You can also manually trigger the poster creation with this:
+5. You can now fine tune all the `width, height, color` of `borders, text boxes and text` in config.json
+    - After each change of a setting just rerun the script in `-Testing` mode so you can see how it looks.
+6. The final step is to set a schedule and let the script run.
+    - You can also trigger the poster creation on-demand, like this:
         - Linux:
         ```
+        cd /opt/appdata/Plex-Poster-Maker
         pwsh PlexPosterMaker.ps1
         ```
         - Windows:
         ```
+        cd C:\Github\Plex-Poster-Maker
         .\PlexPosterMaker.ps1
         ```
     - Configure Scheduled runs:
@@ -132,7 +138,7 @@
         - You can create a schedule task -> [How-To](https://www.sharepointdiary.com/2013/03/create-scheduled-task-for-powershell-script.html)
 ## Docker
 1. Adjust the [docker-compose.yml](https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/docker-compose.yml) to fit your environment.
-    - Required envs and description can be found [here](https://github.com/fscorrupt/Plex-Poster-Maker?tab=readme-ov-file#docker)
+    - Required environment variables and descriptions can be found [here](https://github.com/fscorrupt/Plex-Poster-Maker?tab=readme-ov-file#docker)
     ```yml
     ---
     version: "3"
@@ -174,23 +180,23 @@
         docker compose -up -d
         ```
     - Now it should download everything and start up your container.
-3. On first run the container will download the required files and also create the flder structure for you.
-4. Please rename the `config.example.json` to `config.json` and adjust the settings.
-    - Enter all the api keys from **Getting Started - Step 1** under the `ApiPart` [Detailed Config Description](https://github.com/fscorrupt/Plex-Poster-Maker?tab=readme-ov-file#configuration)
+3. On first run the container will download the required files and also create the folder structure for you.
+4. Copy the `config.example.json` to `config.json` and adjust the settings.
+    - Enter all the api keys and tokens from **Getting Started - Step 1** under the `ApiPart` [Detailed Config Description](https://github.com/fscorrupt/Plex-Poster-Maker?tab=readme-ov-file#configuration)
         - tvdbapi
         - tmdbtoken
         - FanartTvAPIKey
         - PlexToken
-    - There is only one setting you have to adjust if you are happy with the defaults, this is the path to asset dir.
-        - On Linux type it like this: `/PathToAsset/Dir`
-        - On Docker you have to use the binded volume path you specified in `docker-compose.yml`, if you use `/assets` without an extra volume binding it will create a folder in your scriptroot where all the asset lands.
-        - On Windows like this: `C:\\PathToAsset\\Dir` 
+    - If you are happy with the default values, you should still ensure that the AssetPath value is set properly.
+        - On Linux, like this: `/PathToAsset/Dir`
+        - On Docker you have to use the binded volume path you specified in `docker-compose.yml`. If you use `/assets` without an extra volume binding it will create a folder in your scriptroot where all the artwork lands.
+        - On Windows, like this: `C:\\PathToAsset\\Dir` 
             - **Important** - you have to use double `\\` in json.
-1. After that it is recommended to run the script in testing Mode.
+1. After that it is recommended to run the script in `-Testing` Mode.
     
-    *In this Mode the script will create all kind of posters according to the config settings, so you can see how it would look before you mass run it against your lib.*
+    *In this Mode, the script will create sample posters according to the config settings so you can see how it would look before you mass run it against your libraries. These samples will be created in the `test` directory*
     
-    *You can find examples and more infos here:* 
+    *You can find examples and more information here:* 
     
     *[Info about Testing mode](https://github.com/fscorrupt/Plex-Poster-Maker?tab=readme-ov-file#testing-mode)*
     
@@ -202,10 +208,10 @@
         ```sh
         docker exec -it ppm pwsh PlexPosterMaker.ps1 -Testing
         ```
-5. You can now fine tune all the `widht,height,color` of `borders,textboxes and text` in config.json
-    - After each change of a setting just rerun the script in testing mode so you can see how it looks.
-6. Final step is to set a schedule and let the script run.
-    - You can also manually trigger the poster creation with this:
+5. You can now fine tune all the `width, height, color` of `borders, text boxes and text` in config.json
+    - After each change of a setting just rerun the script in `-Testing` mode so you can see how it looks.
+6. The final step is to set a schedule and let the script run.
+    - You can also trigger the poster creation on-demand, like this:
         ```sh
         docker exec -it ppm pwsh PlexPosterMaker.ps1
         ```
