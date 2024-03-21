@@ -195,6 +195,7 @@
 1. After that it is recommended to run the script in `-Testing` Mode.
     
     > [!TIP]
+    
     >*In this Mode, the script will create sample posters according to the config settings so you can see how it would look before you mass run it against your libraries. These samples will be created in the `test` directory*
     
     >*You can find examples and more information here:* 
