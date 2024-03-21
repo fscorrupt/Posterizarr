@@ -101,6 +101,7 @@ Plex Poster Maker is cross-platform ready, meaning it can run on both Linux, Doc
     - `backgroundoverlayfile`: Background overlay file name.
     - `titlecardoverlayfile` : Title Card overlay file name.
     - `LibraryFolders`: Set to `false` for asset structure in one flat folder or `true` to split into library media folders like [Plex-Meta-Manager](https://metamanager.wiki/en/latest/pmm/guides/assets/#image-asset-directory-guide) needs it.
+    - `Posters`: Set to `true` to create movie/show posters.
     - `SeasonPosters`: Set to `true` to also create season posters.
     - `BackgroundPosters`: Set to `true` to also create background posters.
     - `TitleCards` : Set to `true` to also create title cards.

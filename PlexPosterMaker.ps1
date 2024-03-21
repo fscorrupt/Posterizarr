@@ -3,7 +3,7 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.18"
+$CurrentScriptVersion = "1.0.19"
 $global:HeaderWritten = $false
 
 $global:OSType = [System.Environment]::OSVersion.Platform
@@ -1676,6 +1676,7 @@ $testimage = Join-Path -Path $global:ScriptRoot -ChildPath ('test', 'testimage.p
 $backgroundtestimage = Join-Path -Path $global:ScriptRoot -ChildPath ('test', 'backgroundtestimage.png' -join $($joinsymbol))
 $LibraryFolders = $config.PrerequisitePart.LibraryFolders
 $global:SeasonPosters = $config.PrerequisitePart.SeasonPosters
+$global:Posters = $config.PrerequisitePart.Posters
 $global:BackgroundPosters = $config.PrerequisitePart.BackgroundPosters
 $global:TitleCards = $config.PrerequisitePart.TitleCards
 
@@ -1854,6 +1855,7 @@ Write-Log -Subtext "| Used Background Overlay File: $Backgroundoverlay" -Path $c
 Write-Log -Subtext "| Used TitleCard Overlay File:  $titlecardoverlay" -Path $configLogging -Type Info
 Write-Log -Subtext "| Create Library Folders:       $LibraryFolders" -Path $configLogging -Type Info
 Write-Log -Subtext "| Create Season Posters:        $global:SeasonPosters" -Path $configLogging -Type Info
+Write-Log -Subtext "| Create Posters:               $global:Posters" -Path $configLogging -Type Info
 Write-Log -Subtext "| Create Background Posters:    $global:BackgroundPosters" -Path $configLogging -Type Info
 Write-Log -Subtext "| Create Title Cards:           $global:TitleCards" -Path $configLogging -Type Info
 Write-Log -Subtext "OverLay General Part" -Path $configLogging -Type Trace
@@ -3180,7 +3182,8 @@ else {
                 $global:fanartfallbackposterurl = $null
                 $global:IsFallback = $null
                 $global:PlexartworkDownloaded = $null
-    
+
+                
                 $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}]'
                 if ($entry.title -match $cjkPattern) {
                     $Titletext = $entry.originalTitle
@@ -3208,169 +3211,172 @@ else {
     
                 $PosterImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername).jpg"
                 $PosterImage = $PosterImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
-    
-                if (!(Get-ChildItem -LiteralPath $TestPath | Where-Object { $_.Name -like "*$Testfile*" } -ErrorAction SilentlyContinue)) {
-                    # Define Global Variables
-                    $global:tmdbid = $entry.tmdbid
-                    $global:tvdbid = $entry.tvdbid
-                    $global:imdbid = $entry.imdbid
-                    $global:posterurl = $null
-                    $global:PosterWithText = $null
-                    $global:Fallback = $null
-                    if ($PlexToken) {
-                        $Arturl = $plexurl + $entry.PlexPosterUrl + "?X-Plex-Token=$PlexToken"
-                    }
-                    Else {
-                        $Arturl = $plexurl + $entry.PlexPosterUrl
-                    }
-                    Write-Log -Message "Start Poster Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-                    switch -Wildcard ($global:FavProvider) {
-                        'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBMoviePoster }Else { Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning; $global:posterurl = GetFanartMoviePoster } }
-                        'FANART' { $global:posterurl = GetFanartMoviePoster }
-                        'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBMoviePoster }Else { Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning; $global:posterurl = GetFanartMoviePoster } }
-                        'PLEX' { GetPlexArtwork -Type ' a Movie Poster' -ArtUrl $Arturl -TempImage $PosterImage }
-                        Default { $global:posterurl = GetFanartMoviePoster }
-                    }
-                    switch -Wildcard ($global:Fallback) {
-                        'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBMoviePoster } }
-                        'FANART' { $global:posterurl = GetFanartMoviePoster }
-                    }
-                    if ($global:PreferTextless -eq 'True') {
-                        if (!$global:TextlessPoster -and $global:fanartfallbackposterurl) {
-                            $global:posterurl = $global:fanartfallbackposterurl
-                            Write-Log -Subtext "Took Fanart.tv Fallback poster cause its your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
-                            $global:IsFallback = $true
-                        }
-                        if (!$global:TextlessPoster -and $global:TMDBfallbackposterurl) {
-                            $global:posterurl = $global:TMDBfallbackposterurl
-                            Write-Log -Subtext "Took TMDB Fallback poster cause its your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
-                            $global:IsFallback = $true
-                        }
-                    }
-                    if (!$global:posterurl) {
-                        $global:posterurl = GetTVDBMoviePoster
-                        $global:IsFallback = $true
-                        if (!$global:posterurl) {
-                            GetPlexArtwork -Type ' a Movie Poster' -ArtUrl $Arturl -TempImage $PosterImage
-                            $global:IsFallback = $true
-                        }
-                        if (!$global:posterurl -and $global:imdbid) { 
-                            Write-Log -Subtext "Searching on IMDB for a movie poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
-                            $global:posterurl = GetIMDBPoster
-                            $global:IsFallback = $true
-                            if (!$global:posterurl) { 
-                                Write-Log -Subtext "Could not find a poster on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
-                            }
-                        }
-                    }
-    
-                    if ($fontAllCaps -eq 'true') {
-                        $joinedTitle = $Titletext.ToUpper()
-                    }
-                    Else {
-                        $joinedTitle = $Titletext
-                    }
-                    if ($global:posterurl -or $global:PlexartworkDownloaded ) {
-                        if (!$global:PlexartworkDownloaded) {
-                            Invoke-WebRequest -Uri $global:posterurl -OutFile $PosterImage
-                        }
-                        Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-                        if ($global:posterurl -like 'https://image.tmdb.org*') {
-                            if ($global:PosterWithText) {
-                                Write-Log -Subtext "Downloading Poster with Text from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
-                            }
-                            Else {
-                                Write-Log -Subtext "Downloading Textless Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
-                            }
-                        }
-                        elseif ($global:posterurl -like 'https://assets.fanart.tv*') {
-                            if ($global:PosterWithText) {
-                                Write-Log -Subtext "Downloading Poster with Text from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
-                            }
-                            Else {
-                                Write-Log -Subtext "Downloading Textless Poster from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
-                            }
-                        }
-                        elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
-                            Write-Log -Subtext "Downloading Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
-                        }
-                        elseif ($global:posterurl -like "$PlexUrl*") {
-                            Write-Log -Subtext "Downloading Poster from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+                # Now we can start the Poster Part
+                if ($global:Posters -eq 'true') {
+                    if (!(Get-ChildItem -LiteralPath $TestPath | Where-Object { $_.Name -like "*$Testfile*" } -ErrorAction SilentlyContinue)) {
+                        # Define Global Variables
+                        $global:tmdbid = $entry.tmdbid
+                        $global:tvdbid = $entry.tvdbid
+                        $global:imdbid = $entry.imdbid
+                        $global:posterurl = $null
+                        $global:PosterWithText = $null
+                        $global:Fallback = $null
+                        if ($PlexToken) {
+                            $Arturl = $plexurl + $entry.PlexPosterUrl + "?X-Plex-Token=$PlexToken"
                         }
                         Else {
-                            Write-Log -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+                            $Arturl = $plexurl + $entry.PlexPosterUrl
                         }
-                        if ($global:ImageProcessing -eq 'true') {
-                            Write-Log -Subtext "Processing Poster for: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-                            $CommentArguments = "convert `"$PosterImage`" -set `"comment`" `"created with ppm`" `"$PosterImage`""
-                            $CommentlogEntry = "`"$magick`" $CommentArguments"
-                            $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
-                            Start-Process $magick -Wait -NoNewWindow -ArgumentList $CommentArguments
+                        Write-Log -Message "Start Poster Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                        switch -Wildcard ($global:FavProvider) {
+                            'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBMoviePoster }Else { Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning; $global:posterurl = GetFanartMoviePoster } }
+                            'FANART' { $global:posterurl = GetFanartMoviePoster }
+                            'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBMoviePoster }Else { Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning; $global:posterurl = GetFanartMoviePoster } }
+                            'PLEX' { GetPlexArtwork -Type ' a Movie Poster' -ArtUrl $Arturl -TempImage $PosterImage }
+                            Default { $global:posterurl = GetFanartMoviePoster }
+                        }
+                        switch -Wildcard ($global:Fallback) {
+                            'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBMoviePoster } }
+                            'FANART' { $global:posterurl = GetFanartMoviePoster }
+                        }
+                        if ($global:PreferTextless -eq 'True') {
+                            if (!$global:TextlessPoster -and $global:fanartfallbackposterurl) {
+                                $global:posterurl = $global:fanartfallbackposterurl
+                                Write-Log -Subtext "Took Fanart.tv Fallback poster cause its your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+                                $global:IsFallback = $true
+                            }
+                            if (!$global:TextlessPoster -and $global:TMDBfallbackposterurl) {
+                                $global:posterurl = $global:TMDBfallbackposterurl
+                                Write-Log -Subtext "Took TMDB Fallback poster cause its your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+                                $global:IsFallback = $true
+                            }
+                        }
+                        if (!$global:posterurl) {
+                            $global:posterurl = GetTVDBMoviePoster
+                            $global:IsFallback = $true
+                            if (!$global:posterurl) {
+                                GetPlexArtwork -Type ' a Movie Poster' -ArtUrl $Arturl -TempImage $PosterImage
+                                $global:IsFallback = $true
+                            }
+                            if (!$global:posterurl -and $global:imdbid) { 
+                                Write-Log -Subtext "Searching on IMDB for a movie poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+                                $global:posterurl = GetIMDBPoster
+                                $global:IsFallback = $true
+                                if (!$global:posterurl) { 
+                                    Write-Log -Subtext "Could not find a poster on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                                }
+                            }
+                        }
+    
+                        if ($fontAllCaps -eq 'true') {
+                            $joinedTitle = $Titletext.ToUpper()
+                        }
+                        Else {
+                            $joinedTitle = $Titletext
+                        }
+                        if ($global:posterurl -or $global:PlexartworkDownloaded ) {
+                            if (!$global:PlexartworkDownloaded) {
+                                Invoke-WebRequest -Uri $global:posterurl -OutFile $PosterImage
+                            }
+                            Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                            if ($global:posterurl -like 'https://image.tmdb.org*') {
+                                if ($global:PosterWithText) {
+                                    Write-Log -Subtext "Downloading Poster with Text from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+                                }
+                                Else {
+                                    Write-Log -Subtext "Downloading Textless Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+                                }
+                            }
+                            elseif ($global:posterurl -like 'https://assets.fanart.tv*') {
+                                if ($global:PosterWithText) {
+                                    Write-Log -Subtext "Downloading Poster with Text from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+                                }
+                                Else {
+                                    Write-Log -Subtext "Downloading Textless Poster from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+                                }
+                            }
+                            elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
+                                Write-Log -Subtext "Downloading Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+                            }
+                            elseif ($global:posterurl -like "$PlexUrl*") {
+                                Write-Log -Subtext "Downloading Poster from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+                            }
+                            Else {
+                                Write-Log -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+                            }
+                            if ($global:ImageProcessing -eq 'true') {
+                                Write-Log -Subtext "Processing Poster for: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                $CommentArguments = "convert `"$PosterImage`" -set `"comment`" `"created with ppm`" `"$PosterImage`""
+                                $CommentlogEntry = "`"$magick`" $CommentArguments"
+                                $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+                                Start-Process $magick -Wait -NoNewWindow -ArgumentList $CommentArguments
 
-                            # Calculate the height to maintain the aspect ratio with a width of 1000 pixels
-                            if ($AddBorder -eq 'true' -and $AddOverlay -eq 'true') {
-                                $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$PosterImage`""
-                                Write-Log -Subtext "Resizing it | Adding Borders | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-                            }
-                            if ($AddBorder -eq 'true' -and $AddOverlay -eq 'false') {
-                                $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$PosterImage`""
-                                Write-Log -Subtext "Resizing it | Adding Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-                            }
-                            if ($AddBorder -eq 'false' -and $AddOverlay -eq 'true') {
-                                $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite `"$PosterImage`""
-                                Write-Log -Subtext "Resizing it | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-                            }
-                            if ($AddBorder -eq 'false' -and $AddOverlay -eq 'false') {
-                                $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$PosterImage`""
-                                Write-Log -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-                            }
-                            $logEntry = "`"$magick`" $Arguments"
-                            $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
-                            Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
-        
-                            if ($AddText -eq 'true') {
-                                $optimalFontSize = Get-OptimalPointSize -text $joinedTitle -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
-                                Write-Log -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-                                $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
-                                Write-Log -Subtext "Applying Poster text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                # Calculate the height to maintain the aspect ratio with a width of 1000 pixels
+                                if ($AddBorder -eq 'true' -and $AddOverlay -eq 'true') {
+                                    $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$PosterImage`""
+                                    Write-Log -Subtext "Resizing it | Adding Borders | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                }
+                                if ($AddBorder -eq 'true' -and $AddOverlay -eq 'false') {
+                                    $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$PosterImage`""
+                                    Write-Log -Subtext "Resizing it | Adding Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                }
+                                if ($AddBorder -eq 'false' -and $AddOverlay -eq 'true') {
+                                    $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite `"$PosterImage`""
+                                    Write-Log -Subtext "Resizing it | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                }
+                                if ($AddBorder -eq 'false' -and $AddOverlay -eq 'false') {
+                                    $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$PosterImage`""
+                                    Write-Log -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                }
                                 $logEntry = "`"$magick`" $Arguments"
                                 $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
                                 Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
+        
+                                if ($AddText -eq 'true') {
+                                    $optimalFontSize = Get-OptimalPointSize -text $joinedTitle -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
+                                    Write-Log -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                    $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
+                                    Write-Log -Subtext "Applying Poster text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                    $logEntry = "`"$magick`" $Arguments"
+                                    $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+                                    Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
+                                }
+                            }
+                            Else {
+                                $Resizeargument = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$PosterImage`""
+                                Write-Log -Subtext "Resizing it... " -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                $logEntry = "`"$magick`" $Resizeargument"
+                                $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+                                Start-Process $magick -Wait -NoNewWindow -ArgumentList $Resizeargument
+                            }
+                            # Move file back to original naming with Brackets.
+                            if (Get-ChildItem -LiteralPath $PosterImage -ErrorAction SilentlyContinue) {
+                                Move-Item -LiteralPath $PosterImage $PosterImageoriginal -Force -ErrorAction SilentlyContinue
+                                Write-Log -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Type Info
+
+                                $movietemp = New-Object psobject
+                                $movietemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
+                                $movietemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie'
+                                $movietemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
+                                $movietemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
+                                $movietemp | Add-Member -MemberType NoteProperty -Name "Textless" -Value $(if ($global:TextlessPoster) { 'True' } else { 'False' })
+                                $movietemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback) { 'True' } else { 'False' })
+                                $movietemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
+                                $movietemp | Add-Member -MemberType NoteProperty -Name "Url" -Value $global:posterurl
+            
+                                # Export the array to a CSV file
+                                $movietemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
+                                $posterCount++
                             }
                         }
                         Else {
-                            $Resizeargument = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$PosterImage`""
-                            Write-Log -Subtext "Resizing it... " -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-                            $logEntry = "`"$magick`" $Resizeargument"
-                            $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
-                            Start-Process $magick -Wait -NoNewWindow -ArgumentList $Resizeargument
-                        }
-                        # Move file back to original naming with Brackets.
-                        if (Get-ChildItem -LiteralPath $PosterImage -ErrorAction SilentlyContinue) {
-                            Move-Item -LiteralPath $PosterImage $PosterImageoriginal -Force -ErrorAction SilentlyContinue
+                            Write-Log -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Type Error
                             Write-Log -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Type Info
-
-                            $movietemp = New-Object psobject
-                            $movietemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
-                            $movietemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie'
-                            $movietemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
-                            $movietemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
-                            $movietemp | Add-Member -MemberType NoteProperty -Name "Textless" -Value $(if ($global:TextlessPoster) { 'True' } else { 'False' })
-                            $movietemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback) { 'True' } else { 'False' })
-                            $movietemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
-                            $movietemp | Add-Member -MemberType NoteProperty -Name "Url" -Value $global:posterurl
-            
-                            # Export the array to a CSV file
-                            $movietemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
-                            $posterCount++
+                            $Errorcount++
                         }
-                    }
-                    Else {
-                        Write-Log -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Type Error
-                        Write-Log -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Type Info
-                        $Errorcount++
                     }
                 }
+                # Now we can start the Background Poster Part
                 if ($global:BackgroundPosters -eq 'true') {
                     if ($LibraryFolders -eq 'true') {
                         $LibraryName = $entry.'Library Name'
@@ -3580,7 +3586,7 @@ else {
             $global:TextlessPoster = $null
             $global:tvdbalreadysearched = $null
             $global:PlexartworkDownloaded = $null
-    
+            
             $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}]'
             if ($entry.title -match $cjkPattern) {
                 $Titletext = $entry.originalTitle
@@ -3614,163 +3620,166 @@ else {
             Else {
                 $Arturl = $plexurl + $entry.PlexPosterUrl
             }
-            if (!(Get-ChildItem -LiteralPath $TestPath | Where-Object { $_.Name -like "*$Testfile*" } -ErrorAction SilentlyContinue)) {
-                Write-Log -Message "Start Poster Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-                switch -Wildcard ($global:FavProvider) {
-                    'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBShowPoster }Else { Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning; $global:posterurl = GetFanartShowPoster } }
-                    'FANART' { $global:posterurl = GetFanartShowPoster }
-                    'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBShowPoster }Else { Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning; $global:posterurl = GetFanartShowPoster } }
-                    'PLEX' { GetPlexArtwork -Type ' a Show Poster' -ArtUrl $Arturl -TempImage $PosterImage }
-                    Default { $global:posterurl = GetFanartShowPoster }
-                }
-                switch -Wildcard ($global:Fallback) {
-                    'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBShowPoster } }
-                    'FANART' { $global:posterurl = GetFanartShowPoster }
-                }
-                if ($global:PreferTextless -eq 'True') {
-                    if (!$global:TextlessPoster -and $global:fanartfallbackposterurl) {
-                        $global:posterurl = $global:fanartfallbackposterurl
-                        Write-Log -Subtext "Took Fanart.tv Fallback poster cause its your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
-                        $global:IsFallback = $true
+            # Now we can start the Poster Part
+            if ($global:Posters -eq 'true') {
+                if (!(Get-ChildItem -LiteralPath $TestPath | Where-Object { $_.Name -like "*$Testfile*" } -ErrorAction SilentlyContinue)) {
+                    Write-Log -Message "Start Poster Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                    switch -Wildcard ($global:FavProvider) {
+                        'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBShowPoster }Else { Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning; $global:posterurl = GetFanartShowPoster } }
+                        'FANART' { $global:posterurl = GetFanartShowPoster }
+                        'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBShowPoster }Else { Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning; $global:posterurl = GetFanartShowPoster } }
+                        'PLEX' { GetPlexArtwork -Type ' a Show Poster' -ArtUrl $Arturl -TempImage $PosterImage }
+                        Default { $global:posterurl = GetFanartShowPoster }
                     }
-                    if (!$global:TextlessPoster -and $global:TMDBfallbackposterurl) {
-                        $global:posterurl = $global:TMDBfallbackposterurl
-                        Write-Log -Subtext "Took TMDB Fallback poster cause its your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
-                        $global:IsFallback = $true
+                    switch -Wildcard ($global:Fallback) {
+                        'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBShowPoster } }
+                        'FANART' { $global:posterurl = GetFanartShowPoster }
                     }
-                    # try to find textless on TVDB
-                    if ($global:TextlessPoster -ne 'true' -and $entry.tvdbid ) {
+                    if ($global:PreferTextless -eq 'True') {
+                        if (!$global:TextlessPoster -and $global:fanartfallbackposterurl) {
+                            $global:posterurl = $global:fanartfallbackposterurl
+                            Write-Log -Subtext "Took Fanart.tv Fallback poster cause its your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+                            $global:IsFallback = $true
+                        }
+                        if (!$global:TextlessPoster -and $global:TMDBfallbackposterurl) {
+                            $global:posterurl = $global:TMDBfallbackposterurl
+                            Write-Log -Subtext "Took TMDB Fallback poster cause its your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+                            $global:IsFallback = $true
+                        }
+                        # try to find textless on TVDB
+                        if ($global:TextlessPoster -ne 'true' -and $entry.tvdbid ) {
+                            $global:posterurl = GetTVDBShowPoster
+                            $global:IsFallback = $true
+                            $global:tvdbalreadysearched = $true
+                        }
+                    }
+
+                    if (!$global:TextlessPoster -eq 'true' -and $global:posterurl) {
+                        $global:PosterWithText = $true
+                    } 
+
+                    if (!$global:posterurl -and $global:tvdbalreadysearched -ne "True") {
                         $global:posterurl = GetTVDBShowPoster
                         $global:IsFallback = $true
-                        $global:tvdbalreadysearched = $true
-                    }
-                }
-
-                if (!$global:TextlessPoster -eq 'true' -and $global:posterurl) {
-                    $global:PosterWithText = $true
-                } 
-
-                if (!$global:posterurl -and $global:tvdbalreadysearched -ne "True") {
-                    $global:posterurl = GetTVDBShowPoster
-                    $global:IsFallback = $true
-                    if (!$global:posterurl -and !$global:TMDBfallbackposterurl -and !$global:fanartfallbackposterurl) {
-                        Write-Log -Subtext "Could not find a poster on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
-                    }
-                }
-                if ($fontAllCaps -eq 'true') {
-                    $joinedTitle = $Titletext.ToUpper()
-                }
-                Else {
-                    $joinedTitle = $Titletext
-                }
-                if (!$global:TextlessPoster -eq 'True' -and $global:TMDBfallbackposterurl) {
-                    $global:posterurl = $global:TMDBfallbackposterurl
-                }
-                if (!$global:TextlessPoster -eq 'True' -and $global:fanartfallbackposterurl) {
-                    $global:posterurl = $global:fanartfallbackposterurl
-                }
-                if ($global:posterurl -or $global:PlexartworkDownloaded ) {
-                    if (!$global:PlexartworkDownloaded) {
-                        Invoke-WebRequest -Uri $global:posterurl -OutFile $PosterImage
-                    }
-                    Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-                    if ($global:posterurl -like 'https://image.tmdb.org*') {
-                        if ($global:PosterWithText) {
-                            Write-Log -Subtext "Downloading Poster with Text from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
-                        }
-                        Else {
-                            Write-Log -Subtext "Downloading Textless Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+                        if (!$global:posterurl -and !$global:TMDBfallbackposterurl -and !$global:fanartfallbackposterurl) {
+                            Write-Log -Subtext "Could not find a poster on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
                         }
                     }
-                    elseif ($global:posterurl -like 'https://assets.fanart.tv*') {
-                        if ($global:PosterWithText) {
-                            Write-Log -Subtext "Downloading Poster with Text from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
-                        }
-                        Else {
-                            Write-Log -Subtext "Downloading Textless Poster from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
-                        }
-                    }
-                    elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
-                        Write-Log -Subtext "Downloading Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
-                    }
-                    elseif ($global:posterurl -like "$PlexUrl*") {
-                        Write-Log -Subtext "Downloading Poster from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+                    if ($fontAllCaps -eq 'true') {
+                        $joinedTitle = $Titletext.ToUpper()
                     }
                     Else {
-                        Write-Log -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
-                        $global:IsFallback = $true
+                        $joinedTitle = $Titletext
                     }
-                    if ($global:ImageProcessing -eq 'true') {
-                        Write-Log -Subtext "Processing Poster for: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-                        $CommentArguments = "convert `"$PosterImage`" -set `"comment`" `"created with ppm`" `"$PosterImage`""
-                        $CommentlogEntry = "`"$magick`" $CommentArguments"
-                        $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
-                        Start-Process $magick -Wait -NoNewWindow -ArgumentList $CommentArguments
+                    if (!$global:TextlessPoster -eq 'True' -and $global:TMDBfallbackposterurl) {
+                        $global:posterurl = $global:TMDBfallbackposterurl
+                    }
+                    if (!$global:TextlessPoster -eq 'True' -and $global:fanartfallbackposterurl) {
+                        $global:posterurl = $global:fanartfallbackposterurl
+                    }
+                    if ($global:posterurl -or $global:PlexartworkDownloaded ) {
+                        if (!$global:PlexartworkDownloaded) {
+                            Invoke-WebRequest -Uri $global:posterurl -OutFile $PosterImage
+                        }
+                        Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                        if ($global:posterurl -like 'https://image.tmdb.org*') {
+                            if ($global:PosterWithText) {
+                                Write-Log -Subtext "Downloading Poster with Text from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+                            }
+                            Else {
+                                Write-Log -Subtext "Downloading Textless Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+                            }
+                        }
+                        elseif ($global:posterurl -like 'https://assets.fanart.tv*') {
+                            if ($global:PosterWithText) {
+                                Write-Log -Subtext "Downloading Poster with Text from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+                            }
+                            Else {
+                                Write-Log -Subtext "Downloading Textless Poster from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+                            }
+                        }
+                        elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
+                            Write-Log -Subtext "Downloading Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+                        }
+                        elseif ($global:posterurl -like "$PlexUrl*") {
+                            Write-Log -Subtext "Downloading Poster from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+                        }
+                        Else {
+                            Write-Log -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+                            $global:IsFallback = $true
+                        }
+                        if ($global:ImageProcessing -eq 'true') {
+                            Write-Log -Subtext "Processing Poster for: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                            $CommentArguments = "convert `"$PosterImage`" -set `"comment`" `"created with ppm`" `"$PosterImage`""
+                            $CommentlogEntry = "`"$magick`" $CommentArguments"
+                            $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+                            Start-Process $magick -Wait -NoNewWindow -ArgumentList $CommentArguments
 
-                        # Calculate the height to maintain the aspect ratio with a width of 1000 pixels
-                        if ($AddBorder -eq 'true' -and $AddOverlay -eq 'true') {
-                            $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$PosterImage`""
-                            Write-Log -Subtext "Resizing it | Adding Borders | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-                        }
-                        if ($AddBorder -eq 'true' -and $AddOverlay -eq 'false') {
-                            $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$PosterImage`""
-                            Write-Log -Subtext "Resizing it | Adding Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-                        }
-                        if ($AddBorder -eq 'false' -and $AddOverlay -eq 'true') {
-                            $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite `"$PosterImage`""
-                            Write-Log -Subtext "Resizing it | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-                        }
-                        if ($AddBorder -eq 'false' -and $AddOverlay -eq 'false') {
-                            $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$PosterImage`""
-                            Write-Log -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-                        }
-                        $logEntry = "`"$magick`" $Arguments"
-                        $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
-                        Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
-    
-                        if ($AddText -eq 'true') {
-                            $optimalFontSize = Get-OptimalPointSize -text $joinedTitle -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
-                            Write-Log -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-                            $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
-                            Write-Log -Subtext "Applying Poster text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                            # Calculate the height to maintain the aspect ratio with a width of 1000 pixels
+                            if ($AddBorder -eq 'true' -and $AddOverlay -eq 'true') {
+                                $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$PosterImage`""
+                                Write-Log -Subtext "Resizing it | Adding Borders | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                            }
+                            if ($AddBorder -eq 'true' -and $AddOverlay -eq 'false') {
+                                $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$PosterImage`""
+                                Write-Log -Subtext "Resizing it | Adding Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                            }
+                            if ($AddBorder -eq 'false' -and $AddOverlay -eq 'true') {
+                                $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite `"$PosterImage`""
+                                Write-Log -Subtext "Resizing it | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                            }
+                            if ($AddBorder -eq 'false' -and $AddOverlay -eq 'false') {
+                                $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$PosterImage`""
+                                Write-Log -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                            }
                             $logEntry = "`"$magick`" $Arguments"
                             $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
                             Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
+    
+                            if ($AddText -eq 'true') {
+                                $optimalFontSize = Get-OptimalPointSize -text $joinedTitle -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
+                                Write-Log -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
+                                Write-Log -Subtext "Applying Poster text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                $logEntry = "`"$magick`" $Arguments"
+                                $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+                                Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
+                            }
+                        }
+                        Else {
+                            $Resizeargument = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$PosterImage`""
+                            Write-Log -Subtext "Resizing it... " -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                            $logEntry = "`"$magick`" $Resizeargument"
+                            $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+                            Start-Process $magick -Wait -NoNewWindow -ArgumentList $Resizeargument
+                        }
+                        if (Get-ChildItem -LiteralPath $PosterImage -ErrorAction SilentlyContinue) {
+                            # Move file back to original naming with Brackets.
+                            Move-Item -LiteralPath $PosterImage $PosterImageoriginal -Force -ErrorAction SilentlyContinue
+                            Write-Log -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Type Info
+                            $posterCount++
+
+                            $showtemp = New-Object psobject
+                            $showtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
+                            $showtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Show'
+                            $showtemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
+                            $showtemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
+                            $showtemp | Add-Member -MemberType NoteProperty -Name "Textless" -Value $(if ($global:TextlessPoster) { 'True' } else { 'False' })
+                            $showtemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback) { 'True' } else { 'False' })
+                            $showtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
+                            $showtemp | Add-Member -MemberType NoteProperty -Name "Url" -Value $global:posterurl
+        
+                            # Export the array to a CSV file
+                            $showtemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                         }
                     }
                     Else {
-                        $Resizeargument = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$PosterImage`""
-                        Write-Log -Subtext "Resizing it... " -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-                        $logEntry = "`"$magick`" $Resizeargument"
-                        $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
-                        Start-Process $magick -Wait -NoNewWindow -ArgumentList $Resizeargument
-                    }
-                    if (Get-ChildItem -LiteralPath $PosterImage -ErrorAction SilentlyContinue) {
-                        # Move file back to original naming with Brackets.
-                        Move-Item -LiteralPath $PosterImage $PosterImageoriginal -Force -ErrorAction SilentlyContinue
+                        Write-Log -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Type Error
                         Write-Log -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Type Info
-                        $posterCount++
-
-                        $showtemp = New-Object psobject
-                        $showtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
-                        $showtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Show'
-                        $showtemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
-                        $showtemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
-                        $showtemp | Add-Member -MemberType NoteProperty -Name "Textless" -Value $(if ($global:TextlessPoster) { 'True' } else { 'False' })
-                        $showtemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback) { 'True' } else { 'False' })
-                        $showtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
-                        $showtemp | Add-Member -MemberType NoteProperty -Name "Url" -Value $global:posterurl
-        
-                        # Export the array to a CSV file
-                        $showtemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
+                        $Errorcount++
                     }
-                }
-                Else {
-                    Write-Log -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Type Error
-                    Write-Log -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Type Info
-                    $Errorcount++
-                }
 
+                }
             }
             # Now we can start the Background Part
             if ($global:BackgroundPosters -eq 'true') {
