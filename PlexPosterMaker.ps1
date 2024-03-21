@@ -3,7 +3,7 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.19"
+$CurrentScriptVersion = "1.0.20"
 $global:HeaderWritten = $false
 
 $global:OSType = [System.Environment]::OSVersion.Platform
@@ -177,14 +177,14 @@ function GetTMDBMoviePoster {
     }
     Else {
         try {
-            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($global:tmdbid)?append_to_response=images&language=$($PreferedLanguageOrder[0])&include_image_language=$($global:PreferedLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue    
+            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($global:tmdbid)?append_to_response=images&language=$($PreferredLanguageOrder[0])&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue    
         }
         catch {
             Write-Log -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
         }
         if ($response) {
             if ($response.images.posters) {
-                foreach ($lang in $global:PreferedLanguageOrderTMDB) {
+                foreach ($lang in $global:PreferredLanguageOrderTMDB) {
                     if ($lang -eq 'null') {
                         $FavPoster = ($response.images.posters | Where-Object iso_639_1 -eq $null)
                     }
@@ -259,14 +259,14 @@ function GetTMDBMovieBackground {
     }
     Else {
         try {
-            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($global:tmdbid)?append_to_response=images&language=$($PreferedLanguageOrder[0])&include_image_language=$($global:PreferedLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue    
+            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($global:tmdbid)?append_to_response=images&language=$($PreferredLanguageOrder[0])&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue    
         }
         catch {
             Write-Log -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
         }
         if ($response) {
             if ($response.images.backdrops) {
-                foreach ($lang in $global:PreferedLanguageOrderTMDB) {
+                foreach ($lang in $global:PreferredLanguageOrderTMDB) {
                     if ($lang -eq 'null') {
                         $FavPoster = ($response.images.backdrops | Where-Object iso_639_1 -eq $null)
                     }
@@ -346,14 +346,14 @@ function GetTMDBShowPoster {
     }
     Else {
         try {
-            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=$($PreferedLanguageOrder[0])&include_image_language=$($global:PreferedLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
+            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=$($PreferredLanguageOrder[0])&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
         }
         catch {
             Write-Log -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
         }
         if ($response) {
             if ($response.images.posters) {
-                foreach ($lang in $global:PreferedLanguageOrderTMDB) {
+                foreach ($lang in $global:PreferredLanguageOrderTMDB) {
                     if ($lang -eq 'null') {
                         $FavPoster = ($response.images.posters | Where-Object iso_639_1 -eq $null)
                     }
@@ -424,10 +424,10 @@ function GetTMDBSeasonPoster {
     Else {
         try {
             if ($global:SeasonNumber -match '\b\d{1,2}\b') {
-                $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)/season/$global:SeasonNumber/images?append_to_response=images&language=$($global:PreferedLanguageOrder[0])&include_image_language=$($global:PreferedLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
+                $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)/season/$global:SeasonNumber/images?append_to_response=images&language=$($global:PreferredLanguageOrder[0])&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
             }
             Else {
-                $responseBackup = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=$($PreferedLanguageOrder[0])&include_image_language=$($global:PreferedLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
+                $responseBackup = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=$($PreferredLanguageOrder[0])&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
             }
         }
         catch {
@@ -436,7 +436,7 @@ function GetTMDBSeasonPoster {
         if ($responseBackup) {
             if ($responseBackup.images.posters) {
                 Write-Log -Subtext "Could not get a result with '$global:SeasonNumber' on TMDB, likley season number not in correct format, fallback to Show poster." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
-                foreach ($lang in $global:PreferedLanguageOrderTMDB) {
+                foreach ($lang in $global:PreferredLanguageOrderTMDB) {
                     if ($lang -eq 'null') {
                         $FavPoster = ($responseBackup.images.posters | Where-Object iso_639_1 -eq $null)
                     }
@@ -463,7 +463,7 @@ function GetTMDBSeasonPoster {
         }
         if ($response) {
             if ($response.posters) {
-                foreach ($lang in $global:PreferedLanguageOrderTMDB) {
+                foreach ($lang in $global:PreferredLanguageOrderTMDB) {
                     if ($lang -eq 'null') {
                         $FavPoster = ($response.posters | Where-Object iso_639_1 -eq $null)
                     }
@@ -546,14 +546,14 @@ function GetTMDBShowBackground {
     }
     Else {
         try {
-            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=$($PreferedLanguageOrder[0])&include_image_language=$($global:PreferedLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue    
+            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=$($PreferredLanguageOrder[0])&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue    
         }
         catch {
             Write-Log -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
         }
         if ($response) {
             if ($response.images.backdrops) {
-                foreach ($lang in $global:PreferedLanguageOrderTMDB) {
+                foreach ($lang in $global:PreferredLanguageOrderTMDB) {
                     if ($lang -eq 'null') {
                         $FavPoster = ($response.images.backdrops | Where-Object iso_639_1 -eq $null)
                     }
@@ -680,7 +680,7 @@ function GetFanartMoviePoster {
             if ($id) {
                 $entrytemp = Get-FanartTv -Type movies -id $id -ErrorAction SilentlyContinue
                 if ($entrytemp -and $entrytemp.movieposter) {
-                    foreach ($lang in $global:PreferedLanguageOrderFanart) {
+                    foreach ($lang in $global:PreferredLanguageOrderFanart) {
                         if (($entrytemp.movieposter | Where-Object lang -eq "$lang")) {
                             $global:posterurl = ($entrytemp.movieposter)[0].url
                             if ($lang -eq '00') {
@@ -796,7 +796,7 @@ function GetFanartShowPoster {
             if ($id) {
                 $entrytemp = Get-FanartTv -Type tv -id $id -ErrorAction SilentlyContinue
                 if ($entrytemp -and $entrytemp.tvposter) {
-                    foreach ($lang in $global:PreferedLanguageOrderFanart) {
+                    foreach ($lang in $global:PreferredLanguageOrderFanart) {
                         if (($entrytemp.tvposter | Where-Object lang -eq "$lang")) {
                             $global:posterurl = ($entrytemp.tvposter)[0].url
                             if ($lang -eq '00') {
@@ -883,7 +883,7 @@ function GetFanartSeasonPoster {
                         }
                         Else {
                             Write-Log -Subtext "No Texless Season Poster on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
-                            foreach ($lang in $global:PreferedLanguageOrderFanart) {
+                            foreach ($lang in $global:PreferredLanguageOrderFanart) {
                                 $FoundPoster = ($entrytemp.seasonposter | Where-Object { $_.lang -eq "$lang" -and $_.Season -eq $global:SeasonNumber } | Sort-Object likes)
                                 if ($FoundPoster) {
                                     $global:posterurl = $FoundPoster[0].url
@@ -897,7 +897,7 @@ function GetFanartSeasonPoster {
                     Else {
                         Write-Log -Subtext "Could not get a result with '$global:SeasonNumber' on Fanart, likley season number not in correct format, fallback to Show poster." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Optional
                         if ($entrytemp -and $entrytemp.tvposter) {
-                            foreach ($lang in $global:PreferedLanguageOrderFanart) {
+                            foreach ($lang in $global:PreferredLanguageOrderFanart) {
                                 if (($entrytemp.tvposter | Where-Object lang -eq "$lang")) {
                                     $global:posterurl = ($entrytemp.tvposter)[0].url
                                     if ($lang -eq '00') {
@@ -936,7 +936,7 @@ function GetFanartSeasonPoster {
             if ($id) {
                 $entrytemp = Get-FanartTv -Type tv -id $id -ErrorAction SilentlyContinue
                 if ($entrytemp.seasonposter) {
-                    foreach ($lang in $global:PreferedLanguageOrderFanart) {
+                    foreach ($lang in $global:PreferredLanguageOrderFanart) {
                         $FoundPoster = ($entrytemp.seasonposter | Where-Object { $_.lang -eq "$lang" -and $_.Season -eq $global:SeasonNumber } | Sort-Object likes)
                         if ($FoundPoster) {
                             $global:posterurl = $FoundPoster[0].url
@@ -1002,7 +1002,7 @@ function GetTVDBMoviePoster {
             }
             if ($response) {
                 if ($response.data.artworks) {
-                    foreach ($lang in $global:PreferedLanguageOrderTVDB) {
+                    foreach ($lang in $global:PreferredLanguageOrderTVDB) {
                         if ($lang -eq 'null') {
                             $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "" -and $_.type -eq '14' } | Sort-Object Score)
                         }
@@ -1069,7 +1069,7 @@ function GetTVDBMovieBackground {
             }
             if ($response) {
                 if ($response.data.artworks) {
-                    foreach ($lang in $global:PreferedLanguageOrderTVDB) {
+                    foreach ($lang in $global:PreferredLanguageOrderTVDB) {
                         if ($lang -eq 'null') {
                             $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "" -and $_.type -eq '15' } | Sort-Object Score)
                         }
@@ -1147,7 +1147,7 @@ function GetTVDBShowPoster {
             }
             if ($response) {
                 if ($response.data) {
-                    foreach ($lang in $global:PreferedLanguageOrderTVDB) {
+                    foreach ($lang in $global:PreferredLanguageOrderTVDB) {
                         if ($lang -eq 'null') {
                             $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "" -and $_.type -eq '2' } | Sort-Object Score -Descending)
                         }
@@ -1203,7 +1203,7 @@ function GetTVDBSeasonPoster {
                     Write-Log -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
                 }
                 if ($Seasonresponse) {
-                    foreach ($lang in $global:PreferedLanguageOrderTVDB) {
+                    foreach ($lang in $global:PreferredLanguageOrderTVDB) {
                         if ($lang -eq 'null') {
                             $LangArtwork = ($Seasonresponse.data.artwork | Where-Object { $_.language -like "" -and $_.type -eq '7' } | Sort-Object Score -Descending)
                         }
@@ -1280,7 +1280,7 @@ function GetTVDBShowBackground {
             }
             if ($response) {
                 if ($response.data) {
-                    foreach ($lang in $global:PreferedLanguageOrderTVDB) {
+                    foreach ($lang in $global:PreferredLanguageOrderTVDB) {
                         if ($lang -eq 'null') {
                             $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "" -and $_.type -eq '3' } | Sort-Object Score -Descending)
                         }
@@ -1624,16 +1624,16 @@ $global:tmdbtoken = $config.ApiPart.tmdbtoken
 $FanartTvAPIKey = $config.ApiPart.FanartTvAPIKey
 $PlexToken = $config.ApiPart.PlexToken
 $global:FavProvider = $config.ApiPart.FavProvider.ToUpper()
-$global:PreferedLanguageOrder = $config.ApiPart.PreferedLanguageOrder
+$global:PreferredLanguageOrder = $config.ApiPart.PreferredLanguageOrder
 # default Lang order if missing in config
-if (!$global:PreferedLanguageOrder) {
+if (!$global:PreferredLanguageOrder) {
     Write-Log -Message "Lang search Order not set in Config, setting it to 'xx,en,de' for you" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
-    $global:PreferedLanguageOrder = "xx", "en", "de"
+    $global:PreferredLanguageOrder = "xx", "en", "de"
 }
-$global:PreferedLanguageOrderTMDB = $global:PreferedLanguageOrder.Replace('xx', 'null')
-$global:PreferedLanguageOrderFanart = $global:PreferedLanguageOrder.Replace('xx', '00')
-$global:PreferedLanguageOrderTVDB = $global:PreferedLanguageOrder.Replace('xx', 'null')
-if ($global:PreferedLanguageOrder[0] -eq 'xx') {
+$global:PreferredLanguageOrderTMDB = $global:PreferredLanguageOrder.Replace('xx', 'null')
+$global:PreferredLanguageOrderFanart = $global:PreferredLanguageOrder.Replace('xx', '00')
+$global:PreferredLanguageOrderTVDB = $global:PreferredLanguageOrder.Replace('xx', 'null')
+if ($global:PreferredLanguageOrder[0] -eq 'xx') {
     $global:PreferTextless = $true
 }
 Else {
@@ -1839,7 +1839,7 @@ if ($PlexToken) {
     Write-Log -Subtext "| Plex Token:                   $($PlexToken[0..7] -join '')****" -Path $configLogging  -Type Info
 }
 Write-Log -Subtext "| Fav Provider:                 $global:FavProvider" -Path $configLogging  -Type Info
-Write-Log -Subtext "| Prefered Lang Order:          $($global:PreferedLanguageOrder -join ',')" -Path $configLogging  -Type Info
+Write-Log -Subtext "| Preferred Lang Order:          $($global:PreferredLanguageOrder -join ',')" -Path $configLogging  -Type Info
 Write-Log -Subtext "Plex Part" -Path $configLogging  -Type Trace
 Write-Log -Subtext "| Excluded Libs:                $($LibstoExclude -join ',')" -Path $configLogging -Type Info
 Write-Log -Subtext "| Plex Url:                     $($PlexUrl[0..10] -join '')****" -Path $configLogging -Type Info
