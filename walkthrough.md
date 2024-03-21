@@ -193,16 +193,15 @@
         - On Windows, like this: `C:\\PathToAsset\\Dir` 
             - **Important** - you have to use double `\\` in json.
 1. After that it is recommended to run the script in `-Testing` Mode.
-    
-    > [!TIP]
-    
-    >*In this Mode, the script will create sample posters according to the config settings so you can see how it would look before you mass run it against your libraries. These samples will be created in the `test` directory*
-    
-    >*You can find examples and more information here:* 
-    
-    >*[Info about Testing mode](https://github.com/fscorrupt/Plex-Poster-Maker?tab=readme-ov-file#testing-mode)*
-    
-    >*[Example Images](https://github.com/fscorrupt/Plex-Poster-Maker?tab=readme-ov-file#images-from-testing-mode)*
+> [!TIP]
+> 
+>*In this Mode, the script will create sample posters according to the config settings so you can see how it would look before you mass run it against your libraries. These samples will be created in the `test` directory*
+>
+>*You can find examples and more information here:*
+>    
+>*[Info about Testing mode](https://github.com/fscorrupt/Plex-Poster-Maker?tab=readme-ov-file#testing-mode)*
+>    
+>*[Example Images](https://github.com/fscorrupt/Plex-Poster-Maker?tab=readme-ov-file#images-from-testing-mode)*
     
     - Docker 
     
