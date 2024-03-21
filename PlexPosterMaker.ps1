@@ -3,9 +3,18 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.17"
+$CurrentScriptVersion = "1.0.18"
 $global:HeaderWritten = $false
 
+$global:OSType = [System.Environment]::OSVersion.Platform
+if ($env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker-Alpine*') {
+    $global:OSType = "DockerAlpine"
+    $ProgressPreference = 'SilentlyContinue'
+    $global:ScriptRoot = "./config"
+}
+Else {
+    $global:ScriptRoot = $PSScriptRoot
+}
 #################
 # What you need #
 #####################################################################################################################
@@ -51,7 +60,10 @@ function Write-Log {
  | |_) | |/ _ \ \/ / | |_) / _ \/ __| __/ _ \ '__| | |\/| |/ _``` | |/ / _ \ '__|
  |  __/| |  __/>  <  |  __/ (_) \__ \ ||  __/ |    | |  | | (_| |   <  __/ |   
  |_|   |_|\___/_/\_\ |_|   \___/|___/\__\___|_|    |_|  |_|\__,_|_|\_\___|_|   
-
+ 
+ Current Version: $CurrentScriptVersion
+ Latest Version: $LatestScriptVersion 
+ Platform: $Platform
 ===============================================================================
 "@
         Write-Host $Header
@@ -133,6 +145,7 @@ function GetTMDBMoviePoster {
             $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($global:tmdbid)?append_to_response=images&language=xx&include_image_language=en,null,de" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue    
         }
         catch {
+            Write-Log -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
         }
         if ($response) {
             if ($response.images.posters) {
@@ -167,6 +180,7 @@ function GetTMDBMoviePoster {
             $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($global:tmdbid)?append_to_response=images&language=$($PreferedLanguageOrder[0])&include_image_language=$($global:PreferedLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue    
         }
         catch {
+            Write-Log -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
         }
         if ($response) {
             if ($response.images.posters) {
@@ -207,6 +221,7 @@ function GetTMDBMovieBackground {
             $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($global:tmdbid)?append_to_response=images&language=xx&include_image_language=en,null,de" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue    
         }
         catch {
+            Write-Log -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
         }
         if ($response) {
             if ($response.images.backdrops) {
@@ -247,6 +262,7 @@ function GetTMDBMovieBackground {
             $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($global:tmdbid)?append_to_response=images&language=$($PreferedLanguageOrder[0])&include_image_language=$($global:PreferedLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue    
         }
         catch {
+            Write-Log -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
         }
         if ($response) {
             if ($response.images.backdrops) {
@@ -297,6 +313,7 @@ function GetTMDBShowPoster {
             $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=xx&include_image_language=en,null,de" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue    
         }
         catch {
+            Write-Log -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
         }
         if ($response) {
             if ($response.images.posters) {
@@ -332,6 +349,7 @@ function GetTMDBShowPoster {
             $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=$($PreferedLanguageOrder[0])&include_image_language=$($global:PreferedLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
         }
         catch {
+            Write-Log -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
         }
         if ($response) {
             if ($response.images.posters) {
@@ -372,6 +390,7 @@ function GetTMDBSeasonPoster {
             $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)/season/$global:SeasonNumber/images?append_to_response=images&language=xx&include_image_language=en,null,de" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue            
         }
         catch {
+            Write-Log -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
         }
         if ($response) {
             if ($response.posters) {
@@ -412,6 +431,7 @@ function GetTMDBSeasonPoster {
             }
         }
         catch {
+            Write-Log -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
         }
         if ($responseBackup) {
             if ($responseBackup.images.posters) {
@@ -484,6 +504,7 @@ function GetTMDBShowBackground {
             $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=xx&include_image_language=en,null,de" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue    
         }
         catch {
+            Write-Log -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
         }
         if ($response) {
             if ($response.images.backdrops) {
@@ -528,6 +549,7 @@ function GetTMDBShowBackground {
             $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=$($PreferedLanguageOrder[0])&include_image_language=$($global:PreferedLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue    
         }
         catch {
+            Write-Log -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
         }
         if ($response) {
             if ($response.images.backdrops) {
@@ -577,6 +599,7 @@ function GetTMDBTitleCard {
         $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)/season/$($global:season_number)/episode/$($global:episodenumber)/images?append_to_response=images&language=xx&include_image_language=en,null,de" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue            
     }
     catch {
+        Write-Log -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
     }
     if ($response) {
         if ($response.stills) {
@@ -953,6 +976,7 @@ function GetTVDBMoviePoster {
                 $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/movies/$($global:tvdbid)/extended" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
             }
             catch {
+                Write-Log -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
             }
             if ($response) {
                 if ($response.data.artworks) {
@@ -974,6 +998,7 @@ function GetTVDBMoviePoster {
                 $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/movies/$($global:tvdbid)/extended" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
             }
             catch {
+                Write-Log -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
             }
             if ($response) {
                 if ($response.data.artworks) {
@@ -1018,6 +1043,7 @@ function GetTVDBMovieBackground {
                 $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/movies/$($global:tvdbid)/extended" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
             }
             catch {
+                Write-Log -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
             }
             if ($response) {
                 if ($response.data.artworks) {
@@ -1039,6 +1065,7 @@ function GetTVDBMovieBackground {
                 $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/movies/$($global:tvdbid)/extended" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
             }
             catch {
+                Write-Log -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
             }
             if ($response) {
                 if ($response.data.artworks) {
@@ -1086,6 +1113,7 @@ function GetTVDBShowPoster {
                 $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/series/$($global:tvdbid)/artworks" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
             }
             catch {
+                Write-Log -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
             }
             if ($response) {
                 if ($response.data) {
@@ -1115,6 +1143,7 @@ function GetTVDBShowPoster {
                 $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/series/$($global:tvdbid)/artworks" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
             }
             catch {
+                Write-Log -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
             }
             if ($response) {
                 if ($response.data) {
@@ -1158,6 +1187,7 @@ function GetTVDBSeasonPoster {
             $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/series/$($global:tvdbid)/extended" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
         }
         catch {
+            Write-Log -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
         }
         if ($response) {
             if ($response.data.seasons) {
@@ -1170,6 +1200,7 @@ function GetTVDBSeasonPoster {
                     $Seasonresponse = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/seasons/$($SeasonID.id)/extended" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
                 }
                 catch {
+                    Write-Log -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
                 }
                 if ($Seasonresponse) {
                     foreach ($lang in $global:PreferedLanguageOrderTVDB) {
@@ -1215,6 +1246,7 @@ function GetTVDBShowBackground {
                 $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/series/$($global:tvdbid)/artworks" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
             }
             catch {
+                Write-Log -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
             }
             if ($response) {
                 if ($response.data) {
@@ -1244,6 +1276,7 @@ function GetTVDBShowBackground {
                 $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/series/$($global:tvdbid)/artworks" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
             }
             catch {
+                Write-Log -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
             }
             if ($response) {
                 if ($response.data) {
@@ -1290,6 +1323,7 @@ function GetTVDBTitleCard {
             $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/series/$($global:tvdbid)/episodes/default?" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
         }
         catch {
+            Write-Log -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
         }
         if ($response) {
             if ($response.data.episodes) {
@@ -1467,16 +1501,53 @@ function CheckJsonPaths {
     } 
 }
 
-$startTime = Get-Date
-$global:OSType = [System.Environment]::OSVersion.Platform
-if ($env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker-Alpine*') {
-    $global:OSType = "DockerAlpine"
-    $ProgressPreference = 'SilentlyContinue'
-    $global:ScriptRoot = "./config"
+# Get platform
+if ($global:OSType -eq 'DockerAlpine') {
+    $Platform = 'Docker'
+}
+elseif ($global:OSType -eq 'Unix' -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -notlike 'PSDocker-Alpine*') {
+    $Platform = 'Linux'
+}
+elseif ($global:OSType -eq 'Win32NT') {
+    $Platform = 'Windows'
 }
 Else {
-    $global:ScriptRoot = $PSScriptRoot
+    $Platform = 'Unknown'
 }
+
+# Get Latest Script Version
+try {
+    $LatestScriptVersion = Invoke-RestMethod -Uri "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/Release.txt" -Method Get -ErrorAction Stop
+}
+catch {
+    Write-Log -Subtext "Could not query latest script version, Error: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+}
+
+
+$startTime = Get-Date
+# Rotate logs before doing anything!
+$logFolder = Join-Path $global:ScriptRoot "Logs"
+$folderPattern = "Logs_*"
+$RotationFolderName = "RotatedLogs"
+$RotationFolder = Join-Path $global:ScriptRoot $RotationFolderName
+# Create Folder if missing
+if (!(Test-Path -path $RotationFolder)) {
+    New-Item -ItemType Directory -Path $global:ScriptRoot -Name $RotationFolderName -Force | Out-Null
+}
+
+# Check if the log folder exists
+if (Test-Path -Path $logFolder -PathType Container) {
+    # Rename the existing log folder with a timestamp
+    $timestamp = Get-Date -Format 'yyyyMMdd_HHmmss'
+    Rename-Item -Path $logFolder -NewName "Logs`_$timestamp"
+    if (!(Test-Path $RotationFolder)) {
+        New-Item -ItemType Directory -Path $global:ScriptRoot -Name $RotationFolderName -Force | Out-Null
+    }
+    Move-Item -Path "$logFolder`_$timestamp" $RotationFolder
+}
+
+Write-Log -Message "Starting..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
+
 # Check if Config file is present
 if (!(Test-Path $(Join-Path $global:ScriptRoot 'config.json'))) {
     Write-Log -Message "Config File missing, downloading it for you..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
@@ -1490,33 +1561,38 @@ if (!(Test-Path $(Join-Path $global:ScriptRoot 'config.json'))) {
 CheckJson -jsonExampleUrl "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/config.example.json" -jsonFilePath $(Join-Path $global:ScriptRoot 'config.json')
 
 # Check if Script is Latest
-$LatestScriptVersion = Invoke-RestMethod -Uri "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/Release.txt" -Method Get -ErrorAction Stop
 if ($CurrentScriptVersion -eq $LatestScriptVersion) {
-    Write-Log -Message "You are Running Latest Script Version - v$CurrentScriptVersion" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+    Write-Log -Message "You are Running Version - v$CurrentScriptVersion" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
 }
 Else {
-    Write-Log -Message "You are Running Script in Version: v$CurrentScriptVersion - Latest Version is: v$LatestScriptVersion" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+    Write-Log -Message "You are Running Version: v$CurrentScriptVersion - Latest Version is: v$LatestScriptVersion" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
 }
 
 # load config file
 $config = Get-Content -Raw -Path $(Join-Path $global:ScriptRoot 'config.json') | ConvertFrom-Json
+# Read naxLogs value from config.json
+$maxLogs = [int]$config.PrerequisitePart.maxLogs  # Cast to integer
+# Check if the cast was successful
+if ($null -eq $maxLogs) {
+    Write-Warning "Value for maxLogs was null. Setting it to 1."
+    $maxLogs = 1
+}
+# Ensure $maxLogs is at least 1
+if ($maxLogs -le 0) {
+    Write-Warning "Value for maxLogs -le 0. Setting it to 1."
+    $maxLogs = 1
+}
+# Delete excess log folders
+$logFolders = Get-ChildItem -Path $(Join-Path $global:ScriptRoot $RotationFolderName) -Directory | Where-Object { $_.Name -match $folderPattern } | Sort-Object CreationTime -Descending | Select-Object -First $maxLogs
+foreach ($folder in (Get-ChildItem -Path $(Join-Path $global:ScriptRoot $RotationFolderName) -Directory | Where-Object { $_.Name -match $folderPattern })) {
+    if ($folder.FullName -notin $logFolders.FullName) {
+        Remove-Item -Path $folder.FullName -Recurse -Force
+    }
+}
 
 # Access variables from the config file
 # Notification Part
 $global:SendNotification = $config.Notification.SendNotification
-
-if ($global:OSType -eq 'DockerAlpine') {
-    $Platform = 'Docker'
-}
-elseif ($global:OSType -eq 'Unix' -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -notlike 'PSDocker-Alpine*') {
-    $Platform = 'Linux'
-}
-elseif ($global:OSType -eq 'Win32NT') {
-    $Platform = 'Windows'
-}
-Else {
-    $Platform = 'Unknown'
-}
 
 if ($env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker-Alpine*') {
     $global:NotifyUrl = $config.Notification.AppriseUrl
@@ -1573,46 +1649,6 @@ if (!$global:FavProvider) {
 $LibstoExclude = $config.PlexPart.LibstoExclude
 $PlexUrl = $config.PlexPart.PlexUrl
 # Prerequisites Part
-# Rotate logs
-$logFolder = Join-Path $global:ScriptRoot "Logs"
-$folderPattern = "Logs_*"
-$maxLogs = [int]$config.PrerequisitePart.maxLogs  # Cast to integer
-$RotationFolderName = "RotatedLogs"
-$RotationFolder = Join-Path $global:ScriptRoot $RotationFolderName
-# Create Folder if missing
-if (!(Test-Path -path $RotationFolder)) {
-    New-Item -ItemType Directory -Path $global:ScriptRoot -Name $RotationFolderName -Force | Out-Null
-}
-# Check if the cast was successful
-if ($null -eq $maxLogs) {
-    Write-Warning "Invalid value for maxLogs. Setting it to 1."
-    $maxLogs = 1
-}
-# Ensure $maxLogs is at least 1
-if ($maxLogs -le 0) {
-    Write-Warning "Invalid value for maxLogs. Setting it to 1."
-    $maxLogs = 1
-}
-
-# Check if the log folder exists
-if (Test-Path -Path $logFolder -PathType Container) {
-    # Rename the existing log folder with a timestamp
-    $timestamp = Get-Date -Format 'yyyyMMdd_HHmmss'
-    Rename-Item -Path $logFolder -NewName "Logs`_$timestamp"
-    if (!(Test-Path $RotationFolder)) {
-        New-Item -ItemType Directory -Path $global:ScriptRoot -Name $RotationFolderName -Force | Out-Null
-    }
-    Move-Item -Path "$logFolder`_$timestamp" $RotationFolder
-}
-
-# Delete excess log folders
-$logFolders = Get-ChildItem -Path $(Join-Path $global:ScriptRoot $RotationFolderName) -Directory | Where-Object { $_.Name -match $folderPattern } | Sort-Object CreationTime -Descending | Select-Object -First $maxLogs
-foreach ($folder in (Get-ChildItem -Path $(Join-Path $global:ScriptRoot $RotationFolderName) -Directory | Where-Object { $_.Name -match $folderPattern })) {
-    if ($folder.FullName -notin $logFolders.FullName) {
-        Remove-Item -Path $folder.FullName -Recurse -Force
-    }
-}
-
 $AssetPath = RemoveTrailingSlash $config.PrerequisitePart.AssetPath
 
 # Check if its a Network Share
@@ -1786,21 +1822,6 @@ Test-And-Download -url "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/
 Test-And-Download -url "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/backgroundoverlay.png" -destination (Join-Path $TempPath 'backgroundoverlay.png')
 Test-And-Download -url "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/Rocky.ttf" -destination (Join-Path $TempPath 'Rocky.ttf')
 
-# Cleanup old log files
-if ($Testing) {
-    $logFilesToDelete = @("Manuallog.log", "Testinglog.log", "ImageMagickCommands.log", "Scriptlog.log")
-}
-else {
-    $logFilesToDelete = @("Manuallog.log", "Testinglog.log", "ImageMagickCommands.log", "Scriptlog.log", "ImageChoices.csv")
-}
-
-foreach ($logFile in $logFilesToDelete) {
-    $logFilePath = Join-Path $LogsPath $logFile
-    if (Test-Path $logFilePath) {
-        Remove-Item $logFilePath
-    }
-}
-
 # Write log message
 $logMessage = "Old log files cleared..."
 Write-Log -Message $logMessage -Path $configLogging -Type Warning
@@ -1811,7 +1832,7 @@ Write-Log -Subtext "___________________________________________" -Path $configLo
 # Plex Part
 Write-Log -Subtext "API Part" -Path $configLogging -Type Trace
 Write-Log -Subtext "| TVDB API Key:                 $($global:tvdbapi[0..7] -join '')****" -Path $configLogging -Type Info
-Write-Log -Subtext "| TMDB API Token:               $($global:tmdbtoken[0..7] -join '')****" -Path $configLogging -Type Info
+Write-Log -Subtext "| TMDB API Read Access Token:   $($global:tmdbtoken[0..7] -join '')****" -Path $configLogging -Type Info
 Write-Log -Subtext "| Fanart API Key:               $($FanartTvAPIKey[0..7] -join '')****" -Path $configLogging -Type Info
 if ($PlexToken) {
     Write-Log -Subtext "| Plex Token:                   $($PlexToken[0..7] -join '')****" -Path $configLogging  -Type Info
@@ -3158,6 +3179,7 @@ else {
                 $global:TMDBfallbackposterurl = $null
                 $global:fanartfallbackposterurl = $null
                 $global:IsFallback = $null
+                $global:PlexartworkDownloaded = $null
     
                 $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}]'
                 if ($entry.title -match $cjkPattern) {
@@ -3255,28 +3277,28 @@ else {
                         Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                         if ($global:posterurl -like 'https://image.tmdb.org*') {
                             if ($global:PosterWithText) {
-                                Write-Log -Subtext "Downloading Poster with Text from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                Write-Log -Subtext "Downloading Poster with Text from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
                             }
                             Else {
-                                Write-Log -Subtext "Downloading Textless Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                Write-Log -Subtext "Downloading Textless Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
                             }
                         }
                         elseif ($global:posterurl -like 'https://assets.fanart.tv*') {
                             if ($global:PosterWithText) {
-                                Write-Log -Subtext "Downloading Poster with Text from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                Write-Log -Subtext "Downloading Poster with Text from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
                             }
                             Else {
-                                Write-Log -Subtext "Downloading Textless Poster from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                Write-Log -Subtext "Downloading Textless Poster from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
                             }
                         }
                         elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
-                            Write-Log -Subtext "Downloading Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                            Write-Log -Subtext "Downloading Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
                         }
                         elseif ($global:posterurl -like "$PlexUrl*") {
-                            Write-Log -Subtext "Downloading Poster from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                            Write-Log -Subtext "Downloading Poster from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
                         }
                         Else {
-                            Write-Log -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                            Write-Log -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
                         }
                         if ($global:ImageProcessing -eq 'true') {
                             Write-Log -Subtext "Processing Poster for: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
@@ -3430,28 +3452,28 @@ else {
                             Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                             if ($global:posterurl -like 'https://image.tmdb.org*') {
                                 if ($global:PosterWithText) {
-                                    Write-Log -Subtext "Downloading background with Text from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                    Write-Log -Subtext "Downloading background with Text from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
                                 }
                                 Else {
-                                    Write-Log -Subtext "Downloading Textless background from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                    Write-Log -Subtext "Downloading Textless background from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
                                 }
                             }
                             elseif ($global:posterurl -like 'https://assets.fanart.tv*') {
                                 if ($global:PosterWithText) {
-                                    Write-Log -Subtext "Downloading background with Text from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                    Write-Log -Subtext "Downloading background with Text from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
                                 }
                                 Else {
-                                    Write-Log -Subtext "Downloading Textless background from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                    Write-Log -Subtext "Downloading Textless background from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
                                 }
                             }
                             elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
-                                Write-Log -Subtext "Downloading background from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                Write-Log -Subtext "Downloading background from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
                             }
                             elseif ($global:posterurl -like "$PlexUrl*") {
-                                Write-Log -Subtext "Downloading Background from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                Write-Log -Subtext "Downloading Background from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
                             }
                             Else {
-                                Write-Log -Subtext "Downloading background from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                Write-Log -Subtext "Downloading background from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
                             }
                             if ($global:ImageProcessing -eq 'true') {
                                 Write-Log -Subtext "Processing background for: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
@@ -3534,7 +3556,7 @@ else {
             }
         }
         catch {
-            <#Do this if a terminating exception happens#>
+            Write-Log -Subtext "Could not query entries from movies array, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
         }
     }
 
@@ -3557,6 +3579,7 @@ else {
             $global:Fallback = $null
             $global:TextlessPoster = $null
             $global:tvdbalreadysearched = $null
+            $global:PlexartworkDownloaded = $null
     
             $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}]'
             if ($entry.title -match $cjkPattern) {
@@ -3653,28 +3676,28 @@ else {
                     Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                     if ($global:posterurl -like 'https://image.tmdb.org*') {
                         if ($global:PosterWithText) {
-                            Write-Log -Subtext "Downloading Poster with Text from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                            Write-Log -Subtext "Downloading Poster with Text from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
                         }
                         Else {
-                            Write-Log -Subtext "Downloading Textless Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                            Write-Log -Subtext "Downloading Textless Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
                         }
                     }
                     elseif ($global:posterurl -like 'https://assets.fanart.tv*') {
                         if ($global:PosterWithText) {
-                            Write-Log -Subtext "Downloading Poster with Text from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                            Write-Log -Subtext "Downloading Poster with Text from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
                         }
                         Else {
-                            Write-Log -Subtext "Downloading Textless Poster from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                            Write-Log -Subtext "Downloading Textless Poster from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
                         }
                     }
                     elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
-                        Write-Log -Subtext "Downloading Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                        Write-Log -Subtext "Downloading Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
                     }
                     elseif ($global:posterurl -like "$PlexUrl*") {
-                        Write-Log -Subtext "Downloading Poster from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                        Write-Log -Subtext "Downloading Poster from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
                     }
                     Else {
-                        Write-Log -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                        Write-Log -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
                         $global:IsFallback = $true
                     }
                     if ($global:ImageProcessing -eq 'true') {
@@ -3835,28 +3858,28 @@ else {
                         Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                         if ($global:posterurl -like 'https://image.tmdb.org*') {
                             if ($global:PosterWithText) {
-                                Write-Log -Subtext "Downloading background with Text from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                Write-Log -Subtext "Downloading background with Text from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
                             }
                             Else {
-                                Write-Log -Subtext "Downloading Textless background from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                Write-Log -Subtext "Downloading Textless background from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
                             }
                         }
                         elseif ($global:posterurl -like 'https://assets.fanart.tv*') {
                             if ($global:PosterWithText) {
-                                Write-Log -Subtext "Downloading background with Text from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                Write-Log -Subtext "Downloading background with Text from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
                             }
                             Else {
-                                Write-Log -Subtext "Downloading Textless background from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                Write-Log -Subtext "Downloading Textless background from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
                             }
                         }
                         elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
-                            Write-Log -Subtext "Downloading background from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                            Write-Log -Subtext "Downloading background from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
                         }
                         elseif ($global:posterurl -like "$PlexUrl*") {
-                            Write-Log -Subtext "Downloading Background from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                            Write-Log -Subtext "Downloading Background from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
                         }
                         Else {
-                            Write-Log -Subtext "Downloading background from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                            Write-Log -Subtext "Downloading background from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
                         }
                         if ($global:ImageProcessing -eq 'true') {
                             Write-Log -Subtext "Processing background for: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
@@ -4010,7 +4033,7 @@ else {
                         }
                         if ($global:TMDBSeasonFallback -and $global:PosterWithText) {
                             $global:posterurl = $global:TMDBSeasonFallback
-                            Write-Log -Subtext "Taking Season Poster with text as fallback from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                            Write-Log -Subtext "Taking Season Poster with text as fallback from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
                             $global:IsFallback = $true
                         }
                         if ($global:posterurl -or $global:PlexartworkDownloaded ) {
@@ -4020,31 +4043,31 @@ else {
                                 }
                                 Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                 if ($global:posterurl -like 'https://image.tmdb.org*') {
-                                    Write-Log -Subtext "Downloading Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                    Write-Log -Subtext "Downloading Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
                                     if ($global:FavProvider -ne 'TMDB') { 
                                         $global:IsFallback = $true
                                     }
                                 }
                                 elseif ($global:posterurl -like 'https://assets.fanart.tv*') {
-                                    Write-Log -Subtext "Downloading Poster from 'Fanart.tv'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                    Write-Log -Subtext "Downloading Poster from 'Fanart.tv'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
                                     if ($global:FavProvider -ne 'FANART') { 
                                         $global:IsFallback = $true
                                     }
                                 }
                                 elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
-                                    Write-Log -Subtext "Downloading Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                    Write-Log -Subtext "Downloading Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
                                     if ($global:FavProvider -ne 'TVDB') { 
                                         $global:IsFallback = $true
                                     }
                                 }
                                 elseif ($global:posterurl -like "$PlexUrl*") {
-                                    Write-Log -Subtext "Downloading Poster from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                    Write-Log -Subtext "Downloading Poster from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
                                     if ($global:FavProvider -ne 'PLEX') { 
                                         $global:IsFallback = $true
                                     }
                                 }
                                 Else {
-                                    Write-Log -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                    Write-Log -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
                                     $PosterUnknownCount++
                                     if ($global:FavProvider -ne 'IMDB') { 
                                         $global:IsFallback = $true
@@ -4098,32 +4121,32 @@ else {
                                 }
                                 Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                 if ($global:posterurl -like 'https://image.tmdb.org*') {
-                                    Write-Log -Subtext "Downloading Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                    Write-Log -Subtext "Downloading Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
                                     if ($global:FavProvider -ne 'TMDB') { 
                                         $global:IsFallback = $true
                                     }
                                 }
                                 elseif ($global:posterurl -like 'https://assets.fanart.tv*') {
-                                    Write-Log -Subtext "Downloading Poster from 'Fanart.tv'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                    Write-Log -Subtext "Downloading Poster from 'Fanart.tv'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
                                     $PosterUnknownCount++
                                     if ($global:FavProvider -ne 'FANART') { 
                                         $global:IsFallback = $true
                                     }
                                 }
                                 elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
-                                    Write-Log -Subtext "Downloading Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                    Write-Log -Subtext "Downloading Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
                                     if ($global:FavProvider -ne 'TVDB') { 
                                         $global:IsFallback = $true
                                     }
                                 }
                                 elseif ($global:posterurl -like "$PlexUrl*") {
-                                    Write-Log -Subtext "Downloading Poster from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                    Write-Log -Subtext "Downloading Poster from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
                                     if ($global:FavProvider -ne 'PLEX') { 
                                         $global:IsFallback = $true
                                     }
                                 }
                                 Else {
-                                    Write-Log -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                    Write-Log -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
                                     $PosterUnknownCount++
                                     if ($global:FavProvider -ne 'IMDB') { 
                                         $global:IsFallback = $true
@@ -4329,19 +4352,19 @@ else {
                                         }
                                         Write-Log -Subtext "Title Card url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                         if ($global:posterurl -like 'https://image.tmdb.org*') {
-                                            Write-Log -Subtext "Downloading Title Card from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                            Write-Log -Subtext "Downloading Title Card from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
                                             if ($global:FavProvider -ne 'TMDB') { 
                                                 $global:IsFallback = $true
                                             }
                                         }
                                         if ($global:posterurl -like 'https://artworks.thetvdb.com*') {
-                                            Write-Log -Subtext "Downloading Title Card from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                            Write-Log -Subtext "Downloading Title Card from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
                                             if ($global:FavProvider -ne 'TVDB') { 
                                                 $global:IsFallback = $true
                                             }
                                         }
                                         if ($global:posterurl -like "$PlexUrl*") {
-                                            Write-Log -Subtext "Downloading Title Card from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                            Write-Log -Subtext "Downloading Title Card from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
                                             if ($global:FavProvider -ne 'PLEX') { 
                                                 $global:IsFallback = $true
                                             }
@@ -4407,24 +4430,32 @@ else {
                                         }
                                     }
                                     Else {
-                                        if (!$global:PlexartworkDownloaded) {
-                                            Invoke-WebRequest -Uri $global:posterurl -OutFile $EpisodeImage
+                                        try {
+                                            if (!$global:PlexartworkDownloaded) {
+                                                $response = Invoke-WebRequest -Uri $global:posterurl -OutFile $EpisodeImage -ErrorAction Stop
+                                            }
+                                        }
+                                        catch {
+                                            # Not sure how fancy we get here to fall back to another provider, or just log the error and move on
+                                            $statusCode = $_.Exception.Response.StatusCode.value__
+                                            Write-Log -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                                            $errorCount++
                                         }
                                         Write-Log -Subtext "Title Card url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                         if ($global:posterurl -like 'https://image.tmdb.org*') {
-                                            Write-Log -Subtext "Downloading Title Card from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                            Write-Log -Subtext "Downloading Title Card from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
                                             if ($global:FavProvider -ne 'TMDB') { 
                                                 $global:IsFallback = $true
                                             }
                                         }
                                         if ($global:posterurl -like 'https://artworks.thetvdb.com*') {
-                                            Write-Log -Subtext "Downloading Title Card from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                            Write-Log -Subtext "Downloading Title Card from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
                                             if ($global:FavProvider -ne 'TVDB') { 
                                                 $global:IsFallback = $true
                                             }
                                         }
                                         if ($global:posterurl -like "$PlexUrl*") {
-                                            Write-Log -Subtext "Downloading Title Card from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type debug
+                                            Write-Log -Subtext "Downloading Title Card from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
                                             if ($global:FavProvider -ne 'PLEX') { 
                                                 $global:IsFallback = $true
                                             }
