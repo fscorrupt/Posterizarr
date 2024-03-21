@@ -3,7 +3,7 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.20"
+$CurrentScriptVersion = "1.0.21"
 $global:HeaderWritten = $false
 
 $global:OSType = [System.Environment]::OSVersion.Platform
@@ -146,6 +146,7 @@ function GetTMDBMoviePoster {
         }
         catch {
             Write-Log -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+            $errorCount++
         }
         if ($response) {
             if ($response.images.posters) {
@@ -181,6 +182,7 @@ function GetTMDBMoviePoster {
         }
         catch {
             Write-Log -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+            $errorCount++
         }
         if ($response) {
             if ($response.images.posters) {
@@ -222,6 +224,7 @@ function GetTMDBMovieBackground {
         }
         catch {
             Write-Log -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+            $errorCount++
         }
         if ($response) {
             if ($response.images.backdrops) {
@@ -263,6 +266,7 @@ function GetTMDBMovieBackground {
         }
         catch {
             Write-Log -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+            $errorCount++
         }
         if ($response) {
             if ($response.images.backdrops) {
@@ -314,6 +318,7 @@ function GetTMDBShowPoster {
         }
         catch {
             Write-Log -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+            $errorCount++
         }
         if ($response) {
             if ($response.images.posters) {
@@ -350,6 +355,7 @@ function GetTMDBShowPoster {
         }
         catch {
             Write-Log -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+            $errorCount++
         }
         if ($response) {
             if ($response.images.posters) {
@@ -391,6 +397,7 @@ function GetTMDBSeasonPoster {
         }
         catch {
             Write-Log -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+            $errorCount++
         }
         if ($response) {
             if ($response.posters) {
@@ -432,6 +439,7 @@ function GetTMDBSeasonPoster {
         }
         catch {
             Write-Log -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+            $errorCount++
         }
         if ($responseBackup) {
             if ($responseBackup.images.posters) {
@@ -505,6 +513,7 @@ function GetTMDBShowBackground {
         }
         catch {
             Write-Log -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+            $errorCount++
         }
         if ($response) {
             if ($response.images.backdrops) {
@@ -550,6 +559,7 @@ function GetTMDBShowBackground {
         }
         catch {
             Write-Log -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+            $errorCount++
         }
         if ($response) {
             if ($response.images.backdrops) {
@@ -600,6 +610,7 @@ function GetTMDBTitleCard {
     }
     catch {
         Write-Log -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+        $errorCount++
     }
     if ($response) {
         if ($response.stills) {
@@ -977,6 +988,7 @@ function GetTVDBMoviePoster {
             }
             catch {
                 Write-Log -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                $errorCount++
             }
             if ($response) {
                 if ($response.data.artworks) {
@@ -999,6 +1011,7 @@ function GetTVDBMoviePoster {
             }
             catch {
                 Write-Log -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                $errorCount++
             }
             if ($response) {
                 if ($response.data.artworks) {
@@ -1044,6 +1057,7 @@ function GetTVDBMovieBackground {
             }
             catch {
                 Write-Log -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                $errorCount++
             }
             if ($response) {
                 if ($response.data.artworks) {
@@ -1066,6 +1080,7 @@ function GetTVDBMovieBackground {
             }
             catch {
                 Write-Log -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                $errorCount++
             }
             if ($response) {
                 if ($response.data.artworks) {
@@ -1114,6 +1129,7 @@ function GetTVDBShowPoster {
             }
             catch {
                 Write-Log -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                $errorCount++
             }
             if ($response) {
                 if ($response.data) {
@@ -1144,6 +1160,7 @@ function GetTVDBShowPoster {
             }
             catch {
                 Write-Log -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                $errorCount++
             }
             if ($response) {
                 if ($response.data) {
@@ -1188,6 +1205,7 @@ function GetTVDBSeasonPoster {
         }
         catch {
             Write-Log -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+            $errorCount++
         }
         if ($response) {
             if ($response.data.seasons) {
@@ -1201,6 +1219,7 @@ function GetTVDBSeasonPoster {
                 }
                 catch {
                     Write-Log -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                    $errorCount++
                 }
                 if ($Seasonresponse) {
                     foreach ($lang in $global:PreferredLanguageOrderTVDB) {
@@ -1247,6 +1266,7 @@ function GetTVDBShowBackground {
             }
             catch {
                 Write-Log -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                $errorCount++
             }
             if ($response) {
                 if ($response.data) {
@@ -1277,6 +1297,7 @@ function GetTVDBShowBackground {
             }
             catch {
                 Write-Log -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                $errorCount++
             }
             if ($response) {
                 if ($response.data) {
@@ -1324,6 +1345,7 @@ function GetTVDBTitleCard {
         }
         catch {
             Write-Log -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+            $errorCount++
         }
         if ($response) {
             if ($response.data.episodes) {
@@ -3275,8 +3297,15 @@ else {
                             $joinedTitle = $Titletext
                         }
                         if ($global:posterurl -or $global:PlexartworkDownloaded ) {
-                            if (!$global:PlexartworkDownloaded) {
-                                Invoke-WebRequest -Uri $global:posterurl -OutFile $PosterImage
+                            try {
+                                if (!$global:PlexartworkDownloaded) {
+                                    $response = Invoke-WebRequest -Uri $global:posterurl -OutFile $PosterImage -ErrorAction Stop
+                                }
+                            }
+                            catch {
+                                $statusCode = $_.Exception.Response.StatusCode.value__
+                                Write-Log -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                                $errorCount++
                             }
                             Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                             if ($global:posterurl -like 'https://image.tmdb.org*') {
@@ -3452,8 +3481,15 @@ else {
                             $joinedTitle = $Titletext
                         }
                         if ($global:posterurl -or $global:PlexartworkDownloaded ) {
-                            if (!$global:PlexartworkDownloaded) {
-                                Invoke-WebRequest -Uri $global:posterurl -OutFile $backgroundImage
+                            try {
+                                if (!$global:PlexartworkDownloaded) {
+                                    $response = Invoke-WebRequest -Uri $global:posterurl -OutFile $BackgroundImage -ErrorAction Stop
+                                }
+                            }
+                            catch {
+                                $statusCode = $_.Exception.Response.StatusCode.value__
+                                Write-Log -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                                $errorCount++
                             }
                             Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                             if ($global:posterurl -like 'https://image.tmdb.org*') {
@@ -3563,6 +3599,7 @@ else {
         }
         catch {
             Write-Log -Subtext "Could not query entries from movies array, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+            $errorCount++
         }
     }
 
@@ -3678,8 +3715,15 @@ else {
                         $global:posterurl = $global:fanartfallbackposterurl
                     }
                     if ($global:posterurl -or $global:PlexartworkDownloaded ) {
-                        if (!$global:PlexartworkDownloaded) {
-                            Invoke-WebRequest -Uri $global:posterurl -OutFile $PosterImage
+                        try {
+                            if (!$global:PlexartworkDownloaded) {
+                                $response = Invoke-WebRequest -Uri $global:posterurl -OutFile $PosterImage -ErrorAction Stop
+                            }
+                        }
+                        catch {
+                            $statusCode = $_.Exception.Response.StatusCode.value__
+                            Write-Log -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                            $errorCount++
                         }
                         Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                         if ($global:posterurl -like 'https://image.tmdb.org*') {
@@ -3861,8 +3905,15 @@ else {
                         $joinedTitle = $Titletext
                     }
                     if ($global:posterurl -or $global:PlexartworkDownloaded ) {
-                        if (!$global:PlexartworkDownloaded) {
-                            Invoke-WebRequest -Uri $global:posterurl -OutFile $backgroundImage
+                        try {
+                            if (!$global:PlexartworkDownloaded) {
+                                $response = Invoke-WebRequest -Uri $global:posterurl -OutFile $BackgroundImage -ErrorAction Stop
+                            }
+                        }
+                        catch {
+                            $statusCode = $_.Exception.Response.StatusCode.value__
+                            Write-Log -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                            $errorCount++
                         }
                         Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                         if ($global:posterurl -like 'https://image.tmdb.org*') {
@@ -4047,8 +4098,15 @@ else {
                         }
                         if ($global:posterurl -or $global:PlexartworkDownloaded ) {
                             if ($global:ImageProcessing -eq 'true') {
-                                if (!$global:PlexartworkDownloaded) {
-                                    Invoke-WebRequest -Uri $global:posterurl -OutFile $SeasonImage
+                                try {
+                                    if (!$global:PlexartworkDownloaded) {
+                                        $response = Invoke-WebRequest -Uri $global:posterurl -OutFile $SeasonImage -ErrorAction Stop
+                                    }
+                                }
+                                catch {
+                                    $statusCode = $_.Exception.Response.StatusCode.value__
+                                    Write-Log -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                                    $errorCount++
                                 }
                                 Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                 if ($global:posterurl -like 'https://image.tmdb.org*') {
@@ -4125,8 +4183,15 @@ else {
                                 }
                             }
                             Else {
-                                if (!$global:PlexartworkDownloaded) {
-                                    Invoke-WebRequest -Uri $global:posterurl -OutFile $SeasonImage
+                                try {
+                                    if (!$global:PlexartworkDownloaded) {
+                                        $response = Invoke-WebRequest -Uri $global:posterurl -OutFile $SeasonImage -ErrorAction Stop
+                                    }
+                                }
+                                catch {
+                                    $statusCode = $_.Exception.Response.StatusCode.value__
+                                    Write-Log -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                                    $errorCount++
                                 }
                                 Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                 if ($global:posterurl -like 'https://image.tmdb.org*') {
@@ -4356,8 +4421,15 @@ else {
                                 }
                                 if ($global:posterurl -or $global:PlexartworkDownloaded ) {
                                     if ($global:ImageProcessing -eq 'true') {
-                                        if (!$global:PlexartworkDownloaded) {
-                                            Invoke-WebRequest -Uri $global:posterurl -OutFile $EpisodeImage
+                                        try {
+                                            if (!$global:PlexartworkDownloaded) {
+                                                $response = Invoke-WebRequest -Uri $global:posterurl -OutFile $EpisodeImage -ErrorAction Stop
+                                            }
+                                        }
+                                        catch {
+                                            $statusCode = $_.Exception.Response.StatusCode.value__
+                                            Write-Log -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                                            $errorCount++
                                         }
                                         Write-Log -Subtext "Title Card url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                         if ($global:posterurl -like 'https://image.tmdb.org*') {
@@ -4445,7 +4517,6 @@ else {
                                             }
                                         }
                                         catch {
-                                            # Not sure how fancy we get here to fall back to another provider, or just log the error and move on
                                             $statusCode = $_.Exception.Response.StatusCode.value__
                                             Write-Log -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
                                             $errorCount++
