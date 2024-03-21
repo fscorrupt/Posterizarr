@@ -3,18 +3,9 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.21"
+$CurrentScriptVersion = "1.0.22"
 $global:HeaderWritten = $false
 
-$global:OSType = [System.Environment]::OSVersion.Platform
-if ($env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker-Alpine*') {
-    $global:OSType = "DockerAlpine"
-    $ProgressPreference = 'SilentlyContinue'
-    $global:ScriptRoot = "./config"
-}
-Else {
-    $global:ScriptRoot = $PSScriptRoot
-}
 #################
 # What you need #
 #####################################################################################################################
@@ -24,6 +15,17 @@ Else {
 # ImageMagick                   -> https://imagemagick.org/archive/binaries/ImageMagick-7.1.1-27-Q16-HDRI-x64-dll.exe
 # FanartTvAPI Module            -> https://github.com/Celerium/FanartTV-PowerShellWrapper
 #####################################################################################################################
+function Set-OSTypeAndScriptRoot {
+    if ($env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker-Alpine*') {
+        $global:OSType = "DockerAlpine"
+        $ProgressPreference = 'SilentlyContinue'
+        $global:ScriptRoot = "./config"
+    }
+    Else {
+        $global:ScriptRoot = $PSScriptRoot
+        $global:OSType = [System.Environment]::OSVersion.Platform
+    }
+}
 function Write-Log {
     [CmdletBinding()]
     param(
@@ -1523,28 +1525,37 @@ function CheckJsonPaths {
     } 
 }
 
+function Get-Platform {
+    if ($global:OSType -eq 'DockerAlpine') {
+        return 'Docker'
+    }
+    elseif ($global:OSType -eq 'Unix' -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -notlike 'PSDocker-Alpine*') {
+        return 'Linux'
+    }
+    elseif ($global:OSType -eq 'Win32NT') {
+        return 'Windows'
+    }
+    else {
+        return 'Unknown'
+    }
+}
+
+function Get-LatestScriptVersion {
+    try {
+        return Invoke-RestMethod -Uri "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/Release.txt" -Method Get -ErrorAction Stop
+    }
+    catch {
+        Write-Log -Subtext "Could not query latest script version, Error: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+        return $null
+    }
+}
+##### START #####
+# Set some global vars
+Set-OSTypeAndScriptRoot
 # Get platform
-if ($global:OSType -eq 'DockerAlpine') {
-    $Platform = 'Docker'
-}
-elseif ($global:OSType -eq 'Unix' -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -notlike 'PSDocker-Alpine*') {
-    $Platform = 'Linux'
-}
-elseif ($global:OSType -eq 'Win32NT') {
-    $Platform = 'Windows'
-}
-Else {
-    $Platform = 'Unknown'
-}
-
+$Platform = Get-Platform
 # Get Latest Script Version
-try {
-    $LatestScriptVersion = Invoke-RestMethod -Uri "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/Release.txt" -Method Get -ErrorAction Stop
-}
-catch {
-    Write-Log -Subtext "Could not query latest script version, Error: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
-}
-
+$LatestScriptVersion = Get-LatestScriptVersion
 
 $startTime = Get-Date
 # Rotate logs before doing anything!
