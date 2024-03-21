@@ -5,7 +5,6 @@ param (
 
 $CurrentScriptVersion = "1.0.18"
 $global:HeaderWritten = $false
-$maxLogs = "1"
 
 $global:OSType = [System.Environment]::OSVersion.Platform
 if ($env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker-Alpine*') {
@@ -61,7 +60,10 @@ function Write-Log {
  | |_) | |/ _ \ \/ / | |_) / _ \/ __| __/ _ \ '__| | |\/| |/ _``` | |/ / _ \ '__|
  |  __/| |  __/>  <  |  __/ (_) \__ \ ||  __/ |    | |  | | (_| |   <  __/ |   
  |_|   |_|\___/_/\_\ |_|   \___/|___/\__\___|_|    |_|  |_|\__,_|_|\_\___|_|   
-
+ 
+ Current Version: $CurrentScriptVersion
+ Latest Version: $LatestScriptVersion 
+ Platform: $Platform
 ===============================================================================
 "@
         Write-Host $Header
@@ -143,6 +145,7 @@ function GetTMDBMoviePoster {
             $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($global:tmdbid)?append_to_response=images&language=xx&include_image_language=en,null,de" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue    
         }
         catch {
+            Write-Log -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
         }
         if ($response) {
             if ($response.images.posters) {
@@ -177,6 +180,7 @@ function GetTMDBMoviePoster {
             $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($global:tmdbid)?append_to_response=images&language=$($PreferedLanguageOrder[0])&include_image_language=$($global:PreferedLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue    
         }
         catch {
+            Write-Log -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
         }
         if ($response) {
             if ($response.images.posters) {
@@ -217,6 +221,7 @@ function GetTMDBMovieBackground {
             $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($global:tmdbid)?append_to_response=images&language=xx&include_image_language=en,null,de" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue    
         }
         catch {
+            Write-Log -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
         }
         if ($response) {
             if ($response.images.backdrops) {
@@ -257,6 +262,7 @@ function GetTMDBMovieBackground {
             $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($global:tmdbid)?append_to_response=images&language=$($PreferedLanguageOrder[0])&include_image_language=$($global:PreferedLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue    
         }
         catch {
+            Write-Log -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
         }
         if ($response) {
             if ($response.images.backdrops) {
@@ -307,6 +313,7 @@ function GetTMDBShowPoster {
             $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=xx&include_image_language=en,null,de" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue    
         }
         catch {
+            Write-Log -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
         }
         if ($response) {
             if ($response.images.posters) {
@@ -342,6 +349,7 @@ function GetTMDBShowPoster {
             $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=$($PreferedLanguageOrder[0])&include_image_language=$($global:PreferedLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
         }
         catch {
+            Write-Log -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
         }
         if ($response) {
             if ($response.images.posters) {
@@ -382,6 +390,7 @@ function GetTMDBSeasonPoster {
             $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)/season/$global:SeasonNumber/images?append_to_response=images&language=xx&include_image_language=en,null,de" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue            
         }
         catch {
+            Write-Log -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
         }
         if ($response) {
             if ($response.posters) {
@@ -422,6 +431,7 @@ function GetTMDBSeasonPoster {
             }
         }
         catch {
+            Write-Log -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
         }
         if ($responseBackup) {
             if ($responseBackup.images.posters) {
@@ -494,6 +504,7 @@ function GetTMDBShowBackground {
             $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=xx&include_image_language=en,null,de" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue    
         }
         catch {
+            Write-Log -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
         }
         if ($response) {
             if ($response.images.backdrops) {
@@ -538,6 +549,7 @@ function GetTMDBShowBackground {
             $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=$($PreferedLanguageOrder[0])&include_image_language=$($global:PreferedLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue    
         }
         catch {
+            Write-Log -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
         }
         if ($response) {
             if ($response.images.backdrops) {
@@ -587,6 +599,7 @@ function GetTMDBTitleCard {
         $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)/season/$($global:season_number)/episode/$($global:episodenumber)/images?append_to_response=images&language=xx&include_image_language=en,null,de" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue            
     }
     catch {
+        Write-Log -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
     }
     if ($response) {
         if ($response.stills) {
@@ -963,6 +976,7 @@ function GetTVDBMoviePoster {
                 $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/movies/$($global:tvdbid)/extended" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
             }
             catch {
+                Write-Log -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
             }
             if ($response) {
                 if ($response.data.artworks) {
@@ -984,6 +998,7 @@ function GetTVDBMoviePoster {
                 $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/movies/$($global:tvdbid)/extended" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
             }
             catch {
+                Write-Log -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
             }
             if ($response) {
                 if ($response.data.artworks) {
@@ -1028,6 +1043,7 @@ function GetTVDBMovieBackground {
                 $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/movies/$($global:tvdbid)/extended" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
             }
             catch {
+                Write-Log -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
             }
             if ($response) {
                 if ($response.data.artworks) {
@@ -1049,6 +1065,7 @@ function GetTVDBMovieBackground {
                 $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/movies/$($global:tvdbid)/extended" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
             }
             catch {
+                Write-Log -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
             }
             if ($response) {
                 if ($response.data.artworks) {
@@ -1096,6 +1113,7 @@ function GetTVDBShowPoster {
                 $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/series/$($global:tvdbid)/artworks" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
             }
             catch {
+                Write-Log -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
             }
             if ($response) {
                 if ($response.data) {
@@ -1125,6 +1143,7 @@ function GetTVDBShowPoster {
                 $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/series/$($global:tvdbid)/artworks" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
             }
             catch {
+                Write-Log -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
             }
             if ($response) {
                 if ($response.data) {
@@ -1168,6 +1187,7 @@ function GetTVDBSeasonPoster {
             $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/series/$($global:tvdbid)/extended" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
         }
         catch {
+            Write-Log -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
         }
         if ($response) {
             if ($response.data.seasons) {
@@ -1180,6 +1200,7 @@ function GetTVDBSeasonPoster {
                     $Seasonresponse = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/seasons/$($SeasonID.id)/extended" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
                 }
                 catch {
+                    Write-Log -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
                 }
                 if ($Seasonresponse) {
                     foreach ($lang in $global:PreferedLanguageOrderTVDB) {
@@ -1225,6 +1246,7 @@ function GetTVDBShowBackground {
                 $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/series/$($global:tvdbid)/artworks" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
             }
             catch {
+                Write-Log -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
             }
             if ($response) {
                 if ($response.data) {
@@ -1254,6 +1276,7 @@ function GetTVDBShowBackground {
                 $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/series/$($global:tvdbid)/artworks" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
             }
             catch {
+                Write-Log -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
             }
             if ($response) {
                 if ($response.data) {
@@ -1300,6 +1323,7 @@ function GetTVDBTitleCard {
             $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/series/$($global:tvdbid)/episodes/default?" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
         }
         catch {
+            Write-Log -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
         }
         if ($response) {
             if ($response.data.episodes) {
@@ -1477,6 +1501,29 @@ function CheckJsonPaths {
     } 
 }
 
+# Get platform
+if ($global:OSType -eq 'DockerAlpine') {
+    $Platform = 'Docker'
+}
+elseif ($global:OSType -eq 'Unix' -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -notlike 'PSDocker-Alpine*') {
+    $Platform = 'Linux'
+}
+elseif ($global:OSType -eq 'Win32NT') {
+    $Platform = 'Windows'
+}
+Else {
+    $Platform = 'Unknown'
+}
+
+# Get Latest Script Version
+try {
+    $LatestScriptVersion = Invoke-RestMethod -Uri "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/Release.txt" -Method Get -ErrorAction Stop
+}
+catch {
+    Write-Log -Subtext "Could not query latest script version, Error: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+}
+
+
 $startTime = Get-Date
 # Rotate logs before doing anything!
 $logFolder = Join-Path $global:ScriptRoot "Logs"
@@ -1514,7 +1561,6 @@ if (!(Test-Path $(Join-Path $global:ScriptRoot 'config.json'))) {
 CheckJson -jsonExampleUrl "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/config.example.json" -jsonFilePath $(Join-Path $global:ScriptRoot 'config.json')
 
 # Check if Script is Latest
-$LatestScriptVersion = Invoke-RestMethod -Uri "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/Release.txt" -Method Get -ErrorAction Stop
 if ($CurrentScriptVersion -eq $LatestScriptVersion) {
     Write-Log -Message "You are Running Version - v$CurrentScriptVersion" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
 }
@@ -1547,19 +1593,6 @@ foreach ($folder in (Get-ChildItem -Path $(Join-Path $global:ScriptRoot $Rotatio
 # Access variables from the config file
 # Notification Part
 $global:SendNotification = $config.Notification.SendNotification
-
-if ($global:OSType -eq 'DockerAlpine') {
-    $Platform = 'Docker'
-}
-elseif ($global:OSType -eq 'Unix' -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -notlike 'PSDocker-Alpine*') {
-    $Platform = 'Linux'
-}
-elseif ($global:OSType -eq 'Win32NT') {
-    $Platform = 'Windows'
-}
-Else {
-    $Platform = 'Unknown'
-}
 
 if ($env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker-Alpine*') {
     $global:NotifyUrl = $config.Notification.AppriseUrl
@@ -3523,7 +3556,7 @@ else {
             }
         }
         catch {
-            <#Do this if a terminating exception happens#>
+            Write-Log -Subtext "Could not query entries from movies array, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
         }
     }
 
