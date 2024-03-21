@@ -112,15 +112,15 @@
 6. The final step is to set a schedule and let the script run.
     - You can also trigger the poster creation on-demand, like this:
         - Linux:
-        ```
-        cd /opt/appdata/Plex-Poster-Maker
-        pwsh PlexPosterMaker.ps1
-        ```
+            ```
+            cd /opt/appdata/Plex-Poster-Maker
+            pwsh PlexPosterMaker.ps1
+            ```
         - Windows:
-        ```
-        cd C:\Github\Plex-Poster-Maker
-        .\PlexPosterMaker.ps1
-        ```
+            ```
+            cd C:\Github\Plex-Poster-Maker
+            .\PlexPosterMaker.ps1
+            ```
     - Configure Scheduled runs:
     
         Linux:
@@ -139,31 +139,31 @@
 ## Docker
 1. Adjust the [docker-compose.yml](https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/docker-compose.yml) to fit your environment.
     - Required environment variables and descriptions can be found [here](https://github.com/fscorrupt/Plex-Poster-Maker?tab=readme-ov-file#docker)
-    ```yml
-    ---
-    version: "3"
-    services:
-    ppm:
-        hostname: "ppm"
-        container_name: "ppm"
-        environment:
-        - "PGID=1000"
-        - "PUID=1000"
-        - "TZ=Europe/Berlin"
-        - "UMASK=022"
-        - "TERM=xterm"
-        - "RUN_TIME=10:30,19:30"
-        image: "ghcr.io/fscorrupt/docker-ppm:latest"
-        restart: "unless-stopped"
+        ```yml
+        ---
+        version: "3"
+        services:
+        ppm:
+            hostname: "ppm"
+            container_name: "ppm"
+            environment:
+            - "PGID=1000"
+            - "PUID=1000"
+            - "TZ=Europe/Berlin"
+            - "UMASK=022"
+            - "TERM=xterm"
+            - "RUN_TIME=10:30,19:30"
+            image: "ghcr.io/fscorrupt/docker-ppm:latest"
+            restart: "unless-stopped"
+            networks:
+            - "proxy"
+            volumes:
+            - "/opt/appdata/ppm:/config:rw"
         networks:
-        - "proxy"
-        volumes:
-        - "/opt/appdata/ppm:/config:rw"
-    networks:
-    proxy:
-        driver: bridge
-        external: true
-    ```
+        proxy:
+            driver: bridge
+            external: true
+        ```
 2. Switch to the Directory where you want to build/start the container and place the `docker-compose.yml` there.
     - Linux:
         ```
@@ -194,13 +194,14 @@
             - **Important** - you have to use double `\\` in json.
 1. After that it is recommended to run the script in `-Testing` Mode.
     
-    *In this Mode, the script will create sample posters according to the config settings so you can see how it would look before you mass run it against your libraries. These samples will be created in the `test` directory*
+    > [!TIP]
+    >*In this Mode, the script will create sample posters according to the config settings so you can see how it would look before you mass run it against your libraries. These samples will be created in the `test` directory*
     
-    *You can find examples and more information here:* 
+    >*You can find examples and more information here:* 
     
-    *[Info about Testing mode](https://github.com/fscorrupt/Plex-Poster-Maker?tab=readme-ov-file#testing-mode)*
+    >*[Info about Testing mode](https://github.com/fscorrupt/Plex-Poster-Maker?tab=readme-ov-file#testing-mode)*
     
-    *[Example Images](https://github.com/fscorrupt/Plex-Poster-Maker?tab=readme-ov-file#images-from-testing-mode)*
+    >*[Example Images](https://github.com/fscorrupt/Plex-Poster-Maker?tab=readme-ov-file#images-from-testing-mode)*
     
     - Docker 
     
