@@ -1,6 +1,6 @@
 # Plex Poster Maker
 
-This PowerShell script automates the process of generating images for your Plex media library. Leveraging information from your Plex library, such as movie or show titles | season and episode data, it fetches relevant artwork from Fanart.tv, TMDB, TVDB, Plex and IMDB. The script is able to focus on specific language to grab; by default, it is `xx`, which means textless, and then fallbacks to `en` if not available. This is a setting a user can decide on, either to focus on textless or on text posters. It also offers both automatic and manual modes for generating posters, accommodating custom creations that cannot be automated.
+This PowerShell script automates the process of generating images for your Plex media library. Leveraging information from your Plex library, such as movie or show titles, season and episode data, it fetches relevant artwork from Fanart.tv, TMDB, TVDB, Plex and IMDB. The script is able to focus on artwork with specific languages to grab. By default, textless artwork `xx` is retrieved and will fall back to `en` if textless is not found. This is a setting a user can decide on, either to focus on textless or on text posters. It also offers both automatic and manual modes for generating posters. The manual mode can accommodate custom creations that cannot be bulk retrieved.
 
 > [!NOTE]
 Plex Poster Maker is cross-platform ready, meaning it can run on both Linux, Docker and on Windows operating systems.
@@ -12,11 +12,11 @@ Plex Poster Maker is cross-platform ready, meaning it can run on both Linux, Doc
 >- TitleCards
 
 > [!TIP]
-> Here is a starting guide [walkthrough.md](walkthrough.md)
+> Here is an installation [walkthrough](walkthrough.md)
 
 
 > [!WARNING]
->- The `Temp` Folder gets cleared on every Script run, so do not put files into it.
+>- The `temp` Folder gets cleared on every Script run, so do not put files into it.
 >- **[Apprise](https://github.com/caronc/apprise/wiki)** integration only works in docker container, please use discord on other platforms **(discord also works on docker)**.
 >- **Please start the script as Admin on first run, otherwise the script is not able to install the prerequisites.**
 
@@ -44,6 +44,7 @@ Plex Poster Maker is cross-platform ready, meaning it can run on both Linux, Doc
 >Before utilizing the script, ensure the following prerequisites are installed and configured:
 
 >- **TMDB API Read Access Token:** [Obtain TMDB API Token](https://www.themoviedb.org/settings/api)
+    - **NOTE** the **TMDB API Read Access Token** is the really, really long one
 >- **Fanart Personal API Key:** [Obtain Fanart API Key](https://fanart.tv/get-an-api-key)
 >- **TVDB API Key:** [Obtain TVDB API Key](https://thetvdb.com/api-information/signup)
     - **Do not** use `"Legacy API Key"`, it only works with a Project Api Key.
