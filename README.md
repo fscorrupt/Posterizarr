@@ -44,6 +44,7 @@ Plex Poster Maker is cross-platform ready, meaning it can run on both Linux, Doc
 >Before utilizing the script, ensure the following prerequisites are installed and configured:
 
 >- **TMDB API Read Access Token:** [Obtain TMDB API Token](https://www.themoviedb.org/settings/api)
+    - **NOTE** the **TMDB API Read Access Token** is the really, really long one
 >- **Fanart Personal API Key:** [Obtain Fanart API Key](https://fanart.tv/get-an-api-key)
 >- **TVDB API Key:** [Obtain TVDB API Key](https://thetvdb.com/api-information/signup)
     - **Do not** use `"Legacy API Key"`, it only works with a Project Api Key.
