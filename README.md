@@ -3,7 +3,7 @@
 This PowerShell script automates the process of generating images for your Plex media library. Leveraging information from your Plex library, such as movie or show titles, season and episode data, it fetches relevant artwork from Fanart.tv, TMDB, TVDB, Plex and IMDB. The script is able to focus on artwork with specific languages to grab. By default, textless artwork `xx` is retrieved and will fall back to `en` if textless is not found. This is a setting a user can decide on, either to focus on textless or on text posters. It also offers both automatic and manual modes for generating posters. The manual mode can accommodate custom creations that cannot be bulk retrieved.
 
 > [!NOTE]
-Plex Poster Maker is cross-platform ready, meaning it can run on both Linux, Docker and on Windows operating systems.
+Plex Poster Maker is cross-platform ready, meaning it can run on Linux, Docker (Alpine v3.17) and on Windows operating systems.
 > 
 > **Suported Poster Types:**
 >- Movie/Show Posters
@@ -54,7 +54,7 @@ Plex Poster Maker is cross-platform ready, meaning it can run on both Linux, Doc
     - **Do not** use `"Legacy API Key"`, it only works with a Project Api Key.
 >- **ImageMagick:** 
     - **Version 7.x is required** - The script handles downloading and using a portable version of ImageMagick for all platforms. **(You may need to run the Script as Admin on first run)**. If you prefer to reference your own installation or prefer to download and install it yourself, goto: [Download ImageMagick](https://imagemagick.org/script/download.php)
->- **Powershell Version:** 5.x or higher, ps core 6.x/7.x also works.
+>- **Powershell Version:** 5.x or higher (Docker Image uses v7.4.1).
 
 ## Configuration:
 
