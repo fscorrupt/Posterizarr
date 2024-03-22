@@ -1699,7 +1699,7 @@ function Check-PlexAccess {
         Write-Log -Message "Plex token found, checking access now..." -Path $configLogging -Type Info
         if ((Invoke-WebRequest "$PlexUrl/library/sections/?X-Plex-Token=$PlexToken").StatusCode -eq 200) {
             Write-Log -Subtext "Plex access is working..." -Path $configLogging -Type Success
-            [xml]$Libs = (Invoke-WebRequest "$PlexUrl/library/sections/?X-Plex-Token=$PlexToken").content
+            return (Invoke-WebRequest "$PlexUrl/library/sections/?X-Plex-Token=$PlexToken").content
         }
         Else {
             Write-Log -Message "Could not access plex with this url: $PlexUrl/library/sections/?X-Plex-Token=$PlexToken" -Path $configLogging -Type Error
@@ -1723,7 +1723,7 @@ function Check-PlexAccess {
         }
         if ($result.StatusCode -eq 200) {
             Write-Log -Subtext "Plex access is working..." -Path $configLogging -Type Success
-            [xml]$Libs = (Invoke-WebRequest "$PlexUrl/library/sections").content
+            return (Invoke-WebRequest "$PlexUrl/library/sections").content
         }
     }
 }
@@ -2054,7 +2054,7 @@ foreach ($file in $files) {
 CheckJsonPaths -font $font -backgroundfont $backgroundfont -titlecardfont $titlecardfont -Posteroverlay $Posteroverlay -Backgroundoverlay $Backgroundoverlay -titlecardoverlay $titlecardoverlay
 
 # Check Plex now:
-Check-PlexAccess -PlexUrl $PlexUrl -PlexToken $PlexToken
+[xml]$Libs = Check-PlexAccess -PlexUrl $PlexUrl -PlexToken $PlexToken
 
 # Check ImageMagick now:
 Check-ImageMagick -magick $magick -magickinstalllocation $magickinstalllocation
