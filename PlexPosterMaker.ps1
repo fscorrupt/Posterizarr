@@ -3,7 +3,7 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.23"
+$CurrentScriptVersion = "1.0.24"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -1699,7 +1699,16 @@ function Check-PlexAccess {
         Write-Log -Message "Plex token found, checking access now..." -Path $configLogging -Type Info
         if ((Invoke-WebRequest "$PlexUrl/library/sections/?X-Plex-Token=$PlexToken").StatusCode -eq 200) {
             Write-Log -Subtext "Plex access is working..." -Path $configLogging -Type Success
-            return (Invoke-WebRequest "$PlexUrl/library/sections/?X-Plex-Token=$PlexToken").content
+            # Check if libs are available
+            [XML]$Libs = (Invoke-WebRequest "$PlexUrl/library/sections/?X-Plex-Token=$PlexToken").content
+            if ($Libs.MediaContainer.size -ge '1') {
+                Write-Log -Subtext "Found libs on Plex..." -Path $configLogging -Type Info
+                return $Libs
+            }
+            Else {
+                Write-Log -Subtext "No libs on Plex, abrort script now..." -Path $configLogging -Type Error
+                Exit
+            }
         }
         Else {
             Write-Log -Message "Could not access plex with this url: $PlexUrl/library/sections/?X-Plex-Token=$PlexToken" -Path $configLogging -Type Error
@@ -1724,7 +1733,16 @@ function Check-PlexAccess {
         }
         if ($result.StatusCode -eq 200) {
             Write-Log -Subtext "Plex access is working..." -Path $configLogging -Type Success
-            return (Invoke-WebRequest "$PlexUrl/library/sections").content
+            # Check if libs are available
+            [XML]$Libs = (Invoke-WebRequest "$PlexUrl/library/sections").content
+            if ($Libs.MediaContainer.size -ge '1') {
+                Write-Log -Subtext "Found libs on Plex..." -Path $configLogging -Type Info
+                return $Libs
+            }
+            Else {
+                Write-Log -Subtext "No libs on Plex, abrort script now..." -Path $configLogging -Type Error
+                Exit
+            }
         }
     }
 }
@@ -1793,6 +1811,7 @@ Else {
 }
 # load config file
 $config = Get-Content -Raw -Path $(Join-Path $global:ScriptRoot 'config.json') | ConvertFrom-Json
+$config = Get-Content -Raw -Path $(Join-Path 'C:\PosterTemp' 'config.json') | ConvertFrom-Json
 # Read naxLogs value from config.json
 $maxLogs = [int]$config.PrerequisitePart.maxLogs  # Cast to integer
 # Check if the cast was successful
