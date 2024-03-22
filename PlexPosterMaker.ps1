@@ -3,7 +3,7 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.24"
+$CurrentScriptVersion = "1.0.25"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -1664,6 +1664,7 @@ function Log-ConfigSettings {
     Write-Log -Subtext "| Text Box Height:              $BackgroundMaxHeight" -Path $configLogging -Type Info
     Write-Log -Subtext "| Text Box Offset:              $Backgroundtext_offset" -Path $configLogging -Type Info
     Write-Log -Subtext "OverLay TitleCard Part" -Path $configLogging -Type Trace
+    Write-Log -Subtext "| Use Background as Title Card: $UseBackgroundAsTitleCard" -Path $configLogging -Type Info
     Write-Log -Subtext "| Add Border to Background:     $AddTitleCardBorder" -Path $configLogging -Type Info
     Write-Log -Subtext "| Border Color:                 $TitleCardbordercolor" -Path $configLogging -Type Info
     Write-Log -Subtext "| Add Overlay to Background:    $AddTitleCardOverlay" -Path $configLogging -Type Info
@@ -1958,6 +1959,7 @@ $Backgroundboxsize = $BackgroundMaxWidth + 'x' + $BackgroundMaxHeight
 
 # Title Card Overlay Part
 $AddTitleCardOverlay = $config.TitleCardOverlayPart.AddOverlay
+$UseBackgroundAsTitleCard = $config.TitleCardOverlayPart.UseBackgroundAsTitleCard
 $AddTitleCardBorder = $config.TitleCardOverlayPart.AddBorder
 $TitleCardborderwidth = $config.TitleCardOverlayPart.borderwidth
 $TitleCardbordercolor = $config.TitleCardOverlayPart.bordercolor
@@ -4335,6 +4337,8 @@ else {
             if ($global:TitleCards -eq 'true') {
                 # Loop through each episode
                 foreach ($episode in $Episodedata) {
+                    $global:TempImagecopied = $false
+                    $EpisodeTempImage = $null
                     $global:season_number = $null
                     $Episodepostersearchtext = $null
                     $global:show_name = $null
@@ -4353,66 +4357,338 @@ else {
                         $global:episode_numbers = $episode."Episodes".Split(",")
                         $global:titles = $episode."Title".Split(";")
                         $global:PlexTitleCardUrls = $episode."PlexTitleCardUrls".Split(",")
-                        for ($i = 0; $i -lt $global:episode_numbers.Count; $i++) {
-                            $global:Fallback = $null
-                            $global:posterurl = $null
-                            $Episodepostersearchtext = $null
-                            $ExifFound = $null
-                            $global:PlexartworkDownloaded = $null
-                            $value = $null
-                            $magickcommand = $null
-                            $Arturl = $null
-                            $global:PlexTitleCardUrl = $($global:PlexTitleCardUrls[$i].Trim())
-                            $global:EPTitle = $($global:titles[$i].Trim())
-                            $global:episodenumber = $($global:episode_numbers[$i].Trim())
-                            $global:FileNaming = "S" + $global:season_number.PadLeft(2, '0') + "E" + $global:episodenumber.PadLeft(2, '0')
-                            $bullet = [char]0x2022
-                            $global:SeasonEPNumber = "Season $global:season_number $bullet Episode $global:episodenumber"
-                                    
-                            if ($LibraryFolders -eq 'true') {
-                                $EpisodeImageoriginal = "$EntryDir\$global:FileNaming.jpg"
-                                $TestPath = $EntryDir
-                                $Testfile = "$global:FileNaming"
-                            }
-                            Else {
-                                $EpisodeImageoriginal = "$AssetPath\$($entry.RootFoldername)_$global:FileNaming.jpg"
-                                $TestPath = $AssetPath
-                                $Testfile = "$($entry.RootFoldername)_$global:FileNaming"
-                            }
-                            $EpisodeImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_$global:FileNaming.jpg"
-                            $EpisodeImage = $EpisodeImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
-                            if (!(Get-ChildItem -LiteralPath $TestPath | Where-Object { $_.Name -like "*$Testfile*" } -ErrorAction SilentlyContinue)) {
-                                if (!$Episodepostersearchtext) {
-                                    Write-Log -Message "Start Title Card Search for: $global:show_name - $global:SeasonEPNumber" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-                                    $Episodepostersearchtext = $true
-                                }
-                                if ($PlexToken) {
-                                    $Arturl = $plexurl + $global:PlexTitleCardUrl + "?X-Plex-Token=$PlexToken"
+                        if ($UseBackgroundAsTitleCard -eq 'True') {
+                            for ($i = 0; $i -lt $global:episode_numbers.Count; $i++) {
+                                $global:Fallback = $null
+                                $global:posterurl = $null
+                                $Episodepostersearchtext = $null
+                                $ExifFound = $null
+                                $global:PlexartworkDownloaded = $null
+                                $value = $null
+                                $magickcommand = $null
+                                $Arturl = $null
+                                $global:PlexTitleCardUrl = $entry.PlexBackgroundUrl
+                                $global:EPTitle = $($global:titles[$i].Trim())
+                                $global:episodenumber = $($global:episode_numbers[$i].Trim())
+                                $global:FileNaming = "S" + $global:season_number.PadLeft(2, '0') + "E" + $global:episodenumber.PadLeft(2, '0')
+                                $bullet = [char]0x2022
+                                $global:SeasonEPNumber = "Season $global:season_number $bullet Episode $global:episodenumber"
+                                        
+                                if ($LibraryFolders -eq 'true') {
+                                    $EpisodeImageoriginal = "$EntryDir\$global:FileNaming.jpg"
+                                    $TestPath = $EntryDir
+                                    $Testfile = "$global:FileNaming"
                                 }
                                 Else {
-                                    $Arturl = $plexurl + $global:PlexTitleCardUrl
+                                    $EpisodeImageoriginal = "$AssetPath\$($entry.RootFoldername)_$global:FileNaming.jpg"
+                                    $TestPath = $AssetPath
+                                    $Testfile = "$($entry.RootFoldername)_$global:FileNaming"
                                 }
-                                # now search for TitleCards
-                                if ($global:FavProvider -eq 'TMDB') {
-                                    if ($episode.tmdbid) {
-                                        $global:posterurl = GetTMDBTitleCard
-                                        if ($global:Fallback -eq "TVDB") {
-                                            $global:posterurl = GetTVDBTitleCard
-                                        }
-                                        if (!$global:posterurl) {
-                                            $global:IsFallback = $true
-                                            GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage 
-                                        }
-                                        if (!$global:posterurl ) {
-                                            # Lets just try to grab a background poster.
-                                            Write-Log -Subtext "Fallback to Show Background..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+                                $EpisodeImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_$global:FileNaming.jpg"
+                                $EpisodeImage = $EpisodeImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
+                                
+                                $EpisodeTempImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\temp.jpg"
+                                if (!(Get-ChildItem -LiteralPath $TestPath | Where-Object { $_.Name -like "*$Testfile*" } -ErrorAction SilentlyContinue)) {
+                                    if (!$Episodepostersearchtext) {
+                                        Write-Log -Message "Start Title Card Search for: $global:show_name - $global:SeasonEPNumber" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                        $Episodepostersearchtext = $true
+                                    }
+                                    if ($PlexToken) {
+                                        $Arturl = $plexurl + $global:PlexTitleCardUrl + "?X-Plex-Token=$PlexToken"
+                                    }
+                                    Else {
+                                        $Arturl = $plexurl + $global:PlexTitleCardUrl
+                                    }
+                                    # now search for TitleCards
+                                    if ($global:FavProvider -eq 'TMDB') {
+                                        if ($episode.tmdbid) {
                                             $global:posterurl = GetTMDBShowBackground
-                                            if ($global:posterurl) {
-                                                Write-Log -Subtext "Using the Show Background Poster as TitleCard Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                                            if ($global:Fallback -eq "TVDB") {
+                                                $global:posterurl = GetTVDBShowBackground
+                                            }
+                                            if (!$global:posterurl) {
                                                 $global:IsFallback = $true
+                                                GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage 
+                                            }
+                                        }
+                                        else {
+                                            Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                                            $global:posterurl = GetTVDBShowBackground
+                                            if (!$global:posterurl) {
+                                                $global:IsFallback = $true
+                                                GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage 
+                                            }
+                                        }
+                                    }
+                                    Else {
+                                        if ($episode.tvdbid) {
+                                            $global:posterurl = GetTVDBShowBackground
+                                            if ($global:Fallback -eq "TMDB") {
+                                                $global:posterurl = GetTMDBShowBackground
+                                            }
+                                            if (!$global:posterurl) {
+                                                $global:IsFallback = $true
+                                                GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage 
+                                            }
+                                        }
+                                        else {
+                                            Write-Log -Subtext "Can't search on TVDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                                            $global:posterurl = GetTMDBShowBackground
+                                            if (!$global:posterurl) {
+                                                $global:IsFallback = $true
+                                                GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage 
+                                            }
+                                        }
+                                    }
+                                    if ($global:posterurl -or $global:PlexartworkDownloaded ) {
+                                        if ($global:ImageProcessing -eq 'true') {
+                                            try {
+                                                if (!$global:PlexartworkDownloaded -and $global:TempImagecopied -ne 'True') {
+                                                    $response = Invoke-WebRequest -Uri $global:posterurl -OutFile $EpisodeImage -ErrorAction Stop
+                                                    $null = Copy-Item -LiteralPath $EpisodeImage -destination $EpisodeTempImage
+                                                }
+                                            }
+                                            catch {
+                                                $statusCode = $_.Exception.Response.StatusCode.value__
+                                                Write-Log -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                                                $errorCount++
+                                            }
+                                            if ($global:TempImagecopied -ne 'True') {
+                                                Write-Log -Subtext "Title Card url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                                if ($global:posterurl -like 'https://image.tmdb.org*') {
+                                                    Write-Log -Subtext "Downloading Title Card from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+                                                    if ($global:FavProvider -ne 'TMDB') { 
+                                                        $global:IsFallback = $true
+                                                    }
+                                                }
+                                                if ($global:posterurl -like 'https://artworks.thetvdb.com*') {
+                                                    Write-Log -Subtext "Downloading Title Card from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+                                                    if ($global:FavProvider -ne 'TVDB') { 
+                                                        $global:IsFallback = $true
+                                                    }
+                                                }
+                                                if ($global:posterurl -like "$PlexUrl*") {
+                                                    Write-Log -Subtext "Downloading Title Card from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+                                                    if ($global:FavProvider -ne 'PLEX') { 
+                                                        $global:IsFallback = $true
+                                                    }
+                                                }
                                             }
                                             Else {
+                                                $null = Copy-Item -LiteralPath $EpisodeTempImage -destination $EpisodeImage
+                                            }
+                                            $global:TempImagecopied = $true
+                                            if (Get-ChildItem -LiteralPath $EpisodeImage -ErrorAction SilentlyContinue) {
+                                                $CommentArguments = "convert `"$EpisodeImage`" -set `"comment`" `"created with ppm`" `"$EpisodeImage`""
+                                                $CommentlogEntry = "`"$magick`" $CommentArguments"
+                                                $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+                                                Start-Process $magick -Wait -NoNewWindow -ArgumentList $CommentArguments
+    
+                                                # Resize Image to 2000x3000 and apply Border and overlay
+                                                if ($AddTitleCardBorder -eq 'true' -and $AddTitleCardOverlay -eq 'true') {
+                                                    $Arguments = "`"$EpisodeImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$TitleCardoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$TitleCardborderwidthsecond`"  -bordercolor `"$TitleCardbordercolor`" -border `"$TitleCardborderwidth`" `"$EpisodeImage`""
+                                                    Write-Log -Subtext "Resizing it | Adding Borders | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                                }
+                                                if ($AddTitleCardBorder -eq 'true' -and $AddTitleCardOverlay -eq 'false') {
+                                                    $Arguments = "`"$EpisodeImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" -shave `"$TitleCardborderwidthsecond`"  -bordercolor `"$TitleCardbordercolor`" -border `"$TitleCardborderwidth`" `"$EpisodeImage`""
+                                                    Write-Log -Subtext "Resizing it | Adding Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                                }
+                                                if ($AddTitleCardBorder -eq 'false' -and $AddTitleCardOverlay -eq 'true') {
+                                                    $Arguments = "`"$EpisodeImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$TitleCardoverlay`" -gravity south -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                    Write-Log -Subtext "Resizing it | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                                }
+                                                if ($AddTitleCardBorder -eq 'false' -and $AddTitleCardOverlay -eq 'false') {
+                                                    $Arguments = "`"$EpisodeImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$EpisodeImage`""
+                                                    Write-Log -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                                }
+                                                $logEntry = "`"$magick`" $Arguments"
+                                                $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+                                                Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
+                                                        
+                                                if ($AddTitleCardEPTitleText -eq 'true') {
+                                                    if ($TitleCardEPTitlefontAllCaps -eq 'true') {
+                                                        $global:EPTitle = $global:EPTitle.ToUpper()
+                                                    }
+                                                    $optimalFontSize = Get-OptimalPointSize -text $global:EPTitle -font $TitleCardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
+                                                                    
+                                                    Write-Log -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                                                    
+                                                    $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                                    
+                                                    Write-Log -Subtext "Applying EPTitle text: `"$global:EPTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                                    $logEntry = "`"$magick`" $Arguments"
+                                                    $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+                                                    Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
+                                                            
+                                                }
+                                                if ($AddTitleCardEPText -eq 'true') {
+                                                    if ($TitleCardEPfontAllCaps -eq 'true') {
+                                                        $global:SeasonEPNumber = $global:SeasonEPNumber.ToUpper()
+                                                    }
+                                                    $optimalFontSize = Get-OptimalPointSize -text  $global:SeasonEPNumber -font $TitleCardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize
+                                                                    
+                                                    Write-Log -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                                                    
+                                                    $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPfontcolor`" -size `"$TitleCardEPboxsize`" -background none caption:`"$global:SeasonEPNumber`" -trim -gravity south -extent `"$TitleCardEPboxsize`" `) -gravity south -geometry +0`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                                    
+                                                    Write-Log -Subtext "Applying SeasonEPNumber text: `"$global:SeasonEPNumber`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                                    $logEntry = "`"$magick`" $Arguments"
+                                                    $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+                                                    Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
+                                                }
+                                            }
+                                        }
+                                        Else {
+                                            try {
+                                                if (!$global:PlexartworkDownloaded) {
+                                                    $response = Invoke-WebRequest -Uri $global:posterurl -OutFile $EpisodeImage -ErrorAction Stop
+                                                }
+                                            }
+                                            catch {
+                                                $statusCode = $_.Exception.Response.StatusCode.value__
+                                                Write-Log -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                                                $errorCount++
+                                            }
+                                            Write-Log -Subtext "Title Card url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                            if ($global:posterurl -like 'https://image.tmdb.org*') {
+                                                Write-Log -Subtext "Downloading Title Card from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+                                                if ($global:FavProvider -ne 'TMDB') { 
+                                                    $global:IsFallback = $true
+                                                }
+                                            }
+                                            if ($global:posterurl -like 'https://artworks.thetvdb.com*') {
+                                                Write-Log -Subtext "Downloading Title Card from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+                                                if ($global:FavProvider -ne 'TVDB') { 
+                                                    $global:IsFallback = $true
+                                                }
+                                            }
+                                            if ($global:posterurl -like "$PlexUrl*") {
+                                                Write-Log -Subtext "Downloading Title Card from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+                                                if ($global:FavProvider -ne 'PLEX') { 
+                                                    $global:IsFallback = $true
+                                                }
+                                            }                                           
+                                            if (Get-ChildItem -LiteralPath $EpisodeImage -ErrorAction SilentlyContinue) {    
+                                                # Resize Image to 2000x3000
+                                                $Resizeargument = "`"$EpisodeImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$EpisodeImage`""
+                                                Write-Log -Subtext "Resizing it... " -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                                $logEntry = "`"$magick`" $Resizeargument"
+                                                $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+                                                Start-Process $magick -Wait -NoNewWindow -ArgumentList $Resizeargument
+                                            }
+                                        }
+                                        if (Get-ChildItem -LiteralPath $EpisodeImage -ErrorAction SilentlyContinue) {
+                                            # Move file back to original naming with Brackets.
+                                            Move-Item -LiteralPath $EpisodeImage -destination $EpisodeImageoriginal -Force -ErrorAction SilentlyContinue
+                                            Write-Log -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Type Info
+                                            $EpisodeCount++
+                                            $posterCount++
+    
+                                            $episodetemp = New-Object psobject
+                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($global:FileNaming + " | " + $global:EPTitle)
+                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Episode'
+                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
+                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
+                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "Textless" -Value $(if ($global:TextlessPoster) { 'True' } else { 'False' })
+                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback) { 'True' } else { 'False' })
+                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
+                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "Url" -Value $global:posterurl
+                                    
+                                            # Export the array to a CSV file
+                                            $episodetemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
+                                        }
+                                    }
+                                    Else {
+                                        Write-Log -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Type Info
+                                        $Errorcount++
+                                    }
+                                            
+                                }
+                            }
+                            if (Test-Path $EpisodeTempImage -ErrorAction SilentlyContinue) {
+                                $null = Remove-Item -LiteralPath $EpisodeTempImage
+                            }
+                        }
+                        Else {
+                            for ($i = 0; $i -lt $global:episode_numbers.Count; $i++) {
+                                $global:Fallback = $null
+                                $global:posterurl = $null
+                                $Episodepostersearchtext = $null
+                                $ExifFound = $null
+                                $global:PlexartworkDownloaded = $null
+                                $value = $null
+                                $magickcommand = $null
+                                $Arturl = $null
+                                $global:PlexTitleCardUrl = $($global:PlexTitleCardUrls[$i].Trim())
+                                $global:EPTitle = $($global:titles[$i].Trim())
+                                $global:episodenumber = $($global:episode_numbers[$i].Trim())
+                                $global:FileNaming = "S" + $global:season_number.PadLeft(2, '0') + "E" + $global:episodenumber.PadLeft(2, '0')
+                                $bullet = [char]0x2022
+                                $global:SeasonEPNumber = "Season $global:season_number $bullet Episode $global:episodenumber"
+                                        
+                                if ($LibraryFolders -eq 'true') {
+                                    $EpisodeImageoriginal = "$EntryDir\$global:FileNaming.jpg"
+                                    $TestPath = $EntryDir
+                                    $Testfile = "$global:FileNaming"
+                                }
+                                Else {
+                                    $EpisodeImageoriginal = "$AssetPath\$($entry.RootFoldername)_$global:FileNaming.jpg"
+                                    $TestPath = $AssetPath
+                                    $Testfile = "$($entry.RootFoldername)_$global:FileNaming"
+                                }
+                                $EpisodeImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_$global:FileNaming.jpg"
+                                $EpisodeImage = $EpisodeImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
+                                if (!(Get-ChildItem -LiteralPath $TestPath | Where-Object { $_.Name -like "*$Testfile*" } -ErrorAction SilentlyContinue)) {
+                                    if (!$Episodepostersearchtext) {
+                                        Write-Log -Message "Start Title Card Search for: $global:show_name - $global:SeasonEPNumber" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                        $Episodepostersearchtext = $true
+                                    }
+                                    if ($PlexToken) {
+                                        $Arturl = $plexurl + $global:PlexTitleCardUrl + "?X-Plex-Token=$PlexToken"
+                                    }
+                                    Else {
+                                        $Arturl = $plexurl + $global:PlexTitleCardUrl
+                                    }
+                                    # now search for TitleCards
+                                    if ($global:FavProvider -eq 'TMDB') {
+                                        if ($episode.tmdbid) {
+                                            $global:posterurl = GetTMDBTitleCard
+                                            if ($global:Fallback -eq "TVDB") {
+                                                $global:posterurl = GetTVDBTitleCard
+                                            }
+                                            if (!$global:posterurl) {
+                                                $global:IsFallback = $true
+                                                GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage 
+                                            }
+                                            if (!$global:posterurl ) {
                                                 # Lets just try to grab a background poster.
+                                                Write-Log -Subtext "Fallback to Show Background..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+                                                $global:posterurl = GetTMDBShowBackground
+                                                if ($global:posterurl) {
+                                                    Write-Log -Subtext "Using the Show Background Poster as TitleCard Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                                                    $global:IsFallback = $true
+                                                }
+                                                Else {
+                                                    # Lets just try to grab a background poster.
+                                                    $global:posterurl = GetTVDBShowBackground
+                                                    if ($global:posterurl) {
+                                                        Write-Log -Subtext "Using the Show Background Poster as TitleCard Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                                                        $global:IsFallback = $true
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        else {
+                                            Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                                            $global:posterurl = GetTVDBTitleCard
+                                            if (!$global:posterurl) {
+                                                $global:IsFallback = $true
+                                                GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage 
+                                            }
+                                            if (!$global:posterurl ) {
+                                                Write-Log -Subtext "No Title Cards for this Episode on TVDB or TMDB..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                                                # Lets just try to grab a background poster.
+                                                Write-Log -Subtext "Fallback to Show Background..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
                                                 $global:posterurl = GetTVDBShowBackground
                                                 if ($global:posterurl) {
                                                     Write-Log -Subtext "Using the Show Background Poster as TitleCard Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
@@ -4421,45 +4697,44 @@ else {
                                             }
                                         }
                                     }
-                                    else {
-                                        Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
-                                        $global:posterurl = GetTVDBTitleCard
-                                        if (!$global:posterurl) {
-                                            $global:IsFallback = $true
-                                            GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage 
-                                        }
-                                        if (!$global:posterurl ) {
-                                            Write-Log -Subtext "No Title Cards for this Episode on TVDB or TMDB..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
-                                            # Lets just try to grab a background poster.
-                                            Write-Log -Subtext "Fallback to Show Background..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
-                                            $global:posterurl = GetTVDBShowBackground
-                                            if ($global:posterurl) {
-                                                Write-Log -Subtext "Using the Show Background Poster as TitleCard Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
-                                                $global:IsFallback = $true
+                                    Else {
+                                        if ($episode.tvdbid) {
+                                            $global:posterurl = GetTVDBTitleCard
+                                            if ($global:Fallback -eq "TMDB") {
+                                                $global:posterurl = GetTMDBTitleCard
                                             }
-                                        }
-                                    }
-                                }
-                                Else {
-                                    if ($episode.tvdbid) {
-                                        $global:posterurl = GetTVDBTitleCard
-                                        if ($global:Fallback -eq "TMDB") {
-                                            $global:posterurl = GetTMDBTitleCard
-                                        }
-                                        if (!$global:posterurl) {
-                                            $global:IsFallback = $true
-                                            GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage 
-                                        }
-                                        if (!$global:posterurl ) {
-                                            # Lets just try to grab a background poster.
-                                            Write-Log -Subtext "Fallback to Show Background..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
-                                            $global:posterurl = GetTVDBShowBackground
-                                            if ($global:posterurl) {
-                                                Write-Log -Subtext "Using the Show Background Poster as TitleCard Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                                            if (!$global:posterurl) {
                                                 $global:IsFallback = $true
+                                                GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage 
                                             }
-                                            Else {
+                                            if (!$global:posterurl ) {
                                                 # Lets just try to grab a background poster.
+                                                Write-Log -Subtext "Fallback to Show Background..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+                                                $global:posterurl = GetTVDBShowBackground
+                                                if ($global:posterurl) {
+                                                    Write-Log -Subtext "Using the Show Background Poster as TitleCard Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                                                    $global:IsFallback = $true
+                                                }
+                                                Else {
+                                                    # Lets just try to grab a background poster.
+                                                    $global:posterurl = GetTMDBShowBackground
+                                                    if ($global:posterurl) {
+                                                        Write-Log -Subtext "Using the Show Background Poster as TitleCard Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                                                        $global:IsFallback = $true
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        else {
+                                            Write-Log -Subtext "Can't search on TVDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                                            $global:posterurl = GetTMDBTitleCard
+                                            if (!$global:posterurl) {
+                                                $global:IsFallback = $true
+                                                GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage 
+                                            }
+                                            if (!$global:posterurl ) {
+                                                # Lets just try to grab a background poster.
+                                                Write-Log -Subtext "Fallback to Show Background..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
                                                 $global:posterurl = GetTMDBShowBackground
                                                 if ($global:posterurl) {
                                                     Write-Log -Subtext "Using the Show Background Poster as TitleCard Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
@@ -4468,180 +4743,163 @@ else {
                                             }
                                         }
                                     }
-                                    else {
-                                        Write-Log -Subtext "Can't search on TVDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
-                                        $global:posterurl = GetTMDBTitleCard
-                                        if (!$global:posterurl) {
-                                            $global:IsFallback = $true
-                                            GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage 
-                                        }
-                                        if (!$global:posterurl ) {
-                                            # Lets just try to grab a background poster.
-                                            Write-Log -Subtext "Fallback to Show Background..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
-                                            $global:posterurl = GetTMDBShowBackground
-                                            if ($global:posterurl) {
-                                                Write-Log -Subtext "Using the Show Background Poster as TitleCard Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
-                                                $global:IsFallback = $true
-                                            }
-                                        }
-                                    }
-                                }
-                                if ($global:posterurl -or $global:PlexartworkDownloaded ) {
-                                    if ($global:ImageProcessing -eq 'true') {
-                                        try {
-                                            if (!$global:PlexartworkDownloaded) {
-                                                $response = Invoke-WebRequest -Uri $global:posterurl -OutFile $EpisodeImage -ErrorAction Stop
-                                            }
-                                        }
-                                        catch {
-                                            $statusCode = $_.Exception.Response.StatusCode.value__
-                                            Write-Log -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
-                                            $errorCount++
-                                        }
-                                        Write-Log -Subtext "Title Card url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-                                        if ($global:posterurl -like 'https://image.tmdb.org*') {
-                                            Write-Log -Subtext "Downloading Title Card from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
-                                            if ($global:FavProvider -ne 'TMDB') { 
-                                                $global:IsFallback = $true
-                                            }
-                                        }
-                                        if ($global:posterurl -like 'https://artworks.thetvdb.com*') {
-                                            Write-Log -Subtext "Downloading Title Card from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
-                                            if ($global:FavProvider -ne 'TVDB') { 
-                                                $global:IsFallback = $true
-                                            }
-                                        }
-                                        if ($global:posterurl -like "$PlexUrl*") {
-                                            Write-Log -Subtext "Downloading Title Card from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
-                                            if ($global:FavProvider -ne 'PLEX') { 
-                                                $global:IsFallback = $true
-                                            }
-                                        }
-                                        if (Get-ChildItem -LiteralPath $EpisodeImage -ErrorAction SilentlyContinue) {
-                                            $CommentArguments = "convert `"$EpisodeImage`" -set `"comment`" `"created with ppm`" `"$EpisodeImage`""
-                                            $CommentlogEntry = "`"$magick`" $CommentArguments"
-                                            $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
-                                            Start-Process $magick -Wait -NoNewWindow -ArgumentList $CommentArguments
-
-                                            # Resize Image to 2000x3000 and apply Border and overlay
-                                            if ($AddTitleCardBorder -eq 'true' -and $AddTitleCardOverlay -eq 'true') {
-                                                $Arguments = "`"$EpisodeImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$TitleCardoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$TitleCardborderwidthsecond`"  -bordercolor `"$TitleCardbordercolor`" -border `"$TitleCardborderwidth`" `"$EpisodeImage`""
-                                                Write-Log -Subtext "Resizing it | Adding Borders | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-                                            }
-                                            if ($AddTitleCardBorder -eq 'true' -and $AddTitleCardOverlay -eq 'false') {
-                                                $Arguments = "`"$EpisodeImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" -shave `"$TitleCardborderwidthsecond`"  -bordercolor `"$TitleCardbordercolor`" -border `"$TitleCardborderwidth`" `"$EpisodeImage`""
-                                                Write-Log -Subtext "Resizing it | Adding Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-                                            }
-                                            if ($AddTitleCardBorder -eq 'false' -and $AddTitleCardOverlay -eq 'true') {
-                                                $Arguments = "`"$EpisodeImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$TitleCardoverlay`" -gravity south -quality $global:outputQuality -composite `"$EpisodeImage`""
-                                                Write-Log -Subtext "Resizing it | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-                                            }
-                                            if ($AddTitleCardBorder -eq 'false' -and $AddTitleCardOverlay -eq 'false') {
-                                                $Arguments = "`"$EpisodeImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$EpisodeImage`""
-                                                Write-Log -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-                                            }
-                                            $logEntry = "`"$magick`" $Arguments"
-                                            $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
-                                            Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
-                                                    
-                                            if ($AddTitleCardEPTitleText -eq 'true') {
-                                                if ($TitleCardEPTitlefontAllCaps -eq 'true') {
-                                                    $global:EPTitle = $global:EPTitle.ToUpper()
+                                    if ($global:posterurl -or $global:PlexartworkDownloaded ) {
+                                        if ($global:ImageProcessing -eq 'true') {
+                                            try {
+                                                if (!$global:PlexartworkDownloaded) {
+                                                    $response = Invoke-WebRequest -Uri $global:posterurl -OutFile $EpisodeImage -ErrorAction Stop
                                                 }
-                                                $optimalFontSize = Get-OptimalPointSize -text $global:EPTitle -font $TitleCardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
-                                                                
-                                                Write-Log -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-                                                                
-                                                $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
-                                                                
-                                                Write-Log -Subtext "Applying EPTitle text: `"$global:EPTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                            }
+                                            catch {
+                                                $statusCode = $_.Exception.Response.StatusCode.value__
+                                                Write-Log -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                                                $errorCount++
+                                            }
+                                            Write-Log -Subtext "Title Card url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                            if ($global:posterurl -like 'https://image.tmdb.org*') {
+                                                Write-Log -Subtext "Downloading Title Card from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+                                                if ($global:FavProvider -ne 'TMDB') { 
+                                                    $global:IsFallback = $true
+                                                }
+                                            }
+                                            if ($global:posterurl -like 'https://artworks.thetvdb.com*') {
+                                                Write-Log -Subtext "Downloading Title Card from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+                                                if ($global:FavProvider -ne 'TVDB') { 
+                                                    $global:IsFallback = $true
+                                                }
+                                            }
+                                            if ($global:posterurl -like "$PlexUrl*") {
+                                                Write-Log -Subtext "Downloading Title Card from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+                                                if ($global:FavProvider -ne 'PLEX') { 
+                                                    $global:IsFallback = $true
+                                                }
+                                            }
+                                            if (Get-ChildItem -LiteralPath $EpisodeImage -ErrorAction SilentlyContinue) {
+                                                $CommentArguments = "convert `"$EpisodeImage`" -set `"comment`" `"created with ppm`" `"$EpisodeImage`""
+                                                $CommentlogEntry = "`"$magick`" $CommentArguments"
+                                                $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+                                                Start-Process $magick -Wait -NoNewWindow -ArgumentList $CommentArguments
+
+                                                # Resize Image to 2000x3000 and apply Border and overlay
+                                                if ($AddTitleCardBorder -eq 'true' -and $AddTitleCardOverlay -eq 'true') {
+                                                    $Arguments = "`"$EpisodeImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$TitleCardoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$TitleCardborderwidthsecond`"  -bordercolor `"$TitleCardbordercolor`" -border `"$TitleCardborderwidth`" `"$EpisodeImage`""
+                                                    Write-Log -Subtext "Resizing it | Adding Borders | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                                }
+                                                if ($AddTitleCardBorder -eq 'true' -and $AddTitleCardOverlay -eq 'false') {
+                                                    $Arguments = "`"$EpisodeImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" -shave `"$TitleCardborderwidthsecond`"  -bordercolor `"$TitleCardbordercolor`" -border `"$TitleCardborderwidth`" `"$EpisodeImage`""
+                                                    Write-Log -Subtext "Resizing it | Adding Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                                }
+                                                if ($AddTitleCardBorder -eq 'false' -and $AddTitleCardOverlay -eq 'true') {
+                                                    $Arguments = "`"$EpisodeImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$TitleCardoverlay`" -gravity south -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                    Write-Log -Subtext "Resizing it | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                                }
+                                                if ($AddTitleCardBorder -eq 'false' -and $AddTitleCardOverlay -eq 'false') {
+                                                    $Arguments = "`"$EpisodeImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$EpisodeImage`""
+                                                    Write-Log -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                                }
                                                 $logEntry = "`"$magick`" $Arguments"
                                                 $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
                                                 Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
                                                         
-                                            }
-                                            if ($AddTitleCardEPText -eq 'true') {
-                                                if ($TitleCardEPfontAllCaps -eq 'true') {
-                                                    $global:SeasonEPNumber = $global:SeasonEPNumber.ToUpper()
+                                                if ($AddTitleCardEPTitleText -eq 'true') {
+                                                    if ($TitleCardEPTitlefontAllCaps -eq 'true') {
+                                                        $global:EPTitle = $global:EPTitle.ToUpper()
+                                                    }
+                                                    $optimalFontSize = Get-OptimalPointSize -text $global:EPTitle -font $TitleCardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
+                                                                    
+                                                    Write-Log -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                                                    
+                                                    $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                                    
+                                                    Write-Log -Subtext "Applying EPTitle text: `"$global:EPTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                                    $logEntry = "`"$magick`" $Arguments"
+                                                    $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+                                                    Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
+                                                            
                                                 }
-                                                $optimalFontSize = Get-OptimalPointSize -text  $global:SeasonEPNumber -font $TitleCardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize
-                                                                
-                                                Write-Log -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-                                                                
-                                                $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPfontcolor`" -size `"$TitleCardEPboxsize`" -background none caption:`"$global:SeasonEPNumber`" -trim -gravity south -extent `"$TitleCardEPboxsize`" `) -gravity south -geometry +0`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
-                                                                
-                                                Write-Log -Subtext "Applying SeasonEPNumber text: `"$global:SeasonEPNumber`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-                                                $logEntry = "`"$magick`" $Arguments"
-                                                $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
-                                                Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
+                                                if ($AddTitleCardEPText -eq 'true') {
+                                                    if ($TitleCardEPfontAllCaps -eq 'true') {
+                                                        $global:SeasonEPNumber = $global:SeasonEPNumber.ToUpper()
+                                                    }
+                                                    $optimalFontSize = Get-OptimalPointSize -text  $global:SeasonEPNumber -font $TitleCardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize
+                                                                    
+                                                    Write-Log -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                                                    
+                                                    $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPfontcolor`" -size `"$TitleCardEPboxsize`" -background none caption:`"$global:SeasonEPNumber`" -trim -gravity south -extent `"$TitleCardEPboxsize`" `) -gravity south -geometry +0`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                                    
+                                                    Write-Log -Subtext "Applying SeasonEPNumber text: `"$global:SeasonEPNumber`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                                    $logEntry = "`"$magick`" $Arguments"
+                                                    $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+                                                    Start-Process $magick -Wait -NoNewWindow -ArgumentList $Arguments
+                                                }
                                             }
+                                        }
+                                        Else {
+                                            try {
+                                                if (!$global:PlexartworkDownloaded) {
+                                                    $response = Invoke-WebRequest -Uri $global:posterurl -OutFile $EpisodeImage -ErrorAction Stop
+                                                }
+                                            }
+                                            catch {
+                                                $statusCode = $_.Exception.Response.StatusCode.value__
+                                                Write-Log -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                                                $errorCount++
+                                            }
+                                            Write-Log -Subtext "Title Card url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                            if ($global:posterurl -like 'https://image.tmdb.org*') {
+                                                Write-Log -Subtext "Downloading Title Card from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+                                                if ($global:FavProvider -ne 'TMDB') { 
+                                                    $global:IsFallback = $true
+                                                }
+                                            }
+                                            if ($global:posterurl -like 'https://artworks.thetvdb.com*') {
+                                                Write-Log -Subtext "Downloading Title Card from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+                                                if ($global:FavProvider -ne 'TVDB') { 
+                                                    $global:IsFallback = $true
+                                                }
+                                            }
+                                            if ($global:posterurl -like "$PlexUrl*") {
+                                                Write-Log -Subtext "Downloading Title Card from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
+                                                if ($global:FavProvider -ne 'PLEX') { 
+                                                    $global:IsFallback = $true
+                                                }
+                                            }                                           
+                                            if (Get-ChildItem -LiteralPath $EpisodeImage -ErrorAction SilentlyContinue) {    
+                                                # Resize Image to 2000x3000
+                                                $Resizeargument = "`"$EpisodeImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$EpisodeImage`""
+                                                Write-Log -Subtext "Resizing it... " -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                                                $logEntry = "`"$magick`" $Resizeargument"
+                                                $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
+                                                Start-Process $magick -Wait -NoNewWindow -ArgumentList $Resizeargument
+                                            }
+                                        }
+                                        if (Get-ChildItem -LiteralPath $EpisodeImage -ErrorAction SilentlyContinue) {
+                                            # Move file back to original naming with Brackets.
+                                            Move-Item -LiteralPath $EpisodeImage -destination $EpisodeImageoriginal -Force -ErrorAction SilentlyContinue
+                                            Write-Log -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Type Info
+                                            $EpisodeCount++
+                                            $posterCount++
+
+                                            $episodetemp = New-Object psobject
+                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($global:FileNaming + " | " + $global:EPTitle)
+                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Episode'
+                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
+                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
+                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "Textless" -Value $(if ($global:TextlessPoster) { 'True' } else { 'False' })
+                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback) { 'True' } else { 'False' })
+                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
+                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "Url" -Value $global:posterurl
+                                    
+                                            # Export the array to a CSV file
+                                            $episodetemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                                         }
                                     }
                                     Else {
-                                        try {
-                                            if (!$global:PlexartworkDownloaded) {
-                                                $response = Invoke-WebRequest -Uri $global:posterurl -OutFile $EpisodeImage -ErrorAction Stop
-                                            }
-                                        }
-                                        catch {
-                                            $statusCode = $_.Exception.Response.StatusCode.value__
-                                            Write-Log -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
-                                            $errorCount++
-                                        }
-                                        Write-Log -Subtext "Title Card url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-                                        if ($global:posterurl -like 'https://image.tmdb.org*') {
-                                            Write-Log -Subtext "Downloading Title Card from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
-                                            if ($global:FavProvider -ne 'TMDB') { 
-                                                $global:IsFallback = $true
-                                            }
-                                        }
-                                        if ($global:posterurl -like 'https://artworks.thetvdb.com*') {
-                                            Write-Log -Subtext "Downloading Title Card from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
-                                            if ($global:FavProvider -ne 'TVDB') { 
-                                                $global:IsFallback = $true
-                                            }
-                                        }
-                                        if ($global:posterurl -like "$PlexUrl*") {
-                                            Write-Log -Subtext "Downloading Title Card from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Debug
-                                            if ($global:FavProvider -ne 'PLEX') { 
-                                                $global:IsFallback = $true
-                                            }
-                                        }                                           
-                                        if (Get-ChildItem -LiteralPath $EpisodeImage -ErrorAction SilentlyContinue) {    
-                                            # Resize Image to 2000x3000
-                                            $Resizeargument = "`"$EpisodeImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$EpisodeImage`""
-                                            Write-Log -Subtext "Resizing it... " -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-                                            $logEntry = "`"$magick`" $Resizeargument"
-                                            $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append 
-                                            Start-Process $magick -Wait -NoNewWindow -ArgumentList $Resizeargument
-                                        }
-                                    }
-                                    if (Get-ChildItem -LiteralPath $EpisodeImage -ErrorAction SilentlyContinue) {
-                                        # Move file back to original naming with Brackets.
-                                        Move-Item -LiteralPath $EpisodeImage -destination $EpisodeImageoriginal -Force -ErrorAction SilentlyContinue
                                         Write-Log -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Type Info
-                                        $EpisodeCount++
-                                        $posterCount++
-
-                                        $episodetemp = New-Object psobject
-                                        $episodetemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($global:FileNaming + " | " + $global:EPTitle)
-                                        $episodetemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Episode'
-                                        $episodetemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
-                                        $episodetemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
-                                        $episodetemp | Add-Member -MemberType NoteProperty -Name "Textless" -Value $(if ($global:TextlessPoster) { 'True' } else { 'False' })
-                                        $episodetemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback) { 'True' } else { 'False' })
-                                        $episodetemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
-                                        $episodetemp | Add-Member -MemberType NoteProperty -Name "Url" -Value $global:posterurl
-                                
-                                        # Export the array to a CSV file
-                                        $episodetemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
+                                        $Errorcount++
                                     }
+                                            
                                 }
-                                Else {
-                                    Write-Log -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Type Info
-                                    $Errorcount++
-                                }
-                                        
                             }
                         }
                     }

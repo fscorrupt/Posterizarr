@@ -155,6 +155,7 @@ Plex Poster Maker is cross-platform ready, meaning it can run on both Linux, Doc
     <summary>TitleCardOverlayPart:</summary>
     <br>
 
+    - `UseBackgroundAsTitleCard`: Set to `true` if you prefer show background as TitleCard, default is `false` where it uses episode image as TitleCard.
     - `AddOverlay`: Set to `true` to add the defined TitleCard overlay file to the TitleCard image.
     - `AddBorder`: Set to `true` to add a border to the TitleCard image.
     - `borderwidth`: Border width.

@@ -65,6 +65,7 @@
     "text_offset": "+200"
   },
   "TitleCardOverlayPart": {
+    "UseBackgroundAsTitleCard": "false",
     "AddOverlay": "true",
     "AddBorder": "true",
     "bordercolor": "white",
