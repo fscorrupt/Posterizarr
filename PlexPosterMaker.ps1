@@ -3175,7 +3175,7 @@ else {
                     $SeasonNames = $SeasonsTemp.Title -join ','
                     $SeasonNumbers = $SeasonsTemp.index -join ','
                     $SeasonRatingkeys = $SeasonsTemp.ratingKey -join ','
-                    $SeasonPosterUrl = ($SeasonsTemp | where { $_.type -eq "season" }).thumb -join ','
+                    $SeasonPosterUrl = ($SeasonsTemp | Where-Object { $_.type -eq "season" }).thumb -join ','
                 }
                 $matchesimdb = [regex]::Matches($metadatatemp, $imdbpattern)
                 $matchestmdb = [regex]::Matches($metadatatemp, $tmdbpattern)
