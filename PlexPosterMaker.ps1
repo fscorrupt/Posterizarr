@@ -1697,30 +1697,34 @@ function Check-PlexAccess {
 
     if ($PlexToken) {
         Write-Log -Message "Plex token found, checking access now..." -Path $configLogging -Type Info
-        $response = Invoke-WebRequest "$PlexUrl/library/sections/?X-Plex-Token=$PlexToken" -ErrorAction SilentlyContinue
-    } else {
+        if ((Invoke-WebRequest "$PlexUrl/library/sections/?X-Plex-Token=$PlexToken").StatusCode -eq 200) {
+            Write-Log -Subtext "Plex access is working..." -Path $configLogging -Type Success
+            [xml]$Libs = (Invoke-WebRequest "$PlexUrl/library/sections/?X-Plex-Token=$PlexToken").content
+        }
+        Else {
+            Write-Log -Message "Could not access plex with this url: $PlexUrl/library/sections/?X-Plex-Token=$PlexToken" -Path $configLogging -Type Error
+            Write-Log -Subtext "Please check token and access..." -Path $configLogging -Type Error
+            $Errorcount++
+            Exit
+        }
+    } Else {
         Write-Log -Message "Checking Plex access now..." -Path $configLogging -Type Info
         try {
-            $response = Invoke-WebRequest -Uri "$PlexUrl/library/sections" -ErrorAction SilentlyContinue
+            $result = Invoke-WebRequest -Uri "$PlexUrl/library/sections" -ErrorAction SilentlyContinue
         }
         catch {
-            Write-Log -Message "Could not access Plex with this URL: $PlexUrl/library/sections" -Path $configLogging -Type Error
+            Write-Log -Message "Could not access plex with this url: $PlexUrl/library/sections" -Path $configLogging -Type Error
             Write-Log -Message "Error Message: $_" -Path $configLogging -Type Error
-            Write-Log -Subtext "Please check access and settings in Plex..." -Path $configLogging -Type Warning
-            Write-Log -Message "To be able to connect to Plex without Auth" -Path $configLogging -Type Info
-            Write-Log -Message "You have to enter your IP range in 'Settings -> Network -> List of IP addresses and networks that are allowed without auth: '192.168.1.0/255.255.255.0''" -Path $configLogging -Type Info
-            return $false
+            $Errorcount++
+            Write-Log -Subtext "Please check access and settings in plex..." -Path $configLogging -Type Warning
+            Write-Log -Message "To be able to connect to plex without Auth" -Path $configLogging -Type Info
+            Write-Log -Message "You have to enter your ip range in 'Settings -> Network -> List of IP addresses and networks that are allowed without auth: '192.168.1.0/255.255.255.0''" -Path $configLogging -Type Info
+            Exit
         }
-    }
-
-    if ($response.StatusCode -eq 200) {
-        Write-Log -Subtext "Plex access is working..." -Path $configLogging -Type Success
-        [xml]$Libs = $response.Content
-        return $true
-    } else {
-        Write-Log -Message "Could not access Plex with this URL: $PlexUrl/library/sections/?X-Plex-Token=$PlexToken" -Path $configLogging -Type Error
-        Write-Log -Subtext "Please check token and access..." -Path $configLogging -Type Error
-        return $false
+        if ($result.StatusCode -eq 200) {
+            Write-Log -Subtext "Plex access is working..." -Path $configLogging -Type Success
+            [xml]$Libs = (Invoke-WebRequest "$PlexUrl/library/sections").content
+        }
     }
 }
 
@@ -2050,11 +2054,7 @@ foreach ($file in $files) {
 CheckJsonPaths -font $font -backgroundfont $backgroundfont -titlecardfont $titlecardfont -Posteroverlay $Posteroverlay -Backgroundoverlay $Backgroundoverlay -titlecardoverlay $titlecardoverlay
 
 # Check Plex now:
-$plexAccessStatus = Check-PlexAccess -PlexUrl $PlexUrl -PlexToken $PlexToken
-if (-not $plexAccessStatus) {
-    $Errorcount++
-    Exit
-}
+Check-PlexAccess -PlexUrl $PlexUrl -PlexToken $PlexToken
 
 # Check ImageMagick now:
 Check-ImageMagick -magick $magick -magickinstalllocation $magickinstalllocation
@@ -3042,7 +3042,7 @@ Elseif ($Testing) {
 else {
     Write-Log -Message "Query plex libs..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
     $Libsoverview = @()
-    foreach ($lib in $libs.MediaContainer.Directory) {
+    foreach ($lib in $Libs.MediaContainer.Directory) {
         if ($lib.title -notin $LibstoExclude) {
             $libtemp = New-Object psobject
             $libtemp | Add-Member -MemberType NoteProperty -Name "ID" -Value $lib.key
