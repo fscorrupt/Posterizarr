@@ -3,7 +3,7 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.22"
+$CurrentScriptVersion = "1.0.23"
 $global:HeaderWritten = $false
 
 #################
@@ -1549,50 +1549,66 @@ function Get-LatestScriptVersion {
         return $null
     }
 }
-##### START #####
+
+function Rotate-Logs {
+    param (
+        [string]$ScriptRoot
+    )
+
+    $logFolder = Join-Path $ScriptRoot "Logs"
+    $folderPattern = "Logs_*"
+    $RotationFolderName = "RotatedLogs"
+    $RotationFolder = Join-Path $ScriptRoot $RotationFolderName
+    
+    # Create Rotation Folder if missing
+    if (!(Test-Path -path $RotationFolder)) {
+        New-Item -ItemType Directory -Path $ScriptRoot -Name $RotationFolderName -Force | Out-Null
+    }
+
+    # Check if the log folder exists
+    if (Test-Path -Path $logFolder -PathType Container) {
+        # Rename the existing log folder with a timestamp
+        $timestamp = Get-Date -Format 'yyyyMMdd_HHmmss'
+        Rename-Item -Path $logFolder -NewName "Logs`_$timestamp"
+        # Create Rotation Folder if missing
+        if (!(Test-Path $RotationFolder)) {
+            New-Item -ItemType Directory -Path $ScriptRoot -Name $RotationFolderName -Force | Out-Null
+        }
+        # Move logs to Rotation Folder
+        Move-Item -Path "$logFolder`_$timestamp" $RotationFolder
+    }
+}
+
+function Check-ConfigFile {
+    param (
+        [string]$ScriptRoot
+    )
+
+    if (!(Test-Path (Join-Path $ScriptRoot 'config.json'))) {
+        Write-Log -Message "Config File missing, downloading it for you..." -Path "$ScriptRoot\Logs\Scriptlog.log" -Type Info
+        Invoke-WebRequest -Uri "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/config.example.json" -OutFile "$ScriptRoot\config.json"
+        Write-Log -Subtext "Config File downloaded here: '$ScriptRoot\config.json'" -Path "$ScriptRoot\Logs\Scriptlog.log" -Type Info
+        Write-Log -Subtext "Please configure the config file according to GitHub, Exit script now..." -Path "$ScriptRoot\Logs\Scriptlog.log" -Type Warning
+        Exit
+    }
+}
+
+##### PRE-START #####
 # Set some global vars
 Set-OSTypeAndScriptRoot
 # Get platform
 $Platform = Get-Platform
 # Get Latest Script Version
 $LatestScriptVersion = Get-LatestScriptVersion
-
+##### START #####
 $startTime = Get-Date
 # Rotate logs before doing anything!
-$logFolder = Join-Path $global:ScriptRoot "Logs"
-$folderPattern = "Logs_*"
-$RotationFolderName = "RotatedLogs"
-$RotationFolder = Join-Path $global:ScriptRoot $RotationFolderName
-# Create Folder if missing
-if (!(Test-Path -path $RotationFolder)) {
-    New-Item -ItemType Directory -Path $global:ScriptRoot -Name $RotationFolderName -Force | Out-Null
-}
-
-# Check if the log folder exists
-if (Test-Path -Path $logFolder -PathType Container) {
-    # Rename the existing log folder with a timestamp
-    $timestamp = Get-Date -Format 'yyyyMMdd_HHmmss'
-    Rename-Item -Path $logFolder -NewName "Logs`_$timestamp"
-    if (!(Test-Path $RotationFolder)) {
-        New-Item -ItemType Directory -Path $global:ScriptRoot -Name $RotationFolderName -Force | Out-Null
-    }
-    Move-Item -Path "$logFolder`_$timestamp" $RotationFolder
-}
-
+Rotate-Logs -ScriptRoot $global:ScriptRoot
 Write-Log -Message "Starting..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
-
 # Check if Config file is present
-if (!(Test-Path $(Join-Path $global:ScriptRoot 'config.json'))) {
-    Write-Log -Message "Config File missing, downloading it for you..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-    Invoke-WebRequest -uri "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/config.example.json" -OutFile "$global:ScriptRoot\config.json"
-    Write-Log -Subtext "Config File downloaded here: '$global:ScriptRoot\config.json'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-    Write-Log -Subtext "Please configure the config file according to GH, Exit script now..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
-    Exit
-}
-
+Check-ConfigFile -ScriptRoot $global:ScriptRoot
 # Test Json if something is missing
 CheckJson -jsonExampleUrl "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/config.example.json" -jsonFilePath $(Join-Path $global:ScriptRoot 'config.json')
-
 # Check if Script is Latest
 if ($CurrentScriptVersion -eq $LatestScriptVersion) {
     Write-Log -Message "You are Running Version - v$CurrentScriptVersion" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
@@ -1600,7 +1616,6 @@ if ($CurrentScriptVersion -eq $LatestScriptVersion) {
 Else {
     Write-Log -Message "You are Running Version: v$CurrentScriptVersion - Latest Version is: v$LatestScriptVersion" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
 }
-
 # load config file
 $config = Get-Content -Raw -Path $(Join-Path $global:ScriptRoot 'config.json') | ConvertFrom-Json
 # Read naxLogs value from config.json
