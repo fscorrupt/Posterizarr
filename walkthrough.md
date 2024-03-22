@@ -216,3 +216,5 @@
         ```sh
         docker exec -it ppm pwsh PlexPosterMaker.ps1
         ```
+> [!TIP]
+> If you are an unRAID user, install the `Docker Compose Manager` plugin from the Community Apps store so that you can leverage the compose file
