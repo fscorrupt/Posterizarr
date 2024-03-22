@@ -1811,7 +1811,7 @@ Else {
 }
 # load config file
 $config = Get-Content -Raw -Path $(Join-Path $global:ScriptRoot 'config.json') | ConvertFrom-Json
-$config = Get-Content -Raw -Path $(Join-Path 'C:\PosterTemp' 'config.json') | ConvertFrom-Json
+
 # Read naxLogs value from config.json
 $maxLogs = [int]$config.PrerequisitePart.maxLogs  # Cast to integer
 # Check if the cast was successful
