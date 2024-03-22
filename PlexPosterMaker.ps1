@@ -1702,7 +1702,6 @@ function Check-PlexAccess {
             # Check if libs are available
             [XML]$Libs = (Invoke-WebRequest "$PlexUrl/library/sections/?X-Plex-Token=$PlexToken").content
             if ($Libs.MediaContainer.size -ge '1') {
-                Write-Log -Subtext "Found libs on Plex..." -Path $configLogging -Type Info
                 return $Libs
             }
             Else {
