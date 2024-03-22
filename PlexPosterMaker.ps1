@@ -5,6 +5,7 @@ param (
 
 $CurrentScriptVersion = "1.0.23"
 $global:HeaderWritten = $false
+$ProgressPreference = 'SilentlyContinue'
 
 #################
 # What you need #
@@ -18,7 +19,6 @@ $global:HeaderWritten = $false
 function Set-OSTypeAndScriptRoot {
     if ($env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker-Alpine*') {
         $global:OSType = "DockerAlpine"
-        $ProgressPreference = 'SilentlyContinue'
         $global:ScriptRoot = "./config"
     }
     Else {
@@ -1707,7 +1707,8 @@ function Check-PlexAccess {
             $Errorcount++
             Exit
         }
-    } Else {
+    }
+    Else {
         Write-Log -Message "Checking Plex access now..." -Path $configLogging -Type Info
         try {
             $result = Invoke-WebRequest -Uri "$PlexUrl/library/sections" -ErrorAction SilentlyContinue
@@ -1735,13 +1736,16 @@ function Check-ImageMagick {
     )
 
     if (!(Test-Path $magick)) {
-        if ($global:OSType -ne "Win32NT" -and $global:OSType -ne "DockerAlpine") {
-            Write-Log -Message "ImageMagick missing, downloading the portable version for you..." -Path $configLogging -Type Warning
-            $magickUrl = "https://imagemagick.org/archive/binaries/magick"
-            Invoke-WebRequest -Uri $magickUrl -OutFile "$global:ScriptRoot/magick"
-            chmod +x "$global:ScriptRoot/magick"
-            Write-Log -Subtext "Made the portable Magick executable..." -Path $configLogging -Type Success
-        } else {
+        if ($global:OSType -ne "Win32NT") {
+            if ($global:OSType -ne "DockerAlpine") {
+                Write-Log -Message "ImageMagick missing, downloading the portable version for you..." -Path $configLogging -Type Warning
+                $magickUrl = "https://imagemagick.org/archive/binaries/magick"
+                Invoke-WebRequest -Uri $magickUrl -OutFile "$global:ScriptRoot/magick"
+                chmod +x "$global:ScriptRoot/magick"
+                Write-Log -Subtext "Made the portable Magick executable..." -Path $configLogging -Type Success
+            }
+        }
+        else {
             Write-Log -Message "ImageMagick missing, downloading it for you..." -Path $configLogging -Type Error
             $Errorcount++
             $result = Invoke-WebRequest "https://imagemagick.org/archive/binaries/?C=M;O=D"
