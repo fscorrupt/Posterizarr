@@ -3,7 +3,7 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.26"
+$CurrentScriptVersion = "1.0.27"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -1450,6 +1450,7 @@ function CheckJson {
         [object]$jsonFilePath
     )
     try {
+        $AttributeChanged = $null
         # Download the default configuration JSON file from the URL
         $defaultConfig = Invoke-RestMethod -Uri $jsonExampleUrl -Method Get -ErrorAction Stop
 
@@ -1470,28 +1471,43 @@ function CheckJson {
         # Check and add missing keys from the default configuration
         foreach ($partKey in $defaultConfig.PSObject.Properties.Name) {
             # Check if the part exists in the current configuration
-            if (-not $config.$partKey) {
-                Write-Log -Message "Missing Main Attribute in your Config file: $partKey." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
-                Write-Log -Message "In GH Readme, look for $partKey, then review your config file and adjust it accordingly." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
-                Write-Log -Message "GH Readme -> https://github.com/fscorrupt/Plex-Poster-Maker/blob/main/README.md#configuration, Exiting now..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
-                Exit
+            if (-not $config.PSObject.Properties.Name.Contains($partKey)) {
+                Write-Log -Message "Missing Main Attribute in your Config file: $partKey." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                Write-Log -Subtext "Adding it for you... In GH Readme, look for $partKey - if you want to see what changed..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                Write-Log -Subtext "GH Readme -> https://github.com/fscorrupt/Plex-Poster-Maker/blob/main/README.md#configuration" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                $config | Add-Member -MemberType NoteProperty -Name $partKey -Value $defaultConfig.$partKey
+                $AttributeChanged = $True
             }
             else {
                 # Check each key in the part
                 foreach ($propertyKey in $defaultConfig.$partKey.PSObject.Properties.Name) {
                     # Show user that a sub-attribute is missing
                     if (-not $config.$partKey.PSObject.Properties.Name.Contains($propertyKey)) {
-                        Write-Log -Message "Missing Sub-Attribute in your Config file: $partKey.$propertyKey." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
-                        Write-Log -Message "In GH Readme, look for $partKey and $propertyKey, then review your config file and adjust it accordingly." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
-                        Write-Log -Message "GH Readme -> https://github.com/fscorrupt/Plex-Poster-Maker/blob/main/README.md#configuration, Exiting now..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
-                        Exit
+                        Write-Log -Message "Missing Sub-Attribute in your Config file: $partKey.$propertyKey." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                        Write-Log -Subtext "Adding it for you... In GH Readme, look for $partKey.$propertyKey - if you want to see what changed..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                        Write-Log -Subtext "GH Readme -> https://github.com/fscorrupt/Plex-Poster-Maker/blob/main/README.md#configuration" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                        # Check if the sub-attribute exists in the default config
+                        if ($defaultConfig.$partKey.PSObject.Properties.Name -contains $propertyKey) {
+                            $config.$partKey | Add-Member -MemberType NoteProperty -Name $propertyKey -Value $defaultConfig.$partKey.$propertyKey
+                            $AttributeChanged = $True
+                        }
+                        else {
+                            Write-Log -Message  "Default configuration does not contain sub-attribute: $partKey.$propertyKey. Skipping..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+                        }
                     }
                 }
             }
         }
+        if ($AttributeChanged -eq 'True') {
+            # Convert the updated configuration object back to JSON and save it
+            $configJson = $config | ConvertTo-Json -Depth 10
+            $configJson | Set-Content -Path $jsonFilePath -Force
+
+            Write-Log -Subtext "Configuration file updated successfully." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
+        }
     }
     catch [System.Net.WebException] {
-        Write-Log -Message "Failed to download the default configuration JSON file from the URL. Please check your internet connection and URL: $jsonExampleUrl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+        Write-Log -Message "Failed to download the default configuration JSON file from the URL." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
         Exit
     }
     catch {
@@ -4453,7 +4469,7 @@ else {
                                             try {
                                                 if (!$global:PlexartworkDownloaded -and $global:TempImagecopied -ne 'True') {
                                                     $response = Invoke-WebRequest -Uri $global:posterurl -OutFile $EpisodeImage -ErrorAction Stop
-                                                    $null = Copy-Item -LiteralPath $EpisodeImage -destination $EpisodeTempImage
+                                                    Copy-Item -LiteralPath $EpisodeImage -destination $EpisodeTempImage | Out-Null
                                                 }
                                             }
                                             catch {
@@ -4483,9 +4499,15 @@ else {
                                                 }
                                             }
                                             Else {
-                                                $null = Copy-Item -LiteralPath $EpisodeTempImage -destination $EpisodeImage
+                                                Copy-Item -LiteralPath $EpisodeTempImage -destination $EpisodeImage | Out-Null
                                             }
                                             $global:TempImagecopied = $true
+                                            # Check temp image
+                                            if ((Get-ChildItem -LiteralPath $EpisodeTempImage -ErrorAction SilentlyContinue).length -le '100000') {
+                                                Write-Log -Subtext "Temp image to small, copy episode image again..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                                                Copy-Item -LiteralPath $EpisodeImage -destination $EpisodeTempImage | Out-Null
+                                                Start-Sleep 5
+                                            }
                                             if (Get-ChildItem -LiteralPath $EpisodeImage -ErrorAction SilentlyContinue) {
                                                 $CommentArguments = "convert `"$EpisodeImage`" -set `"comment`" `"created with ppm`" `"$EpisodeImage`""
                                                 $CommentlogEntry = "`"$magick`" $CommentArguments"
@@ -4614,7 +4636,7 @@ else {
                                 }
                             }
                             if (Test-Path $EpisodeTempImage -ErrorAction SilentlyContinue) {
-                                $null = Remove-Item -LiteralPath $EpisodeTempImage
+                                Remove-Item -LiteralPath $EpisodeTempImage | Out-Null
                                 Write-Log -Message "Deleting EpisodeTempImage: $EpisodeTempImage" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                             }
                         }
