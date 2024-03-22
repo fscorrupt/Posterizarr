@@ -335,74 +335,20 @@ Follow the prompts to enter the source picture path, media folder name, and movi
 </p>
 </details>
 <details close>
-<summary>🖼️Movie Posters after creation:</summary>
+<summary>🖼️Assets after PPM run:</summary>
 <br>
 <p>
   <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
-    <img alt="movies" height="520px" src="/images/movies.png">
+    <img alt="output" height="100%" src="/images/ppm-overview.png">
   </a>
 </p>
 </details>
 <details close>
-<summary>🖼️Show Posters after creation:</summary>
+<summary>🖼️Assets after PMM run:</summary>
 <br>
 <p>
   <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
-    <img alt="shows" height="520px" src="/images/shows.png">
-  </a>
-</p>
-</details>
-<details close>
-<summary>🖼️TitleCards after creation:</summary>
-<br>
-<p>
-  <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
-    <img alt="titlecards" height="520px" src="/images/titlecards.png">
-  </a>
-</p>
-</details>
-<details close>
-<summary>🖼️Backgrounds after creation:</summary>
-<br>
-<p>
-  <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
-    <img alt="backgrounds" height="520px" src="/images/backgrounds.png">
-  </a>
-</p>
-</details>
-<details close>
-<summary>🖼️4K Lib after Plex-Meta-Manager magic:</summary>
-<br>
-<p>
-  <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
-    <img alt="movies4kpmm" height="100%" src="/images/movies4kpmm.png">
-  </a>
-</p>
-</details>
-<details close>
-<summary>🖼️Movie Lib after Plex-Meta-Manager magic:</summary>
-<br>
-<p>
-  <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
-    <img alt="movies_pmm" height="100%" src="/images/movies_pmm.png">
-  </a>
-</p>
-</details>
-<details close>
-<summary>🖼️TV Lib after Plex-Meta-Manager magic:</summary>
-<br>
-<p>
-  <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
-    <img alt="showspmm" height="520px" src="/images/showspmm.png">
-  </a>
-</p>
-</details>
-<details close>
-<summary>🖼️TV Lib Seasons after Plex-Meta-Manager magic:</summary>
-<br>
-<p>
-  <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
-    <img alt="seasonspmm" height="100%" src="/images/seasonspmm.png">
+    <img alt="imagecsv" height="100%" src="/images/pmm-overview.png">
   </a>
 </p>
 </details>
