@@ -229,7 +229,10 @@ Run the script with the `-Testing` flag. In this mode, the script will create pi
   - Change `TimeZone` to yours, otherwise it will get scheduled to a different time you may want it to.
   - You may also have to change `PUID/PGID`
 
-  if you manually want to run the Script you can do it this way:
+> [!TIP]
+> If you are an unRAID user, install the `Docker Compose Manager` plugin from the Community Apps store so that you can leverage the compose file
+> 
+  If you manually want to run the Script you can do it this way:
 
   **Automatic Mode:**
   ```sh
