@@ -24,6 +24,7 @@ Plex Poster Maker is cross-platform ready, meaning it can run on both Linux, Doc
 ### **Key Features:**
 >[!TIP]
 > If you want to use the created assets with PMM make shure to check out the [Assets doc](https://metamanager.wiki/en/latest/pmm/guides/assets/)
+>
 > You can find an example config for the Assets on my [PMM-Configs repo](https://github.com/bullmoose20/Plex-Meta-Manager-Configs/blob/master/fscorrupt/config.yml)
 - **Resizing**: It automatically resizes every poster to 2000x3000.
 - **Overlays**: If you choose to, downloaded images will automatically have borders, text, and a gradient overlay applied.
