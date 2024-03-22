@@ -1593,6 +1593,17 @@ function Check-ConfigFile {
     }
 }
 
+function Test-And-Download {
+    param(
+        [string]$url,
+        [string]$destination
+    )
+
+    if (!(Test-Path $destination)) {
+        Invoke-WebRequest -Uri $url -OutFile $destination
+    }
+}
+
 ##### PRE-START #####
 # Set some global vars
 Set-OSTypeAndScriptRoot
@@ -1856,17 +1867,6 @@ if ($Testing) {
 }
 
 # Test and download files if they don't exist
-function Test-And-Download {
-    param(
-        [string]$url,
-        [string]$destination
-    )
-
-    if (!(Test-Path $destination)) {
-        Invoke-WebRequest -Uri $url -OutFile $destination
-    }
-}
-
 Test-And-Download -url "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/overlay.png" -destination (Join-Path $TempPath 'overlay.png')
 Test-And-Download -url "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/backgroundoverlay.png" -destination (Join-Path $TempPath 'backgroundoverlay.png')
 Test-And-Download -url "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/Rocky.ttf" -destination (Join-Path $TempPath 'Rocky.ttf')
@@ -3132,7 +3132,7 @@ else {
                     $SeasonNames = $SeasonsTemp.Title -join ','
                     $SeasonNumbers = $SeasonsTemp.index -join ','
                     $SeasonRatingkeys = $SeasonsTemp.ratingKey -join ','
-                    $SeasonPosterUrl = ($SeasonsTemp | Where-Object { $_.type -eq "season" }).thumb -join ','
+                    $SeasonPosterUrl = ($SeasonsTemp | where { $_.type -eq "season" }).thumb -join ','
                 }
                 $matchesimdb = [regex]::Matches($metadatatemp, $imdbpattern)
                 $matchestmdb = [regex]::Matches($metadatatemp, $tmdbpattern)
