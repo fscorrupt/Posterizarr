@@ -3,7 +3,7 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.25"
+$CurrentScriptVersion = "1.0.26"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -1556,13 +1556,12 @@ function Rotate-Logs {
     )
 
     $logFolder = Join-Path $ScriptRoot "Logs"
-    $folderPattern = "Logs_*"
-    $RotationFolderName = "RotatedLogs"
-    $RotationFolder = Join-Path $ScriptRoot $RotationFolderName
+    $global:RotationFolderName = "RotatedLogs"
+    $RotationFolder = Join-Path $ScriptRoot $global:RotationFolderName
     
     # Create Rotation Folder if missing
     if (!(Test-Path -path $RotationFolder)) {
-        New-Item -ItemType Directory -Path $ScriptRoot -Name $RotationFolderName -Force | Out-Null
+        New-Item -ItemType Directory -Path $ScriptRoot -Name $global:RotationFolderName -Force | Out-Null
     }
 
     # Check if the log folder exists
@@ -1572,7 +1571,7 @@ function Rotate-Logs {
         Rename-Item -Path $logFolder -NewName "Logs`_$timestamp"
         # Create Rotation Folder if missing
         if (!(Test-Path $RotationFolder)) {
-            New-Item -ItemType Directory -Path $ScriptRoot -Name $RotationFolderName -Force | Out-Null
+            New-Item -ItemType Directory -Path $ScriptRoot -Name $global:RotationFolderName -Force | Out-Null
         }
         # Move logs to Rotation Folder
         Move-Item -Path "$logFolder`_$timestamp" $RotationFolder
@@ -1796,6 +1795,8 @@ $LatestScriptVersion = Get-LatestScriptVersion
 ##### START #####
 $startTime = Get-Date
 # Rotate logs before doing anything!
+$folderPattern = "Logs_*"
+$global:RotationFolderName = $null
 Rotate-Logs -ScriptRoot $global:ScriptRoot
 Write-Log -Message "Starting..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
 # Check if Config file is present
@@ -1825,10 +1826,12 @@ if ($maxLogs -le 0) {
     $maxLogs = 1
 }
 # Delete excess log folders
-$logFolders = Get-ChildItem -Path $(Join-Path $global:ScriptRoot $RotationFolderName) -Directory | Where-Object { $_.Name -match $folderPattern } | Sort-Object CreationTime -Descending | Select-Object -First $maxLogs
-foreach ($folder in (Get-ChildItem -Path $(Join-Path $global:ScriptRoot $RotationFolderName) -Directory | Where-Object { $_.Name -match $folderPattern })) {
+$logFolders = Get-ChildItem -Path $(Join-Path $global:ScriptRoot $global:RotationFolderName) -Directory | Where-Object { $_.Name -match $folderPattern } | Sort-Object CreationTime -Descending | Select-Object -First $maxLogs
+foreach ($folder in (Get-ChildItem -Path $(Join-Path $global:ScriptRoot $global:RotationFolderName) -Directory | Where-Object { $_.Name -match $folderPattern })) {
     if ($folder.FullName -notin $logFolders.FullName) {
         Remove-Item -Path $folder.FullName -Recurse -Force
+        $fldrName = $folder.FullName
+        Write-Log -Message "Deleting excess folder: $fldrName" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
     }
 }
 
@@ -2042,11 +2045,13 @@ foreach ($path in $LogsPath, $TempPath, $TestPath, $AssetPath) {
 # Delete all files and subfolders within the temp directory
 if (Test-Path $TempPath) {
     Remove-Item -Path (Join-Path $TempPath '*') -Recurse -Force
+    Write-Log -Message "Deleting temp folder: $TempPath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
 }
 
 if ($Testing) {
     if ((Test-Path $TestPath)) {
         Remove-Item -Path (Join-Path $TestPath '*') -Recurse -Force
+        Write-Log -Message "Deleting test folder: $TestPath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
     }
 }
 
@@ -2917,10 +2922,13 @@ Elseif ($Testing) {
     $minutes = $executionTime.Minutes
     $seconds = $executionTime.Seconds
     $FormattedTimespawn = $hours.ToString() + "h " + $minutes.ToString() + "m " + $seconds.ToString() + "s "
+    Write-Log -Subtext "Final cleanup starting..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
+    Write-Log -Subtext "Deleting testimage: $testimage" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+    Remove-Item -LiteralPath $testimage | out-null
+    Write-Log -Subtext "Deleting backgroundtestimage: $backgroundtestimage" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+    Remove-Item -LiteralPath $backgroundtestimage | out-null
     Write-Log -Subtext "Poster/Background/TitleCard Tests finished, you can find them here: $(Join-Path $global:ScriptRoot 'test')" -Path (Join-Path $global:ScriptRoot 'Logs\Testinglog.log') -Type Success
     Write-Log -Message "Script execution time: $FormattedTimespawn" -Path $global:ScriptRoot\Logs\Testinglog.log -Type Success
-    Remove-Item -LiteralPath $testimage | out-null
-    Remove-Item -LiteralPath $backgroundtestimage | out-null
     $gettestimages = Get-ChildItem $global:ScriptRoot\test
     $titlecardscount = ($gettestimages | Where-Object { $_.name -like 'Title*' }).count
     $backgroundsscount = ($gettestimages | Where-Object { $_.name -like 'back*' }).count
@@ -4607,6 +4615,7 @@ else {
                             }
                             if (Test-Path $EpisodeTempImage -ErrorAction SilentlyContinue) {
                                 $null = Remove-Item -LiteralPath $EpisodeTempImage
+                                Write-Log -Message "Deleting EpisodeTempImage: $EpisodeTempImage" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                             }
                         }
                         Else {
