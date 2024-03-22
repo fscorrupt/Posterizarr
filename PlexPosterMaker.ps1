@@ -3,8 +3,9 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.22"
+$CurrentScriptVersion = "1.0.23"
 $global:HeaderWritten = $false
+$ProgressPreference = 'SilentlyContinue'
 
 #################
 # What you need #
@@ -18,7 +19,6 @@ $global:HeaderWritten = $false
 function Set-OSTypeAndScriptRoot {
     if ($env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker-Alpine*') {
         $global:OSType = "DockerAlpine"
-        $ProgressPreference = 'SilentlyContinue'
         $global:ScriptRoot = "./config"
     }
     Else {
@@ -1549,50 +1549,241 @@ function Get-LatestScriptVersion {
         return $null
     }
 }
-##### START #####
+
+function Rotate-Logs {
+    param (
+        [string]$ScriptRoot
+    )
+
+    $logFolder = Join-Path $ScriptRoot "Logs"
+    $folderPattern = "Logs_*"
+    $RotationFolderName = "RotatedLogs"
+    $RotationFolder = Join-Path $ScriptRoot $RotationFolderName
+    
+    # Create Rotation Folder if missing
+    if (!(Test-Path -path $RotationFolder)) {
+        New-Item -ItemType Directory -Path $ScriptRoot -Name $RotationFolderName -Force | Out-Null
+    }
+
+    # Check if the log folder exists
+    if (Test-Path -Path $logFolder -PathType Container) {
+        # Rename the existing log folder with a timestamp
+        $timestamp = Get-Date -Format 'yyyyMMdd_HHmmss'
+        Rename-Item -Path $logFolder -NewName "Logs`_$timestamp"
+        # Create Rotation Folder if missing
+        if (!(Test-Path $RotationFolder)) {
+            New-Item -ItemType Directory -Path $ScriptRoot -Name $RotationFolderName -Force | Out-Null
+        }
+        # Move logs to Rotation Folder
+        Move-Item -Path "$logFolder`_$timestamp" $RotationFolder
+    }
+}
+
+function Check-ConfigFile {
+    param (
+        [string]$ScriptRoot
+    )
+
+    if (!(Test-Path (Join-Path $ScriptRoot 'config.json'))) {
+        Write-Log -Message "Config File missing, downloading it for you..." -Path "$ScriptRoot\Logs\Scriptlog.log" -Type Info
+        Invoke-WebRequest -Uri "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/config.example.json" -OutFile "$ScriptRoot\config.json"
+        Write-Log -Subtext "Config File downloaded here: '$ScriptRoot\config.json'" -Path "$ScriptRoot\Logs\Scriptlog.log" -Type Info
+        Write-Log -Subtext "Please configure the config file according to GitHub, Exit script now..." -Path "$ScriptRoot\Logs\Scriptlog.log" -Type Warning
+        Exit
+    }
+}
+
+function Test-And-Download {
+    param(
+        [string]$url,
+        [string]$destination
+    )
+
+    if (!(Test-Path $destination)) {
+        Invoke-WebRequest -Uri $url -OutFile $destination
+    }
+}
+
+function Log-ConfigSettings {
+    Write-Log -Message "Current Config.json Settings" -Path $configLogging -Type Trace
+    Write-Log -Subtext "___________________________________________" -Path $configLogging -Type Debug
+    # Plex Part
+    Write-Log -Subtext "API Part" -Path $configLogging -Type Trace
+    Write-Log -Subtext "| TVDB API Key:                 $($global:tvdbapi[0..7] -join '')****" -Path $configLogging -Type Info
+    Write-Log -Subtext "| TMDB API Read Access Token:   $($global:tmdbtoken[0..7] -join '')****" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Fanart API Key:               $($FanartTvAPIKey[0..7] -join '')****" -Path $configLogging -Type Info
+    if ($PlexToken) {
+        Write-Log -Subtext "| Plex Token:                   $($PlexToken[0..7] -join '')****" -Path $configLogging -Type Info
+    }
+    Write-Log -Subtext "| Fav Provider:                 $global:FavProvider" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Preferred Lang Order:         $($global:PreferredLanguageOrder -join ',')" -Path $configLogging -Type Info
+    Write-Log -Subtext "Plex Part" -Path $configLogging -Type Trace
+    Write-Log -Subtext "| Excluded Libs:                $($LibstoExclude -join ',')" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Plex Url:                     $($PlexUrl[0..10] -join '')****" -Path $configLogging -Type Info
+    Write-Log -Subtext "Prerequisites Part" -Path $configLogging -Type Trace
+    Write-Log -Subtext "| Asset Path:                   $AssetPath" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Script Root:                  $global:ScriptRoot" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Magick Location:              $magickinstalllocation" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Used Poster Font:             $font" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Used Background Font:         $backgroundfont" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Used TitleCard Font:          $titlecardfont" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Used Poster Overlay File:     $Posteroverlay" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Used Background Overlay File: $Backgroundoverlay" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Used TitleCard Overlay File:  $titlecardoverlay" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Create Library Folders:       $LibraryFolders" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Create Season Posters:        $global:SeasonPosters" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Create Posters:               $global:Posters" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Create Background Posters:    $global:BackgroundPosters" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Create Title Cards:           $global:TitleCards" -Path $configLogging -Type Info
+    Write-Log -Subtext "OverLay General Part" -Path $configLogging -Type Trace
+    Write-Log -Subtext "| Process Images:               $global:ImageProcessing" -Path $configLogging -Type Info
+    Write-Log -Subtext "OverLay Poster Part" -Path $configLogging -Type Trace
+    Write-Log -Subtext "| All Caps on Text:             $fontAllCaps" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Add Border to Image:          $AddBorder" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Add Text to Image:            $AddText" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Add Overlay to Image:         $AddOverlay" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Font Color:                   $fontcolor" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Border Color:                 $bordercolor" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Min Font Size:                $minPointSize" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Max Font Size:                $maxPointSize" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Border Width:                 $borderwidth" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Text Box Width:               $MaxWidth" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Text Box Height:              $MaxHeight" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Text Box Offset:              $text_offset" -Path $configLogging -Type Info
+    Write-Log -Subtext "OverLay Background Part" -Path $configLogging -Type Trace
+    Write-Log -Subtext "| All Caps on Text:             $BackgroundfontAllCaps" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Add Border to Background:     $AddBackgroundBorder" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Add Text to Background:       $AddBackgroundText" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Add Overlay to Background:    $AddBackgroundOverlay" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Font Color:                   $Backgroundfontcolor" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Border Color:                 $Backgroundbordercolor" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Min Font Size:                $BackgroundminPointSize" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Max Font Size:                $BackgroundmaxPointSize" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Border Width:                 $Backgroundborderwidth" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Text Box Width:               $BackgroundMaxWidth" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Text Box Height:              $BackgroundMaxHeight" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Text Box Offset:              $Backgroundtext_offset" -Path $configLogging -Type Info
+    Write-Log -Subtext "OverLay TitleCard Part" -Path $configLogging -Type Trace
+    Write-Log -Subtext "| Add Border to Background:     $AddTitleCardBorder" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Border Color:                 $TitleCardbordercolor" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Add Overlay to Background:    $AddTitleCardOverlay" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Border Width:                 $TitleCardborderwidth" -Path $configLogging -Type Info
+    Write-Log -Subtext "OverLay TitleCard Title Part" -Path $configLogging -Type Trace
+    Write-Log -Subtext "| All Caps on Text:             $TitleCardEPTitlefontAllCaps" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Add Title to TitleCard:       $AddTitleCardEPTitleText" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Font Color:                   $TitleCardEPTitlefontcolor" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Min Font Size:                $TitleCardEPTitleminPointSize" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Max Font Size:                $TitleCardEPTitlemaxPointSize" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Text Box Width:               $TitleCardEPTitleMaxWidth" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Text Box Height:              $TitleCardEPTitleMaxHeight" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Text Box Offset:              $TitleCardEPTitletext_offset" -Path $configLogging -Type Info
+    Write-Log -Subtext "OverLay TitleCard EP Part" -Path $configLogging -Type Trace
+    Write-Log -Subtext "| All Caps on Text:             $TitleCardEPfontAllCaps" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Add Episode to TitleCard:     $AddTitleCardEPText" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Font Color:                   $TitleCardEPfontcolor" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Min Font Size:                $TitleCardEPminPointSize" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Max Font Size:                $TitleCardEPmaxPointSize" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Text Box Width:               $TitleCardEPMaxWidth" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Text Box Height:              $TitleCardEPMaxHeight" -Path $configLogging -Type Info
+    Write-Log -Subtext "| Text Box Offset:              $TitleCardEPtext_offset" -Path $configLogging -Type Info
+    Write-Log -Subtext "___________________________________________" -Path $configLogging -Type Debug
+}
+
+function Check-PlexAccess {
+    param (
+        [string]$PlexUrl,
+        [string]$PlexToken
+    )
+
+    if ($PlexToken) {
+        Write-Log -Message "Plex token found, checking access now..." -Path $configLogging -Type Info
+        if ((Invoke-WebRequest "$PlexUrl/library/sections/?X-Plex-Token=$PlexToken").StatusCode -eq 200) {
+            Write-Log -Subtext "Plex access is working..." -Path $configLogging -Type Success
+            return (Invoke-WebRequest "$PlexUrl/library/sections/?X-Plex-Token=$PlexToken").content
+        }
+        Else {
+            Write-Log -Message "Could not access plex with this url: $PlexUrl/library/sections/?X-Plex-Token=$PlexToken" -Path $configLogging -Type Error
+            Write-Log -Subtext "Please check token and access..." -Path $configLogging -Type Error
+            $Errorcount++
+            Exit
+        }
+    }
+    Else {
+        Write-Log -Message "Checking Plex access now..." -Path $configLogging -Type Info
+        try {
+            $result = Invoke-WebRequest -Uri "$PlexUrl/library/sections" -ErrorAction SilentlyContinue
+        }
+        catch {
+            Write-Log -Message "Could not access plex with this url: $PlexUrl/library/sections" -Path $configLogging -Type Error
+            Write-Log -Message "Error Message: $_" -Path $configLogging -Type Error
+            $Errorcount++
+            Write-Log -Subtext "Please check access and settings in plex..." -Path $configLogging -Type Warning
+            Write-Log -Message "To be able to connect to plex without Auth" -Path $configLogging -Type Info
+            Write-Log -Message "You have to enter your ip range in 'Settings -> Network -> List of IP addresses and networks that are allowed without auth: '192.168.1.0/255.255.255.0''" -Path $configLogging -Type Info
+            Exit
+        }
+        if ($result.StatusCode -eq 200) {
+            Write-Log -Subtext "Plex access is working..." -Path $configLogging -Type Success
+            return (Invoke-WebRequest "$PlexUrl/library/sections").content
+        }
+    }
+}
+
+function Check-ImageMagick {
+    param (
+        [string]$magick,
+        [string]$magickinstalllocation
+    )
+
+    if (!(Test-Path $magick)) {
+        if ($global:OSType -ne "Win32NT") {
+            if ($global:OSType -ne "DockerAlpine") {
+                Write-Log -Message "ImageMagick missing, downloading the portable version for you..." -Path $configLogging -Type Warning
+                $magickUrl = "https://imagemagick.org/archive/binaries/magick"
+                Invoke-WebRequest -Uri $magickUrl -OutFile "$global:ScriptRoot/magick"
+                chmod +x "$global:ScriptRoot/magick"
+                Write-Log -Subtext "Made the portable Magick executable..." -Path $configLogging -Type Success
+            }
+        }
+        else {
+            Write-Log -Message "ImageMagick missing, downloading it for you..." -Path $configLogging -Type Error
+            $Errorcount++
+            $result = Invoke-WebRequest "https://imagemagick.org/archive/binaries/?C=M;O=D"
+            $LatestRelease = ($result.links.href | Where-Object { $_ -like '*portable-Q16-HDRI-x64.zip' } | Sort-Object -Descending)[0]
+            $DownloadPath = Join-Path -Path $global:ScriptRoot -ChildPath (Join-Path -Path 'temp' -ChildPath $LatestRelease)
+            Invoke-WebRequest "https://imagemagick.org/archive/binaries/$LatestRelease" -OutFile $DownloadPath
+            Expand-Archive -Path $DownloadPath -DestinationPath $magickinstalllocation -Force
+            if ((Get-ChildItem -Directory -LiteralPath $magickinstalllocation).name -eq $($LatestRelease.replace('.zip', ''))) {
+                Copy-item -Force -Recurse "$magickinstalllocation\$((Get-ChildItem -Directory -LiteralPath $magickinstalllocation).name)\*" $magickinstalllocation
+                Remove-Item -Recurse -LiteralPath "$magickinstalllocation\$((Get-ChildItem -Directory -LiteralPath $magickinstalllocation).name)" -Force
+            }
+            if (Test-Path -LiteralPath $magickinstalllocation\magick.exe) {
+                Write-Log -Subtext "Placed Portable ImageMagick here: $magickinstalllocation" -Path $configLogging -Type Success
+            }
+            Else {
+                Write-Log -Subtext "Error During extraction, please manually install/copy portable Imagemagick from here: https://imagemagick.org/archive/binaries/$LatestRelease" -Path $configLogging -Type Error
+            }
+        }
+    }
+}
+
+
+##### PRE-START #####
 # Set some global vars
 Set-OSTypeAndScriptRoot
 # Get platform
 $Platform = Get-Platform
 # Get Latest Script Version
 $LatestScriptVersion = Get-LatestScriptVersion
-
+##### START #####
 $startTime = Get-Date
 # Rotate logs before doing anything!
-$logFolder = Join-Path $global:ScriptRoot "Logs"
-$folderPattern = "Logs_*"
-$RotationFolderName = "RotatedLogs"
-$RotationFolder = Join-Path $global:ScriptRoot $RotationFolderName
-# Create Folder if missing
-if (!(Test-Path -path $RotationFolder)) {
-    New-Item -ItemType Directory -Path $global:ScriptRoot -Name $RotationFolderName -Force | Out-Null
-}
-
-# Check if the log folder exists
-if (Test-Path -Path $logFolder -PathType Container) {
-    # Rename the existing log folder with a timestamp
-    $timestamp = Get-Date -Format 'yyyyMMdd_HHmmss'
-    Rename-Item -Path $logFolder -NewName "Logs`_$timestamp"
-    if (!(Test-Path $RotationFolder)) {
-        New-Item -ItemType Directory -Path $global:ScriptRoot -Name $RotationFolderName -Force | Out-Null
-    }
-    Move-Item -Path "$logFolder`_$timestamp" $RotationFolder
-}
-
+Rotate-Logs -ScriptRoot $global:ScriptRoot
 Write-Log -Message "Starting..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
-
 # Check if Config file is present
-if (!(Test-Path $(Join-Path $global:ScriptRoot 'config.json'))) {
-    Write-Log -Message "Config File missing, downloading it for you..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-    Invoke-WebRequest -uri "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/config.example.json" -OutFile "$global:ScriptRoot\config.json"
-    Write-Log -Subtext "Config File downloaded here: '$global:ScriptRoot\config.json'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-    Write-Log -Subtext "Please configure the config file according to GH, Exit script now..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
-    Exit
-}
-
+Check-ConfigFile -ScriptRoot $global:ScriptRoot
 # Test Json if something is missing
 CheckJson -jsonExampleUrl "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/config.example.json" -jsonFilePath $(Join-Path $global:ScriptRoot 'config.json')
-
 # Check if Script is Latest
 if ($CurrentScriptVersion -eq $LatestScriptVersion) {
     Write-Log -Message "You are Running Version - v$CurrentScriptVersion" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
@@ -1600,7 +1791,6 @@ if ($CurrentScriptVersion -eq $LatestScriptVersion) {
 Else {
     Write-Log -Message "You are Running Version: v$CurrentScriptVersion - Latest Version is: v$LatestScriptVersion" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
 }
-
 # load config file
 $config = Get-Content -Raw -Path $(Join-Path $global:ScriptRoot 'config.json') | ConvertFrom-Json
 # Read naxLogs value from config.json
@@ -1841,108 +2031,15 @@ if ($Testing) {
 }
 
 # Test and download files if they don't exist
-function Test-And-Download {
-    param(
-        [string]$url,
-        [string]$destination
-    )
-
-    if (!(Test-Path $destination)) {
-        Invoke-WebRequest -Uri $url -OutFile $destination
-    }
-}
-
 Test-And-Download -url "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/overlay.png" -destination (Join-Path $TempPath 'overlay.png')
 Test-And-Download -url "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/backgroundoverlay.png" -destination (Join-Path $TempPath 'backgroundoverlay.png')
 Test-And-Download -url "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/Rocky.ttf" -destination (Join-Path $TempPath 'Rocky.ttf')
 
 # Write log message
-$logMessage = "Old log files cleared..."
-Write-Log -Message $logMessage -Path $configLogging -Type Warning
-
+Write-Log -Message "Old log files cleared..." -Path $configLogging -Type Warning
 # Display Current Config settings:
-Write-Log -Message "Current Config.json Settings" -Path $configLogging -Type Trace
-Write-Log -Subtext "___________________________________________" -Path $configLogging -Type Debug
-# Plex Part
-Write-Log -Subtext "API Part" -Path $configLogging -Type Trace
-Write-Log -Subtext "| TVDB API Key:                 $($global:tvdbapi[0..7] -join '')****" -Path $configLogging -Type Info
-Write-Log -Subtext "| TMDB API Read Access Token:   $($global:tmdbtoken[0..7] -join '')****" -Path $configLogging -Type Info
-Write-Log -Subtext "| Fanart API Key:               $($FanartTvAPIKey[0..7] -join '')****" -Path $configLogging -Type Info
-if ($PlexToken) {
-    Write-Log -Subtext "| Plex Token:                   $($PlexToken[0..7] -join '')****" -Path $configLogging  -Type Info
-}
-Write-Log -Subtext "| Fav Provider:                 $global:FavProvider" -Path $configLogging  -Type Info
-Write-Log -Subtext "| Preferred Lang Order:          $($global:PreferredLanguageOrder -join ',')" -Path $configLogging  -Type Info
-Write-Log -Subtext "Plex Part" -Path $configLogging  -Type Trace
-Write-Log -Subtext "| Excluded Libs:                $($LibstoExclude -join ',')" -Path $configLogging -Type Info
-Write-Log -Subtext "| Plex Url:                     $($PlexUrl[0..10] -join '')****" -Path $configLogging -Type Info
-Write-Log -Subtext "Prerequisites Part" -Path $configLogging -Type Trace
-Write-Log -Subtext "| Asset Path:                   $AssetPath" -Path $configLogging -Type Info
-Write-Log -Subtext "| Script Root:                  $global:ScriptRoot" -Path $configLogging -Type Info
-Write-Log -Subtext "| Magick Location:              $magickinstalllocation" -Path $configLogging -Type Info
-Write-Log -Subtext "| Used Poster Font:             $font" -Path $configLogging -Type Info
-Write-Log -Subtext "| Used Background Font:         $backgroundfont" -Path $configLogging -Type Info
-Write-Log -Subtext "| Used TitleCard Font:          $titlecardfont" -Path $configLogging -Type Info
-Write-Log -Subtext "| Used Poster Overlay File:     $Posteroverlay" -Path $configLogging -Type Info
-Write-Log -Subtext "| Used Background Overlay File: $Backgroundoverlay" -Path $configLogging -Type Info
-Write-Log -Subtext "| Used TitleCard Overlay File:  $titlecardoverlay" -Path $configLogging -Type Info
-Write-Log -Subtext "| Create Library Folders:       $LibraryFolders" -Path $configLogging -Type Info
-Write-Log -Subtext "| Create Season Posters:        $global:SeasonPosters" -Path $configLogging -Type Info
-Write-Log -Subtext "| Create Posters:               $global:Posters" -Path $configLogging -Type Info
-Write-Log -Subtext "| Create Background Posters:    $global:BackgroundPosters" -Path $configLogging -Type Info
-Write-Log -Subtext "| Create Title Cards:           $global:TitleCards" -Path $configLogging -Type Info
-Write-Log -Subtext "OverLay General Part" -Path $configLogging -Type Trace
-Write-Log -Subtext "| Process Images:               $global:ImageProcessing" -Path $configLogging -Type Info
-Write-Log -Subtext "OverLay Poster Part" -Path $configLogging -Type Trace
-Write-Log -Subtext "| All Caps on Text:             $fontAllCaps" -Path $configLogging -Type Info
-Write-Log -Subtext "| Add Border to Image:          $AddBorder" -Path $configLogging -Type Info
-Write-Log -Subtext "| Add Text to Image:            $AddText" -Path $configLogging -Type Info
-Write-Log -Subtext "| Add Overlay to Image:         $AddOverlay" -Path $configLogging -Type Info
-Write-Log -Subtext "| Font Color:                   $fontcolor" -Path $configLogging -Type Info
-Write-Log -Subtext "| Border Color:                 $bordercolor" -Path $configLogging -Type Info
-Write-Log -Subtext "| Min Font Size:                $minPointSize" -Path $configLogging -Type Info
-Write-Log -Subtext "| Max Font Size:                $maxPointSize" -Path $configLogging -Type Info
-Write-Log -Subtext "| Border Width:                 $borderwidth" -Path $configLogging -Type Info
-Write-Log -Subtext "| Text Box Width:               $MaxWidth" -Path $configLogging -Type Info
-Write-Log -Subtext "| Text Box Height:              $MaxHeight" -Path $configLogging -Type Info
-Write-Log -Subtext "| Text Box Offset:              $text_offset" -Path $configLogging -Type Info
-Write-Log -Subtext "OverLay Background Part" -Path $configLogging -Type Trace
-Write-Log -Subtext "| All Caps on Text:             $BackgroundfontAllCaps" -Path $configLogging -Type Info
-Write-Log -Subtext "| Add Border to Background:     $AddBackgroundBorder" -Path $configLogging -Type Info
-Write-Log -Subtext "| Add Text to Background:       $AddBackgroundText" -Path $configLogging -Type Info
-Write-Log -Subtext "| Add Overlay to Background:    $AddBackgroundOverlay" -Path $configLogging -Type Info
-Write-Log -Subtext "| Font Color:                   $Backgroundfontcolor" -Path $configLogging -Type Info
-Write-Log -Subtext "| Border Color:                 $Backgroundbordercolor" -Path $configLogging -Type Info
-Write-Log -Subtext "| Min Font Size:                $BackgroundminPointSize" -Path $configLogging -Type Info
-Write-Log -Subtext "| Max Font Size:                $BackgroundmaxPointSize" -Path $configLogging -Type Info
-Write-Log -Subtext "| Border Width:                 $Backgroundborderwidth" -Path $configLogging -Type Info
-Write-Log -Subtext "| Text Box Width:               $BackgroundMaxWidth" -Path $configLogging -Type Info
-Write-Log -Subtext "| Text Box Height:              $BackgroundMaxHeight" -Path $configLogging -Type Info
-Write-Log -Subtext "| Text Box Offset:              $Backgroundtext_offset" -Path $configLogging -Type Info
-Write-Log -Subtext "OverLay TitleCard Part" -Path $configLogging -Type Trace
-Write-Log -Subtext "| Add Border to Background:     $AddTitleCardBorder" -Path $configLogging -Type Info
-Write-Log -Subtext "| Border Color:                 $TitleCardbordercolor" -Path $configLogging -Type Info
-Write-Log -Subtext "| Add Overlay to Background:    $AddTitleCardOverlay" -Path $configLogging -Type Info
-Write-Log -Subtext "| Border Width:                 $TitleCardborderwidth" -Path $configLogging -Type Info
-Write-Log -Subtext "OverLay TitleCard Title Part" -Path $configLogging -Type Trace
-Write-Log -Subtext "| All Caps on Text:             $TitleCardEPTitlefontAllCaps" -Path $configLogging -Type Info
-Write-Log -Subtext "| Add Title to TitleCard:       $AddTitleCardEPTitleText" -Path $configLogging -Type Info
-Write-Log -Subtext "| Font Color:                   $TitleCardEPTitlefontcolor" -Path $configLogging -Type Info
-Write-Log -Subtext "| Min Font Size:                $TitleCardEPTitleminPointSize" -Path $configLogging -Type Info
-Write-Log -Subtext "| Max Font Size:                $TitleCardEPTitlemaxPointSize" -Path $configLogging -Type Info
-Write-Log -Subtext "| Text Box Width:               $TitleCardEPTitleMaxWidth" -Path $configLogging -Type Info
-Write-Log -Subtext "| Text Box Height:              $TitleCardEPTitleMaxHeight" -Path $configLogging -Type Info
-Write-Log -Subtext "| Text Box Offset:              $TitleCardEPTitletext_offset" -Path $configLogging -Type Info
-Write-Log -Subtext "OverLay TitleCard EP Part" -Path $configLogging -Type Trace
-Write-Log -Subtext "| All Caps on Text:             $TitleCardEPfontAllCaps" -Path $configLogging -Type Info
-Write-Log -Subtext "| Add Episode to TitleCard:     $AddTitleCardEPText" -Path $configLogging -Type Info
-Write-Log -Subtext "| Font Color:                   $TitleCardEPfontcolor" -Path $configLogging -Type Info
-Write-Log -Subtext "| Min Font Size:                $TitleCardEPminPointSize" -Path $configLogging -Type Info
-Write-Log -Subtext "| Max Font Size:                $TitleCardEPmaxPointSize" -Path $configLogging -Type Info
-Write-Log -Subtext "| Text Box Width:               $TitleCardEPMaxWidth" -Path $configLogging -Type Info
-Write-Log -Subtext "| Text Box Height:              $TitleCardEPMaxHeight" -Path $configLogging -Type Info
-Write-Log -Subtext "| Text Box Offset:              $TitleCardEPtext_offset" -Path $configLogging -Type Info
-Write-Log -Subtext "___________________________________________" -Path $configLogging -Type Debug
+Log-ConfigSettings
+# Starting main Script now...
 Write-Log -Message "Starting main Script now..." -Path $configLogging -Type Success    
 
 # Get files in script root with specified extensions
@@ -1953,7 +2050,7 @@ foreach ($file in $files) {
     $destinationPath = Join-Path -Path (Join-Path -Path $global:ScriptRoot -ChildPath 'temp') -ChildPath $file.Name
     if (!(Test-Path -LiteralPath $destinationPath)) {
         Copy-Item -Path $file.FullName -Destination $destinationPath -Force | Out-Null
-        Write-Log -Subtext "Found File: '$($file.Name)' in ScriptRoot - copy it into temp folder..." -Path $configLogging -Type Trace
+        Write-Log -Subtext "Found File: '$($file.Name)' in ScriptRoot - copying it into temp folder..." -Path $configLogging -Type Trace
     }
 }
 
@@ -1961,71 +2058,12 @@ foreach ($file in $files) {
 CheckJsonPaths -font $font -backgroundfont $backgroundfont -titlecardfont $titlecardfont -Posteroverlay $Posteroverlay -Backgroundoverlay $Backgroundoverlay -titlecardoverlay $titlecardoverlay
 
 # Check Plex now:
-if ($PlexToken) {
-    Write-Log -Message "Plex token found, checking access now..." -Path $configLogging -Type Info
-    if ((Invoke-WebRequest "$PlexUrl/library/sections/?X-Plex-Token=$PlexToken").StatusCode -eq 200) {
-        Write-Log -Subtext "Plex access is working..." -Path $configLogging -Type Success
-        [xml]$Libs = (Invoke-WebRequest "$PlexUrl/library/sections/?X-Plex-Token=$PlexToken").content
-    }
-    Else {
-        Write-Log -Message "Could not access plex with this url: $PlexUrl/library/sections/?X-Plex-Token=$PlexToken" -Path $configLogging -Type Error
-        Write-Log -Subtext "Please check token and access..." -Path $configLogging -Type Error
-        $Errorcount++
-        Exit
-    }
-}
-Else {
-    Write-Log -Message "Checking Plex access now..." -Path $configLogging -Type Info
-    try {
-        $result = Invoke-WebRequest -Uri "$PlexUrl/library/sections" -ErrorAction SilentlyContinue
-    }
-    catch {
-        Write-Log -Message "Could not access plex with this url: $PlexUrl/library/sections" -Path $configLogging -Type Error
-        Write-Log -Message "Error Message: $_" -Path $configLogging -Type Error
-        $Errorcount++
-        Write-Log -Subtext "Please check access and settings in plex..." -Path $configLogging -Type Warning
-        Write-Log -Message "To be able to connect to plex without Auth" -Path $configLogging -Type Info
-        Write-Log -Message "You have to enter your ip range in 'Settings -> Network -> List of IP addresses and networks that are allowed without auth: '192.168.1.0/255.255.255.0''" -Path $configLogging -Type Info
-        Exit
-    }
-    if ($result.StatusCode -eq 200) {
-        Write-Log -Subtext "Plex access is working..." -Path $configLogging -Type Success
-        [xml]$Libs = (Invoke-WebRequest "$PlexUrl/library/sections").content
-    }
-}
+[xml]$Libs = Check-PlexAccess -PlexUrl $PlexUrl -PlexToken $PlexToken
 
-if (!(Test-Path $magick)) {
-    if ($global:OSType -ne "Win32NT") {
-        if ($global:OSType -ne "DockerAlpine") {
-            Write-Log -Message "ImageMagick missing, downloading the portable version for you..." -Path $configLogging -Type Warning
-            Invoke-WebRequest -Uri "https://imagemagick.org/archive/binaries/magick" -OutFile "$global:ScriptRoot/magick"
-            chmod +x "$global:ScriptRoot/magick"
-            Write-Log -Subtext "made the portable magick executeable..." -Path $configLogging -Type Success
-        }
-    }
-    Else {
-        Write-Log -Message "ImageMagick missing, downloading it for you..." -Path $configLogging -Type Error
-        $Errorcount++
-        $result = Invoke-WebRequest "https://imagemagick.org/archive/binaries/?C=M;O=D"
-        $LatestRelease = ($result.links.href | Where-Object { $_ -like '*portable-Q16-HDRI-x64.zip' } | Sort-Object -Descending)[0]
-        # Construct the download path
-        $DownloadPath = Join-Path -Path $global:ScriptRoot -ChildPath (Join-Path -Path 'temp' -ChildPath $LatestRelease)
-        Invoke-WebRequest "https://imagemagick.org/archive/binaries/$LatestRelease" -OutFile $DownloadPath
-        # Construct the portable path
-        Expand-Archive -Path $DownloadPath -DestinationPath $magickinstalllocation -Force
-        if ((Get-ChildItem -Directory -LiteralPath $magickinstalllocation).name -eq $($LatestRelease.replace('.zip', ''))) {
-            Copy-item -Force -Recurse "$magickinstalllocation\$((Get-ChildItem -Directory -LiteralPath $magickinstalllocation).name)\*" $magickinstalllocation
-            Remove-Item -Recurse -LiteralPath "$magickinstalllocation\$((Get-ChildItem -Directory -LiteralPath $magickinstalllocation).name)" -Force
-        }
-        if (Test-Path -LiteralPath $magickinstalllocation\magick.exe) {
-            Write-Log -Subtext "Placed Portable ImageMagick here: $magickinstalllocation" -Path $configLogging -Type Success
-        }
-        Else {
-            Write-Log -Subtext "Error During extraction, please manually install/copy portable Imagemagick from here: https://imagemagick.org/archive/binaries/$LatestRelease" -Path $configLogging -Type Error
-        }
-    }
-}
+# Check ImageMagick now:
+Check-ImageMagick -magick $magick -magickinstalllocation $magickinstalllocation
 
+# Use magick to check dimensions
 $Posteroverlaydimensions = & $magick $Posteroverlay -format "%wx%h" info:
 $Backgroundoverlaydimensions = & $magick $Backgroundoverlay -format "%wx%h" info:
 $titlecardoverlaydimensions = & $magick $titlecardoverlay -format "%wx%h" info:
@@ -3008,7 +3046,7 @@ Elseif ($Testing) {
 else {
     Write-Log -Message "Query plex libs..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
     $Libsoverview = @()
-    foreach ($lib in $libs.MediaContainer.Directory) {
+    foreach ($lib in $Libs.MediaContainer.Directory) {
         if ($lib.title -notin $LibstoExclude) {
             $libtemp = New-Object psobject
             $libtemp | Add-Member -MemberType NoteProperty -Name "ID" -Value $lib.key
