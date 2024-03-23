@@ -3,7 +3,7 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.27"
+$CurrentScriptVersion = "1.0.28"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -3357,12 +3357,12 @@ else {
                         if ($global:PreferTextless -eq 'True') {
                             if (!$global:TextlessPoster -and $global:fanartfallbackposterurl) {
                                 $global:posterurl = $global:fanartfallbackposterurl
-                                Write-Log -Subtext "Took Fanart.tv Fallback poster cause its your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+                                Write-Log -Subtext "Took Fanart.tv Fallback poster because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
                                 $global:IsFallback = $true
                             }
                             if (!$global:TextlessPoster -and $global:TMDBfallbackposterurl) {
                                 $global:posterurl = $global:TMDBfallbackposterurl
-                                Write-Log -Subtext "Took TMDB Fallback poster cause its your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+                                Write-Log -Subtext "Took TMDB Fallback poster because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
                                 $global:IsFallback = $true
                             }
                         }
@@ -3548,12 +3548,12 @@ else {
                         if ($global:PreferTextless -eq 'True') {
                             if (!$global:TextlessPoster -and $global:fanartfallbackposterurl) {
                                 $global:posterurl = $global:fanartfallbackposterurl
-                                Write-Log -Subtext "Took Fanart.tv Fallback background cause its your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+                                Write-Log -Subtext "Took Fanart.tv Fallback background because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
                                 $global:IsFallback = $true
                             }
                             if (!$global:TextlessPoster -and $global:TMDBfallbackposterurl) {
                                 $global:posterurl = $global:TMDBfallbackposterurl
-                                Write-Log -Subtext "Took TMDB Fallback background cause its your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+                                Write-Log -Subtext "Took TMDB Fallback background because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
                                 $global:IsFallback = $true
                             }
                         }
@@ -3768,12 +3768,12 @@ else {
                     if ($global:PreferTextless -eq 'True') {
                         if (!$global:TextlessPoster -and $global:fanartfallbackposterurl) {
                             $global:posterurl = $global:fanartfallbackposterurl
-                            Write-Log -Subtext "Took Fanart.tv Fallback poster cause its your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+                            Write-Log -Subtext "Took Fanart.tv Fallback poster because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
                             $global:IsFallback = $true
                         }
                         if (!$global:TextlessPoster -and $global:TMDBfallbackposterurl) {
                             $global:posterurl = $global:TMDBfallbackposterurl
-                            Write-Log -Subtext "Took TMDB Fallback poster cause its your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+                            Write-Log -Subtext "Took TMDB Fallback poster because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
                             $global:IsFallback = $true
                         }
                         # try to find textless on TVDB
@@ -3970,12 +3970,12 @@ else {
                     if ($global:PreferTextless -eq 'True') {
                         if (!$global:TextlessPoster -and $global:fanartfallbackposterurl) {
                             $global:posterurl = $global:fanartfallbackposterurl
-                            Write-Log -Subtext "Took Fanart.tv Fallback background cause its your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+                            Write-Log -Subtext "Took Fanart.tv Fallback background because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
                             $global:IsFallback = $true
                         }
                         if (!$global:TextlessPoster -and $global:TMDBfallbackposterurl) {
                             $global:posterurl = $global:TMDBfallbackposterurl
-                            Write-Log -Subtext "Took TMDB Fallback background cause its your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+                            Write-Log -Subtext "Took TMDB Fallback background because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
                             $global:IsFallback = $true
                         }
                     }
@@ -4964,27 +4964,27 @@ else {
         $TextTruncatedCount = @($SummaryCount | Where-Object TextTruncated -eq 'True')
         $TextCount = @($SummaryCount | Where-Object Textless -eq 'False')
         if ($TextlessCount -or $FallbackCount -or $TextCount -or $PosterUnknownCount -or $TextTruncatedCount) {
-            Write-Log -Message "This is a subset summary over all image choices from the ImageChoices.csv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+            Write-Log -Message "This is a subset summary of all image choices from the ImageChoices.csv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
         }
         if ($TextlessCount) {
             Write-Log -Subtext "'$($TextlessCount.count)' times the script took a Textless image" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
         }
         if ($FallbackCount) {
             Write-Log -Subtext "'$($FallbackCount.count)' times the script took a fallback image" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
-            Write-Log -Subtext "'$($posterCount-$($FallbackCount.count))' times the script took the image from fav provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+            Write-Log -Subtext "'$($posterCount-$($FallbackCount.count))' times the script took the image from fav provider: $global:FavProvider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
         }
         if ($TextCount) {
-            Write-Log -Subtext "'$($TextCount.count)' times the script took a image with Text" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+            Write-Log -Subtext "'$($TextCount.count)' times the script took an image with Text" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
         }
         if ($PosterUnknownCount -ge '1') {
-            Write-Log -Subtext "'$PosterUnknownCount' times the script took a season poster where we cant tell if it has text or not" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+            Write-Log -Subtext "'$PosterUnknownCount' times the script took a season poster where we cannot tell if it has text or not" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
         }
         if ($TextTruncatedCount) {
             Write-Log -Subtext "'$($TextTruncatedCount.count)' times the script truncated the text in images" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
         }
     }
     if ($Errorcount -ge '1') {
-        Write-Log -Message "During execution '$Errorcount' Errors occurred, please check log for detailed description." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+        Write-Log -Message "During execution '$Errorcount' Errors occurred, please the check log for a detailed description." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
     }
     Write-Log -Message "Script execution time: $FormattedTimespawn" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
     # Send Notification when running in Docker
