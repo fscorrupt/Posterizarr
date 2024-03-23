@@ -4503,7 +4503,7 @@ else {
                                             }
                                             $global:TempImagecopied = $true
                                             # Check temp image
-                                            if ((Get-ChildItem -LiteralPath $EpisodeTempImage -ErrorAction SilentlyContinue).length -le '100000') {
+                                            if ((Get-ChildItem -LiteralPath $EpisodeTempImage -ErrorAction SilentlyContinue).length -le '10000') {
                                                 Write-Log -Subtext "Temp image to small, copy episode image again..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
                                                 Copy-Item -LiteralPath $EpisodeImage -destination $EpisodeTempImage | Out-Null
                                                 Start-Sleep 5
