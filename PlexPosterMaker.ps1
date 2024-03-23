@@ -4984,7 +4984,7 @@ else {
         }
     }
     if ($Errorcount -ge '1') {
-        Write-Log -Message "During execution '$Errorcount' Errors occurred, please the check log for a detailed description." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+        Write-Log -Message "During execution '$Errorcount' Errors occurred, please check the log for a detailed description." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
     }
     Write-Log -Message "Script execution time: $FormattedTimespawn" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
     # Send Notification when running in Docker
