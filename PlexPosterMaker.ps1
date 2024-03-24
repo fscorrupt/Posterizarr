@@ -3,7 +3,7 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.29"
+$CurrentScriptVersion = "1.0.30"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -1918,12 +1918,12 @@ Else {
 }
 
 # API Part
-$global:tvdbapi = $config.APIPart.tvdbapi
-$global:tmdbtoken = $config.APIPart.tmdbtoken
-$FanartTvAPIKey = $config.APIPart.FanartTvAPIKey
-$PlexToken = $config.APIPart.PlexToken
-$global:FavProvider = $config.APIPart.FavProvider.ToUpper()
-$global:PreferredLanguageOrder = $config.APIPart.PreferredLanguageOrder
+$global:tvdbapi = $config.ApiPart.tvdbapi
+$global:tmdbtoken = $config.ApiPart.tmdbtoken
+$FanartTvAPIKey = $config.ApiPart.FanartTvAPIKey
+$PlexToken = $config.ApiPart.PlexToken
+$global:FavProvider = $config.ApiPart.FavProvider.ToUpper()
+$global:PreferredLanguageOrder = $config.ApiPart.PreferredLanguageOrder
 # default Lang order if missing in config
 if (!$global:PreferredLanguageOrder) {
     Write-Log -Message "Lang search Order not set in Config, setting it to 'xx,en,de' for you" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
