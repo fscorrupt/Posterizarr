@@ -387,7 +387,7 @@ function GetTMDBShowPoster {
             }
         }
         Else {
-            Write-Log -Subtext "TMD API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+            Write-Log -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
         }
     }
 }
