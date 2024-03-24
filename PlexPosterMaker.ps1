@@ -3,7 +3,7 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.30"
+$CurrentScriptVersion = "1.0.31"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -1948,6 +1948,7 @@ if (!$global:FavProvider) {
 $LibstoExclude = $config.PlexPart.LibstoExclude
 $PlexUrl = $config.PlexPart.PlexUrl
 # Prerequisites Part
+$show_missing = $config.PrerequisitePart.show_missing
 $AssetPath = RemoveTrailingSlash $config.PrerequisitePart.AssetPath
 
 # Check if its a Network Share
@@ -3298,10 +3299,30 @@ else {
         $Episodedata | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\PlexEpisodeExport.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
         Write-Log -Subtext "Found '$($Episodedata.Episodes.split(',').count)' Episodes..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
     }
-    # Query episode info
+    
+    # Store all Files from asset dir in a hashtable
+    Write-Log -Message "Creating Hashtable of all posters in asset dir..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+    try {
+        $directoryHashtable = @{}
+        $allowedExtensions = @(".jpg", ".jpeg", ".png", ".bmp")
+
+        Get-ChildItem -Path $AssetPath -Recurse | ForEach-Object {
+            if ($allowedExtensions -contains $_.Extension.ToLower()) {
+                $directoryHashtable[$_.FullName] = $true
+            }
+        }
+        Write-Log -Subtext "Hashtable created..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
+        Write-Log -Subtext "Found: '$($directoryHashtable.count)' assets in asset directory." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+    }
+    catch {
+        Write-Log -Subtext "Error during Hashtable creation, please check Asset dir is available..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+        Exit
+    }
+
     # Download poster foreach movie
-    Write-Log -Message "Starting poster creation now, this can take a while..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
-    Write-Log -Message "Starting Movie Poster Creation part..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
+    Write-Log -Message "Starting asset creation now, this can take a while..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
+    Write-Log -Message "Starting Movie Poster/Background creation part..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Success
+    
     # Movie Part
     foreach ($entry in $AllMovies) {
         try {
@@ -3343,7 +3364,7 @@ else {
                 $PosterImage = $PosterImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
                 # Now we can start the Poster Part
                 if ($global:Posters -eq 'true') {
-                    if (!(Get-ChildItem -LiteralPath $TestPath | Where-Object { $_.Name -like "*$Testfile*" } -ErrorAction SilentlyContinue)) {
+                    if (!$directoryHashtable.ContainsKey($Testfile)) {
                         # Define Global Variables
                         $global:tmdbid = $entry.tmdbid
                         $global:tvdbid = $entry.tvdbid
@@ -3512,6 +3533,11 @@ else {
                             $Errorcount++
                         }
                     }
+                    Else {
+                        if ($show_missing -eq 'True' ) {
+                            Write-Log -Subtext "Skipping '$PosterImageoriginal' because it already exists..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+                        }
+                    }
                 }
                 # Now we can start the Background Poster Part
                 if ($global:BackgroundPosters -eq 'true') {
@@ -3535,7 +3561,7 @@ else {
                     $backgroundImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_background.jpg"
                     $backgroundImage = $backgroundImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
 
-                    if (!(Get-ChildItem -LiteralPath $TestPath | Where-Object { $_.Name -like "*$Testfile*" } -ErrorAction SilentlyContinue)) {
+                    if (!$directoryHashtable.ContainsKey($Testfile)) {
                         # Define Global Variables
                         $global:tmdbid = $entry.tmdbid
                         $global:tvdbid = $entry.tvdbid
@@ -3697,6 +3723,11 @@ else {
                             $Errorcount++
                         }
                     }
+                    Else {
+                        if ($show_missing -eq 'True' ) {
+                            Write-Log -Subtext "Skipping '$backgroundImageoriginal' because it already exists..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+                        }
+                    }
                 }
             }
             
@@ -3767,7 +3798,7 @@ else {
             }
             # Now we can start the Poster Part
             if ($global:Posters -eq 'true') {
-                if (!(Get-ChildItem -LiteralPath $TestPath | Where-Object { $_.Name -like "*$Testfile*" } -ErrorAction SilentlyContinue)) {
+                if (!$directoryHashtable.ContainsKey($Testfile)) {
                     Write-Log -Message "Start Poster Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                     switch -Wildcard ($global:FavProvider) {
                         'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBShowPoster }Else { Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning; $global:posterurl = GetFanartShowPoster } }
@@ -3932,6 +3963,11 @@ else {
                     }
 
                 }
+                Else {
+                    if ($show_missing -eq 'True' ) {
+                        Write-Log -Subtext "Skipping '$PosterImageoriginal' because it already exists..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+                    }
+                }
             }
             # Now we can start the Background Part
             if ($global:BackgroundPosters -eq 'true') {
@@ -3954,8 +3990,7 @@ else {
     
                 $backgroundImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_background.jpg"
                 $backgroundImage = $backgroundImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
-
-                if (!(Get-ChildItem -LiteralPath $TestPath | Where-Object { $_.Name -like "*$Testfile*" } -ErrorAction SilentlyContinue)) {
+                if (!$directoryHashtable.ContainsKey($Testfile)) {
                     # Define Global Variables
                     $global:tmdbid = $entry.tmdbid
                     $global:tvdbid = $entry.tvdbid
@@ -4121,6 +4156,11 @@ else {
                         $Errorcount++
                     }
                 }
+                Else {
+                    if ($show_missing -eq 'True' ) {
+                        Write-Log -Subtext "Skipping '$backgroundImageoriginal' because it already exists..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+                    }
+                }
             }
             # Now we can start the Season Part
             if ($global:SeasonPosters -eq 'true') {
@@ -4154,7 +4194,7 @@ else {
                     }
                     $SeasonImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_$global:season.jpg"
                     $SeasonImage = $SeasonImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
-                    if (!(Get-ChildItem -LiteralPath $TestPath | Where-Object { $_.Name -like "*$Testfile*" } -ErrorAction SilentlyContinue)) {
+                    if (!$directoryHashtable.ContainsKey($Testfile)) {
                         if ($PlexToken) {
                             $Arturl = $plexurl + $global:PlexSeasonUrl + "?X-Plex-Token=$PlexToken"
                         }
@@ -4370,6 +4410,11 @@ else {
                             $Errorcount++
                         }
                     }
+                    Else {
+                        if ($show_missing -eq 'True' ) {
+                            Write-Log -Subtext "Skipping '$SeasonImageoriginal' because it already exists..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+                        }
+                    }
                 }
             }
             # Now we can start the Episode Part
@@ -4427,7 +4472,7 @@ else {
                                 $EpisodeImage = $EpisodeImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
                                 
                                 $EpisodeTempImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\temp.jpg"
-                                if (!(Get-ChildItem -LiteralPath $TestPath | Where-Object { $_.Name -like "*$Testfile*" } -ErrorAction SilentlyContinue)) {
+                                if (!$directoryHashtable.ContainsKey($Testfile)) {
                                     if (!$Episodepostersearchtext) {
                                         Write-Log -Message "Start Title Card Search for: $global:show_name - $global:SeasonEPNumber" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                         $Episodepostersearchtext = $true
@@ -4649,6 +4694,11 @@ else {
                                     }
                                             
                                 }
+                                Else {
+                                    if ($show_missing -eq 'True' ) {
+                                        Write-Log -Subtext "Skipping '$EpisodeImageoriginal' because it already exists..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+                                    }
+                                }
                             }
                             if (Test-Path $EpisodeTempImage -ErrorAction SilentlyContinue) {
                                 Remove-Item -LiteralPath $EpisodeTempImage | Out-Null
@@ -4684,7 +4734,7 @@ else {
                                 }
                                 $EpisodeImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_$global:FileNaming.jpg"
                                 $EpisodeImage = $EpisodeImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
-                                if (!(Get-ChildItem -LiteralPath $TestPath | Where-Object { $_.Name -like "*$Testfile*" } -ErrorAction SilentlyContinue)) {
+                                if (!$directoryHashtable.ContainsKey($Testfile)) {
                                     if (!$Episodepostersearchtext) {
                                         Write-Log -Message "Start Title Card Search for: $global:show_name - $global:SeasonEPNumber" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                         $Episodepostersearchtext = $true
@@ -4945,6 +4995,11 @@ else {
                                         $Errorcount++
                                     }
                                             
+                                }
+                                Else {
+                                    if ($show_missing -eq 'True' ) {
+                                        Write-Log -Subtext "Skipping '$EpisodeImageoriginal' because it already exists..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+                                    }
                                 }
                             }
                         }

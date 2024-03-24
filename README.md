@@ -97,6 +97,7 @@ Plex Poster Maker is cross-platform ready, meaning it can run on Linux, Docker (
     <br>
 
     - `AssetPath`: Path to store generated posters.
+    - `show_missing`: If set to `true`, verbose logging of already created assets will be displayed; otherwise, they will be silently skipped - On large libraries, this may appear as if the script is hanging.
     - `magickinstalllocation`: Path to ImageMagick installation location where `magick.exe` is located (Otherwise leave value as `"./magick"`)
     - `maxLogs`: Number of Log folders you want to keep in `RotatedLogs` Folder (Log History).
     - `font`: Font file name.
