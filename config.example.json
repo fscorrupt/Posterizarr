@@ -18,7 +18,7 @@
   },
   "PrerequisitePart":{
     "AssetPath": "P:\\assets",
-    "show_missing":"false",
+    "show_skipped":"false",
     "magickinstalllocation": "C:\\PosterTemp\\ImageMagickPortable",
     "maxLogs": "5",
     "font": "Rocky.ttf",
