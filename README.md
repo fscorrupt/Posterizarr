@@ -288,6 +288,7 @@ Run the script with the `-Manual` switch:
 ```powershell
 .\PlexPosterMaker.ps1 -Manual
 ```
+Follow the prompts to enter the source picture path, media folder name, and movie/show title to manually create a custom poster.
 
 ### How to use the PPM.xlsm
 <details close>
@@ -300,8 +301,6 @@ Run the script with the `-Manual` switch:
 </p>
 
 </details>
-
-Follow the prompts to enter the source picture path, media folder name, and movie/show title to manually create a custom poster.
 
 ### Webhook
 
