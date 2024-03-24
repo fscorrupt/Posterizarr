@@ -2160,7 +2160,7 @@ Add-FanartTvAPIKey -Api_Key $FanartTvAPIKey
 
 # Check TMDB Token before building the Header.
 if ($global:tmdbtoken.Length -le '35') {
-    Write-Log -Message "TMDB Token is to0 short, you may have used the API key in your config file. Please use the 'API Read Access Token'." -Path $configLogging -Type Error
+    Write-Log -Message "TMDB Token is too short, you may have used the API key in your config file. Please use the 'API Read Access Token'." -Path $configLogging -Type Error
     Exit
 }
 
