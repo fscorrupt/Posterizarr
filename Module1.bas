@@ -2,7 +2,21 @@ Attribute VB_Name = "Module1"
 Option Explicit
 Sub PromptUser()
     Dim folderPath As String
-     
+    Dim FilenamePPM As String
+    
+    ' Get the current filename
+    FilenamePPM = ThisWorkbook.FullName
+    
+    ' Check if the current filename is not "PPM.xlsm"
+    If InStrRev(FilenamePPM, "\PPM.xlsm") = 0 Then
+        ' Rename the workbook to "PPM.xlsm"
+        MsgBox "Renaming file to PPM.xlsm", vbInformation
+        FilenamePPM = Replace(FilenamePPM, ThisWorkbook.Name, "PPM.xlsm")
+        Application.DisplayAlerts = False ' Disable alerts temporarily
+        ThisWorkbook.SaveAs Filename:=FilenamePPM, FileFormat:=xlOpenXMLWorkbookMacroEnabled, CreateBackup:=False
+        Application.DisplayAlerts = True ' Re-enable alerts
+    End If
+
     ' Prompt the user to select a folder
     KeepOnlyPPMSheet
     
@@ -10,25 +24,28 @@ Sub PromptUser()
     AddOrUpdateFancyButtonToPPM
     
     ' Prompt the user to select a folder
-    folderPath = GetFolderPath("Select the folder containing the PPM log files")
+    folderPath = GetFolderPath("Select the folder containing the PPM csv files")
     
     ' Check if a folder is selected
     If folderPath <> "" Then
         ' Call the macro with the folder path
         ImportCSVs folderPath
     Else
-        MsgBox "No folder selected. Operation canceled."
+        MsgBox "No folder selected. Operation canceled.", vbCritical
     End If
-    ' Remove info to retain privacy
+
+    ' Remove personal info and save the workbook without prompting
     RemoveDocumentPersonalInfo
+    Application.DisplayAlerts = False ' Disable alerts
+    ThisWorkbook.SaveAs Filename:=FilenamePPM, FileFormat:=xlOpenXMLWorkbookMacroEnabled, CreateBackup:=False
+    Application.DisplayAlerts = True ' Re-enable alerts
+    MsgBox "Workbook saved successfully.", vbInformation
 End Sub
 
 Sub ImportCSVs(folderPath)
-
     Dim Filename1 As String
     Dim Filename2 As String
     Dim Filename3 As String
-    Dim Filename4 As String
     Dim conn As WorkbookConnection
     Dim q
     Dim ws As Worksheet
@@ -37,7 +54,6 @@ Sub ImportCSVs(folderPath)
     Filename1 = folderPath & "\ImageChoices.csv"
     Filename2 = folderPath & "\PlexLibexport.csv"
     Filename3 = folderPath & "\PlexEpisodeExport.csv"
-    Filename4 = ThisWorkbook.FullName
     
     ' Validate filenames
     If Not ValidateFilenames(Filename1, Filename2, Filename3) Then
@@ -68,13 +84,18 @@ Sub ImportCSVs(folderPath)
         End If
     Next ws
     
+    Dim wsImageChoices As Worksheet
+    Dim wsPlexLibexport As Worksheet
+    Dim wsPlexEpisodeExport As Worksheet
+    
+    Set wsImageChoices = ThisWorkbook.Worksheets.Add
+    wsImageChoices.Name = "ImageChoices"
     ThisWorkbook.Queries.Add Name:="ImageChoices", Formula:= _
         "let" & Chr(13) & "" & Chr(10) & "    Source = Csv.Document(File.Contents(""" & Filename1 & """),[Delimiter="";"", Columns=8, Encoding=65001, QuoteStyle=QuoteStyle.None])," & Chr(13) & "" & Chr(10) & "    #""Promoted Headers"" = Table.PromoteHeaders(Source, [PromoteAllScalars=true])," & Chr(13) & "" & Chr(10) & "    #""Changed Type"" = Table.TransformColumnTypes(#""Promoted Headers"",{{""Title"", type text}, {""Type"", t" & _
         "ype text}, {""Rootfolder"", type text}, {""LibraryName"", type text}, {""Textless"", type logical}, {""Fallback"", type logical}, {""TextTruncated"", type logical}, {""Url"", type text}})" & Chr(13) & "" & Chr(10) & "in" & Chr(13) & "" & Chr(10) & "    #""Changed Type"""
-    ThisWorkbook.Worksheets.Add
-    With ActiveSheet.ListObjects.Add(SourceType:=0, Source:= _
-        "OLEDB;Provider=Microsoft.Mashup.OleDb.1;Data Source=$Workbook$;Location=ImageChoices;Extended Properties=""""" _
-        , Destination:=Range("$A$1")).QueryTable
+
+    With wsImageChoices.ListObjects.Add(SourceType:=0, Source:= _
+        "OLEDB;Provider=Microsoft.Mashup.OleDb.1;Data Source=$Workbook$;Location=ImageChoices;Extended Properties=""""", Destination:=wsImageChoices.Range("$A$1")).QueryTable
         .CommandType = xlCmdSql
         .CommandText = Array("SELECT * FROM [ImageChoices]")
         .RowNumbers = False
@@ -91,18 +112,16 @@ Sub ImportCSVs(folderPath)
         .ListObject.DisplayName = "ImageChoices"
         .Refresh BackgroundQuery:=False
     End With
-    ActiveSheet.ListObjects("ImageChoices").ShowTotals = True
-    ' After creating each worksheet, rename it
-    ActiveSheet.Name = "ImageChoices"
-
+    
+    Set wsPlexLibexport = ThisWorkbook.Worksheets.Add
+    wsPlexLibexport.Name = "PlexLibexport"
     ThisWorkbook.Queries.Add Name:="PlexLibexport", Formula:= _
         "let" & Chr(13) & "" & Chr(10) & "    Source = Csv.Document(File.Contents(""" & Filename2 & """),[Delimiter="";"", Columns=18, Encoding=65001, QuoteStyle=QuoteStyle.None])," & Chr(13) & "" & Chr(10) & "    #""Promoted Headers"" = Table.PromoteHeaders(Source, [PromoteAllScalars=true])," & Chr(13) & "" & Chr(10) & "    #""Changed Type"" = Table.TransformColumnTypes(#""Promoted Headers"",{{""Library Name"", type text}, {""" & _
         "Library Type"", type text}, {""title"", type text}, {""originalTitle"", type text}, {""SeasonNames"", type text}, {""SeasonNumbers"", type number}, {""SeasonRatingKeys"", type number}, {""year"", Int64.Type}, {""tvdbid"", Int64.Type}, {""imdbid"", type text}, {""tmdbid"", Int64.Type}, {""ratingKey"", Int64.Type}, {""Path"", type text}, {""RootFoldername"", type text" & _
         "}, {""MultipleVersions"", type logical}, {""PlexPosterUrl"", type text}, {""PlexBackgroundUrl"", type text}, {""PlexSeasonUrls"", type text}})" & Chr(13) & "" & Chr(10) & "in" & Chr(13) & "" & Chr(10) & "    #""Changed Type"""
-    ThisWorkbook.Worksheets.Add
-    With ActiveSheet.ListObjects.Add(SourceType:=0, Source:= _
-        "OLEDB;Provider=Microsoft.Mashup.OleDb.1;Data Source=$Workbook$;Location=PlexLibexport;Extended Properties=""""" _
-        , Destination:=Range("$A$1")).QueryTable
+
+    With wsPlexLibexport.ListObjects.Add(SourceType:=0, Source:= _
+        "OLEDB;Provider=Microsoft.Mashup.OleDb.1;Data Source=$Workbook$;Location=PlexLibexport;Extended Properties=""""", Destination:=wsPlexLibexport.Range("$A$1")).QueryTable
         .CommandType = xlCmdSql
         .CommandText = Array("SELECT * FROM [PlexLibexport]")
         .RowNumbers = False
@@ -119,17 +138,15 @@ Sub ImportCSVs(folderPath)
         .ListObject.DisplayName = "PlexLibexport"
         .Refresh BackgroundQuery:=False
     End With
-    ActiveSheet.ListObjects("PlexLibexport").ShowTotals = True
-    ' After creating each worksheet, rename it
-    ActiveSheet.Name = "PlexLibexport"
-
+    
+    Set wsPlexEpisodeExport = ThisWorkbook.Worksheets.Add
+    wsPlexEpisodeExport.Name = "PlexEpisodeExport"
     ThisWorkbook.Queries.Add Name:="PlexEpisodeExport", Formula:= _
         "let" & Chr(13) & "" & Chr(10) & "    Source = Csv.Document(File.Contents(""" & Filename3 & """),[Delimiter="";"", Columns=8, Encoding=65001, QuoteStyle=QuoteStyle.None])," & Chr(13) & "" & Chr(10) & "    #""Promoted Headers"" = Table.PromoteHeaders(Source, [PromoteAllScalars=true])," & Chr(13) & "" & Chr(10) & "    #""Changed Type"" = Table.TransformColumnTypes(#""Promoted Headers"",{{""Show Name"", type text}, {""" & _
         "Type"", type text}, {""tvdbid"", Int64.Type}, {""tmdbid"", Int64.Type}, {""Season Number"", Int64.Type}, {""Episodes"", type number}, {""Title"", type text}, {""PlexTitleCardUrls"", type text}})" & Chr(13) & "" & Chr(10) & "in" & Chr(13) & "" & Chr(10) & "    #""Changed Type"""
-    ThisWorkbook.Worksheets.Add
-    With ActiveSheet.ListObjects.Add(SourceType:=0, Source:= _
-        "OLEDB;Provider=Microsoft.Mashup.OleDb.1;Data Source=$Workbook$;Location=PlexEpisodeExport;Extended Properties=""""" _
-        , Destination:=Range("$A$1")).QueryTable
+
+    With wsPlexEpisodeExport.ListObjects.Add(SourceType:=0, Source:= _
+        "OLEDB;Provider=Microsoft.Mashup.OleDb.1;Data Source=$Workbook$;Location=PlexEpisodeExport;Extended Properties=""""", Destination:=wsPlexEpisodeExport.Range("$A$1")).QueryTable
         .CommandType = xlCmdSql
         .CommandText = Array("SELECT * FROM [PlexEpisodeExport]")
         .RowNumbers = False
@@ -146,23 +163,12 @@ Sub ImportCSVs(folderPath)
         .ListObject.DisplayName = "PlexEpisodeExport"
         .Refresh BackgroundQuery:=False
     End With
-    ActiveSheet.ListObjects("PlexEpisodeExport").ShowTotals = True
-    ' After creating each worksheet, rename it
-    ActiveSheet.Name = "PlexEpisodeExport"
     
     ' Refresh_All
     Refresh_All_Data_Connections
     
     ' Select "PPM"
     ThisWorkbook.Sheets("PPM").Activate
-    
-    ' Remove personal info and save the workbook without prompting
-    RemoveDocumentPersonalInfo
-    Application.DisplayAlerts = False ' Disable alerts
-    ThisWorkbook.SaveAs Filename:=Filename4, FileFormat:=xlOpenXMLWorkbookMacroEnabled, CreateBackup:=False
-    Application.DisplayAlerts = True ' Re-enable alerts
-    MsgBox "Workbook saved successfully."
-    
 End Sub
 
 Sub Refresh_All_Data_Connections()
@@ -183,7 +189,7 @@ Sub Refresh_All_Data_Connections()
         objConnection.OLEDBConnection.BackgroundQuery = bBackground
     Next
     
-    MsgBox "Finished refreshing all data connections"
+    MsgBox "Finished refreshing all data connections", vbInformation
     
 End Sub
 
@@ -213,19 +219,19 @@ End Function
 Function ValidateFilenames(Filename1 As String, Filename2 As String, Filename3 As String) As Boolean
     ' Check if the files exist
     If Len(Dir(Filename1)) = 0 Then
-        MsgBox "File '" & Filename1 & "' does not exist. Did you specify the PPM Logs folder? Aborting...", vbExclamation, "File Not Found"
+        MsgBox "File '" & Filename1 & "' does not exist. Did you specify the PPM Logs folder? Try again...", vbExclamation, "File Not Found"
         ValidateFilenames = False
         Exit Function
     End If
     
     If Len(Dir(Filename2)) = 0 Then
-        MsgBox "File '" & Filename2 & "' does not exist. Did you specify the PPM Logs folder? Aborting...", vbExclamation, "File Not Found"
+        MsgBox "File '" & Filename2 & "' does not exist. Did you specify the PPM Logs folder? Try again...", vbExclamation, "File Not Found"
         ValidateFilenames = False
         Exit Function
     End If
     
     If Len(Dir(Filename3)) = 0 Then
-        MsgBox "File '" & Filename3 & "' does not exist. Did you specify the PPM Logs folder? Aborting...", vbExclamation, "File Not Found"
+        MsgBox "File '" & Filename3 & "' does not exist. Did you specify the PPM Logs folder? Try again...", vbExclamation, "File Not Found"
         ValidateFilenames = False
         Exit Function
     End If
