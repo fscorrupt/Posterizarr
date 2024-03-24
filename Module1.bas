@@ -1,24 +1,29 @@
 Attribute VB_Name = "Module1"
 Option Explicit
 Sub PromptUser()
-    Dim FolderPath As String
+    Dim folderPath As String
+     
+    ' Prompt the user to select a folder
+    KeepOnlyPPMSheet
     
     ' Prompt the user to select a folder
-    AddOrUpdateFancyButtonToSheet1
+    AddOrUpdateFancyButtonToPPM
     
     ' Prompt the user to select a folder
-    FolderPath = GetFolderPath("Select the folder containing the PPM log files")
+    folderPath = GetFolderPath("Select the folder containing the PPM log files")
     
     ' Check if a folder is selected
-    If FolderPath <> "" Then
+    If folderPath <> "" Then
         ' Call the macro with the folder path
-        ImportCSVs FolderPath
+        ImportCSVs folderPath
     Else
         MsgBox "No folder selected. Operation canceled."
     End If
+    ' Remove info to retain privacy
+    RemoveDocumentPersonalInfo
 End Sub
 
-Sub ImportCSVs(FolderPath)
+Sub ImportCSVs(folderPath)
 
     Dim Filename1 As String
     Dim Filename2 As String
@@ -29,14 +34,15 @@ Sub ImportCSVs(FolderPath)
     Dim ws As Worksheet
     
     ' Concatenate folder path with filenames
-    Filename1 = FolderPath & "\ImageChoices.csv"
-    Filename2 = FolderPath & "\PlexLibexport.csv"
-    Filename3 = FolderPath & "\PlexEpisodeExport.csv"
+    Filename1 = folderPath & "\ImageChoices.csv"
+    Filename2 = folderPath & "\PlexLibexport.csv"
+    Filename3 = folderPath & "\PlexEpisodeExport.csv"
     Filename4 = ThisWorkbook.FullName
     
     ' Validate filenames
     If Not ValidateFilenames(Filename1, Filename2, Filename3) Then
-        Exit Sub ' Abort script
+        PromptUser ' Ask user to find logs again
+        Exit Sub
     End If
     
     ' Check if connections already exist and delete them if they do
@@ -147,10 +153,11 @@ Sub ImportCSVs(FolderPath)
     ' Refresh_All
     Refresh_All_Data_Connections
     
-    ' Select "Sheet1"
-    ThisWorkbook.Sheets("Sheet1").Activate
+    ' Select "PPM"
+    ThisWorkbook.Sheets("PPM").Activate
     
-    ' Change directory and save the workbook without prompting
+    ' Remove personal info and save the workbook without prompting
+    RemoveDocumentPersonalInfo
     Application.DisplayAlerts = False ' Disable alerts
     ThisWorkbook.SaveAs Filename:=Filename4, FileFormat:=xlOpenXMLWorkbookMacroEnabled, CreateBackup:=False
     Application.DisplayAlerts = True ' Re-enable alerts
@@ -203,8 +210,6 @@ Function GetFolderPath(prompt As String) As String
         GetFolderPath = ""
     End If
 End Function
-
-
 Function ValidateFilenames(Filename1 As String, Filename2 As String, Filename3 As String) As Boolean
     ' Check if the files exist
     If Len(Dir(Filename1)) = 0 Then
@@ -229,20 +234,20 @@ Function ValidateFilenames(Filename1 As String, Filename2 As String, Filename3 A
     ValidateFilenames = True
 End Function
 
-Sub AddOrUpdateFancyButtonToSheet1()
+Sub AddOrUpdateFancyButtonToPPM()
     Dim shp As Shape
     Dim rng As Range
     Dim btnText As String
     Dim btnExists As Boolean
     
     ' Define the range where you want to place the button
-    Set rng = ThisWorkbook.Sheets("Sheet1").Range("C10")
+    Set rng = ThisWorkbook.Sheets("PPM").Range("C10")
     
     ' Set button text
     btnText = "Import CSVs"
     
     ' Check if the button already exists
-    For Each shp In ThisWorkbook.Sheets("Sheet1").Shapes
+    For Each shp In ThisWorkbook.Sheets("PPM").Shapes
         If shp.Name = "FancyButton" Then
             ' Button already exists, delete it
             shp.Delete
@@ -251,7 +256,7 @@ Sub AddOrUpdateFancyButtonToSheet1()
     Next shp
     
     ' Add a rounded rectangle shape to the worksheet
-    Set shp = ThisWorkbook.Sheets("Sheet1").Shapes.AddShape(msoShapeRoundedRectangle, rng.Left, rng.Top, 215.25, 66.75)
+    Set shp = ThisWorkbook.Sheets("PPM").Shapes.AddShape(msoShapeRoundedRectangle, rng.Left, rng.Top, 215.25, 66.75)
     
     ' Configure the shape
     With shp
@@ -296,6 +301,49 @@ Sub AddOrUpdateFancyButtonToSheet1()
     End With
 End Sub
 
+Sub KeepOnlyPPMSheet()
+    Dim ws As Worksheet
+    Dim tempSheet As Worksheet
+    
+    ' Create a new sheet named "ppm_temp_sheet1"
+    Set tempSheet = ThisWorkbook.Sheets.Add
+    tempSheet.Name = "ppm_temp_sheet1"
+    
+    Application.DisplayAlerts = False ' Disable alerts
+    
+    ' Delete all sheets except the "ppm_temp_sheet1"
+    For Each ws In ThisWorkbook.Worksheets
+        If ws.Name <> tempSheet.Name Then
+            ws.Delete
+        End If
+    Next ws
+    
+    ' Rename the "ppm_temp_sheet1" to "PPM"
+    tempSheet.Name = "PPM"
+    
+    Application.DisplayAlerts = True ' Re-enable alerts
+End Sub
 
+Sub RemoveDocumentPersonalInfo()
+    Dim prop As DocumentProperty
     
+    ' Remove personal information from document properties
+    For Each prop In ThisWorkbook.CustomDocumentProperties
+        If prop.Name Like "Author" Or prop.Name Like "Last Save By" Or prop.Name Like "Manager" Or prop.Name Like "Company" Then
+            prop.Delete
+        End If
+    Next prop
     
+    ' Remove personal information from built-in document properties
+    ThisWorkbook.BuiltinDocumentProperties("Last Author").Value = ""
+    ThisWorkbook.BuiltinDocumentProperties("Author").Value = ""
+    ThisWorkbook.BuiltinDocumentProperties("Manager").Value = ""
+    ThisWorkbook.BuiltinDocumentProperties("Company").Value = ""
+    
+    ' Clear personal information from the file properties
+    ' ThisWorkbook.RemoveDocumentInformation (XlRemoveDocInfoType.xlAuthor)
+    ' ThisWorkbook.RemoveDocumentInformation (XlRemoveDocInfoType.xlLastAuthor)
+    ' ThisWorkbook.RemoveDocumentInformation (XlRemoveDocInfoType.xlComments)
+    ' ThisWorkbook.RemoveDocumentInformation (XlRemoveDocInfoType.xlCompanyName)
+    ' ThisWorkbook.RemoveDocumentInformation (XlRemoveDocInfoType.xlManager)
+End Sub
