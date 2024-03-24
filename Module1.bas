@@ -17,10 +17,10 @@ Sub PromptUser()
         Application.DisplayAlerts = True ' Re-enable alerts
     End If
 
-    ' Prompt the user to select a folder
+    ' Remove all sheets and only keep PPM sheet
     KeepOnlyPPMSheet
     
-    ' Prompt the user to select a folder
+    ' Create the Fancy Button on PPM sheet
     AddOrUpdateFancyButtonToPPM
     
     ' Prompt the user to select a folder
@@ -197,25 +197,41 @@ Function GetFolderPath(prompt As String) As String
     Dim dialog As FileDialog
     Dim selectedFolder As Variant
     
-    ' Create a FileDialog object
-    Set dialog = Application.FileDialog(msoFileDialogFolderPicker)
-    
-    ' Set dialog properties
-    dialog.Title = prompt
-    dialog.AllowMultiSelect = False
-    
-    ' Set initial directory to the current directory of the Excel file
-    dialog.InitialFileName = ThisWorkbook.Path
-    
-    ' Show the dialog and check if a folder is selected
-    If dialog.Show = -1 Then
-        ' Get the selected folder path
-        selectedFolder = dialog.SelectedItems(1)
-        GetFolderPath = selectedFolder
-    Else
-        GetFolderPath = ""
-    End If
+    #If Mac Then
+        ' For macOS, use the MacScript function to call a shell script
+        Dim shellScript As String
+        shellScript = "osascript -e 'tell application ""System Events"" to activate' -e 'return POSIX path of (choose folder with prompt """ & prompt & """)'"
+        
+        selectedFolder = MacScript(shellScript)
+        
+        ' Check if user canceled the dialog
+        If selectedFolder <> "" Then
+            GetFolderPath = selectedFolder
+        Else
+            GetFolderPath = ""
+        End If
+    #Else
+        ' For Windows, use the FileDialog object
+        Set dialog = Application.FileDialog(msoFileDialogFolderPicker)
+        
+        ' Set dialog properties
+        dialog.Title = prompt
+        dialog.AllowMultiSelect = False
+        
+        ' Set initial directory to the current directory of the Excel file
+        dialog.InitialFileName = ThisWorkbook.Path
+        
+        ' Show the dialog and check if a folder is selected
+        If dialog.Show = -1 Then
+            ' Get the selected folder path
+            selectedFolder = dialog.SelectedItems(1)
+            GetFolderPath = selectedFolder
+        Else
+            GetFolderPath = ""
+        End If
+    #End If
 End Function
+
 Function ValidateFilenames(Filename1 As String, Filename2 As String, Filename3 As String) As Boolean
     ' Check if the files exist
     If Len(Dir(Filename1)) = 0 Then
