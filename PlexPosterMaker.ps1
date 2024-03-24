@@ -1800,6 +1800,44 @@ function Check-ImageMagick {
     }
 }
 
+function Check-OverlayDimensions {
+    param (
+        [string]$Posteroverlay,
+        [string]$Backgroundoverlay,
+        [string]$Titlecardoverlay,
+        [string]$PosterSize,
+        [string]$BackgroundSize
+    )
+
+    # Use magick to check dimensions
+    $Posteroverlaydimensions = & $magick $Posteroverlay -format "%wx%h" info:
+    $Backgroundoverlaydimensions = & $magick $Backgroundoverlay -format "%wx%h" info:
+    $Titlecardoverlaydimensions = & $magick $Titlecardoverlay -format "%wx%h" info:
+
+    # Check Poster Overlay Size
+    if ($Posteroverlaydimensions -eq $PosterSize) {
+        Write-Log -Message "Poster overlay is correctly sized at: $Postersize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+    }
+    else {
+        Write-Log -Message "Poster overlay is NOT correctly sized at: $Postersize. Actual dimensions: $Posteroverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+    }
+
+    # Check Background Overlay Size
+    if ($Backgroundoverlaydimensions -eq $BackgroundSize) {
+        Write-Log -Message "Background overlay is correctly sized at: $BackgroundSize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+    }
+    else {
+        Write-Log -Message "Background overlay is NOT correctly sized at: $BackgroundSize. Actual dimensions: $Backgroundoverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+    }
+
+    # Check TitleCard Overlay Size
+    if ($Titlecardoverlaydimensions -eq $BackgroundSize) {
+        Write-Log -Message "TitleCard overlay is correctly sized at: $BackgroundSize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+    }
+    else {
+        Write-Log -Message "TitleCard overlay is NOT correctly sized at: $BackgroundSize. Actual dimensions: $Titlecardoverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+    }
+}
 
 ##### PRE-START #####
 # Set some global vars
@@ -2104,32 +2142,9 @@ CheckJsonPaths -font $font -backgroundfont $backgroundfont -titlecardfont $title
 # Check ImageMagick now:
 Check-ImageMagick -magick $magick -magickinstalllocation $magickinstalllocation
 
-# Use magick to check dimensions
-$Posteroverlaydimensions = & $magick $Posteroverlay -format "%wx%h" info:
-$Backgroundoverlaydimensions = & $magick $Backgroundoverlay -format "%wx%h" info:
-$titlecardoverlaydimensions = & $magick $titlecardoverlay -format "%wx%h" info:
+# Check overlay artwork for poster, background, and titlecard dimensions
+Check-OverlayDimensions -Posteroverlay "$Posteroverlay" -Backgroundoverlay "$Backgroundoverlay" -Titlecardoverlay "$titlecardoverlay" -PosterSize "$PosterSize" -BackgroundSize "$BackgroundSize"
 
-# Check Poster Overlay Size:
-if ($Posteroverlaydimensions -eq $PosterSize) {
-    Write-Log -Message "Poster overlay is correctly sized at: $Postersize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
-}
-else {
-    Write-Log -Message "Poster overlay is NOT correctly sized at: $Postersize. Actual dimensions: $Posteroverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
-}
-# Check Background Overlay Size:
-if ($Backgroundoverlaydimensions -eq $BackgroundSize) {
-    Write-Log -Message "Background overlay is correctly sized at: $BackgroundSize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
-}
-else {
-    Write-Log -Message "Background overlay is NOT correctly sized at: $BackgroundSize. Actual dimensions: $Backgroundoverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
-}
-# Check TitleCard Overlay Size:
-if ($titlecardoverlaydimensions -eq $BackgroundSize) {
-    Write-Log -Message "TitleCard overlay is correctly sized at: $BackgroundSize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
-}
-else {
-    Write-Log -Message "TitleCard overlay is NOT correctly sized at: $BackgroundSize. Actual dimensions: $titlecardoverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
-}
 
 # check if fanart Module is installed
 if (!(Get-InstalledModule -Name FanartTvAPI)) {
@@ -2145,7 +2160,7 @@ Add-FanartTvAPIKey -Api_Key $FanartTvAPIKey
 
 # Check TMDB Token before building the Header.
 if ($global:tmdbtoken.Length -le '35') {
-    Write-Log -Message "TMDB Token is to short, you may have used Api key in config file, please change it to 'API Read Access Token'." -Path $configLogging -Type Error
+    Write-Log -Message "TMDB Token is to short, you may have used the Api key in your config file. Please use the 'API Read Access Token'." -Path $configLogging -Type Error
     Exit
 }
 
