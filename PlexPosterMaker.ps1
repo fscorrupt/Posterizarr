@@ -14,7 +14,7 @@ $ProgressPreference = 'SilentlyContinue'
 # FANART API                    -> https://fanart.tv/get-an-api-key
 # TVDB API                      -> https://thetvdb.com/api-information/signup
 # ImageMagick                   -> https://imagemagick.org/archive/binaries/ImageMagick-7.1.1-27-Q16-HDRI-x64-dll.exe
-# FanartTvAPI Module            -> https://github.com/Celerium/FanartTV-PowerShellWrapper
+# FanartTv Module            -> https://github.com/Celerium/FanartTV-PowerShellWrapper
 #####################################################################################################################
 function Set-OSTypeAndScriptRoot {
     if ($env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker-Alpine*') {
@@ -175,7 +175,7 @@ function GetTMDBMoviePoster {
             }
         }
         Else {
-            Write-Log -Subtext "TMDB Api Response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+            Write-Log -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
         }
     }
     Else {
@@ -214,7 +214,7 @@ function GetTMDBMoviePoster {
             }
         }
         Else {
-            Write-Log -Subtext "TMDB Api Response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+            Write-Log -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
         }
     }
 }
@@ -259,7 +259,7 @@ function GetTMDBMovieBackground {
             }
         }
         Else {
-            Write-Log -Subtext "TMDB Api Response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+            Write-Log -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
         }
     }
     Else {
@@ -308,7 +308,7 @@ function GetTMDBMovieBackground {
             }
         }
         Else {
-            Write-Log -Subtext "TMDB Api Response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+            Write-Log -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
         }
     }
 }
@@ -348,7 +348,7 @@ function GetTMDBShowPoster {
             }
         }
         Else {
-            Write-Log -Subtext "TMDB Api Response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+            Write-Log -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
         }
     }
     Else {
@@ -387,7 +387,7 @@ function GetTMDBShowPoster {
             }
         }
         Else {
-            Write-Log -Subtext "TMDB Api Response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+            Write-Log -Subtext "TMD API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
         }
     }
 }
@@ -423,7 +423,7 @@ function GetTMDBSeasonPoster {
                 }
             }
             Else {
-                Write-Log -Subtext "TMDB Api Response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type error
+                Write-Log -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type error
             }
         }
         Else {
@@ -498,7 +498,7 @@ function GetTMDBSeasonPoster {
                 }
             }
             Else {
-                Write-Log -Subtext "TMDB Api Response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type error
+                Write-Log -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type error
             }
         }
         Else {
@@ -552,7 +552,7 @@ function GetTMDBShowBackground {
             }
         }
         Else {
-            Write-Log -Subtext "TMDB Api Response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+            Write-Log -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
         }
     }
     Else {
@@ -601,7 +601,7 @@ function GetTMDBShowBackground {
             }
         }
         Else {
-            Write-Log -Subtext "TMDB Api Response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+            Write-Log -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
         }
     }
 }
@@ -641,7 +641,7 @@ function GetTMDBTitleCard {
         }
     }
     Else {
-        Write-Log -Subtext "TMDB Api Response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+        Write-Log -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
         $global:Fallback = "TVDB"
         $Errorcount++
     }
@@ -1003,7 +1003,7 @@ function GetTVDBMoviePoster {
                 }
             }
             Else {
-                Write-Log -Subtext "TVDB Api Response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                Write-Log -Subtext "TVDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
             }
         }
         Else {
@@ -1045,7 +1045,7 @@ function GetTVDBMoviePoster {
                 }
             }
             Else {
-                Write-Log -Subtext "TVDB Api Response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                Write-Log -Subtext "TVDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
             }
         }
     }
@@ -1072,7 +1072,7 @@ function GetTVDBMovieBackground {
                 }
             }
             Else {
-                Write-Log -Subtext "TVDB Api Response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                Write-Log -Subtext "TVDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
             }
         }
         Else {
@@ -1117,7 +1117,7 @@ function GetTVDBMovieBackground {
                 }
             }
             Else {
-                Write-Log -Subtext "TVDB Api Response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                Write-Log -Subtext "TVDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
             }
         }
     }
@@ -1153,7 +1153,7 @@ function GetTVDBShowPoster {
                 }
             }
             Else {
-                Write-Log -Subtext "TVDB Api Response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                Write-Log -Subtext "TVDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
             }
         }
         Else {
@@ -1194,7 +1194,7 @@ function GetTVDBShowPoster {
                 }
             }
             Else {
-                Write-Log -Subtext "TVDB Api Response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                Write-Log -Subtext "TVDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
             }
         }
     }
@@ -1255,7 +1255,7 @@ function GetTVDBSeasonPoster {
             }
         }
         Else {
-            Write-Log -Subtext "TVDB Api Response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+            Write-Log -Subtext "TVDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
         }
     }
 }
@@ -1290,7 +1290,7 @@ function GetTVDBShowBackground {
                 }
             }
             Else {
-                Write-Log -Subtext "TVDB Api Response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                Write-Log -Subtext "TVDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
             }
         }
         Else {
@@ -1334,7 +1334,7 @@ function GetTVDBShowBackground {
                 }
             }
             Else {
-                Write-Log -Subtext "TVDB Api Response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                Write-Log -Subtext "TVDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
             }
         }
     }
@@ -1369,7 +1369,7 @@ function GetTVDBTitleCard {
             }
         }
         Else {
-            Write-Log -Subtext "TVDB Api Response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+            Write-Log -Subtext "TVDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
             $Errorcount++
         }
     }
@@ -1917,13 +1917,13 @@ Else {
     }
 }
 
-# Api Part
-$global:tvdbapi = $config.ApiPart.tvdbapi
-$global:tmdbtoken = $config.ApiPart.tmdbtoken
-$FanartTvAPIKey = $config.ApiPart.FanartTvAPIKey
-$PlexToken = $config.ApiPart.PlexToken
-$global:FavProvider = $config.ApiPart.FavProvider.ToUpper()
-$global:PreferredLanguageOrder = $config.ApiPart.PreferredLanguageOrder
+# API Part
+$global:tvdbapi = $config.APIPart.tvdbapi
+$global:tmdbtoken = $config.APIPart.tmdbtoken
+$FanartTvAPIKey = $config.APIPart.FanartTvAPIKey
+$PlexToken = $config.APIPart.PlexToken
+$global:FavProvider = $config.APIPart.FavProvider.ToUpper()
+$global:PreferredLanguageOrder = $config.APIPart.PreferredLanguageOrder
 # default Lang order if missing in config
 if (!$global:PreferredLanguageOrder) {
     Write-Log -Message "Lang search Order not set in Config, setting it to 'xx,en,de' for you" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
@@ -2155,12 +2155,12 @@ if (!(Get-InstalledModule -Name FanartTvAPI)) {
     Write-Log -Subtext "FanartTvAPI Module installed, importing it now..." -Path $configLogging -Type Success
     Import-Module -Name FanartTvAPI
 }
-# Add Fanart Api
+# Add Fanart API
 Add-FanartTvAPIKey -Api_Key $FanartTvAPIKey
 
 # Check TMDB Token before building the Header.
 if ($global:tmdbtoken.Length -le '35') {
-    Write-Log -Message "TMDB Token is to short, you may have used the Api key in your config file. Please use the 'API Read Access Token'." -Path $configLogging -Type Error
+    Write-Log -Message "TMDB Token is to0 short, you may have used the API key in your config file. Please use the 'API Read Access Token'." -Path $configLogging -Type Error
     Exit
 }
 
