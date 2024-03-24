@@ -289,6 +289,18 @@ Run the script with the `-Manual` switch:
 .\PlexPosterMaker.ps1 -Manual
 ```
 
+### How to use the PPM.xlsm
+<details close>
+<summary>🖼️PPM Excel:</summary>
+<br>
+<p>
+  <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
+    <img alt="excel" height="100%" src="/images/PPM-xlsm.gif">
+  </a>
+</p>
+
+</details>
+
 Follow the prompts to enter the source picture path, media folder name, and movie/show title to manually create a custom poster.
 
 ### Webhook
