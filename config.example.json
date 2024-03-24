@@ -1,5 +1,5 @@
 {
-  "ApiPart":{
+  "APIPart":{
     "tvdbapi": "TVDBAPIKEY",
     "tmdbtoken": "TMDBTOKEN",
     "FanartTvAPIKey": "FANARTAPIKEY",
