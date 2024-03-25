@@ -3249,6 +3249,7 @@ else {
                 $temp | Add-Member -MemberType NoteProperty -Name "PlexBackgroundUrl" -Value $Metadata.MediaContainer.$contentquery.art
                 $temp | Add-Member -MemberType NoteProperty -Name "PlexSeasonUrls" -Value $SeasonPosterUrl
                 $Libraries += $temp
+                Write-Log -Subtext "Found [$($temp.title)] of type $($temp.{Library Type}) in [$($temp.{Library Name})]" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
             }
         }
     }
@@ -3294,6 +3295,7 @@ else {
                 $tempseasondata | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Seasondata.MediaContainer.video.title -join ';')
                 $tempseasondata | Add-Member -MemberType NoteProperty -Name "PlexTitleCardUrls" -Value $($Seasondata.MediaContainer.video.thumb -join ',')
                 $Episodedata += $tempseasondata
+                Write-Log -Subtext "Found [$($tempseasondata.{Show Name})] of type $($tempseasondata.Type) for season $($tempseasondata.{Season Number})" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
             }
         }
         $Episodedata | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\PlexEpisodeExport.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
@@ -3368,7 +3370,7 @@ else {
                     $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/')
                 }
                 Else {
-                    $hashtestpath = $TestPath + "\" + $Testfile
+                    $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
                 }
 
                 $PosterImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername).jpg"
@@ -3574,7 +3576,7 @@ else {
                         $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/')
                     }
                     Else {
-                        $hashtestpath = $TestPath + "\" + $Testfile
+                        $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
                     }
 
                     $backgroundImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_background.jpg"
@@ -3815,7 +3817,7 @@ else {
                 $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/')
             }
             Else {
-                $hashtestpath = $TestPath + "\" + $Testfile
+                $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
             }
 
             $PosterImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername).jpg"
@@ -4029,7 +4031,7 @@ else {
                     $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/')
                 }
                 Else {
-                    $hashtestpath = $TestPath + "\" + $Testfile
+                    $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
                 }
 
                 $backgroundImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_background.jpg"
@@ -4247,7 +4249,7 @@ else {
                         $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/')
                     }
                     Else {
-                        $hashtestpath = $TestPath + "\" + $Testfile
+                        $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
                     }
 
                     $SeasonImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_$global:season.jpg"
@@ -4533,7 +4535,7 @@ else {
                                     $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/')
                                 }
                                 Else {
-                                    $hashtestpath = $TestPath + "\" + $Testfile
+                                    $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
                                 }
 
                                 $EpisodeImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_$global:FileNaming.jpg"
@@ -4806,7 +4808,7 @@ else {
                                     $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/')
                                 }
                                 Else {
-                                    $hashtestpath = $TestPath + "\" + $Testfile
+                                    $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
                                 }
 
                                 $EpisodeImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_$global:FileNaming.jpg"
