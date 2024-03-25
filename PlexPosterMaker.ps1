@@ -47,13 +47,10 @@ function Write-Log {
         [string]$Subtext = $null
     )
     switch ($logLevel) {
-        'Info' { $log = 1 }
-        'Warning' { $log = 2 }
-        'Error' { $log = 3 }
-        'Optional' { $log = 4 }
-        'Debug' { $log = 5 }
-        'Trace' { $log = 6 }
-        'Success' { $log = 1 }
+        'Info' { $log = 2 }
+        'Warning' { $log = 1 }
+        'Error' { $log = 1 }
+        'Debug' { $log = 3 }
     }
     if (!(Test-Path -path $path)) {
         New-Item -Path $Path -Force | out-null
@@ -167,7 +164,7 @@ function GetTMDBMoviePoster {
                         $global:Fallback = "fanart"
                         $global:tmdbfallbackposterurl = $global:posterurl
                     }
-                    Write-Log -Subtext "Found Poster with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                    Write-Log -Subtext "Found Poster with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                     $global:PosterWithText = $true
                 }
                 Else {
@@ -206,10 +203,10 @@ function GetTMDBMoviePoster {
                         $posterpath = (($FavPoster | Sort-Object vote_average -Descending)[0]).file_path
                         $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
                         if ($lang -eq 'null') {
-                            Write-Log -Subtext "Found Poster without Language on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                            Write-Log -Subtext "Found Poster without Language on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                         }
                         Else {
-                            Write-Log -Subtext "Found Poster with Language '$lang' on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                            Write-Log -Subtext "Found Poster with Language '$lang' on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                         }
                         if ($lang -ne 'null') {
                             $global:PosterWithText = $true
@@ -245,7 +242,7 @@ function GetTMDBMovieBackground {
                         $global:Fallback = "fanart"
                         $global:tmdbfallbackposterurl = $global:posterurl
                     }
-                    Write-Log -Subtext "Found background with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                    Write-Log -Subtext "Found background with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                     $global:PosterWithText = $true
                 }
                 Else {
@@ -290,10 +287,10 @@ function GetTMDBMovieBackground {
                         $posterpath = (($FavPoster | Sort-Object vote_average -Descending)[0]).file_path
                         $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
                         if ($lang -eq 'null') {
-                            Write-Log -Subtext "Found background without Language on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                            Write-Log -Subtext "Found background without Language on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                         }
                         Else {
-                            Write-Log -Subtext "Found background with Language '$lang' on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                            Write-Log -Subtext "Found background with Language '$lang' on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                         }
                         if ($lang -ne 'null') {
                             $global:PosterWithText = $true
@@ -339,7 +336,7 @@ function GetTMDBShowPoster {
                         $global:Fallback = "fanart"
                         $global:tmdbfallbackposterurl = $global:posterurl
                     }
-                    Write-Log -Subtext "Found Poster with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                    Write-Log -Subtext "Found Poster with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                     $global:PosterWithText = $true
                     return $global:posterurl
                 }
@@ -379,10 +376,10 @@ function GetTMDBShowPoster {
                         $posterpath = (($FavPoster | Sort-Object vote_average -Descending)[0]).file_path
                         $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
                         if ($lang -eq 'null') {
-                            Write-Log -Subtext "Found Poster without Language on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                            Write-Log -Subtext "Found Poster without Language on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                         }
                         Else {
-                            Write-Log -Subtext "Found Poster with Language '$lang' on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                            Write-Log -Subtext "Found Poster with Language '$lang' on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                         }
                         if ($lang -ne 'null') {
                             $global:PosterWithText = $true
@@ -414,7 +411,7 @@ function GetTMDBSeasonPoster {
                 if (!$NoLangPoster) {
                     $posterpath = (($response.posters | Sort-Object vote_average -Descending)[0]).file_path
                     $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
-                    Write-Log -Subtext "Found Poster with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                    Write-Log -Subtext "Found Poster with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                     $global:PosterWithText = $true
                     $global:TMDBSeasonFallback = $global:posterurl
                     return $global:posterurl
@@ -452,7 +449,7 @@ function GetTMDBSeasonPoster {
         }
         if ($responseBackup) {
             if ($responseBackup.images.posters) {
-                Write-Log -Subtext "Could not get a result with '$global:SeasonNumber' on TMDB, likley season number not in correct format, fallback to Show poster." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                Write-Log -Subtext "Could not get a result with '$global:SeasonNumber' on TMDB, likley season number not in correct format, fallback to Show poster." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                 foreach ($lang in $global:PreferredLanguageOrderTMDB) {
                     if ($lang -eq 'null') {
                         $FavPoster = ($responseBackup.images.posters | Where-Object iso_639_1 -eq $null)
@@ -464,10 +461,10 @@ function GetTMDBSeasonPoster {
                         $posterpath = (($FavPoster | Sort-Object vote_average -Descending)[0]).file_path
                         $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
                         if ($lang -eq 'null') {
-                            Write-Log -Subtext "Found Poster without Language on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                            Write-Log -Subtext "Found Poster without Language on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                         }
                         Else {
-                            Write-Log -Subtext "Found Poster with Language '$lang' on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                            Write-Log -Subtext "Found Poster with Language '$lang' on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                         }
                         if ($lang -ne 'null') {
                             $global:PosterWithText = $true
@@ -491,10 +488,10 @@ function GetTMDBSeasonPoster {
                         $posterpath = (($FavPoster | Sort-Object vote_average -Descending)[0]).file_path
                         $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
                         if ($lang -eq 'null') {
-                            Write-Log -Subtext "Found Poster without Language on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                            Write-Log -Subtext "Found Poster without Language on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                         }
                         Else {
-                            Write-Log -Subtext "Found Poster with Language '$lang' on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                            Write-Log -Subtext "Found Poster with Language '$lang' on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                         }
                         if ($lang -ne 'null') {
                             $global:PosterWithText = $true
@@ -534,7 +531,7 @@ function GetTMDBShowBackground {
                         $global:Fallback = "fanart"
                         $global:tmdbfallbackposterurl = $global:posterurl
                     }
-                    Write-Log -Subtext "Found background with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                    Write-Log -Subtext "Found background with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                     $global:PosterWithText = $true
                 }
                 Else {
@@ -583,10 +580,10 @@ function GetTMDBShowBackground {
                         $posterpath = (($FavPoster | Sort-Object vote_average -Descending)[0]).file_path
                         $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
                         if ($lang -eq 'null') {
-                            Write-Log -Subtext "Found background without Language on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                            Write-Log -Subtext "Found background without Language on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                         }
                         Else {
-                            Write-Log -Subtext "Found background with Language '$lang' on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                            Write-Log -Subtext "Found background with Language '$lang' on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                         }
                         if ($lang -ne 'null') {
                             $global:PosterWithText = $true
@@ -627,7 +624,7 @@ function GetTMDBTitleCard {
             if (!$NoLangPoster) {
                 $posterpath = (($response.stills | Sort-Object vote_average -Descending)[0]).file_path
                 $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
-                Write-Log -Subtext "Found Title Card with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                Write-Log -Subtext "Found Title Card with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                 $global:PosterWithText = $true
                 return $global:posterurl
             }
@@ -666,7 +663,7 @@ function GetFanartMoviePoster {
                 if ($entrytemp -and $entrytemp.movieposter) {
                     if (!($entrytemp.movieposter | Where-Object lang -eq '00')) {
                         $global:posterurl = ($entrytemp.movieposter)[0].url
-                        Write-Log -Subtext "Found Poster with text on Fanart.tv"  -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                        Write-Log -Subtext "Found Poster with text on Fanart.tv"  -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                         $global:PosterWithText = $true
                         if ($global:FavProvider -eq 'FANART') {
                             $global:Fallback = "TMDB"
@@ -704,10 +701,10 @@ function GetFanartMoviePoster {
                         if (($entrytemp.movieposter | Where-Object lang -eq "$lang")) {
                             $global:posterurl = ($entrytemp.movieposter)[0].url
                             if ($lang -eq '00') {
-                                Write-Log -Subtext "Found Poster without Language on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                                Write-Log -Subtext "Found Poster without Language on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                             }
                             Else {
-                                Write-Log -Subtext "Found Poster with Language '$lang' on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                                Write-Log -Subtext "Found Poster with Language '$lang' on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                             }
                             if ($lang -ne '00') {
                                 $global:PosterWithText = $true
@@ -740,7 +737,7 @@ function GetFanartMovieBackground {
             if ($entrytemp -and $entrytemp.moviebackground) {
                 if (!($entrytemp.moviebackground | Where-Object lang -eq '')) {
                     $global:posterurl = ($entrytemp.moviebackground)[0].url
-                    Write-Log -Subtext "Found Background with text on Fanart.tv"  -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                    Write-Log -Subtext "Found Background with text on Fanart.tv"  -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                     $global:PosterWithText = $true
                     if ($global:FavProvider -eq 'FANART') {
                         $global:Fallback = "TMDB"
@@ -780,7 +777,7 @@ function GetFanartShowPoster {
                     if (!($entrytemp.tvposter | Where-Object lang -eq '00')) {
                         $global:posterurl = ($entrytemp.tvposter)[0].url
 
-                        Write-Log -Subtext "Found Poster with text on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                        Write-Log -Subtext "Found Poster with text on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                         $global:PosterWithText = $true
                         if ($global:FavProvider -eq 'FANART') {
                             $global:Fallback = "TMDB"
@@ -820,10 +817,10 @@ function GetFanartShowPoster {
                         if (($entrytemp.tvposter | Where-Object lang -eq "$lang")) {
                             $global:posterurl = ($entrytemp.tvposter)[0].url
                             if ($lang -eq '00') {
-                                Write-Log -Subtext "Found Poster without Language on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                                Write-Log -Subtext "Found Poster without Language on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                             }
                             Else {
-                                Write-Log -Subtext "Found Poster with Language '$lang' on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                                Write-Log -Subtext "Found Poster with Language '$lang' on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                             }
                             if ($lang -ne '00') {
                                 $global:PosterWithText = $true
@@ -858,7 +855,7 @@ function GetFanartShowBackground {
             if ($entrytemp -and $entrytemp.showbackground) {
                 if (!($entrytemp.showbackground | Where-Object lang -eq '')) {
                     $global:posterurl = ($entrytemp.showbackground)[0].url
-                    Write-Log -Subtext "Found Background with text on Fanart.tv"  -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                    Write-Log -Subtext "Found Background with text on Fanart.tv"  -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                     $global:PosterWithText = $true
                     if ($global:FavProvider -eq 'FANART') {
                         $global:Fallback = "TMDB"
@@ -898,16 +895,16 @@ function GetFanartSeasonPoster {
                         $NoLangPoster = ($entrytemp.seasonposter | Where-Object { $_.lang -eq '00' -and $_.Season -eq $global:SeasonNumber } | Sort-Object likes)
                         if ($NoLangPoster) {
                             $global:posterurl = ($NoLangPoster | Sort-Object likes)[0].url
-                            Write-Log -Subtext "Found Season Poster without Language on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                            Write-Log -Subtext "Found Season Poster without Language on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                             $global:TextlessPoster = $true
                         }
                         Else {
-                            Write-Log -Subtext "No Texless Season Poster on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                            Write-Log -Subtext "No Texless Season Poster on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                             foreach ($lang in $global:PreferredLanguageOrderFanart) {
                                 $FoundPoster = ($entrytemp.seasonposter | Where-Object { $_.lang -eq "$lang" -and $_.Season -eq $global:SeasonNumber } | Sort-Object likes)
                                 if ($FoundPoster) {
                                     $global:posterurl = $FoundPoster[0].url
-                                    Write-Log -Subtext "Found season Poster with Language '$lang' on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                                    Write-Log -Subtext "Found season Poster with Language '$lang' on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                                     $global:PosterWithText = $true
                                     break
                                 }
@@ -915,17 +912,17 @@ function GetFanartSeasonPoster {
                         }
                     }
                     Else {
-                        Write-Log -Subtext "Could not get a result with '$global:SeasonNumber' on Fanart, likley season number not in correct format, fallback to Show poster." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                        Write-Log -Subtext "Could not get a result with '$global:SeasonNumber' on Fanart, likley season number not in correct format, fallback to Show poster." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                         if ($entrytemp -and $entrytemp.tvposter) {
                             foreach ($lang in $global:PreferredLanguageOrderFanart) {
                                 if (($entrytemp.tvposter | Where-Object lang -eq "$lang")) {
                                     $global:posterurl = ($entrytemp.tvposter)[0].url
                                     if ($lang -eq '00') {
-                                        Write-Log -Subtext "Found Poster without Language on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                                        Write-Log -Subtext "Found Poster without Language on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                                         $global:TextlessPoster = $true
                                     }
                                     Else {
-                                        Write-Log -Subtext "Found Poster with Language '$lang' on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                                        Write-Log -Subtext "Found Poster with Language '$lang' on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                                     }
                                     if ($lang -ne '00') {
                                         $global:PosterWithText = $true
@@ -963,11 +960,11 @@ function GetFanartSeasonPoster {
                         }
                         if ($global:posterurl) {
                             if ($lang -eq '00') {
-                                Write-Log -Subtext "Found season Poster without Language on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                                Write-Log -Subtext "Found season Poster without Language on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                                 $global:TextlessPoster = $true
                             }
                             Else {
-                                Write-Log -Subtext "Found season Poster with Language '$lang' on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                                Write-Log -Subtext "Found season Poster with Language '$lang' on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                                 $global:PosterWithText = $true
                                 break
                             }
@@ -1002,7 +999,7 @@ function GetTVDBMoviePoster {
             if ($response) {
                 if ($response.data.artworks) {
                     $global:posterurl = ($response.data.artworks | Where-Object { $_.language -eq $null -and $_.type -eq '14' } | Sort-Object Score)[0].image
-                    Write-Log -Subtext "Found Textless Poster on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                    Write-Log -Subtext "Found Textless Poster on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                     return $global:posterurl
                 }
                 Else {
@@ -1034,10 +1031,10 @@ function GetTVDBMoviePoster {
                         if ($LangArtwork) {
                             $global:posterurl = $LangArtwork[0].image
                             if ($lang -eq 'null') {
-                                Write-Log -Subtext "Found Poster without Language on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                                Write-Log -Subtext "Found Poster without Language on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                             }
                             Else {
-                                Write-Log -Subtext "Found Poster with Language '$lang' on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                                Write-Log -Subtext "Found Poster with Language '$lang' on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                             }
                             if ($lang -ne 'null') {
                                 $global:PosterWithText = $true
@@ -1071,7 +1068,7 @@ function GetTVDBMovieBackground {
             if ($response) {
                 if ($response.data.artworks) {
                     $global:posterurl = ($response.data.artworks | Where-Object { $_.language -eq $null -and $_.type -eq '15' } | Sort-Object Score)[0].image
-                    Write-Log -Subtext "Found Textless Background on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                    Write-Log -Subtext "Found Textless Background on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                     return $global:posterurl
                 }
                 Else {
@@ -1103,10 +1100,10 @@ function GetTVDBMovieBackground {
                         if ($LangArtwork) {
                             $global:posterurl = $LangArtwork[0].image
                             if ($lang -eq 'null') {
-                                Write-Log -Subtext "Found Background without Language on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                                Write-Log -Subtext "Found Background without Language on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                             }
                             Else {
-                                Write-Log -Subtext "Found Background with Language '$lang' on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                                Write-Log -Subtext "Found Background with Language '$lang' on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                             }
                             if ($lang -ne 'null') {
                                 $global:PosterWithText = $true
@@ -1146,12 +1143,12 @@ function GetTVDBShowPoster {
                     $NoLangImageUrl = $response.data.artworks | Where-Object { $_.language -eq $null -and $_.type -eq '2' }
                     if ($NoLangImageUrl) {
                         $global:posterurl = $NoLangImageUrl[0].image
-                        Write-Log -Subtext "Found Textless Poster on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                        Write-Log -Subtext "Found Textless Poster on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                         $global:TextlessPoster = $true
                     }
                     Else {
                         $global:posterurl = $defaultImageurl
-                        Write-Log -Subtext "Found Poster with text on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                        Write-Log -Subtext "Found Poster with text on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                     }
                     return $global:posterurl
                 }
@@ -1183,10 +1180,10 @@ function GetTVDBShowPoster {
                         if ($LangArtwork) {
                             $global:posterurl = $LangArtwork[0].image
                             if ($lang -eq 'null') {
-                                Write-Log -Subtext "Found Poster without Language on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                                Write-Log -Subtext "Found Poster without Language on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                             }
                             Else {
-                                Write-Log -Subtext "Found Poster with Language '$lang' on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                                Write-Log -Subtext "Found Poster with Language '$lang' on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                             }
                             if ($lang -ne 'null') {
                                 $global:PosterWithText = $true
@@ -1241,11 +1238,11 @@ function GetTVDBSeasonPoster {
                         if ($LangArtwork) {
                             $global:posterurl = $LangArtwork[0].image
                             if ($lang -eq 'null') {
-                                Write-Log -Subtext "Found Season Poster without Language on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                                Write-Log -Subtext "Found Season Poster without Language on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                                 $global:TextlessPoster = $true
                             }
                             Else {
-                                Write-Log -Subtext "Found Season Poster with Language '$lang' on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                                Write-Log -Subtext "Found Season Poster with Language '$lang' on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                             }
                             if ($lang -ne 'null') {
                                 $global:PosterWithText = $true
@@ -1283,12 +1280,12 @@ function GetTVDBShowBackground {
                     $NoLangImageUrl = $response.data.artworks | Where-Object { $_.language -eq $null -and $_.type -eq '3' }
                     if ($NoLangImageUrl) {
                         $global:posterurl = $NoLangImageUrl[0].image
-                        Write-Log -Subtext "Found Textless background on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                        Write-Log -Subtext "Found Textless background on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                         $global:TextlessPoster = $true
                     }
                     Else {
                         $global:posterurl = $defaultImageurl
-                        Write-Log -Subtext "Found background with text on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                        Write-Log -Subtext "Found background with text on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                     }
                     return $global:posterurl
                 }
@@ -1320,10 +1317,10 @@ function GetTVDBShowBackground {
                         if ($LangArtwork) {
                             $global:posterurl = $LangArtwork[0].image
                             if ($lang -eq 'null') {
-                                Write-Log -Subtext "Found background without Language on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                                Write-Log -Subtext "Found background without Language on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                             }
                             Else {
-                                Write-Log -Subtext "Found background with Language '$lang' on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                                Write-Log -Subtext "Found background with Language '$lang' on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                             }
                             if ($lang -ne 'null') {
                                 $global:PosterWithText = $true
@@ -1361,7 +1358,7 @@ function GetTVDBTitleCard {
                 $global:NoLangImageUrl = $response.data.episodes | Where-Object { $_.seasonNumber -eq $global:season_number -and $_.number -eq $global:episodenumber }
                 if ($global:NoLangImageUrl.image) {
                     $global:posterurl = $global:NoLangImageUrl.image
-                    Write-Log -Subtext "Found Title Card on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+                    Write-Log -Subtext "Found Title Card on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
                     $global:TextlessPoster = $true
                     return $global:NoLangImageUrl.image
                 }
@@ -1388,7 +1385,7 @@ function GetIMDBPoster {
         Write-Log -Subtext "No show match or poster found on IMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -logLevel Warning
     }
     Else {
-        Write-Log -Subtext "Found Poster with text on IMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Optional
+        Write-Log -Subtext "Found Poster with text on IMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -logLevel Info
         return $global:posterurl
     }
 }
