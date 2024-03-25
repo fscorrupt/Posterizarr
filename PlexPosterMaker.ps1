@@ -3512,6 +3512,9 @@ else {
                             $Errorcount++
                         }
                     }
+                    else {
+                        Write-Log -Subtext "Already exists : $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
+                    }
                 }
                 # Now we can start the Background Poster Part
                 if ($global:BackgroundPosters -eq 'true') {
@@ -3696,6 +3699,9 @@ else {
                             Write-Log -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Type Info
                             $Errorcount++
                         }
+                    }
+                    else {
+                        Write-Log -Subtext "Already exists : $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
                     }
                 }
             }
@@ -3930,7 +3936,9 @@ else {
                         Write-Log -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Type Info
                         $Errorcount++
                     }
-
+                }
+                else {
+                    Write-Log -Subtext "Already exists : $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
                 }
             }
             # Now we can start the Background Part
@@ -4120,6 +4128,9 @@ else {
                         Write-Log -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Type Info
                         $Errorcount++
                     }
+                }
+                else {
+                    Write-Log -Subtext "Already exists : $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
                 }
             }
             # Now we can start the Season Part
@@ -4369,6 +4380,9 @@ else {
                             Write-Log -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Type Info
                             $Errorcount++
                         }
+                    }
+                    else {
+                        Write-Log -Subtext "Already exists : $SeasonImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
                     }
                 }
             }
@@ -4648,6 +4662,9 @@ else {
                                         $Errorcount++
                                     }
                                             
+                                }
+                                else {
+                                    Write-Log -Subtext "Already exists : $EpisodeImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
                                 }
                             }
                             if (Test-Path $EpisodeTempImage -ErrorAction SilentlyContinue) {
@@ -4945,6 +4962,9 @@ else {
                                         $Errorcount++
                                     }
                                             
+                                }
+                                else {
+                                    Write-Log -Subtext "Already exists : $EpisodeImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
                                 }
                             }
                         }
