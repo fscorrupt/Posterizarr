@@ -3,7 +3,7 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.34"
+$CurrentScriptVersion = "1.0.35"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -3309,7 +3309,7 @@ else {
             if ($allowedExtensions -contains $_.Extension.ToLower()) {
                 $directory = $_.Directory
                 $basename = $_.BaseName
-                if ($Platform -eq "Docker" -or $Platform -eq "Linux"){
+                if ($Platform -eq "Docker" -or $Platform -eq "Linux") {
                     $directoryHashtable["$directory/$basename"] = $true
                 }
                 Else {
@@ -3364,11 +3364,11 @@ else {
                     $Testfile = $($entry.RootFoldername)
                 }
 
-                if ($Platform -eq 'Docker' -or $Platform -eq 'Linux'){
-                    $hashtestpath = ($TestPath+"/"+$Testfile).Replace('\','/')
+                if ($Platform -eq 'Docker' -or $Platform -eq 'Linux') {
+                    $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/')
                 }
                 Else {
-                    $hashtestpath = $TestPath+"\"+$Testfile
+                    $hashtestpath = $TestPath + "\" + $Testfile
                 }
 
                 $PosterImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername).jpg"
@@ -3570,11 +3570,11 @@ else {
                         $Testfile = "$($entry.RootFoldername)_background"
                     }
 
-                    if ($Platform -eq 'Docker' -or $Platform -eq 'Linux'){
-                        $hashtestpath = ($TestPath+"/"+$Testfile).Replace('\','/')
+                    if ($Platform -eq 'Docker' -or $Platform -eq 'Linux') {
+                        $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/')
                     }
                     Else {
-                        $hashtestpath = $TestPath+"\"+$Testfile
+                        $hashtestpath = $TestPath + "\" + $Testfile
                     }
 
                     $backgroundImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_background.jpg"
@@ -3620,10 +3620,10 @@ else {
                         if (!$global:posterurl) {
                             $global:posterurl = GetTVDBMovieBackground
                             $global:IsFallback = $true
-                            if (!$global:posterurl){
+                            if (!$global:posterurl) {
                                 GetPlexArtwork -Type ' a Movie Background' -ArtUrl $Arturl -TempImage $backgroundImage
                                 $global:IsFallback = $true
-                                if (!$global:posterurl){
+                                if (!$global:posterurl) {
                                     Write-Log -Subtext "Could not find a background on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
                                 }
                             }
@@ -3777,6 +3777,7 @@ else {
             $global:TMDBfallbackposterurl = $null
             $global:fanartfallbackposterurl = $null
             $FanartSearched = $null
+            $global:plexalreadysearched = $null
             $global:posterurl = $null
             $global:PosterWithText = $null
             $global:IsFallback = $null
@@ -3810,12 +3811,12 @@ else {
                 $Testfile = $($entry.RootFoldername)
             }
             
-                    if ($Platform -eq 'Docker' -or $Platform -eq 'Linux'){
-                        $hashtestpath = ($TestPath+"/"+$Testfile).Replace('\','/')
-                    }
-                    Else {
-                        $hashtestpath = $TestPath+"\"+$Testfile
-                    }
+            if ($Platform -eq 'Docker' -or $Platform -eq 'Linux') {
+                $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/')
+            }
+            Else {
+                $hashtestpath = $TestPath + "\" + $Testfile
+            }
 
             $PosterImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername).jpg"
             $PosterImage = $PosterImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
@@ -3867,8 +3868,15 @@ else {
                         $global:posterurl = GetTVDBShowPoster
                         $global:IsFallback = $true
                         if (!$global:posterurl -and !$global:TMDBfallbackposterurl -and !$global:fanartfallbackposterurl) {
+                            GetPlexArtwork -Type ' a Show Poster' -ArtUrl $Arturl -TempImage $PosterImage
+                            $global:plexalreadysearched = $True
                             Write-Log -Subtext "Could not find a poster on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
                         }
+                    }
+                    if (!$global:posterurl -and !$global:plexalreadysearched -eq 'True') {
+                        $global:IsFallback = $true
+                        GetPlexArtwork -Type ' a Show Poster' -ArtUrl $Arturl -TempImage $PosterImage
+                        Write-Log -Subtext "Could not find a poster on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
                     }
                     if ($fontAllCaps -eq 'true') {
                         $joinedTitle = $Titletext.ToUpper()
@@ -4017,11 +4025,11 @@ else {
                     $Testfile = "$($entry.RootFoldername)_background"
                 }
                 
-                if ($Platform -eq 'Docker' -or $Platform -eq 'Linux'){
-                    $hashtestpath = ($TestPath+"/"+$Testfile).Replace('\','/')
+                if ($Platform -eq 'Docker' -or $Platform -eq 'Linux') {
+                    $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/')
                 }
                 Else {
-                    $hashtestpath = $TestPath+"\"+$Testfile
+                    $hashtestpath = $TestPath + "\" + $Testfile
                 }
 
                 $backgroundImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_background.jpg"
@@ -4074,7 +4082,10 @@ else {
                         $global:IsFallback = $true
                         
                         if (!$global:posterurl) { 
-                            Write-Log -Subtext "Could not find a background on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                            GetPlexArtwork -Type ' a Show Background' -ArtUrl $Arturl -TempImage $backgroundImage
+                            if (!$global:posterurl) {
+                                Write-Log -Subtext "Could not find a background on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                            }
                         }
                         
                     }
@@ -4232,11 +4243,11 @@ else {
                         $Testfile = "$($entry.RootFoldername)_$global:season"
                     }
                     
-                    if ($Platform -eq 'Docker' -or $Platform -eq 'Linux'){
-                        $hashtestpath = ($TestPath+"/"+$Testfile).Replace('\','/')
+                    if ($Platform -eq 'Docker' -or $Platform -eq 'Linux') {
+                        $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/')
                     }
                     Else {
-                        $hashtestpath = $TestPath+"\"+$Testfile
+                        $hashtestpath = $TestPath + "\" + $Testfile
                     }
 
                     $SeasonImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_$global:season.jpg"
@@ -4518,12 +4529,12 @@ else {
                                     $Testfile = "$($entry.RootFoldername)_$global:FileNaming"
                                 }
                                 
-                    if ($Platform -eq 'Docker' -or $Platform -eq 'Linux'){
-                        $hashtestpath = ($TestPath+"/"+$Testfile).Replace('\','/')
-                    }
-                    Else {
-                        $hashtestpath = $TestPath+"\"+$Testfile
-                    }
+                                if ($Platform -eq 'Docker' -or $Platform -eq 'Linux') {
+                                    $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/')
+                                }
+                                Else {
+                                    $hashtestpath = $TestPath + "\" + $Testfile
+                                }
 
                                 $EpisodeImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_$global:FileNaming.jpg"
                                 $EpisodeImage = $EpisodeImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
@@ -4791,12 +4802,12 @@ else {
                                     $Testfile = "$($entry.RootFoldername)_$global:FileNaming"
                                 }
                                 
-                    if ($Platform -eq 'Docker' -or $Platform -eq 'Linux'){
-                        $hashtestpath = ($TestPath+"/"+$Testfile).Replace('\','/')
-                    }
-                    Else {
-                        $hashtestpath = $TestPath+"\"+$Testfile
-                    }
+                                if ($Platform -eq 'Docker' -or $Platform -eq 'Linux') {
+                                    $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/')
+                                }
+                                Else {
+                                    $hashtestpath = $TestPath + "\" + $Testfile
+                                }
 
                                 $EpisodeImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_$global:FileNaming.jpg"
                                 $EpisodeImage = $EpisodeImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
