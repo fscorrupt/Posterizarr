@@ -1951,6 +1951,13 @@ $PlexUrl = $config.PlexPart.PlexUrl
 $show_skipped = $config.PrerequisitePart.show_skipped
 $AssetPath = RemoveTrailingSlash $config.PrerequisitePart.AssetPath
 
+if ($Platform -eq 'Docker' -or $Platform -eq 'Linux') {
+    $AssetPath = $AssetPath.Replace('\', '/')
+}
+else {
+    $AssetPath = $AssetPath.Replace('/', '\')
+}
+
 # Check if its a Network Share
 if ($AssetPath.StartsWith("\")) { 
     # add \ if it only Starts with one
@@ -3369,8 +3376,11 @@ else {
                 if ($Platform -eq 'Docker' -or $Platform -eq 'Linux') {
                     $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/')
                 }
-                Else {
-                    $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
+                else {
+                    $fullTestPath = Resolve-Path -Path $TestPath -ErrorAction SilentlyContinue
+                    if ($fullTestPath) {
+                        $hashtestpath = ($fullTestPath.Path + "\" + $Testfile).Replace('/', '\')
+                    }
                 }
 
                 $PosterImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername).jpg"
@@ -3575,8 +3585,11 @@ else {
                     if ($Platform -eq 'Docker' -or $Platform -eq 'Linux') {
                         $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/')
                     }
-                    Else {
-                        $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
+                    else {
+                        $fullTestPath = Resolve-Path -Path $TestPath -ErrorAction SilentlyContinue
+                        if ($fullTestPath) {
+                            $hashtestpath = ($fullTestPath.Path + "\" + $Testfile).Replace('/', '\')
+                        }
                     }
 
                     $backgroundImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_background.jpg"
@@ -3816,8 +3829,11 @@ else {
             if ($Platform -eq 'Docker' -or $Platform -eq 'Linux') {
                 $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/')
             }
-            Else {
-                $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
+            else {
+                $fullTestPath = Resolve-Path -Path $TestPath -ErrorAction SilentlyContinue
+                if ($fullTestPath) {
+                    $hashtestpath = ($fullTestPath.Path + "\" + $Testfile).Replace('/', '\')
+                }
             }
 
             $PosterImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername).jpg"
@@ -4030,8 +4046,11 @@ else {
                 if ($Platform -eq 'Docker' -or $Platform -eq 'Linux') {
                     $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/')
                 }
-                Else {
-                    $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
+                else {
+                    $fullTestPath = Resolve-Path -Path $TestPath -ErrorAction SilentlyContinue
+                    if ($fullTestPath) {
+                        $hashtestpath = ($fullTestPath.Path + "\" + $Testfile).Replace('/', '\')
+                    }
                 }
 
                 $backgroundImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_background.jpg"
@@ -4248,8 +4267,11 @@ else {
                     if ($Platform -eq 'Docker' -or $Platform -eq 'Linux') {
                         $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/')
                     }
-                    Else {
-                        $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
+                    else {
+                        $fullTestPath = Resolve-Path -Path $TestPath -ErrorAction SilentlyContinue
+                        if ($fullTestPath) {
+                            $hashtestpath = ($fullTestPath.Path + "\" + $Testfile).Replace('/', '\')
+                        }
                     }
 
                     $SeasonImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_$global:season.jpg"
@@ -4534,8 +4556,11 @@ else {
                                 if ($Platform -eq 'Docker' -or $Platform -eq 'Linux') {
                                     $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/')
                                 }
-                                Else {
-                                    $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
+                                else {
+                                    $fullTestPath = Resolve-Path -Path $TestPath -ErrorAction SilentlyContinue
+                                    if ($fullTestPath) {
+                                        $hashtestpath = ($fullTestPath.Path + "\" + $Testfile).Replace('/', '\')
+                                    }
                                 }
 
                                 $EpisodeImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_$global:FileNaming.jpg"
@@ -4807,8 +4832,11 @@ else {
                                 if ($Platform -eq 'Docker' -or $Platform -eq 'Linux') {
                                     $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/')
                                 }
-                                Else {
-                                    $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
+                                else {
+                                    $fullTestPath = Resolve-Path -Path $TestPath -ErrorAction SilentlyContinue
+                                    if ($fullTestPath) {
+                                        $hashtestpath = ($fullTestPath.Path + "\" + $Testfile).Replace('/', '\')
+                                    }
                                 }
 
                                 $EpisodeImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_$global:FileNaming.jpg"
