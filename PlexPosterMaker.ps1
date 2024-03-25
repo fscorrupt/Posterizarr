@@ -3,18 +3,18 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.33"
+$CurrentScriptVersion = "1.0.34"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
 #################
 # What you need #
 #####################################################################################################################
-# TMDB API Read Access Token    -> https://www.themoviedb.org/settings/api
-# FANART API                    -> https://fanart.tv/get-an-api-key
-# TVDB API                      -> https://thetvdb.com/api-information/signup
-# ImageMagick                   -> https://imagemagick.org/archive/binaries/ImageMagick-7.1.1-27-Q16-HDRI-x64-dll.exe
-# FanartTv Module            -> https://github.com/Celerium/FanartTV-PowerShellWrapper
+# TMDB API Read Access Token      -> https://www.themoviedb.org/settings/api
+# FANART API                      -> https://fanart.tv/get-an-api-key
+# TVDB API                        -> https://thetvdb.com/api-information/signup
+# ImageMagick                     -> https://imagemagick.org/archive/binaries/ImageMagick-7.1.1-27-Q16-HDRI-x64-dll.exe
+# FanartTv API Powershell Wrapper -> https://github.com/Celerium/FanartTV-PowerShellWrapper
 #####################################################################################################################
 function Set-OSTypeAndScriptRoot {
     if ($env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker-Alpine*') {
