@@ -1951,13 +1951,6 @@ $PlexUrl = $config.PlexPart.PlexUrl
 $show_skipped = $config.PrerequisitePart.show_skipped
 $AssetPath = RemoveTrailingSlash $config.PrerequisitePart.AssetPath
 
-if ($Platform -eq 'Docker' -or $Platform -eq 'Linux') {
-    $AssetPath = $AssetPath.Replace('\', '/')
-}
-else {
-    $AssetPath = $AssetPath.Replace('/', '\')
-}
-
 # Check if its a Network Share
 if ($AssetPath.StartsWith("\")) { 
     # add \ if it only Starts with one
@@ -2128,6 +2121,14 @@ Write-Log -Message "Old log files cleared..." -Path $configLogging -Type Warning
 Log-ConfigSettings
 # Starting main Script now...
 Write-Log -Message "Starting main Script now..." -Path $configLogging -Type Success    
+
+# Fix asset path based on OS (do it here so that we see what is in config.json versus what script should use)
+if ($Platform -eq 'Docker' -or $Platform -eq 'Linux') {
+    $AssetPath = $AssetPath.Replace('\', '/')
+}
+else {
+    $AssetPath = $AssetPath.Replace('/', '\')
+}
 
 # Get files in script root with specified extensions
 $files = Get-ChildItem -Path $global:ScriptRoot -File | Where-Object { $_.Extension -in $fileExtensions } -ErrorAction SilentlyContinue
