@@ -3,7 +3,7 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.36"
+$CurrentScriptVersion = "1.0.37"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -3405,7 +3405,7 @@ else {
                             'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBMoviePoster }Else { Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning; $global:posterurl = GetFanartMoviePoster } }
                             'FANART' { $global:posterurl = GetFanartMoviePoster }
                             'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBMoviePoster }Else { Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning; $global:posterurl = GetFanartMoviePoster } }
-                            'PLEX' { GetPlexArtwork -Type ' a Movie Poster' -ArtUrl $Arturl -TempImage $PosterImage }
+                            'PLEX' { if ($entry.PlexPosterUrl) { GetPlexArtwork -Type ' a Movie Poster' -ArtUrl $Arturl -TempImage $PosterImage } }
                             Default { $global:posterurl = GetFanartMoviePoster }
                         }
                         switch -Wildcard ($global:Fallback) {
@@ -3428,8 +3428,13 @@ else {
                             $global:posterurl = GetTVDBMoviePoster
                             $global:IsFallback = $true
                             if (!$global:posterurl) {
-                                GetPlexArtwork -Type ' a Movie Poster' -ArtUrl $Arturl -TempImage $PosterImage
-                                $global:IsFallback = $true
+                                if ($entry.PlexPosterUrl) {
+                                    GetPlexArtwork -Type ' a Movie Poster' -ArtUrl $Arturl -TempImage $PosterImage
+                                    $global:IsFallback = $true
+                                }
+                                Else {
+                                    Write-Log -Subtext "Plex Poster Url empty, cannot search on plex, likley there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                                }
                             }
                             if (!$global:posterurl -and $global:imdbid) { 
                                 Write-Log -Subtext "Searching on IMDB for a movie poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Trace
@@ -3612,7 +3617,7 @@ else {
                             'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBMovieBackground }Else { Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning; $global:posterurl = GetFanartMovieBackground } }
                             'FANART' { $global:posterurl = GetFanartMovieBackground }
                             'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBMovieBackground }Else { Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning; $global:posterurl = GetFanartMovieBackground } }
-                            'PLEX' { GetPlexArtwork -Type ' a Movie Background' -ArtUrl $Arturl -TempImage $backgroundImage }
+                            'PLEX' { if ($entry.PlexBackgroundUrl) { GetPlexArtwork -Type ' a Movie Background' -ArtUrl $Arturl -TempImage $backgroundImage } }
                             Default { $global:posterurl = GetFanartMovieBackground }
                         }
                         switch -Wildcard ($global:Fallback) {
@@ -3635,10 +3640,15 @@ else {
                             $global:posterurl = GetTVDBMovieBackground
                             $global:IsFallback = $true
                             if (!$global:posterurl) {
-                                GetPlexArtwork -Type ' a Movie Background' -ArtUrl $Arturl -TempImage $backgroundImage
-                                $global:IsFallback = $true
+                                if ($entry.PlexBackgroundUrl) {
+                                    GetPlexArtwork -Type ' a Movie Background' -ArtUrl $Arturl -TempImage $backgroundImage
+                                    $global:IsFallback = $true
+                                }
+                                Else {
+                                    Write-Log -Subtext "Plex Background Url empty, cannot search on plex, likley there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                                }
                                 if (!$global:posterurl) {
-                                    Write-Log -Subtext "Could not find a background on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                                    Write-Log -Subtext "Could not find a Background on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
                                 }
                             }
                         }
@@ -3851,7 +3861,7 @@ else {
                         'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBShowPoster }Else { Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning; $global:posterurl = GetFanartShowPoster } }
                         'FANART' { $global:posterurl = GetFanartShowPoster }
                         'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBShowPoster }Else { Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning; $global:posterurl = GetFanartShowPoster } }
-                        'PLEX' { GetPlexArtwork -Type ' a Show Poster' -ArtUrl $Arturl -TempImage $PosterImage }
+                        'PLEX' { if ($entry.PlexPosterUrl) { GetPlexArtwork -Type ' a Show Poster' -ArtUrl $Arturl -TempImage $PosterImage } }
                         Default { $global:posterurl = GetFanartShowPoster }
                     }
                     switch -Wildcard ($global:Fallback) {
@@ -3885,15 +3895,30 @@ else {
                         $global:posterurl = GetTVDBShowPoster
                         $global:IsFallback = $true
                         if (!$global:posterurl -and !$global:TMDBfallbackposterurl -and !$global:fanartfallbackposterurl) {
-                            GetPlexArtwork -Type ' a Show Poster' -ArtUrl $Arturl -TempImage $PosterImage
-                            $global:plexalreadysearched = $True
-                            Write-Log -Subtext "Could not find a poster on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                            if ($entry.PlexPosterUrl) {
+                                GetPlexArtwork -Type ' a Show Poster' -ArtUrl $Arturl -TempImage $PosterImage
+                                $global:plexalreadysearched = $True
+                            }
+                            Else {
+                                Write-Log -Subtext "Plex Poster Url empty, cannot search on plex, likley there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                            }
+                            if (!$global:posterurl) {
+                                Write-Log -Subtext "Could not find a poster on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                            }
                         }
                     }
                     if (!$global:posterurl -and !$global:plexalreadysearched -eq 'True') {
                         $global:IsFallback = $true
-                        GetPlexArtwork -Type ' a Show Poster' -ArtUrl $Arturl -TempImage $PosterImage
-                        Write-Log -Subtext "Could not find a poster on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                        if ($entry.PlexPosterUrl) {
+                            GetPlexArtwork -Type ' a Show Poster' -ArtUrl $Arturl -TempImage $PosterImage
+                            $global:plexalreadysearched = $True
+                        }
+                        Else {
+                            Write-Log -Subtext "Plex Poster Url empty, cannot search on plex, likley there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                        }
+                        if (!$global:posterurl) {
+                            Write-Log -Subtext "Could not find a poster on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                        }
                     }
                     if ($fontAllCaps -eq 'true') {
                         $joinedTitle = $Titletext.ToUpper()
@@ -4076,7 +4101,7 @@ else {
                         'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBShowBackground }Else { Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning; $global:posterurl = GetFanartShowBackground } }
                         'FANART' { $global:posterurl = GetFanartShowBackground }
                         'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBShowBackground }Else { Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning; $global:posterurl = GetFanartShowBackground } }
-                        'PLEX' { GetPlexArtwork -Type ' a Show Background' -ArtUrl $Arturl -TempImage $backgroundImage }
+                        'PLEX' { if ($entry.PlexBackgroundUrl) { GetPlexArtwork -Type ' a Show Background' -ArtUrl $Arturl -TempImage $backgroundImage } }
                         Default { $global:posterurl = GetFanartShowBackground }
                     }
                     switch -Wildcard ($global:Fallback) {
@@ -4102,7 +4127,12 @@ else {
                         $global:IsFallback = $true
                         
                         if (!$global:posterurl) { 
-                            GetPlexArtwork -Type ' a Show Background' -ArtUrl $Arturl -TempImage $backgroundImage
+                            if ($entry.PlexBackgroundUrl) {
+                                GetPlexArtwork -Type ' a Show Background' -ArtUrl $Arturl -TempImage $backgroundImage
+                            }
+                            Else {
+                                Write-Log -Subtext "Plex Background Url empty, cannot search on plex, likley there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                            }
                             if (!$global:posterurl) {
                                 Write-Log -Subtext "Could not find a background on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
                             }
@@ -4303,7 +4333,15 @@ else {
                             }
                             if (!$global:posterurl) {
                                 $global:IsFallback = $true
-                                GetPlexArtwork -Type ' a Season Poster' -ArtUrl $Arturl -TempImage $SeasonImage 
+                                if ($entry.PlexSeasonUrl) {
+                                    GetPlexArtwork -Type ' a Season Poster' -ArtUrl $Arturl -TempImage $SeasonImage 
+                                }
+                                Else {
+                                    Write-Log -Subtext "Plex Season Poster Url empty, cannot search on plex, likley there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                                }
+                                if (!$global:posterurl) {
+                                    Write-Log -Subtext "Could not find a season poster on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                                }
                             }
                         }
                         Else {
@@ -4316,7 +4354,15 @@ else {
                                 }
                                 if (!$global:posterurl) {
                                     $global:IsFallback = $true
-                                    GetPlexArtwork -Type ' a Season Poster' -ArtUrl $Arturl -TempImage $SeasonImage 
+                                    if ($entry.PlexSeasonUrl) {
+                                        GetPlexArtwork -Type ' a Season Poster' -ArtUrl $Arturl -TempImage $SeasonImage
+                                    }
+                                    Else {
+                                        Write-Log -Subtext "Plex Season Poster Url empty, cannot search on plex, likley there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                                    }
+                                    if (!$global:posterurl) {
+                                        Write-Log -Subtext "Could not find a season poster on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                                    }
                                 }
                             }
                         }
@@ -4586,7 +4632,15 @@ else {
                                             }
                                             if (!$global:posterurl) {
                                                 $global:IsFallback = $true
-                                                GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage 
+                                                if ($entry.PlexTitleCardUrl) {
+                                                    GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage
+                                                }
+                                                Else {
+                                                    Write-Log -Subtext "Plex TitleCard Url empty, cannot search on plex, likley there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                                                }
+                                                if (!$global:posterurl) {
+                                                    Write-Log -Subtext "Could not find a TitleCard on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                                                }
                                             }
                                         }
                                         else {
@@ -4594,7 +4648,15 @@ else {
                                             $global:posterurl = GetTVDBShowBackground
                                             if (!$global:posterurl) {
                                                 $global:IsFallback = $true
-                                                GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage 
+                                                if ($entry.PlexTitleCardUrl) {
+                                                    GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage 
+                                                }
+                                                Else {
+                                                    Write-Log -Subtext "Plex TitleCard Url empty, cannot search on plex, likley there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                                                }
+                                                if (!$global:posterurl) {
+                                                    Write-Log -Subtext "Could not find a TitleCard on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                                                }
                                             }
                                         }
                                     }
@@ -4606,7 +4668,15 @@ else {
                                             }
                                             if (!$global:posterurl) {
                                                 $global:IsFallback = $true
-                                                GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage 
+                                                if ($entry.PlexTitleCardUrl) {
+                                                    GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage 
+                                                }
+                                                Else {
+                                                    Write-Log -Subtext "Plex TitleCard Url empty, cannot search on plex, likley there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                                                }
+                                                if (!$global:posterurl) {
+                                                    Write-Log -Subtext "Could not find a TitleCard on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                                                }
                                             }
                                         }
                                         else {
@@ -4614,7 +4684,15 @@ else {
                                             $global:posterurl = GetTMDBShowBackground
                                             if (!$global:posterurl) {
                                                 $global:IsFallback = $true
-                                                GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage 
+                                                if ($entry.PlexTitleCardUrl) {
+                                                    GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage 
+                                                }
+                                                Else {
+                                                    Write-Log -Subtext "Plex TitleCard Url empty, cannot search on plex, likley there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                                                }
+                                                if (!$global:posterurl) {
+                                                    Write-Log -Subtext "Could not find a TitleCard on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                                                }
                                             }
                                         }
                                     }
@@ -4860,7 +4938,15 @@ else {
                                             }
                                             if (!$global:posterurl) {
                                                 $global:IsFallback = $true
-                                                GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage 
+                                                if ($entry.PlexTitleCardUrl) {
+                                                    GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage 
+                                                }
+                                                Else {
+                                                    Write-Log -Subtext "Plex TitleCard Url empty, cannot search on plex, likley there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                                                }
+                                                if (!$global:posterurl) {
+                                                    Write-Log -Subtext "Could not find a TitleCard on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                                                }
                                             }
                                             if (!$global:posterurl ) {
                                                 # Lets just try to grab a background poster.
@@ -4885,7 +4971,15 @@ else {
                                             $global:posterurl = GetTVDBTitleCard
                                             if (!$global:posterurl) {
                                                 $global:IsFallback = $true
-                                                GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage 
+                                                if ($entry.PlexTitleCardUrl) {
+                                                    GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage 
+                                                }
+                                                Else {
+                                                    Write-Log -Subtext "Plex TitleCard Url empty, cannot search on plex, likley there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                                                }
+                                                if (!$global:posterurl) {
+                                                    Write-Log -Subtext "Could not find a TitleCard on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                                                }
                                             }
                                             if (!$global:posterurl ) {
                                                 Write-Log -Subtext "No Title Cards for this Episode on TVDB or TMDB..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
@@ -4907,7 +5001,15 @@ else {
                                             }
                                             if (!$global:posterurl) {
                                                 $global:IsFallback = $true
-                                                GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage 
+                                                if ($entry.PlexTitleCardUrl) {
+                                                    GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage 
+                                                }
+                                                Else {
+                                                    Write-Log -Subtext "Plex TitleCard Url empty, cannot search on plex, likley there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                                                }
+                                                if (!$global:posterurl) {
+                                                    Write-Log -Subtext "Could not find a TitleCard on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                                                }
                                             }
                                             if (!$global:posterurl ) {
                                                 # Lets just try to grab a background poster.
@@ -4932,7 +5034,15 @@ else {
                                             $global:posterurl = GetTMDBTitleCard
                                             if (!$global:posterurl) {
                                                 $global:IsFallback = $true
-                                                GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage 
+                                                if ($entry.PlexTitleCardUrl) {
+                                                    GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage 
+                                                }
+                                                Else {
+                                                    Write-Log -Subtext "Plex TitleCard Url empty, cannot search on plex, likley there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Warning
+                                                }
+                                                if (!$global:posterurl) {
+                                                    Write-Log -Subtext "Could not find a TitleCard on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Error
+                                                }
                                             }
                                             if (!$global:posterurl ) {
                                                 # Lets just try to grab a background poster.
