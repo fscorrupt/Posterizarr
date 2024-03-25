@@ -21,6 +21,7 @@
     "show_skipped":"false",
     "magickinstalllocation": "C:\\PosterTemp\\ImageMagickPortable",
     "maxLogs": "5",
+    "logLevel": "2",
     "font": "Rocky.ttf",
     "backgroundfont": "Rocky.ttf",
     "titlecardfont": "Rocky.ttf",
