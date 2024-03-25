@@ -3489,6 +3489,7 @@ else {
                             # Move file back to original naming with Brackets.
                             if (Get-ChildItem -LiteralPath $PosterImage -ErrorAction SilentlyContinue) {
                                 Move-Item -LiteralPath $PosterImage $PosterImageoriginal -Force -ErrorAction SilentlyContinue
+                                Write-Log -Subtext "Added : $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                 Write-Log -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Type Info
 
                                 $movietemp = New-Object psobject
@@ -3676,6 +3677,7 @@ else {
                             # Move file back to original naming with Brackets.
                             if (Get-ChildItem -LiteralPath $backgroundImage -ErrorAction SilentlyContinue) {
                                 Move-Item -LiteralPath $backgroundImage $backgroundImageoriginal -Force -ErrorAction SilentlyContinue
+                                Write-Log -Subtext "Added : $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                 Write-Log -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Type Info
         
                                 $moviebackgroundtemp = New-Object psobject
@@ -3914,6 +3916,7 @@ else {
                         if (Get-ChildItem -LiteralPath $PosterImage -ErrorAction SilentlyContinue) {
                             # Move file back to original naming with Brackets.
                             Move-Item -LiteralPath $PosterImage $PosterImageoriginal -Force -ErrorAction SilentlyContinue
+                            Write-Log -Subtext "Added : $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                             Write-Log -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Type Info
                             $posterCount++
 
@@ -4106,6 +4109,7 @@ else {
                         if (Get-ChildItem -LiteralPath $backgroundImage -ErrorAction SilentlyContinue) {
                             Move-Item -LiteralPath $backgroundImage $backgroundImageoriginal -Force -ErrorAction SilentlyContinue
                             $BackgroundCount++
+                            Write-Log -Subtext "Added : $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                             Write-Log -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Type Info
 
                             $showbackgroundtemp = New-Object psobject
@@ -4357,6 +4361,7 @@ else {
                             if (Get-ChildItem -LiteralPath $SeasonImage -ErrorAction SilentlyContinue) {
                                 # Move file back to original naming with Brackets.
                                 Move-Item -LiteralPath $SeasonImage -destination $SeasonImageoriginal -Force -ErrorAction SilentlyContinue
+                                Write-Log -Subtext "Added : $SeasonImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                 Write-Log -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Type Info
                                 $SeasonCount++
                                 $posterCount++
@@ -4639,6 +4644,7 @@ else {
                                         if (Get-ChildItem -LiteralPath $EpisodeImage -ErrorAction SilentlyContinue) {
                                             # Move file back to original naming with Brackets.
                                             Move-Item -LiteralPath $EpisodeImage -destination $EpisodeImageoriginal -Force -ErrorAction SilentlyContinue
+                                            Write-Log -Subtext "Added : $EpisodeImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                             Write-Log -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Type Info
                                             $EpisodeCount++
                                             $posterCount++
@@ -4939,6 +4945,7 @@ else {
                                         if (Get-ChildItem -LiteralPath $EpisodeImage -ErrorAction SilentlyContinue) {
                                             # Move file back to original naming with Brackets.
                                             Move-Item -LiteralPath $EpisodeImage -destination $EpisodeImageoriginal -Force -ErrorAction SilentlyContinue
+                                            Write-Log -Subtext "Added : $EpisodeImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Type Info
                                             Write-Log -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Type Info
                                             $EpisodeCount++
                                             $posterCount++
