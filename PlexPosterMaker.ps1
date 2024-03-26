@@ -3,7 +3,7 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.40"
+$CurrentScriptVersion = "1.0.41"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
