@@ -1476,20 +1476,27 @@ function CheckJson {
         foreach ($partKey in $defaultConfig.PSObject.Properties.Name) {
             # Check if the part exists in the current configuration
             if (-not $config.PSObject.Properties.Name.Contains($partKey)) {
-                Write-Log -Message "Missing Main Attribute in your Config file: $partKey." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-                Write-Log -Subtext "Adding it for you... In GH Readme, look for $partKey - if you want to see what changed..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                Write-Log -Subtext "GH Readme -> https://github.com/fscorrupt/Plex-Poster-Maker/blob/main/README.md#configuration" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                $config | Add-Member -MemberType NoteProperty -Name $partKey -Value $defaultConfig.$partKey
-                $AttributeChanged = $True
+                if (-not $config.PSObject.Properties.Name.tolower().Contains($partKey.tolower())) {
+                    Write-Log -Message "Missing Main Attribute in your Config file: $partKey." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                    Write-Log -Subtext "Adding it for you... In GH Readme, look for $partKey - if you want to see what changed..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                    Write-Log -Subtext "GH Readme -> https://github.com/fscorrupt/Plex-Poster-Maker/blob/main/README.md#configuration" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                    $config | Add-Member -MemberType NoteProperty -Name $partKey -Value $defaultConfig.$partKey
+                    $AttributeChanged = $True
+                }
+                else {
+                    # Inform user about the case issue
+                    Write-Log -Message "The Main Attribute '$partKey' in your configuration file has a different casing than the expected property." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    Write-Log -Subtext "Please correct the casing of the property in your configuration file to '$partKey'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                    Exit  # Abort the script
+                }
             }
             else {
                 # Check each key in the part
                 foreach ($propertyKey in $defaultConfig.$partKey.PSObject.Properties.Name) {
                     # Show user that a sub-attribute is missing
                     if (-not $config.$partKey.PSObject.Properties.Name.Contains($propertyKey)) {
-                        $existingProperty = $config.$partKey.PSObject.Properties.Name | Where-Object { $_ -ceq $propertyKey }
-                        if ($existingProperty -eq $null) {
-                            Write-Log -Message "Missing Sub-Attribute in your Config file: $partKey.$propertyKey." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                        if (-not $config.$partKey.PSObject.Properties.Name.tolower().Contains($propertyKey.tolower())) {
+                            Write-Log -Message "Missing Sub-Attribute in your Config file: $partKey.$propertyKey" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                             Write-Log -Subtext "Adding it for you... In GH Readme, look for $partKey.$propertyKey - if you want to see what changed..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             Write-Log -Subtext "GH Readme -> https://github.com/fscorrupt/Plex-Poster-Maker/blob/main/README.md#configuration" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             # Add the property using the expected casing
@@ -1497,8 +1504,8 @@ function CheckJson {
                             $AttributeChanged = $True
                         } else {
                             # Inform user about the case issue
-                            Write-Log -Message "The property '$existingProperty' in your configuration file has a different casing than the expected property '$propertyKey'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                            Write-Log -Subtext "Please correct the casing of the property in your configuration file to '$propertyKey'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            Write-Log -Message "The Sub-Attribute '$partKey.$propertyKey' in your configuration file has a different casing than the expected property." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            Write-Log -Subtext "Please correct the casing of the Sub-Attribute in your configuration file to '$partKey.$propertyKey'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
                             Exit  # Abort the script
                         }
                     }
