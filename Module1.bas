@@ -111,6 +111,7 @@ Sub ImportCSVs(folderPath)
         .PreserveColumnInfo = True
         .ListObject.DisplayName = "ImageChoices"
         .Refresh BackgroundQuery:=False
+        .ListObject.ShowTotals = True
     End With
     
     Set wsPlexLibexport = ThisWorkbook.Worksheets.Add
@@ -137,6 +138,7 @@ Sub ImportCSVs(folderPath)
         .PreserveColumnInfo = True
         .ListObject.DisplayName = "PlexLibexport"
         .Refresh BackgroundQuery:=False
+        .ListObject.ShowTotals = True
     End With
     
     Set wsPlexEpisodeExport = ThisWorkbook.Worksheets.Add
@@ -162,6 +164,7 @@ Sub ImportCSVs(folderPath)
         .PreserveColumnInfo = True
         .ListObject.DisplayName = "PlexEpisodeExport"
         .Refresh BackgroundQuery:=False
+        .ListObject.ShowTotals = True
     End With
     
     ' Refresh_All
