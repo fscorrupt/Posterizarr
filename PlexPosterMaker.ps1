@@ -3,7 +3,7 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.42"
+$CurrentScriptVersion = "1.0.43"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -1502,7 +1502,8 @@ function CheckJson {
                             # Add the property using the expected casing
                             $config.$partKey | Add-Member -MemberType NoteProperty -Name $propertyKey -Value $defaultConfig.$partKey.$propertyKey -Force
                             $AttributeChanged = $True
-                        } else {
+                        }
+                        else {
                             # Inform user about the case issue
                             Write-Log -Message "The Sub-Attribute '$partKey.$propertyKey' in your configuration file has a different casing than the expected property." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                             Write-Log -Subtext "Please correct the casing of the Sub-Attribute in your configuration file to '$partKey.$propertyKey'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
@@ -3238,25 +3239,17 @@ else {
                 $Seasondata = $null
                 if ($PlexToken) {
                     if ($contentquery -eq 'Directory') {
-                        Write-log -Subtext "Before Metadata Directory with PlexToken" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                         [xml]$Metadata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey)?X-Plex-Token=$PlexToken).content
                         [xml]$Seasondata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey)/children?X-Plex-Token=$PlexToken).content
-                        Write-log -Subtext "After Metadata Directory with PlexToken" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                     }
-                    Write-log -Subtext "Before Metadata with PlexToken" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                     [xml]$Metadata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey)?X-Plex-Token=$PlexToken).content
-                    Write-log -Subtext "After Metadata with PlexToken" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                 }
                 Else {
                     if ($contentquery -eq 'Directory') {
-                        Write-log -Subtext "Before Metadata Directory without PlexToken" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                         [xml]$Metadata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey)).content
                         [xml]$Seasondata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey)/children?).content
-                        Write-log -Subtext "After Metadata Directory without PlexToken" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                     }
-                    Write-log -Subtext "Before Metadata without PlexToken" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                     [xml]$Metadata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey)).content
-                    Write-log -Subtext "After Metadata without PlexToken" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                 }
                 $metadatatemp = $Metadata.MediaContainer.$contentquery.guid.id
                 $tmdbpattern = 'tmdb://(\d+)'
@@ -3276,11 +3269,12 @@ else {
                     Write-log -Subtext "Plex Lib Paths after split: $libpaths" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                     foreach ($libpath in $libpaths) {
                         if ($location -like "$libpath*") {
+                            Write-log -Subtext "Location: $location" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-log -Subtext "Libpath: $libpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                             $Matchedpath = AddTrailingSlash $libpath
                             $libpath = $Matchedpath
                             $extractedFolder = $location.Substring($libpath.Length)
                             Write-log -Subtext "Matchedpath: $Matchedpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                            Write-log -Subtext "Libpath: $libpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                             Write-log -Subtext "ExtractedFolder: $extractedFolder" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                         }
                     }
@@ -3302,6 +3296,8 @@ else {
                     Write-log -Subtext "Plex Lib Paths after split: $libpaths" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                     foreach ($libpath in $libpaths) {
                         if ($location -like "$libpath*") {
+                            Write-log -Subtext "Location: $location" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-log -Subtext "Libpath: $libpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                             $Matchedpath = AddTrailingSlash $libpath
                             $libpath = $Matchedpath
                             $extractedFolder = $location.Substring($libpath.Length)
@@ -3312,7 +3308,6 @@ else {
                                 $extractedFolder = $extractedFolder.split('/')[0]
                             }
                             Write-log -Subtext "Matchedpath: $Matchedpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                            Write-log -Subtext "Libpath: $libpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                             Write-log -Subtext "ExtractedFolder: $extractedFolder" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                         }
                     }
