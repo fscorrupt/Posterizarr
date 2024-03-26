@@ -144,8 +144,8 @@ Sub ImportCSVs(folderPath)
     Set wsPlexEpisodeExport = ThisWorkbook.Worksheets.Add
     wsPlexEpisodeExport.Name = "PlexEpisodeExport"
     ThisWorkbook.Queries.Add Name:="PlexEpisodeExport", Formula:= _
-        "let" & Chr(13) & "" & Chr(10) & "    Source = Csv.Document(File.Contents(""" & Filename3 & """),[Delimiter="";"", Columns=8, Encoding=65001, QuoteStyle=QuoteStyle.None])," & Chr(13) & "" & Chr(10) & "    #""Promoted Headers"" = Table.PromoteHeaders(Source, [PromoteAllScalars=true])," & Chr(13) & "" & Chr(10) & "    #""Changed Type"" = Table.TransformColumnTypes(#""Promoted Headers"",{{""Show Name"", type text}, {""" & _
-        "Type"", type text}, {""tvdbid"", Int64.Type}, {""tmdbid"", Int64.Type}, {""Season Number"", Int64.Type}, {""Episodes"", type number}, {""Title"", type text}, {""PlexTitleCardUrls"", type text}})" & Chr(13) & "" & Chr(10) & "in" & Chr(13) & "" & Chr(10) & "    #""Changed Type"""
+        "let" & Chr(13) & "" & Chr(10) & "    Source = Csv.Document(File.Contents(""" & Filename3 & """),[Delimiter="";"", Columns=9, Encoding=65001, QuoteStyle=QuoteStyle.None])," & Chr(13) & "" & Chr(10) & "    #""Promoted Headers"" = Table.PromoteHeaders(Source, [PromoteAllScalars=true])," & Chr(13) & "" & Chr(10) & "    #""Changed Type"" = Table.TransformColumnTypes(#""Promoted Headers"",{{""Show Name"", type text}, {""" & _
+        "Type"", type text}, {""tvdbid"", Int64.Type}, {""tmdbid"", Int64.Type}, {""Library Name"", type text}, {""Season Number"", Int64.Type}, {""Episodes"", type number}, {""Title"", type text}, {""PlexTitleCardUrls"", type text}})" & Chr(13) & "" & Chr(10) & "in" & Chr(13) & "" & Chr(10) & "    #""Changed Type"""
 
     With wsPlexEpisodeExport.ListObjects.Add(SourceType:=0, Source:= _
         "OLEDB;Provider=Microsoft.Mashup.OleDb.1;Data Source=$Workbook$;Location=PlexEpisodeExport;Extended Properties=""""", Destination:=wsPlexEpisodeExport.Range("$A$1")).QueryTable
