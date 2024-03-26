@@ -3224,25 +3224,25 @@ else {
                 $Seasondata = $null
                 if ($PlexToken) {
                     if ($contentquery -eq 'Directory') {
-                        Write-log "Before Metadata Directory with PlexToken" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        Write-log -Subtext "Before Metadata Directory with PlexToken" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                         [xml]$Metadata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey)?X-Plex-Token=$PlexToken).content
                         [xml]$Seasondata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey)/children?X-Plex-Token=$PlexToken).content
-                        Write-log "After Metadata Directory with PlexToken" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        Write-log -Subtext "After Metadata Directory with PlexToken" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                     }
-                    Write-log "Before Metadata with PlexToken" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                    Write-log -Subtext "Before Metadata with PlexToken" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                     [xml]$Metadata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey)?X-Plex-Token=$PlexToken).content
-                    Write-log "After Metadata with PlexToken" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                    Write-log -Subtext "After Metadata with PlexToken" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                 }
                 Else {
                     if ($contentquery -eq 'Directory') {
-                        Write-log "Before Metadata Directory without PlexToken" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        Write-log -Subtext "Before Metadata Directory without PlexToken" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                         [xml]$Metadata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey)).content
                         [xml]$Seasondata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey)/children?).content
-                        Write-log "After Metadata Directory without PlexToken" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        Write-log -Subtext "After Metadata Directory without PlexToken" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                     }
-                    Write-log "Before Metadata without PlexToken" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                    Write-log -Subtext "Before Metadata without PlexToken" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                     [xml]$Metadata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey)).content
-                    Write-log "After Metadata without PlexToken" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                    Write-log -Subtext "After Metadata without PlexToken" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                 }
                 $metadatatemp = $Metadata.MediaContainer.$contentquery.guid.id
                 $tmdbpattern = 'tmdb://(\d+)'
@@ -3258,24 +3258,34 @@ else {
                         $MultipleVersions = $false
                     }
                     $libpaths = $($Library.path).split(',')
+                    Write-log -Subtext "Plex Lib Paths before split: $($Library.path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                    Write-log -Subtext "Plex Lib Paths after split: $libpaths" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                     foreach ($libpath in $libpaths) {
                         if ($location -like "$libpath*") {
                             $Matchedpath = AddTrailingSlash $libpath
                             $libpath = $Matchedpath
                             $extractedFolder = $location.Substring($libpath.Length)
+                            Write-log -Subtext "Matchedpath: $Matchedpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-log -Subtext "Libpath: $libpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-log -Subtext "ExtractedFolder: $extractedFolder" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                         }
                     }
                 }
                 Else {
                     $location = $Metadata.MediaContainer.$contentquery.media.part.file
+                    
                     if ($location.count -gt '1') {
+                        Write-log -Subtext "Multi File Locations: $location" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                         $location = $location[0]
                         $MultipleVersions = $true
                     }
                     Else {
                         $MultipleVersions = $false
                     }
+                    Write-log -Subtext "File Location: $location" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                     $libpaths = $($Library.path).split(',')
+                    Write-log -Subtext "Plex Lib Paths before split: $($Library.path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                    Write-log -Subtext "Plex Lib Paths after split: $libpaths" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                     foreach ($libpath in $libpaths) {
                         if ($location -like "$libpath*") {
                             $Matchedpath = AddTrailingSlash $libpath
@@ -3287,6 +3297,9 @@ else {
                             if ($extractedFolder -like '*/*') {
                                 $extractedFolder = $extractedFolder.split('/')[0]
                             }
+                            Write-log -Subtext "Matchedpath: $Matchedpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-log -Subtext "Libpath: $libpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-log -Subtext "ExtractedFolder: $extractedFolder" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                         }
                     }
                 }
