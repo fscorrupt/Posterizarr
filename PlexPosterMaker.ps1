@@ -3,7 +3,7 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.41"
+$CurrentScriptVersion = "1.0.42"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -1476,27 +1476,37 @@ function CheckJson {
         foreach ($partKey in $defaultConfig.PSObject.Properties.Name) {
             # Check if the part exists in the current configuration
             if (-not $config.PSObject.Properties.Name.Contains($partKey)) {
-                Write-Log -Message "Missing Main Attribute in your Config file: $partKey." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-                Write-Log -Subtext "Adding it for you... In GH Readme, look for $partKey - if you want to see what changed..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                Write-Log -Subtext "GH Readme -> https://github.com/fscorrupt/Plex-Poster-Maker/blob/main/README.md#configuration" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                $config | Add-Member -MemberType NoteProperty -Name $partKey -Value $defaultConfig.$partKey
-                $AttributeChanged = $True
+                if (-not $config.PSObject.Properties.Name.tolower().Contains($partKey.tolower())) {
+                    Write-Log -Message "Missing Main Attribute in your Config file: $partKey." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                    Write-Log -Subtext "Adding it for you... In GH Readme, look for $partKey - if you want to see what changed..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                    Write-Log -Subtext "GH Readme -> https://github.com/fscorrupt/Plex-Poster-Maker/blob/main/README.md#configuration" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                    $config | Add-Member -MemberType NoteProperty -Name $partKey -Value $defaultConfig.$partKey
+                    $AttributeChanged = $True
+                }
+                else {
+                    # Inform user about the case issue
+                    Write-Log -Message "The Main Attribute '$partKey' in your configuration file has a different casing than the expected property." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    Write-Log -Subtext "Please correct the casing of the property in your configuration file to '$partKey'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                    Exit  # Abort the script
+                }
             }
             else {
                 # Check each key in the part
                 foreach ($propertyKey in $defaultConfig.$partKey.PSObject.Properties.Name) {
                     # Show user that a sub-attribute is missing
                     if (-not $config.$partKey.PSObject.Properties.Name.Contains($propertyKey)) {
-                        Write-Log -Message "Missing Sub-Attribute in your Config file: $partKey.$propertyKey." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-                        Write-Log -Subtext "Adding it for you... In GH Readme, look for $partKey.$propertyKey - if you want to see what changed..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                        Write-Log -Subtext "GH Readme -> https://github.com/fscorrupt/Plex-Poster-Maker/blob/main/README.md#configuration" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                        # Check if the sub-attribute exists in the default config
-                        if ($defaultConfig.$partKey.PSObject.Properties.Name -contains $propertyKey) {
-                            $config.$partKey | Add-Member -MemberType NoteProperty -Name $propertyKey -Value $defaultConfig.$partKey.$propertyKey
+                        if (-not $config.$partKey.PSObject.Properties.Name.tolower().Contains($propertyKey.tolower())) {
+                            Write-Log -Message "Missing Sub-Attribute in your Config file: $partKey.$propertyKey" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                            Write-Log -Subtext "Adding it for you... In GH Readme, look for $partKey.$propertyKey - if you want to see what changed..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                            Write-Log -Subtext "GH Readme -> https://github.com/fscorrupt/Plex-Poster-Maker/blob/main/README.md#configuration" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                            # Add the property using the expected casing
+                            $config.$partKey | Add-Member -MemberType NoteProperty -Name $propertyKey -Value $defaultConfig.$partKey.$propertyKey -Force
                             $AttributeChanged = $True
-                        }
-                        else {
-                            Write-Log -Message  "Default configuration does not contain sub-attribute: $partKey.$propertyKey. Skipping..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                        } else {
+                            # Inform user about the case issue
+                            Write-Log -Message "The Sub-Attribute '$partKey.$propertyKey' in your configuration file has a different casing than the expected property." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            Write-Log -Subtext "Please correct the casing of the Sub-Attribute in your configuration file to '$partKey.$propertyKey'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                            Exit  # Abort the script
                         }
                     }
                 }
@@ -1855,12 +1865,12 @@ function InvokeMagickCommand {
         param (
             [string]$ErrorMessage
         )
-    
+
         # Split the error message into lines
         $lines = $ErrorMessage -split "convert: |magick.exe: |@"
         return $lines[1]
     }
-    
+
     $processInfo = New-Object System.Diagnostics.ProcessStartInfo
     $processInfo.FileName = $Command
     $processInfo.Arguments = $Arguments
@@ -1919,24 +1929,28 @@ $config = Get-Content -Raw -Path $(Join-Path $global:ScriptRoot 'config.json') |
 $global:logLevel = [int]$config.PrerequisitePart.logLevel
 # Check if the cast was successful
 if ($null -eq $global:logLevel) {
-    Write-Warning "Value for logLevel was null. Setting it to 1."
+    Write-Log -Message "Value for logLevel was null. Setting it to 1. Adjust your config.json accordingly." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     $global:logLevel = 1
 }
 # Ensure $logLevel is at least 1
 if ($global:logLevel -le 0) {
-    Write-Warning "Value for logLevel -le 0. Setting it to 1."
+    Write-Log -Message "Value for logLevel -le 0. Setting it to 1. Adjust your config.json accordingly." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     $global:logLevel = 1
+}# Ensure $logLevel is le 3
+if ($global:logLevel -gt 3) {
+    Write-Log -Message "Value for logLevel -gt 3. Setting it to 3. Adjust your config.json accordingly." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+    $global:logLevel = 3
 }
 # Read naxLogs value from config.json
 $maxLogs = [int]$config.PrerequisitePart.maxLogs  # Cast to integer
 # Check if the cast was successful
 if ($null -eq $maxLogs) {
-    Write-Warning "Value for maxLogs was null. Setting it to 1."
+    Write-Log -Message "Value for maxLogs was null. Setting it to 1. Adjust your config.json accordingly." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     $maxLogs = 1
 }
 # Ensure $maxLogs is at least 1
 if ($maxLogs -le 0) {
-    Write-Warning "Value for maxLogs -le 0. Setting it to 1."
+    Write-Log -Message "Value for maxLogs -le 0. Setting it to 1. Adjust your config.json accordingly." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     $maxLogs = 1
 }
 # Delete excess log folders
@@ -2176,7 +2190,7 @@ Test-And-Download -url "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/
 Test-And-Download -url "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/Rocky.ttf" -destination (Join-Path $TempPath 'Rocky.ttf')
 
 # Write log message
-Write-Log -Message "Old log files cleared..." -Path $configLogging -Color Yellow -log Warning
+Write-Log -Message "Old log files cleared..." -Path $configLogging -Color White -log Info
 # Display Current Config settings:
 LogConfigSettings
 # Starting main Script now...
@@ -3273,7 +3287,7 @@ else {
                 }
                 Else {
                     $location = $Metadata.MediaContainer.$contentquery.media.part.file
-                    
+
                     if ($location.count -gt '1') {
                         Write-log -Subtext "Multi File Locations: $location" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                         $location = $location[0]
