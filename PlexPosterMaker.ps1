@@ -3,7 +3,7 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.43"
+$CurrentScriptVersion = "1.0.44"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -26,7 +26,7 @@ function Set-OSTypeAndScriptRoot {
         $global:OSType = [System.Environment]::OSVersion.Platform
     }
 }
-function Write-Log {
+function Write-Entry {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory = $true)]
@@ -97,6 +97,7 @@ function Write-Log {
             $FormattedLine | Out-File $Path -Append
         }
         else {
+
             Write-Host $FormattedLineWritehost -NoNewline
             Write-Host $Message -ForegroundColor $Color
             $FormattedLine1 | Out-File $Path -Append
@@ -136,7 +137,7 @@ function Get-OptimalPointSize {
         $current_pointsize = $max_pointsize
     }
     elseif ($current_pointsize -lt $min_pointsize) {
-        Write-Log -Subtext "Text truncated! optimalFontSize: $current_pointsize below min_pointsize: $min_pointsize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+        Write-Entry -Subtext "Text truncated! optimalFontSize: $current_pointsize below min_pointsize: $min_pointsize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
         $global:IsTruncated = $true
         $current_pointsize = $min_pointsize
     }
@@ -145,13 +146,13 @@ function Get-OptimalPointSize {
     return $current_pointsize
 }
 function GetTMDBMoviePoster {
-    Write-Log -Subtext "Searching on TMDB for a movie poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+    Write-Entry -Subtext "Searching on TMDB for a movie poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     if ($global:PreferTextless -eq 'True') {
         try {
             $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($global:tmdbid)?append_to_response=images&language=xx&include_image_language=en,null,de" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
         }
         catch {
-            Write-Log -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             $errorCount++
         }
         if ($response) {
@@ -164,14 +165,14 @@ function GetTMDBMoviePoster {
                         $global:Fallback = "fanart"
                         $global:tmdbfallbackposterurl = $global:posterurl
                     }
-                    Write-Log -Subtext "Found Poster with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                    Write-Entry -Subtext "Found Poster with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                     $global:PosterWithText = $true
                 }
                 Else {
                     $posterpath = (($response.images.posters | Where-Object iso_639_1 -eq $null | Sort-Object vote_average -Descending)[0]).file_path
                     if ($posterpath) {
                         $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
-                        Write-Log -Subtext "Found Textless Poster on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                        Write-Entry -Subtext "Found Textless Poster on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                         $global:TextlessPoster = $true
                         return $global:posterurl
                     }
@@ -179,7 +180,7 @@ function GetTMDBMoviePoster {
             }
         }
         Else {
-            Write-Log -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
         }
     }
     Else {
@@ -187,7 +188,7 @@ function GetTMDBMoviePoster {
             $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($global:tmdbid)?append_to_response=images&language=$($PreferredLanguageOrder[0])&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
         }
         catch {
-            Write-Log -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             $errorCount++
         }
         if ($response) {
@@ -203,10 +204,10 @@ function GetTMDBMoviePoster {
                         $posterpath = (($FavPoster | Sort-Object vote_average -Descending)[0]).file_path
                         $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
                         if ($lang -eq 'null') {
-                            Write-Log -Subtext "Found Poster without Language on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                            Write-Entry -Subtext "Found Poster without Language on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                         }
                         Else {
-                            Write-Log -Subtext "Found Poster with Language '$lang' on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                            Write-Entry -Subtext "Found Poster with Language '$lang' on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                         }
                         if ($lang -ne 'null') {
                             $global:PosterWithText = $true
@@ -218,18 +219,18 @@ function GetTMDBMoviePoster {
             }
         }
         Else {
-            Write-Log -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
         }
     }
 }
 function GetTMDBMovieBackground {
-    Write-Log -Subtext "Searching on TMDB for a movie background" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+    Write-Entry -Subtext "Searching on TMDB for a movie background" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     if ($global:PreferTextless -eq 'True') {
         try {
             $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($global:tmdbid)?append_to_response=images&language=xx&include_image_language=en,null,de" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
         }
         catch {
-            Write-Log -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             $errorCount++
         }
         if ($response) {
@@ -242,28 +243,28 @@ function GetTMDBMovieBackground {
                         $global:Fallback = "fanart"
                         $global:tmdbfallbackposterurl = $global:posterurl
                     }
-                    Write-Log -Subtext "Found background with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                    Write-Entry -Subtext "Found background with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                     $global:PosterWithText = $true
                 }
                 Else {
                     $posterpath = (($response.images.backdrops | Where-Object iso_639_1 -eq $null | Sort-Object vote_average -Descending)[0]).file_path
                     if ($posterpath) {
                         $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
-                        Write-Log -Subtext "Found Textless background on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                        Write-Entry -Subtext "Found Textless background on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                         $global:TextlessPoster = $true
                         return $global:posterurl
                     }
                 }
             }
             Else {
-                Write-Log -Subtext "No Background found on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                Write-Entry -Subtext "No Background found on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                 if ($global:FavProvider -eq 'TMDB') {
                     $global:Fallback = "fanart"
                 }
             }
         }
         Else {
-            Write-Log -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
         }
     }
     Else {
@@ -271,7 +272,7 @@ function GetTMDBMovieBackground {
             $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($global:tmdbid)?append_to_response=images&language=$($PreferredLanguageOrder[0])&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
         }
         catch {
-            Write-Log -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             $errorCount++
         }
         if ($response) {
@@ -287,10 +288,10 @@ function GetTMDBMovieBackground {
                         $posterpath = (($FavPoster | Sort-Object vote_average -Descending)[0]).file_path
                         $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
                         if ($lang -eq 'null') {
-                            Write-Log -Subtext "Found background without Language on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                            Write-Entry -Subtext "Found background without Language on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                         }
                         Else {
-                            Write-Log -Subtext "Found background with Language '$lang' on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                            Write-Entry -Subtext "Found background with Language '$lang' on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                         }
                         if ($lang -ne 'null') {
                             $global:PosterWithText = $true
@@ -300,30 +301,30 @@ function GetTMDBMovieBackground {
                     }
                 }
                 if (!$global:posterurl) {
-                    Write-Log -Subtext "No Background found on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                    Write-Entry -Subtext "No Background found on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                     $global:Fallback = "fanart"
                 }
             }
             Else {
-                Write-Log -Subtext "No Background found on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                Write-Entry -Subtext "No Background found on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                 if ($global:FavProvider -eq 'TMDB') {
                     $global:Fallback = "fanart"
                 }
             }
         }
         Else {
-            Write-Log -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
         }
     }
 }
 function GetTMDBShowPoster {
-    Write-Log -Subtext "Searching on TMDB for a show poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+    Write-Entry -Subtext "Searching on TMDB for a show poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     if ($global:PreferTextless -eq 'True') {
         try {
             $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=xx&include_image_language=en,null,de" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
         }
         catch {
-            Write-Log -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             $errorCount++
         }
         if ($response) {
@@ -336,7 +337,7 @@ function GetTMDBShowPoster {
                         $global:Fallback = "fanart"
                         $global:tmdbfallbackposterurl = $global:posterurl
                     }
-                    Write-Log -Subtext "Found Poster with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                    Write-Entry -Subtext "Found Poster with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                     $global:PosterWithText = $true
                     return $global:posterurl
                 }
@@ -344,7 +345,7 @@ function GetTMDBShowPoster {
                     $posterpath = (($response.images.posters | Where-Object iso_639_1 -eq $null | Sort-Object vote_average -Descending)[0]).file_path
                     if ($posterpath) {
                         $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
-                        Write-Log -Subtext "Found Textless Poster on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                        Write-Entry -Subtext "Found Textless Poster on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                         $global:TextlessPoster = $true
                         return $global:posterurl
                     }
@@ -352,7 +353,7 @@ function GetTMDBShowPoster {
             }
         }
         Else {
-            Write-Log -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
         }
     }
     Else {
@@ -360,7 +361,7 @@ function GetTMDBShowPoster {
             $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=$($PreferredLanguageOrder[0])&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
         }
         catch {
-            Write-Log -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             $errorCount++
         }
         if ($response) {
@@ -376,10 +377,10 @@ function GetTMDBShowPoster {
                         $posterpath = (($FavPoster | Sort-Object vote_average -Descending)[0]).file_path
                         $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
                         if ($lang -eq 'null') {
-                            Write-Log -Subtext "Found Poster without Language on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                            Write-Entry -Subtext "Found Poster without Language on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                         }
                         Else {
-                            Write-Log -Subtext "Found Poster with Language '$lang' on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                            Write-Entry -Subtext "Found Poster with Language '$lang' on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                         }
                         if ($lang -ne 'null') {
                             $global:PosterWithText = $true
@@ -391,18 +392,18 @@ function GetTMDBShowPoster {
             }
         }
         Else {
-            Write-Log -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
         }
     }
 }
 function GetTMDBSeasonPoster {
-    Write-Log -Subtext "Searching on TMDB for Season '$global:SeasonNumber' poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+    Write-Entry -Subtext "Searching on TMDB for Season '$global:SeasonNumber' poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     if ($global:PreferTextless -eq 'True') {
         try {
             $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)/season/$global:SeasonNumber/images?append_to_response=images&language=xx&include_image_language=en,null,de" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
         }
         catch {
-            Write-Log -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             $errorCount++
         }
         if ($response) {
@@ -411,7 +412,7 @@ function GetTMDBSeasonPoster {
                 if (!$NoLangPoster) {
                     $posterpath = (($response.posters | Sort-Object vote_average -Descending)[0]).file_path
                     $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
-                    Write-Log -Subtext "Found Poster with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                    Write-Entry -Subtext "Found Poster with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                     $global:PosterWithText = $true
                     $global:TMDBSeasonFallback = $global:posterurl
                     return $global:posterurl
@@ -420,18 +421,18 @@ function GetTMDBSeasonPoster {
                     $posterpath = (($response.posters | Where-Object iso_639_1 -eq $null | Sort-Object vote_average -Descending)[0]).file_path
                     if ($posterpath) {
                         $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
-                        Write-Log -Subtext "Found Textless Poster on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                        Write-Entry -Subtext "Found Textless Poster on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                         $global:TextlessPoster = $true
                         return $global:posterurl
                     }
                 }
             }
             Else {
-                Write-Log -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             }
         }
         Else {
-            Write-Log -Subtext "No Season Poster on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+            Write-Entry -Subtext "No Season Poster on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
         }
     }
     Else {
@@ -444,12 +445,12 @@ function GetTMDBSeasonPoster {
             }
         }
         catch {
-            Write-Log -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             $errorCount++
         }
         if ($responseBackup) {
             if ($responseBackup.images.posters) {
-                Write-Log -Subtext "Could not get a result with '$global:SeasonNumber' on TMDB, likely season number not in correct format, fallback to Show poster." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                Write-Entry -Subtext "Could not get a result with '$global:SeasonNumber' on TMDB, likely season number not in correct format, fallback to Show poster." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                 foreach ($lang in $global:PreferredLanguageOrderTMDB) {
                     if ($lang -eq 'null') {
                         $FavPoster = ($responseBackup.images.posters | Where-Object iso_639_1 -eq $null)
@@ -461,10 +462,10 @@ function GetTMDBSeasonPoster {
                         $posterpath = (($FavPoster | Sort-Object vote_average -Descending)[0]).file_path
                         $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
                         if ($lang -eq 'null') {
-                            Write-Log -Subtext "Found Poster without Language on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                            Write-Entry -Subtext "Found Poster without Language on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                         }
                         Else {
-                            Write-Log -Subtext "Found Poster with Language '$lang' on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                            Write-Entry -Subtext "Found Poster with Language '$lang' on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                         }
                         if ($lang -ne 'null') {
                             $global:PosterWithText = $true
@@ -488,10 +489,10 @@ function GetTMDBSeasonPoster {
                         $posterpath = (($FavPoster | Sort-Object vote_average -Descending)[0]).file_path
                         $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
                         if ($lang -eq 'null') {
-                            Write-Log -Subtext "Found Poster without Language on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                            Write-Entry -Subtext "Found Poster without Language on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                         }
                         Else {
-                            Write-Log -Subtext "Found Poster with Language '$lang' on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                            Write-Entry -Subtext "Found Poster with Language '$lang' on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                         }
                         if ($lang -ne 'null') {
                             $global:PosterWithText = $true
@@ -502,23 +503,23 @@ function GetTMDBSeasonPoster {
                 }
             }
             Else {
-                Write-Log -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             }
         }
         Else {
-            Write-Log -Subtext "No Season Poster on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+            Write-Entry -Subtext "No Season Poster on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
         }
 
     }
 }
 function GetTMDBShowBackground {
-    Write-Log -Subtext "Searching on TMDB for a show background" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+    Write-Entry -Subtext "Searching on TMDB for a show background" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     if ($global:PreferTextless -eq 'True') {
         try {
             $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=xx&include_image_language=en,null,de" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
         }
         catch {
-            Write-Log -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             $errorCount++
         }
         if ($response) {
@@ -531,32 +532,32 @@ function GetTMDBShowBackground {
                         $global:Fallback = "fanart"
                         $global:tmdbfallbackposterurl = $global:posterurl
                     }
-                    Write-Log -Subtext "Found background with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                    Write-Entry -Subtext "Found background with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                     $global:PosterWithText = $true
                 }
                 Else {
                     $posterpath = (($response.images.backdrops | Where-Object iso_639_1 -eq $null | Sort-Object vote_average -Descending)[0]).file_path
                     if ($posterpath) {
                         $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
-                        Write-Log -Subtext "Found Textless background on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                        Write-Entry -Subtext "Found Textless background on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                         $global:TextlessPoster = $true
                         return $global:posterurl
                     }
                 }
                 if (!$global:posterurl) {
-                    Write-Log -Subtext "No Background found on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                    Write-Entry -Subtext "No Background found on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                     $global:Fallback = "fanart"
                 }
             }
             Else {
-                Write-Log -Subtext "No Background found on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                Write-Entry -Subtext "No Background found on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                 if ($global:FavProvider -eq 'TMDB') {
                     $global:Fallback = "fanart"
                 }
             }
         }
         Else {
-            Write-Log -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
         }
     }
     Else {
@@ -564,7 +565,7 @@ function GetTMDBShowBackground {
             $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=$($PreferredLanguageOrder[0])&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
         }
         catch {
-            Write-Log -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             $errorCount++
         }
         if ($response) {
@@ -580,10 +581,10 @@ function GetTMDBShowBackground {
                         $posterpath = (($FavPoster | Sort-Object vote_average -Descending)[0]).file_path
                         $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
                         if ($lang -eq 'null') {
-                            Write-Log -Subtext "Found background without Language on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                            Write-Entry -Subtext "Found background without Language on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                         }
                         Else {
-                            Write-Log -Subtext "Found background with Language '$lang' on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                            Write-Entry -Subtext "Found background with Language '$lang' on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                         }
                         if ($lang -ne 'null') {
                             $global:PosterWithText = $true
@@ -593,29 +594,29 @@ function GetTMDBShowBackground {
                     }
                 }
                 if (!$global:posterurl) {
-                    Write-Log -Subtext "No Background found on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                    Write-Entry -Subtext "No Background found on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                     $global:Fallback = "fanart"
                 }
             }
             Else {
-                Write-Log -Subtext "No Background found on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                Write-Entry -Subtext "No Background found on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                 if ($global:FavProvider -eq 'TMDB') {
                     $global:Fallback = "fanart"
                 }
             }
         }
         Else {
-            Write-Log -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
         }
     }
 }
 function GetTMDBTitleCard {
-    Write-Log -Subtext "Searching on TMDB for: $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+    Write-Entry -Subtext "Searching on TMDB for: $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     try {
         $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)/season/$($global:season_number)/episode/$($global:episodenumber)/images?append_to_response=images&language=xx&include_image_language=en,null,de" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
     }
     catch {
-        Write-Log -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        Write-Entry -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
         $errorCount++
     }
     if ($response) {
@@ -624,7 +625,7 @@ function GetTMDBTitleCard {
             if (!$NoLangPoster) {
                 $posterpath = (($response.stills | Sort-Object vote_average -Descending)[0]).file_path
                 $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
-                Write-Log -Subtext "Found Title Card with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                Write-Entry -Subtext "Found Title Card with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                 $global:PosterWithText = $true
                 return $global:posterurl
             }
@@ -632,27 +633,27 @@ function GetTMDBTitleCard {
                 $posterpath = (($response.stills | Where-Object iso_639_1 -eq $null | Sort-Object vote_average -Descending)[0]).file_path
                 if ($posterpath) {
                     $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
-                    Write-Log -Subtext "Found Textless Title Card on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                    Write-Entry -Subtext "Found Textless Title Card on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                     $global:TextlessPoster = $true
                     return $global:posterurl
                 }
             }
         }
         Else {
-            Write-Log -Subtext "No Title Card found on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "No Title Card found on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             $global:Fallback = "TVDB"
             $Errorcount++
         }
     }
     Else {
-        Write-Log -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+        Write-Entry -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
         $global:Fallback = "TVDB"
         $Errorcount++
     }
 }
 function GetFanartMoviePoster {
     $global:Fallback = $null
-    Write-Log -Subtext "Searching on Fanart.tv for a movie poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+    Write-Entry -Subtext "Searching on Fanart.tv for a movie poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     if ($global:PreferTextless -eq 'True') {
         $ids = @($global:tmdbid, $global:tvdbid, $global:imdbid)
         $entrytemp = $null
@@ -663,7 +664,7 @@ function GetFanartMoviePoster {
                 if ($entrytemp -and $entrytemp.movieposter) {
                     if (!($entrytemp.movieposter | Where-Object lang -eq '00')) {
                         $global:posterurl = ($entrytemp.movieposter)[0].url
-                        Write-Log -Subtext "Found Poster with text on Fanart.tv"  -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                        Write-Entry -Subtext "Found Poster with text on Fanart.tv"  -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                         $global:PosterWithText = $true
                         if ($global:FavProvider -eq 'FANART') {
                             $global:Fallback = "TMDB"
@@ -673,7 +674,7 @@ function GetFanartMoviePoster {
                     }
                     Else {
                         $global:posterurl = ($entrytemp.movieposter | Where-Object lang -eq '00')[0].url
-                        Write-Log -Subtext "Found Textless Poster on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                        Write-Entry -Subtext "Found Textless Poster on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                         $global:TextlessPoster = $true
                         break
                     }
@@ -682,7 +683,7 @@ function GetFanartMoviePoster {
         }
 
         if (!$global:posterurl) {
-            Write-Log -Subtext "No movie match or poster found on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+            Write-Entry -Subtext "No movie match or poster found on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
             $global:Fallback = "TMDB"
         }
         Else {
@@ -701,10 +702,10 @@ function GetFanartMoviePoster {
                         if (($entrytemp.movieposter | Where-Object lang -eq "$lang")) {
                             $global:posterurl = ($entrytemp.movieposter)[0].url
                             if ($lang -eq '00') {
-                                Write-Log -Subtext "Found Poster without Language on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                                Write-Entry -Subtext "Found Poster without Language on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                             }
                             Else {
-                                Write-Log -Subtext "Found Poster with Language '$lang' on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                                Write-Entry -Subtext "Found Poster with Language '$lang' on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                             }
                             if ($lang -ne '00') {
                                 $global:PosterWithText = $true
@@ -717,7 +718,7 @@ function GetFanartMoviePoster {
         }
 
         if (!$global:posterurl) {
-            Write-Log -Subtext "No movie match or poster found on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+            Write-Entry -Subtext "No movie match or poster found on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
             $global:Fallback = "TMDB"
         }
         Else {
@@ -727,7 +728,7 @@ function GetFanartMoviePoster {
 }
 function GetFanartMovieBackground {
     $global:Fallback = $null
-    Write-Log -Subtext "Searching on Fanart.tv for a Background poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+    Write-Entry -Subtext "Searching on Fanart.tv for a Background poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     $ids = @($global:tmdbid, $global:tvdbid, $global:imdbid)
     $entrytemp = $null
 
@@ -737,7 +738,7 @@ function GetFanartMovieBackground {
             if ($entrytemp -and $entrytemp.moviebackground) {
                 if (!($entrytemp.moviebackground | Where-Object lang -eq '')) {
                     $global:posterurl = ($entrytemp.moviebackground)[0].url
-                    Write-Log -Subtext "Found Background with text on Fanart.tv"  -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                    Write-Entry -Subtext "Found Background with text on Fanart.tv"  -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                     $global:PosterWithText = $true
                     if ($global:FavProvider -eq 'FANART') {
                         $global:Fallback = "TMDB"
@@ -747,7 +748,7 @@ function GetFanartMovieBackground {
                 }
                 Else {
                     $global:posterurl = ($entrytemp.moviebackground | Where-Object lang -eq '')[0].url
-                    Write-Log -Subtext "Found Textless background on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                    Write-Entry -Subtext "Found Textless background on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                     $global:TextlessPoster = $true
                     break
                 }
@@ -755,7 +756,7 @@ function GetFanartMovieBackground {
         }
     }
     if (!$global:posterurl) {
-        Write-Log -Subtext "No movie match or background found on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+        Write-Entry -Subtext "No movie match or background found on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
         $global:Fallback = "TMDB"
     }
     Else {
@@ -765,7 +766,7 @@ function GetFanartMovieBackground {
 }
 function GetFanartShowPoster {
     $global:Fallback = $null
-    Write-Log -Subtext "Searching on Fanart.tv for a show poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+    Write-Entry -Subtext "Searching on Fanart.tv for a show poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     if ($global:PreferTextless -eq 'True') {
         $ids = @($global:tmdbid, $global:tvdbid, $global:imdbid)
         $entrytemp = $null
@@ -777,7 +778,7 @@ function GetFanartShowPoster {
                     if (!($entrytemp.tvposter | Where-Object lang -eq '00')) {
                         $global:posterurl = ($entrytemp.tvposter)[0].url
 
-                        Write-Log -Subtext "Found Poster with text on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                        Write-Entry -Subtext "Found Poster with text on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                         $global:PosterWithText = $true
                         if ($global:FavProvider -eq 'FANART') {
                             $global:Fallback = "TMDB"
@@ -787,7 +788,7 @@ function GetFanartShowPoster {
                     }
                     Else {
                         $global:posterurl = ($entrytemp.tvposter | Where-Object lang -eq '00')[0].url
-                        Write-Log -Subtext "Found Textless Poster on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                        Write-Entry -Subtext "Found Textless Poster on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                         $global:TextlessPoster = $true
                         break
                     }
@@ -797,7 +798,7 @@ function GetFanartShowPoster {
 
         if (!$global:posterurl) {
 
-            Write-Log -Subtext "No show match or poster found on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+            Write-Entry -Subtext "No show match or poster found on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
 
             $global:Fallback = "TMDB"
         }
@@ -817,10 +818,10 @@ function GetFanartShowPoster {
                         if (($entrytemp.tvposter | Where-Object lang -eq "$lang")) {
                             $global:posterurl = ($entrytemp.tvposter)[0].url
                             if ($lang -eq '00') {
-                                Write-Log -Subtext "Found Poster without Language on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                                Write-Entry -Subtext "Found Poster without Language on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                             }
                             Else {
-                                Write-Log -Subtext "Found Poster with Language '$lang' on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                                Write-Entry -Subtext "Found Poster with Language '$lang' on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                             }
                             if ($lang -ne '00') {
                                 $global:PosterWithText = $true
@@ -834,7 +835,7 @@ function GetFanartShowPoster {
 
         if (!$global:posterurl) {
 
-            Write-Log -Subtext "No show match or poster found on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+            Write-Entry -Subtext "No show match or poster found on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
 
             $global:Fallback = "TMDB"
         }
@@ -845,7 +846,7 @@ function GetFanartShowPoster {
 }
 function GetFanartShowBackground {
     $global:Fallback = $null
-    Write-Log -Subtext "Searching on Fanart.tv for a Background poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+    Write-Entry -Subtext "Searching on Fanart.tv for a Background poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     $ids = @($global:tmdbid, $global:tvdbid, $global:imdbid)
     $entrytemp = $null
 
@@ -855,7 +856,7 @@ function GetFanartShowBackground {
             if ($entrytemp -and $entrytemp.showbackground) {
                 if (!($entrytemp.showbackground | Where-Object lang -eq '')) {
                     $global:posterurl = ($entrytemp.showbackground)[0].url
-                    Write-Log -Subtext "Found Background with text on Fanart.tv"  -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                    Write-Entry -Subtext "Found Background with text on Fanart.tv"  -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                     $global:PosterWithText = $true
                     if ($global:FavProvider -eq 'FANART') {
                         $global:Fallback = "TMDB"
@@ -865,7 +866,7 @@ function GetFanartShowBackground {
                 }
                 Else {
                     $global:posterurl = ($entrytemp.showbackground | Where-Object lang -eq '')[0].url
-                    Write-Log -Subtext "Found Textless background on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                    Write-Entry -Subtext "Found Textless background on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                     $global:TextlessPoster = $true
                     break
                 }
@@ -874,7 +875,7 @@ function GetFanartShowBackground {
     }
 
     if (!$global:posterurl) {
-        Write-Log -Subtext "No show match or background found on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+        Write-Entry -Subtext "No show match or background found on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
         $global:Fallback = "TMDB"
     }
     Else {
@@ -883,7 +884,7 @@ function GetFanartShowBackground {
 
 }
 function GetFanartSeasonPoster {
-    Write-Log -Subtext "Searching on Fanart.tv for Season '$global:SeasonNumber' poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+    Write-Entry -Subtext "Searching on Fanart.tv for Season '$global:SeasonNumber' poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     $ids = @($global:tmdbid, $global:tvdbid, $global:imdbid)
     $entrytemp = $null
     if ($global:PreferTextless -eq 'True') {
@@ -895,16 +896,16 @@ function GetFanartSeasonPoster {
                         $NoLangPoster = ($entrytemp.seasonposter | Where-Object { $_.lang -eq '00' -and $_.Season -eq $global:SeasonNumber } | Sort-Object likes)
                         if ($NoLangPoster) {
                             $global:posterurl = ($NoLangPoster | Sort-Object likes)[0].url
-                            Write-Log -Subtext "Found Season Poster without Language on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                            Write-Entry -Subtext "Found Season Poster without Language on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                             $global:TextlessPoster = $true
                         }
                         Else {
-                            Write-Log -Subtext "No Texless Season Poster on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                            Write-Entry -Subtext "No Texless Season Poster on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                             foreach ($lang in $global:PreferredLanguageOrderFanart) {
                                 $FoundPoster = ($entrytemp.seasonposter | Where-Object { $_.lang -eq "$lang" -and $_.Season -eq $global:SeasonNumber } | Sort-Object likes)
                                 if ($FoundPoster) {
                                     $global:posterurl = $FoundPoster[0].url
-                                    Write-Log -Subtext "Found season Poster with Language '$lang' on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                                    Write-Entry -Subtext "Found season Poster with Language '$lang' on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                                     $global:PosterWithText = $true
                                     break
                                 }
@@ -912,17 +913,17 @@ function GetFanartSeasonPoster {
                         }
                     }
                     Else {
-                        Write-Log -Subtext "Could not get a result with '$global:SeasonNumber' on Fanart, likely season number not in correct format, fallback to Show poster." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                        Write-Entry -Subtext "Could not get a result with '$global:SeasonNumber' on Fanart, likely season number not in correct format, fallback to Show poster." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                         if ($entrytemp -and $entrytemp.tvposter) {
                             foreach ($lang in $global:PreferredLanguageOrderFanart) {
                                 if (($entrytemp.tvposter | Where-Object lang -eq "$lang")) {
                                     $global:posterurl = ($entrytemp.tvposter)[0].url
                                     if ($lang -eq '00') {
-                                        Write-Log -Subtext "Found Poster without Language on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                                        Write-Entry -Subtext "Found Poster without Language on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                                         $global:TextlessPoster = $true
                                     }
                                     Else {
-                                        Write-Log -Subtext "Found Poster with Language '$lang' on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                                        Write-Entry -Subtext "Found Poster with Language '$lang' on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                                     }
                                     if ($lang -ne '00') {
                                         $global:PosterWithText = $true
@@ -941,11 +942,11 @@ function GetFanartSeasonPoster {
             }
         }
         if ($global:posterurl) {
-            Write-Log -Subtext "Found season poster on Fanart" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+            Write-Entry -Subtext "Found season poster on Fanart" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
             return $global:posterurl
         }
         Else {
-            Write-Log -Subtext "No Season Poster on Fanart" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+            Write-Entry -Subtext "No Season Poster on Fanart" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
         }
     }
     Else {
@@ -960,11 +961,11 @@ function GetFanartSeasonPoster {
                         }
                         if ($global:posterurl) {
                             if ($lang -eq '00') {
-                                Write-Log -Subtext "Found season Poster without Language on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                                Write-Entry -Subtext "Found season Poster without Language on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                                 $global:TextlessPoster = $true
                             }
                             Else {
-                                Write-Log -Subtext "Found season Poster with Language '$lang' on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                                Write-Entry -Subtext "Found season Poster with Language '$lang' on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                                 $global:PosterWithText = $true
                                 break
                             }
@@ -981,42 +982,42 @@ function GetFanartSeasonPoster {
             return $global:posterurl
         }
         Else {
-            Write-Log -Subtext "No Season Poster on Fanart" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+            Write-Entry -Subtext "No Season Poster on Fanart" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
         }
     }
 }
 function GetTVDBMoviePoster {
     if ($global:tvdbid) {
         if ($global:PreferTextless -eq 'True') {
-            Write-Log -Subtext "Searching on TVDB for a movie poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+            Write-Entry -Subtext "Searching on TVDB for a movie poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
             try {
                 $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/movies/$($global:tvdbid)/extended" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
             }
             catch {
-                Write-Log -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                 $errorCount++
             }
             if ($response) {
                 if ($response.data.artworks) {
                     $global:posterurl = ($response.data.artworks | Where-Object { $_.language -eq $null -and $_.type -eq '14' } | Sort-Object Score)[0].image
-                    Write-Log -Subtext "Found Textless Poster on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                    Write-Entry -Subtext "Found Textless Poster on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                     return $global:posterurl
                 }
                 Else {
-                    Write-Log -Subtext "No Poster found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                    Write-Entry -Subtext "No Poster found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                 }
             }
             Else {
-                Write-Log -Subtext "TVDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "TVDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             }
         }
         Else {
-            Write-Log -Subtext "Searching on TVDB for a movie poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+            Write-Entry -Subtext "Searching on TVDB for a movie poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
             try {
                 $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/movies/$($global:tvdbid)/extended" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
             }
             catch {
-                Write-Log -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                 $errorCount++
             }
             if ($response) {
@@ -1031,10 +1032,10 @@ function GetTVDBMoviePoster {
                         if ($LangArtwork) {
                             $global:posterurl = $LangArtwork[0].image
                             if ($lang -eq 'null') {
-                                Write-Log -Subtext "Found Poster without Language on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                                Write-Entry -Subtext "Found Poster without Language on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                             }
                             Else {
-                                Write-Log -Subtext "Found Poster with Language '$lang' on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                                Write-Entry -Subtext "Found Poster with Language '$lang' on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                             }
                             if ($lang -ne 'null') {
                                 $global:PosterWithText = $true
@@ -1045,11 +1046,11 @@ function GetTVDBMoviePoster {
                     }
                 }
                 Else {
-                    Write-Log -Subtext "No Poster found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                    Write-Entry -Subtext "No Poster found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                 }
             }
             Else {
-                Write-Log -Subtext "TVDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "TVDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             }
         }
     }
@@ -1057,35 +1058,35 @@ function GetTVDBMoviePoster {
 function GetTVDBMovieBackground {
     if ($global:tvdbid) {
         if ($global:PreferTextless -eq 'True') {
-            Write-Log -Subtext "Searching on TVDB for a movie Background" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+            Write-Entry -Subtext "Searching on TVDB for a movie Background" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
             try {
                 $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/movies/$($global:tvdbid)/extended" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
             }
             catch {
-                Write-Log -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                 $errorCount++
             }
             if ($response) {
                 if ($response.data.artworks) {
                     $global:posterurl = ($response.data.artworks | Where-Object { $_.language -eq $null -and $_.type -eq '15' } | Sort-Object Score)[0].image
-                    Write-Log -Subtext "Found Textless Background on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                    Write-Entry -Subtext "Found Textless Background on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                     return $global:posterurl
                 }
                 Else {
-                    Write-Log -Subtext "No Background found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                    Write-Entry -Subtext "No Background found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                 }
             }
             Else {
-                Write-Log -Subtext "TVDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "TVDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             }
         }
         Else {
-            Write-Log -Subtext "Searching on TVDB for a movie Background" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+            Write-Entry -Subtext "Searching on TVDB for a movie Background" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
             try {
                 $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/movies/$($global:tvdbid)/extended" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
             }
             catch {
-                Write-Log -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                 $errorCount++
             }
             if ($response) {
@@ -1100,10 +1101,10 @@ function GetTVDBMovieBackground {
                         if ($LangArtwork) {
                             $global:posterurl = $LangArtwork[0].image
                             if ($lang -eq 'null') {
-                                Write-Log -Subtext "Found Background without Language on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                                Write-Entry -Subtext "Found Background without Language on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                             }
                             Else {
-                                Write-Log -Subtext "Found Background with Language '$lang' on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                                Write-Entry -Subtext "Found Background with Language '$lang' on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                             }
                             if ($lang -ne 'null') {
                                 $global:PosterWithText = $true
@@ -1113,28 +1114,28 @@ function GetTVDBMovieBackground {
                         }
                     }
                     if (!$global:posterurl) {
-                        Write-Log -Subtext "No background found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                        Write-Entry -Subtext "No background found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                     }
                 }
                 Else {
-                    Write-Log -Subtext "No Background found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                    Write-Entry -Subtext "No Background found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                 }
             }
             Else {
-                Write-Log -Subtext "TVDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "TVDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             }
         }
     }
 }
 function GetTVDBShowPoster {
     if ($global:tvdbid) {
-        Write-Log -Subtext "Searching on TVDB for a poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+        Write-Entry -Subtext "Searching on TVDB for a poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
         if ($global:PreferTextless -eq 'True') {
             try {
                 $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/series/$($global:tvdbid)/artworks" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
             }
             catch {
-                Write-Log -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                 $errorCount++
             }
             if ($response) {
@@ -1143,21 +1144,21 @@ function GetTVDBShowPoster {
                     $NoLangImageUrl = $response.data.artworks | Where-Object { $_.language -eq $null -and $_.type -eq '2' }
                     if ($NoLangImageUrl) {
                         $global:posterurl = $NoLangImageUrl[0].image
-                        Write-Log -Subtext "Found Textless Poster on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                        Write-Entry -Subtext "Found Textless Poster on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                         $global:TextlessPoster = $true
                     }
                     Else {
                         $global:posterurl = $defaultImageurl
-                        Write-Log -Subtext "Found Poster with text on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                        Write-Entry -Subtext "Found Poster with text on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                     }
                     return $global:posterurl
                 }
                 Else {
-                    Write-Log -Subtext "No Poster found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                    Write-Entry -Subtext "No Poster found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                 }
             }
             Else {
-                Write-Log -Subtext "TVDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "TVDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             }
         }
         Else {
@@ -1165,7 +1166,7 @@ function GetTVDBShowPoster {
                 $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/series/$($global:tvdbid)/artworks" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
             }
             catch {
-                Write-Log -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                 $errorCount++
             }
             if ($response) {
@@ -1180,10 +1181,10 @@ function GetTVDBShowPoster {
                         if ($LangArtwork) {
                             $global:posterurl = $LangArtwork[0].image
                             if ($lang -eq 'null') {
-                                Write-Log -Subtext "Found Poster without Language on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                                Write-Entry -Subtext "Found Poster without Language on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                             }
                             Else {
-                                Write-Log -Subtext "Found Poster with Language '$lang' on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                                Write-Entry -Subtext "Found Poster with Language '$lang' on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                             }
                             if ($lang -ne 'null') {
                                 $global:PosterWithText = $true
@@ -1194,23 +1195,23 @@ function GetTVDBShowPoster {
                     }
                 }
                 Else {
-                    Write-Log -Subtext "No Poster found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                    Write-Entry -Subtext "No Poster found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                 }
             }
             Else {
-                Write-Log -Subtext "TVDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "TVDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             }
         }
     }
 }
 function GetTVDBSeasonPoster {
     if ($global:tvdbid) {
-        Write-Log -Subtext "Searching on TVDB for a Season poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+        Write-Entry -Subtext "Searching on TVDB for a Season poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
         try {
             $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/series/$($global:tvdbid)/extended" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
         }
         catch {
-            Write-Log -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             $errorCount++
         }
         if ($response) {
@@ -1224,7 +1225,7 @@ function GetTVDBSeasonPoster {
                     $Seasonresponse = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/seasons/$($SeasonID.id)/extended" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
                 }
                 catch {
-                    Write-Log -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    Write-Entry -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                     $errorCount++
                 }
                 if ($Seasonresponse) {
@@ -1238,11 +1239,11 @@ function GetTVDBSeasonPoster {
                         if ($LangArtwork) {
                             $global:posterurl = $LangArtwork[0].image
                             if ($lang -eq 'null') {
-                                Write-Log -Subtext "Found Season Poster without Language on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                                Write-Entry -Subtext "Found Season Poster without Language on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                                 $global:TextlessPoster = $true
                             }
                             Else {
-                                Write-Log -Subtext "Found Season Poster with Language '$lang' on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                                Write-Entry -Subtext "Found Season Poster with Language '$lang' on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                             }
                             if ($lang -ne 'null') {
                                 $global:PosterWithText = $true
@@ -1255,23 +1256,23 @@ function GetTVDBSeasonPoster {
                 return $global:posterurl
             }
             Else {
-                Write-Log -Subtext "No Poster found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                Write-Entry -Subtext "No Poster found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
             }
         }
         Else {
-            Write-Log -Subtext "TVDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "TVDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
         }
     }
 }
 function GetTVDBShowBackground {
     if ($global:tvdbid) {
-        Write-Log -Subtext "Searching on TVDB for a background" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+        Write-Entry -Subtext "Searching on TVDB for a background" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
         if ($global:PreferTextless -eq 'True') {
             try {
                 $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/series/$($global:tvdbid)/artworks" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
             }
             catch {
-                Write-Log -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                 $errorCount++
             }
             if ($response) {
@@ -1280,21 +1281,21 @@ function GetTVDBShowBackground {
                     $NoLangImageUrl = $response.data.artworks | Where-Object { $_.language -eq $null -and $_.type -eq '3' }
                     if ($NoLangImageUrl) {
                         $global:posterurl = $NoLangImageUrl[0].image
-                        Write-Log -Subtext "Found Textless background on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                        Write-Entry -Subtext "Found Textless background on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                         $global:TextlessPoster = $true
                     }
                     Else {
                         $global:posterurl = $defaultImageurl
-                        Write-Log -Subtext "Found background with text on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                        Write-Entry -Subtext "Found background with text on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                     }
                     return $global:posterurl
                 }
                 Else {
-                    Write-Log -Subtext "No background found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                    Write-Entry -Subtext "No background found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                 }
             }
             Else {
-                Write-Log -Subtext "TVDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "TVDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             }
         }
         Else {
@@ -1302,7 +1303,7 @@ function GetTVDBShowBackground {
                 $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/series/$($global:tvdbid)/artworks" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
             }
             catch {
-                Write-Log -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                 $errorCount++
             }
             if ($response) {
@@ -1317,10 +1318,10 @@ function GetTVDBShowBackground {
                         if ($LangArtwork) {
                             $global:posterurl = $LangArtwork[0].image
                             if ($lang -eq 'null') {
-                                Write-Log -Subtext "Found background without Language on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                                Write-Entry -Subtext "Found background without Language on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                             }
                             Else {
-                                Write-Log -Subtext "Found background with Language '$lang' on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                                Write-Entry -Subtext "Found background with Language '$lang' on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                             }
                             if ($lang -ne 'null') {
                                 $global:PosterWithText = $true
@@ -1330,27 +1331,27 @@ function GetTVDBShowBackground {
                         }
                     }
                     if (!$global:posterurl) {
-                        Write-Log -Subtext "No background found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                        Write-Entry -Subtext "No background found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                     }
                 }
                 Else {
-                    Write-Log -Subtext "No background found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                    Write-Entry -Subtext "No background found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                 }
             }
             Else {
-                Write-Log -Subtext "TVDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "TVDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             }
         }
     }
 }
 function GetTVDBTitleCard {
     if ($global:tvdbid) {
-        Write-Log -Subtext "Searching on TVDB for: $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+        Write-Entry -Subtext "Searching on TVDB for: $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
         try {
             $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/series/$($global:tvdbid)/episodes/default?" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
         }
         catch {
-            Write-Log -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             $errorCount++
         }
         if ($response) {
@@ -1358,22 +1359,22 @@ function GetTVDBTitleCard {
                 $global:NoLangImageUrl = $response.data.episodes | Where-Object { $_.seasonNumber -eq $global:season_number -and $_.number -eq $global:episodenumber }
                 if ($global:NoLangImageUrl.image) {
                     $global:posterurl = $global:NoLangImageUrl.image
-                    Write-Log -Subtext "Found Title Card on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                    Write-Entry -Subtext "Found Title Card on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                     $global:TextlessPoster = $true
                     return $global:NoLangImageUrl.image
                 }
                 Else {
-                    Write-Log -Subtext "No Title Card found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                    Write-Entry -Subtext "No Title Card found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                     $Errorcount++
                 }
             }
             Else {
-                Write-Log -Subtext "No Title Card found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                Write-Entry -Subtext "No Title Card found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                 $Errorcount++
             }
         }
         Else {
-            Write-Log -Subtext "TVDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "TVDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             $Errorcount++
         }
     }
@@ -1382,10 +1383,10 @@ function GetIMDBPoster {
     $response = Invoke-WebRequest -Uri "https://www.imdb.com/title/$($global:imdbid)/mediaviewer" -Method GET
     $global:posterurl = $response.images.src[1]
     if (!$global:posterurl) {
-        Write-Log -Subtext "No show match or poster found on IMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+        Write-Entry -Subtext "No show match or poster found on IMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     }
     Else {
-        Write-Log -Subtext "Found Poster with text on IMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+        Write-Entry -Subtext "Found Poster with text on IMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
         return $global:posterurl
     }
 }
@@ -1395,12 +1396,12 @@ function GetPlexArtwork {
         [string]$ArtUrl,
         [string]$TempImage
     )
-    Write-Log -Subtext "Searching on Plex for$Type" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+    Write-Entry -Subtext "Searching on Plex for$Type" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     try {
         Invoke-WebRequest -Uri $ArtUrl -OutFile $TempImage
     }
     catch {
-        Write-Log -Subtext "Could not download Artwork from plex, Error Message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        Write-Entry -Subtext "Could not download Artwork from plex, Error Message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
         $errorCount++
         break
     }
@@ -1413,11 +1414,11 @@ function GetPlexArtwork {
 
     if ($value) {
         $ExifFound = $True
-        Write-Log -Subtext "Artwork has exif data from ppm/pmm/tcm, cant take it..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+        Write-Entry -Subtext "Artwork has exif data from ppm/pmm/tcm, cant take it..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
         Remove-Item -LiteralPath $TempImage | out-null
     }
     Else {
-        Write-Log -Subtext "No ppm/pmm/tcm exif data found, taking Plex artwork..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+        Write-Entry -Subtext "No ppm/pmm/tcm exif data found, taking Plex artwork..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
         $global:PlexartworkDownloaded = $true
         $global:posterurl = $ArtUrl
     }
@@ -1438,8 +1439,8 @@ function Push-ObjectToDiscord {
         Start-Sleep -Seconds 1
     }
     catch {
-        Write-Host "Unable to send to Discord. $($_)" -ForegroundColor Red
-        Write-Host $objPayload
+        Write-Entry -Message "Unable to send to Discord. $($_)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        Write-Entry -Message "$objPayload" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
     }
 }
 function CheckJson {
@@ -1464,7 +1465,7 @@ function CheckJson {
                 $config = Get-Content -Path $jsonFilePath -Raw | ConvertFrom-Json
             }
             catch {
-                Write-Log -Message "Failed to read the existing configuration file: $jsonFilePath. Please ensure it is valid JSON. Aborting..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Message "Failed to read the existing configuration file: $jsonFilePath. Please ensure it is valid JSON. Aborting..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                 Exit
             }
         }
@@ -1477,16 +1478,16 @@ function CheckJson {
             # Check if the part exists in the current configuration
             if (-not $config.PSObject.Properties.Name.Contains($partKey)) {
                 if (-not $config.PSObject.Properties.Name.tolower().Contains($partKey.tolower())) {
-                    Write-Log -Message "Missing Main Attribute in your Config file: $partKey." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-                    Write-Log -Subtext "Adding it for you... In GH Readme, look for $partKey - if you want to see what changed..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                    Write-Log -Subtext "GH Readme -> https://github.com/fscorrupt/Plex-Poster-Maker/blob/main/README.md#configuration" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                    Write-Entry -Message "Missing Main Attribute in your Config file: $partKey." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                    Write-Entry -Subtext "Adding it for you... In GH Readme, look for $partKey - if you want to see what changed..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                    Write-Entry -Subtext "GH Readme -> https://github.com/fscorrupt/Plex-Poster-Maker/blob/main/README.md#configuration" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                     $config | Add-Member -MemberType NoteProperty -Name $partKey -Value $defaultConfig.$partKey
                     $AttributeChanged = $True
                 }
                 else {
                     # Inform user about the case issue
-                    Write-Log -Message "The Main Attribute '$partKey' in your configuration file has a different casing than the expected property." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                    Write-Log -Subtext "Please correct the casing of the property in your configuration file to '$partKey'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                    Write-Entry -Message "The Main Attribute '$partKey' in your configuration file has a different casing than the expected property." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    Write-Entry -Subtext "Please correct the casing of the property in your configuration file to '$partKey'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
                     Exit  # Abort the script
                 }
             }
@@ -1496,17 +1497,17 @@ function CheckJson {
                     # Show user that a sub-attribute is missing
                     if (-not $config.$partKey.PSObject.Properties.Name.Contains($propertyKey)) {
                         if (-not $config.$partKey.PSObject.Properties.Name.tolower().Contains($propertyKey.tolower())) {
-                            Write-Log -Message "Missing Sub-Attribute in your Config file: $partKey.$propertyKey" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-                            Write-Log -Subtext "Adding it for you... In GH Readme, look for $partKey.$propertyKey - if you want to see what changed..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                            Write-Log -Subtext "GH Readme -> https://github.com/fscorrupt/Plex-Poster-Maker/blob/main/README.md#configuration" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                            Write-Entry -Message "Missing Sub-Attribute in your Config file: $partKey.$propertyKey" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                            Write-Entry -Subtext "Adding it for you... In GH Readme, look for $partKey.$propertyKey - if you want to see what changed..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                            Write-Entry -Subtext "GH Readme -> https://github.com/fscorrupt/Plex-Poster-Maker/blob/main/README.md#configuration" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             # Add the property using the expected casing
                             $config.$partKey | Add-Member -MemberType NoteProperty -Name $propertyKey -Value $defaultConfig.$partKey.$propertyKey -Force
                             $AttributeChanged = $True
                         }
                         else {
                             # Inform user about the case issue
-                            Write-Log -Message "The Sub-Attribute '$partKey.$propertyKey' in your configuration file has a different casing than the expected property." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                            Write-Log -Subtext "Please correct the casing of the Sub-Attribute in your configuration file to '$partKey.$propertyKey'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                            Write-Entry -Message "The Sub-Attribute '$partKey.$propertyKey' in your configuration file has a different casing than the expected property." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            Write-Entry -Subtext "Please correct the casing of the Sub-Attribute in your configuration file to '$partKey.$propertyKey'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
                             Exit  # Abort the script
                         }
                     }
@@ -1518,15 +1519,15 @@ function CheckJson {
             $configJson = $config | ConvertTo-Json -Depth 10
             $configJson | Set-Content -Path $jsonFilePath -Force
 
-            Write-Log -Subtext "Configuration file updated successfully." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+            Write-Entry -Subtext "Configuration file updated successfully." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
         }
     }
     catch [System.Net.WebException] {
-        Write-Log -Message "Failed to download the default configuration JSON file from the URL." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        Write-Entry -Message "Failed to download the default configuration JSON file from the URL." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
         Exit
     }
     catch {
-        Write-Log -Message "An unexpected error occurred: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        Write-Entry -Message "An unexpected error occurred: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
         Exit
     }
 }
@@ -1545,8 +1546,8 @@ function CheckJsonPaths {
     $errorCount = 0
     foreach ($path in $paths) {
         if (-not (Test-Path $path)) {
-            Write-Log -Message "Could not find file in: $path" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-            Write-Log -Subtext "Check config for typos and make sure that the file is present in scriptroot." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+            Write-Entry -Message "Could not find file in: $path" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "Check config for typos and make sure that the file is present in scriptroot." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
             $errorCount++
         }
     }
@@ -1576,7 +1577,7 @@ function Get-LatestScriptVersion {
         return Invoke-RestMethod -Uri "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/Release.txt" -Method Get -ErrorAction Stop
     }
     catch {
-        Write-Log -Subtext "Could not query latest script version, Error: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        Write-Entry -Subtext "Could not query latest script version, Error: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
         return $null
     }
 }
@@ -1615,10 +1616,10 @@ function CheckConfigFile {
     )
 
     if (!(Test-Path (Join-Path $ScriptRoot 'config.json'))) {
-        Write-Log -Message "Config File missing, downloading it for you..." -Path "$ScriptRoot\Logs\Scriptlog.log" -Color White -log Info
+        Write-Entry -Message "Config File missing, downloading it for you..." -Path "$ScriptRoot\Logs\Scriptlog.log" -Color White -log Info
         Invoke-WebRequest -Uri "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/config.example.json" -OutFile "$ScriptRoot\config.json"
-        Write-Log -Subtext "Config File downloaded here: '$ScriptRoot\config.json'" -Path "$ScriptRoot\Logs\Scriptlog.log" -Color White -log Info
-        Write-Log -Subtext "Please configure the config file according to GitHub, Exit script now..." -Path "$ScriptRoot\Logs\Scriptlog.log" -Color Yellow -log Warning
+        Write-Entry -Subtext "Config File downloaded here: '$ScriptRoot\config.json'" -Path "$ScriptRoot\Logs\Scriptlog.log" -Color White -log Info
+        Write-Entry -Subtext "Please configure the config file according to GitHub, Exit script now..." -Path "$ScriptRoot\Logs\Scriptlog.log" -Color Yellow -log Warning
         Exit
     }
 }
@@ -1635,92 +1636,92 @@ function Test-And-Download {
 }
 
 function LogConfigSettings {
-    Write-Log -Message "Current Config.json Settings" -Path $configLogging -Color Cyan -log Info
-    Write-Log -Subtext "___________________________________________" -Path $configLogging -Color DarkMagenta -log Info
+    Write-Entry -Message "Current Config.json Settings" -Path $configLogging -Color Cyan -log Info
+    Write-Entry -Subtext "___________________________________________" -Path $configLogging -Color DarkMagenta -log Info
     # Plex Part
-    Write-Log -Subtext "API Part" -Path $configLogging -Color Cyan -log Info
-    Write-Log -Subtext "| TVDB API Key:                 $($global:tvdbapi[0..7] -join '')****" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| TMDB API Read Access Token:   $($global:tmdbtoken[0..7] -join '')****" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Fanart API Key:               $($FanartTvAPIKey[0..7] -join '')****" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "API Part" -Path $configLogging -Color Cyan -log Info
+    Write-Entry -Subtext "| TVDB API Key:                 $($global:tvdbapi[0..7] -join '')****" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| TMDB API Read Access Token:   $($global:tmdbtoken[0..7] -join '')****" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Fanart API Key:               $($FanartTvAPIKey[0..7] -join '')****" -Path $configLogging -Color White -log Info
     if ($PlexToken) {
-        Write-Log -Subtext "| Plex Token:                   $($PlexToken[0..7] -join '')****" -Path $configLogging -Color White -log Info
+        Write-Entry -Subtext "| Plex Token:                   $($PlexToken[0..7] -join '')****" -Path $configLogging -Color White -log Info
     }
-    Write-Log -Subtext "| Fav Provider:                 $global:FavProvider" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Preferred Lang Order:         $($global:PreferredLanguageOrder -join ',')" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "Plex Part" -Path $configLogging -Color Cyan -log Info
-    Write-Log -Subtext "| Excluded Libs:                $($LibstoExclude -join ',')" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Plex Url:                     $($PlexUrl[0..10] -join '')****" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "Prerequisites Part" -Path $configLogging -Color Cyan -log Info
-    Write-Log -Subtext "| Asset Path:                   $AssetPath" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Show skipped:                 $show_skipped" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Script Root:                  $global:ScriptRoot" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Magick Location:              $magickinstalllocation" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| # of Log Folders to retain:   $maxLogs" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Log Level:                    $logLevel" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Used Poster Font:             $font" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Used Background Font:         $backgroundfont" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Used TitleCard Font:          $titlecardfont" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Used Poster Overlay File:     $Posteroverlay" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Used Background Overlay File: $Backgroundoverlay" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Used TitleCard Overlay File:  $titlecardoverlay" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Create Library Folders:       $LibraryFolders" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Create Season Posters:        $global:SeasonPosters" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Create Posters:               $global:Posters" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Create Background Posters:    $global:BackgroundPosters" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Create Title Cards:           $global:TitleCards" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "OverLay General Part" -Path $configLogging -Color Cyan -log Info
-    Write-Log -Subtext "| Process Images:               $global:ImageProcessing" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "OverLay Poster Part" -Path $configLogging -Color Cyan -log Info
-    Write-Log -Subtext "| All Caps on Text:             $fontAllCaps" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Add Border to Image:          $AddBorder" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Add Text to Image:            $AddText" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Add Overlay to Image:         $AddOverlay" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Font Color:                   $fontcolor" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Border Color:                 $bordercolor" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Min Font Size:                $minPointSize" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Max Font Size:                $maxPointSize" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Border Width:                 $borderwidth" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Text Box Width:               $MaxWidth" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Text Box Height:              $MaxHeight" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Text Box Offset:              $text_offset" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "OverLay Background Part" -Path $configLogging -Color Cyan -log Info
-    Write-Log -Subtext "| All Caps on Text:             $BackgroundfontAllCaps" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Add Border to Background:     $AddBackgroundBorder" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Add Text to Background:       $AddBackgroundText" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Add Overlay to Background:    $AddBackgroundOverlay" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Font Color:                   $Backgroundfontcolor" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Border Color:                 $Backgroundbordercolor" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Min Font Size:                $BackgroundminPointSize" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Max Font Size:                $BackgroundmaxPointSize" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Border Width:                 $Backgroundborderwidth" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Text Box Width:               $BackgroundMaxWidth" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Text Box Height:              $BackgroundMaxHeight" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Text Box Offset:              $Backgroundtext_offset" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "OverLay TitleCard Part" -Path $configLogging -Color Cyan -log Info
-    Write-Log -Subtext "| Use Background as Title Card: $UseBackgroundAsTitleCard" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Add Border to Background:     $AddTitleCardBorder" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Border Color:                 $TitleCardbordercolor" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Add Overlay to Background:    $AddTitleCardOverlay" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Border Width:                 $TitleCardborderwidth" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "OverLay TitleCard Title Part" -Path $configLogging -Color Cyan -log Info
-    Write-Log -Subtext "| All Caps on Text:             $TitleCardEPTitlefontAllCaps" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Add Title to TitleCard:       $AddTitleCardEPTitleText" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Font Color:                   $TitleCardEPTitlefontcolor" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Min Font Size:                $TitleCardEPTitleminPointSize" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Max Font Size:                $TitleCardEPTitlemaxPointSize" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Text Box Width:               $TitleCardEPTitleMaxWidth" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Text Box Height:              $TitleCardEPTitleMaxHeight" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Text Box Offset:              $TitleCardEPTitletext_offset" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "OverLay TitleCard EP Part" -Path $configLogging -Color Cyan -log Info
-    Write-Log -Subtext "| All Caps on Text:             $TitleCardEPfontAllCaps" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Add Episode to TitleCard:     $AddTitleCardEPText" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Font Color:                   $TitleCardEPfontcolor" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Min Font Size:                $TitleCardEPminPointSize" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Max Font Size:                $TitleCardEPmaxPointSize" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Text Box Width:               $TitleCardEPMaxWidth" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Text Box Height:              $TitleCardEPMaxHeight" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "| Text Box Offset:              $TitleCardEPtext_offset" -Path $configLogging -Color White -log Info
-    Write-Log -Subtext "___________________________________________" -Path $configLogging -Color DarkMagenta -log Info
+    Write-Entry -Subtext "| Fav Provider:                 $global:FavProvider" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Preferred Lang Order:         $($global:PreferredLanguageOrder -join ',')" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "Plex Part" -Path $configLogging -Color Cyan -log Info
+    Write-Entry -Subtext "| Excluded Libs:                $($LibstoExclude -join ',')" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Plex Url:                     $($PlexUrl[0..10] -join '')****" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "Prerequisites Part" -Path $configLogging -Color Cyan -log Info
+    Write-Entry -Subtext "| Asset Path:                   $AssetPath" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Show skipped:                 $show_skipped" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Script Root:                  $global:ScriptRoot" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Magick Location:              $magickinstalllocation" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| # of Log Folders to retain:   $maxLogs" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Log Level:                    $logLevel" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Used Poster Font:             $font" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Used Background Font:         $backgroundfont" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Used TitleCard Font:          $titlecardfont" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Used Poster Overlay File:     $Posteroverlay" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Used Background Overlay File: $Backgroundoverlay" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Used TitleCard Overlay File:  $titlecardoverlay" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Create Library Folders:       $LibraryFolders" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Create Season Posters:        $global:SeasonPosters" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Create Posters:               $global:Posters" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Create Background Posters:    $global:BackgroundPosters" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Create Title Cards:           $global:TitleCards" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "OverLay General Part" -Path $configLogging -Color Cyan -log Info
+    Write-Entry -Subtext "| Process Images:               $global:ImageProcessing" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "OverLay Poster Part" -Path $configLogging -Color Cyan -log Info
+    Write-Entry -Subtext "| All Caps on Text:             $fontAllCaps" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Add Border to Image:          $AddBorder" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Add Text to Image:            $AddText" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Add Overlay to Image:         $AddOverlay" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Font Color:                   $fontcolor" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Border Color:                 $bordercolor" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Min Font Size:                $minPointSize" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Max Font Size:                $maxPointSize" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Border Width:                 $borderwidth" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Text Box Width:               $MaxWidth" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Text Box Height:              $MaxHeight" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Text Box Offset:              $text_offset" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "OverLay Background Part" -Path $configLogging -Color Cyan -log Info
+    Write-Entry -Subtext "| All Caps on Text:             $BackgroundfontAllCaps" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Add Border to Background:     $AddBackgroundBorder" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Add Text to Background:       $AddBackgroundText" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Add Overlay to Background:    $AddBackgroundOverlay" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Font Color:                   $Backgroundfontcolor" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Border Color:                 $Backgroundbordercolor" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Min Font Size:                $BackgroundminPointSize" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Max Font Size:                $BackgroundmaxPointSize" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Border Width:                 $Backgroundborderwidth" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Text Box Width:               $BackgroundMaxWidth" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Text Box Height:              $BackgroundMaxHeight" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Text Box Offset:              $Backgroundtext_offset" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "OverLay TitleCard Part" -Path $configLogging -Color Cyan -log Info
+    Write-Entry -Subtext "| Use Background as Title Card: $UseBackgroundAsTitleCard" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Add Border to Background:     $AddTitleCardBorder" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Border Color:                 $TitleCardbordercolor" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Add Overlay to Background:    $AddTitleCardOverlay" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Border Width:                 $TitleCardborderwidth" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "OverLay TitleCard Title Part" -Path $configLogging -Color Cyan -log Info
+    Write-Entry -Subtext "| All Caps on Text:             $TitleCardEPTitlefontAllCaps" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Add Title to TitleCard:       $AddTitleCardEPTitleText" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Font Color:                   $TitleCardEPTitlefontcolor" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Min Font Size:                $TitleCardEPTitleminPointSize" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Max Font Size:                $TitleCardEPTitlemaxPointSize" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Text Box Width:               $TitleCardEPTitleMaxWidth" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Text Box Height:              $TitleCardEPTitleMaxHeight" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Text Box Offset:              $TitleCardEPTitletext_offset" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "OverLay TitleCard EP Part" -Path $configLogging -Color Cyan -log Info
+    Write-Entry -Subtext "| All Caps on Text:             $TitleCardEPfontAllCaps" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Add Episode to TitleCard:     $AddTitleCardEPText" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Font Color:                   $TitleCardEPfontcolor" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Min Font Size:                $TitleCardEPminPointSize" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Max Font Size:                $TitleCardEPmaxPointSize" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Text Box Width:               $TitleCardEPMaxWidth" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Text Box Height:              $TitleCardEPMaxHeight" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Text Box Offset:              $TitleCardEPtext_offset" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "___________________________________________" -Path $configLogging -Color DarkMagenta -log Info
 }
 
 function CheckPlexAccess {
@@ -1730,50 +1731,50 @@ function CheckPlexAccess {
     )
 
     if ($PlexToken) {
-        Write-Log -Message "Plex token found, checking access now..." -Path $configLogging -Color White -log Info
+        Write-Entry -Message "Plex token found, checking access now..." -Path $configLogging -Color White -log Info
         if ((Invoke-WebRequest "$PlexUrl/library/sections/?X-Plex-Token=$PlexToken").StatusCode -eq 200) {
-            Write-Log -Subtext "Plex access is working..." -Path $configLogging -Color Green -log Info
+            Write-Entry -Subtext "Plex access is working..." -Path $configLogging -Color Green -log Info
             # Check if libs are available
             [XML]$Libs = (Invoke-WebRequest "$PlexUrl/library/sections/?X-Plex-Token=$PlexToken").content
             if ($Libs.MediaContainer.size -ge '1') {
                 return $Libs
             }
             Else {
-                Write-Log -Subtext "No libs on Plex, abrort script now..." -Path $configLogging -Color Red -log Error
+                Write-Entry -Subtext "No libs on Plex, abrort script now..." -Path $configLogging -Color Red -log Error
                 Exit
             }
         }
         Else {
-            Write-Log -Message "Could not access plex with this url: $PlexUrl/library/sections/?X-Plex-Token=$PlexToken" -Path $configLogging -Color Red -log Error
-            Write-Log -Subtext "Please check token and access..." -Path $configLogging -Color Red -log Error
+            Write-Entry -Message "Could not access plex with this url: $PlexUrl/library/sections/?X-Plex-Token=$PlexToken" -Path $configLogging -Color Red -log Error
+            Write-Entry -Subtext "Please check token and access..." -Path $configLogging -Color Red -log Error
             $Errorcount++
             Exit
         }
     }
     Else {
-        Write-Log -Message "Checking Plex access now..." -Path $configLogging -Color White -log Info
+        Write-Entry -Message "Checking Plex access now..." -Path $configLogging -Color White -log Info
         try {
             $result = Invoke-WebRequest -Uri "$PlexUrl/library/sections" -ErrorAction SilentlyContinue
         }
         catch {
-            Write-Log -Message "Could not access plex with this url: $PlexUrl/library/sections" -Path $configLogging -Color Red -log Error
-            Write-Log -Message "Error Message: $_" -Path $configLogging -Color Red -log Error
+            Write-Entry -Message "Could not access plex with this url: $PlexUrl/library/sections" -Path $configLogging -Color Red -log Error
+            Write-Entry -Message "Error Message: $_" -Path $configLogging -Color Red -log Error
             $Errorcount++
-            Write-Log -Subtext "Please check access and settings in plex..." -Path $configLogging -Color Yellow -log Warning
-            Write-Log -Message "To be able to connect to plex without Auth" -Path $configLogging -Color White -log Info
-            Write-Log -Message "You have to enter your ip range in 'Settings -> Network -> List of IP addresses and networks that are allowed without auth: '192.168.1.0/255.255.255.0''" -Path $configLogging -Color White -log Info
+            Write-Entry -Subtext "Please check access and settings in plex..." -Path $configLogging -Color Yellow -log Warning
+            Write-Entry -Message "To be able to connect to plex without Auth" -Path $configLogging -Color White -log Info
+            Write-Entry -Message "You have to enter your ip range in 'Settings -> Network -> List of IP addresses and networks that are allowed without auth: '192.168.1.0/255.255.255.0''" -Path $configLogging -Color White -log Info
             Exit
         }
         if ($result.StatusCode -eq 200) {
-            Write-Log -Subtext "Plex access is working..." -Path $configLogging -Color Green -log Info
+            Write-Entry -Subtext "Plex access is working..." -Path $configLogging -Color Green -log Info
             # Check if libs are available
             [XML]$Libs = (Invoke-WebRequest "$PlexUrl/library/sections").content
             if ($Libs.MediaContainer.size -ge '1') {
-                Write-Log -Subtext "Found libs on Plex..." -Path $configLogging -Color White -log Info
+                Write-Entry -Subtext "Found libs on Plex..." -Path $configLogging -Color White -log Info
                 return $Libs
             }
             Else {
-                Write-Log -Subtext "No libs on Plex, abrort script now..." -Path $configLogging -Color Red -log Error
+                Write-Entry -Subtext "No libs on Plex, abrort script now..." -Path $configLogging -Color Red -log Error
                 Exit
             }
         }
@@ -1789,15 +1790,15 @@ function CheckImageMagick {
     if (!(Test-Path $magick)) {
         if ($global:OSType -ne "Win32NT") {
             if ($global:OSType -ne "DockerAlpine") {
-                Write-Log -Message "ImageMagick missing, downloading the portable version for you..." -Path $configLogging -Color Yellow -log Warning
+                Write-Entry -Message "ImageMagick missing, downloading the portable version for you..." -Path $configLogging -Color Yellow -log Warning
                 $magickUrl = "https://imagemagick.org/archive/binaries/magick"
                 Invoke-WebRequest -Uri $magickUrl -OutFile "$global:ScriptRoot/magick"
                 chmod +x "$global:ScriptRoot/magick"
-                Write-Log -Subtext "Made the portable Magick executable..." -Path $configLogging -Color Green -log Info
+                Write-Entry -Subtext "Made the portable Magick executable..." -Path $configLogging -Color Green -log Info
             }
         }
         else {
-            Write-Log -Message "ImageMagick missing, downloading it for you..." -Path $configLogging -Color Red -log Error
+            Write-Entry -Message "ImageMagick missing, downloading it for you..." -Path $configLogging -Color Red -log Error
             $Errorcount++
             $result = Invoke-WebRequest "https://imagemagick.org/archive/binaries/?C=M;O=D"
             $LatestRelease = ($result.links.href | Where-Object { $_ -like '*portable-Q16-HDRI-x64.zip' } | Sort-Object -Descending)[0]
@@ -1809,10 +1810,10 @@ function CheckImageMagick {
                 Remove-Item -Recurse -LiteralPath "$magickinstalllocation\$((Get-ChildItem -Directory -LiteralPath $magickinstalllocation).name)" -Force
             }
             if (Test-Path -LiteralPath $magickinstalllocation\magick.exe) {
-                Write-Log -Subtext "Placed Portable ImageMagick here: $magickinstalllocation" -Path $configLogging -Color Green -log Info
+                Write-Entry -Subtext "Placed Portable ImageMagick here: $magickinstalllocation" -Path $configLogging -Color Green -log Info
             }
             Else {
-                Write-Log -Subtext "Error During extraction, please manually install/copy portable Imagemagick from here: https://imagemagick.org/archive/binaries/$LatestRelease" -Path $configLogging -Color Red -log Error
+                Write-Entry -Subtext "Error During extraction, please manually install/copy portable Imagemagick from here: https://imagemagick.org/archive/binaries/$LatestRelease" -Path $configLogging -Color Red -log Error
             }
         }
     }
@@ -1834,26 +1835,26 @@ function CheckOverlayDimensions {
 
     # Check Poster Overlay Size
     if ($Posteroverlaydimensions -eq $PosterSize) {
-        Write-Log -Subtext "Poster overlay is correctly sized at: $Postersize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+        Write-Entry -Subtext "Poster overlay is correctly sized at: $Postersize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     }
     else {
-        Write-Log -Subtext "Poster overlay is NOT correctly sized at: $Postersize. Actual dimensions: $Posteroverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+        Write-Entry -Subtext "Poster overlay is NOT correctly sized at: $Postersize. Actual dimensions: $Posteroverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     }
 
     # Check Background Overlay Size
     if ($Backgroundoverlaydimensions -eq $BackgroundSize) {
-        Write-Log -Subtext "Background overlay is correctly sized at: $BackgroundSize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+        Write-Entry -Subtext "Background overlay is correctly sized at: $BackgroundSize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     }
     else {
-        Write-Log -Subtext "Background overlay is NOT correctly sized at: $BackgroundSize. Actual dimensions: $Backgroundoverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+        Write-Entry -Subtext "Background overlay is NOT correctly sized at: $BackgroundSize. Actual dimensions: $Backgroundoverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     }
 
     # Check TitleCard Overlay Size
     if ($Titlecardoverlaydimensions -eq $BackgroundSize) {
-        Write-Log -Subtext "TitleCard overlay is correctly sized at: $BackgroundSize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+        Write-Entry -Subtext "TitleCard overlay is correctly sized at: $BackgroundSize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     }
     else {
-        Write-Log -Subtext "TitleCard overlay is NOT correctly sized at: $BackgroundSize. Actual dimensions: $Titlecardoverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+        Write-Entry -Subtext "TitleCard overlay is NOT correctly sized at: $BackgroundSize. Actual dimensions: $Titlecardoverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     }
 }
 
@@ -1892,8 +1893,8 @@ function InvokeMagickCommand {
 
     # Check if there was any error output
     if (-not [string]::IsNullOrWhiteSpace($errorOutput)) {
-        Write-Log -Subtext "An error occurred while executing the magick command:" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-        Write-Log -Subtext (GetMagickErrorMessage $errorOutput) -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log info
+        Write-Entry -Subtext "An error occurred while executing the magick command:" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        Write-Entry -Subtext (GetMagickErrorMessage $errorOutput) -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log info
     }
 }
 
@@ -1911,17 +1912,17 @@ $folderPattern = "Logs_*"
 $global:RotationFolderName = $null
 $global:logLevel = 2
 RotateLogs -ScriptRoot $global:ScriptRoot
-Write-Log -Message "Starting..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+Write-Entry -Message "Starting..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
 # Check if Config file is present
 CheckConfigFile -ScriptRoot $global:ScriptRoot
 # Test Json if something is missing
 CheckJson -jsonExampleUrl "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/config.example.json" -jsonFilePath $(Join-Path $global:ScriptRoot 'config.json')
 # Check if Script is Latest
 if ($CurrentScriptVersion -eq $LatestScriptVersion) {
-    Write-Log -Message "You are Running Version - v$CurrentScriptVersion" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+    Write-Entry -Message "You are Running Version - v$CurrentScriptVersion" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
 }
 Else {
-    Write-Log -Message "You are Running Version: v$CurrentScriptVersion - Latest Version is: v$LatestScriptVersion" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+    Write-Entry -Message "You are Running Version: v$CurrentScriptVersion - Latest Version is: v$LatestScriptVersion" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
 }
 # load config file
 $config = Get-Content -Raw -Path $(Join-Path $global:ScriptRoot 'config.json') | ConvertFrom-Json
@@ -1930,28 +1931,28 @@ $config = Get-Content -Raw -Path $(Join-Path $global:ScriptRoot 'config.json') |
 $global:logLevel = [int]$config.PrerequisitePart.logLevel
 # Check if the cast was successful
 if ($null -eq $global:logLevel) {
-    Write-Log -Message "Value for logLevel was null. Setting it to 1. Adjust your config.json accordingly." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+    Write-Entry -Message "Value for logLevel was null. Setting it to 1. Adjust your config.json accordingly." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     $global:logLevel = 1
 }
 # Ensure $logLevel is at least 1
 if ($global:logLevel -le 0) {
-    Write-Log -Message "Value for logLevel -le 0. Setting it to 1. Adjust your config.json accordingly." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+    Write-Entry -Message "Value for logLevel -le 0. Setting it to 1. Adjust your config.json accordingly." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     $global:logLevel = 1
 }# Ensure $logLevel is le 3
 if ($global:logLevel -gt 3) {
-    Write-Log -Message "Value for logLevel -gt 3. Setting it to 3. Adjust your config.json accordingly." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+    Write-Entry -Message "Value for logLevel -gt 3. Setting it to 3. Adjust your config.json accordingly." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     $global:logLevel = 3
 }
 # Read naxLogs value from config.json
 $maxLogs = [int]$config.PrerequisitePart.maxLogs  # Cast to integer
 # Check if the cast was successful
 if ($null -eq $maxLogs) {
-    Write-Log -Message "Value for maxLogs was null. Setting it to 1. Adjust your config.json accordingly." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+    Write-Entry -Message "Value for maxLogs was null. Setting it to 1. Adjust your config.json accordingly." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     $maxLogs = 1
 }
 # Ensure $maxLogs is at least 1
 if ($maxLogs -le 0) {
-    Write-Log -Message "Value for maxLogs -le 0. Setting it to 1. Adjust your config.json accordingly." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+    Write-Entry -Message "Value for maxLogs -le 0. Setting it to 1. Adjust your config.json accordingly." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     $maxLogs = 1
 }
 # Delete excess log folders
@@ -1960,7 +1961,7 @@ foreach ($folder in (Get-ChildItem -Path $(Join-Path $global:ScriptRoot $global:
     if ($folder.FullName -notin $logFolders.FullName) {
         Remove-Item -Path $folder.FullName -Recurse -Force
         $fldrName = $folder.FullName
-        Write-Log -Message "Deleting excess folder: $fldrName" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+        Write-Entry -Message "Deleting excess folder: $fldrName" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
     }
 }
 
@@ -1974,7 +1975,7 @@ if ($env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker-Alpine*') {
         # Try the normal discord url
         $global:NotifyUrl = $config.Notification.Discord
         if ($global:NotifyUrl -eq 'https://discordapp.com/api/webhooks/{WebhookID}/{WebhookToken}' -and $global:SendNotification -eq 'True') {
-            Write-Log -Message "Found default Notification Url, please update url in config..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Message "Found default Notification Url, please update url in config..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             Pause
             Exit
         }
@@ -1986,7 +1987,7 @@ if ($env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker-Alpine*') {
 Else {
     $global:NotifyUrl = $config.Notification.Discord
     if ($global:NotifyUrl -eq 'https://discordapp.com/api/webhooks/{WebhookID}/{WebhookToken}' -and $global:SendNotification -eq 'True') {
-        Write-Log -Message "Found default Notification Url, please update url in config..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        Write-Entry -Message "Found default Notification Url, please update url in config..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
         Pause
         Exit
     }
@@ -2001,7 +2002,7 @@ $global:FavProvider = $config.ApiPart.FavProvider.ToUpper()
 $global:PreferredLanguageOrder = $config.ApiPart.PreferredLanguageOrder
 # default Lang order if missing in config
 if (!$global:PreferredLanguageOrder) {
-    Write-Log -Message "Lang search Order not set in Config, setting it to 'xx,en,de' for you" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+    Write-Entry -Message "Lang search Order not set in Config, setting it to 'xx,en,de' for you" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     $global:PreferredLanguageOrder = "xx", "en", "de"
 }
 $global:PreferredLanguageOrderTMDB = $global:PreferredLanguageOrder.Replace('xx', 'null')
@@ -2015,7 +2016,7 @@ Else {
 }
 # default to TMDB if favprovider missing
 if (!$global:FavProvider) {
-    Write-Log -Message "FavProvider not set in config, setting it to 'TMDB' for you" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+    Write-Entry -Message "FavProvider not set in config, setting it to 'TMDB' for you" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     $global:FavProvider = 'TMDB'
 }
 
@@ -2165,7 +2166,7 @@ if ($Testing) {
 foreach ($path in $LogsPath, $TempPath, $TestPath, $AssetPath) {
     if (!(Test-Path $path)) {
         if ($global:OSType -ne "Win32NT" -and $path -eq 'P:\assets') {
-            Write-Log -Message 'Please change default asset Path...' -Path $configLogging -Color Red -log Error
+            Write-Entry -Message 'Please change default asset Path...' -Path $configLogging -Color Red -log Error
             Exit
         }
         New-Item -ItemType Directory -Path $path -Force | Out-Null
@@ -2175,13 +2176,13 @@ foreach ($path in $LogsPath, $TempPath, $TestPath, $AssetPath) {
 # Delete all files and subfolders within the temp directory
 if (Test-Path $TempPath) {
     Remove-Item -Path (Join-Path $TempPath '*') -Recurse -Force
-    Write-Log -Message "Deleting temp folder: $TempPath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+    Write-Entry -Message "Deleting temp folder: $TempPath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
 }
 
 if ($Testing) {
     if ((Test-Path $TestPath)) {
         Remove-Item -Path (Join-Path $TestPath '*') -Recurse -Force
-        Write-Log -Message "Deleting test folder: $TestPath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+        Write-Entry -Message "Deleting test folder: $TestPath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
     }
 }
 
@@ -2191,11 +2192,11 @@ Test-And-Download -url "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/
 Test-And-Download -url "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/Rocky.ttf" -destination (Join-Path $TempPath 'Rocky.ttf')
 
 # Write log message
-Write-Log -Message "Old log files cleared..." -Path $configLogging -Color White -log Info
+Write-Entry -Message "Old log files cleared..." -Path $configLogging -Color White -log Info
 # Display Current Config settings:
 LogConfigSettings
 # Starting main Script now...
-Write-Log -Message "Starting main Script now..." -Path $configLogging -Color Green -log Info
+Write-Entry -Message "Starting main Script now..." -Path $configLogging -Color Green -log Info
 
 # Fix asset path based on OS (do it here so that we see what is in config.json versus what script should use)
 if ($Platform -eq 'Docker' -or $Platform -eq 'Linux') {
@@ -2213,7 +2214,7 @@ foreach ($file in $files) {
     $destinationPath = Join-Path -Path (Join-Path -Path $global:ScriptRoot -ChildPath 'temp') -ChildPath $file.Name
     if (!(Test-Path -LiteralPath $destinationPath)) {
         Copy-Item -Path $file.FullName -Destination $destinationPath -Force | Out-Null
-        Write-Log -Subtext "Found File: '$($file.Name)' in ScriptRoot - copying it into temp folder..." -Path $configLogging -Color Cyan -log Info
+        Write-Entry -Subtext "Found File: '$($file.Name)' in ScriptRoot - copying it into temp folder..." -Path $configLogging -Color Cyan -log Info
     }
 }
 
@@ -2227,17 +2228,17 @@ CheckJsonPaths -font $font -backgroundfont $backgroundfont -titlecardfont $title
 CheckImageMagick -magick $magick -magickinstalllocation $magickinstalllocation
 
 # Check overlay artwork for poster, background, and titlecard dimensions
-Write-Log -Message "Checking size of overlay files..." -Path $configLogging -Color White -log Info
+Write-Entry -Message "Checking size of overlay files..." -Path $configLogging -Color White -log Info
 CheckOverlayDimensions -Posteroverlay "$Posteroverlay" -Backgroundoverlay "$Backgroundoverlay" -Titlecardoverlay "$titlecardoverlay" -PosterSize "$PosterSize" -BackgroundSize "$BackgroundSize"
 
 
 # check if fanart Module is installed
 if (!(Get-InstalledModule -Name FanartTvAPI)) {
-    Write-Log -Message "FanartTvAPI Module missing, installing it for you..." -Path $configLogging -Color Red -log Error
+    Write-Entry -Message "FanartTvAPI Module missing, installing it for you..." -Path $configLogging -Color Red -log Error
     $Errorcount++
     Install-Module -Name FanartTvAPI -Force -Confirm -AllowClobber
 
-    Write-Log -Subtext "FanartTvAPI Module installed, importing it now..." -Path $configLogging -Color Green -log Info
+    Write-Entry -Subtext "FanartTvAPI Module installed, importing it now..." -Path $configLogging -Color Green -log Info
     Import-Module -Name FanartTvAPI
 }
 # Add Fanart API
@@ -2245,7 +2246,7 @@ Add-FanartTvAPIKey -Api_Key $FanartTvAPIKey
 
 # Check TMDB Token before building the Header.
 if ($global:tmdbtoken.Length -le '35') {
-    Write-Log -Message "TMDB Token is too short, you may have used the API key in your config file. Please use the 'API Read Access Token'." -Path $configLogging -Color Red -log Error
+    Write-Entry -Message "TMDB Token is too short, you may have used the API key in your config file. Please use the 'API Read Access Token'." -Path $configLogging -Color Red -log Error
     Exit
 }
 
@@ -2272,7 +2273,7 @@ $global:tvdbheader.Add("accept", "application/json")
 $global:tvdbheader.Add("Authorization", "Bearer $global:tvdbtoken")
 
 if ($Manual) {
-    Write-Log -Message "Manual Poster Creation Started" -Path $global:ScriptRoot\Logs\Manuallog.log -Color DarkMagenta -log Info
+    Write-Entry -Message "Manual Poster Creation Started" -Path $global:ScriptRoot\Logs\Manuallog.log -Color DarkMagenta -log Info
     $PicturePath = Read-Host "Enter path to source picture"
     $FolderName = Read-Host "Enter Media Foldername (how plex sees it)"
     $Titletext = Read-Host "Enter Movie/Show Title"
@@ -2332,7 +2333,7 @@ if ($Manual) {
             }
         }
         Move-Item -LiteralPath $PicturePath -destination $PosterImage -Force -ErrorAction SilentlyContinue
-        Write-Log -Subtext "Processing Poster for: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
+        Write-Entry -Subtext "Processing Poster for: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
 
         $CommentArguments = "convert `"$PosterImage`" -set `"comment`" `"created with ppm`" `"$PosterImage`""
         $CommentlogEntry = "`"$magick`" $CommentArguments"
@@ -2342,19 +2343,19 @@ if ($Manual) {
             # Resize Image to 2000x3000 and apply Border and overlay
             if ($AddBorder -eq 'true' -and $AddOverlay -eq 'true') {
                 $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$PosterImage`""
-                Write-Log -Subtext "Resizing it | Adding Borders | Adding Overlay" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
+                Write-Entry -Subtext "Resizing it | Adding Borders | Adding Overlay" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
             }
             if ($AddBorder -eq 'true' -and $AddOverlay -eq 'false') {
                 $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$PosterImage`""
-                Write-Log -Subtext "Resizing it | Adding Borders" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
+                Write-Entry -Subtext "Resizing it | Adding Borders" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
             }
             if ($AddBorder -eq 'false' -and $AddOverlay -eq 'true') {
                 $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite `"$PosterImage`""
-                Write-Log -Subtext "Resizing it | Adding Overlay" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
+                Write-Entry -Subtext "Resizing it | Adding Overlay" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
             }
             if ($AddBorder -eq 'false' -and $AddOverlay -eq 'false') {
                 $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$PosterImage`""
-                Write-Log -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
+                Write-Entry -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
             }
 
             $logEntry = "`"$magick`" $Arguments"
@@ -2363,9 +2364,9 @@ if ($Manual) {
 
             if ($AddText -eq 'true') {
                 $optimalFontSize = Get-OptimalPointSize -text $joinedTitle -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
-                Write-Log -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
+                Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
                 $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
-                Write-Log -Subtext "    Applying Poster text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
+                Write-Entry -Subtext "    Applying Poster text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
                 $logEntry = "`"$magick`" $Arguments"
                 $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                 InvokeMagickCommand -Command $magick -Arguments $Arguments
@@ -2375,7 +2376,7 @@ if ($Manual) {
     Else {
         # Resize Image to 2000x3000
         $Resizeargument = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$PosterImage`""
-        Write-Log -Subtext "Resizing it... " -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
+        Write-Entry -Subtext "Resizing it... " -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
         $logEntry = "`"$magick`" $Resizeargument"
         $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
         InvokeMagickCommand -Command $magick -Arguments $Resizeargument
@@ -2383,26 +2384,26 @@ if ($Manual) {
     if (!$global:ImageMagickError -eq 'True') {
         # Move file back to original naming with Brackets.
         Move-Item -LiteralPath $PosterImage -destination $PosterImageoriginal -Force -ErrorAction SilentlyContinue
-        Write-Log -Subtext "Poster created and moved to: $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Manuallog.log -Color Green -log Info
+        Write-Entry -Subtext "Poster created and moved to: $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Manuallog.log -Color Green -log Info
     }
 }
 Elseif ($Testing) {
-    Write-Log -Message "Poster Testing Started" -Path $global:ScriptRoot\Logs\Testinglog.log -Color DarkMagenta -log Info
-    Write-Log -Subtext "I will now create a few posters for you with different text lengths using your current configuration settings." -Path $global:ScriptRoot\Logs\Testinglog.log -Color Yellow -log Warning
+    Write-Entry -Message "Poster Testing Started" -Path $global:ScriptRoot\Logs\Testinglog.log -Color DarkMagenta -log Info
+    Write-Entry -Subtext "I will now create a few posters for you with different text lengths using your current configuration settings." -Path $global:ScriptRoot\Logs\Testinglog.log -Color Yellow -log Warning
     # Poster Part
     if (!(Test-Path $testimage)) {
         $ArgumentCreate = "-size `"$PosterSize`" xc:pink -background none `"$testimage`""
         $logEntryCreate = "`"$magick`" $ArgumentCreate"
         $logEntryCreate | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
         InvokeMagickCommand -Command $magick -Arguments $ArgumentCreate
-        Write-Log -Subtext "Test Poster Created..." -Path $global:ScriptRoot\Logs\Testinglog.log -Color Cyan -log Info
+        Write-Entry -Subtext "Test Poster Created..." -Path $global:ScriptRoot\Logs\Testinglog.log -Color Cyan -log Info
     }
     if (!(Test-Path $backgroundtestimage)) {
         $backgroundArgumentCreate = "-size `"$BackgroundSize`" xc:pink -background none `"$backgroundtestimage`""
         $backgroundlogEntryCreate = "`"$magick`" $backgroundArgumentCreate"
         $backgroundlogEntryCreate | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
         InvokeMagickCommand -Command $magick -Arguments $backgroundArgumentCreate
-        Write-Log -Subtext "Test Background/TitleCard Created..." -Path $global:ScriptRoot\Logs\Testinglog.log -Color Cyan -log Info
+        Write-Entry -Subtext "Test Background/TitleCard Created..." -Path $global:ScriptRoot\Logs\Testinglog.log -Color Cyan -log Info
     }
     $ShortText = "The Hobbit"
     $MediumText = "The Hobbit is a great movie"
@@ -2454,7 +2455,7 @@ Elseif ($Testing) {
     }
 
     if ($AddText -eq 'true' -or $AddBackgroundText -eq 'True' -or $AddTitleCardEPTitleText -eq 'True' -or $AddTitleCardEPText -eq 'True') {
-        Write-Log -Subtext "Calculating Optimal Font Sizes. This may take a while..." -Path $global:ScriptRoot\Logs\Testinglog.log -Color Cyan -log Info
+        Write-Entry -Subtext "Calculating Optimal Font Sizes. This may take a while..." -Path $global:ScriptRoot\Logs\Testinglog.log -Color Cyan -log Info
     }
     $TruncatedCount = 0
     # Optimal Poster Font Size
@@ -2472,7 +2473,7 @@ Elseif ($Testing) {
         if ($global:IsTruncated) { $TruncatedCount++ }
         $optimalFontSizeLongCAPS = Get-OptimalPointSize -text $LongTextCAPS -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
         if ($global:IsTruncated) { $TruncatedCount++ }
-        Write-Log -Subtext "Finished Optimal Font Sizes for posters..." -Path $global:ScriptRoot\Logs\Testinglog.log -Color Cyan -log Info
+        Write-Entry -Subtext "Finished Optimal Font Sizes for posters..." -Path $global:ScriptRoot\Logs\Testinglog.log -Color Cyan -log Info
     }
     # Optimal Background Font Size
     if ($AddBackgroundText -eq 'True') {
@@ -2489,7 +2490,7 @@ Elseif ($Testing) {
         if ($global:IsTruncated) { $TruncatedCount++ }
         $backgroundoptimalFontSizeLongCAPS = Get-OptimalPointSize -text $LongTextCAPS -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
         if ($global:IsTruncated) { $TruncatedCount++ }
-        Write-Log -Subtext "Finished Optimal Font Sizes for backgrounds..." -Path $global:ScriptRoot\Logs\Testinglog.log -Color Cyan -log Info
+        Write-Entry -Subtext "Finished Optimal Font Sizes for backgrounds..." -Path $global:ScriptRoot\Logs\Testinglog.log -Color Cyan -log Info
     }
     # Optimal TitleCard Font Size
     if ($AddTitleCardEPTitleText -eq 'True') {
@@ -2514,12 +2515,12 @@ Elseif ($Testing) {
         if ($global:IsTruncated) { $TruncatedCount++ }
     }
     if ($AddText -eq 'true' -or $AddBackgroundText -eq 'True' -or $AddTitleCardEPTitleText -eq 'True' -or $AddTitleCardEPText -eq 'True') {
-        Write-Log -Subtext "Finished Optimal Font Sizes for titlecards..." -Path $global:ScriptRoot\Logs\Testinglog.log -Color Cyan -log Info
+        Write-Entry -Subtext "Finished Optimal Font Sizes for titlecards..." -Path $global:ScriptRoot\Logs\Testinglog.log -Color Cyan -log Info
     }
 
     # Border/Overlay Poster Part
 
-    Write-Log -Subtext "Poster Part:" -Path $global:ScriptRoot\Logs\Testinglog.log -Color Green -log Info
+    Write-Entry -Subtext "Poster Part:" -Path $global:ScriptRoot\Logs\Testinglog.log -Color Green -log Info
     if ($AddText -eq 'true') {
         if ($AddBorder -eq 'true' -and $AddOverlay -eq 'true') {
             $ArgumentsShort = "`"$testimage`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterShort`""
@@ -2528,7 +2529,7 @@ Elseif ($Testing) {
             $ArgumentsShortCAPS = "`"$testimage`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterShortCAPS`""
             $ArgumentsMediumCAPS = "`"$testimage`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterMediumCAPS`""
             $ArgumentsLongCAPS = "`"$testimage`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterLongCAPS`""
-            Write-Log -Subtext "Adding Poster Borders | Adding Poster Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+            Write-Entry -Subtext "Adding Poster Borders | Adding Poster Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
         }
         if ($AddBorder -eq 'true' -and $AddOverlay -eq 'false') {
             $ArgumentsShort = "`"$testimage`" -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterShort`""
@@ -2537,7 +2538,7 @@ Elseif ($Testing) {
             $ArgumentsShortCAPS = "`"$testimage`" -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterShortCAPS`""
             $ArgumentsMediumCAPS = "`"$testimage`" -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterMediumCAPS`""
             $ArgumentsLongCAPS = "`"$testimage`" -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterLongCAPS`""
-            Write-Log -Subtext "Adding Poster Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+            Write-Entry -Subtext "Adding Poster Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
         }
         if ($AddBorder -eq 'false' -and $AddOverlay -eq 'true') {
             $ArgumentsShort = "`"$testimage`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite `"$TestPosterShort`""
@@ -2546,7 +2547,7 @@ Elseif ($Testing) {
             $ArgumentsShortCAPS = "`"$testimage`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite `"$TestPosterShortCAPS`""
             $ArgumentsMediumCAPS = "`"$testimage`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite `"$TestPosterMediumCAPS`""
             $ArgumentsLongCAPS = "`"$testimage`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite `"$TestPosterLongCAPS`""
-            Write-Log -Subtext "Adding Poster Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+            Write-Entry -Subtext "Adding Poster Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
         }
         if ($AddBorder -eq 'false' -and $AddOverlay -eq 'false') {
             $ArgumentsShort = "`"$testimage`" -quality $global:outputQuality `"$TestPosterShort`""
@@ -2555,7 +2556,7 @@ Elseif ($Testing) {
             $ArgumentsShortCAPS = "`"$testimage`" -quality $global:outputQuality `"$TestPosterShortCAPS`""
             $ArgumentsMediumCAPS = "`"$testimage`" -quality $global:outputQuality `"$TestPosterMediumCAPS`""
             $ArgumentsLongCAPS = "`"$testimage`" -quality $global:outputQuality `"$TestPosterLongCAPS`""
-            Write-Log -Subtext "Nothing specified, just output pic with desired quality" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+            Write-Entry -Subtext "Nothing specified, just output pic with desired quality" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
         }
 
         # Poster Logging
@@ -2584,19 +2585,19 @@ Elseif ($Testing) {
     Else {
         if ($AddBorder -eq 'true' -and $AddOverlay -eq 'true') {
             $ArgumentsTextless = "`"$testimage`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterTextless`""
-            Write-Log -Subtext "Adding Poster Borders | Adding Poster Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+            Write-Entry -Subtext "Adding Poster Borders | Adding Poster Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
         }
         if ($AddBorder -eq 'true' -and $AddOverlay -eq 'false') {
             $ArgumentsTextless = "`"$testimage`" -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$TestPosterTextless`""
-            Write-Log -Subtext "Adding Poster Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+            Write-Entry -Subtext "Adding Poster Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
         }
         if ($AddBorder -eq 'false' -and $AddOverlay -eq 'true') {
             $ArgumentsTextless = "`"$testimage`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite `"$TestPosterTextless`""
-            Write-Log -Subtext "Adding Poster Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+            Write-Entry -Subtext "Adding Poster Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
         }
         if ($AddBorder -eq 'false' -and $AddOverlay -eq 'false') {
             $ArgumentsTextless = "`"$testimage`" -quality $global:outputQuality `"$TestPosterTextless`""
-            Write-Log -Subtext "Nothing specified, just output pic with desired quality" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+            Write-Entry -Subtext "Nothing specified, just output pic with desired quality" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
         }
         $PosterlogEntryTextless = "`"$magick`" $ArgumentsTextless"
         $PosterlogEntryTextless | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
@@ -2605,19 +2606,19 @@ Elseif ($Testing) {
     # Text Poster overlay
     if ($AddText -eq 'true') {
         # Logging Poster
-        Write-Log -Subtext "Optimal font size for Short text is: '$optimalFontSizeShort'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
-        Write-Log -Subtext "    Applying text: `"$ShortText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
-        Write-Log -Subtext "Optimal font size for Medium text is: '$optimalFontSizeMedium'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
-        Write-Log -Subtext "    Applying text: `"$MediumText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
-        Write-Log -Subtext "Optimal font size for Long text is: '$optimalFontSizeLong'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
-        Write-Log -Subtext "    Applying text: `"$LongText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "Optimal font size for Short text is: '$optimalFontSizeShort'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "    Applying text: `"$ShortText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "Optimal font size for Medium text is: '$optimalFontSizeMedium'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "    Applying text: `"$MediumText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "Optimal font size for Long text is: '$optimalFontSizeLong'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "    Applying text: `"$LongText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
 
-        Write-Log -Subtext "Optimal font size for Short CAPS text is: '$optimalFontSizeShortCAPS'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
-        Write-Log -Subtext "    Applying CAPS text: `"$ShortTextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
-        Write-Log -Subtext "Optimal font size for Medium CAPS text is: '$optimalFontSizeMediumCAPS'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
-        Write-Log -Subtext "    Applying CAPS text: `"$MediumTextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
-        Write-Log -Subtext "Optimal font size for Long CAPS text is: '$optimalFontSizeLongCAPS'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
-        Write-Log -Subtext "    Applying CAPS text: `"$LongTextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "Optimal font size for Short CAPS text is: '$optimalFontSizeShortCAPS'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "    Applying CAPS text: `"$ShortTextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "Optimal font size for Medium CAPS text is: '$optimalFontSizeMediumCAPS'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "    Applying CAPS text: `"$MediumTextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "Optimal font size for Long CAPS text is: '$optimalFontSizeLongCAPS'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "    Applying CAPS text: `"$LongTextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
 
         $ArgumentsShort = "`"$TestPosterShort`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeShort`" -fill `"#0000FF`" -size `"$boxsize`" -background `"#ACD7E6`" caption:`"$ShortText`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -quality $global:outputQuality -composite `"$TestPosterShort`""
         $ArgumentsMedium = "`"$TestPosterMedium`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeMedium`" -fill `"#0000FF`" -size `"$boxsize`" -background `"#ACD7E6`" caption:`"$MediumText`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -quality $global:outputQuality -composite `"$TestPosterMedium`""
@@ -2650,12 +2651,12 @@ Elseif ($Testing) {
         InvokeMagickCommand -Command $magick -Arguments $ArgumentsLongCAPS
     }
     Else {
-        Write-Log -Subtext "    Applying textbox only to Poster..." -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "    Applying textbox only to Poster..." -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
         $ArgumentsNoText = "`"$TestPosterTextless`" -size `"$boxsize`" xc:`"#ACD7E6`" -gravity south -geometry +0+`"$text_offset`" -compose over -composite `"$TestPosterTextless`""
         InvokeMagickCommand -Command $magick -Arguments $ArgumentsNoText
     }
 
-    Write-Log -Subtext "Background Part:" -Path $global:ScriptRoot\Logs\Testinglog.log -Color Green -log Info
+    Write-Entry -Subtext "Background Part:" -Path $global:ScriptRoot\Logs\Testinglog.log -Color Green -log Info
     # Border/Overlay Background Part
     if ($AddBackgroundText -eq 'true') {
         if ($AddBackgroundBorder -eq 'true' -and $AddBackgroundOverlay -eq 'true') {
@@ -2665,7 +2666,7 @@ Elseif ($Testing) {
             $backgroundArgumentsShortCAPS = "`"$backgroundtestimage`" `"$Backgroundoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundTestPosterShortCAPS`""
             $backgroundArgumentsMediumCAPS = "`"$backgroundtestimage`" `"$Backgroundoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundTestPosterMediumCAPS`""
             $backgroundArgumentsLongCAPS = "`"$backgroundtestimage`" `"$Backgroundoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundTestPosterLongCAPS`""
-            Write-Log -Subtext "Adding Background Borders | Adding Background Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+            Write-Entry -Subtext "Adding Background Borders | Adding Background Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
         }
         if ($AddBackgroundBorder -eq 'true' -and $AddBackgroundOverlay -eq 'false') {
             $backgroundArgumentsShort = "`"$backgroundtestimage`" -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundTestPosterShort`""
@@ -2674,7 +2675,7 @@ Elseif ($Testing) {
             $backgroundArgumentsShortCAPS = "`"$backgroundtestimage`" -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundTestPosterShortCAPS`""
             $backgroundArgumentsMediumCAPS = "`"$backgroundtestimage`" -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundTestPosterMediumCAPS`""
             $backgroundArgumentsLongCAPS = "`"$backgroundtestimage`" -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundTestPosterLongCAPS`""
-            Write-Log -Subtext "Adding Background Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+            Write-Entry -Subtext "Adding Background Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
         }
         if ($AddBackgroundBorder -eq 'false' -and $AddBackgroundOverlay -eq 'true') {
             $backgroundArgumentsShort = "`"$backgroundtestimage`" `"$Backgroundoverlay`" -gravity south -quality $global:outputQuality -composite `"$backgroundTestPosterShort`""
@@ -2683,7 +2684,7 @@ Elseif ($Testing) {
             $backgroundArgumentsShortCAPS = "`"$backgroundtestimage`" `"$Backgroundoverlay`" -gravity south -quality $global:outputQuality -composite `"$backgroundTestPosterShortCAPS`""
             $backgroundArgumentsMediumCAPS = "`"$backgroundtestimage`" `"$Backgroundoverlay`" -gravity south -quality $global:outputQuality -composite `"$backgroundTestPosterMediumCAPS`""
             $backgroundArgumentsLongCAPS = "`"$backgroundtestimage`" `"$Backgroundoverlay`" -gravity south -quality $global:outputQuality -composite `"$backgroundTestPosterLongCAPS`""
-            Write-Log -Subtext "Adding Background Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+            Write-Entry -Subtext "Adding Background Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
         }
         if ($AddBackgroundBorder -eq 'false' -and $AddBackgroundOverlay -eq 'false') {
             $backgroundArgumentsShort = "`"$backgroundtestimage`" -quality $global:outputQuality `"$backgroundTestPosterShort`""
@@ -2692,7 +2693,7 @@ Elseif ($Testing) {
             $backgroundArgumentsShortCAPS = "`"$backgroundtestimage`" -quality $global:outputQuality `"$backgroundTestPosterShortCAPS`""
             $backgroundArgumentsMediumCAPS = "`"$backgroundtestimage`" -quality $global:outputQuality `"$backgroundTestPosterMediumCAPS`""
             $backgroundArgumentsLongCAPS = "`"$backgroundtestimage`" -quality $global:outputQuality `"$backgroundTestPosterLongCAPS`""
-            Write-Log -Subtext "Nothing specified, just output pic with desired quality" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+            Write-Entry -Subtext "Nothing specified, just output pic with desired quality" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
         }
         # Background Logging
         $backgroundlogEntryShort = "`"$magick`" $backgroundArgumentsShort"
@@ -2720,19 +2721,19 @@ Elseif ($Testing) {
     Else {
         if ($AddBackgroundBorder -eq 'true' -and $AddBackgroundOverlay -eq 'true') {
             $BackgroundArgumentsTextless = "`"$backgroundtestimage`" `"$Backgroundoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$BackgroundTestPosterTextless`""
-            Write-Log -Subtext "Adding Poster Borders | Adding Poster Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+            Write-Entry -Subtext "Adding Poster Borders | Adding Poster Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
         }
         if ($AddBackgroundBorder -eq 'true' -and $AddBackgroundOverlay -eq 'false') {
             $BackgroundArgumentsTextless = "`"$backgroundtestimage`" -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$BackgroundTestPosterTextless`""
-            Write-Log -Subtext "Adding Poster Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+            Write-Entry -Subtext "Adding Poster Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
         }
         if ($AddBackgroundBorder -eq 'false' -and $AddBackgroundOverlay -eq 'true') {
             $BackgroundArgumentsTextless = "`"$backgroundtestimage`" `"$Backgroundoverlay`" -gravity south -quality $global:outputQuality -composite `"$BackgroundTestPosterTextless`""
-            Write-Log -Subtext "Adding Poster Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+            Write-Entry -Subtext "Adding Poster Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
         }
         if ($AddBackgroundBorder -eq 'false' -and $AddBackgroundOverlay -eq 'false') {
             $BackgroundArgumentsTextless = "`"$backgroundtestimage`" -quality $global:outputQuality `"$BackgroundTestPosterTextless`""
-            Write-Log -Subtext "Nothing specified, just output pic with desired quality" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+            Write-Entry -Subtext "Nothing specified, just output pic with desired quality" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
         }
         $BackgroundlogEntryTextless = "`"$magick`" $BackgroundArgumentsTextless"
         $BackgroundlogEntryTextless | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
@@ -2741,19 +2742,19 @@ Elseif ($Testing) {
     # Text background overlay
     if ($AddBackgroundText -eq 'True') {
         # Logging Background
-        Write-Log -Subtext "Optimal font size for Short text is: '$backgroundoptimalFontSizeShort'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
-        Write-Log -Subtext "    Applying text: `"$ShortText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
-        Write-Log -Subtext "Optimal font size for Medium text is: '$backgroundoptimalFontSizeMedium'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
-        Write-Log -Subtext "    Applying text: `"$MediumText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
-        Write-Log -Subtext "Optimal font size for Long text is: '$backgroundoptimalFontSizeLong'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
-        Write-Log -Subtext "    Applying text: `"$LongText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "Optimal font size for Short text is: '$backgroundoptimalFontSizeShort'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "    Applying text: `"$ShortText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "Optimal font size for Medium text is: '$backgroundoptimalFontSizeMedium'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "    Applying text: `"$MediumText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "Optimal font size for Long text is: '$backgroundoptimalFontSizeLong'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "    Applying text: `"$LongText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
 
-        Write-Log -Subtext "Optimal font size for Short CAPS text is: '$backgroundoptimalFontSizeShortCAPS'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
-        Write-Log -Subtext "    Applying CAPS text: `"$ShortTextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
-        Write-Log -Subtext "Optimal font size for Medium CAPS text is: '$backgroundoptimalFontSizeMediumCAPS'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
-        Write-Log -Subtext "    Applying CAPS text: `"$MediumTextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
-        Write-Log -Subtext "Optimal font size for Long CAPS text is: '$backgroundoptimalFontSizeLongCAPS'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
-        Write-Log -Subtext "    Applying CAPS text: `"$LongTextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "Optimal font size for Short CAPS text is: '$backgroundoptimalFontSizeShortCAPS'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "    Applying CAPS text: `"$ShortTextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "Optimal font size for Medium CAPS text is: '$backgroundoptimalFontSizeMediumCAPS'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "    Applying CAPS text: `"$MediumTextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "Optimal font size for Long CAPS text is: '$backgroundoptimalFontSizeLongCAPS'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "    Applying CAPS text: `"$LongTextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
 
         $backgroundArgumentsShort = "`"$backgroundTestPosterShort`" -gravity center -background none -layers Flatten ( -font `"$backgroundfontImagemagick`" -pointsize `"$backgroundoptimalFontSizeShort`" -fill `"#0000FF`" -size `"$Backgroundboxsize`" -background `"#ACD7E6`" caption:`"$ShortText`" -trim -gravity south -extent `"$Backgroundboxsize`" ) -gravity south -geometry +0+`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundTestPosterShort`""
         $backgroundArgumentsMedium = "`"$backgroundTestPosterMedium`" -gravity center -background none -layers Flatten ( -font `"$backgroundfontImagemagick`" -pointsize `"$backgroundoptimalFontSizeMedium`" -fill `"#0000FF`" -size `"$Backgroundboxsize`" -background `"#ACD7E6`" caption:`"$MediumText`" -trim -gravity south -extent `"$Backgroundboxsize`" ) -gravity south -geometry +0+`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundTestPosterMedium`""
@@ -2785,11 +2786,11 @@ Elseif ($Testing) {
         InvokeMagickCommand -Command $magick -Arguments $backgroundArgumentsLongCAPS
     }
     Else {
-        Write-Log -Subtext "    Applying textbox only to Background..." -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "    Applying textbox only to Background..." -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
         $BackgroundArgumentsNoText = "`"$BackgroundTestPosterTextless`" -size `"$Backgroundboxsize`" xc:`"#ACD7E6`" -gravity south -geometry +0+`"$Backgroundtext_offset`" -compose over -composite `"$BackgroundTestPosterTextless`""
         InvokeMagickCommand -Command $magick -Arguments $BackgroundArgumentsNoText
     }
-    Write-Log -Subtext "TitleCard Part:" -Path $global:ScriptRoot\Logs\Testinglog.log -Color Green -log Info
+    Write-Entry -Subtext "TitleCard Part:" -Path $global:ScriptRoot\Logs\Testinglog.log -Color Green -log Info
     # Border/Overlay TitleCard Part
     if ($AddTitleCardEPTitleText -eq 'true' -or $AddTitleCardEPText -eq 'True') {
         if ($Addtitlecardborder -eq 'true' -and $Addtitlecardoverlay -eq 'true') {
@@ -2799,7 +2800,7 @@ Elseif ($Testing) {
             $titlecardArgumentsShortCAPS = "`"$backgroundtestimage`" `"$titlecardoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$titlecardborderwidthsecond`"  -bordercolor `"$titlecardbordercolor`" -border `"$titlecardborderwidth`" `"$titlecardtestPosterShortCAPS`""
             $titlecardArgumentsMediumCAPS = "`"$backgroundtestimage`" `"$titlecardoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$titlecardborderwidthsecond`"  -bordercolor `"$titlecardbordercolor`" -border `"$titlecardborderwidth`" `"$titlecardtestPosterMediumCAPS`""
             $titlecardArgumentsLongCAPS = "`"$backgroundtestimage`" `"$titlecardoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$titlecardborderwidthsecond`"  -bordercolor `"$titlecardbordercolor`" -border `"$titlecardborderwidth`" `"$titlecardtestPosterLongCAPS`""
-            Write-Log -Subtext "Adding Background Borders | Adding Background Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+            Write-Entry -Subtext "Adding Background Borders | Adding Background Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
         }
         if ($Addtitlecardborder -eq 'true' -and $Addtitlecardoverlay -eq 'false') {
             $titlecardArgumentsShort = "`"$backgroundtestimage`" -shave `"$titlecardborderwidthsecond`"  -bordercolor `"$titlecardbordercolor`" -border `"$titlecardborderwidth`" `"$titlecardtestPosterShort`""
@@ -2808,7 +2809,7 @@ Elseif ($Testing) {
             $titlecardArgumentsShortCAPS = "`"$backgroundtestimage`" -shave `"$titlecardborderwidthsecond`"  -bordercolor `"$titlecardbordercolor`" -border `"$titlecardborderwidth`" `"$titlecardtestPosterShortCAPS`""
             $titlecardArgumentsMediumCAPS = "`"$backgroundtestimage`" -shave `"$titlecardborderwidthsecond`"  -bordercolor `"$titlecardbordercolor`" -border `"$titlecardborderwidth`" `"$titlecardtestPosterMediumCAPS`""
             $titlecardArgumentsLongCAPS = "`"$backgroundtestimage`" -shave `"$titlecardborderwidthsecond`"  -bordercolor `"$titlecardbordercolor`" -border `"$titlecardborderwidth`" `"$titlecardtestPosterLongCAPS`""
-            Write-Log -Subtext "Adding Background Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+            Write-Entry -Subtext "Adding Background Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
         }
         if ($Addtitlecardborder -eq 'false' -and $Addtitlecardoverlay -eq 'true') {
             $titlecardArgumentsShort = "`"$backgroundtestimage`" `"$titlecardoverlay`" -gravity south -quality $global:outputQuality -composite `"$titlecardtestPosterShort`""
@@ -2817,7 +2818,7 @@ Elseif ($Testing) {
             $titlecardArgumentsShortCAPS = "`"$backgroundtestimage`" `"$titlecardoverlay`" -gravity south -quality $global:outputQuality -composite `"$titlecardtestPosterShortCAPS`""
             $titlecardArgumentsMediumCAPS = "`"$backgroundtestimage`" `"$titlecardoverlay`" -gravity south -quality $global:outputQuality -composite `"$titlecardtestPosterMediumCAPS`""
             $titlecardArgumentsLongCAPS = "`"$backgroundtestimage`" `"$titlecardoverlay`" -gravity south -quality $global:outputQuality -composite `"$titlecardtestPosterLongCAPS`""
-            Write-Log -Subtext "Adding Background Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+            Write-Entry -Subtext "Adding Background Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
         }
         if ($Addtitlecardborder -eq 'false' -and $Addtitlecardoverlay -eq 'false') {
             $titlecardArgumentsShort = "`"$backgroundtestimage`" -quality $global:outputQuality `"$titlecardtestPosterShort`""
@@ -2826,7 +2827,7 @@ Elseif ($Testing) {
             $titlecardArgumentsShortCAPS = "`"$backgroundtestimage`" -quality $global:outputQuality `"$titlecardtestPosterShortCAPS`""
             $titlecardArgumentsMediumCAPS = "`"$backgroundtestimage`" -quality $global:outputQuality `"$titlecardtestPosterMediumCAPS`""
             $titlecardArgumentsLongCAPS = "`"$backgroundtestimage`" -quality $global:outputQuality `"$titlecardtestPosterLongCAPS`""
-            Write-Log -Subtext "Nothing specified, just output pic with desired quality" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+            Write-Entry -Subtext "Nothing specified, just output pic with desired quality" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
         }
         # TitleCard Logging
         $titlecardlogEntryShort = "`"$magick`" $titlecardArgumentsShort"
@@ -2854,19 +2855,19 @@ Elseif ($Testing) {
     Else {
         if ($Addtitlecardborder -eq 'true' -and $Addtitlecardoverlay -eq 'true') {
             $TitleCardArgumentsTextless = "`"$backgroundtestimage`" `"$titlecardoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$titlecardborderwidthsecond`"  -bordercolor `"$titlecardbordercolor`" -border `"$titlecardborderwidth`" `"$TitleCardTestPosterTextless`""
-            Write-Log -Subtext "Adding TitleCard Borders | Adding TitleCard Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+            Write-Entry -Subtext "Adding TitleCard Borders | Adding TitleCard Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
         }
         if ($Addtitlecardborder -eq 'true' -and $Addtitlecardoverlay -eq 'false') {
             $TitleCardArgumentsTextless = "`"$backgroundtestimage`" -shave `"$titlecardborderwidthsecond`"  -bordercolor `"$titlecardbordercolor`" -border `"$titlecardborderwidth`" `"$TitleCardTestPosterTextless`""
-            Write-Log -Subtext "Adding TitleCard Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+            Write-Entry -Subtext "Adding TitleCard Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
         }
         if ($Addtitlecardborder -eq 'false' -and $Addtitlecardoverlay -eq 'true') {
             $TitleCardArgumentsTextless = "`"$backgroundtestimage`" `"$titlecardoverlay`" -gravity south -quality $global:outputQuality -composite `"$TitleCardTestPosterTextless`""
-            Write-Log -Subtext "Adding TitleCard Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+            Write-Entry -Subtext "Adding TitleCard Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
         }
         if ($Addtitlecardborder -eq 'false' -and $Addtitlecardoverlay -eq 'false') {
             $TitleCardArgumentsTextless = "`"$backgroundtestimage`" -quality $global:outputQuality `"$TitleCardTestPosterTextless`""
-            Write-Log -Subtext "Nothing specified, just output pic with desired quality" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+            Write-Entry -Subtext "Nothing specified, just output pic with desired quality" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
         }
         $titlecardlogEntryTextless = "`"$magick`" $TitleCardArgumentsTextless"
         $titlecardlogEntryTextless | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
@@ -2876,18 +2877,18 @@ Elseif ($Testing) {
     # Text TitleCard Title overlay
     if ($AddTitleCardEPTitleText -eq 'True') {
         # Logging TitleCards
-        Write-Log -Subtext "Optimal font size for Short text is: '$titlecardoptimalFontSizeShort'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
-        Write-Log -Subtext "    Applying text: `"$ShortText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
-        Write-Log -Subtext "Optimal font size for Medium text is: '$titlecardoptimalFontSizeMedium'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
-        Write-Log -Subtext "    Applying text: `"$MediumText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
-        Write-Log -Subtext "Optimal font size for Long text is: '$titlecardoptimalFontSizeLong'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
-        Write-Log -Subtext "    Applying text: `"$LongText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
-        Write-Log -Subtext "Optimal font size for Short CAPS text is: '$titlecardoptimalFontSizeShortCAPS'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
-        Write-Log -Subtext "    Applying CAPS text: `"$ShortTextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
-        Write-Log -Subtext "Optimal font size for Medium CAPS text is: '$titlecardoptimalFontSizeMediumCAPS'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
-        Write-Log -Subtext "    Applying CAPS text: `"$MediumTextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
-        Write-Log -Subtext "Optimal font size for Long CAPS text is: '$titlecardoptimalFontSizeLongCAPS'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
-        Write-Log -Subtext "    Applying CAPS text: `"$LongTextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "Optimal font size for Short text is: '$titlecardoptimalFontSizeShort'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "    Applying text: `"$ShortText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "Optimal font size for Medium text is: '$titlecardoptimalFontSizeMedium'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "    Applying text: `"$MediumText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "Optimal font size for Long text is: '$titlecardoptimalFontSizeLong'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "    Applying text: `"$LongText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "Optimal font size for Short CAPS text is: '$titlecardoptimalFontSizeShortCAPS'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "    Applying CAPS text: `"$ShortTextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "Optimal font size for Medium CAPS text is: '$titlecardoptimalFontSizeMediumCAPS'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "    Applying CAPS text: `"$MediumTextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "Optimal font size for Long CAPS text is: '$titlecardoptimalFontSizeLongCAPS'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "    Applying CAPS text: `"$LongTextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
 
         $TitleCardTitleArgumentsShort = "`"$titlecardtestPosterShort`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeShort`" -fill `"#0000FF`" -size `"$TitleCardEPTitleboxsize`" -background `"#ACD7E6`" caption:`"$ShortText`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterShort`""
         $TitleCardTitleArgumentsMedium = "`"$titlecardtestPosterMedium`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeMedium`" -fill `"#0000FF`" -size `"$TitleCardEPTitleboxsize`" -background `"#ACD7E6`" caption:`"$MediumText`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterMedium`""
@@ -2919,7 +2920,7 @@ Elseif ($Testing) {
         InvokeMagickCommand -Command $magick -Arguments $TitleCardTitleArgumentsLongCAPS
     }
     Elseif ($AddTitleCardEPTitleText -eq 'false' -and $AddTitleCardEPText -eq 'True') {
-        Write-Log -Subtext "    Applying Title textbox only to TitleCard..." -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "    Applying Title textbox only to TitleCard..." -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
         $TitleCardEPTitleArgumentsNoTextShort = "`"$titlecardtestPosterShort`" -size `"$TitleCardEPTitleboxsize`" xc:`"#ACD7E6`" -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -compose over -composite `"$titlecardtestPosterShort`""
         $TitleCardEPTitleArgumentsNoTextMedium = "`"$titlecardtestPosterMedium`" -size `"$TitleCardEPTitleboxsize`" xc:`"#ACD7E6`" -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -compose over -composite `"$titlecardtestPosterMedium`""
         $TitleCardEPTitleArgumentsNoTextLong = "`"$titlecardtestPosterLong`" -size `"$TitleCardEPTitleboxsize`" xc:`"#ACD7E6`" -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -compose over -composite `"$titlecardtestPosterLong`""
@@ -2949,7 +2950,7 @@ Elseif ($Testing) {
         InvokeMagickCommand -Command $magick -Arguments $TitleCardEPTitleArgumentsNoTextLongCAPS
     }
     Else {
-        Write-Log -Subtext "    Applying Title textbox only to TitleCard..." -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "    Applying Title textbox only to TitleCard..." -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
         $TitleCardTitleArgumentsNoText = "`"$TitleCardTestPosterTextless`" -size `"$TitleCardEPTitleboxsize`" xc:`"#ACD7E6`" -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -compose over -composite `"$TitleCardTestPosterTextless`""
 
         # Episode Text Titlecard Logging
@@ -2959,10 +2960,10 @@ Elseif ($Testing) {
     }
     # Text TitleCard EP overlay
     if ($AddTitleCardEPText -eq 'True') {
-        Write-Log -Subtext "Optimal font size for Episode CAPS text is: '$TitleCardoptimalFontSizeEpisodetextCAPS'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
-        Write-Log -Subtext "    Applying CAPS text: `"$EpisodetextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
-        Write-Log -Subtext "Optimal font size for Episode text is: '$TitleCardoptimalFontSizeEpisodetext'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
-        Write-Log -Subtext "    Applying text: `"$Episodetext`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "Optimal font size for Episode CAPS text is: '$TitleCardoptimalFontSizeEpisodetextCAPS'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "    Applying CAPS text: `"$EpisodetextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "Optimal font size for Episode text is: '$TitleCardoptimalFontSizeEpisodetext'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "    Applying text: `"$Episodetext`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
 
         $TitleCardEPArgumentsShort = "`"$titlecardtestPosterShort`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeEpisodetext`" -fill `"#0000FF`" -size `"$TitleCardEPboxsize`" -background `"#ACD7E6`" caption:`"$Episodetext`" -trim -gravity south -extent `"$TitleCardEPboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterShort`""
         $TitleCardEPArgumentsMedium = "`"$titlecardtestPosterMedium`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeEpisodetext`" -fill `"#0000FF`" -size `"$TitleCardEPboxsize`" -background `"#ACD7E6`" caption:`"$Episodetext`" -trim -gravity south -extent `"$TitleCardEPboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterMedium`""
@@ -2994,7 +2995,7 @@ Elseif ($Testing) {
         InvokeMagickCommand -Command $magick -Arguments $TitleCardEPArgumentsLongCAPS
     }
     Elseif ($AddTitleCardEPText -eq 'false' -and $AddTitleCardEPTitleText -eq 'True') {
-        Write-Log -Subtext "    Applying EP textbox only to TitleCard..." -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "    Applying EP textbox only to TitleCard..." -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
         $TitleCardEPArgumentsNoTextShort = "`"$titlecardtestPosterShort`" -size `"$TitleCardEPboxsize`" xc:`"#ACD7E6`" -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -compose over -composite `"$titlecardtestPosterShort`""
         $TitleCardEPArgumentsNoTextMedium = "`"$titlecardtestPosterMedium`" -size `"$TitleCardEPboxsize`" xc:`"#ACD7E6`" -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -compose over -composite `"$titlecardtestPosterMedium`""
         $TitleCardEPArgumentsNoTextLong = "`"$titlecardtestPosterLong`" -size `"$TitleCardEPboxsize`" xc:`"#ACD7E6`" -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -compose over -composite `"$titlecardtestPosterLong`""
@@ -3024,7 +3025,7 @@ Elseif ($Testing) {
         InvokeMagickCommand -Command $magick -Arguments $TitleCardEPArgumentsNoTextLongCAPS
     }
     Else {
-        Write-Log -Subtext "    Applying EP textbox only to TitleCard..." -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "    Applying EP textbox only to TitleCard..." -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
         $TitleCardEPArgumentsNoText = "`"$TitleCardTestPosterTextless`" -size `"$TitleCardEPboxsize`" xc:`"#ACD7E6`" -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -compose over -composite `"$TitleCardTestPosterTextless`""
 
         # Episode Text Titlecard Logging
@@ -3041,13 +3042,13 @@ Elseif ($Testing) {
     $minutes = $executionTime.Minutes
     $seconds = $executionTime.Seconds
     $FormattedTimespawn = $hours.ToString() + "h " + $minutes.ToString() + "m " + $seconds.ToString() + "s "
-    Write-Log -Subtext "Final cleanup starting..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
-    Write-Log -Subtext "Deleting testimage: $testimage" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+    Write-Entry -Subtext "Final cleanup starting..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+    Write-Entry -Subtext "Deleting testimage: $testimage" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
     Remove-Item -LiteralPath $testimage | out-null
-    Write-Log -Subtext "Deleting backgroundtestimage: $backgroundtestimage" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+    Write-Entry -Subtext "Deleting backgroundtestimage: $backgroundtestimage" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
     Remove-Item -LiteralPath $backgroundtestimage | out-null
-    Write-Log -Subtext "Poster/Background/TitleCard Tests finished, you can find them here: $(Join-Path $global:ScriptRoot 'test')" -Path (Join-Path $global:ScriptRoot 'Logs\Testinglog.log') -Color Green -log Info
-    Write-Log -Message "Script execution time: $FormattedTimespawn" -Path $global:ScriptRoot\Logs\Testinglog.log -Color Green -log Info
+    Write-Entry -Subtext "Poster/Background/TitleCard Tests finished, you can find them here: $(Join-Path $global:ScriptRoot 'test')" -Path (Join-Path $global:ScriptRoot 'Logs\Testinglog.log') -Color Green -log Info
+    Write-Entry -Message "Script execution time: $FormattedTimespawn" -Path $global:ScriptRoot\Logs\Testinglog.log -Color Green -log Info
     $gettestimages = Get-ChildItem $global:ScriptRoot\test
     $titlecardscount = ($gettestimages | Where-Object { $_.name -like 'Title*' }).count
     $backgroundsscount = ($gettestimages | Where-Object { $_.name -like 'back*' }).count
@@ -3191,7 +3192,7 @@ Elseif ($Testing) {
     }
 }
 else {
-    Write-Log -Message "Query plex libs..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+    Write-Entry -Message "Query plex libs..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
     $Libsoverview = @()
     foreach ($lib in $Libs.MediaContainer.Directory) {
         if ($lib.title -notin $LibstoExclude) {
@@ -3209,17 +3210,17 @@ else {
             }
             # Check if Libname has chars we cant use for Folders
             if ($lib.title -notmatch "^[^\/:*?`"<>\|\\}]+$") {
-                Write-Log -Message  "Lib: '$($lib.title)' contains invalid characters." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                Write-Log -Subtext "Please rename your lib and remove all chars that are listed here: '/, :, *, ?, `", <, >, |, \, or }'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                Write-Entry -Message  "Lib: '$($lib.title)' contains invalid characters." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "Please rename your lib and remove all chars that are listed here: '/, :, *, ?, `", <, >, |, \, or }'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                 Exit
             }
             $Libsoverview += $libtemp
         }
     }
-    Write-Log -Subtext "Found '$($Libsoverview.count)' libs and '$($LibstoExclude.count)' are excluded..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+    Write-Entry -Subtext "Found '$($Libsoverview.count)' libs and '$($LibstoExclude.count)' are excluded..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     $IncludedLibraryNames = $Libsoverview.Name -join ', '
-    Write-Log -Subtext "Included Libraries: $IncludedLibraryNames" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
-    Write-Log -Message "Query all items from all Libs, this can take a while..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+    Write-Entry -Subtext "Included Libraries: $IncludedLibraryNames" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+    Write-Entry -Message "Query all items from all Libs, this can take a while..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
     $Libraries = @()
     Foreach ($Library in $Libsoverview) {
         if ($Library.Name -notin $LibstoExclude) {
@@ -3265,17 +3266,17 @@ else {
                         $MultipleVersions = $false
                     }
                     $libpaths = $($Library.path).split(',')
-                    Write-log -Subtext "Plex Lib Paths before split: $($Library.path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                    Write-log -Subtext "Plex Lib Paths after split: $libpaths" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                    Write-Entry -Subtext "Plex Lib Paths before split: $($Library.path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                    Write-Entry -Subtext "Plex Lib Paths after split: $libpaths" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                     foreach ($libpath in $libpaths) {
                         if ($location -like "$libpath*") {
-                            Write-log -Subtext "Location: $location" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                            Write-log -Subtext "Libpath: $libpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-Entry -Subtext "Location: $location" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-Entry -Subtext "Libpath: $libpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                             $Matchedpath = AddTrailingSlash $libpath
                             $libpath = $Matchedpath
                             $extractedFolder = $location.Substring($libpath.Length)
-                            Write-log -Subtext "Matchedpath: $Matchedpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                            Write-log -Subtext "ExtractedFolder: $extractedFolder" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-Entry -Subtext "Matchedpath: $Matchedpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-Entry -Subtext "ExtractedFolder: $extractedFolder" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                         }
                     }
                 }
@@ -3283,21 +3284,21 @@ else {
                     $location = $Metadata.MediaContainer.$contentquery.media.part.file
 
                     if ($location.count -gt '1') {
-                        Write-log -Subtext "Multi File Locations: $location" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        Write-Entry -Subtext "Multi File Locations: $location" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                         $location = $location[0]
                         $MultipleVersions = $true
                     }
                     Else {
                         $MultipleVersions = $false
                     }
-                    Write-log -Subtext "File Location: $location" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                    Write-Entry -Subtext "File Location: $location" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                     $libpaths = $($Library.path).split(',')
-                    Write-log -Subtext "Plex Lib Paths before split: $($Library.path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                    Write-log -Subtext "Plex Lib Paths after split: $libpaths" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                    Write-Entry -Subtext "Plex Lib Paths before split: $($Library.path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                    Write-Entry -Subtext "Plex Lib Paths after split: $libpaths" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                     foreach ($libpath in $libpaths) {
                         if ($location -like "$libpath*") {
-                            Write-log -Subtext "Location: $location" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                            Write-log -Subtext "Libpath: $libpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-Entry -Subtext "Location: $location" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-Entry -Subtext "Libpath: $libpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                             $Matchedpath = AddTrailingSlash $libpath
                             $libpath = $Matchedpath
                             $extractedFolder = $location.Substring($libpath.Length)
@@ -3307,8 +3308,8 @@ else {
                             if ($extractedFolder -like '*/*') {
                                 $extractedFolder = $extractedFolder.split('/')[0]
                             }
-                            Write-log -Subtext "Matchedpath: $Matchedpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                            Write-log -Subtext "ExtractedFolder: $extractedFolder" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-Entry -Subtext "Matchedpath: $Matchedpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-Entry -Subtext "ExtractedFolder: $extractedFolder" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                         }
                     }
                 }
@@ -3351,13 +3352,13 @@ else {
                 $temp | Add-Member -MemberType NoteProperty -Name "PlexBackgroundUrl" -Value $Metadata.MediaContainer.$contentquery.art
                 $temp | Add-Member -MemberType NoteProperty -Name "PlexSeasonUrls" -Value $SeasonPosterUrl
                 $Libraries += $temp
-                Write-Log -Subtext "Found [$($temp.title)] of type $($temp.{Library Type}) in [$($temp.{Library Name})]" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                Write-Entry -Subtext "Found [$($temp.title)] of type $($temp.{Library Type}) in [$($temp.{Library Name})]" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
             }
         }
     }
-    Write-Log -Subtext "Found '$($Libraries.count)' Items..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+    Write-Entry -Subtext "Found '$($Libraries.count)' Items..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     $Libraries | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\PlexLibexport.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
-    Write-Log -Message "Export everything to a csv: $global:ScriptRoot\Logs\PlexLibexport.csv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+    Write-Entry -Message "Export everything to a csv: $global:ScriptRoot\Logs\PlexLibexport.csv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
 
     # Initialize counter variable
     $posterCount = 0
@@ -3370,7 +3371,7 @@ else {
 
     # Getting information of all Episodes
     if ($global:TitleCards -eq 'True') {
-        Write-Log -Message "Query episodes data from all Libs, this can take a while..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+        Write-Entry -Message "Query episodes data from all Libs, this can take a while..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
         # Query episode info
         $Episodedata = @()
         foreach ($showentry in $AllShows) {
@@ -3398,14 +3399,14 @@ else {
                 $tempseasondata | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Seasondata.MediaContainer.video.title -join ';')
                 $tempseasondata | Add-Member -MemberType NoteProperty -Name "PlexTitleCardUrls" -Value $($Seasondata.MediaContainer.video.thumb -join ',')
                 $Episodedata += $tempseasondata
-                Write-Log -Subtext "Found [$($tempseasondata.{Show Name})] of type $($tempseasondata.Type) for season $($tempseasondata.{Season Number})" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                Write-Entry -Subtext "Found [$($tempseasondata.{Show Name})] of type $($tempseasondata.Type) for season $($tempseasondata.{Season Number})" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
             }
         }
         $Episodedata | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\PlexEpisodeExport.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
-        Write-Log -Subtext "Found '$($Episodedata.Episodes.split(',').count)' Episodes..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+        Write-Entry -Subtext "Found '$($Episodedata.Episodes.split(',').count)' Episodes..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     }
     # Store all Files from asset dir in a hashtable
-    Write-Log -Message "Creating Hashtable of all posters in asset dir..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+    Write-Entry -Message "Creating Hashtable of all posters in asset dir..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
     try {
         $directoryHashtable = @{}
         $allowedExtensions = @(".jpg", ".jpeg", ".png", ".bmp")
@@ -3422,17 +3423,17 @@ else {
                 }
             }
         }
-        Write-Log -Subtext "Hashtable created..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
-        Write-Log -Subtext "Found: '$($directoryHashtable.count)' images in asset directory." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+        Write-Entry -Subtext "Hashtable created..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+        Write-Entry -Subtext "Found: '$($directoryHashtable.count)' images in asset directory." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     }
     catch {
-        Write-Log -Subtext "Error during Hashtable creation, please check Asset dir is available..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        Write-Entry -Subtext "Error during Hashtable creation, please check Asset dir is available..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
         Exit
     }
 
     # Download poster foreach movie
-    Write-Log -Message "Starting asset creation now, this can take a while..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-    Write-Log -Message "Starting Movie Poster Creation part..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+    Write-Entry -Message "Starting asset creation now, this can take a while..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+    Write-Entry -Message "Starting Movie Poster Creation part..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
     # Movie Part
     foreach ($entry in $AllMovies) {
         try {
@@ -3499,11 +3500,11 @@ else {
                         Else {
                             $Arturl = $plexurl + $entry.PlexPosterUrl
                         }
-                        Write-Log -Message "Start Poster Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                        Write-Entry -Message "Start Poster Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                         switch -Wildcard ($global:FavProvider) {
-                            'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBMoviePoster }Else { Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartMoviePoster } }
+                            'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBMoviePoster }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartMoviePoster } }
                             'FANART' { $global:posterurl = GetFanartMoviePoster }
-                            'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBMoviePoster }Else { Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartMoviePoster } }
+                            'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBMoviePoster }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartMoviePoster } }
                             'PLEX' { if ($entry.PlexPosterUrl) { GetPlexArtwork -Type ' a Movie Poster' -ArtUrl $Arturl -TempImage $PosterImage } }
                             Default { $global:posterurl = GetFanartMoviePoster }
                         }
@@ -3514,12 +3515,12 @@ else {
                         if ($global:PreferTextless -eq 'True') {
                             if (!$global:TextlessPoster -and $global:fanartfallbackposterurl) {
                                 $global:posterurl = $global:fanartfallbackposterurl
-                                Write-Log -Subtext "Took Fanart.tv Fallback poster because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                                Write-Entry -Subtext "Took Fanart.tv Fallback poster because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                                 $global:IsFallback = $true
                             }
                             if (!$global:TextlessPoster -and $global:TMDBfallbackposterurl) {
                                 $global:posterurl = $global:TMDBfallbackposterurl
-                                Write-Log -Subtext "Took TMDB Fallback poster because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                                Write-Entry -Subtext "Took TMDB Fallback poster because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                                 $global:IsFallback = $true
                             }
                         }
@@ -3532,15 +3533,15 @@ else {
                                     $global:IsFallback = $true
                                 }
                                 Else {
-                                    Write-Log -Subtext "Plex Poster Url empty, cannot search on plex, likely there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                    Write-Entry -Subtext "Plex Poster Url empty, cannot search on plex, likely there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                 }
                             }
                             if (!$global:posterurl -and $global:imdbid) {
-                                Write-Log -Subtext "Searching on IMDB for a movie poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                                Write-Entry -Subtext "Searching on IMDB for a movie poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                                 $global:posterurl = GetIMDBPoster
                                 $global:IsFallback = $true
                                 if (!$global:posterurl) {
-                                    Write-Log -Subtext "Could not find a poster on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                    Write-Entry -Subtext "Could not find a poster on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                 }
                             }
                         }
@@ -3559,37 +3560,37 @@ else {
                             }
                             catch {
                                 $statusCode = $_.Exception.Response.StatusCode.value__
-                                Write-Log -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                Write-Entry -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                 $errorCount++
                             }
-                            Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                            Write-Entry -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             if ($global:posterurl -like 'https://image.tmdb.org*') {
                                 if ($global:PosterWithText) {
-                                    Write-Log -Subtext "Downloading Poster with Text from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                    Write-Entry -Subtext "Downloading Poster with Text from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                 }
                                 Else {
-                                    Write-Log -Subtext "Downloading Textless Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                    Write-Entry -Subtext "Downloading Textless Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                 }
                             }
                             elseif ($global:posterurl -like 'https://assets.fanart.tv*') {
                                 if ($global:PosterWithText) {
-                                    Write-Log -Subtext "Downloading Poster with Text from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                    Write-Entry -Subtext "Downloading Poster with Text from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                 }
                                 Else {
-                                    Write-Log -Subtext "Downloading Textless Poster from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                    Write-Entry -Subtext "Downloading Textless Poster from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                 }
                             }
                             elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
-                                Write-Log -Subtext "Downloading Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                Write-Entry -Subtext "Downloading Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                             }
                             elseif ($global:posterurl -like "$PlexUrl*") {
-                                Write-Log -Subtext "Downloading Poster from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                Write-Entry -Subtext "Downloading Poster from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                             }
                             Else {
-                                Write-Log -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                Write-Entry -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                             }
                             if ($global:ImageProcessing -eq 'true') {
-                                Write-Log -Subtext "Processing Poster for: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                Write-Entry -Subtext "Processing Poster for: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 $CommentArguments = "convert `"$PosterImage`" -set `"comment`" `"created with ppm`" `"$PosterImage`""
                                 $CommentlogEntry = "`"$magick`" $CommentArguments"
                                 $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
@@ -3598,19 +3599,19 @@ else {
                                     # Calculate the height to maintain the aspect ratio with a width of 1000 pixels
                                     if ($AddBorder -eq 'true' -and $AddOverlay -eq 'true') {
                                         $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$PosterImage`""
-                                        Write-Log -Subtext "Resizing it | Adding Borders | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                        Write-Entry -Subtext "Resizing it | Adding Borders | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                     }
                                     if ($AddBorder -eq 'true' -and $AddOverlay -eq 'false') {
                                         $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$PosterImage`""
-                                        Write-Log -Subtext "Resizing it | Adding Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                        Write-Entry -Subtext "Resizing it | Adding Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                     }
                                     if ($AddBorder -eq 'false' -and $AddOverlay -eq 'true') {
                                         $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite `"$PosterImage`""
-                                        Write-Log -Subtext "Resizing it | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                        Write-Entry -Subtext "Resizing it | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                     }
                                     if ($AddBorder -eq 'false' -and $AddOverlay -eq 'false') {
                                         $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$PosterImage`""
-                                        Write-Log -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                        Write-Entry -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                     }
                                     $logEntry = "`"$magick`" $Arguments"
                                     $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
@@ -3618,9 +3619,9 @@ else {
 
                                     if ($AddText -eq 'true') {
                                         $optimalFontSize = Get-OptimalPointSize -text $joinedTitle -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
-                                        Write-Log -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                        Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                         $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
-                                        Write-Log -Subtext "Applying Poster text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                        Write-Entry -Subtext "Applying Poster text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                         $logEntry = "`"$magick`" $Arguments"
                                         $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                         InvokeMagickCommand -Command $magick -Arguments $Arguments
@@ -3629,7 +3630,7 @@ else {
                             }
                             Else {
                                 $Resizeargument = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$PosterImage`""
-                                Write-Log -Subtext "Resizing it... " -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                Write-Entry -Subtext "Resizing it... " -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 $logEntry = "`"$magick`" $Resizeargument"
                                 $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                 InvokeMagickCommand -Command $magick -Arguments $Resizeargument
@@ -3638,8 +3639,8 @@ else {
                             if (!$global:ImageMagickError -eq 'True') {
                                 if (Get-ChildItem -LiteralPath $PosterImage -ErrorAction SilentlyContinue) {
                                     Move-Item -LiteralPath $PosterImage $PosterImageoriginal -Force -ErrorAction SilentlyContinue
-                                    Write-Log -Subtext "Added: $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
-                                    Write-Log -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
+                                    Write-Entry -Subtext "Added: $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                                    Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
 
                                     $movietemp = New-Object psobject
                                     $movietemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
@@ -3658,14 +3659,14 @@ else {
                             }
                         }
                         Else {
-                            Write-Log -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
-                            Write-Log -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
+                            Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
+                            Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                             $Errorcount++
                         }
                     }
                     else {
                         if ($show_skipped -eq 'True' ) {
-                            Write-Log -Subtext "Already exists: $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                            Write-Entry -Subtext "Already exists: $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                         }
                     }
                 }
@@ -3715,11 +3716,11 @@ else {
                         Else {
                             $Arturl = $plexurl + $entry.PlexBackgroundUrl
                         }
-                        Write-Log -Message "Start Background Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                        Write-Entry -Message "Start Background Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                         switch -Wildcard ($global:FavProvider) {
-                            'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBMovieBackground }Else { Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartMovieBackground } }
+                            'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBMovieBackground }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartMovieBackground } }
                             'FANART' { $global:posterurl = GetFanartMovieBackground }
-                            'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBMovieBackground }Else { Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartMovieBackground } }
+                            'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBMovieBackground }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartMovieBackground } }
                             'PLEX' { if ($entry.PlexBackgroundUrl) { GetPlexArtwork -Type ' a Movie Background' -ArtUrl $Arturl -TempImage $backgroundImage } }
                             Default { $global:posterurl = GetFanartMovieBackground }
                         }
@@ -3730,12 +3731,12 @@ else {
                         if ($global:PreferTextless -eq 'True') {
                             if (!$global:TextlessPoster -and $global:fanartfallbackposterurl) {
                                 $global:posterurl = $global:fanartfallbackposterurl
-                                Write-Log -Subtext "Took Fanart.tv Fallback background because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                                Write-Entry -Subtext "Took Fanart.tv Fallback background because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                                 $global:IsFallback = $true
                             }
                             if (!$global:TextlessPoster -and $global:TMDBfallbackposterurl) {
                                 $global:posterurl = $global:TMDBfallbackposterurl
-                                Write-Log -Subtext "Took TMDB Fallback background because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                                Write-Entry -Subtext "Took TMDB Fallback background because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                                 $global:IsFallback = $true
                             }
                         }
@@ -3748,10 +3749,10 @@ else {
                                     $global:IsFallback = $true
                                 }
                                 Else {
-                                    Write-Log -Subtext "Plex Background Url empty, cannot search on plex, likely there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                    Write-Entry -Subtext "Plex Background Url empty, cannot search on plex, likely there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                 }
                                 if (!$global:posterurl) {
-                                    Write-Log -Subtext "Could not find a Background on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                    Write-Entry -Subtext "Could not find a Background on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                 }
                             }
                         }
@@ -3770,37 +3771,37 @@ else {
                             }
                             catch {
                                 $statusCode = $_.Exception.Response.StatusCode.value__
-                                Write-Log -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                Write-Entry -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                 $errorCount++
                             }
-                            Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                            Write-Entry -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             if ($global:posterurl -like 'https://image.tmdb.org*') {
                                 if ($global:PosterWithText) {
-                                    Write-Log -Subtext "Downloading background with Text from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                    Write-Entry -Subtext "Downloading background with Text from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                 }
                                 Else {
-                                    Write-Log -Subtext "Downloading Textless background from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                    Write-Entry -Subtext "Downloading Textless background from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                 }
                             }
                             elseif ($global:posterurl -like 'https://assets.fanart.tv*') {
                                 if ($global:PosterWithText) {
-                                    Write-Log -Subtext "Downloading background with Text from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                    Write-Entry -Subtext "Downloading background with Text from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                 }
                                 Else {
-                                    Write-Log -Subtext "Downloading Textless background from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                    Write-Entry -Subtext "Downloading Textless background from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                 }
                             }
                             elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
-                                Write-Log -Subtext "Downloading background from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                Write-Entry -Subtext "Downloading background from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                             }
                             elseif ($global:posterurl -like "$PlexUrl*") {
-                                Write-Log -Subtext "Downloading Background from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                Write-Entry -Subtext "Downloading Background from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                             }
                             Else {
-                                Write-Log -Subtext "Downloading background from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                Write-Entry -Subtext "Downloading background from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                             }
                             if ($global:ImageProcessing -eq 'true') {
-                                Write-Log -Subtext "Processing background for: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                Write-Entry -Subtext "Processing background for: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 $CommentArguments = "convert `"$backgroundImage`" -set `"comment`" `"created with ppm`" `"$backgroundImage`""
                                 $CommentlogEntry = "`"$magick`" $CommentArguments"
                                 $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
@@ -3809,19 +3810,19 @@ else {
                                     # Calculate the height to maintain the aspect ratio with a width of 1000 pixels
                                     if ($AddBackgroundBorder -eq 'true' -and $AddBackgroundOverlay -eq 'true') {
                                         $Arguments = "`"$backgroundImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$backgroundoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundImage`""
-                                        Write-Log -Subtext "Resizing it | Adding Borders | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                        Write-Entry -Subtext "Resizing it | Adding Borders | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                     }
                                     if ($AddBackgroundBorder -eq 'true' -and $AddBackgroundOverlay -eq 'false') {
                                         $Arguments = "`"$backgroundImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundImage`""
-                                        Write-Log -Subtext "Resizing it | Adding Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                        Write-Entry -Subtext "Resizing it | Adding Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                     }
                                     if ($AddBackgroundBorder -eq 'false' -and $AddBackgroundOverlay -eq 'true') {
                                         $Arguments = "`"$backgroundImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$Backgroundoverlay`" -gravity south -quality $global:outputQuality -composite `"$backgroundImage`""
-                                        Write-Log -Subtext "Resizing it | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                        Write-Entry -Subtext "Resizing it | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                     }
                                     if ($AddBackgroundBorder -eq 'false' -and $AddBackgroundOverlay -eq 'false') {
                                         $Arguments = "`"$backgroundImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$backgroundImage`""
-                                        Write-Log -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                        Write-Entry -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                     }
                                     $logEntry = "`"$magick`" $Arguments"
                                     $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
@@ -3829,9 +3830,9 @@ else {
 
                                     if ($AddBackgroundText -eq 'true') {
                                         $optimalFontSize = Get-OptimalPointSize -text $joinedTitle -font $fontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
-                                        Write-Log -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                        Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                         $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -size `"$Backgroundboxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
-                                        Write-Log -Subtext "Applying Background text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                        Write-Entry -Subtext "Applying Background text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                         $logEntry = "`"$magick`" $Arguments"
                                         $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                         InvokeMagickCommand -Command $magick -Arguments $Arguments
@@ -3840,7 +3841,7 @@ else {
                             }
                             Else {
                                 $Resizeargument = "`"$backgroundImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$backgroundImage`""
-                                Write-Log -Subtext "Resizing it... " -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                Write-Entry -Subtext "Resizing it... " -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 $logEntry = "`"$magick`" $Resizeargument"
                                 $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                 InvokeMagickCommand -Command $magick -Arguments $Resizeargument
@@ -3849,8 +3850,8 @@ else {
                                 # Move file back to original naming with Brackets.
                                 if (Get-ChildItem -LiteralPath $backgroundImage -ErrorAction SilentlyContinue) {
                                     Move-Item -LiteralPath $backgroundImage $backgroundImageoriginal -Force -ErrorAction SilentlyContinue
-                                    Write-Log -Subtext "Added: $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
-                                    Write-Log -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
+                                    Write-Entry -Subtext "Added: $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                                    Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
 
                                     $moviebackgroundtemp = New-Object psobject
                                     $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
@@ -3870,31 +3871,31 @@ else {
                             }
                         }
                         Else {
-                            Write-Log -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
-                            Write-Log -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
+                            Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
+                            Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                             $Errorcount++
                         }
                     }
                     else {
                         if ($show_skipped -eq 'True' ) {
-                            Write-Log -Subtext "Already exists: $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                            Write-Entry -Subtext "Already exists: $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                         }
                     }
                 }
             }
 
             Else {
-                Write-Log -Message "Missing RootFolder for: $($entry.title) - you have to manually create the poster for it..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Message "Missing RootFolder for: $($entry.title) - you have to manually create the poster for it..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                 $Errorcount++
             }
         }
         catch {
-            Write-Log -Subtext "Could not query entries from movies array, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "Could not query entries from movies array, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             $errorCount++
         }
     }
 
-    Write-Log -Message "Starting Show/Season Poster/Background/TitleCard Creation part..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+    Write-Entry -Message "Starting Show/Season Poster/Background/TitleCard Creation part..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
     # Show Part
     foreach ($entry in $AllShows) {
         if ($($entry.RootFoldername)) {
@@ -3963,11 +3964,11 @@ else {
             # Now we can start the Poster Part
             if ($global:Posters -eq 'true') {
                 if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
-                    Write-Log -Message "Start Poster Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                    Write-Entry -Message "Start Poster Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                     switch -Wildcard ($global:FavProvider) {
-                        'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBShowPoster }Else { Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartShowPoster } }
+                        'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBShowPoster }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartShowPoster } }
                         'FANART' { $global:posterurl = GetFanartShowPoster }
-                        'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBShowPoster }Else { Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartShowPoster } }
+                        'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBShowPoster }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartShowPoster } }
                         'PLEX' { if ($entry.PlexPosterUrl) { GetPlexArtwork -Type ' a Show Poster' -ArtUrl $Arturl -TempImage $PosterImage } }
                         Default { $global:posterurl = GetFanartShowPoster }
                     }
@@ -3978,12 +3979,12 @@ else {
                     if ($global:PreferTextless -eq 'True') {
                         if (!$global:TextlessPoster -and $global:fanartfallbackposterurl) {
                             $global:posterurl = $global:fanartfallbackposterurl
-                            Write-Log -Subtext "Took Fanart.tv Fallback poster because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                            Write-Entry -Subtext "Took Fanart.tv Fallback poster because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                             $global:IsFallback = $true
                         }
                         if (!$global:TextlessPoster -and $global:TMDBfallbackposterurl) {
                             $global:posterurl = $global:TMDBfallbackposterurl
-                            Write-Log -Subtext "Took TMDB Fallback poster because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                            Write-Entry -Subtext "Took TMDB Fallback poster because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                             $global:IsFallback = $true
                         }
                         # try to find textless on TVDB
@@ -4007,10 +4008,10 @@ else {
                                 $global:plexalreadysearched = $True
                             }
                             Else {
-                                Write-Log -Subtext "Plex Poster Url empty, cannot search on plex, likely there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                Write-Entry -Subtext "Plex Poster Url empty, cannot search on plex, likely there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                             }
                             if (!$global:posterurl) {
-                                Write-Log -Subtext "Could not find a poster on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                Write-Entry -Subtext "Could not find a poster on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                             }
                         }
                     }
@@ -4021,10 +4022,10 @@ else {
                             $global:plexalreadysearched = $True
                         }
                         Else {
-                            Write-Log -Subtext "Plex Poster Url empty, cannot search on plex, likely there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                            Write-Entry -Subtext "Plex Poster Url empty, cannot search on plex, likely there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                         }
                         if (!$global:posterurl) {
-                            Write-Log -Subtext "Could not find a poster on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            Write-Entry -Subtext "Could not find a poster on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                         }
                     }
                     if ($fontAllCaps -eq 'true') {
@@ -4047,38 +4048,38 @@ else {
                         }
                         catch {
                             $statusCode = $_.Exception.Response.StatusCode.value__
-                            Write-Log -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            Write-Entry -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                             $errorCount++
                         }
-                        Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                        Write-Entry -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                         if ($global:posterurl -like 'https://image.tmdb.org*') {
                             if ($global:PosterWithText) {
-                                Write-Log -Subtext "Downloading Poster with Text from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                Write-Entry -Subtext "Downloading Poster with Text from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                             }
                             Else {
-                                Write-Log -Subtext "Downloading Textless Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                Write-Entry -Subtext "Downloading Textless Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                             }
                         }
                         elseif ($global:posterurl -like 'https://assets.fanart.tv*') {
                             if ($global:PosterWithText) {
-                                Write-Log -Subtext "Downloading Poster with Text from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                Write-Entry -Subtext "Downloading Poster with Text from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                             }
                             Else {
-                                Write-Log -Subtext "Downloading Textless Poster from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                Write-Entry -Subtext "Downloading Textless Poster from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                             }
                         }
                         elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
-                            Write-Log -Subtext "Downloading Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                            Write-Entry -Subtext "Downloading Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                         }
                         elseif ($global:posterurl -like "$PlexUrl*") {
-                            Write-Log -Subtext "Downloading Poster from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                            Write-Entry -Subtext "Downloading Poster from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                         }
                         Else {
-                            Write-Log -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                            Write-Entry -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                             $global:IsFallback = $true
                         }
                         if ($global:ImageProcessing -eq 'true') {
-                            Write-Log -Subtext "Processing Poster for: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                            Write-Entry -Subtext "Processing Poster for: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             $CommentArguments = "convert `"$PosterImage`" -set `"comment`" `"created with ppm`" `"$PosterImage`""
                             $CommentlogEntry = "`"$magick`" $CommentArguments"
                             $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
@@ -4087,19 +4088,19 @@ else {
                                 # Calculate the height to maintain the aspect ratio with a width of 1000 pixels
                                 if ($AddBorder -eq 'true' -and $AddOverlay -eq 'true') {
                                     $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$PosterImage`""
-                                    Write-Log -Subtext "Resizing it | Adding Borders | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                    Write-Entry -Subtext "Resizing it | Adding Borders | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 }
                                 if ($AddBorder -eq 'true' -and $AddOverlay -eq 'false') {
                                     $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$PosterImage`""
-                                    Write-Log -Subtext "Resizing it | Adding Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                    Write-Entry -Subtext "Resizing it | Adding Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 }
                                 if ($AddBorder -eq 'false' -and $AddOverlay -eq 'true') {
                                     $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite `"$PosterImage`""
-                                    Write-Log -Subtext "Resizing it | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                    Write-Entry -Subtext "Resizing it | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 }
                                 if ($AddBorder -eq 'false' -and $AddOverlay -eq 'false') {
                                     $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$PosterImage`""
-                                    Write-Log -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                    Write-Entry -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 }
                                 $logEntry = "`"$magick`" $Arguments"
                                 $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
@@ -4107,9 +4108,9 @@ else {
 
                                 if ($AddText -eq 'true') {
                                     $optimalFontSize = Get-OptimalPointSize -text $joinedTitle -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
-                                    Write-Log -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                    Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                     $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
-                                    Write-Log -Subtext "Applying Poster text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                    Write-Entry -Subtext "Applying Poster text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                     $logEntry = "`"$magick`" $Arguments"
                                     $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                     InvokeMagickCommand -Command $magick -Arguments $Arguments
@@ -4118,7 +4119,7 @@ else {
                         }
                         Else {
                             $Resizeargument = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$PosterImage`""
-                            Write-Log -Subtext "Resizing it... " -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                            Write-Entry -Subtext "Resizing it... " -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             $logEntry = "`"$magick`" $Resizeargument"
                             $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                             InvokeMagickCommand -Command $magick -Arguments $Resizeargument
@@ -4127,8 +4128,8 @@ else {
                             if (Get-ChildItem -LiteralPath $PosterImage -ErrorAction SilentlyContinue) {
                                 # Move file back to original naming with Brackets.
                                 Move-Item -LiteralPath $PosterImage $PosterImageoriginal -Force -ErrorAction SilentlyContinue
-                                Write-Log -Subtext "Added: $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
-                                Write-Log -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
+                                Write-Entry -Subtext "Added: $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                                Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                 $posterCount++
 
                                 $showtemp = New-Object psobject
@@ -4147,14 +4148,14 @@ else {
                         }
                     }
                     Else {
-                        Write-Log -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
-                        Write-Log -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
+                        Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
+                        Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                         $Errorcount++
                     }
                 }
                 else {
                     if ($show_skipped -eq 'True' ) {
-                        Write-Log -Subtext "Already exists: $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                        Write-Entry -Subtext "Already exists: $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                     }
                 }
             }
@@ -4207,11 +4208,11 @@ else {
                         $Arturl = $plexurl + $entry.PlexBackgroundUrl
                     }
 
-                    Write-Log -Message "Start Background Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                    Write-Entry -Message "Start Background Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                     switch -Wildcard ($global:FavProvider) {
-                        'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBShowBackground }Else { Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartShowBackground } }
+                        'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBShowBackground }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartShowBackground } }
                         'FANART' { $global:posterurl = GetFanartShowBackground }
-                        'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBShowBackground }Else { Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartShowBackground } }
+                        'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBShowBackground }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartShowBackground } }
                         'PLEX' { if ($entry.PlexBackgroundUrl) { GetPlexArtwork -Type ' a Show Background' -ArtUrl $Arturl -TempImage $backgroundImage } }
                         Default { $global:posterurl = GetFanartShowBackground }
                     }
@@ -4222,12 +4223,12 @@ else {
                     if ($global:PreferTextless -eq 'True') {
                         if (!$global:TextlessPoster -and $global:fanartfallbackposterurl) {
                             $global:posterurl = $global:fanartfallbackposterurl
-                            Write-Log -Subtext "Took Fanart.tv Fallback background because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                            Write-Entry -Subtext "Took Fanart.tv Fallback background because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                             $global:IsFallback = $true
                         }
                         if (!$global:TextlessPoster -and $global:TMDBfallbackposterurl) {
                             $global:posterurl = $global:TMDBfallbackposterurl
-                            Write-Log -Subtext "Took TMDB Fallback background because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                            Write-Entry -Subtext "Took TMDB Fallback background because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                             $global:IsFallback = $true
                         }
                     }
@@ -4242,10 +4243,10 @@ else {
                                 GetPlexArtwork -Type ' a Show Background' -ArtUrl $Arturl -TempImage $backgroundImage
                             }
                             Else {
-                                Write-Log -Subtext "Plex Background Url empty, cannot search on plex, likely there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                Write-Entry -Subtext "Plex Background Url empty, cannot search on plex, likely there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                             }
                             if (!$global:posterurl) {
-                                Write-Log -Subtext "Could not find a background on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                Write-Entry -Subtext "Could not find a background on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                             }
                         }
 
@@ -4265,37 +4266,37 @@ else {
                         }
                         catch {
                             $statusCode = $_.Exception.Response.StatusCode.value__
-                            Write-Log -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            Write-Entry -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                             $errorCount++
                         }
-                        Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                        Write-Entry -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                         if ($global:posterurl -like 'https://image.tmdb.org*') {
                             if ($global:PosterWithText) {
-                                Write-Log -Subtext "Downloading background with Text from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                Write-Entry -Subtext "Downloading background with Text from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                             }
                             Else {
-                                Write-Log -Subtext "Downloading Textless background from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                Write-Entry -Subtext "Downloading Textless background from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                             }
                         }
                         elseif ($global:posterurl -like 'https://assets.fanart.tv*') {
                             if ($global:PosterWithText) {
-                                Write-Log -Subtext "Downloading background with Text from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                Write-Entry -Subtext "Downloading background with Text from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                             }
                             Else {
-                                Write-Log -Subtext "Downloading Textless background from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                Write-Entry -Subtext "Downloading Textless background from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                             }
                         }
                         elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
-                            Write-Log -Subtext "Downloading background from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                            Write-Entry -Subtext "Downloading background from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                         }
                         elseif ($global:posterurl -like "$PlexUrl*") {
-                            Write-Log -Subtext "Downloading Background from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                            Write-Entry -Subtext "Downloading Background from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                         }
                         Else {
-                            Write-Log -Subtext "Downloading background from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                            Write-Entry -Subtext "Downloading background from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                         }
                         if ($global:ImageProcessing -eq 'true') {
-                            Write-Log -Subtext "Processing background for: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                            Write-Entry -Subtext "Processing background for: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             $CommentArguments = "convert `"$backgroundImage`" -set `"comment`" `"created with ppm`" `"$backgroundImage`""
                             $CommentlogEntry = "`"$magick`" $CommentArguments"
                             $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
@@ -4304,19 +4305,19 @@ else {
                                 # Calculate the height to maintain the aspect ratio with a width of 1000 pixels
                                 if ($AddBackgroundBorder -eq 'true' -and $AddBackgroundOverlay -eq 'true') {
                                     $Arguments = "`"$backgroundImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$Backgroundoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundImage`""
-                                    Write-Log -Subtext "Resizing it | Adding Borders | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                    Write-Entry -Subtext "Resizing it | Adding Borders | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 }
                                 if ($AddBackgroundBorder -eq 'true' -and $AddBackgroundOverlay -eq 'false') {
                                     $Arguments = "`"$backgroundImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundImage`""
-                                    Write-Log -Subtext "Resizing it | Adding Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                    Write-Entry -Subtext "Resizing it | Adding Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 }
                                 if ($AddBackgroundBorder -eq 'false' -and $AddBackgroundOverlay -eq 'true') {
                                     $Arguments = "`"$backgroundImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$Backgroundoverlay`" -gravity south -quality $global:outputQuality -composite `"$backgroundImage`""
-                                    Write-Log -Subtext "Resizing it | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                    Write-Entry -Subtext "Resizing it | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 }
                                 if ($AddBackgroundBorder -eq 'false' -and $AddBackgroundOverlay -eq 'false') {
                                     $Arguments = "`"$backgroundImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$backgroundImage`""
-                                    Write-Log -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                    Write-Entry -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 }
                                 $logEntry = "`"$magick`" $Arguments"
                                 $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
@@ -4324,9 +4325,9 @@ else {
 
                                 if ($AddBackgroundText -eq 'true') {
                                     $optimalFontSize = Get-OptimalPointSize -text $joinedTitle -font $fontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
-                                    Write-Log -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                    Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                     $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -size `"$Backgroundboxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
-                                    Write-Log -Subtext "Applying Background text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                    Write-Entry -Subtext "Applying Background text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                     $logEntry = "`"$magick`" $Arguments"
                                     $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                     InvokeMagickCommand -Command $magick -Arguments $Arguments
@@ -4335,7 +4336,7 @@ else {
                         }
                         Else {
                             $Resizeargument = "`"$backgroundImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$backgroundImage`""
-                            Write-Log -Subtext "Resizing it... " -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                            Write-Entry -Subtext "Resizing it... " -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             $logEntry = "`"$magick`" $Resizeargument"
                             $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                             InvokeMagickCommand -Command $magick -Arguments $Resizeargument
@@ -4345,8 +4346,8 @@ else {
                             if (Get-ChildItem -LiteralPath $backgroundImage -ErrorAction SilentlyContinue) {
                                 Move-Item -LiteralPath $backgroundImage $backgroundImageoriginal -Force -ErrorAction SilentlyContinue
                                 $BackgroundCount++
-                                Write-Log -Subtext "Added: $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
-                                Write-Log -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
+                                Write-Entry -Subtext "Added: $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                                Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
 
                                 $showbackgroundtemp = New-Object psobject
                                 $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
@@ -4365,14 +4366,14 @@ else {
                         }
                     }
                     Else {
-                        Write-Log -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
-                        Write-Log -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
+                        Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
+                        Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                         $Errorcount++
                     }
                 }
                 else {
                     if ($show_skipped -eq 'True' ) {
-                        Write-Log -Subtext "Already exists: $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                        Write-Entry -Subtext "Already exists: $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                     }
                 }
             }
@@ -4429,7 +4430,7 @@ else {
                             $Arturl = $plexurl + $global:PlexSeasonUrl
                         }
                         if (!$Seasonpostersearchtext) {
-                            Write-Log -Message "Start Season Poster Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                            Write-Entry -Message "Start Season Poster Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             $Seasonpostersearchtext = $true
                         }
                         # do a specific order
@@ -4453,15 +4454,15 @@ else {
                                     GetPlexArtwork -Type ' a Season Poster' -ArtUrl $Arturl -TempImage $SeasonImage
                                 }
                                 Else {
-                                    Write-Log -Subtext "Plex Season Poster Url empty, cannot search on plex, likely there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                    Write-Entry -Subtext "Plex Season Poster Url empty, cannot search on plex, likely there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                 }
                                 if (!$global:posterurl) {
-                                    Write-Log -Subtext "Could not find a season poster on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                    Write-Entry -Subtext "Could not find a season poster on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                 }
                             }
                         }
                         Else {
-                            Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                            Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                             $global:posterurl = GetFanartSeasonPoster
                             if (!$global:posterurl) {
                                 $global:IsFallback = $true
@@ -4474,17 +4475,17 @@ else {
                                         GetPlexArtwork -Type ' a Season Poster' -ArtUrl $Arturl -TempImage $SeasonImage
                                     }
                                     Else {
-                                        Write-Log -Subtext "Plex Season Poster Url empty, cannot search on plex, likely there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                        Write-Entry -Subtext "Plex Season Poster Url empty, cannot search on plex, likely there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                     }
                                     if (!$global:posterurl) {
-                                        Write-Log -Subtext "Could not find a season poster on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                        Write-Entry -Subtext "Could not find a season poster on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                     }
                                 }
                             }
                         }
                         if ($global:TMDBSeasonFallback -and $global:PosterWithText) {
                             $global:posterurl = $global:TMDBSeasonFallback
-                            Write-Log -Subtext "Taking Season Poster with text as fallback from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                            Write-Entry -Subtext "Taking Season Poster with text as fallback from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                             $global:IsFallback = $true
                         }
                         if ($global:posterurl -or $global:PlexartworkDownloaded ) {
@@ -4496,36 +4497,36 @@ else {
                                 }
                                 catch {
                                     $statusCode = $_.Exception.Response.StatusCode.value__
-                                    Write-Log -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                    Write-Entry -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                     $errorCount++
                                 }
-                                Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                Write-Entry -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 if ($global:posterurl -like 'https://image.tmdb.org*') {
-                                    Write-Log -Subtext "Downloading Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                    Write-Entry -Subtext "Downloading Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                     if ($global:FavProvider -ne 'TMDB') {
                                         $global:IsFallback = $true
                                     }
                                 }
                                 elseif ($global:posterurl -like 'https://assets.fanart.tv*') {
-                                    Write-Log -Subtext "Downloading Poster from 'Fanart.tv'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                    Write-Entry -Subtext "Downloading Poster from 'Fanart.tv'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                     if ($global:FavProvider -ne 'FANART') {
                                         $global:IsFallback = $true
                                     }
                                 }
                                 elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
-                                    Write-Log -Subtext "Downloading Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                    Write-Entry -Subtext "Downloading Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                     if ($global:FavProvider -ne 'TVDB') {
                                         $global:IsFallback = $true
                                     }
                                 }
                                 elseif ($global:posterurl -like "$PlexUrl*") {
-                                    Write-Log -Subtext "Downloading Poster from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                    Write-Entry -Subtext "Downloading Poster from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                     if ($global:FavProvider -ne 'PLEX') {
                                         $global:IsFallback = $true
                                     }
                                 }
                                 Else {
-                                    Write-Log -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                    Write-Entry -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                     $PosterUnknownCount++
                                     if ($global:FavProvider -ne 'IMDB') {
                                         $global:IsFallback = $true
@@ -4540,19 +4541,19 @@ else {
                                         # Resize Image to 2000x3000 and apply Border and overlay
                                         if ($AddBorder -eq 'true' -and $AddOverlay -eq 'true') {
                                             $Arguments = "`"$SeasonImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$SeasonImage`""
-                                            Write-Log -Subtext "Resizing it | Adding Borders | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                            Write-Entry -Subtext "Resizing it | Adding Borders | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                         }
                                         if ($AddBorder -eq 'true' -and $AddOverlay -eq 'false') {
                                             $Arguments = "`"$SeasonImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$SeasonImage`""
-                                            Write-Log -Subtext "Resizing it | Adding Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                            Write-Entry -Subtext "Resizing it | Adding Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                         }
                                         if ($AddBorder -eq 'false' -and $AddOverlay -eq 'true') {
                                             $Arguments = "`"$SeasonImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite `"$SeasonImage`""
-                                            Write-Log -Subtext "Resizing it | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                            Write-Entry -Subtext "Resizing it | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                         }
                                         if ($AddBorder -eq 'false' -and $AddOverlay -eq 'false') {
                                             $Arguments = "`"$SeasonImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$SeasonImage`""
-                                            Write-Log -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                            Write-Entry -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                         }
 
                                         $logEntry = "`"$magick`" $Arguments"
@@ -4562,11 +4563,11 @@ else {
                                         if ($AddText -eq 'true') {
                                             $optimalFontSize = Get-OptimalPointSize -text $global:seasonTitle -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
 
-                                            Write-Log -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                            Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
 
                                             $Arguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$global:seasonTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
 
-                                            Write-Log -Subtext "Applying seasonTitle text: `"$global:seasonTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                            Write-Entry -Subtext "Applying seasonTitle text: `"$global:seasonTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                             $logEntry = "`"$magick`" $Arguments"
                                             $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                             InvokeMagickCommand -Command $magick -Arguments $Arguments
@@ -4582,37 +4583,37 @@ else {
                                 }
                                 catch {
                                     $statusCode = $_.Exception.Response.StatusCode.value__
-                                    Write-Log -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                    Write-Entry -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                     $errorCount++
                                 }
-                                Write-Log -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                Write-Entry -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 if ($global:posterurl -like 'https://image.tmdb.org*') {
-                                    Write-Log -Subtext "Downloading Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                    Write-Entry -Subtext "Downloading Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                     if ($global:FavProvider -ne 'TMDB') {
                                         $global:IsFallback = $true
                                     }
                                 }
                                 elseif ($global:posterurl -like 'https://assets.fanart.tv*') {
-                                    Write-Log -Subtext "Downloading Poster from 'Fanart.tv'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                    Write-Entry -Subtext "Downloading Poster from 'Fanart.tv'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                     $PosterUnknownCount++
                                     if ($global:FavProvider -ne 'FANART') {
                                         $global:IsFallback = $true
                                     }
                                 }
                                 elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
-                                    Write-Log -Subtext "Downloading Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                    Write-Entry -Subtext "Downloading Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                     if ($global:FavProvider -ne 'TVDB') {
                                         $global:IsFallback = $true
                                     }
                                 }
                                 elseif ($global:posterurl -like "$PlexUrl*") {
-                                    Write-Log -Subtext "Downloading Poster from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                    Write-Entry -Subtext "Downloading Poster from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                     if ($global:FavProvider -ne 'PLEX') {
                                         $global:IsFallback = $true
                                     }
                                 }
                                 Else {
-                                    Write-Log -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                    Write-Entry -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                     $PosterUnknownCount++
                                     if ($global:FavProvider -ne 'IMDB') {
                                         $global:IsFallback = $true
@@ -4621,7 +4622,7 @@ else {
                                 if (Get-ChildItem -LiteralPath $SeasonImage -ErrorAction SilentlyContinue) {
                                     # Resize Image to 2000x3000
                                     $Resizeargument = "`"$SeasonImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$SeasonImage`""
-                                    Write-Log -Subtext "Resizing it... " -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                    Write-Entry -Subtext "Resizing it... " -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                     $logEntry = "`"$magick`" $Resizeargument"
                                     $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                     InvokeMagickCommand -Command $magick -Arguments $Resizeargument
@@ -4631,8 +4632,8 @@ else {
                                 if (Get-ChildItem -LiteralPath $SeasonImage -ErrorAction SilentlyContinue) {
                                     # Move file back to original naming with Brackets.
                                     Move-Item -LiteralPath $SeasonImage -destination $SeasonImageoriginal -Force -ErrorAction SilentlyContinue
-                                    Write-Log -Subtext "Added: $SeasonImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
-                                    Write-Log -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
+                                    Write-Entry -Subtext "Added: $SeasonImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                                    Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                     $SeasonCount++
                                     $posterCount++
 
@@ -4652,14 +4653,14 @@ else {
                             }
                         }
                         Else {
-                            Write-Log -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
-                            Write-Log -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
+                            Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
+                            Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                             $Errorcount++
                         }
                     }
                     else {
                         if ($show_skipped -eq 'True' ) {
-                            Write-Log -Subtext "Already exists: $SeasonImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                            Write-Entry -Subtext "Already exists: $SeasonImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                         }
                     }
                 }
@@ -4735,7 +4736,7 @@ else {
                                 $EpisodeTempImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\temp.jpg"
                                 if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
                                     if (!$Episodepostersearchtext) {
-                                        Write-Log -Message "Start Title Card Search for: $global:show_name - $global:SeasonEPNumber" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                        Write-Entry -Message "Start Title Card Search for: $global:show_name - $global:SeasonEPNumber" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                         $Episodepostersearchtext = $true
                                     }
                                     if ($PlexToken) {
@@ -4757,15 +4758,15 @@ else {
                                                     GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage
                                                 }
                                                 Else {
-                                                    Write-Log -Subtext "Plex TitleCard Url empty, cannot search on plex, likely there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                                    Write-Entry -Subtext "Plex TitleCard Url empty, cannot search on plex, likely there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                                 }
                                                 if (!$global:posterurl) {
-                                                    Write-Log -Subtext "Could not find a TitleCard on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                                    Write-Entry -Subtext "Could not find a TitleCard on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                 }
                                             }
                                         }
                                         else {
-                                            Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                            Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                             $global:posterurl = GetTVDBShowBackground
                                             if (!$global:posterurl) {
                                                 $global:IsFallback = $true
@@ -4773,10 +4774,10 @@ else {
                                                     GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage
                                                 }
                                                 Else {
-                                                    Write-Log -Subtext "Plex TitleCard Url empty, cannot search on plex, likely there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                                    Write-Entry -Subtext "Plex TitleCard Url empty, cannot search on plex, likely there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                                 }
                                                 if (!$global:posterurl) {
-                                                    Write-Log -Subtext "Could not find a TitleCard on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                                    Write-Entry -Subtext "Could not find a TitleCard on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                 }
                                             }
                                         }
@@ -4793,15 +4794,15 @@ else {
                                                     GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage
                                                 }
                                                 Else {
-                                                    Write-Log -Subtext "Plex TitleCard Url empty, cannot search on plex, likely there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                                    Write-Entry -Subtext "Plex TitleCard Url empty, cannot search on plex, likely there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                                 }
                                                 if (!$global:posterurl) {
-                                                    Write-Log -Subtext "Could not find a TitleCard on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                                    Write-Entry -Subtext "Could not find a TitleCard on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                 }
                                             }
                                         }
                                         else {
-                                            Write-Log -Subtext "Can't search on TVDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                            Write-Entry -Subtext "Can't search on TVDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                             $global:posterurl = GetTMDBShowBackground
                                             if (!$global:posterurl) {
                                                 $global:IsFallback = $true
@@ -4809,10 +4810,10 @@ else {
                                                     GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage
                                                 }
                                                 Else {
-                                                    Write-Log -Subtext "Plex TitleCard Url empty, cannot search on plex, likely there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                                    Write-Entry -Subtext "Plex TitleCard Url empty, cannot search on plex, likely there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                                 }
                                                 if (!$global:posterurl) {
-                                                    Write-Log -Subtext "Could not find a TitleCard on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                                    Write-Entry -Subtext "Could not find a TitleCard on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                 }
                                             }
                                         }
@@ -4827,25 +4828,25 @@ else {
                                             }
                                             catch {
                                                 $statusCode = $_.Exception.Response.StatusCode.value__
-                                                Write-Log -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                                Write-Entry -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                 $errorCount++
                                             }
                                             if ($global:TempImagecopied -ne 'True') {
-                                                Write-Log -Subtext "Title Card url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                Write-Entry -Subtext "Title Card url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                 if ($global:posterurl -like 'https://image.tmdb.org*') {
-                                                    Write-Log -Subtext "Downloading Title Card from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                                    Write-Entry -Subtext "Downloading Title Card from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                                     if ($global:FavProvider -ne 'TMDB') {
                                                         $global:IsFallback = $true
                                                     }
                                                 }
                                                 if ($global:posterurl -like 'https://artworks.thetvdb.com*') {
-                                                    Write-Log -Subtext "Downloading Title Card from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                                    Write-Entry -Subtext "Downloading Title Card from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                                     if ($global:FavProvider -ne 'TVDB') {
                                                         $global:IsFallback = $true
                                                     }
                                                 }
                                                 if ($global:posterurl -like "$PlexUrl*") {
-                                                    Write-Log -Subtext "Downloading Title Card from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                                    Write-Entry -Subtext "Downloading Title Card from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                                     if ($global:FavProvider -ne 'PLEX') {
                                                         $global:IsFallback = $true
                                                     }
@@ -4857,7 +4858,7 @@ else {
                                             $global:TempImagecopied = $true
                                             # Check temp image
                                             if ((Get-ChildItem -LiteralPath $EpisodeTempImage -ErrorAction SilentlyContinue).length -eq '0') {
-                                                Write-Log -Subtext "Temp image is corrupt, cannot proceed" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                                Write-Entry -Subtext "Temp image is corrupt, cannot proceed" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                 $Errorcount++
                                             }
                                             Else {
@@ -4870,19 +4871,19 @@ else {
                                                         # Resize Image to 2000x3000 and apply Border and overlay
                                                         if ($AddTitleCardBorder -eq 'true' -and $AddTitleCardOverlay -eq 'true') {
                                                             $Arguments = "`"$EpisodeImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$TitleCardoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$TitleCardborderwidthsecond`"  -bordercolor `"$TitleCardbordercolor`" -border `"$TitleCardborderwidth`" `"$EpisodeImage`""
-                                                            Write-Log -Subtext "Resizing it | Adding Borders | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                            Write-Entry -Subtext "Resizing it | Adding Borders | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                         }
                                                         if ($AddTitleCardBorder -eq 'true' -and $AddTitleCardOverlay -eq 'false') {
                                                             $Arguments = "`"$EpisodeImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" -shave `"$TitleCardborderwidthsecond`"  -bordercolor `"$TitleCardbordercolor`" -border `"$TitleCardborderwidth`" `"$EpisodeImage`""
-                                                            Write-Log -Subtext "Resizing it | Adding Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                            Write-Entry -Subtext "Resizing it | Adding Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                         }
                                                         if ($AddTitleCardBorder -eq 'false' -and $AddTitleCardOverlay -eq 'true') {
                                                             $Arguments = "`"$EpisodeImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$TitleCardoverlay`" -gravity south -quality $global:outputQuality -composite `"$EpisodeImage`""
-                                                            Write-Log -Subtext "Resizing it | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                            Write-Entry -Subtext "Resizing it | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                         }
                                                         if ($AddTitleCardBorder -eq 'false' -and $AddTitleCardOverlay -eq 'false') {
                                                             $Arguments = "`"$EpisodeImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$EpisodeImage`""
-                                                            Write-Log -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                            Write-Entry -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                         }
                                                         $logEntry = "`"$magick`" $Arguments"
                                                         $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
@@ -4894,11 +4895,11 @@ else {
                                                             }
                                                             $optimalFontSize = Get-OptimalPointSize -text $global:EPTitle -font $TitleCardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
 
-                                                            Write-Log -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                            Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
 
                                                             $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
 
-                                                            Write-Log -Subtext "Applying EPTitle text: `"$global:EPTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                            Write-Entry -Subtext "Applying EPTitle text: `"$global:EPTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                             $logEntry = "`"$magick`" $Arguments"
                                                             $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                                             InvokeMagickCommand -Command $magick -Arguments $Arguments
@@ -4910,11 +4911,11 @@ else {
                                                             }
                                                             $optimalFontSize = Get-OptimalPointSize -text  $global:SeasonEPNumber -font $TitleCardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize
 
-                                                            Write-Log -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                            Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
 
                                                             $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPfontcolor`" -size `"$TitleCardEPboxsize`" -background none caption:`"$global:SeasonEPNumber`" -trim -gravity south -extent `"$TitleCardEPboxsize`" `) -gravity south -geometry +0`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
 
-                                                            Write-Log -Subtext "Applying SeasonEPNumber text: `"$global:SeasonEPNumber`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                            Write-Entry -Subtext "Applying SeasonEPNumber text: `"$global:SeasonEPNumber`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                             $logEntry = "`"$magick`" $Arguments"
                                                             $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                                             InvokeMagickCommand -Command $magick -Arguments $Arguments
@@ -4931,24 +4932,24 @@ else {
                                             }
                                             catch {
                                                 $statusCode = $_.Exception.Response.StatusCode.value__
-                                                Write-Log -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                                Write-Entry -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                 $errorCount++
                                             }
-                                            Write-Log -Subtext "Title Card url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                            Write-Entry -Subtext "Title Card url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                             if ($global:posterurl -like 'https://image.tmdb.org*') {
-                                                Write-Log -Subtext "Downloading Title Card from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                                Write-Entry -Subtext "Downloading Title Card from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                                 if ($global:FavProvider -ne 'TMDB') {
                                                     $global:IsFallback = $true
                                                 }
                                             }
                                             if ($global:posterurl -like 'https://artworks.thetvdb.com*') {
-                                                Write-Log -Subtext "Downloading Title Card from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                                Write-Entry -Subtext "Downloading Title Card from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                                 if ($global:FavProvider -ne 'TVDB') {
                                                     $global:IsFallback = $true
                                                 }
                                             }
                                             if ($global:posterurl -like "$PlexUrl*") {
-                                                Write-Log -Subtext "Downloading Title Card from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                                Write-Entry -Subtext "Downloading Title Card from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                                 if ($global:FavProvider -ne 'PLEX') {
                                                     $global:IsFallback = $true
                                                 }
@@ -4956,7 +4957,7 @@ else {
                                             if (Get-ChildItem -LiteralPath $EpisodeImage -ErrorAction SilentlyContinue) {
                                                 # Resize Image to 2000x3000
                                                 $Resizeargument = "`"$EpisodeImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$EpisodeImage`""
-                                                Write-Log -Subtext "Resizing it... " -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                Write-Entry -Subtext "Resizing it... " -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                 $logEntry = "`"$magick`" $Resizeargument"
                                                 $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                                 InvokeMagickCommand -Command $magick -Arguments $Resizeargument
@@ -4966,8 +4967,8 @@ else {
                                             if (Get-ChildItem -LiteralPath $EpisodeImage -ErrorAction SilentlyContinue) {
                                                 # Move file back to original naming with Brackets.
                                                 Move-Item -LiteralPath $EpisodeImage -destination $EpisodeImageoriginal -Force -ErrorAction SilentlyContinue
-                                                Write-Log -Subtext "Added: $EpisodeImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
-                                                Write-Log -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
+                                                Write-Entry -Subtext "Added: $EpisodeImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                                                Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                                 $EpisodeCount++
                                                 $posterCount++
 
@@ -4987,20 +4988,20 @@ else {
                                         }
                                     }
                                     Else {
-                                        Write-Log -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
+                                        Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                         $Errorcount++
                                     }
 
                                 }
                                 else {
                                     if ($show_skipped -eq 'True' ) {
-                                        Write-Log -Subtext "Already exists: $EpisodeImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                                        Write-Entry -Subtext "Already exists: $EpisodeImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                                     }
                                 }
                             }
                             if (Test-Path $EpisodeTempImage -ErrorAction SilentlyContinue) {
                                 Remove-Item -LiteralPath $EpisodeTempImage | Out-Null
-                                Write-Log -Message "Deleting EpisodeTempImage: $EpisodeTempImage" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                Write-Entry -Message "Deleting EpisodeTempImage: $EpisodeTempImage" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             }
                         }
                         Else {
@@ -5047,7 +5048,7 @@ else {
                                 $EpisodeImage = $EpisodeImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
                                 if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
                                     if (!$Episodepostersearchtext) {
-                                        Write-Log -Message "Start Title Card Search for: $global:show_name - $global:SeasonEPNumber" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                        Write-Entry -Message "Start Title Card Search for: $global:show_name - $global:SeasonEPNumber" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                         $Episodepostersearchtext = $true
                                     }
                                     if ($PlexToken) {
@@ -5069,32 +5070,32 @@ else {
                                                     GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage
                                                 }
                                                 Else {
-                                                    Write-Log -Subtext "Plex TitleCard Url empty, cannot search on plex, likely there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                                    Write-Entry -Subtext "Plex TitleCard Url empty, cannot search on plex, likely there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                                 }
                                                 if (!$global:posterurl) {
-                                                    Write-Log -Subtext "Could not find a TitleCard on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                                    Write-Entry -Subtext "Could not find a TitleCard on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                 }
                                             }
                                             if (!$global:posterurl ) {
                                                 # Lets just try to grab a background poster.
-                                                Write-Log -Subtext "Fallback to Show Background..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                                Write-Entry -Subtext "Fallback to Show Background..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                                 $global:posterurl = GetTMDBShowBackground
                                                 if ($global:posterurl) {
-                                                    Write-Log -Subtext "Using the Show Background Poster as TitleCard Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                                    Write-Entry -Subtext "Using the Show Background Poster as TitleCard Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                                     $global:IsFallback = $true
                                                 }
                                                 Else {
                                                     # Lets just try to grab a background poster.
                                                     $global:posterurl = GetTVDBShowBackground
                                                     if ($global:posterurl) {
-                                                        Write-Log -Subtext "Using the Show Background Poster as TitleCard Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                                        Write-Entry -Subtext "Using the Show Background Poster as TitleCard Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                                         $global:IsFallback = $true
                                                     }
                                                 }
                                             }
                                         }
                                         else {
-                                            Write-Log -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                            Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                             $global:posterurl = GetTVDBTitleCard
                                             if (!$global:posterurl) {
                                                 $global:IsFallback = $true
@@ -5102,19 +5103,19 @@ else {
                                                     GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage
                                                 }
                                                 Else {
-                                                    Write-Log -Subtext "Plex TitleCard Url empty, cannot search on plex, likely there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                                    Write-Entry -Subtext "Plex TitleCard Url empty, cannot search on plex, likely there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                                 }
                                                 if (!$global:posterurl) {
-                                                    Write-Log -Subtext "Could not find a TitleCard on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                                    Write-Entry -Subtext "Could not find a TitleCard on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                 }
                                             }
                                             if (!$global:posterurl ) {
-                                                Write-Log -Subtext "No Title Cards for this Episode on TVDB or TMDB..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                                Write-Entry -Subtext "No Title Cards for this Episode on TVDB or TMDB..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                 # Lets just try to grab a background poster.
-                                                Write-Log -Subtext "Fallback to Show Background..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                                Write-Entry -Subtext "Fallback to Show Background..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                                 $global:posterurl = GetTVDBShowBackground
                                                 if ($global:posterurl) {
-                                                    Write-Log -Subtext "Using the Show Background Poster as TitleCard Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                                    Write-Entry -Subtext "Using the Show Background Poster as TitleCard Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                                     $global:IsFallback = $true
                                                 }
                                             }
@@ -5132,32 +5133,32 @@ else {
                                                     GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage
                                                 }
                                                 Else {
-                                                    Write-Log -Subtext "Plex TitleCard Url empty, cannot search on plex, likely there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                                    Write-Entry -Subtext "Plex TitleCard Url empty, cannot search on plex, likely there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                                 }
                                                 if (!$global:posterurl) {
-                                                    Write-Log -Subtext "Could not find a TitleCard on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                                    Write-Entry -Subtext "Could not find a TitleCard on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                 }
                                             }
                                             if (!$global:posterurl ) {
                                                 # Lets just try to grab a background poster.
-                                                Write-Log -Subtext "Fallback to Show Background..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                                Write-Entry -Subtext "Fallback to Show Background..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                                 $global:posterurl = GetTVDBShowBackground
                                                 if ($global:posterurl) {
-                                                    Write-Log -Subtext "Using the Show Background Poster as TitleCard Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                                    Write-Entry -Subtext "Using the Show Background Poster as TitleCard Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                                     $global:IsFallback = $true
                                                 }
                                                 Else {
                                                     # Lets just try to grab a background poster.
                                                     $global:posterurl = GetTMDBShowBackground
                                                     if ($global:posterurl) {
-                                                        Write-Log -Subtext "Using the Show Background Poster as TitleCard Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                                        Write-Entry -Subtext "Using the Show Background Poster as TitleCard Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                                         $global:IsFallback = $true
                                                     }
                                                 }
                                             }
                                         }
                                         else {
-                                            Write-Log -Subtext "Can't search on TVDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                            Write-Entry -Subtext "Can't search on TVDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                             $global:posterurl = GetTMDBTitleCard
                                             if (!$global:posterurl) {
                                                 $global:IsFallback = $true
@@ -5165,18 +5166,18 @@ else {
                                                     GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage
                                                 }
                                                 Else {
-                                                    Write-Log -Subtext "Plex TitleCard Url empty, cannot search on plex, likely there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                                    Write-Entry -Subtext "Plex TitleCard Url empty, cannot search on plex, likely there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                                 }
                                                 if (!$global:posterurl) {
-                                                    Write-Log -Subtext "Could not find a TitleCard on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                                    Write-Entry -Subtext "Could not find a TitleCard on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                 }
                                             }
                                             if (!$global:posterurl ) {
                                                 # Lets just try to grab a background poster.
-                                                Write-Log -Subtext "Fallback to Show Background..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                                Write-Entry -Subtext "Fallback to Show Background..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                                 $global:posterurl = GetTMDBShowBackground
                                                 if ($global:posterurl) {
-                                                    Write-Log -Subtext "Using the Show Background Poster as TitleCard Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                                    Write-Entry -Subtext "Using the Show Background Poster as TitleCard Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                                     $global:IsFallback = $true
                                                 }
                                             }
@@ -5191,24 +5192,24 @@ else {
                                             }
                                             catch {
                                                 $statusCode = $_.Exception.Response.StatusCode.value__
-                                                Write-Log -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                                Write-Entry -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                 $errorCount++
                                             }
-                                            Write-Log -Subtext "Title Card url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                            Write-Entry -Subtext "Title Card url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                             if ($global:posterurl -like 'https://image.tmdb.org*') {
-                                                Write-Log -Subtext "Downloading Title Card from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                                Write-Entry -Subtext "Downloading Title Card from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                                 if ($global:FavProvider -ne 'TMDB') {
                                                     $global:IsFallback = $true
                                                 }
                                             }
                                             if ($global:posterurl -like 'https://artworks.thetvdb.com*') {
-                                                Write-Log -Subtext "Downloading Title Card from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                                Write-Entry -Subtext "Downloading Title Card from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                                 if ($global:FavProvider -ne 'TVDB') {
                                                     $global:IsFallback = $true
                                                 }
                                             }
                                             if ($global:posterurl -like "$PlexUrl*") {
-                                                Write-Log -Subtext "Downloading Title Card from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                                Write-Entry -Subtext "Downloading Title Card from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                                 if ($global:FavProvider -ne 'PLEX') {
                                                     $global:IsFallback = $true
                                                 }
@@ -5222,19 +5223,19 @@ else {
                                                     # Resize Image to 2000x3000 and apply Border and overlay
                                                     if ($AddTitleCardBorder -eq 'true' -and $AddTitleCardOverlay -eq 'true') {
                                                         $Arguments = "`"$EpisodeImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$TitleCardoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$TitleCardborderwidthsecond`"  -bordercolor `"$TitleCardbordercolor`" -border `"$TitleCardborderwidth`" `"$EpisodeImage`""
-                                                        Write-Log -Subtext "Resizing it | Adding Borders | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                        Write-Entry -Subtext "Resizing it | Adding Borders | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                     }
                                                     if ($AddTitleCardBorder -eq 'true' -and $AddTitleCardOverlay -eq 'false') {
                                                         $Arguments = "`"$EpisodeImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" -shave `"$TitleCardborderwidthsecond`"  -bordercolor `"$TitleCardbordercolor`" -border `"$TitleCardborderwidth`" `"$EpisodeImage`""
-                                                        Write-Log -Subtext "Resizing it | Adding Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                        Write-Entry -Subtext "Resizing it | Adding Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                     }
                                                     if ($AddTitleCardBorder -eq 'false' -and $AddTitleCardOverlay -eq 'true') {
                                                         $Arguments = "`"$EpisodeImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$TitleCardoverlay`" -gravity south -quality $global:outputQuality -composite `"$EpisodeImage`""
-                                                        Write-Log -Subtext "Resizing it | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                        Write-Entry -Subtext "Resizing it | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                     }
                                                     if ($AddTitleCardBorder -eq 'false' -and $AddTitleCardOverlay -eq 'false') {
                                                         $Arguments = "`"$EpisodeImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$EpisodeImage`""
-                                                        Write-Log -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                        Write-Entry -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                     }
                                                     $logEntry = "`"$magick`" $Arguments"
                                                     $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
@@ -5246,11 +5247,11 @@ else {
                                                         }
                                                         $optimalFontSize = Get-OptimalPointSize -text $global:EPTitle -font $TitleCardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
 
-                                                        Write-Log -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                        Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
 
                                                         $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
 
-                                                        Write-Log -Subtext "Applying EPTitle text: `"$global:EPTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                        Write-Entry -Subtext "Applying EPTitle text: `"$global:EPTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                         $logEntry = "`"$magick`" $Arguments"
                                                         $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                                         InvokeMagickCommand -Command $magick -Arguments $Arguments
@@ -5262,11 +5263,11 @@ else {
                                                         }
                                                         $optimalFontSize = Get-OptimalPointSize -text  $global:SeasonEPNumber -font $TitleCardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize
 
-                                                        Write-Log -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                        Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
 
                                                         $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPfontcolor`" -size `"$TitleCardEPboxsize`" -background none caption:`"$global:SeasonEPNumber`" -trim -gravity south -extent `"$TitleCardEPboxsize`" `) -gravity south -geometry +0`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
 
-                                                        Write-Log -Subtext "Applying SeasonEPNumber text: `"$global:SeasonEPNumber`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                        Write-Entry -Subtext "Applying SeasonEPNumber text: `"$global:SeasonEPNumber`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                         $logEntry = "`"$magick`" $Arguments"
                                                         $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                                         InvokeMagickCommand -Command $magick -Arguments $Arguments
@@ -5282,24 +5283,24 @@ else {
                                             }
                                             catch {
                                                 $statusCode = $_.Exception.Response.StatusCode.value__
-                                                Write-Log -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                                Write-Entry -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                 $errorCount++
                                             }
-                                            Write-Log -Subtext "Title Card url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                            Write-Entry -Subtext "Title Card url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                             if ($global:posterurl -like 'https://image.tmdb.org*') {
-                                                Write-Log -Subtext "Downloading Title Card from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                                Write-Entry -Subtext "Downloading Title Card from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                                 if ($global:FavProvider -ne 'TMDB') {
                                                     $global:IsFallback = $true
                                                 }
                                             }
                                             if ($global:posterurl -like 'https://artworks.thetvdb.com*') {
-                                                Write-Log -Subtext "Downloading Title Card from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                                Write-Entry -Subtext "Downloading Title Card from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                                 if ($global:FavProvider -ne 'TVDB') {
                                                     $global:IsFallback = $true
                                                 }
                                             }
                                             if ($global:posterurl -like "$PlexUrl*") {
-                                                Write-Log -Subtext "Downloading Title Card from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                                Write-Entry -Subtext "Downloading Title Card from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                                 if ($global:FavProvider -ne 'PLEX') {
                                                     $global:IsFallback = $true
                                                 }
@@ -5307,7 +5308,7 @@ else {
                                             if (Get-ChildItem -LiteralPath $EpisodeImage -ErrorAction SilentlyContinue) {
                                                 # Resize Image to 2000x3000
                                                 $Resizeargument = "`"$EpisodeImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$EpisodeImage`""
-                                                Write-Log -Subtext "Resizing it... " -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                Write-Entry -Subtext "Resizing it... " -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                 $logEntry = "`"$magick`" $Resizeargument"
                                                 $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                                 InvokeMagickCommand -Command $magick -Arguments $Resizeargument
@@ -5317,8 +5318,8 @@ else {
                                             if (Get-ChildItem -LiteralPath $EpisodeImage -ErrorAction SilentlyContinue) {
                                                 # Move file back to original naming with Brackets.
                                                 Move-Item -LiteralPath $EpisodeImage -destination $EpisodeImageoriginal -Force -ErrorAction SilentlyContinue
-                                                Write-Log -Subtext "Added: $EpisodeImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
-                                                Write-Log -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
+                                                Write-Entry -Subtext "Added: $EpisodeImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                                                Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                                 $EpisodeCount++
                                                 $posterCount++
 
@@ -5338,14 +5339,14 @@ else {
                                         }
                                     }
                                     Else {
-                                        Write-Log -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
+                                        Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                         $Errorcount++
                                     }
 
                                 }
                                 else {
                                     if ($show_skipped -eq 'True' ) {
-                                        Write-Log -Subtext "Already exists: $EpisodeImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                                        Write-Entry -Subtext "Already exists: $EpisodeImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                                     }
                                 }
                             }
@@ -5356,7 +5357,7 @@ else {
             }
         }
         Else {
-            Write-Log -Message "Missing RootFolder for: $($entry.title) - you have to manually create the poster for it..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Message "Missing RootFolder for: $($entry.title) - you have to manually create the poster for it..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             $Errorcount++
         }
     }
@@ -5368,12 +5369,12 @@ else {
     $seconds = $executionTime.Seconds
     $FormattedTimespawn = $hours.ToString() + "h " + $minutes.ToString() + "m " + $seconds.ToString() + "s "
 
-    Write-Log -Message "Finished, Total images created: $posterCount" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+    Write-Entry -Message "Finished, Total images created: $posterCount" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
     if ($posterCount -ge '1') {
-        Write-Log -Message "Show/Movie Posters created: $($posterCount-$SeasonCount-$BackgroundCount-$EpisodeCount)| Season images created: $SeasonCount | Background images created: $BackgroundCount | TitleCards created: $EpisodeCount" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+        Write-Entry -Message "Show/Movie Posters created: $($posterCount-$SeasonCount-$BackgroundCount-$EpisodeCount)| Season images created: $SeasonCount | Background images created: $BackgroundCount | TitleCards created: $EpisodeCount" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
     }
     if ((Test-Path $global:ScriptRoot\Logs\ImageChoices.csv)) {
-        Write-Log -Message "You can find a detailed Summary of image Choices here: $global:ScriptRoot\Logs\ImageChoices.csv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+        Write-Entry -Message "You can find a detailed Summary of image Choices here: $global:ScriptRoot\Logs\ImageChoices.csv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
         # Calculate Summary
         $SummaryCount = Import-Csv -LiteralPath "$global:ScriptRoot\Logs\ImageChoices.csv" -Delimiter ';'
         $FallbackCount = @($SummaryCount | Where-Object Fallback -eq 'True')
@@ -5381,29 +5382,29 @@ else {
         $TextTruncatedCount = @($SummaryCount | Where-Object TextTruncated -eq 'True')
         $TextCount = @($SummaryCount | Where-Object Textless -eq 'False')
         if ($TextlessCount -or $FallbackCount -or $TextCount -or $PosterUnknownCount -or $TextTruncatedCount) {
-            Write-Log -Message "This is a subset summary of all image choices from the ImageChoices.csv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+            Write-Entry -Message "This is a subset summary of all image choices from the ImageChoices.csv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
         }
         if ($TextlessCount) {
-            Write-Log -Subtext "'$($TextlessCount.count)' times the script took a Textless image" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+            Write-Entry -Subtext "'$($TextlessCount.count)' times the script took a Textless image" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
         }
         if ($FallbackCount) {
-            Write-Log -Subtext "'$($FallbackCount.count)' times the script took a fallback image" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-            Write-Log -Subtext "'$($posterCount-$($FallbackCount.count))' times the script took the image from fav provider: $global:FavProvider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+            Write-Entry -Subtext "'$($FallbackCount.count)' times the script took a fallback image" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+            Write-Entry -Subtext "'$($posterCount-$($FallbackCount.count))' times the script took the image from fav provider: $global:FavProvider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
         }
         if ($TextCount) {
-            Write-Log -Subtext "'$($TextCount.count)' times the script took an image with Text" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+            Write-Entry -Subtext "'$($TextCount.count)' times the script took an image with Text" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
         }
         if ($PosterUnknownCount -ge '1') {
-            Write-Log -Subtext "'$PosterUnknownCount' times the script took a season poster where we cannot tell if it has text or not" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+            Write-Entry -Subtext "'$PosterUnknownCount' times the script took a season poster where we cannot tell if it has text or not" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
         }
         if ($TextTruncatedCount) {
-            Write-Log -Subtext "'$($TextTruncatedCount.count)' times the script truncated the text in images" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+            Write-Entry -Subtext "'$($TextTruncatedCount.count)' times the script truncated the text in images" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
         }
     }
     if ($Errorcount -ge '1') {
-        Write-Log -Message "During execution '$Errorcount' Errors occurred, please check the log for a detailed description." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+        Write-Entry -Message "During execution '$Errorcount' Errors occurred, please check the log for a detailed description." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
     }
-    Write-Log -Message "Script execution time: $FormattedTimespawn" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+    Write-Entry -Message "Script execution time: $FormattedTimespawn" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
     # Send Notification when running in Docker
     if ($global:NotifyUrl -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker-Alpine*') {
         if ($global:NotifyUrl -like '*discord*') {
