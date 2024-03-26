@@ -5,7 +5,7 @@ This PowerShell script automates the process of generating images for your Plex 
 > [!NOTE]
 Plex Poster Maker is cross-platform ready, meaning it can run on Linux, Docker (Alpine v3.17) and on Windows operating systems.
 > 
-> **Suported Poster Types:**
+> **Supported Poster Types:**
 >- Movie/Show Posters
 >- Movie/Show Backgrounds
 >- Season Posters
@@ -23,7 +23,7 @@ Plex Poster Maker is cross-platform ready, meaning it can run on Linux, Docker (
 
 ### **Key Features:**
 >[!TIP]
-> If you want to use the created assets with PMM make shure to check out the [Assets doc](https://metamanager.wiki/en/latest/pmm/guides/assets/)
+> If you want to use the created assets with PMM make sure to check out the [Assets doc](https://metamanager.wiki/en/latest/pmm/guides/assets/)
 >
 > You can find an example config for the Assets on my [PMM-Configs repo](https://github.com/bullmoose20/Plex-Meta-Manager-Configs/blob/master/fscorrupt/config.yml)
 - **Resizing**: It automatically resizes every poster to 2000x3000.
@@ -100,6 +100,7 @@ Plex Poster Maker is cross-platform ready, meaning it can run on Linux, Docker (
     - `show_skipped`: If set to `true`, verbose logging of already created assets will be displayed; otherwise, they will be silently skipped - On large libraries, this may appear as if the script is hanging.
     - `magickinstalllocation`: Path to ImageMagick installation location where `magick.exe` is located (Otherwise leave value as `"./magick"`)
     - `maxLogs`: Number of Log folders you want to keep in `RotatedLogs` Folder (Log History).
+    - `logLevel`: Sets the verbosity of logging. 1 logs Warning/Error messages. Default is 2 which logs Info/Warning/Error messages. 3 captures Info/Warning/Error/Debug messages and is the most verbose.
     - `font`: Font file name.
     - `backgroundfont`: Background font file name.
     - `overlayfile`: Overlay file name.
@@ -300,6 +301,38 @@ Follow the prompts to enter the source picture path, media folder name, and movi
     <img alt="excel" height="100%" src="/images/PPM-xlsm.gif">
   </a>
 </p>
+
+</details>
+
+### How to create the PPM.xlsm
+<details close>
+<summary>🖼️PPM Excel Creation using Module1.bas:</summary>
+<br>
+
+1. **Open Excel**: First, open Microsoft Excel on your computer. You can do this by clicking on the Excel icon in your applications menu or by searching for "Excel" in your computer's search bar and selecting it from the results.
+
+2. **Access the Visual Basic for Applications (VBA) Editor**:
+   - While in Excel, press `Alt + F11` on your keyboard. This keyboard shortcut will open the VBA editor window.
+
+3. **Import Module**:
+   - In the VBA editor window, you'll see a menu bar at the top.
+   - Right-click on any existing module or in the project explorer (usually located on the left-hand side).
+   - From the dropdown menu, select `Import File...`.
+   - A file explorer window will open. Navigate to the location where you saved the `Module1.bas` file.
+   - Select the `Module1.bas` file and click `Open`.
+
+4. **Run the Macro**:
+   - Now, go back to the Excel window.
+   - Look for the `View` tab at the top of the Excel window.
+   - Click on the `View` tab.
+   - Within the `Macros` group, you'll find a button labeled `Macros`. Click on it.
+   - In the dropdown menu, select `View Macros`.
+   - A Macros dialog box will appear, listing all available macros.
+   - In the list, you should see the `PromptUser` macro.
+   - Select `PromptUser` from the list.
+   - Finally, click the `Run` button.
+
+Following these steps will allow you to import the `Module1.bas` file containing the VBA code into Excel and then run the `PromptUser` macro.
 
 </details>
 
