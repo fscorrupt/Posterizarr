@@ -50,6 +50,7 @@ function Write-Log {
         'Warning' { $theLog = 1 }
         'Error' { $theLog = 1 }
         'Debug' { $theLog = 3 }
+        'Optional' { $theLog = 3 }
     }
     if (!(Test-Path -path $path)) {
         New-Item -Path $Path -Force | out-null
@@ -1822,26 +1823,26 @@ function CheckOverlayDimensions {
 
     # Check Poster Overlay Size
     if ($Posteroverlaydimensions -eq $PosterSize) {
-        Write-Log -Message "Poster overlay is correctly sized at: $Postersize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+        Write-Log -Subtext "Poster overlay is correctly sized at: $Postersize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     }
     else {
-        Write-Log -Message "Poster overlay is NOT correctly sized at: $Postersize. Actual dimensions: $Posteroverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+        Write-Log -Subtext "Poster overlay is NOT correctly sized at: $Postersize. Actual dimensions: $Posteroverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     }
 
     # Check Background Overlay Size
     if ($Backgroundoverlaydimensions -eq $BackgroundSize) {
-        Write-Log -Message "Background overlay is correctly sized at: $BackgroundSize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+        Write-Log -Subtext "Background overlay is correctly sized at: $BackgroundSize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     }
     else {
-        Write-Log -Message "Background overlay is NOT correctly sized at: $BackgroundSize. Actual dimensions: $Backgroundoverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+        Write-Log -Subtext "Background overlay is NOT correctly sized at: $BackgroundSize. Actual dimensions: $Backgroundoverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     }
 
     # Check TitleCard Overlay Size
     if ($Titlecardoverlaydimensions -eq $BackgroundSize) {
-        Write-Log -Message "TitleCard overlay is correctly sized at: $BackgroundSize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+        Write-Log -Subtext "TitleCard overlay is correctly sized at: $BackgroundSize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     }
     else {
-        Write-Log -Message "TitleCard overlay is NOT correctly sized at: $BackgroundSize. Actual dimensions: $Titlecardoverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+        Write-Log -Subtext "TitleCard overlay is NOT correctly sized at: $BackgroundSize. Actual dimensions: $Titlecardoverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     }
 }
 
@@ -2171,6 +2172,7 @@ CheckJsonPaths -font $font -backgroundfont $backgroundfont -titlecardfont $title
 CheckImageMagick -magick $magick -magickinstalllocation $magickinstalllocation
 
 # Check overlay artwork for poster, background, and titlecard dimensions
+Write-Log -Message "Checking size of overlay files..." -Path $configLogging -Color White -log Info
 CheckOverlayDimensions -Posteroverlay "$Posteroverlay" -Backgroundoverlay "$Backgroundoverlay" -Titlecardoverlay "$titlecardoverlay" -PosterSize "$PosterSize" -BackgroundSize "$BackgroundSize"
 
 
@@ -4910,6 +4912,7 @@ else {
                         Else {
                             for ($i = 0; $i -lt $global:episode_numbers.Count; $i++) {
                                 $global:Fallback = $null
+                                $global:TextlessPoster = $null
                                 $global:posterurl = $null
                                 $Episodepostersearchtext = $null
                                 $ExifFound = $null
