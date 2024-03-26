@@ -1569,7 +1569,7 @@ function Get-LatestScriptVersion {
     }
 }
 
-function Rotate-Logs {
+function RotateLogs {
     param (
         [string]$ScriptRoot
     )
@@ -1597,7 +1597,7 @@ function Rotate-Logs {
     }
 }
 
-function Check-ConfigFile {
+function CheckConfigFile {
     param (
         [string]$ScriptRoot
     )
@@ -1622,7 +1622,7 @@ function Test-And-Download {
     }
 }
 
-function Log-ConfigSettings {
+function LogConfigSettings {
     Write-Log -Message "Current Config.json Settings" -Path $configLogging -Color Cyan -log Info
     Write-Log -Subtext "___________________________________________" -Path $configLogging -Color DarkMagenta -log Info
     # Plex Part
@@ -1711,7 +1711,7 @@ function Log-ConfigSettings {
     Write-Log -Subtext "___________________________________________" -Path $configLogging -Color DarkMagenta -log Info
 }
 
-function Check-PlexAccess {
+function CheckPlexAccess {
     param (
         [string]$PlexUrl,
         [string]$PlexToken
@@ -1768,7 +1768,7 @@ function Check-PlexAccess {
     }
 }
 
-function Check-ImageMagick {
+function CheckImageMagick {
     param (
         [string]$magick,
         [string]$magickinstalllocation
@@ -1806,7 +1806,7 @@ function Check-ImageMagick {
     }
 }
 
-function Check-OverlayDimensions {
+function CheckOverlayDimensions {
     param (
         [string]$Posteroverlay,
         [string]$Backgroundoverlay,
@@ -1858,10 +1858,10 @@ $startTime = Get-Date
 $folderPattern = "Logs_*"
 $global:RotationFolderName = $null
 $global:logLevel = 2
-Rotate-Logs -ScriptRoot $global:ScriptRoot
+RotateLogs -ScriptRoot $global:ScriptRoot
 Write-Log -Message "Starting..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
 # Check if Config file is present
-Check-ConfigFile -ScriptRoot $global:ScriptRoot
+CheckConfigFile -ScriptRoot $global:ScriptRoot
 # Test Json if something is missing
 CheckJson -jsonExampleUrl "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/config.example.json" -jsonFilePath $(Join-Path $global:ScriptRoot 'config.json')
 # Check if Script is Latest
@@ -2137,7 +2137,7 @@ Test-And-Download -url "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/
 # Write log message
 Write-Log -Message "Old log files cleared..." -Path $configLogging -Color Yellow -log Warning
 # Display Current Config settings:
-Log-ConfigSettings
+LogConfigSettings
 # Starting main Script now...
 Write-Log -Message "Starting main Script now..." -Path $configLogging -Color Green -log Info
 
@@ -2165,13 +2165,13 @@ foreach ($file in $files) {
 CheckJsonPaths -font $font -backgroundfont $backgroundfont -titlecardfont $titlecardfont -Posteroverlay $Posteroverlay -Backgroundoverlay $Backgroundoverlay -titlecardoverlay $titlecardoverlay
 
 # Check Plex now:
-[xml]$Libs = Check-PlexAccess -PlexUrl $PlexUrl -PlexToken $PlexToken
+[xml]$Libs = CheckPlexAccess -PlexUrl $PlexUrl -PlexToken $PlexToken
 
 # Check ImageMagick now:
-Check-ImageMagick -magick $magick -magickinstalllocation $magickinstalllocation
+CheckImageMagick -magick $magick -magickinstalllocation $magickinstalllocation
 
 # Check overlay artwork for poster, background, and titlecard dimensions
-Check-OverlayDimensions -Posteroverlay "$Posteroverlay" -Backgroundoverlay "$Backgroundoverlay" -Titlecardoverlay "$titlecardoverlay" -PosterSize "$PosterSize" -BackgroundSize "$BackgroundSize"
+CheckOverlayDimensions -Posteroverlay "$Posteroverlay" -Backgroundoverlay "$Backgroundoverlay" -Titlecardoverlay "$titlecardoverlay" -PosterSize "$PosterSize" -BackgroundSize "$BackgroundSize"
 
 
 # check if fanart Module is installed
