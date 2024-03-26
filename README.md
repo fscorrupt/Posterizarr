@@ -292,21 +292,9 @@ Run the script with the `-Manual` switch:
 ```
 Follow the prompts to enter the source picture path, media folder name, and movie/show title to manually create a custom poster.
 
-### How to use the PPM.xlsm
-<details close>
-<summary>🖼️PPM Excel:</summary>
-<br>
-<p>
-  <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
-    <img alt="excel" height="100%" src="/images/PPM-xlsm.gif">
-  </a>
-</p>
-
-</details>
-
 ### How to create the PPM.xlsm
 <details close>
-<summary>🖼️PPM Excel Creation using Module1.bas:</summary>
+<summary>📝PPM Excel Creation using Module1.bas:</summary>
 <br>
 
 1. **Open Excel**: First, open Microsoft Excel on your computer. You can do this by clicking on the Excel icon in your applications menu or by searching for "Excel" in your computer's search bar and selecting it from the results.
@@ -333,6 +321,18 @@ Follow the prompts to enter the source picture path, media folder name, and movi
    - Finally, click the `Run` button.
 
 Following these steps will allow you to import the `Module1.bas` file containing the VBA code into Excel and then run the `PromptUser` macro.
+
+</details>
+
+### How to use the PPM.xlsm
+<details close>
+<summary>🎥PPM Excel:</summary>
+<br>
+<p>
+  <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
+    <img alt="excel" height="100%" src="/images/PPM-xlsm.gif">
+  </a>
+</p>
 
 </details>
 
