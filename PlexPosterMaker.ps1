@@ -3,7 +3,7 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.44"
+$CurrentScriptVersion = "1.0.45"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -3273,10 +3273,16 @@ else {
                             Write-Entry -Subtext "Location: $location" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                             Write-Entry -Subtext "Libpath: $libpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                             $Matchedpath = AddTrailingSlash $libpath
-                            $libpath = $Matchedpath
-                            $extractedFolder = $location.Substring($libpath.Length)
+                            $extractedFolder = $location.Substring($Matchedpath.Length)
+                            if ($extractedFolder -like "*\*") {
+                                $extractedFolder = $extractedFolder.Split("\")[0]
+                            }
+                            elseif ($extractedFolder -like "*/*") {
+                                $extractedFolder = $extractedFolder.Split("/")[0]
+                            }
                             Write-Entry -Subtext "Matchedpath: $Matchedpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                             Write-Entry -Subtext "ExtractedFolder: $extractedFolder" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            break # Exit loop once a match is found
                         }
                     }
                 }
@@ -3479,8 +3485,14 @@ else {
                     if ($fullTestPath) {
                         $hashtestpath = ($fullTestPath.Path + "\" + $Testfile).Replace('/', '\')
                     }
+                    Else {
+                        $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
+                    }
                 }
-
+                Write-Entry -Message "Test Path is: $TestPath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                Write-Entry -Message "Test File is: $Testfile" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                Write-Entry -Message "Resolved Full Test Path is: $fullTestPath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                Write-Entry -Message "Resolved hash Test Path is: $hashtestpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                 $PosterImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername).jpg"
                 $PosterImage = $PosterImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
                 # Now we can start the Poster Part
@@ -3696,6 +3708,9 @@ else {
                         $fullTestPath = Resolve-Path -Path $TestPath -ErrorAction SilentlyContinue
                         if ($fullTestPath) {
                             $hashtestpath = ($fullTestPath.Path + "\" + $Testfile).Replace('/', '\')
+                        }
+                        Else {
+                            $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
                         }
                     }
 
@@ -3951,6 +3966,9 @@ else {
                 if ($fullTestPath) {
                     $hashtestpath = ($fullTestPath.Path + "\" + $Testfile).Replace('/', '\')
                 }
+                Else {
+                    $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
+                }
             }
 
             $PosterImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername).jpg"
@@ -4186,6 +4204,9 @@ else {
                     if ($fullTestPath) {
                         $hashtestpath = ($fullTestPath.Path + "\" + $Testfile).Replace('/', '\')
                     }
+                    Else {
+                        $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
+                    }
                 }
 
                 $backgroundImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_background.jpg"
@@ -4417,6 +4438,9 @@ else {
                         $fullTestPath = Resolve-Path -Path $TestPath -ErrorAction SilentlyContinue
                         if ($fullTestPath) {
                             $hashtestpath = ($fullTestPath.Path + "\" + $Testfile).Replace('/', '\')
+                        }
+                        Else {
+                            $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
                         }
                     }
 
@@ -4728,6 +4752,9 @@ else {
                                     $fullTestPath = Resolve-Path -Path $TestPath -ErrorAction SilentlyContinue
                                     if ($fullTestPath) {
                                         $hashtestpath = ($fullTestPath.Path + "\" + $Testfile).Replace('/', '\')
+                                    }
+                                    Else {
+                                        $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
                                     }
                                 }
 
@@ -5042,6 +5069,9 @@ else {
                                     $fullTestPath = Resolve-Path -Path $TestPath -ErrorAction SilentlyContinue
                                     if ($fullTestPath) {
                                         $hashtestpath = ($fullTestPath.Path + "\" + $Testfile).Replace('/', '\')
+                                    }
+                                    Else {
+                                        $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
                                     }
                                 }
 
