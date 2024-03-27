@@ -3,7 +3,7 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.45"
+$CurrentScriptVersion = "1.0.46"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -3273,16 +3273,17 @@ else {
                             Write-Entry -Subtext "Location: $location" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                             Write-Entry -Subtext "Libpath: $libpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                             $Matchedpath = AddTrailingSlash $libpath
-                            $extractedFolder = $location.Substring($Matchedpath.Length)
-                            if ($extractedFolder -like "*\*") {
-                                $extractedFolder = $extractedFolder.Split("\")[0]
+                            $libpath = $Matchedpath
+                            $extractedFolder = $location.Substring($libpath.Length)
+                            if ($extractedFolder -like '*\*') {
+                                $extractedFolder = $extractedFolder.split('\')[0]
                             }
-                            elseif ($extractedFolder -like "*/*") {
-                                $extractedFolder = $extractedFolder.Split("/")[0]
+                            if ($extractedFolder -like '*/*') {
+                                $extractedFolder = $extractedFolder.split('/')[0]
                             }
                             Write-Entry -Subtext "Matchedpath: $Matchedpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                             Write-Entry -Subtext "ExtractedFolder: $extractedFolder" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                            break # Exit loop once a match is found
+                            break
                         }
                     }
                 }
@@ -3316,6 +3317,7 @@ else {
                             }
                             Write-Entry -Subtext "Matchedpath: $Matchedpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                             Write-Entry -Subtext "ExtractedFolder: $extractedFolder" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            break
                         }
                     }
                 }
