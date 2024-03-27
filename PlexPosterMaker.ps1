@@ -4683,6 +4683,7 @@ else {
                     $EpisodeImageoriginal = $null
                     $EpisodeImage = $null
                     $global:Fallback = $null
+                    $global:IsFallback = $null
                     $global:TextlessPoster = $null
 
                     if (($episode.tmdbid -eq $entry.tmdbid -or $episode.tvdbid -eq $entry.tvdbid) -and $episode.'Show Name' -eq $entry.title -and $episode.'Library Name' -eq $entry.'Library Name') {
