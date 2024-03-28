@@ -6,6 +6,7 @@ param (
 $CurrentScriptVersion = "1.0.48"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
+$RemoveYear= $true
 
 #################
 # What you need #
@@ -116,6 +117,24 @@ function RemoveTrailingSlash($path) {
     }
     return $path
 }
+
+function RemoveYear {
+    param (
+        [string]$inputString
+    )
+# Example usage:
+# $string = "This is a sample string [1234] with {5678} some (9876) numbers Movie (2017)"
+# RemoveYear -inputString $string
+
+    # Define regex pattern to match 4 digit number within brackets
+    $pattern = '\[(\s*|\s*[0-9]{4}\s*)\]|\{(\s*|\s*[0-9]{4}\s*)\}|\((\s*|\s*[0-9]{4}\s*)\)'
+
+    # Replace matches with empty string and trim spaces
+    $result = $inputString -replace $pattern, '' | ForEach-Object { $_.Trim() }
+
+    return $result
+}
+
 function Get-OptimalPointSize {
     param(
         [string]$text,
@@ -2376,7 +2395,12 @@ if ($Manual) {
             InvokeMagickCommand -Command $magick -Arguments $Arguments
 
             if ($AddText -eq 'true') {
-                $optimalFontSize = Get-OptimalPointSize -text $joinedTitle -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
+                if ($RemoveYear -eq 'true') {
+                    $optimalFontSize = Get-OptimalPointSize -text (RemoveYear -inputString $joinedTitle) -font $fontImagemagick -box_width $MaxWidth -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
+                }
+                else {
+                    $optimalFontSize = Get-OptimalPointSize -text $joinedTitle -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
+                }
                 Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
                 $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
                 Write-Entry -Subtext "    Applying Poster text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
@@ -3650,7 +3674,12 @@ else {
                                     InvokeMagickCommand -Command $magick -Arguments $Arguments
 
                                     if ($AddText -eq 'true') {
-                                        $optimalFontSize = Get-OptimalPointSize -text $joinedTitle -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
+                                        if ($RemoveYear -eq 'true') {
+                                            $optimalFontSize = Get-OptimalPointSize -text (RemoveYear -inputString $joinedTitle) -font $fontImagemagick -box_width $MaxWidth -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
+                                        }
+                                        else {
+                                            $optimalFontSize = Get-OptimalPointSize -text $joinedTitle -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
+                                        }
                                         Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                         $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
                                         Write-Entry -Subtext "Applying Poster text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -4145,7 +4174,12 @@ else {
                                 InvokeMagickCommand -Command $magick -Arguments $Arguments
 
                                 if ($AddText -eq 'true') {
-                                    $optimalFontSize = Get-OptimalPointSize -text $joinedTitle -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
+                                    if ($RemoveYear -eq 'true') {
+                                        $optimalFontSize = Get-OptimalPointSize -text (RemoveYear -inputString $joinedTitle) -font $fontImagemagick -box_width $MaxWidth -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
+                                    }
+                                    else {
+                                        $optimalFontSize = Get-OptimalPointSize -text $joinedTitle -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
+                                    }
                                     Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                     $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
                                     Write-Entry -Subtext "Applying Poster text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -4605,12 +4639,14 @@ else {
                                         InvokeMagickCommand -Command $magick -Arguments $Arguments
 
                                         if ($AddText -eq 'true') {
-                                            $optimalFontSize = Get-OptimalPointSize -text $global:seasonTitle -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
-
+                                            if ($RemoveYear -eq 'true') {
+                                                $optimalFontSize = Get-OptimalPointSize -text (RemoveYear -inputString $global:seasonTitle) -font $fontImagemagick -box_width $MaxWidth -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
+                                            }
+                                            else {
+                                                $optimalFontSize = Get-OptimalPointSize -text $global:seasonTitle -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
+                                            }
                                             Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-
                                             $Arguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$global:seasonTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
-
                                             Write-Entry -Subtext "Applying seasonTitle text: `"$global:seasonTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                             $logEntry = "`"$magick`" $Arguments"
                                             $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
