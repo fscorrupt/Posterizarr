@@ -1654,12 +1654,34 @@ function Test-And-Download {
     }
 }
 
-function RedactToken([string]$url) {
-    if (-not $url) {
+function RedactPlexUrl {
+    param(
+        [string]$url
+    )
+
+    $urlMatch = $url -match "(https?://)([^:/]+)(:\d+)?(/[^?]+)(\?X-Plex-Token=)([^&]+)(.*)"
+    if ($urlMatch) {
+        $protocol = $Matches[1]
+        $hostname = $Matches[2]
+        $port = $Matches[3]
+        $path = $Matches[4]
+        $prefix = $Matches[5]
+        $token = $Matches[6]
+        $suffix = $Matches[7]
+
+        # Redact IP address or hostname
+        $redactedHostname = $hostname -replace "(?<=.{3}).", "*"
+        $redactedUrl = $protocol + $redactedHostname + $port + $path
+
+        # Redact token
+        $redactedToken = $($token[0..7] -join '') + "*******"
+        $redactedUrl += $prefix + $redactedToken + $suffix
+
+        return $redactedUrl
+    }
+    else {
         return $url
     }
-
-    return $url -replace '(X-Plex-Token=)(.{8})[^&]*', '$1$2****'
 }
 
 function LogConfigSettings {
@@ -1774,13 +1796,14 @@ function CheckPlexAccess {
                 }
             }
             else {
-                Write-Entry -Message "Could not access Plex with this URL: $(RedactToken -url "$PlexUrl/library/sections/?X-Plex-Token=$PlexToken")" -Path $configLogging -Color Red -LogLevel Error
+                Write-Entry -Message "Could not access Plex with this URL: $(RedactPlexUrl -url "$PlexUrl/library/sections/?X-Plex-Token=$PlexToken")" -Path $configLogging -Color Red -Log Error
                 Write-Entry -Subtext "Please check token and access..." -Path $configLogging -Color Red -log Error
                 $Errorcount++
                 Exit
             }
         }
         catch {
+            Write-Entry -Subtext "Could not access Plex with this URL: $(RedactPlexUrl -url "$PlexUrl/library/sections/?X-Plex-Token=$PlexToken")" -Path $configLogging -Color Red -Log Error
             Write-Entry -Subtext "Error occurred while accessing Plex server: $_" -Path $configLogging -Color Red -log Error
             Exit
         }
@@ -3619,7 +3642,7 @@ else {
                                 Write-Entry -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                 $errorCount++
                             }
-                            Write-Entry -Subtext "Poster url: $(RedactToken -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
+                            Write-Entry -Subtext "Poster url: $(RedactPlexUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
                             if ($global:posterurl -like 'https://image.tmdb.org*') {
                                 if ($global:PosterWithText) {
                                     Write-Entry -Subtext "Downloading Poster with Text from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
@@ -3838,7 +3861,7 @@ else {
                                 Write-Entry -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                 $errorCount++
                             }
-                            Write-Entry -Subtext "Poster url: $(RedactToken -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
+                            Write-Entry -Subtext "Poster url: $(RedactPlexUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
                             if ($global:posterurl -like 'https://image.tmdb.org*') {
                                 if ($global:PosterWithText) {
                                     Write-Entry -Subtext "Downloading background with Text from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
@@ -4118,7 +4141,7 @@ else {
                             Write-Entry -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                             $errorCount++
                         }
-                        Write-Entry -Subtext "Poster url: $(RedactToken -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
+                        Write-Entry -Subtext "Poster url: $(RedactPlexUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
                         if ($global:posterurl -like 'https://image.tmdb.org*') {
                             if ($global:PosterWithText) {
                                 Write-Entry -Subtext "Downloading Poster with Text from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
@@ -4344,7 +4367,7 @@ else {
                             Write-Entry -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                             $errorCount++
                         }
-                        Write-Entry -Subtext "Poster url: $(RedactToken -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
+                        Write-Entry -Subtext "Poster url: $(RedactPlexUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
                         if ($global:posterurl -like 'https://image.tmdb.org*') {
                             if ($global:PosterWithText) {
                                 Write-Entry -Subtext "Downloading background with Text from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
@@ -4578,7 +4601,7 @@ else {
                                     Write-Entry -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                     $errorCount++
                                 }
-                                Write-Entry -Subtext "Poster url: $(RedactToken -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
+                                Write-Entry -Subtext "Poster url: $(RedactPlexUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
                                 if ($global:posterurl -like 'https://image.tmdb.org*') {
                                     Write-Entry -Subtext "Downloading Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                     if ($global:FavProvider -ne 'TMDB') {
@@ -4666,7 +4689,7 @@ else {
                                     Write-Entry -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                     $errorCount++
                                 }
-                                Write-Entry -Subtext "Poster url: $(RedactToken -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
+                                Write-Entry -Subtext "Poster url: $(RedactPlexUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
                                 if ($global:posterurl -like 'https://image.tmdb.org*') {
                                     Write-Entry -Subtext "Downloading Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                     if ($global:FavProvider -ne 'TMDB') {
