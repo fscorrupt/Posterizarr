@@ -3,7 +3,7 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.47"
+$CurrentScriptVersion = "1.0.48"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -1635,6 +1635,35 @@ function Test-And-Download {
     }
 }
 
+function RedactPlexUrl {
+    param(
+        [string]$url
+    )
+
+    $urlMatch = $url -match "(https?://)([^:/]+)(:\d+)?(/[^?]+)(\?X-Plex-Token=)([^&]+)(.*)"
+    if ($urlMatch) {
+        $protocol = $Matches[1]
+        $hostname = $Matches[2]
+        $port = $Matches[3]
+        $path = $Matches[4]
+        $prefix = $Matches[5]
+        $token = $Matches[6]
+        $suffix = $Matches[7]
+
+        # Redact IP address or hostname
+        $redactedHostname = $hostname -replace "(?<=.{3}).", "*"
+        $redactedUrl = $protocol + $redactedHostname + $port + $path
+
+        # Redact token
+        $redactedToken = $($token[0..7] -join '') + "*******"
+        $redactedUrl += $prefix + $redactedToken + $suffix
+
+        return $redactedUrl
+    }
+    else {
+        return $url
+    }
+}
 function LogConfigSettings {
     Write-Entry -Message "Current Config.json Settings" -Path $configLogging -Color Cyan -log Info
     Write-Entry -Subtext "___________________________________________" -Path $configLogging -Color DarkMagenta -log Info
@@ -1732,54 +1761,61 @@ function CheckPlexAccess {
 
     if ($PlexToken) {
         Write-Entry -Message "Plex token found, checking access now..." -Path $configLogging -Color White -log Info
-        if ((Invoke-WebRequest "$PlexUrl/library/sections/?X-Plex-Token=$PlexToken").StatusCode -eq 200) {
-            Write-Entry -Subtext "Plex access is working..." -Path $configLogging -Color Green -log Info
-            # Check if libs are available
-            [XML]$Libs = (Invoke-WebRequest "$PlexUrl/library/sections/?X-Plex-Token=$PlexToken").content
-            if ($Libs.MediaContainer.size -ge '1') {
-                return $Libs
+        try {
+            $response = Invoke-WebRequest -Uri "$PlexUrl/library/sections/?X-Plex-Token=$PlexToken" -ErrorAction Stop
+            if ($response.StatusCode -eq 200) {
+                Write-Entry -Subtext "Plex access is working..." -Path $configLogging -Color Green -log Info
+                # Check if libs are available
+                [XML]$Libs = $response.Content
+                if ($Libs.MediaContainer.size -ge 1) {
+                    return $Libs
+                }
+                else {
+                    Write-Entry -Subtext "No libs on Plex, abort script now..." -Path $configLogging -Color Red -log Error
+                    Exit
+                }
             }
-            Else {
-                Write-Entry -Subtext "No libs on Plex, abrort script now..." -Path $configLogging -Color Red -log Error
+            else {
+                Write-Entry -Message "Could not access Plex with this URL: $(RedactPlexUrl -url "$PlexUrl/library/sections/?X-Plex-Token=$PlexToken")" -Path $configLogging -Color Red -Log Error
+                Write-Entry -Subtext "Please check token and access..." -Path $configLogging -Color Red -log Error
+                $Errorcount++
                 Exit
             }
         }
-        Else {
-            Write-Entry -Message "Could not access plex with this url: $PlexUrl/library/sections/?X-Plex-Token=$PlexToken" -Path $configLogging -Color Red -log Error
-            Write-Entry -Subtext "Please check token and access..." -Path $configLogging -Color Red -log Error
-            $Errorcount++
+        catch {
+            Write-Entry -Subtext "Could not access Plex with this URL: $(RedactPlexUrl -url "$PlexUrl/library/sections/?X-Plex-Token=$PlexToken")" -Path $configLogging -Color Red -Log Error
+            Write-Entry -Subtext "Error occurred while accessing Plex server: $_" -Path $configLogging -Color Red -log Error
             Exit
         }
     }
-    Else {
+    else {
         Write-Entry -Message "Checking Plex access now..." -Path $configLogging -Color White -log Info
         try {
             $result = Invoke-WebRequest -Uri "$PlexUrl/library/sections" -ErrorAction SilentlyContinue
+            if ($result.StatusCode -eq 200) {
+                Write-Entry -Subtext "Plex access is working..." -Path $configLogging -Color Green -log Info
+                # Check if libs are available
+                [XML]$Libs = $result.Content
+                if ($Libs.MediaContainer.size -ge 1) {
+                    Write-Entry -Subtext "Found libs on Plex..." -Path $configLogging -Color White -log Info
+                    return $Libs
+                }
+                else {
+                    Write-Entry -Subtext "No libs on Plex, abort script now..." -Path $configLogging -Color Red -log Error
+                    Exit
+                }
+            }
         }
         catch {
-            Write-Entry -Message "Could not access plex with this url: $PlexUrl/library/sections" -Path $configLogging -Color Red -log Error
-            Write-Entry -Message "Error Message: $_" -Path $configLogging -Color Red -log Error
-            $Errorcount++
-            Write-Entry -Subtext "Please check access and settings in plex..." -Path $configLogging -Color Yellow -log Warning
-            Write-Entry -Message "To be able to connect to plex without Auth" -Path $configLogging -Color White -log Info
-            Write-Entry -Message "You have to enter your ip range in 'Settings -> Network -> List of IP addresses and networks that are allowed without auth: '192.168.1.0/255.255.255.0''" -Path $configLogging -Color White -log Info
+            Write-Entry -Subtext "Error occurred while accessing Plex server: $_" -Path $configLogging -Color Red -log Error
+            Write-Entry -Subtext "Please check access and settings in Plex..." -Path $configLogging -Color Yellow -log Warning
+            Write-Entry -Message "To be able to connect to Plex without authentication" -Path $configLogging -Color White -log Info
+            Write-Entry -Message "You have to enter your IP range in 'Settings -> Network -> List of IP addresses and networks that are allowed without auth: '192.168.1.0/255.255.255.0''" -Path $configLogging -Color White -log Info
             Exit
-        }
-        if ($result.StatusCode -eq 200) {
-            Write-Entry -Subtext "Plex access is working..." -Path $configLogging -Color Green -log Info
-            # Check if libs are available
-            [XML]$Libs = (Invoke-WebRequest "$PlexUrl/library/sections").content
-            if ($Libs.MediaContainer.size -ge '1') {
-                Write-Entry -Subtext "Found libs on Plex..." -Path $configLogging -Color White -log Info
-                return $Libs
-            }
-            Else {
-                Write-Entry -Subtext "No libs on Plex, abrort script now..." -Path $configLogging -Color Red -log Error
-                Exit
-            }
         }
     }
 }
+
 
 function CheckImageMagick {
     param (
@@ -3217,6 +3253,10 @@ else {
             $Libsoverview += $libtemp
         }
     }
+    if ($($Libsoverview.count) -lt 1) {
+        Write-Entry -Subtext "0 libraries were found. Are you on the correct Plex server?" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        Exit
+    }
     Write-Entry -Subtext "Found '$($Libsoverview.count)' libs and '$($LibstoExclude.count)' are excluded..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     $IncludedLibraryNames = $Libsoverview.Name -join ', '
     Write-Entry -Subtext "Included Libraries: $IncludedLibraryNames" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
@@ -3578,7 +3618,7 @@ else {
                                 Write-Entry -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                 $errorCount++
                             }
-                            Write-Entry -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                            Write-Entry -Subtext "Poster url: $(RedactPlexUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
                             if ($global:posterurl -like 'https://image.tmdb.org*') {
                                 if ($global:PosterWithText) {
                                     Write-Entry -Subtext "Downloading Poster with Text from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
@@ -3792,7 +3832,7 @@ else {
                                 Write-Entry -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                 $errorCount++
                             }
-                            Write-Entry -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                            Write-Entry -Subtext "Poster url: $(RedactPlexUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
                             if ($global:posterurl -like 'https://image.tmdb.org*') {
                                 if ($global:PosterWithText) {
                                     Write-Entry -Subtext "Downloading background with Text from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
@@ -4072,7 +4112,7 @@ else {
                             Write-Entry -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                             $errorCount++
                         }
-                        Write-Entry -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                        Write-Entry -Subtext "Poster url: $(RedactPlexUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
                         if ($global:posterurl -like 'https://image.tmdb.org*') {
                             if ($global:PosterWithText) {
                                 Write-Entry -Subtext "Downloading Poster with Text from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
@@ -4293,7 +4333,7 @@ else {
                             Write-Entry -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                             $errorCount++
                         }
-                        Write-Entry -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                        Write-Entry -Subtext "Poster url: $(RedactPlexUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
                         if ($global:posterurl -like 'https://image.tmdb.org*') {
                             if ($global:PosterWithText) {
                                 Write-Entry -Subtext "Downloading background with Text from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
@@ -4527,7 +4567,7 @@ else {
                                     Write-Entry -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                     $errorCount++
                                 }
-                                Write-Entry -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                Write-Entry -Subtext "Poster url: $(RedactPlexUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
                                 if ($global:posterurl -like 'https://image.tmdb.org*') {
                                     Write-Entry -Subtext "Downloading Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                     if ($global:FavProvider -ne 'TMDB') {
@@ -4613,7 +4653,7 @@ else {
                                     Write-Entry -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                     $errorCount++
                                 }
-                                Write-Entry -Subtext "Poster url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                Write-Entry -Subtext "Poster url: $(RedactPlexUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
                                 if ($global:posterurl -like 'https://image.tmdb.org*') {
                                     Write-Entry -Subtext "Downloading Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                     if ($global:FavProvider -ne 'TMDB') {
