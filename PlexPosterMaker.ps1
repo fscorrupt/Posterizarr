@@ -698,7 +698,7 @@ function GetFanartMoviePoster {
                         $global:PosterWithText = $true
                         $global:AssetTextLang = ($entrytemp.movieposter)[0].lang
                         $global:FANARTAssetChangeUrl = "https://fanart.tv/movie/$id"
-                        
+
                         if ($global:FavProvider -eq 'FANART') {
                             $global:Fallback = "TMDB"
                             $global:fanartfallbackposterurl = ($entrytemp.movieposter)[0].url
@@ -777,7 +777,7 @@ function GetFanartMovieBackground {
                     $global:PosterWithText = $true
                     $global:AssetTextLang = ($entrytemp.moviebackground)[0].lang
                     $global:FANARTAssetChangeUrl = "https://fanart.tv/movie/$id"
-                    
+
                     if ($global:FavProvider -eq 'FANART') {
                         $global:Fallback = "TMDB"
                         $global:fanartfallbackposterurl = ($entrytemp.moviebackground)[0].url
@@ -821,7 +821,7 @@ function GetFanartShowPoster {
                         $global:PosterWithText = $true
                         $global:AssetTextLang = ($entrytemp.tvposter)[0].lang
                         $global:FANARTAssetChangeUrl = "https://fanart.tv/series/$id"
-                        
+
                         if ($global:FavProvider -eq 'FANART') {
                             $global:Fallback = "TMDB"
                             $global:fanartfallbackposterurl = ($entrytemp.tvposter)[0].url
@@ -904,7 +904,7 @@ function GetFanartShowBackground {
                     $global:PosterWithText = $true
                     $global:AssetTextLang = ($entrytemp.showbackground)[0].lang
                     $global:FANARTAssetChangeUrl = "https://fanart.tv/series/$id"
-                    
+
                     if ($global:FavProvider -eq 'FANART') {
                         $global:Fallback = "TMDB"
                         $global:fanartfallbackposterurl = ($entrytemp.showbackground)[0].url
@@ -1311,7 +1311,7 @@ function GetTVDBSeasonPoster {
                                 $global:AssetTextLang = $lang
                             }
                             $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)/seasons/$($Seasonresponse.data.type.type)/$global:SeasonNumber#artwork"
-                            
+
                             return $global:posterurl
                             break
                         }
@@ -1393,7 +1393,7 @@ function GetTVDBShowBackground {
                                 $global:AssetTextLang = $lang
                             }
                             $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)/#artwork"
-                            
+
                             return $global:posterurl
                             break
                         }
@@ -1430,7 +1430,7 @@ function GetTVDBTitleCard {
                     Write-Entry -Subtext "Found Title Card on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                     $global:TextlessPoster = $true
                     $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.series.slug)/episodes/$($global:NoLangImageUrl.id)"
-                    
+
                     return $global:NoLangImageUrl.image
                 }
                 Else {
