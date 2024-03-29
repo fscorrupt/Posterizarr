@@ -284,7 +284,12 @@ Run the script with the `-Testing` flag. In this mode, the script will create pi
 </details>
 
 
-### Manual Mode (Currently only movie/show/season poster creation integrated)
+### Manual Mode
+
+> [!IMPORTANT]
+> Alpha and only tested on Windows.
+> 
+> Currently only movie/show/season poster creation integrated
 
 Run the script with the `-Manual` switch:
 
