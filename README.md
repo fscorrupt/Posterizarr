@@ -28,6 +28,7 @@ Plex Poster Maker is cross-platform ready, meaning it can run on Linux, Docker (
 > You can find an example config for the Assets on my [PMM-Configs repo](https://github.com/bullmoose20/Plex-Meta-Manager-Configs/blob/master/fscorrupt/config.yml)
 - **Resizing**: It automatically resizes every poster to 2000x3000.
 - **Overlays**: If you choose to, downloaded images will automatically have borders, text, and a gradient overlay applied.
+  - Here are some gradient overlays that you can use instead of the default one [gradient-zip](gradient_background_poster_overlays.zip)
 - **Automatic Library Search**: The script autonomously searches for libraries within your Plex server, enhancing its usability.
 - **Handling Multiple Versions**: It adeptly manages multiple versions of a movie/show, ensuring comprehensive coverage.
 - **CSV Export**: Produces an impressive CSV file containing all queried movie/show information during the script's runtime in `$ScriptRoot\logs\PlexLibexport.csv`

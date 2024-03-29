@@ -3,7 +3,7 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.54"
+$CurrentScriptVersion = "1.0.55"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -1495,7 +1495,7 @@ function GetPlexArtwork {
     )
     Write-Entry -Subtext "Searching on Plex for$Type" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     try {
-        Invoke-WebRequest -Uri $ArtUrl -OutFile $TempImage
+        Invoke-WebRequest -Uri $ArtUrl -OutFile $TempImage -Headers $extraPlexHeaders
     }
     catch {
         Write-Entry -Subtext "Could not download Artwork from plex, Error Message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
@@ -1861,7 +1861,7 @@ function CheckPlexAccess {
     if ($PlexToken) {
         Write-Entry -Message "Plex token found, checking access now..." -Path $configLogging -Color White -log Info
         try {
-            $response = Invoke-WebRequest -Uri "$PlexUrl/library/sections/?X-Plex-Token=$PlexToken" -ErrorAction Stop
+            $response = Invoke-WebRequest -Uri "$PlexUrl/library/sections/?X-Plex-Token=$PlexToken" -ErrorAction Stop -Headers $extraPlexHeaders
             if ($response.StatusCode -eq 200) {
                 Write-Entry -Subtext "Plex access is working..." -Path $configLogging -Color Green -log Info
                 # Check if libs are available
@@ -1891,7 +1891,7 @@ function CheckPlexAccess {
     else {
         Write-Entry -Message "Checking Plex access now..." -Path $configLogging -Color White -log Info
         try {
-            $result = Invoke-WebRequest -Uri "$PlexUrl/library/sections" -ErrorAction SilentlyContinue
+            $result = Invoke-WebRequest -Uri "$PlexUrl/library/sections" -ErrorAction SilentlyContinue -Headers $extraPlexHeaders
             if ($result.StatusCode -eq 200) {
                 Write-Entry -Subtext "Plex access is working..." -Path $configLogging -Color Green -log Info
                 # Check if libs are available
@@ -2409,6 +2409,11 @@ $global:tvdbtoken = (Invoke-RestMethod -Uri $global:apiUrl -Headers $global:tvdb
 $global:tvdbheader = @{}
 $global:tvdbheader.Add("accept", "application/json")
 $global:tvdbheader.Add("Authorization", "Bearer $global:tvdbtoken")
+
+# Plex Headers
+$extraPlexHeaders = @{
+    'X-Plex-Container-Size' = '1000'
+}
 
 if ($Manual) {
     Write-Entry -Message "Manual Poster Creation Started" -Path $global:ScriptRoot\Logs\Manuallog.log -Color DarkMagenta -log Info
@@ -3367,10 +3372,88 @@ else {
     Foreach ($Library in $Libsoverview) {
         if ($Library.Name -notin $LibstoExclude) {
             if ($PlexToken) {
-                [xml]$Libcontent = (Invoke-WebRequest $PlexUrl/library/sections/$($Library.ID)/all?X-Plex-Token=$PlexToken).content
+                # Create a parent XML document
+                $Libcontent = New-Object -TypeName System.Xml.XmlDocument
+                $mediaContainerNode = $Libcontent.CreateElement("MediaContainer")
+                $Libcontent.AppendChild($mediaContainerNode) | Out-Null
+    
+                # Initialize variables for pagination
+                $searchsize = 0
+                $totalContentSize = 1
+    
+                # Loop until all content is retrieved
+                do {
+                    # Set headers for the current request
+                    $loopPlexHeaders = @{
+                        'X-Plex-Container-Start' = $searchsize
+                        'X-Plex-Container-Size' = '1000'
+                    }
+    
+                    # Fetch content from Plex server
+                    $response = Invoke-WebRequest -Uri "$PlexUrl/library/sections/$($Library.ID)/all?X-Plex-Token=$PlexToken" -Headers $loopPlexHeaders
+    
+                    # Convert response content to XML
+                    [xml]$additionalContent = $response.Content
+    
+                    # Get total content size if not retrieved yet
+                    if ($totalContentSize -eq 1) {
+                        $totalContentSize = $additionalContent.MediaContainer.totalSize
+                    }
+    
+                    # Import and append video nodes to the parent XML document
+                    foreach ($videoNode in $additionalContent.MediaContainer.video) {
+                        $importedNode = $Libcontent.ImportNode($videoNode, $true)
+                        [void]$mediaContainerNode.AppendChild($importedNode)
+                    }
+                    foreach ($videoNode in $additionalContent.MediaContainer.Directory) {
+                        $importedNode = $Libcontent.ImportNode($videoNode, $true)
+                        [void]$mediaContainerNode.AppendChild($importedNode)
+                    }
+                    # Update search size for next request
+                    $searchsize += [int]$additionalContent.MediaContainer.Size
+                } until ($searchsize -ge $totalContentSize)
             }
             Else {
-                [xml]$Libcontent = (Invoke-WebRequest $PlexUrl/library/sections/$($Library.ID)/all).content
+                # Create a parent XML document
+                $Libcontent = New-Object -TypeName System.Xml.XmlDocument
+                $mediaContainerNode = $Libcontent.CreateElement("MediaContainer")
+                $Libcontent.AppendChild($mediaContainerNode) | Out-Null
+    
+                # Initialize variables for pagination
+                $searchsize = 0
+                $totalContentSize = 1
+    
+                # Loop until all content is retrieved
+                do {
+                    # Set headers for the current request
+                    $loopPlexHeaders = @{
+                        'X-Plex-Container-Start' = $searchsize
+                        'X-Plex-Container-Size' = '1000'
+                    }
+    
+                    # Fetch content from Plex server
+                    $response = Invoke-WebRequest -Uri "$PlexUrl/library/sections/$($Library.ID)/all" -Headers $loopPlexHeaders
+    
+                    # Convert response content to XML
+                    [xml]$additionalContent = $response.Content
+    
+                    # Get total content size if not retrieved yet
+                    if ($totalContentSize -eq 1) {
+                        $totalContentSize = $additionalContent.MediaContainer.totalSize
+                    }
+    
+                    # Import and append video nodes to the parent XML document
+                    foreach ($videoNode in $additionalContent.MediaContainer.video) {
+                        $importedNode = $Libcontent.ImportNode($videoNode, $true)
+                        [void]$mediaContainerNode.AppendChild($importedNode)
+                    }
+                    foreach ($videoNode in $additionalContent.MediaContainer.Directory) {
+                        $importedNode = $Libcontent.ImportNode($videoNode, $true)
+                        [void]$mediaContainerNode.AppendChild($importedNode)
+                    }
+                    # Update search size for next request
+                    $searchsize += [int]$additionalContent.MediaContainer.Size
+                } until ($searchsize -ge $totalContentSize)
             }
             if ($Libcontent.MediaContainer.video) {
                 $contentquery = 'video'
@@ -3382,17 +3465,21 @@ else {
                 $Seasondata = $null
                 if ($PlexToken) {
                     if ($contentquery -eq 'Directory') {
-                        [xml]$Metadata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey)?X-Plex-Token=$PlexToken).content
-                        [xml]$Seasondata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey)/children?X-Plex-Token=$PlexToken).content
+                        [xml]$Metadata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey)?X-Plex-Token=$PlexToken -Headers $extraPlexHeaders).content
+                        [xml]$Seasondata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey)/children?X-Plex-Token=$PlexToken -Headers $extraPlexHeaders).content
                     }
-                    [xml]$Metadata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey)?X-Plex-Token=$PlexToken).content
+                    Else {
+                        [xml]$Metadata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey)?X-Plex-Token=$PlexToken -Headers $extraPlexHeaders).content
+                    }    
                 }
                 Else {
                     if ($contentquery -eq 'Directory') {
-                        [xml]$Metadata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey)).content
-                        [xml]$Seasondata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey)/children?).content
+                        [xml]$Metadata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey) -Headers $extraPlexHeaders).content
+                        [xml]$Seasondata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey)/children? -Headers $extraPlexHeaders).content
                     }
-                    [xml]$Metadata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey)).content
+                    Else {
+                        [xml]$Metadata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey) -Headers $extraPlexHeaders).content
+                    }
                 }
                 $metadatatemp = $Metadata.MediaContainer.$contentquery.guid.id
                 $tmdbpattern = 'tmdb://(\d+)'
@@ -3531,12 +3618,12 @@ else {
             foreach ($key in $splittedkeys) {
                 if ($PlexToken) {
                     if ($contentquery -eq 'Directory') {
-                        [xml]$Seasondata = (Invoke-WebRequest $PlexUrl/library/metadata/$key/children?X-Plex-Token=$PlexToken).content
+                        [xml]$Seasondata = (Invoke-WebRequest $PlexUrl/library/metadata/$key/children?X-Plex-Token=$PlexToken -Headers $extraPlexHeaders).content
                     }
                 }
                 Else {
                     if ($contentquery -eq 'Directory') {
-                        [xml]$Seasondata = (Invoke-WebRequest $PlexUrl/library/metadata/$key/children?).content
+                        [xml]$Seasondata = (Invoke-WebRequest $PlexUrl/library/metadata/$key/children? -Headers $extraPlexHeaders).content
                     }
                 }
                 $tempseasondata = New-Object psobject
