@@ -153,6 +153,7 @@ function GetTMDBMoviePoster {
         }
         catch {
             Write-Entry -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             $errorCount++
         }
         if ($response) {
@@ -192,6 +193,7 @@ function GetTMDBMoviePoster {
         }
         catch {
             Write-Entry -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             $errorCount++
         }
         if ($response) {
@@ -236,6 +238,7 @@ function GetTMDBMovieBackground {
         }
         catch {
             Write-Entry -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             $errorCount++
         }
         if ($response) {
@@ -281,6 +284,7 @@ function GetTMDBMovieBackground {
         }
         catch {
             Write-Entry -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             $errorCount++
         }
         if ($response) {
@@ -335,6 +339,7 @@ function GetTMDBShowPoster {
         }
         catch {
             Write-Entry -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             $errorCount++
         }
         if ($response) {
@@ -375,6 +380,7 @@ function GetTMDBShowPoster {
         }
         catch {
             Write-Entry -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             $errorCount++
         }
         if ($response) {
@@ -419,6 +425,7 @@ function GetTMDBSeasonPoster {
         }
         catch {
             Write-Entry -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             $errorCount++
         }
         if ($response) {
@@ -464,6 +471,7 @@ function GetTMDBSeasonPoster {
         }
         catch {
             Write-Entry -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             $errorCount++
         }
         if ($responseBackup) {
@@ -542,6 +550,7 @@ function GetTMDBShowBackground {
         }
         catch {
             Write-Entry -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             $errorCount++
         }
         if ($response) {
@@ -591,6 +600,7 @@ function GetTMDBShowBackground {
         }
         catch {
             Write-Entry -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             $errorCount++
         }
         if ($response) {
@@ -644,6 +654,7 @@ function GetTMDBTitleCard {
     }
     catch {
         Write-Entry -Subtext "Could not query TMDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
         $errorCount++
     }
     if ($response) {
@@ -672,13 +683,15 @@ function GetTMDBTitleCard {
         Else {
             Write-Entry -Subtext "No Title Card found on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             $global:Fallback = "TVDB"
-            $Errorcount++
+            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            $errorCount++
         }
     }
     Else {
         Write-Entry -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
         $global:Fallback = "TVDB"
-        $Errorcount++
+        Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        $errorCount++
     }
 }
 function GetFanartMoviePoster {
@@ -1052,6 +1065,7 @@ function GetTVDBMoviePoster {
             }
             catch {
                 Write-Entry -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                 $errorCount++
             }
             if ($response) {
@@ -1075,6 +1089,7 @@ function GetTVDBMoviePoster {
             }
             catch {
                 Write-Entry -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                 $errorCount++
             }
             if ($response) {
@@ -1122,6 +1137,7 @@ function GetTVDBMovieBackground {
             }
             catch {
                 Write-Entry -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                 $errorCount++
             }
             if ($response) {
@@ -1145,6 +1161,7 @@ function GetTVDBMovieBackground {
             }
             catch {
                 Write-Entry -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                 $errorCount++
             }
             if ($response) {
@@ -1195,6 +1212,7 @@ function GetTVDBShowPoster {
             }
             catch {
                 Write-Entry -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                 $errorCount++
             }
             if ($response) {
@@ -1227,6 +1245,7 @@ function GetTVDBShowPoster {
             }
             catch {
                 Write-Entry -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                 $errorCount++
             }
             if ($response) {
@@ -1273,6 +1292,7 @@ function GetTVDBSeasonPoster {
         }
         catch {
             Write-Entry -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             $errorCount++
         }
         if ($response) {
@@ -1287,6 +1307,7 @@ function GetTVDBSeasonPoster {
                 }
                 catch {
                     Write-Entry -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                     $errorCount++
                 }
                 if ($Seasonresponse) {
@@ -1337,6 +1358,7 @@ function GetTVDBShowBackground {
             }
             catch {
                 Write-Entry -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                 $errorCount++
             }
             if ($response) {
@@ -1369,6 +1391,7 @@ function GetTVDBShowBackground {
             }
             catch {
                 Write-Entry -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                 $errorCount++
             }
             if ($response) {
@@ -1420,6 +1443,7 @@ function GetTVDBTitleCard {
         }
         catch {
             Write-Entry -Subtext "Could not query TVDB url, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             $errorCount++
         }
         if ($response) {
@@ -1435,17 +1459,20 @@ function GetTVDBTitleCard {
                 }
                 Else {
                     Write-Entry -Subtext "No Title Card found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-                    $Errorcount++
+                    Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    $errorCount++
                 }
             }
             Else {
                 Write-Entry -Subtext "No Title Card found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-                $Errorcount++
+                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                $errorCount++
             }
         }
         Else {
             Write-Entry -Subtext "TVDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-            $Errorcount++
+            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            $errorCount++
         }
     }
 }
@@ -1472,6 +1499,7 @@ function GetPlexArtwork {
     }
     catch {
         Write-Entry -Subtext "Could not download Artwork from plex, Error Message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
         $errorCount++
         break
     }
@@ -1618,6 +1646,7 @@ function CheckJsonPaths {
         if (-not (Test-Path $path)) {
             Write-Entry -Message "Could not find file in: $path" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             Write-Entry -Subtext "Check config for typos and make sure that the file is present in scriptroot." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             $errorCount++
         }
     }
@@ -1848,7 +1877,8 @@ function CheckPlexAccess {
             else {
                 Write-Entry -Message "Could not access Plex with this URL: $(RedactPlexUrl -url "$PlexUrl/library/sections/?X-Plex-Token=$PlexToken")" -Path $configLogging -Color Red -Log Error
                 Write-Entry -Subtext "Please check token and access..." -Path $configLogging -Color Red -log Error
-                $Errorcount++
+                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                $errorCount++
                 Exit
             }
         }
@@ -1905,7 +1935,8 @@ function CheckImageMagick {
         }
         else {
             Write-Entry -Message "ImageMagick missing, downloading it for you..." -Path $configLogging -Color Red -log Error
-            $Errorcount++
+            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            $errorCount++
             $result = Invoke-WebRequest "https://imagemagick.org/archive/binaries/?C=M;O=D"
             $LatestRelease = ($result.links.href | Where-Object { $_ -like '*portable-Q16-HDRI-x64.zip' } | Sort-Object -Descending)[0]
             $DownloadPath = Join-Path -Path $global:ScriptRoot -ChildPath (Join-Path -Path 'temp' -ChildPath $LatestRelease)
@@ -2247,7 +2278,7 @@ Else {
     $magick = Join-Path $magickinstalllocation 'magick.exe'
 }
 $fileExtensions = @(".otf", ".ttf", ".otc", ".ttc", ".png")
-$Errorcount = 0
+$errorCount = 0
 
 # Initialize Other Variables
 $SeasonsTemp = $null
@@ -2341,7 +2372,8 @@ CheckOverlayDimensions -Posteroverlay "$Posteroverlay" -Backgroundoverlay "$Back
 # check if fanart Module is installed
 if (!(Get-InstalledModule -Name FanartTvAPI)) {
     Write-Entry -Message "FanartTvAPI Module missing, installing it for you..." -Path $configLogging -Color Red -log Error
-    $Errorcount++
+    Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+    $errorCount++
     Install-Module -Name FanartTvAPI -Force -Confirm -AllowClobber
 
     Write-Entry -Subtext "FanartTvAPI Module installed, importing it now..." -Path $configLogging -Color Green -log Info
@@ -3173,7 +3205,7 @@ Elseif ($Testing) {
                 },
                 "description": "PPM Test run took: $FormattedTimespawn",
                 "timestamp": "$(((Get-Date).ToUniversalTime()).ToString("yyyy-MM-ddTHH:mm:ss.fffZ"))",
-                "color": $(if ($Errorcount -ge '1') {16711680}Elseif ($Testing){8388736}Elseif ($FallbackCount.count -gt '1' -or $PosterUnknownCount -ge '1' -or $TextTruncatedCount.count -gt '1'){15120384}Else{5763719}),
+                "color": $(if ($errorCount -ge '1') {16711680}Elseif ($Testing){8388736}Elseif ($FallbackCount.count -gt '1' -or $PosterUnknownCount -ge '1' -or $TextTruncatedCount.count -gt '1'){15120384}Else{5763719}),
                 "fields": [
                 {
                     "name": "",
@@ -3236,7 +3268,7 @@ Elseif ($Testing) {
                     },
                     "description": "PPM Test run took: $FormattedTimespawn",
                     "timestamp": "$(((Get-Date).ToUniversalTime()).ToString("yyyy-MM-ddTHH:mm:ss.fffZ"))",
-                    "color": $(if ($Errorcount -ge '1') {16711680}Elseif ($Testing){8388736}Elseif ($FallbackCount.count -gt '1' -or $PosterUnknownCount -ge '1' -or $TextTruncatedCount.count -gt '1'){15120384}Else{5763719}),
+                    "color": $(if ($errorCount -ge '1') {16711680}Elseif ($Testing){8388736}Elseif ($FallbackCount.count -gt '1' -or $PosterUnknownCount -ge '1' -or $TextTruncatedCount.count -gt '1'){15120384}Else{5763719}),
                     "fields": [
                     {
                         "name": "",
@@ -3690,6 +3722,7 @@ else {
                             catch {
                                 $statusCode = $_.Exception.Response.StatusCode.value__
                                 Write-Entry -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                 $errorCount++
                             }
                             Write-Entry -Subtext "Poster url: $(RedactPlexUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
@@ -3796,7 +3829,8 @@ else {
                         Else {
                             Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
                             Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
-                            $Errorcount++
+                            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            $errorCount++
                         }
                     }
                     else {
@@ -3914,6 +3948,7 @@ else {
                             catch {
                                 $statusCode = $_.Exception.Response.StatusCode.value__
                                 Write-Entry -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                 $errorCount++
                             }
                             Write-Entry -Subtext "Poster url: $(RedactPlexUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
@@ -4020,7 +4055,8 @@ else {
                         Else {
                             Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
                             Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
-                            $Errorcount++
+                            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            $errorCount++
                         }
                     }
                     else {
@@ -4033,11 +4069,13 @@ else {
 
             Else {
                 Write-Entry -Message "Missing RootFolder for: $($entry.title) - you have to manually create the poster for it..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                $Errorcount++
+                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                $errorCount++
             }
         }
         catch {
             Write-Entry -Subtext "Could not query entries from movies array, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             $errorCount++
         }
     }
@@ -4203,6 +4241,7 @@ else {
                         catch {
                             $statusCode = $_.Exception.Response.StatusCode.value__
                             Write-Entry -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                             $errorCount++
                         }
                         Write-Entry -Subtext "Poster url: $(RedactPlexUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
@@ -4309,7 +4348,8 @@ else {
                     Else {
                         Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
                         Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
-                        $Errorcount++
+                        Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                        $errorCount++
                     }
                 }
                 else {
@@ -4433,6 +4473,7 @@ else {
                         catch {
                             $statusCode = $_.Exception.Response.StatusCode.value__
                             Write-Entry -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                             $errorCount++
                         }
                         Write-Entry -Subtext "Poster url: $(RedactPlexUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
@@ -4539,7 +4580,8 @@ else {
                     Else {
                         Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
                         Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
-                        $Errorcount++
+                        Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                        $errorCount++
                     }
                 }
                 else {
@@ -4683,6 +4725,7 @@ else {
                                 catch {
                                     $statusCode = $_.Exception.Response.StatusCode.value__
                                     Write-Entry -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                    Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                     $errorCount++
                                 }
                                 Write-Entry -Subtext "Poster url: $(RedactPlexUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
@@ -4769,6 +4812,7 @@ else {
                                 catch {
                                     $statusCode = $_.Exception.Response.StatusCode.value__
                                     Write-Entry -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                    Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                     $errorCount++
                                 }
                                 Write-Entry -Subtext "Poster url: $(RedactPlexUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
@@ -4845,7 +4889,8 @@ else {
                         Else {
                             Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
                             Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
-                            $Errorcount++
+                            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            $errorCount++
                         }
                     }
                     else {
@@ -5033,6 +5078,7 @@ else {
                                             catch {
                                                 $statusCode = $_.Exception.Response.StatusCode.value__
                                                 Write-Entry -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                 $errorCount++
                                             }
                                             if ($global:TempImagecopied -ne 'True') {
@@ -5063,7 +5109,8 @@ else {
                                             # Check temp image
                                             if ((Get-ChildItem -LiteralPath $EpisodeTempImage -ErrorAction SilentlyContinue).length -eq '0') {
                                                 Write-Entry -Subtext "Temp image is corrupt, cannot proceed" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                                                $Errorcount++
+                                                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                                $errorCount++
                                             }
                                             Else {
                                                 if (Get-ChildItem -LiteralPath $EpisodeImage -ErrorAction SilentlyContinue) {
@@ -5137,6 +5184,7 @@ else {
                                             catch {
                                                 $statusCode = $_.Exception.Response.StatusCode.value__
                                                 Write-Entry -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                 $errorCount++
                                             }
                                             Write-Entry -Subtext "Title Card url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -5198,7 +5246,8 @@ else {
                                     }
                                     Else {
                                         Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
-                                        $Errorcount++
+                                        Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                        $errorCount++
                                     }
 
                                 }
@@ -5410,6 +5459,7 @@ else {
                                             catch {
                                                 $statusCode = $_.Exception.Response.StatusCode.value__
                                                 Write-Entry -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                 $errorCount++
                                             }
                                             Write-Entry -Subtext "Title Card url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -5501,6 +5551,7 @@ else {
                                             catch {
                                                 $statusCode = $_.Exception.Response.StatusCode.value__
                                                 Write-Entry -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                 $errorCount++
                                             }
                                             Write-Entry -Subtext "Title Card url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -5562,7 +5613,8 @@ else {
                                     }
                                     Else {
                                         Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
-                                        $Errorcount++
+                                        Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                        $errorCount++
                                     }
 
                                 }
@@ -5580,7 +5632,8 @@ else {
         }
         Else {
             Write-Entry -Message "Missing RootFolder for: $($entry.title) - you have to manually create the poster for it..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-            $Errorcount++
+            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            $errorCount++
         }
     }
     $endTime = Get-Date
@@ -5623,8 +5676,8 @@ else {
             Write-Entry -Subtext "'$($TextTruncatedCount.count)' times the script truncated the text in images" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
         }
     }
-    if ($Errorcount -ge '1') {
-        Write-Entry -Message "During execution '$Errorcount' Errors occurred, please check the log for a detailed description." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+    if ($errorCount -ge '1') {
+        Write-Entry -Message "During execution '$errorCount' Errors occurred, please check the log for a detailed description where you see [ERROR-HERE]." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
     }
     Write-Entry -Message "Script execution time: $FormattedTimespawn" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
     # Send Notification when running in Docker
@@ -5641,9 +5694,9 @@ else {
                 "name": "PPM @Github",
                 "url": "https://github.com/fscorrupt/Plex-Poster-Maker"
                 },
-                "description": "PPM run took: $FormattedTimespawn $(if ($Errorcount -ge '1') {"\n During execution Errors occurred, please check log for detailed description."})",
+                "description": "PPM run took: $FormattedTimespawn $(if ($errorCount -ge '1') {"\n During execution Errors occurred, please check log for detailed description."})",
                 "timestamp": "$(((Get-Date).ToUniversalTime()).ToString("yyyy-MM-ddTHH:mm:ss.fffZ"))",
-                "color": $(if ($Errorcount -ge '1') {16711680}Elseif ($Testing){8388736}Elseif ($FallbackCount.count -gt '1' -or $PosterUnknownCount -ge '1' -or $TextTruncatedCount.count -gt '1'){15120384}Else{5763719}),
+                "color": $(if ($errorCount -ge '1') {16711680}Elseif ($Testing){8388736}Elseif ($FallbackCount.count -gt '1' -or $PosterUnknownCount -ge '1' -or $TextTruncatedCount.count -gt '1'){15120384}Else{5763719}),
                 "fields": [
                 {
                     "name": "",
@@ -5652,7 +5705,7 @@ else {
                 },
                 {
                     "name": "Errors",
-                    "value": "$Errorcount",
+                    "value": "$errorCount",
                     "inline": false
                 },
                 {
@@ -5719,8 +5772,8 @@ else {
         }
         Else {
             if ($global:SendNotification -eq 'True') {
-                if ($Errorcount -ge '1') {
-                    apprise --notification-type="error" --title="Plex-Poster-Maker" --body="PPM run took: $FormattedTimespawn`nIt Created '$posterCount' Images`n`nDuring execution '$Errorcount' Errors occurred, please check log for detailed description." "$global:NotifyUrl"
+                if ($errorCount -ge '1') {
+                    apprise --notification-type="error" --title="Plex-Poster-Maker" --body="PPM run took: $FormattedTimespawn`nIt Created '$posterCount' Images`n`nDuring execution '$errorCount' Errors occurred, please check log for detailed description." "$global:NotifyUrl"
                 }
                 Else {
                     apprise --notification-type="success" --title="Plex-Poster-Maker" --body="PPM run took: $FormattedTimespawn`nIt Created '$posterCount' Images" "$global:NotifyUrl"
@@ -5740,9 +5793,9 @@ else {
                 "name": "PPM @Github",
                 "url": "https://github.com/fscorrupt/Plex-Poster-Maker"
                 },
-                "description": "PPM run took: $FormattedTimespawn $(if ($Errorcount -ge '1') {"\n During execution Errors occurred, please check log for detailed description."})",
+                "description": "PPM run took: $FormattedTimespawn $(if ($errorCount -ge '1') {"\n During execution Errors occurred, please check log for detailed description."})",
                 "timestamp": "$(((Get-Date).ToUniversalTime()).ToString("yyyy-MM-ddTHH:mm:ss.fffZ"))",
-                "color": $(if ($Errorcount -ge '1') {16711680}Elseif ($Testing){8388736}Elseif ($FallbackCount.count -gt '1' -or $PosterUnknownCount -ge '1' -or $TextTruncatedCount.count -gt '1'){15120384}Else{5763719}),
+                "color": $(if ($errorCount -ge '1') {16711680}Elseif ($Testing){8388736}Elseif ($FallbackCount.count -gt '1' -or $PosterUnknownCount -ge '1' -or $TextTruncatedCount.count -gt '1'){15120384}Else{5763719}),
                 "fields": [
                 {
                     "name": "",
@@ -5751,7 +5804,7 @@ else {
                 },
                 {
                     "name": "Errors",
-                    "value": "$Errorcount",
+                    "value": "$errorCount",
                     "inline": false
                 },
                 {
