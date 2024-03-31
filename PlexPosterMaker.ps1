@@ -3,7 +3,7 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.60"
+$CurrentScriptVersion = "1.0.61"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -3684,6 +3684,11 @@ else {
     catch {
         Write-Entry -Subtext "Error during Hashtable creation, please check Asset dir is available..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
         Exit
+    }
+
+    if ($global:logLevel -eq '3'){
+        Write-Entry -Message "Output hashtable..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Debug
+        $directoryHashtable.keys | Out-File "$global:ScriptRoot\Logs\hashtable.log" -Force
     }
 
     # Download poster foreach movie
