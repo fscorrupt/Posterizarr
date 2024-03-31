@@ -17,6 +17,7 @@ services:
       - "proxy"
     volumes:
       - "/opt/appdata/ppm:/config:rw"
+      - "/opt/appdata/ppm/assets:/assets:rw"
 networks:
   proxy:
     driver: bridge
