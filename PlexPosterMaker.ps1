@@ -3,7 +3,7 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.57"
+$CurrentScriptVersion = "1.0.58"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -3750,6 +3750,7 @@ else {
                         $global:FANARTAssetChangeUrl = $null
                         $global:TVDBAssetChangeUrl = $null
                         $global:Fallback = $null
+                        $global:IsFallback = $null
                         $global:ImageMagickError = $null
                         if ($PlexToken) {
                             $Arturl = $plexurl + $entry.PlexPosterUrl + "?X-Plex-Token=$PlexToken"
@@ -3983,6 +3984,8 @@ else {
                         $global:posterurl = $null
                         $global:PosterWithText = $null
                         $global:AssetTextLang = $null
+                        $global:Fallback = $null
+                        $global:IsFallback = $null
                         $global:TMDBAssetTextLang = $null
                         $global:FANARTAssetTextLang = $null
                         $global:TVDBAssetTextLang = $null
@@ -4208,8 +4211,8 @@ else {
             $global:PosterWithText = $null
             $global:AssetTextLang = $null
             $global:TMDBAssetTextLang = $null
-                        $global:FANARTAssetTextLang = $null
-                        $global:TVDBAssetTextLang = $null
+            $global:FANARTAssetTextLang = $null
+            $global:TVDBAssetTextLang = $null
             $global:TMDBAssetChangeUrl = $null
             $global:FANARTAssetChangeUrl = $null
             $global:TVDBAssetChangeUrl = $null
@@ -4518,9 +4521,11 @@ else {
                     $global:posterurl = $null
                     $global:PosterWithText = $null
                     $global:AssetTextLang = $null
+                    $global:Fallback = $null
+                    $global:IsFallback = $null
                     $global:TMDBAssetTextLang = $null
-                        $global:FANARTAssetTextLang = $null
-                        $global:TVDBAssetTextLang = $null
+                    $global:FANARTAssetTextLang = $null
+                    $global:TVDBAssetTextLang = $null
                     $global:TMDBAssetChangeUrl = $null
                     $global:FANARTAssetChangeUrl = $null
                     $global:TVDBAssetChangeUrl = $null
@@ -4719,9 +4724,10 @@ else {
             if ($global:SeasonPosters -eq 'true') {
                 $global:IsFallback = $null
                 $global:AssetTextLang = $null
+                $global:Fallback = $null
                 $global:TMDBAssetTextLang = $null
-                        $global:FANARTAssetTextLang = $null
-                        $global:TVDBAssetTextLang = $null
+                $global:FANARTAssetTextLang = $null
+                $global:TVDBAssetTextLang = $null
                 $global:TMDBAssetChangeUrl = $null
                 $global:FANARTAssetChangeUrl = $null
                 $global:TVDBAssetChangeUrl = $null
@@ -4735,9 +4741,10 @@ else {
                     $global:posterurl = $null
                     $global:IsFallback = $null
                     $global:AssetTextLang = $null
+                    $global:Fallback = $null
                     $global:TMDBAssetTextLang = $null
-                        $global:FANARTAssetTextLang = $null
-                        $global:TVDBAssetTextLang = $null
+                    $global:FANARTAssetTextLang = $null
+                    $global:TVDBAssetTextLang = $null
                     $global:TMDBAssetChangeUrl = $null
                     $global:FANARTAssetChangeUrl = $null
                     $global:TVDBAssetChangeUrl = $null
@@ -5043,8 +5050,8 @@ else {
                 foreach ($episode in $Episodedata) {
                     $global:AssetTextLang = $null
                     $global:TMDBAssetTextLang = $null
-                        $global:FANARTAssetTextLang = $null
-                        $global:TVDBAssetTextLang = $null
+                    $global:FANARTAssetTextLang = $null
+                    $global:TVDBAssetTextLang = $null
                     $global:TMDBAssetChangeUrl = $null
                     $global:FANARTAssetChangeUrl = $null
                     $global:TVDBAssetChangeUrl = $null
@@ -5077,13 +5084,14 @@ else {
                             for ($i = 0; $i -lt $global:episode_numbers.Count; $i++) {
                                 $global:AssetTextLang = $null
                                 $global:TMDBAssetTextLang = $null
-                        $global:FANARTAssetTextLang = $null
-                        $global:TVDBAssetTextLang = $null
+                                $global:FANARTAssetTextLang = $null
+                                $global:TVDBAssetTextLang = $null
                                 $global:TMDBAssetChangeUrl = $null
                                 $global:FANARTAssetChangeUrl = $null
                                 $global:TVDBAssetChangeUrl = $null
                                 $global:PosterWithText = $null
                                 $global:Fallback = $null
+                                $global:IsFallback = $null
                                 $global:posterurl = $null
                                 $Episodepostersearchtext = $null
                                 $ExifFound = $null
@@ -5413,13 +5421,14 @@ else {
                             for ($i = 0; $i -lt $global:episode_numbers.Count; $i++) {
                                 $global:AssetTextLang = $null
                                 $global:TMDBAssetTextLang = $null
-                        $global:FANARTAssetTextLang = $null
-                        $global:TVDBAssetTextLang = $null
+                                $global:FANARTAssetTextLang = $null
+                                $global:TVDBAssetTextLang = $null
                                 $global:TMDBAssetChangeUrl = $null
                                 $global:FANARTAssetChangeUrl = $null
                                 $global:TVDBAssetChangeUrl = $null
                                 $global:PosterWithText = $null
                                 $global:Fallback = $null
+                                $global:IsFallback = $null
                                 $global:ImageMagickError = $null
                                 $global:TextlessPoster = $null
                                 $global:posterurl = $null
