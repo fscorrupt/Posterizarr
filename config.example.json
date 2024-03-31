@@ -52,6 +52,20 @@
     "MaxHeight": "500",
     "text_offset": "+400"
   },
+  "SeasonPosterOverlayPart": {
+    "fontAllCaps": "true",
+    "AddBorder": "true",
+    "AddText": "true",
+    "AddOverlay": "true",
+    "fontcolor": "white",
+    "bordercolor": "white",
+    "minPointSize": "95",
+    "maxPointSize": "250",
+    "borderwidth": "30",
+    "MaxWidth": "1900",
+    "MaxHeight": "500",
+    "text_offset": "+400"
+  },
   "BackgroundOverlayPart": {
     "fontAllCaps": "true",
     "AddOverlay": "true",
