@@ -1841,6 +1841,8 @@ function LogConfigSettings {
     Write-Entry -Subtext "| Text Box Height:              $TitleCardEPTitleMaxHeight" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Text Box Offset:              $TitleCardEPTitletext_offset" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "OverLay TitleCard EP Part" -Path $configLogging -Color Cyan -log Info
+    Write-Entry -Subtext "| Season TC Text:               $SeasonTCText" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Episode TC Text:              $EpisodeTCText" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| All Caps on Text:             $TitleCardEPfontAllCaps" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Add Episode to TitleCard:     $AddTitleCardEPText" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Font Color:                   $TitleCardEPfontcolor" -Path $configLogging -Color White -log Info
