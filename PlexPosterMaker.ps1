@@ -3,7 +3,7 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.55"
+$CurrentScriptVersion = "1.0.56"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -3371,90 +3371,52 @@ else {
     $Libraries = @()
     Foreach ($Library in $Libsoverview) {
         if ($Library.Name -notin $LibstoExclude) {
+            $PlexHeaders = @{}
             if ($PlexToken) {
-                # Create a parent XML document
-                $Libcontent = New-Object -TypeName System.Xml.XmlDocument
-                $mediaContainerNode = $Libcontent.CreateElement("MediaContainer")
-                $Libcontent.AppendChild($mediaContainerNode) | Out-Null
-    
-                # Initialize variables for pagination
-                $searchsize = 0
-                $totalContentSize = 1
-    
-                # Loop until all content is retrieved
-                do {
-                    # Set headers for the current request
-                    $loopPlexHeaders = @{
-                        'X-Plex-Container-Start' = $searchsize
-                        'X-Plex-Container-Size' = '1000'
-                    }
-    
-                    # Fetch content from Plex server
-                    $response = Invoke-WebRequest -Uri "$PlexUrl/library/sections/$($Library.ID)/all?X-Plex-Token=$PlexToken" -Headers $loopPlexHeaders
-    
-                    # Convert response content to XML
-                    [xml]$additionalContent = $response.Content
-    
-                    # Get total content size if not retrieved yet
-                    if ($totalContentSize -eq 1) {
-                        $totalContentSize = $additionalContent.MediaContainer.totalSize
-                    }
-    
-                    # Import and append video nodes to the parent XML document
-                    foreach ($videoNode in $additionalContent.MediaContainer.video) {
-                        $importedNode = $Libcontent.ImportNode($videoNode, $true)
-                        [void]$mediaContainerNode.AppendChild($importedNode)
-                    }
-                    foreach ($videoNode in $additionalContent.MediaContainer.Directory) {
-                        $importedNode = $Libcontent.ImportNode($videoNode, $true)
-                        [void]$mediaContainerNode.AppendChild($importedNode)
-                    }
-                    # Update search size for next request
-                    $searchsize += [int]$additionalContent.MediaContainer.Size
-                } until ($searchsize -ge $totalContentSize)
+                $PlexHeaders['X-Plex-Token'] = $PlexToken
             }
-            Else {
-                # Create a parent XML document
-                $Libcontent = New-Object -TypeName System.Xml.XmlDocument
-                $mediaContainerNode = $Libcontent.CreateElement("MediaContainer")
-                $Libcontent.AppendChild($mediaContainerNode) | Out-Null
-    
-                # Initialize variables for pagination
-                $searchsize = 0
-                $totalContentSize = 1
-    
-                # Loop until all content is retrieved
-                do {
-                    # Set headers for the current request
-                    $loopPlexHeaders = @{
-                        'X-Plex-Container-Start' = $searchsize
-                        'X-Plex-Container-Size' = '1000'
-                    }
-    
-                    # Fetch content from Plex server
-                    $response = Invoke-WebRequest -Uri "$PlexUrl/library/sections/$($Library.ID)/all" -Headers $loopPlexHeaders
-    
-                    # Convert response content to XML
-                    [xml]$additionalContent = $response.Content
-    
-                    # Get total content size if not retrieved yet
-                    if ($totalContentSize -eq 1) {
-                        $totalContentSize = $additionalContent.MediaContainer.totalSize
-                    }
-    
-                    # Import and append video nodes to the parent XML document
-                    foreach ($videoNode in $additionalContent.MediaContainer.video) {
-                        $importedNode = $Libcontent.ImportNode($videoNode, $true)
-                        [void]$mediaContainerNode.AppendChild($importedNode)
-                    }
-                    foreach ($videoNode in $additionalContent.MediaContainer.Directory) {
-                        $importedNode = $Libcontent.ImportNode($videoNode, $true)
-                        [void]$mediaContainerNode.AppendChild($importedNode)
-                    }
-                    # Update search size for next request
-                    $searchsize += [int]$additionalContent.MediaContainer.Size
-                } until ($searchsize -ge $totalContentSize)
-            }
+            
+            # Create a parent XML document
+            $Libcontent = New-Object -TypeName System.Xml.XmlDocument
+            $mediaContainerNode = $Libcontent.CreateElement('MediaContainer')
+            $Libcontent.AppendChild($mediaContainerNode) | Out-Null
+            
+            # Initialize variables for pagination
+            $searchsize = 0
+            $totalContentSize = 1
+            
+            # Loop until all content is retrieved
+            do {
+                # Set headers for the current request
+                $PlexHeaders['X-Plex-Container-Start'] = $searchsize
+                $PlexHeaders['X-Plex-Container-Size'] = '1000'
+                
+                # Fetch content from Plex server
+                $response = Invoke-WebRequest -Uri "$PlexUrl/library/sections/$($Library.ID)/all" -Headers $PlexHeaders
+                
+                # Convert response content to XML
+                [xml]$additionalContent = $response.Content
+                
+                # Get total content size if not retrieved yet
+                if ($totalContentSize -eq 1) {
+                    $totalContentSize = $additionalContent.MediaContainer.totalSize
+                }
+                
+                # Import and append video nodes to the parent XML document
+                $contentquery = if ($additionalContent.MediaContainer.video) {
+                    'video'
+                }
+                else {
+                    'Directory'
+                }
+                foreach ($videoNode in $additionalContent.MediaContainer.$contentquery) {
+                    $importedNode = $Libcontent.ImportNode($videoNode, $true)
+                    [void]$mediaContainerNode.AppendChild($importedNode)
+                }
+                
+                # Update search size for next request
+                $searchsize += [int]$additionalContent.MediaContainer.Size
+            } until ($searchsize -ge $totalContentSize)
             if ($Libcontent.MediaContainer.video) {
                 $contentquery = 'video'
             }
