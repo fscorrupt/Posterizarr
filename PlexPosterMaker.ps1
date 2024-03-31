@@ -3,7 +3,7 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.58"
+$CurrentScriptVersion = "1.0.59"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -2246,6 +2246,8 @@ $TitleCardEPTitleMaxHeight = $config.TitleCardTitleTextPart.MaxHeight
 $TitleCardEPTitletext_offset = $config.TitleCardTitleTextPart.text_offset
 
 # Title Card EP Text Part
+$SeasonTCText = $config.TitleCardEPTextPart.SeasonTCText
+$EpisodeTCText = $config.TitleCardEPTextPart.EpisodeTCText
 $TitleCardEPfontAllCaps = $config.TitleCardEPTextPart.fontAllCaps
 $AddTitleCardEPText = $config.TitleCardEPTextPart.AddEPText
 $TitleCardEPfontcolor = $config.TitleCardEPTextPart.fontcolor
@@ -2552,7 +2554,7 @@ Elseif ($Testing) {
     $MediumText = "The Hobbit is a great movie"
     $LongText = "The Hobbit is a great movie that we all loved and enjoyed watching"
     $bullet = [char]0x2022
-    $Episodetext = "Season 9999 $bullet Episode 9999"
+    $Episodetext = "$SeasonTCText 9999 $bullet $EpisodeTCText 9999"
 
     $ShortTextCAPS = $ShortText.ToUpper()
     $MediumTextCAPS = $MediumText.ToUpper()
@@ -3603,7 +3605,9 @@ else {
             }
         }
         $Episodedata | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\PlexEpisodeExport.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
-        Write-Entry -Subtext "Found '$($Episodedata.Episodes.split(',').count)' Episodes..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+        if ($Episodedata){
+            Write-Entry -Subtext "Found '$($Episodedata.Episodes.split(',').count)' Episodes..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+        }
     }
     
     # Test if csv´s are missing and create dummy file.
@@ -5104,7 +5108,7 @@ else {
                                 $global:episodenumber = $($global:episode_numbers[$i].Trim())
                                 $global:FileNaming = "S" + $global:season_number.PadLeft(2, '0') + "E" + $global:episodenumber.PadLeft(2, '0')
                                 $bullet = [char]0x2022
-                                $global:SeasonEPNumber = "Season $global:season_number $bullet Episode $global:episodenumber"
+                                $global:SeasonEPNumber = "$SeasonTCText $global:season_number $bullet $EpisodeTCText $global:episodenumber"
 
                                 if ($LibraryFolders -eq 'true') {
                                     $EpisodeImageoriginal = "$EntryDir\$global:FileNaming.jpg"
@@ -5443,7 +5447,7 @@ else {
                                 $global:episodenumber = $($global:episode_numbers[$i].Trim())
                                 $global:FileNaming = "S" + $global:season_number.PadLeft(2, '0') + "E" + $global:episodenumber.PadLeft(2, '0')
                                 $bullet = [char]0x2022
-                                $global:SeasonEPNumber = "Season $global:season_number $bullet Episode $global:episodenumber"
+                                $global:SeasonEPNumber = "$SeasonTCText $global:season_number $bullet $EpisodeTCText $global:episodenumber"
 
                                 if ($LibraryFolders -eq 'true') {
                                     $EpisodeImageoriginal = "$EntryDir\$global:FileNaming.jpg"

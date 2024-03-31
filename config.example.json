@@ -84,6 +84,8 @@
     "text_offset": "+300"
   },
   "TitleCardEPTextPart": {
+    "SeasonTCText": "Season",
+    "EpisodeTCText": "Episode",
     "fontAllCaps": "true",
     "AddEPText": "true",
     "fontcolor": "white",

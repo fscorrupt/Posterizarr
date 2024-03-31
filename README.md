@@ -181,8 +181,12 @@ Plex Poster Maker is cross-platform ready, meaning it can run on Linux, Docker (
     <summary>TitleCardEpisodeTextPart:</summary>
     <br>
 
-    - `AddEPText`: Set to `true` to add episode text to the TitleCard image.
+    - `SeasonTCText`: You can Specify the default text for `Season` that appears on TitleCard.
+      - Example: `STAFFEL 1 • EPISODE 5` or `"SÄSONG 1 • EPISODE 1"`
+    - `EpisodeTCText`: You can Specify the default text for `Episode` that appears on TitleCard.
+      - Example: `SEASON 1 • EPISODE 5` or `"SEASON 1 • AVSNITT 1"`
     - `fontAllCaps`: Set to `true` for all caps text, else `false`.
+    - `AddEPText`: Set to `true` to add episode text to the TitleCard image.
     - `fontcolor`: Color of font text.
     - `minPointSize`: Minimum size of text in TitleCard image.
     - `maxPointSize`: Maximum size of text in TitleCard image.
