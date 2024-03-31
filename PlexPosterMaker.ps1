@@ -3,7 +3,7 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.61"
+$CurrentScriptVersion = "1.0.62"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -1576,11 +1576,25 @@ function CheckJson {
             # Check if the part exists in the current configuration
             if (-not $config.PSObject.Properties.Name.Contains($partKey)) {
                 if (-not $config.PSObject.Properties.Name.tolower().Contains($partKey.tolower())) {
-                    Write-Entry -Message "Missing Main Attribute in your Config file: $partKey." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-                    Write-Entry -Subtext "Adding it for you... In GH Readme, look for $partKey - if you want to see what changed..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                    Write-Entry -Subtext "GH Readme -> https://github.com/fscorrupt/Plex-Poster-Maker/blob/main/README.md#configuration" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                    $config | Add-Member -MemberType NoteProperty -Name $partKey -Value $defaultConfig.$partKey
-                    $AttributeChanged = $True
+                    # Add "SeasonPosterOverlayPart" if it's missing in $config
+                    if (-not $config.PSObject.Properties.Name.tolower().Contains("SeasonPosterOverlayPart")) {
+                        $config | Add-Member -MemberType NoteProperty -Name "SeasonPosterOverlayPart" -Value $defaultConfig.PosterOverlayPart
+                        Write-Entry -Message "Missing Main Attribute in your Config file: $partKey." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                        Write-Entry -Subtext "I will copy all settings from 'PosterOverlayPart'..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                        Write-Entry -Subtext "Adding it for you... In GH Readme, look for $partKey - if you want to see what changed..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                        Write-Entry -Subtext "GH Readme -> https://github.com/fscorrupt/Plex-Poster-Maker/blob/main/README.md#configuration" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                        # Convert the updated configuration object back to JSON and save it, then reload it
+                        $configJson = $config | ConvertTo-Json -Depth 10
+                        $configJson | Set-Content -Path $jsonFilePath -Force
+                        $config = Get-Content -Path $jsonFilePath -Raw | ConvertFrom-Json
+                    }
+                    Else {
+                        Write-Entry -Message "Missing Main Attribute in your Config file: $partKey." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                        Write-Entry -Subtext "Adding it for you... In GH Readme, look for $partKey - if you want to see what changed..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                        Write-Entry -Subtext "GH Readme -> https://github.com/fscorrupt/Plex-Poster-Maker/blob/main/README.md#configuration" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                        $config | Add-Member -MemberType NoteProperty -Name $partKey -Value $defaultConfig.$partKey
+                        $AttributeChanged = $True
+                    }
                 }
                 else {
                     # Inform user about the case issue
@@ -2037,6 +2051,22 @@ function InvokeMagickCommand {
     }
 }
 
+function CheckCharLimit {
+    # Check if the registry key exists
+    if (Test-Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem\LongPathsEnabled") {
+        # Get the value of LongPathsEnabled
+        $longPathsEnabled = Get-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name LongPathsEnabled | Select-Object -ExpandProperty LongPathsEnabled
+        if ($longPathsEnabled -eq 1) {
+            return $true
+        }
+        Else {
+            return $false
+        }
+    }
+    Else {
+        return $false
+    }
+}
 ##### PRE-START #####
 # Set some global vars
 Set-OSTypeAndScriptRoot
@@ -2213,6 +2243,22 @@ $MaxHeight = $config.PosterOverlayPart.MaxHeight
 $text_offset = $config.PosterOverlayPart.text_offset
 $borderwidthsecond = $borderwidth + 'x' + $borderwidth
 $boxsize = $MaxWidth + 'x' + $MaxHeight
+
+# Season Poster Overlay Part
+$SeasonfontAllCaps = $config.SeasonPosterOverlayPart.fontAllCaps
+$AddSeasonBorder = $config.SeasonPosterOverlayPart.AddBorder
+$AddSeasonText = $config.SeasonPosterOverlayPart.AddText
+$AddSeasonOverlay = $config.SeasonPosterOverlayPart.AddOverlay
+$Seasonfontcolor = $config.SeasonPosterOverlayPart.fontcolor
+$Seasonbordercolor = $config.SeasonPosterOverlayPart.bordercolor
+$SeasonminPointSize = $config.SeasonPosterOverlayPart.minPointSize
+$SeasonmaxPointSize = $config.SeasonPosterOverlayPart.maxPointSize
+$Seasonborderwidth = $config.SeasonPosterOverlayPart.borderwidth
+$SeasonMaxWidth = $config.SeasonPosterOverlayPart.MaxWidth
+$SeasonMaxHeight = $config.SeasonPosterOverlayPart.MaxHeight
+$Seasontext_offset = $config.SeasonPosterOverlayPart.text_offset
+$Seasonborderwidthsecond = $borderwidth + 'x' + $borderwidth
+$Seasonboxsize = $SeasonMaxWidth + 'x' + $SeasonMaxHeight
 
 # Background Overlay Part
 $BackgroundfontAllCaps = $config.BackgroundOverlayPart.fontAllCaps
@@ -2575,6 +2621,18 @@ Elseif ($Testing) {
         $TestPosterTextless = Join-Path -Path $global:ScriptRoot -ChildPath "test\PosterTextless.jpg"
     }
 
+    # Season Posters
+    if ($AddText -eq 'true') {
+        $TestSeasonPosterShort = Join-Path -Path $global:ScriptRoot -ChildPath "test\SeasonPosterShortText.jpg"
+        $TestSeasonPosterMedium = Join-Path -Path $global:ScriptRoot -ChildPath "test\SeasonPosterMediumText.jpg"
+        $TestSeasonPosterLong = Join-Path -Path $global:ScriptRoot -ChildPath "test\SeasonPosterLongText.jpg"
+        $TestSeasonPosterShortCAPS = Join-Path -Path $global:ScriptRoot -ChildPath "test\SeasonPosterShortTextCAPS.jpg"
+        $TestSeasonPosterMediumCAPS = Join-Path -Path $global:ScriptRoot -ChildPath "test\SeasonPosterMediumTextCAPS.jpg"
+        $TestSeasonPosterLongCAPS = Join-Path -Path $global:ScriptRoot -ChildPath "test\SeasonPosterLongTextCAPS.jpg"
+    }
+    Else {
+        $TestSeasonPosterTextless = Join-Path -Path $global:ScriptRoot -ChildPath "test\SeasonPosterTextless.jpg"
+    }
     # Backgrounds
     if ($AddBackgroundText -eq 'True') {
         $backgroundTestPosterShort = Join-Path -Path $global:ScriptRoot -ChildPath "test\backgroundShortText.jpg"
@@ -2621,6 +2679,23 @@ Elseif ($Testing) {
         $optimalFontSizeLongCAPS = Get-OptimalPointSize -text $LongTextCAPS -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
         if ($global:IsTruncated) { $TruncatedCount++ }
         Write-Entry -Subtext "Finished Optimal Font Sizes for posters..." -Path $global:ScriptRoot\Logs\Testinglog.log -Color Cyan -log Info
+    }
+    # Optimal Season Poster Font Size
+    if ($AddSeasonText -eq 'true') {
+        $seasonoptimalFontSizeShort = Get-OptimalPointSize -text $ShortText -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize
+        if ($global:IsTruncated) { $TruncatedCount++ }
+        $seasonoptimalFontSizeMedium = Get-OptimalPointSize -text $MediumText -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize
+        if ($global:IsTruncated) { $TruncatedCount++ }
+        $seasonoptimalFontSizeLong = Get-OptimalPointSize -text $LongText -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize
+        if ($global:IsTruncated) { $TruncatedCount++ }
+    
+        $seasonoptimalFontSizeShortCAPS = Get-OptimalPointSize -text $ShortTextCAPS -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize
+        if ($global:IsTruncated) { $TruncatedCount++ }
+        $seasonoptimalFontSizeMediumCAPS = Get-OptimalPointSize -text $MediumTextCAPS -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize
+        if ($global:IsTruncated) { $TruncatedCount++ }
+        $seasonoptimalFontSizeLongCAPS = Get-OptimalPointSize -text $LongTextCAPS -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize
+        if ($global:IsTruncated) { $TruncatedCount++ }
+        Write-Entry -Subtext "Finished Optimal Font Sizes for season posters..." -Path $global:ScriptRoot\Logs\Testinglog.log -Color Cyan -log Info
     }
     # Optimal Background Font Size
     if ($AddBackgroundText -eq 'True') {
@@ -2801,6 +2876,144 @@ Elseif ($Testing) {
         Write-Entry -Subtext "    Applying textbox only to Poster..." -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
         $ArgumentsNoText = "`"$TestPosterTextless`" -size `"$boxsize`" xc:`"#ACD7E6`" -gravity south -geometry +0+`"$text_offset`" -compose over -composite `"$TestPosterTextless`""
         InvokeMagickCommand -Command $magick -Arguments $ArgumentsNoText
+    }
+
+    # Border/Overlay Season Poster Part
+
+    Write-Entry -Subtext "Season Poster Part:" -Path $global:ScriptRoot\Logs\Testinglog.log -Color Green -log Info
+    if ($AddSeasonText -eq 'true') {
+        if ($AddSeasonBorder -eq 'true' -and $AddSeasonOverlay -eq 'true') {
+            $SeasonArgumentsShort = "`"$testimage`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Seasonborderwidthsecond`"  -bordercolor `"$Seasonbordercolor`" -border `"$Seasonborderwidth`" `"$TestSeasonPosterShort`""
+            $SeasonArgumentsMedium = "`"$testimage`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Seasonborderwidthsecond`"  -bordercolor `"$Seasonbordercolor`" -border `"$Seasonborderwidth`" `"$TestSeasonPosterMedium`""
+            $SeasonArgumentsLong = "`"$testimage`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Seasonborderwidthsecond`"  -bordercolor `"$Seasonbordercolor`" -border `"$Seasonborderwidth`" `"$TestSeasonPosterLong`""
+            $SeasonArgumentsShortCAPS = "`"$testimage`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Seasonborderwidthsecond`"  -bordercolor `"$Seasonbordercolor`" -border `"$Seasonborderwidth`" `"$TestSeasonPosterShortCAPS`""
+            $SeasonArgumentsMediumCAPS = "`"$testimage`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Seasonborderwidthsecond`"  -bordercolor `"$Seasonbordercolor`" -border `"$Seasonborderwidth`" `"$TestSeasonPosterMediumCAPS`""
+            $SeasonArgumentsLongCAPS = "`"$testimage`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Seasonborderwidthsecond`"  -bordercolor `"$Seasonbordercolor`" -border `"$Seasonborderwidth`" `"$TestSeasonPosterLongCAPS`""
+            Write-Entry -Subtext "Adding Season Poster Borders | Adding Season Poster Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+        }
+        if ($AddSeasonBorder -eq 'true' -and $AddSeasonOverlay -eq 'false') {
+            $SeasonArgumentsShort = "`"$testimage`" -shave `"$Seasonborderwidthsecond`"  -bordercolor `"$Seasonbordercolor`" -border `"$Seasonborderwidth`" `"$TestSeasonPosterShort`""
+            $SeasonArgumentsMedium = "`"$testimage`" -shave `"$Seasonborderwidthsecond`"  -bordercolor `"$Seasonbordercolor`" -border `"$Seasonborderwidth`" `"$TestSeasonPosterMedium`""
+            $SeasonArgumentsLong = "`"$testimage`" -shave `"$Seasonborderwidthsecond`"  -bordercolor `"$Seasonbordercolor`" -border `"$Seasonborderwidth`" `"$TestSeasonPosterLong`""
+            $SeasonArgumentsShortCAPS = "`"$testimage`" -shave `"$Seasonborderwidthsecond`"  -bordercolor `"$Seasonbordercolor`" -border `"$Seasonborderwidth`" `"$TestSeasonPosterShortCAPS`""
+            $SeasonArgumentsMediumCAPS = "`"$testimage`" -shave `"$Seasonborderwidthsecond`"  -bordercolor `"$Seasonbordercolor`" -border `"$Seasonborderwidth`" `"$TestSeasonPosterMediumCAPS`""
+            $SeasonArgumentsLongCAPS = "`"$testimage`" -shave `"$Seasonborderwidthsecond`"  -bordercolor `"$Seasonbordercolor`" -border `"$Seasonborderwidth`" `"$TestSeasonPosterLongCAPS`""
+            Write-Entry -Subtext "Adding Season Poster Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+        }
+        if ($AddSeasonBorder -eq 'false' -and $AddSeasonOverlay -eq 'true') {
+            $SeasonArgumentsShort = "`"$testimage`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite `"$TestSeasonPosterShort`""
+            $SeasonArgumentsMedium = "`"$testimage`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite `"$TestSeasonPosterMedium`""
+            $SeasonArgumentsLong = "`"$testimage`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite `"$TestSeasonPosterLong`""
+            $SeasonArgumentsShortCAPS = "`"$testimage`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite `"$TestSeasonPosterShortCAPS`""
+            $SeasonArgumentsMediumCAPS = "`"$testimage`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite `"$TestSeasonPosterMediumCAPS`""
+            $SeasonArgumentsLongCAPS = "`"$testimage`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite `"$TestSeasonPosterLongCAPS`""
+            Write-Entry -Subtext "Adding Season Poster Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+        }
+        if ($AddSeasonBorder -eq 'false' -and $AddSeasonOverlay -eq 'false') {
+            $SeasonArgumentsShort = "`"$testimage`" -quality $global:outputQuality `"$TestSeasonPosterShort`""
+            $SeasonArgumentsMedium = "`"$testimage`" -quality $global:outputQuality `"$TestSeasonPosterMedium`""
+            $SeasonArgumentsLong = "`"$testimage`" -quality $global:outputQuality `"$TestSeasonPosterLong`""
+            $SeasonArgumentsShortCAPS = "`"$testimage`" -quality $global:outputQuality `"$TestSeasonPosterShortCAPS`""
+            $SeasonArgumentsMediumCAPS = "`"$testimage`" -quality $global:outputQuality `"$TestSeasonPosterMediumCAPS`""
+            $SeasonArgumentsLongCAPS = "`"$testimage`" -quality $global:outputQuality `"$TestSeasonPosterLongCAPS`""
+            Write-Entry -Subtext "Nothing specified, just output pic with desired quality" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+        }
+    
+        # Poster Logging
+        $SeasonlogEntryShort = "`"$magick`" $SeasonArgumentsShort"
+        $SeasonlogEntryMedium = "`"$magick`" $SeasonArgumentsMedium"
+        $SeasonlogEntryLong = "`"$magick`" $SeasonArgumentsLong"
+        $SeasonlogEntryShortCAPS = "`"$magick`" $SeasonArgumentsShortCAPS"
+        $SeasonlogEntryMediumCAPS = "`"$magick`" $SeasonArgumentsMediumCAPS"
+        $SeasonlogEntryLongCAPS = "`"$magick`" $SeasonArgumentsLongCAPS"
+    
+        $SeasonlogEntryShort | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+        $SeasonlogEntryShortCAPS | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+        $SeasonlogEntryMedium | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+        $SeasonlogEntryMediumCAPS | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+        $SeasonlogEntryLong | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+        $SeasonlogEntryLongCAPS | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+    
+        # Test Poster creation
+        InvokeMagickCommand -Command $magick -Arguments $SeasonArgumentsShort
+        InvokeMagickCommand -Command $magick -Arguments $SeasonArgumentsMedium
+        InvokeMagickCommand -Command $magick -Arguments $SeasonArgumentsLong
+        InvokeMagickCommand -Command $magick -Arguments $SeasonArgumentsShortCAPS
+        InvokeMagickCommand -Command $magick -Arguments $SeasonArgumentsMediumCAPS
+        InvokeMagickCommand -Command $magick -Arguments $SeasonArgumentsLongCAPS
+    }
+    Else {
+        if ($AddBorder -eq 'true' -and $AddOverlay -eq 'true') {
+            $SeasonArgumentsTextless = "`"$testimage`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Seasonborderwidthsecond`"  -bordercolor `"$Seasonbordercolor`" -border `"$Seasonborderwidth`" `"$TestSeasonPosterTextless`""
+            Write-Entry -Subtext "Adding Season Poster Borders | Adding Season Poster Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+        }
+        if ($AddBorder -eq 'true' -and $AddOverlay -eq 'false') {
+            $SeasonArgumentsTextless = "`"$testimage`" -shave `"$Seasonborderwidthsecond`"  -bordercolor `"$Seasonbordercolor`" -border `"$Seasonborderwidth`" `"$TestSeasonPosterTextless`""
+            Write-Entry -Subtext "Adding Season Poster Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+        }
+        if ($AddBorder -eq 'false' -and $AddOverlay -eq 'true') {
+            $SeasonArgumentsTextless = "`"$testimage`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite `"$TestSeasonPosterTextless`""
+            Write-Entry -Subtext "Adding Season Poster Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+        }
+        if ($AddBorder -eq 'false' -and $AddOverlay -eq 'false') {
+            $SeasonArgumentsTextless = "`"$testimage`" -quality $global:outputQuality `"$TestSeasonPosterTextless`""
+            Write-Entry -Subtext "Nothing specified, just output pic with desired quality" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+        }
+        $PosterlogEntryTextless = "`"$magick`" $SeasonArgumentsTextless"
+        $PosterlogEntryTextless | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+        InvokeMagickCommand -Command $magick -Arguments $SeasonArgumentsTextless
+    }
+    # Text Poster overlay
+    if ($AddSeasonText -eq 'true') {
+        # Logging Poster
+        Write-Entry -Subtext "Optimal font size for Short text is: '$optimalFontSizeShort'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "    Applying text: `"$ShortText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "Optimal font size for Medium text is: '$optimalFontSizeMedium'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "    Applying text: `"$MediumText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "Optimal font size for Long text is: '$optimalFontSizeLong'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "    Applying text: `"$LongText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+    
+        Write-Entry -Subtext "Optimal font size for Short CAPS text is: '$optimalFontSizeShortCAPS'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "    Applying CAPS text: `"$ShortTextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "Optimal font size for Medium CAPS text is: '$optimalFontSizeMediumCAPS'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "    Applying CAPS text: `"$MediumTextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "Optimal font size for Long CAPS text is: '$optimalFontSizeLongCAPS'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "    Applying CAPS text: `"$LongTextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+    
+        $SeasonArgumentsShort = "`"$TestSeasonPosterShort`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeShort`" -fill `"#0000FF`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$ShortText`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterShort`""
+        $SeasonArgumentsMedium = "`"$TestSeasonPosterMedium`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeMedium`" -fill `"#0000FF`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$MediumText`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterMedium`""
+        $SeasonArgumentsLong = "`"$TestSeasonPosterLong`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeLong`" -fill `"#0000FF`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$LongText`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterLong`""
+        $SeasonArgumentsShortCAPS = "`"$TestSeasonPosterShortCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeShortCAPS`" -fill `"#0000FF`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$ShortTextCAPS`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterShortCAPS`""
+        $SeasonArgumentsMediumCAPS = "`"$TestSeasonPosterMediumCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeMediumCAPS`" -fill `"#0000FF`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$MediumTextCAPS`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterMediumCAPS`""
+        $SeasonArgumentsLongCAPS = "`"$TestSeasonPosterLongCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeLongCAPS`" -fill `"#0000FF`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$LongTextCAPS`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterLongCAPS`""
+    
+        # Text Poster Logging
+        $SeasonlogEntryShort = "`"$magick`" $SeasonArgumentsShort"
+        $SeasonlogEntryMedium = "`"$magick`" $SeasonArgumentsMedium"
+        $SeasonlogEntryLong = "`"$magick`" $SeasonArgumentsLong"
+        $SeasonlogEntryShortCAPS = "`"$magick`" $SeasonArgumentsShortCAPS"
+        $SeasonlogEntryMediumCAPS = "`"$magick`" $SeasonArgumentsMediumCAPS"
+        $SeasonlogEntryLongCAPS = "`"$magick`" $SeasonArgumentsLongCAPS"
+    
+        $SeasonlogEntryShort | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+        $SeasonlogEntryShortCAPS | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+        $SeasonlogEntryMedium | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+        $SeasonlogEntryMediumCAPS | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+        $SeasonlogEntryLong | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+        $SeasonlogEntryLongCAPS | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+    
+        # Text Poster overlaying
+        InvokeMagickCommand -Command $magick -Arguments $SeasonArgumentsShort
+        InvokeMagickCommand -Command $magick -Arguments $SeasonArgumentsMedium
+        InvokeMagickCommand -Command $magick -Arguments $SeasonArgumentsLong
+        InvokeMagickCommand -Command $magick -Arguments $SeasonArgumentsShortCAPS
+        InvokeMagickCommand -Command $magick -Arguments $SeasonArgumentsMediumCAPS
+        InvokeMagickCommand -Command $magick -Arguments $SeasonArgumentsLongCAPS
+    }
+    Else {
+        Write-Entry -Subtext "    Applying textbox only to Season Poster..." -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        $SeasonArgumentsNoText = "`"$TestSeasonPosterTextless`" -size `"$Seasonboxsize`" xc:`"#ACD7E6`" -gravity south -geometry +0+`"$Seasontext_offset`" -compose over -composite `"$TestSeasonPosterTextless`""
+        InvokeMagickCommand -Command $magick -Arguments $SeasonArgumentsNoText
     }
 
     Write-Entry -Subtext "Background Part:" -Path $global:ScriptRoot\Logs\Testinglog.log -Color Green -log Info
@@ -3199,7 +3412,7 @@ Elseif ($Testing) {
     $gettestimages = Get-ChildItem $global:ScriptRoot\test
     $titlecardscount = ($gettestimages | Where-Object { $_.name -like 'Title*' }).count
     $backgroundsscount = ($gettestimages | Where-Object { $_.name -like 'back*' }).count
-    $posterscount = ($gettestimages | Where-Object { $_.name -like 'poster*' }).count
+    $posterscount = ($gettestimages | Where-Object { $_.name -like 'poster*' -or $_.name -like 'SeasonPoster*' }).count
     if ($global:NotifyUrl -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -notlike 'PSDocker-Alpine*') {
         $jsonPayload = @"
         {
@@ -3495,10 +3708,15 @@ else {
                         $MultipleVersions = $false
                     }
                     Write-Entry -Subtext "File Location: $location" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                    if ($location.length -ge '256' -and $Platform -eq 'Windows'){
-                        Write-Entry -Subtext "Skipping [$($item.title)] because path length is over '256'..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-                        break
+                    
+                    if ($location.length -ge '256' -and $Platform -eq 'Windows') {
+                        $CheckCharLimit = CheckCharLimit
+                        if ($CheckCharLimit -eq $false){
+                            Write-Entry -Subtext "Skipping [$($item.title)] because path length is over '256'..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                            continue
+                        }
                     }
+
                     $libpaths = $($Library.path).split(',')
                     Write-Entry -Subtext "Plex Lib Paths before split: $($Library.path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                     Write-Entry -Subtext "Plex Lib Paths after split: $libpaths" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
@@ -3612,7 +3830,7 @@ else {
             }
         }
         $Episodedata | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\PlexEpisodeExport.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
-        if ($Episodedata){
+        if ($Episodedata) {
             Write-Entry -Subtext "Found '$($Episodedata.Episodes.split(',').count)' Episodes..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
         }
     }
@@ -3685,12 +3903,10 @@ else {
         Write-Entry -Subtext "Error during Hashtable creation, please check Asset dir is available..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
         Exit
     }
-
-    if ($global:logLevel -eq '3'){
-        Write-Entry -Message "Output hashtable..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Debug
+    if ($global:logLevel -eq '3') {
+        Write-Entry -Message "Output hashtable..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
         $directoryHashtable.keys | Out-File "$global:ScriptRoot\Logs\hashtable.log" -Force
     }
-
     # Download poster foreach movie
     Write-Entry -Message "Starting asset creation now, this can take a while..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
     Write-Entry -Message "Starting Movie Poster Creation part..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
@@ -3732,7 +3948,7 @@ else {
                 }
 
                 if ($Platform -eq 'Docker' -or $Platform -eq 'Linux') {
-                    $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/')
+                    $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/').Replace('./', '/')
                 }
                 else {
                     $fullTestPath = Resolve-Path -Path $TestPath -ErrorAction SilentlyContinue
@@ -3977,7 +4193,7 @@ else {
                     }
 
                     if ($Platform -eq 'Docker' -or $Platform -eq 'Linux') {
-                        $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/')
+                        $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/').Replace('./', '/')
                     }
                     else {
                         $fullTestPath = Resolve-Path -Path $TestPath -ErrorAction SilentlyContinue
@@ -4264,7 +4480,7 @@ else {
             }
 
             if ($Platform -eq 'Docker' -or $Platform -eq 'Linux') {
-                $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/')
+                $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/').Replace('./', '/')
             }
             else {
                 $fullTestPath = Resolve-Path -Path $TestPath -ErrorAction SilentlyContinue
@@ -4275,6 +4491,11 @@ else {
                     $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
                 }
             }
+
+            Write-Entry -Message "Test Path is: $TestPath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+            Write-Entry -Message "Test File is: $Testfile" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+            Write-Entry -Message "Resolved Full Test Path is: $fullTestPath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+            Write-Entry -Message "Resolved hash Test Path is: $hashtestpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
 
             $PosterImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername).jpg"
             $PosterImage = $PosterImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
@@ -4514,7 +4735,7 @@ else {
                 }
 
                 if ($Platform -eq 'Docker' -or $Platform -eq 'Linux') {
-                    $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/')
+                    $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/').Replace('./', '/')
                 }
                 else {
                     $fullTestPath = Resolve-Path -Path $TestPath -ErrorAction SilentlyContinue
@@ -4525,6 +4746,11 @@ else {
                         $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
                     }
                 }
+
+                Write-Entry -Message "Test Path is: $TestPath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                Write-Entry -Message "Test File is: $Testfile" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                Write-Entry -Message "Resolved Full Test Path is: $fullTestPath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                Write-Entry -Message "Resolved hash Test Path is: $hashtestpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
 
                 $backgroundImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_background.jpg"
                 $backgroundImage = $backgroundImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
@@ -4767,7 +4993,7 @@ else {
                     $global:PosterWithText = $null
                     $global:ImageMagickError = $null
                     $global:TMDBSeasonFallback = $null
-                    if ($fontAllCaps -eq 'true') {
+                    if ($SeasonfontAllCaps -eq 'true') {
                         $global:seasonTitle = $global:seasonNames[$i].ToUpper()
                     }
                     Else {
@@ -4776,7 +5002,7 @@ else {
                     $global:SeasonNumber = $global:seasonNumbers[$i]
                     $global:PlexSeasonUrl = $global:PlexSeasonUrls[$i]
                     $global:season = "Season" + $global:SeasonNumber.PadLeft(2, '0')
-
+            
                     if ($LibraryFolders -eq 'true') {
                         $SeasonImageoriginal = "$EntryDir\$global:season.jpg"
                         $TestPath = $EntryDir
@@ -4787,9 +5013,9 @@ else {
                         $TestPath = $AssetPath
                         $Testfile = "$($entry.RootFoldername)_$global:season"
                     }
-
+            
                     if ($Platform -eq 'Docker' -or $Platform -eq 'Linux') {
-                        $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/')
+                        $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/').Replace('./', '/')
                     }
                     else {
                         $fullTestPath = Resolve-Path -Path $TestPath -ErrorAction SilentlyContinue
@@ -4800,6 +5026,11 @@ else {
                             $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
                         }
                     }
+
+                    Write-Entry -Message "Test Path is: $TestPath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                    Write-Entry -Message "Test File is: $Testfile" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                    Write-Entry -Message "Resolved Full Test Path is: $fullTestPath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                    Write-Entry -Message "Resolved hash Test Path is: $hashtestpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
 
                     $SeasonImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_$global:season.jpg"
                     $SeasonImage = $SeasonImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
@@ -4924,34 +5155,34 @@ else {
                                     InvokeMagickCommand -Command $magick -Arguments $CommentArguments
                                     if (!$global:ImageMagickError -eq 'True') {
                                         # Resize Image to 2000x3000 and apply Border and overlay
-                                        if ($AddBorder -eq 'true' -and $AddOverlay -eq 'true') {
-                                            $Arguments = "`"$SeasonImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$SeasonImage`""
+                                        if ($AddSeasonBorder -eq 'true' -and $AddSeasonOverlay -eq 'true') {
+                                            $Arguments = "`"$SeasonImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Seasonborderwidthsecond`"  -bordercolor `"$Seasonbordercolor`" -border `"$Seasonborderwidth`" `"$SeasonImage`""
                                             Write-Entry -Subtext "Resizing it | Adding Borders | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                         }
-                                        if ($AddBorder -eq 'true' -and $AddOverlay -eq 'false') {
-                                            $Arguments = "`"$SeasonImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$SeasonImage`""
+                                        if ($AddSeasonBorder -eq 'true' -and $AddSeasonOverlay -eq 'false') {
+                                            $Arguments = "`"$SeasonImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" -shave `"$Seasonborderwidthsecond`"  -bordercolor `"$Seasonbordercolor`" -border `"$Seasonborderwidth`" `"$SeasonImage`""
                                             Write-Entry -Subtext "Resizing it | Adding Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                         }
-                                        if ($AddBorder -eq 'false' -and $AddOverlay -eq 'true') {
+                                        if ($AddSeasonBorder -eq 'false' -and $AddSeasonOverlay -eq 'true') {
                                             $Arguments = "`"$SeasonImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite `"$SeasonImage`""
                                             Write-Entry -Subtext "Resizing it | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                         }
-                                        if ($AddBorder -eq 'false' -and $AddOverlay -eq 'false') {
+                                        if ($AddSeasonBorder -eq 'false' -and $AddSeasonOverlay -eq 'false') {
                                             $Arguments = "`"$SeasonImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$SeasonImage`""
                                             Write-Entry -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                         }
-
+            
                                         $logEntry = "`"$magick`" $Arguments"
                                         $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                         InvokeMagickCommand -Command $magick -Arguments $Arguments
-
-                                        if ($AddText -eq 'true') {
-                                            $optimalFontSize = Get-OptimalPointSize -text $global:seasonTitle -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
-
+            
+                                        if ($AddSeasonText -eq 'true') {
+                                            $optimalFontSize = Get-OptimalPointSize -text $global:seasonTitle -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize
+            
                                             Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-
-                                            $Arguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$global:seasonTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
-
+            
+                                            $Arguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Seasonfontcolor`" -size `"$Seasonboxsize`" -background none caption:`"$global:seasonTitle`" -trim -gravity south -extent `"$Seasonboxsize`" `) -gravity south -geometry +0`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
+            
                                             Write-Entry -Subtext "Applying seasonTitle text: `"$global:seasonTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                             $logEntry = "`"$magick`" $Arguments"
                                             $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
@@ -5025,7 +5256,7 @@ else {
                                     Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                     $SeasonCount++
                                     $posterCount++
-
+            
                                     $seasontemp = New-Object psobject
                                     $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Titletext + " | " + $global:season)
                                     $seasontemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Season'
@@ -5134,7 +5365,7 @@ else {
                                 }
 
                                 if ($Platform -eq 'Docker' -or $Platform -eq 'Linux') {
-                                    $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/')
+                                    $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/').Replace('./', '/')
                                 }
                                 else {
                                     $fullTestPath = Resolve-Path -Path $TestPath -ErrorAction SilentlyContinue
@@ -5145,6 +5376,11 @@ else {
                                         $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
                                     }
                                 }
+
+                                Write-Entry -Message "Test Path is: $TestPath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                Write-Entry -Message "Test File is: $Testfile" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                Write-Entry -Message "Resolved Full Test Path is: $fullTestPath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                Write-Entry -Message "Resolved hash Test Path is: $hashtestpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
 
                                 $EpisodeImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_$global:FileNaming.jpg"
                                 $EpisodeImage = $EpisodeImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
@@ -5175,6 +5411,9 @@ else {
                                                 }
                                                 Else {
                                                     Write-Entry -Subtext "Plex TitleCard Url empty, cannot search on plex, likely there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                                }
+                                                if ($global:tmdbfallbackposterurl){
+                                                    $global:posterurl = $global:tmdbfallbackposterurl
                                                 }
                                                 if (!$global:posterurl) {
                                                     Write-Entry -Subtext "Could not find a TitleCard on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
@@ -5473,7 +5712,7 @@ else {
                                 }
 
                                 if ($Platform -eq 'Docker' -or $Platform -eq 'Linux') {
-                                    $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/')
+                                    $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/').Replace('./', '/')
                                 }
                                 else {
                                     $fullTestPath = Resolve-Path -Path $TestPath -ErrorAction SilentlyContinue

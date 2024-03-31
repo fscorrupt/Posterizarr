@@ -138,6 +138,23 @@ Plex Poster Maker is cross-platform ready, meaning it can run on Linux, Docker (
     - `text_offset`: Text box offset from the bottom of the picture.
     </details>
     <details close>
+    <summary>SeasonPosterOverlayPart:</summary>
+    <br>
+
+    - `fontAllCaps`: Set to `true` for all caps text, else `false`.
+    - `AddBorder`: Set to `true` to add a border to the image.
+    - `AddText`: Set to `true` to add text to the image.
+    - `AddOverlay`: Set to `true` to add the defined overlay file to the image.
+    - `fontcolor`: Color of font text.
+    - `bordercolor`: Color of border.
+    - `minPointSize`: Minimum size of text in poster.
+    - `maxPointSize`: Maximum size of text in poster.
+    - `borderwidth`: Border width.
+    - `MaxWidth`: Maximum width of text box.
+    - `MaxHeight`: Maximum height of text box.
+    - `text_offset`: Text box offset from the bottom of the picture.
+    </details>
+    <details close>
     <summary>BackgroundOverlayPart:</summary>
     <br>
 
