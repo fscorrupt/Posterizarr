@@ -3,7 +3,7 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.59"
+$CurrentScriptVersion = "1.0.60"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -3428,6 +3428,7 @@ else {
                 $contentquery = 'Directory'
             }
             foreach ($item in $Libcontent.MediaContainer.$contentquery) {
+                $extractedFolder = $null
                 $Seasondata = $null
                 if ($PlexToken) {
                     if ($contentquery -eq 'Directory') {
@@ -3494,6 +3495,10 @@ else {
                         $MultipleVersions = $false
                     }
                     Write-Entry -Subtext "File Location: $location" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                    if ($location.length -ge '256' -and $Platform -eq 'Windows'){
+                        Write-Entry -Subtext "Skipping [$($item.title)] because path length is over '256'..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                        break
+                    }
                     $libpaths = $($Library.path).split(',')
                     Write-Entry -Subtext "Plex Lib Paths before split: $($Library.path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                     Write-Entry -Subtext "Plex Lib Paths after split: $libpaths" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
