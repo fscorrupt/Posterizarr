@@ -3718,7 +3718,8 @@ else {
                     if ($location.length -ge '256' -and $Platform -eq 'Windows') {
                         $CheckCharLimit = CheckCharLimit
                         if ($CheckCharLimit -eq $false){
-                            Write-Entry -Subtext "Skipping [$($item.title)] because path length is over '256'... In Windows, you can adjust this with Regedit, navigating to HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\FileSystem  On the right, find a value named LongPathsEnabled and double-click it. If you don't see the value listed, you'll need to create it by right-clicking the FileSystem key, choosing New > DWORD (32-bit) Value, and then naming the new value LongPathsEnabled and setting the Hexadecimal value to 1. Then reboot to ensure it takes effect. " -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                            Write-Entry -Subtext "Skipping [$($item.title)] because path length is over '256'..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                            Write-Entry -Subtext "You can adjust it by following this: https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation?tabs=registry#enable-long-paths-in-windows-10-version-1607-and-later" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                             continue
                         }
                     }
