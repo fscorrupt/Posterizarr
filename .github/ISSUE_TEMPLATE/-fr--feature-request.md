@@ -3,7 +3,7 @@ name: "[FR] Feature request"
 about: Suggest an idea for this project
 title: "[FR] "
 labels: enhancement, Feature Request
-assignees: ''
+assignees: fscorrupt
 
 ---
 
