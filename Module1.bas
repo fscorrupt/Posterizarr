@@ -42,6 +42,20 @@ Sub PromptUser()
     MsgBox "Workbook saved successfully.", vbInformation
 End Sub
 
+Sub ConvertToClickableLinks(ws As Worksheet, rng As Range)
+    Dim cell As Range
+    
+    ' Loop through each non-blank cell in the range and convert URLs to clickable hyperlinks
+    For Each cell In rng
+        If cell.Value <> "" And (InStr(1, cell.Value, "http://") > 0 Or InStr(1, cell.Value, "https://") > 0) Then
+            ' Add hyperlink
+            ws.Hyperlinks.Add Anchor:=cell, Address:=cell.Value
+        End If
+        
+        ' Debug statement to display the address of the cell currently being evaluated
+        ' Debug.Print "Evaluated cell address: " & cell.Address
+    Next cell
+End Sub
 Sub ImportCSVs(folderPath)
     Dim Filename1 As String
     Dim Filename2 As String
@@ -87,13 +101,15 @@ Sub ImportCSVs(folderPath)
     Dim wsImageChoices As Worksheet
     Dim wsPlexLibexport As Worksheet
     Dim wsPlexEpisodeExport As Worksheet
-    
+    Dim wsSheet As Worksheet
+    Dim rngURLs As Range
+ 
     Set wsImageChoices = ThisWorkbook.Worksheets.Add
     wsImageChoices.Name = "ImageChoices"
     ThisWorkbook.Queries.Add Name:="ImageChoices", Formula:= _
         "let" & Chr(13) & "" & Chr(10) & " Source = Csv.Document(File.Contents(""" & Filename1 & """),[Delimiter="";"", Columns=9, Encoding=65001, QuoteStyle=QuoteStyle.None])," & Chr(13) & "" & Chr(10) & "    #""Promoted Headers"" = Table.PromoteHeaders(Source, [PromoteAllScalars=true])," & Chr(13) & "" & Chr(10) & "    #""Changed Type"" = Table.TransformColumnTypes(#""Promoted Headers"",{{""Title"", type text}, {""Type"", t" & _
         "ype text}, {""Rootfolder"", type text}, {""LibraryName"", type text}, {""Language"", type text}, {""Fallback"", type logical}, {""TextTruncated"", type logical}, {""Download Source"", type text}, {""Fav Provider Link"", type text}})" & Chr(13) & "" & Chr(10) & "in" & Chr(13) & "" & Chr(10) & "    #""Changed Type"""
-    
+        
     With wsImageChoices.ListObjects.Add(SourceType:=0, Source:= _
         "OLEDB;Provider=Microsoft.Mashup.OleDb.1;Data Source=$Workbook$;Location=ImageChoices;Extended Properties=""""", Destination:=wsImageChoices.Range("$A$1")).QueryTable
         .CommandType = xlCmdSql
@@ -114,11 +130,15 @@ Sub ImportCSVs(folderPath)
         .ListObject.ShowTotals = True
     End With
     
+    Set wsSheet = ThisWorkbook.Sheets("ImageChoices")
+    Set rngURLs = wsSheet.UsedRange
+    ConvertToClickableLinks wsSheet, rngURLs
+    
     Set wsPlexLibexport = ThisWorkbook.Worksheets.Add
     wsPlexLibexport.Name = "PlexLibexport"
     ThisWorkbook.Queries.Add Name:="PlexLibexport", Formula:= _
         "let" & Chr(13) & "" & Chr(10) & "    Source = Csv.Document(File.Contents(""" & Filename2 & """),[Delimiter="";"", Columns=18, Encoding=65001, QuoteStyle=QuoteStyle.None])," & Chr(13) & "" & Chr(10) & "    #""Promoted Headers"" = Table.PromoteHeaders(Source, [PromoteAllScalars=true])," & Chr(13) & "" & Chr(10) & "    #""Changed Type"" = Table.TransformColumnTypes(#""Promoted Headers"",{{""Library Name"", type text}, {""" & _
-        "Library Type"", type text}, {""title"", type text}, {""originalTitle"", type text}, {""SeasonNames"", type text}, {""SeasonNumbers"", type number}, {""SeasonRatingKeys"", type number}, {""year"", Int64.Type}, {""tvdbid"", Int64.Type}, {""imdbid"", type text}, {""tmdbid"", Int64.Type}, {""ratingKey"", Int64.Type}, {""Path"", type text}, {""RootFoldername"", type text" & _
+        "Library Type"", type text}, {""title"", type text}, {""originalTitle"", type text}, {""SeasonNames"", type text}, {""SeasonNumbers"", type text}, {""SeasonRatingKeys"", type text}, {""year"", Int64.Type}, {""tvdbid"", type text}, {""imdbid"", type text}, {""tmdbid"", type text}, {""ratingKey"", type text}, {""Path"", type text}, {""RootFoldername"", type text" & _
         "}, {""MultipleVersions"", type logical}, {""PlexPosterUrl"", type text}, {""PlexBackgroundUrl"", type text}, {""PlexSeasonUrls"", type text}})" & Chr(13) & "" & Chr(10) & "in" & Chr(13) & "" & Chr(10) & "    #""Changed Type"""
 
     With wsPlexLibexport.ListObjects.Add(SourceType:=0, Source:= _
@@ -141,11 +161,15 @@ Sub ImportCSVs(folderPath)
         .ListObject.ShowTotals = True
     End With
     
+    Set wsSheet = ThisWorkbook.Sheets("PlexLibexport")
+    Set rngURLs = wsSheet.UsedRange
+    ConvertToClickableLinks wsSheet, rngURLs
+   
     Set wsPlexEpisodeExport = ThisWorkbook.Worksheets.Add
     wsPlexEpisodeExport.Name = "PlexEpisodeExport"
     ThisWorkbook.Queries.Add Name:="PlexEpisodeExport", Formula:= _
         "let" & Chr(13) & "" & Chr(10) & "    Source = Csv.Document(File.Contents(""" & Filename3 & """),[Delimiter="";"", Columns=9, Encoding=65001, QuoteStyle=QuoteStyle.None])," & Chr(13) & "" & Chr(10) & "    #""Promoted Headers"" = Table.PromoteHeaders(Source, [PromoteAllScalars=true])," & Chr(13) & "" & Chr(10) & "    #""Changed Type"" = Table.TransformColumnTypes(#""Promoted Headers"",{{""Show Name"", type text}, {""" & _
-        "Type"", type text}, {""tvdbid"", Int64.Type}, {""tmdbid"", Int64.Type}, {""Library Name"", type text}, {""Season Number"", Int64.Type}, {""Episodes"", type number}, {""Title"", type text}, {""PlexTitleCardUrls"", type text}})" & Chr(13) & "" & Chr(10) & "in" & Chr(13) & "" & Chr(10) & "    #""Changed Type"""
+        "Type"", type text}, {""tvdbid"", type text}, {""tmdbid"", type text}, {""Library Name"", type text}, {""Season Number"", type text}, {""Episodes"", type text}, {""Title"", type text}, {""PlexTitleCardUrls"", type text}})" & Chr(13) & "" & Chr(10) & "in" & Chr(13) & "" & Chr(10) & "    #""Changed Type"""
 
     With wsPlexEpisodeExport.ListObjects.Add(SourceType:=0, Source:= _
         "OLEDB;Provider=Microsoft.Mashup.OleDb.1;Data Source=$Workbook$;Location=PlexEpisodeExport;Extended Properties=""""", Destination:=wsPlexEpisodeExport.Range("$A$1")).QueryTable
@@ -167,6 +191,10 @@ Sub ImportCSVs(folderPath)
         .ListObject.ShowTotals = True
     End With
     
+    Set wsSheet = ThisWorkbook.Sheets("PlexEpisodeExport")
+    Set rngURLs = wsSheet.UsedRange
+    ConvertToClickableLinks wsSheet, rngURLs
+       
     ' Refresh_All
     Refresh_All_Data_Connections
     
