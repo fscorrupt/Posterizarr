@@ -3,6 +3,13 @@ Option Explicit
 Sub PromptUser()
     Dim folderPath As String
     Dim FilenamePPM As String
+    Dim currentVersion As String
+    
+    ' Specify the current version number
+    currentVersion = "1.0.1"
+    
+    ' Check for updates
+    CheckForUpdate currentVersion
     
     ' Get the current filename
     FilenamePPM = ThisWorkbook.FullName
@@ -222,6 +229,46 @@ Sub Refresh_All_Data_Connections()
     
     MsgBox "Finished refreshing all data connections", vbInformation
     
+End Sub
+Sub CheckForUpdate(currentVersion As String)
+    Dim http As Object
+    Dim url As String
+    Dim onlineVersion As String
+    Dim fileContent As String
+    
+    ' Define the URL of the GitHub raw file
+    url = "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/ReleaseModule.txt"
+    
+    ' Create a new WinHttpRequest object
+    Set http = CreateObject("WinHttp.WinHttpRequest.5.1")
+    
+    ' Open a connection to the URL
+    http.Open "GET", url, False
+    
+    ' Send the request for the file content
+    http.send
+    
+    ' Check if the request was successful
+    If http.Status = 200 Then
+        ' Get the content of the file
+        fileContent = http.responseText
+        
+        ' Extract the online version from the file content
+        ' (Assuming the file content contains only the version number)
+        onlineVersion = Trim(fileContent)
+        
+        ' Compare the current version with the online version
+        If currentVersion <> onlineVersion Then
+            ' Display a message box prompting the user to update
+            MsgBox "A new version (" & onlineVersion & ") of Module1.bas is available. Please update.", vbExclamation
+        End If
+    Else
+        ' Display a message box if the request fails
+        MsgBox "Failed to check for updates. Please try again later.", vbExclamation
+    End If
+    
+    ' Clean up the HTTP object
+    Set http = Nothing
 End Sub
 
 Function GetFolderPath(prompt As String) As String
