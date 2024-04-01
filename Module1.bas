@@ -6,7 +6,7 @@ Sub PromptUser()
     Dim currentVersion As String
     
     ' Specify the current version number
-    currentVersion = "1.0.1"
+    currentVersion = "1.0.2"
     
     ' Check for updates
     CheckForUpdate currentVersion
@@ -260,7 +260,8 @@ Sub CheckForUpdate(currentVersion As String)
         ' Compare the current version with the online version
         If currentVersion <> onlineVersion Then
             ' Display a message box prompting the user to update
-            MsgBox "A new version (" & onlineVersion & ") of Module1.bas is available. Please update.", vbExclamation
+            MsgBox "Module1.bas check" & vbCrLf & "Your version:(" & currentVersion & ")." & vbCrLf & "Version Available: (" & onlineVersion & ")." & vbCrLf & "Please update. Aborting now...", vbExclamation
+            End
         End If
     Else
         ' Display a message box if the request fails
