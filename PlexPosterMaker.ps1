@@ -3,7 +3,7 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.62"
+$CurrentScriptVersion = "1.0.63"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -2052,10 +2052,13 @@ function InvokeMagickCommand {
 }
 
 function CheckCharLimit {
-    # Check if the registry key exists
-    if (Test-Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem\LongPathsEnabled") {
+    # Attempt to get the registry key
+    try {
+        $regKey = Get-Item -ErrorAction Stop -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem"
+
         # Get the value of LongPathsEnabled
-        $longPathsEnabled = Get-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\FileSystem" -Name LongPathsEnabled | Select-Object -ExpandProperty LongPathsEnabled
+        $longPathsEnabled = $regKey.GetValue("LongPathsEnabled")
+
         if ($longPathsEnabled -eq 1) {
             return $true
         }
@@ -2063,10 +2066,13 @@ function CheckCharLimit {
             return $false
         }
     }
-    Else {
+    catch {
+        # Handle any errors accessing the registry key
+        Write-Entry -Subtext "$_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
         return $false
     }
 }
+
 ##### PRE-START #####
 # Set some global vars
 Set-OSTypeAndScriptRoot
@@ -2688,7 +2694,7 @@ Elseif ($Testing) {
         if ($global:IsTruncated) { $TruncatedCount++ }
         $seasonoptimalFontSizeLong = Get-OptimalPointSize -text $LongText -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize
         if ($global:IsTruncated) { $TruncatedCount++ }
-    
+
         $seasonoptimalFontSizeShortCAPS = Get-OptimalPointSize -text $ShortTextCAPS -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize
         if ($global:IsTruncated) { $TruncatedCount++ }
         $seasonoptimalFontSizeMediumCAPS = Get-OptimalPointSize -text $MediumTextCAPS -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize
@@ -2918,7 +2924,7 @@ Elseif ($Testing) {
             $SeasonArgumentsLongCAPS = "`"$testimage`" -quality $global:outputQuality `"$TestSeasonPosterLongCAPS`""
             Write-Entry -Subtext "Nothing specified, just output pic with desired quality" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
         }
-    
+
         # Poster Logging
         $SeasonlogEntryShort = "`"$magick`" $SeasonArgumentsShort"
         $SeasonlogEntryMedium = "`"$magick`" $SeasonArgumentsMedium"
@@ -2926,14 +2932,14 @@ Elseif ($Testing) {
         $SeasonlogEntryShortCAPS = "`"$magick`" $SeasonArgumentsShortCAPS"
         $SeasonlogEntryMediumCAPS = "`"$magick`" $SeasonArgumentsMediumCAPS"
         $SeasonlogEntryLongCAPS = "`"$magick`" $SeasonArgumentsLongCAPS"
-    
+
         $SeasonlogEntryShort | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
         $SeasonlogEntryShortCAPS | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
         $SeasonlogEntryMedium | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
         $SeasonlogEntryMediumCAPS | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
         $SeasonlogEntryLong | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
         $SeasonlogEntryLongCAPS | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
-    
+
         # Test Poster creation
         InvokeMagickCommand -Command $magick -Arguments $SeasonArgumentsShort
         InvokeMagickCommand -Command $magick -Arguments $SeasonArgumentsMedium
@@ -2972,21 +2978,21 @@ Elseif ($Testing) {
         Write-Entry -Subtext "    Applying text: `"$MediumText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
         Write-Entry -Subtext "Optimal font size for Long text is: '$optimalFontSizeLong'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
         Write-Entry -Subtext "    Applying text: `"$LongText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
-    
+
         Write-Entry -Subtext "Optimal font size for Short CAPS text is: '$optimalFontSizeShortCAPS'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
         Write-Entry -Subtext "    Applying CAPS text: `"$ShortTextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
         Write-Entry -Subtext "Optimal font size for Medium CAPS text is: '$optimalFontSizeMediumCAPS'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
         Write-Entry -Subtext "    Applying CAPS text: `"$MediumTextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
         Write-Entry -Subtext "Optimal font size for Long CAPS text is: '$optimalFontSizeLongCAPS'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
         Write-Entry -Subtext "    Applying CAPS text: `"$LongTextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
-    
+
         $SeasonArgumentsShort = "`"$TestSeasonPosterShort`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeShort`" -fill `"#0000FF`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$ShortText`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterShort`""
         $SeasonArgumentsMedium = "`"$TestSeasonPosterMedium`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeMedium`" -fill `"#0000FF`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$MediumText`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterMedium`""
         $SeasonArgumentsLong = "`"$TestSeasonPosterLong`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeLong`" -fill `"#0000FF`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$LongText`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterLong`""
         $SeasonArgumentsShortCAPS = "`"$TestSeasonPosterShortCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeShortCAPS`" -fill `"#0000FF`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$ShortTextCAPS`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterShortCAPS`""
         $SeasonArgumentsMediumCAPS = "`"$TestSeasonPosterMediumCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeMediumCAPS`" -fill `"#0000FF`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$MediumTextCAPS`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterMediumCAPS`""
         $SeasonArgumentsLongCAPS = "`"$TestSeasonPosterLongCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeLongCAPS`" -fill `"#0000FF`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$LongTextCAPS`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterLongCAPS`""
-    
+
         # Text Poster Logging
         $SeasonlogEntryShort = "`"$magick`" $SeasonArgumentsShort"
         $SeasonlogEntryMedium = "`"$magick`" $SeasonArgumentsMedium"
@@ -2994,14 +3000,14 @@ Elseif ($Testing) {
         $SeasonlogEntryShortCAPS = "`"$magick`" $SeasonArgumentsShortCAPS"
         $SeasonlogEntryMediumCAPS = "`"$magick`" $SeasonArgumentsMediumCAPS"
         $SeasonlogEntryLongCAPS = "`"$magick`" $SeasonArgumentsLongCAPS"
-    
+
         $SeasonlogEntryShort | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
         $SeasonlogEntryShortCAPS | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
         $SeasonlogEntryMedium | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
         $SeasonlogEntryMediumCAPS | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
         $SeasonlogEntryLong | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
         $SeasonlogEntryLongCAPS | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
-    
+
         # Text Poster overlaying
         InvokeMagickCommand -Command $magick -Arguments $SeasonArgumentsShort
         InvokeMagickCommand -Command $magick -Arguments $SeasonArgumentsMedium
@@ -3592,33 +3598,33 @@ else {
             if ($PlexToken) {
                 $PlexHeaders['X-Plex-Token'] = $PlexToken
             }
-            
+
             # Create a parent XML document
             $Libcontent = New-Object -TypeName System.Xml.XmlDocument
             $mediaContainerNode = $Libcontent.CreateElement('MediaContainer')
             $Libcontent.AppendChild($mediaContainerNode) | Out-Null
-            
+
             # Initialize variables for pagination
             $searchsize = 0
             $totalContentSize = 1
-            
+
             # Loop until all content is retrieved
             do {
                 # Set headers for the current request
                 $PlexHeaders['X-Plex-Container-Start'] = $searchsize
                 $PlexHeaders['X-Plex-Container-Size'] = '1000'
-                
+
                 # Fetch content from Plex server
                 $response = Invoke-WebRequest -Uri "$PlexUrl/library/sections/$($Library.ID)/all" -Headers $PlexHeaders
-                
+
                 # Convert response content to XML
                 [xml]$additionalContent = $response.Content
-                
+
                 # Get total content size if not retrieved yet
                 if ($totalContentSize -eq 1) {
                     $totalContentSize = $additionalContent.MediaContainer.totalSize
                 }
-                
+
                 # Import and append video nodes to the parent XML document
                 $contentquery = if ($additionalContent.MediaContainer.video) {
                     'video'
@@ -3630,7 +3636,7 @@ else {
                     $importedNode = $Libcontent.ImportNode($videoNode, $true)
                     [void]$mediaContainerNode.AppendChild($importedNode)
                 }
-                
+
                 # Update search size for next request
                 $searchsize += [int]$additionalContent.MediaContainer.Size
             } until ($searchsize -ge $totalContentSize)
@@ -3650,7 +3656,7 @@ else {
                     }
                     Else {
                         [xml]$Metadata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey)?X-Plex-Token=$PlexToken -Headers $extraPlexHeaders).content
-                    }    
+                    }
                 }
                 Else {
                     if ($contentquery -eq 'Directory') {
@@ -3708,11 +3714,12 @@ else {
                         $MultipleVersions = $false
                     }
                     Write-Entry -Subtext "File Location: $location" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                    
+
                     if ($location.length -ge '256' -and $Platform -eq 'Windows') {
                         $CheckCharLimit = CheckCharLimit
                         if ($CheckCharLimit -eq $false){
                             Write-Entry -Subtext "Skipping [$($item.title)] because path length is over '256'..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                            Write-Entry -Subtext "You can adjust it by following this: https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation?tabs=registry#enable-long-paths-in-windows-10-version-1607-and-later" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                             continue
                         }
                     }
@@ -3834,7 +3841,7 @@ else {
             Write-Entry -Subtext "Found '$($Episodedata.Episodes.split(',').count)' Episodes..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
         }
     }
-    
+
     # Test if csv´s are missing and create dummy file.
     if (!(Get-ChildItem -LiteralPath "$global:ScriptRoot\Logs\PlexEpisodeExport.csv" -ErrorAction SilentlyContinue)) {
         $EpisodeDummycsv = New-Object psobject
@@ -5002,7 +5009,7 @@ else {
                     $global:SeasonNumber = $global:seasonNumbers[$i]
                     $global:PlexSeasonUrl = $global:PlexSeasonUrls[$i]
                     $global:season = "Season" + $global:SeasonNumber.PadLeft(2, '0')
-            
+
                     if ($LibraryFolders -eq 'true') {
                         $SeasonImageoriginal = "$EntryDir\$global:season.jpg"
                         $TestPath = $EntryDir
@@ -5013,7 +5020,7 @@ else {
                         $TestPath = $AssetPath
                         $Testfile = "$($entry.RootFoldername)_$global:season"
                     }
-            
+
                     if ($Platform -eq 'Docker' -or $Platform -eq 'Linux') {
                         $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/').Replace('./', '/')
                     }
@@ -5171,18 +5178,18 @@ else {
                                             $Arguments = "`"$SeasonImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$SeasonImage`""
                                             Write-Entry -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                         }
-            
+
                                         $logEntry = "`"$magick`" $Arguments"
                                         $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                         InvokeMagickCommand -Command $magick -Arguments $Arguments
-            
+
                                         if ($AddSeasonText -eq 'true') {
                                             $optimalFontSize = Get-OptimalPointSize -text $global:seasonTitle -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize
-            
+
                                             Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-            
+
                                             $Arguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Seasonfontcolor`" -size `"$Seasonboxsize`" -background none caption:`"$global:seasonTitle`" -trim -gravity south -extent `"$Seasonboxsize`" `) -gravity south -geometry +0`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
-            
+
                                             Write-Entry -Subtext "Applying seasonTitle text: `"$global:seasonTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                             $logEntry = "`"$magick`" $Arguments"
                                             $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
@@ -5256,7 +5263,7 @@ else {
                                     Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                     $SeasonCount++
                                     $posterCount++
-            
+
                                     $seasontemp = New-Object psobject
                                     $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Titletext + " | " + $global:season)
                                     $seasontemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Season'
