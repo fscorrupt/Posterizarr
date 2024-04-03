@@ -3,7 +3,7 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.63"
+$CurrentScriptVersion = "1.0.64"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -160,16 +160,22 @@ function GetTMDBMoviePoster {
             if ($response.images.posters) {
                 $NoLangPoster = ($response.images.posters | Where-Object iso_639_1 -eq $null)
                 if (!$NoLangPoster) {
-                    $posterpath = (($response.images.posters | Sort-Object vote_average -Descending)[0]).file_path
-                    $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
-                    if ($global:FavProvider -eq 'TMDB') {
-                        $global:Fallback = "fanart"
-                        $global:tmdbfallbackposterurl = $global:posterurl
+                    if (!$global:OnlyTextless) {
+                        $posterpath = (($response.images.posters | Sort-Object vote_average -Descending)[0]).file_path
+                        $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
+                        if ($global:FavProvider -eq 'TMDB') {
+                            $global:Fallback = "fanart"
+                            $global:tmdbfallbackposterurl = $global:posterurl
+                        }
+                        Write-Entry -Subtext "Found Poster with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                        $global:PosterWithText = $true
+                        $global:TMDBAssetTextLang = (($response.images.posters | Sort-Object vote_average -Descending)[0]).iso_639_1
+                        $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/movie/$($global:tmdbid)/images/posters"
                     }
-                    Write-Entry -Subtext "Found Poster with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
-                    $global:PosterWithText = $true
-                    $global:TMDBAssetTextLang = (($response.images.posters | Sort-Object vote_average -Descending)[0]).iso_639_1
-                    $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/movie/$($global:tmdbid)/images/posters"
+                    Else {
+                        Write-Entry -Subtext "Found Poster with text on TMDB, skipping because you only want textless..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                        $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/movie/$($global:tmdbid)/images/posters"
+                    }
                 }
                 Else {
                     $posterpath = (($response.images.posters | Where-Object iso_639_1 -eq $null | Sort-Object vote_average -Descending)[0]).file_path
@@ -185,6 +191,7 @@ function GetTMDBMoviePoster {
         }
         Else {
             Write-Entry -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/movie/$($global:tmdbid)/images/posters"
         }
     }
     Else {
@@ -227,6 +234,7 @@ function GetTMDBMoviePoster {
         }
         Else {
             Write-Entry -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/movie/$($global:tmdbid)/images/posters"
         }
     }
 }
@@ -245,16 +253,22 @@ function GetTMDBMovieBackground {
             if ($response.images.backdrops) {
                 $NoLangPoster = ($response.images.backdrops | Where-Object iso_639_1 -eq $null)
                 if (!$NoLangPoster) {
-                    $posterpath = (($response.images.backdrops | Sort-Object vote_average -Descending)[0]).file_path
-                    $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
-                    if ($global:FavProvider -eq 'TMDB') {
-                        $global:Fallback = "fanart"
-                        $global:tmdbfallbackposterurl = $global:posterurl
+                    if (!$global:OnlyTextless) {
+                        $posterpath = (($response.images.backdrops | Sort-Object vote_average -Descending)[0]).file_path
+                        $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
+                        if ($global:FavProvider -eq 'TMDB') {
+                            $global:Fallback = "fanart"
+                            $global:tmdbfallbackposterurl = $global:posterurl
+                        }
+                        Write-Entry -Subtext "Found background with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                        $global:PosterWithText = $true
+                        $global:TMDBAssetTextLang = (($response.images.backdrops | Sort-Object vote_average -Descending)[0]).iso_639_1
+                        $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/movie/$($global:tmdbid)/images/backdrops"
                     }
-                    Write-Entry -Subtext "Found background with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
-                    $global:PosterWithText = $true
-                    $global:TMDBAssetTextLang = (($response.images.backdrops | Sort-Object vote_average -Descending)[0]).iso_639_1
-                    $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/movie/$($global:tmdbid)/images/backdrops"
+                    Else {
+                        Write-Entry -Subtext "Found Poster with text on TMDB, skipping because you only want textless..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                        $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/movie/$($global:tmdbid)/images/backdrops"
+                    }
                 }
                 Else {
                     $posterpath = (($response.images.backdrops | Where-Object iso_639_1 -eq $null | Sort-Object vote_average -Descending)[0]).file_path
@@ -269,6 +283,7 @@ function GetTMDBMovieBackground {
             }
             Else {
                 Write-Entry -Subtext "No Background found on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/movie/$($global:tmdbid)/images/backdrops"
                 if ($global:FavProvider -eq 'TMDB') {
                     $global:Fallback = "fanart"
                 }
@@ -276,6 +291,7 @@ function GetTMDBMovieBackground {
         }
         Else {
             Write-Entry -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/movie/$($global:tmdbid)/images/backdrops"
         }
     }
     Else {
@@ -321,6 +337,7 @@ function GetTMDBMovieBackground {
             }
             Else {
                 Write-Entry -Subtext "No Background found on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/movie/$($global:tmdbid)/images/backdrops"
                 if ($global:FavProvider -eq 'TMDB') {
                     $global:Fallback = "fanart"
                 }
@@ -328,6 +345,7 @@ function GetTMDBMovieBackground {
         }
         Else {
             Write-Entry -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/movie/$($global:tmdbid)/images/backdrops"
         }
     }
 }
@@ -346,17 +364,23 @@ function GetTMDBShowPoster {
             if ($response.images.posters) {
                 $NoLangPoster = ($response.images.posters | Where-Object iso_639_1 -eq $null)
                 if (!$NoLangPoster) {
-                    $posterpath = (($response.images.posters | Sort-Object vote_average -Descending)[0]).file_path
-                    $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
-                    if ($global:FavProvider -eq 'TMDB') {
-                        $global:Fallback = "fanart"
-                        $global:tmdbfallbackposterurl = $global:posterurl
+                    if (!$global:OnlyTextless) {
+                        $posterpath = (($response.images.posters | Sort-Object vote_average -Descending)[0]).file_path
+                        $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
+                        if ($global:FavProvider -eq 'TMDB') {
+                            $global:Fallback = "fanart"
+                            $global:tmdbfallbackposterurl = $global:posterurl
+                        }
+                        Write-Entry -Subtext "Found Poster with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                        $global:PosterWithText = $true
+                        $global:TMDBAssetTextLang = (($response.images.posters | Sort-Object vote_average -Descending)[0]).iso_639_1
+                        $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/images/posters"
+                        return $global:posterurl
                     }
-                    Write-Entry -Subtext "Found Poster with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
-                    $global:PosterWithText = $true
-                    $global:TMDBAssetTextLang = (($response.images.posters | Sort-Object vote_average -Descending)[0]).iso_639_1
-                    $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/images/posters"
-                    return $global:posterurl
+                    Else {
+                        Write-Entry -Subtext "Found Poster with text on TMDB, skipping because you only want textless..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                        $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/images/posters"
+                    }
                 }
                 Else {
                     $posterpath = (($response.images.posters | Where-Object iso_639_1 -eq $null | Sort-Object vote_average -Descending)[0]).file_path
@@ -372,6 +396,7 @@ function GetTMDBShowPoster {
         }
         Else {
             Write-Entry -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/images/posters"
         }
     }
     Else {
@@ -414,6 +439,7 @@ function GetTMDBShowPoster {
         }
         Else {
             Write-Entry -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/images/posters"
         }
     }
 }
@@ -432,14 +458,20 @@ function GetTMDBSeasonPoster {
             if ($response.posters) {
                 $NoLangPoster = ($response.posters | Where-Object iso_639_1 -eq $null)
                 if (!$NoLangPoster) {
-                    $posterpath = (($response.posters | Sort-Object vote_average -Descending)[0]).file_path
-                    $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
-                    Write-Entry -Subtext "Found Poster with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
-                    $global:PosterWithText = $true
-                    $global:TMDBAssetTextLang = (($response.posters | Sort-Object vote_average -Descending)[0]).iso_639_1
-                    $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/season/$global:SeasonNumber/images/posters"
-                    $global:TMDBSeasonFallback = $global:posterurl
-                    return $global:posterurl
+                    if (!$global:OnlyTextless) {
+                        $posterpath = (($response.posters | Sort-Object vote_average -Descending)[0]).file_path
+                        $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
+                        Write-Entry -Subtext "Found Poster with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                        $global:PosterWithText = $true
+                        $global:TMDBAssetTextLang = (($response.posters | Sort-Object vote_average -Descending)[0]).iso_639_1
+                        $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/season/$global:SeasonNumber/images/posters"
+                        $global:TMDBSeasonFallback = $global:posterurl
+                        return $global:posterurl
+                    }
+                    Else {
+                        Write-Entry -Subtext "Found Poster with text on TMDB, skipping because you only want textless..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                        $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/season/$global:SeasonNumber/images/posters"
+                    }
                 }
                 Else {
                     $posterpath = (($response.posters | Where-Object iso_639_1 -eq $null | Sort-Object vote_average -Descending)[0]).file_path
@@ -454,10 +486,12 @@ function GetTMDBSeasonPoster {
             }
             Else {
                 Write-Entry -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/season/$global:SeasonNumber/images/posters"
             }
         }
         Else {
             Write-Entry -Subtext "No Season Poster on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+            $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/season/$global:SeasonNumber/images/posters"
         }
     }
     Else {
@@ -534,10 +568,12 @@ function GetTMDBSeasonPoster {
             }
             Else {
                 Write-Entry -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/season/$global:SeasonNumber/images/posters"
             }
         }
         Else {
             Write-Entry -Subtext "No Season Poster on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+            $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/season/$global:SeasonNumber/images/posters"
         }
 
     }
@@ -557,16 +593,22 @@ function GetTMDBShowBackground {
             if ($response.images.backdrops) {
                 $NoLangPoster = ($response.images.backdrops | Where-Object iso_639_1 -eq $null)
                 if (!$NoLangPoster) {
-                    $posterpath = (($response.images.backdrops | Sort-Object vote_average -Descending)[0]).file_path
-                    $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
-                    if ($global:FavProvider -eq 'TMDB') {
-                        $global:Fallback = "fanart"
-                        $global:tmdbfallbackposterurl = $global:posterurl
+                    if (!$global:OnlyTextless) {
+                        $posterpath = (($response.images.backdrops | Sort-Object vote_average -Descending)[0]).file_path
+                        $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
+                        if ($global:FavProvider -eq 'TMDB') {
+                            $global:Fallback = "fanart"
+                            $global:tmdbfallbackposterurl = $global:posterurl
+                        }
+                        Write-Entry -Subtext "Found background with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                        $global:PosterWithText = $true
+                        $global:TMDBAssetTextLang = (($response.images.backdrops | Sort-Object vote_average -Descending)[0]).iso_639_1
+                        $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/images/backdrops"
                     }
-                    Write-Entry -Subtext "Found background with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
-                    $global:PosterWithText = $true
-                    $global:TMDBAssetTextLang = (($response.images.backdrops | Sort-Object vote_average -Descending)[0]).iso_639_1
-                    $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/images/backdrops"
+                    Else {
+                        Write-Entry -Subtext "Found Poster with text on TMDB, skipping because you only want textless..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                        $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/images/backdrops"
+                    }
                 }
                 Else {
                     $posterpath = (($response.images.backdrops | Where-Object iso_639_1 -eq $null | Sort-Object vote_average -Descending)[0]).file_path
@@ -585,6 +627,7 @@ function GetTMDBShowBackground {
             }
             Else {
                 Write-Entry -Subtext "No Background found on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/images/backdrops"
                 if ($global:FavProvider -eq 'TMDB') {
                     $global:Fallback = "fanart"
                 }
@@ -592,6 +635,7 @@ function GetTMDBShowBackground {
         }
         Else {
             Write-Entry -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/images/backdrops"
         }
     }
     Else {
@@ -632,11 +676,13 @@ function GetTMDBShowBackground {
                 }
                 if (!$global:posterurl) {
                     Write-Entry -Subtext "No Background found on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                    $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/images/backdrops"
                     $global:Fallback = "fanart"
                 }
             }
             Else {
                 Write-Entry -Subtext "No Background found on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/images/backdrops"
                 if ($global:FavProvider -eq 'TMDB') {
                     $global:Fallback = "fanart"
                 }
@@ -644,6 +690,7 @@ function GetTMDBShowBackground {
         }
         Else {
             Write-Entry -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/images/backdrops"
         }
     }
 }
@@ -682,6 +729,7 @@ function GetTMDBTitleCard {
         }
         Else {
             Write-Entry -Subtext "No Title Card found on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/season/$global:season_number/episode/$global:episodenumber/images/backdrops"
             $global:Fallback = "TVDB"
             Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             $errorCount++
@@ -689,6 +737,7 @@ function GetTMDBTitleCard {
     }
     Else {
         Write-Entry -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+        $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/season/$global:season_number/episode/$global:episodenumber/images/backdrops"
         $global:Fallback = "TVDB"
         Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
         $errorCount++
@@ -706,15 +755,21 @@ function GetFanartMoviePoster {
                 $entrytemp = Get-FanartTv -Type movies -id $id -ErrorAction SilentlyContinue
                 if ($entrytemp -and $entrytemp.movieposter) {
                     if (!($entrytemp.movieposter | Where-Object lang -eq '00')) {
-                        $global:posterurl = ($entrytemp.movieposter)[0].url
-                        Write-Entry -Subtext "Found Poster with text on Fanart.tv"  -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
-                        $global:PosterWithText = $true
-                        $global:FANARTAssetTextLang = ($entrytemp.movieposter)[0].lang
-                        $global:FANARTAssetChangeUrl = "https://fanart.tv/movie/$id"
+                        if (!$global:OnlyTextless) {
+                            $global:posterurl = ($entrytemp.movieposter)[0].url
+                            Write-Entry -Subtext "Found Poster with text on Fanart.tv"  -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                            $global:PosterWithText = $true
+                            $global:FANARTAssetTextLang = ($entrytemp.movieposter)[0].lang
+                            $global:FANARTAssetChangeUrl = "https://fanart.tv/movie/$id"
 
-                        if ($global:FavProvider -eq 'FANART') {
-                            $global:Fallback = "TMDB"
-                            $global:fanartfallbackposterurl = ($entrytemp.movieposter)[0].url
+                            if ($global:FavProvider -eq 'FANART') {
+                                $global:Fallback = "TMDB"
+                                $global:fanartfallbackposterurl = ($entrytemp.movieposter)[0].url
+                            }
+                        }
+                        Else {
+                            Write-Entry -Subtext "Found Poster with text on FANART, skipping because you only want textless..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                            $global:FANARTAssetChangeUrl = "https://fanart.tv/movie/$id"
                         }
                         break
                     }
@@ -828,16 +883,22 @@ function GetFanartShowPoster {
                 $entrytemp = Get-FanartTv -Type tv -id $id -ErrorAction SilentlyContinue
                 if ($entrytemp -and $entrytemp.tvposter) {
                     if (!($entrytemp.tvposter | Where-Object lang -eq '00')) {
-                        $global:posterurl = ($entrytemp.tvposter)[0].url
+                        if (!$global:OnlyTextless) {
+                            $global:posterurl = ($entrytemp.tvposter)[0].url
 
-                        Write-Entry -Subtext "Found Poster with text on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
-                        $global:PosterWithText = $true
-                        $global:FANARTAssetTextLang = ($entrytemp.tvposter)[0].lang
-                        $global:FANARTAssetChangeUrl = "https://fanart.tv/series/$id"
+                            Write-Entry -Subtext "Found Poster with text on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                            $global:PosterWithText = $true
+                            $global:FANARTAssetTextLang = ($entrytemp.tvposter)[0].lang
+                            $global:FANARTAssetChangeUrl = "https://fanart.tv/series/$id"
 
-                        if ($global:FavProvider -eq 'FANART') {
-                            $global:Fallback = "TMDB"
-                            $global:fanartfallbackposterurl = ($entrytemp.tvposter)[0].url
+                            if ($global:FavProvider -eq 'FANART') {
+                                $global:Fallback = "TMDB"
+                                $global:fanartfallbackposterurl = ($entrytemp.tvposter)[0].url
+                            }
+                        }
+                        Else {
+                            Write-Entry -Subtext "Found Poster with text on FANART, skipping because you only want textless..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                            $global:FANARTAssetChangeUrl = "https://fanart.tv/series/$id"
                         }
                         break
                     }
@@ -962,17 +1023,23 @@ function GetFanartSeasonPoster {
                             $global:FANARTAssetChangeUrl = "https://fanart.tv/series/$id"
                         }
                         Else {
-                            Write-Entry -Subtext "No Texless Season Poster on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
-                            foreach ($lang in $global:PreferredLanguageOrderFanart) {
-                                $FoundPoster = ($entrytemp.seasonposter | Where-Object { $_.lang -eq "$lang" -and $_.Season -eq $global:SeasonNumber } | Sort-Object likes)
-                                if ($FoundPoster) {
-                                    $global:posterurl = $FoundPoster[0].url
-                                    Write-Entry -Subtext "Found season Poster with Language '$lang' on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
-                                    $global:PosterWithText = $true
-                                    $global:FANARTAssetTextLang = $lang
-                                    $global:FANARTAssetChangeUrl = "https://fanart.tv/series/$id"
-                                    break
+                            if (!$global:OnlyTextless) {
+                                Write-Entry -Subtext "No Texless Season Poster on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                                foreach ($lang in $global:PreferredLanguageOrderFanart) {
+                                    $FoundPoster = ($entrytemp.seasonposter | Where-Object { $_.lang -eq "$lang" -and $_.Season -eq $global:SeasonNumber } | Sort-Object likes)
+                                    if ($FoundPoster) {
+                                        $global:posterurl = $FoundPoster[0].url
+                                        Write-Entry -Subtext "Found season Poster with Language '$lang' on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                                        $global:PosterWithText = $true
+                                        $global:FANARTAssetTextLang = $lang
+                                        $global:FANARTAssetChangeUrl = "https://fanart.tv/series/$id"
+                                        break
+                                    }
                                 }
+                            }
+                            Else {
+                                Write-Entry -Subtext "Found Poster with text on FANART, skipping because you only want textless..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                                $global:FANARTAssetChangeUrl = "https://fanart.tv/series/$id"
                             }
                         }
                     }
@@ -988,12 +1055,21 @@ function GetFanartSeasonPoster {
                                         $global:FANARTAssetChangeUrl = "https://fanart.tv/series/$id"
                                     }
                                     Else {
-                                        Write-Entry -Subtext "Found Poster with Language '$lang' on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                                        if (!$global:OnlyTextless) {
+                                            Write-Entry -Subtext "Found Poster with Language '$lang' on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                                        }
                                     }
-                                    if ($lang -ne '00') {
-                                        $global:PosterWithText = $true
-                                        $global:FANARTAssetTextLang = $lang
+                                    if (!$global:OnlyTextless -and !$global:TextlessPoster) {
+                                        if ($lang -ne '00') {
+                                            $global:PosterWithText = $true
+                                            $global:FANARTAssetTextLang = $lang
+                                            $global:FANARTAssetChangeUrl = "https://fanart.tv/series/$id"
+                                        }
+                                    }
+                                    Else {
+                                        Write-Entry -Subtext "Found Poster with text on FANART, skipping because you only want textless..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
                                         $global:FANARTAssetChangeUrl = "https://fanart.tv/series/$id"
+                                        $global:posterurl = $null
                                     }
                                     break
                                 }
@@ -1071,15 +1147,18 @@ function GetTVDBMoviePoster {
             if ($response) {
                 if ($response.data.artworks) {
                     $global:posterurl = ($response.data.artworks | Where-Object { $_.language -eq $null -and $_.type -eq '14' } | Sort-Object Score)[0].image
+                    $global:TVDBAssetChangeUrl = "https://thetvdb.com/movies/$($response.data.slug)#artwork"
                     Write-Entry -Subtext "Found Textless Poster on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                     return $global:posterurl
                 }
                 Else {
                     Write-Entry -Subtext "No Poster found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                    $global:TVDBAssetChangeUrl = "https://thetvdb.com/movies/$($response.data.slug)#artwork"
                 }
             }
             Else {
                 Write-Entry -Subtext "TVDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                $global:TVDBAssetChangeUrl = "https://thetvdb.com/movies/$($response.data.slug)#artwork"
             }
         }
         Else {
@@ -1114,16 +1193,19 @@ function GetTVDBMoviePoster {
                                 $global:TVDBAssetTextLang = $lang
                             }
                             return $global:posterurl
+                            $global:TVDBAssetChangeUrl = "https://thetvdb.com/movies/$($response.data.slug)#artwork"
                             break
                         }
                     }
                 }
                 Else {
                     Write-Entry -Subtext "No Poster found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                    $global:TVDBAssetChangeUrl = "https://thetvdb.com/movies/$($response.data.slug)#artwork"
                 }
             }
             Else {
                 Write-Entry -Subtext "TVDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                $global:TVDBAssetChangeUrl = "https://thetvdb.com/movies/$($response.data.slug)#artwork"
             }
         }
     }
@@ -1144,14 +1226,17 @@ function GetTVDBMovieBackground {
                 if ($response.data.artworks) {
                     $global:posterurl = ($response.data.artworks | Where-Object { $_.language -eq $null -and $_.type -eq '15' } | Sort-Object Score)[0].image
                     Write-Entry -Subtext "Found Textless Background on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                    $global:TVDBAssetChangeUrl = "https://thetvdb.com/movies/$($response.data.slug)#artwork"
                     return $global:posterurl
                 }
                 Else {
                     Write-Entry -Subtext "No Background found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                    $global:TVDBAssetChangeUrl = "https://thetvdb.com/movies/$($response.data.slug)#artwork"
                 }
             }
             Else {
                 Write-Entry -Subtext "TVDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                $global:TVDBAssetChangeUrl = "https://thetvdb.com/movies/$($response.data.slug)#artwork"
             }
         }
         Else {
@@ -1186,19 +1271,23 @@ function GetTVDBMovieBackground {
                                 $global:TVDBAssetTextLang = $lang
                             }
                             return $global:posterurl
+                            $global:TVDBAssetChangeUrl = "https://thetvdb.com/movies/$($response.data.slug)#artwork"
                             break
                         }
                     }
                     if (!$global:posterurl) {
                         Write-Entry -Subtext "No background found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                        $global:TVDBAssetChangeUrl = "https://thetvdb.com/movies/$($response.data.slug)#artwork"
                     }
                 }
                 Else {
                     Write-Entry -Subtext "No Background found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                    $global:TVDBAssetChangeUrl = "https://thetvdb.com/movies/$($response.data.slug)#artwork"
                 }
             }
             Else {
                 Write-Entry -Subtext "TVDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                $global:TVDBAssetChangeUrl = "https://thetvdb.com/movies/$($response.data.slug)#artwork"
             }
         }
     }
@@ -1226,17 +1315,26 @@ function GetTVDBShowPoster {
                         $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)#artwork"
                     }
                     Else {
-                        $global:posterurl = $defaultImageurl
-                        Write-Entry -Subtext "Found Poster with text on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                        if (!$global:OnlyTextless) {
+                            $global:posterurl = $defaultImageurl
+                            Write-Entry -Subtext "Found Poster with text on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                            $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)#artwork"
+                        }
+                        Else {
+                            Write-Entry -Subtext "Found Poster with text on TVDB, skipping because you only want textless..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                            $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)#artwork"
+                        }
                     }
                     return $global:posterurl
                 }
                 Else {
                     Write-Entry -Subtext "No Poster found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                    $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)#artwork"
                 }
             }
             Else {
                 Write-Entry -Subtext "TVDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)#artwork"
             }
         }
         Else {
@@ -1270,16 +1368,19 @@ function GetTVDBShowPoster {
                                 $global:TVDBAssetTextLang = $lang
                             }
                             return $global:posterurl
+                            $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)#artwork"
                             break
                         }
                     }
                 }
                 Else {
                     Write-Entry -Subtext "No Poster found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                    $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)#artwork"
                 }
             }
             Else {
                 Write-Entry -Subtext "TVDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)#artwork"
             }
         }
     }
@@ -1342,10 +1443,12 @@ function GetTVDBSeasonPoster {
             }
             Else {
                 Write-Entry -Subtext "No Poster found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)/seasons/$($Seasonresponse.data.type.type)/$global:SeasonNumber#artwork"
             }
         }
         Else {
             Write-Entry -Subtext "TVDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)/seasons/$($Seasonresponse.data.type.type)/$global:SeasonNumber#artwork"
         }
     }
 }
@@ -1372,17 +1475,26 @@ function GetTVDBShowBackground {
                         $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)/#artwork"
                     }
                     Else {
-                        $global:posterurl = $defaultImageurl
-                        Write-Entry -Subtext "Found background with text on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                        if (!$global:OnlyTextless) {
+                            $global:posterurl = $defaultImageurl
+                            Write-Entry -Subtext "Found background with text on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                            $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)/#artwork"
+                        }
+                        Else {
+                            Write-Entry -Subtext "Found Poster with text on TVDB, skipping because you only want textless..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                            $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)/#artwork"
+                        }
                     }
                     return $global:posterurl
                 }
                 Else {
                     Write-Entry -Subtext "No background found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                    $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)/#artwork"
                 }
             }
             Else {
                 Write-Entry -Subtext "TVDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)/#artwork"
             }
         }
         Else {
@@ -1423,14 +1535,17 @@ function GetTVDBShowBackground {
                     }
                     if (!$global:posterurl) {
                         Write-Entry -Subtext "No background found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                        $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)/#artwork"
                     }
                 }
                 Else {
                     Write-Entry -Subtext "No background found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                    $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)/#artwork"
                 }
             }
             Else {
                 Write-Entry -Subtext "TVDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)/#artwork"
             }
         }
     }
@@ -1460,18 +1575,21 @@ function GetTVDBTitleCard {
                 Else {
                     Write-Entry -Subtext "No Title Card found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                     Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)/#artwork"
                     $errorCount++
                 }
             }
             Else {
                 Write-Entry -Subtext "No Title Card found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                 Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)/#artwork"
                 $errorCount++
             }
         }
         Else {
             Write-Entry -Subtext "TVDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)/#artwork"
             $errorCount++
         }
     }
@@ -2183,8 +2301,11 @@ if (!$global:PreferredLanguageOrder) {
 $global:PreferredLanguageOrderTMDB = $global:PreferredLanguageOrder.Replace('xx', 'null')
 $global:PreferredLanguageOrderFanart = $global:PreferredLanguageOrder.Replace('xx', '00')
 $global:PreferredLanguageOrderTVDB = $global:PreferredLanguageOrder.Replace('xx', 'null')
-if ($global:PreferredLanguageOrder[0] -eq 'xx') {
+if ($global:PreferredLanguageOrder[0] -eq 'xx' -or $global:PreferredLanguageOrder -eq 'xx') {
     $global:PreferTextless = $true
+    if ( $PreferredLanguageOrder.count -eq "1") {
+        $global:OnlyTextless = $true
+    }
 }
 Else {
     $global:PreferTextless = $false
@@ -2562,6 +2683,7 @@ if ($Manual) {
             InvokeMagickCommand -Command $magick -Arguments $Arguments
 
             if ($AddText -eq 'true') {
+                $joinedTitle = $joinedTitle -replace '"', '""'
                 $optimalFontSize = Get-OptimalPointSize -text $joinedTitle -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
                 Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
                 $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
@@ -2737,8 +2859,10 @@ Elseif ($Testing) {
     }
     # Optimal TitleCard EP Font Size
     if ($AddTitleCardEPText -eq 'True') {
+        $Episodetext = $Episodetext -replace '"', '""'
         $TitleCardoptimalFontSizeEpisodetext = Get-OptimalPointSize -text $Episodetext -font $titlecardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize
         if ($global:IsTruncated) { $TruncatedCount++ }
+        $EpisodetextCAPS = $EpisodetextCAPS -replace '"', '""'
         $TitleCardoptimalFontSizeEpisodetextCAPS = Get-OptimalPointSize -text $EpisodetextCAPS -font $titlecardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize
         if ($global:IsTruncated) { $TruncatedCount++ }
     }
@@ -3717,7 +3841,7 @@ else {
 
                     if ($location.length -ge '256' -and $Platform -eq 'Windows') {
                         $CheckCharLimit = CheckCharLimit
-                        if ($CheckCharLimit -eq $false){
+                        if ($CheckCharLimit -eq $false) {
                             Write-Entry -Subtext "Skipping [$($item.title)] because path length is over '256'..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                             Write-Entry -Subtext "You can adjust it by following this: https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation?tabs=registry#enable-long-paths-in-windows-10-version-1607-and-later" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                             continue
@@ -4024,7 +4148,7 @@ else {
                         if (!$global:posterurl) {
                             $global:posterurl = GetTVDBMoviePoster
                             $global:IsFallback = $true
-                            if (!$global:posterurl) {
+                            if (!$global:posterurl -and !$global:OnlyTextless) {
                                 if ($entry.PlexPosterUrl) {
                                     GetPlexArtwork -Type ' a Movie Poster' -ArtUrl $Arturl -TempImage $PosterImage
                                     $global:IsFallback = $true
@@ -4033,7 +4157,7 @@ else {
                                     Write-Entry -Subtext "Plex Poster Url empty, cannot search on plex, likely there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                 }
                             }
-                            if (!$global:posterurl -and $global:imdbid) {
+                            if (!$global:posterurl -and $global:imdbid -and !$global:OnlyTextless) {
                                 Write-Entry -Subtext "Searching on IMDB for a movie poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                                 $global:posterurl = GetIMDBPoster
                                 $global:IsFallback = $true
@@ -4121,6 +4245,7 @@ else {
                                     InvokeMagickCommand -Command $magick -Arguments $Arguments
 
                                     if ($AddText -eq 'true') {
+                                        $joinedTitle = $joinedTitle -replace '"', '""'
                                         $optimalFontSize = Get-OptimalPointSize -text $joinedTitle -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
                                         Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                         $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
@@ -4171,6 +4296,26 @@ else {
                             Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
                             Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                             Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            if ($global:OnlyTextless){
+                                $movietemp = New-Object psobject
+                                $movietemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
+                                $movietemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie'
+                                $movietemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
+                                $movietemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
+                                $movietemp | Add-Member -MemberType NoteProperty -Name "Language" -Value "N/A"
+                                $movietemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value "N/A"
+                                $movietemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
+                                $movietemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value "N/A"
+                                switch -Wildcard ($global:FavProvider) {
+                                    'TMDB' { $movietemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "N/A" }) }
+                                    'FANART' { $movietemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "N/A" }) }
+                                    'TVDB' { $movietemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
+                                    Default { $movietemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
+                                }
+                            
+                                # Export the array to a CSV file
+                                $movietemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
+                            }
                             $errorCount++
                         }
                     }
@@ -4357,6 +4502,7 @@ else {
                                     InvokeMagickCommand -Command $magick -Arguments $Arguments
 
                                     if ($AddBackgroundText -eq 'true') {
+                                        $joinedTitle = $joinedTitle -replace '"', '""'
                                         $optimalFontSize = Get-OptimalPointSize -text $joinedTitle -font $fontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
                                         Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                         $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -size `"$Backgroundboxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
@@ -4407,6 +4553,26 @@ else {
                             Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
                             Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                             Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            if ($global:OnlyTextless){
+                                $moviebackgroundtemp = New-Object psobject
+                                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
+                                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie'
+                                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
+                                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
+                                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Language" -Value "N/A"
+                                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value "N/A"
+                                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
+                                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value "N/A"
+                                switch -Wildcard ($global:FavProvider) {
+                                    'TMDB' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "N/A" }) }
+                                    'FANART' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "N/A" }) }
+                                    'TVDB' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
+                                    Default { $movietemoviebackgroundtempmp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
+                                }
+                            
+                                # Export the array to a CSV file
+                                $moviebackgroundtemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
+                            }
                             $errorCount++
                         }
                     }
@@ -4427,6 +4593,26 @@ else {
         catch {
             Write-Entry -Subtext "Could not query entries from movies array, error message: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            if ($global:OnlyTextless){
+                $moviebackgroundtemp = New-Object psobject
+                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
+                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie'
+                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
+                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
+                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Language" -Value "N/A"
+                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value "N/A"
+                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
+                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value "N/A"
+                switch -Wildcard ($global:FavProvider) {
+                    'TMDB' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "N/A" }) }
+                    'FANART' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "N/A" }) }
+                    'TVDB' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
+                    Default { $movietemoviebackgroundtempmp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
+                }
+            
+                # Export the array to a CSV file
+                $moviebackgroundtemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
+            }
             $errorCount++
         }
     }
@@ -4554,7 +4740,7 @@ else {
                         $global:posterurl = GetTVDBShowPoster
                         $global:IsFallback = $true
                         if (!$global:posterurl -and !$global:TMDBfallbackposterurl -and !$global:fanartfallbackposterurl) {
-                            if ($entry.PlexPosterUrl) {
+                            if ($entry.PlexPosterUrl -and !$global:OnlyTextless) {
                                 GetPlexArtwork -Type ' a Show Poster' -ArtUrl $Arturl -TempImage $PosterImage
                                 $global:plexalreadysearched = $True
                             }
@@ -4568,7 +4754,7 @@ else {
                     }
                     if (!$global:posterurl -and !$global:plexalreadysearched -eq 'True') {
                         $global:IsFallback = $true
-                        if ($entry.PlexPosterUrl) {
+                        if ($entry.PlexPosterUrl -and !$global:OnlyTextless) {
                             GetPlexArtwork -Type ' a Show Poster' -ArtUrl $Arturl -TempImage $PosterImage
                             $global:plexalreadysearched = $True
                         }
@@ -4664,6 +4850,7 @@ else {
                                 InvokeMagickCommand -Command $magick -Arguments $Arguments
 
                                 if ($AddText -eq 'true') {
+                                    $joinedTitle = $joinedTitle -replace '"', '""'
                                     $optimalFontSize = Get-OptimalPointSize -text $joinedTitle -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
                                     Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                     $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
@@ -4713,6 +4900,26 @@ else {
                         Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
                         Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                         Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                        if ($global:OnlyTextless){
+                            $showtemp = New-Object psobject
+                            $showtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
+                            $showtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie'
+                            $showtemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
+                            $showtemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
+                            $showtemp | Add-Member -MemberType NoteProperty -Name "Language" -Value "N/A"
+                            $showtemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value "N/A"
+                            $showtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
+                            $showtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value "N/A"
+                            switch -Wildcard ($global:FavProvider) {
+                                'TMDB' { $showtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "N/A" }) }
+                                'FANART' { $showtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "N/A" }) }
+                                'TVDB' { $showtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
+                                Default { $showtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
+                            }
+                        
+                            # Export the array to a CSV file
+                            $showtemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
+                        }
                         $errorCount++
                     }
                 }
@@ -4910,6 +5117,7 @@ else {
                                 InvokeMagickCommand -Command $magick -Arguments $Arguments
 
                                 if ($AddBackgroundText -eq 'true') {
+                                    $joinedTitle = $joinedTitle -replace '"', '""'
                                     $optimalFontSize = Get-OptimalPointSize -text $joinedTitle -font $fontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
                                     Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                     $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -size `"$Backgroundboxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
@@ -4960,6 +5168,26 @@ else {
                         Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
                         Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                         Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                        if ($global:OnlyTextless){
+                            $showbackgroundtemp = New-Object psobject
+                            $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
+                            $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie'
+                            $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
+                            $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
+                            $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Language" -Value "N/A"
+                            $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value "N/A"
+                            $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
+                            $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value "N/A"
+                            switch -Wildcard ($global:FavProvider) {
+                                'TMDB' { $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "N/A" }) }
+                                'FANART' { $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "N/A" }) }
+                                'TVDB' { $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
+                                Default { $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
+                            }
+                        
+                            # Export the array to a CSV file
+                            $showbackgroundtemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
+                        }
                         $errorCount++
                     }
                 }
@@ -5069,7 +5297,7 @@ else {
                             }
                             if (!$global:posterurl) {
                                 $global:IsFallback = $true
-                                if ($entry.PlexSeasonUrl) {
+                                if ($entry.PlexSeasonUrl -and !$global:OnlyTextless) {
                                     GetPlexArtwork -Type ' a Season Poster' -ArtUrl $Arturl -TempImage $SeasonImage
                                 }
                                 Else {
@@ -5090,7 +5318,7 @@ else {
                                 }
                                 if (!$global:posterurl) {
                                     $global:IsFallback = $true
-                                    if ($entry.PlexSeasonUrl) {
+                                    if ($entry.PlexSeasonUrl -and !$global:OnlyTextless) {
                                         GetPlexArtwork -Type ' a Season Poster' -ArtUrl $Arturl -TempImage $SeasonImage
                                     }
                                     Else {
@@ -5184,6 +5412,7 @@ else {
                                         InvokeMagickCommand -Command $magick -Arguments $Arguments
 
                                         if ($AddSeasonText -eq 'true') {
+                                            $global:seasonTitle = $global:seasonTitle -replace '"', '""'
                                             $optimalFontSize = Get-OptimalPointSize -text $global:seasonTitle -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize
 
                                             Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -5288,6 +5517,26 @@ else {
                             Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
                             Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                             Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            if ($global:OnlyTextless){
+                                $seasontemp = New-Object psobject
+                                $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
+                                $seasontemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie'
+                                $seasontemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
+                                $seasontemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
+                                $seasontemp | Add-Member -MemberType NoteProperty -Name "Language" -Value "N/A"
+                                $seasontemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value "N/A"
+                                $seasontemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
+                                $seasontemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value "N/A"
+                                switch -Wildcard ($global:FavProvider) {
+                                    'TMDB' { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "N/A" }) }
+                                    'FANART' { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "N/A" }) }
+                                    'TVDB' { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
+                                    Default { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
+                                }
+                            
+                                # Export the array to a CSV file
+                                $seasontemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
+                            }
                             $errorCount++
                         }
                     }
@@ -5419,7 +5668,7 @@ else {
                                                 Else {
                                                     Write-Entry -Subtext "Plex TitleCard Url empty, cannot search on plex, likely there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                                 }
-                                                if ($global:tmdbfallbackposterurl){
+                                                if ($global:tmdbfallbackposterurl) {
                                                     $global:posterurl = $global:tmdbfallbackposterurl
                                                 }
                                                 if (!$global:posterurl) {
@@ -5559,6 +5808,7 @@ else {
                                                             if ($TitleCardEPTitlefontAllCaps -eq 'true') {
                                                                 $global:EPTitle = $global:EPTitle.ToUpper()
                                                             }
+                                                            $global:EPTitle = $global:EPTitle -replace '"', '""'
                                                             $optimalFontSize = Get-OptimalPointSize -text $global:EPTitle -font $TitleCardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
 
                                                             Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -5575,7 +5825,8 @@ else {
                                                             if ($TitleCardEPfontAllCaps -eq 'true') {
                                                                 $global:SeasonEPNumber = $global:SeasonEPNumber.ToUpper()
                                                             }
-                                                            $optimalFontSize = Get-OptimalPointSize -text  $global:SeasonEPNumber -font $TitleCardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize
+                                                            $global:SeasonEPNumber = $global:SeasonEPNumber -replace '"', '""'
+                                                            $optimalFontSize = Get-OptimalPointSize -text $global:SeasonEPNumber -font $TitleCardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize
 
                                                             Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
 
@@ -5664,6 +5915,26 @@ else {
                                     Else {
                                         Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                         Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                        if ($global:OnlyTextless){
+                                            $episodetemp = New-Object psobject
+                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
+                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie'
+                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
+                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
+                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "Language" -Value "N/A"
+                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value "N/A"
+                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
+                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value "N/A"
+                                            switch -Wildcard ($global:FavProvider) {
+                                                'TMDB' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "N/A" }) }
+                                                'FANART' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "N/A" }) }
+                                                'TVDB' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
+                                                Default { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
+                                            }
+                                        
+                                            # Export the array to a CSV file
+                                            $episodetemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
+                                        }
                                         $errorCount++
                                     }
 
@@ -5935,6 +6206,7 @@ else {
                                                         if ($TitleCardEPTitlefontAllCaps -eq 'true') {
                                                             $global:EPTitle = $global:EPTitle.ToUpper()
                                                         }
+                                                        $global:EPTitle = $global:EPTitle -replace '"', '""'
                                                         $optimalFontSize = Get-OptimalPointSize -text $global:EPTitle -font $TitleCardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
 
                                                         Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -5951,7 +6223,8 @@ else {
                                                         if ($TitleCardEPfontAllCaps -eq 'true') {
                                                             $global:SeasonEPNumber = $global:SeasonEPNumber.ToUpper()
                                                         }
-                                                        $optimalFontSize = Get-OptimalPointSize -text  $global:SeasonEPNumber -font $TitleCardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize
+                                                        $global:SeasonEPNumber = $global:SeasonEPNumber -replace '"', '""'
+                                                        $optimalFontSize = Get-OptimalPointSize -text $global:SeasonEPNumber -font $TitleCardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize
 
                                                         Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
 
@@ -6039,6 +6312,26 @@ else {
                                     Else {
                                         Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                         Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                        if ($global:OnlyTextless){
+                                            $episodetemp = New-Object psobject
+                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
+                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie'
+                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
+                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
+                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "Language" -Value "N/A"
+                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value "N/A"
+                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
+                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value "N/A"
+                                            switch -Wildcard ($global:FavProvider) {
+                                                'TMDB' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "N/A" }) }
+                                                'FANART' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "N/A" }) }
+                                                'TVDB' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
+                                                Default { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
+                                            }
+                                        
+                                            # Export the array to a CSV file
+                                            $episodetemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
+                                        }
                                         $errorCount++
                                     }
 
