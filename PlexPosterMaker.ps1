@@ -3,7 +3,7 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.68"
+$CurrentScriptVersion = "1.0.69"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -4185,6 +4185,9 @@ else {
 
                         if ($global:OnlyTextless) {
                             $global:posterurl = GetFanartMoviePoster
+                            if (!$global:FavProvider -eq 'FANART'){
+                                $global:IsFallback = $true
+                            }
                         }
 
                         if (!$global:posterurl) {
@@ -4460,6 +4463,9 @@ else {
                         if (!$global:posterurl) {
                             if ($global:OnlyTextless) {
                                 $global:posterurl = GetFanartMovieBackground
+                                if (!$global:FavProvider -eq 'FANART'){
+                                    $global:IsFallback = $true
+                                }
                             }
                             $global:posterurl = GetTVDBMovieBackground
                             $global:IsFallback = $true
