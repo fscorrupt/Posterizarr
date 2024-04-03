@@ -3,7 +3,7 @@ param (
     [switch]$Testing
 )
 
-$CurrentScriptVersion = "1.0.65"
+$CurrentScriptVersion = "1.0.66"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -1149,7 +1149,7 @@ function GetTVDBMoviePoster {
                     $global:posterurltmp = ($response.data.artworks | Where-Object { $_.language -eq $null -and $_.type -eq '14' } | Sort-Object Score)
                     
                     $global:TVDBAssetChangeUrl = "https://thetvdb.com/movies/$($response.data.slug)#artwork"
-                    if ($global:posterurltmp){
+                    if ($global:posterurltmp) {
                         $global:posterurl = $global:posterurltmp[0].image
                         Write-Entry -Subtext "Found Textless Poster on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                         return $global:posterurl
@@ -4182,7 +4182,7 @@ else {
                             }
                         }
 
-                        if ($global:OnlyTextless){
+                        if ($global:OnlyTextless) {
                             $global:posterurl = GetFanartMoviePoster
                         }
 
@@ -4308,10 +4308,15 @@ else {
                             # Move file back to original naming with Brackets.
                             if (!$global:ImageMagickError -eq 'True') {
                                 if (Get-ChildItem -LiteralPath $PosterImage -ErrorAction SilentlyContinue) {
-                                    Move-Item -LiteralPath $PosterImage $PosterImageoriginal -Force -ErrorAction SilentlyContinue
-                                    Write-Entry -Subtext "Added: $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
-                                    Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
-
+                                    if (!$global:IsTruncated) {
+                                        Move-Item -LiteralPath $PosterImage $PosterImageoriginal -Force -ErrorAction SilentlyContinue
+                                        Write-Entry -Subtext "Added: $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                                        Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
+                                        $posterCount++
+                                    }
+                                    Else {
+                                        Write-Entry -Subtext "Skipping asset move because text is truncated..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                    }   
                                     $movietemp = New-Object psobject
                                     $movietemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
                                     $movietemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie'
@@ -4330,7 +4335,6 @@ else {
 
                                     # Export the array to a CSV file
                                     $movietemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
-                                    $posterCount++
                                 }
                             }
                         }
@@ -4338,7 +4342,7 @@ else {
                             Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
                             Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                             Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                            if ($global:OnlyTextless){
+                            if ($global:OnlyTextless) {
                                 $movietemp = New-Object psobject
                                 $movietemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
                                 $movietemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie'
@@ -4450,7 +4454,7 @@ else {
                             }
                         }
                         if (!$global:posterurl) {
-                            if ($global:OnlyTextless){
+                            if ($global:OnlyTextless) {
                                 $global:posterurl = GetFanartMovieBackground
                             }
                             $global:posterurl = GetTVDBMovieBackground
@@ -4568,10 +4572,16 @@ else {
                             if (!$global:ImageMagickError -eq 'True') {
                                 # Move file back to original naming with Brackets.
                                 if (Get-ChildItem -LiteralPath $backgroundImage -ErrorAction SilentlyContinue) {
-                                    Move-Item -LiteralPath $backgroundImage $backgroundImageoriginal -Force -ErrorAction SilentlyContinue
-                                    Write-Entry -Subtext "Added: $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
-                                    Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
-
+                                    if (!$global:IsTruncated) {
+                                        Move-Item -LiteralPath $backgroundImage $backgroundImageoriginal -Force -ErrorAction SilentlyContinue
+                                        Write-Entry -Subtext "Added: $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                                        Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
+                                        $posterCount++
+                                        $BackgroundCount++
+                                    }
+                                    Else {
+                                        Write-Entry -Subtext "Skipping asset move because text is truncated..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                    }    
                                     $moviebackgroundtemp = New-Object psobject
                                     $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
                                     $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie Background'
@@ -4589,8 +4599,6 @@ else {
                                     }
                                     # Export the array to a CSV file
                                     $moviebackgroundtemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
-                                    $posterCount++
-                                    $BackgroundCount++
                                 }
                             }
                         }
@@ -4598,7 +4606,7 @@ else {
                             Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
                             Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                             Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                            if ($global:OnlyTextless){
+                            if ($global:OnlyTextless) {
                                 $moviebackgroundtemp = New-Object psobject
                                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
                                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie'
@@ -4639,7 +4647,7 @@ else {
             Write-Entry -Subtext "Could not query entries from movies array, error message: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             write-Entry -Subtext "At line $($_.InvocationInfo.ScriptLineNumber)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-            if ($global:OnlyTextless){
+            if ($global:OnlyTextless) {
                 $moviebackgroundtemp = New-Object psobject
                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie'
@@ -4917,11 +4925,15 @@ else {
                         if (!$global:ImageMagickError -eq 'True') {
                             if (Get-ChildItem -LiteralPath $PosterImage -ErrorAction SilentlyContinue) {
                                 # Move file back to original naming with Brackets.
-                                Move-Item -LiteralPath $PosterImage $PosterImageoriginal -Force -ErrorAction SilentlyContinue
-                                Write-Entry -Subtext "Added: $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
-                                Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
-                                $posterCount++
-
+                                if (!$global:IsTruncated) {
+                                    Move-Item -LiteralPath $PosterImage $PosterImageoriginal -Force -ErrorAction SilentlyContinue
+                                    Write-Entry -Subtext "Added: $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                                    Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
+                                    $posterCount++
+                                }
+                                Else {
+                                    Write-Entry -Subtext "Skipping asset move because text is truncated..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                }   
                                 $showtemp = New-Object psobject
                                 $showtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
                                 $showtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Show'
@@ -4946,7 +4958,7 @@ else {
                         Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
                         Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                         Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                        if ($global:OnlyTextless){
+                        if ($global:OnlyTextless) {
                             $showtemp = New-Object psobject
                             $showtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
                             $showtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie'
@@ -5068,7 +5080,7 @@ else {
                     if ($global:TextlessPoster -eq 'true' -and $global:posterurl) {
                     }
                     if (!$global:posterurl) {
-                        if ($global:OnlyTextless){
+                        if ($global:OnlyTextless) {
                             $global:posterurl = GetFanartShowBackground
                         }
                         $global:posterurl = GetTVDBShowBackground
@@ -5187,11 +5199,16 @@ else {
                         if (!$global:ImageMagickError -eq 'True') {
                             # Move file back to original naming with Brackets.
                             if (Get-ChildItem -LiteralPath $backgroundImage -ErrorAction SilentlyContinue) {
-                                Move-Item -LiteralPath $backgroundImage $backgroundImageoriginal -Force -ErrorAction SilentlyContinue
-                                $BackgroundCount++
-                                Write-Entry -Subtext "Added: $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
-                                Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
-
+                                if (!$global:IsTruncated) {
+                                    Move-Item -LiteralPath $backgroundImage $backgroundImageoriginal -Force -ErrorAction SilentlyContinue
+                                    $BackgroundCount++
+                                    Write-Entry -Subtext "Added: $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                                    Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
+                                    $posterCount++
+                                }
+                                Else {
+                                    Write-Entry -Subtext "Skipping asset move because text is truncated..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                }    
                                 $showbackgroundtemp = New-Object psobject
                                 $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
                                 $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Show Background'
@@ -5209,7 +5226,7 @@ else {
                                 }
                                 # Export the array to a CSV file
                                 $showbackgroundtemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
-                                $posterCount++
+
                             }
                         }
                     }
@@ -5217,7 +5234,7 @@ else {
                         Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
                         Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                         Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                        if ($global:OnlyTextless){
+                        if ($global:OnlyTextless) {
                             $showbackgroundtemp = New-Object psobject
                             $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
                             $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie'
@@ -5536,12 +5553,16 @@ else {
                             if (!$global:ImageMagickError -eq 'True') {
                                 if (Get-ChildItem -LiteralPath $SeasonImage -ErrorAction SilentlyContinue) {
                                     # Move file back to original naming with Brackets.
-                                    Move-Item -LiteralPath $SeasonImage -destination $SeasonImageoriginal -Force -ErrorAction SilentlyContinue
-                                    Write-Entry -Subtext "Added: $SeasonImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
-                                    Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
-                                    $SeasonCount++
-                                    $posterCount++
-
+                                    if (!$global:IsTruncated) {
+                                        Move-Item -LiteralPath $SeasonImage -destination $SeasonImageoriginal -Force -ErrorAction SilentlyContinue
+                                        Write-Entry -Subtext "Added: $SeasonImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                                        Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
+                                        $SeasonCount++
+                                        $posterCount++
+                                    }
+                                    Else {
+                                        Write-Entry -Subtext "Skipping asset move because text is truncated..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                    }    
                                     $seasontemp = New-Object psobject
                                     $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Titletext + " | " + $global:season)
                                     $seasontemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Season'
@@ -5566,7 +5587,7 @@ else {
                             Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
                             Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                             Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                            if ($global:OnlyTextless){
+                            if ($global:OnlyTextless) {
                                 $seasontemp = New-Object psobject
                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie'
@@ -5935,12 +5956,16 @@ else {
                                         if (!$global:ImageMagickError -eq 'True') {
                                             if (Get-ChildItem -LiteralPath $EpisodeImage -ErrorAction SilentlyContinue) {
                                                 # Move file back to original naming with Brackets.
-                                                Move-Item -LiteralPath $EpisodeImage -destination $EpisodeImageoriginal -Force -ErrorAction SilentlyContinue
-                                                Write-Entry -Subtext "Added: $EpisodeImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
-                                                Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
-                                                $EpisodeCount++
-                                                $posterCount++
-
+                                                if (!$global:IsTruncated) {
+                                                    Move-Item -LiteralPath $EpisodeImage -destination $EpisodeImageoriginal -Force -ErrorAction SilentlyContinue
+                                                    Write-Entry -Subtext "Added: $EpisodeImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                                                    Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
+                                                    $EpisodeCount++
+                                                    $posterCount++
+                                                }
+                                                Else {
+                                                    Write-Entry -Subtext "Skipping asset move because text is truncated..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                                }    
                                                 $episodetemp = New-Object psobject
                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($global:FileNaming + " | " + $global:EPTitle)
                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Episode'
@@ -5964,7 +5989,7 @@ else {
                                     Else {
                                         Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                         Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                                        if ($global:OnlyTextless){
+                                        if ($global:OnlyTextless) {
                                             $episodetemp = New-Object psobject
                                             $episodetemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
                                             $episodetemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie'
@@ -6332,11 +6357,16 @@ else {
                                         if (!$global:ImageMagickError -eq 'True') {
                                             if (Get-ChildItem -LiteralPath $EpisodeImage -ErrorAction SilentlyContinue) {
                                                 # Move file back to original naming with Brackets.
-                                                Move-Item -LiteralPath $EpisodeImage -destination $EpisodeImageoriginal -Force -ErrorAction SilentlyContinue
-                                                Write-Entry -Subtext "Added: $EpisodeImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
-                                                Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
-                                                $EpisodeCount++
-                                                $posterCount++
+                                                if (!$global:IsTruncated) {
+                                                    Move-Item -LiteralPath $EpisodeImage -destination $EpisodeImageoriginal -Force -ErrorAction SilentlyContinue
+                                                    Write-Entry -Subtext "Added: $EpisodeImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                                                    Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
+                                                    $EpisodeCount++
+                                                    $posterCount++
+                                                }
+                                                Else {
+                                                    Write-Entry -Subtext "Skipping asset move because text is truncated..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                                }
 
                                                 $episodetemp = New-Object psobject
                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($global:FileNaming + " | " + $global:EPTitle)
@@ -6361,7 +6391,7 @@ else {
                                     Else {
                                         Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                         Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                                        if ($global:OnlyTextless){
+                                        if ($global:OnlyTextless) {
                                             $episodetemp = New-Object psobject
                                             $episodetemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
                                             $episodetemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie'
