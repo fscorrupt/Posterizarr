@@ -238,6 +238,73 @@ This will generate posters for your entire Plex library based on the configured 
 
 The posters are all placed in `AssetPath\...`. This can then be mounted in Plex-Meta-Manager to use as the assets folder.
 
+### Tautulli Mode Docker
+> [!IMPORTANT]
+> Tautulli and PPM must run as a container in Docker
+
+> [!Note]
+> If Discord is configured it will send a Notification on each trigger.
+
+In this mode we use Tautulli to trigger ppm for an specific item in Plex, like a new show, movie or episode got added.
+
+To use it we need to configure a script in Tautulli, please follow these instructions.
+1. Make sure that you mount the `PPM` directory to tautulli, cause the script needs the Path `/ppm`
+    ```yml
+    volumes:
+      - "/opt/appdata/ppm:/ppm:rw"
+    ```
+1. Download the [ppm.py](ppm.py) from the GH and place it in the Tautulli Script dir -> [Tautulli-Wiki](https://github.com/Tautulli/Tautulli/wiki/Custom-Scripts)
+1. Open Tautulli and go to Settings -> `NOTIFICATION AGENTS`
+1. Click on `Add a new notification agent` and select `Script`
+1. Specify the script folder where you placed the script and select the script file.
+    - You can specify a `Description` at the bottom like i did.
+    <details close>
+    <summary>🖼️Example</summary>
+    <br>
+    <p>
+      <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
+        <img alt="testing" height="100%" src="/images/Tautulli_Step1.png">
+      </a>
+    </p>
+    </details>
+1. Go to `Triggers`, scroll down and select `Recently Added`.
+    <details close>
+    <summary>🖼️Example</summary>
+    <br>
+    <p>
+      <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
+        <img alt="testing" height="100%" src="/images/Tautulli_Step2.png">
+      </a>
+    </p>
+    </details>
+1. Go to `Conditions`, you can now specify when the script should get called.
+    - In my case i specified the **Media Type**: `episode, movie, show and season`
+    - I also excluded the **Youtube** Lib cause the videos i have there - **do not** have an `tmdb,tvdb or fanart ID`.
+      - This is an recommended setting, either exclude such libs or include only those libs where ppm should create art for.
+    <details close>
+    <summary>🖼️Example</summary>
+    <br>
+    <p>
+      <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
+        <img alt="testing" height="100%" src="/images/Tautulli_Step3.png">
+      </a>
+    </p>
+    </details>
+1. Next go to Arguments -> Unfold `Recently Added` Menu and paste the following Argument, after that you can safe it.
+    - **Please do not change the Argument otherwise the script could fail.**
+    ```sh
+    <movie>RatingKey "{rating_key}" mediatype "{media_type}"</movie><show>grandparentratingkey "{grandparent_rating_key}" mediatype "{media_type}"</show><season>parentratingkey "{parent_rating_key}" grandparentratingkey "{grandparent_rating_key}" mediatype "{media_type}"</season><episode>RatingKey "{rating_key}" parentratingkey "{parent_rating_key}" grandparentratingkey "{grandparent_rating_key}" mediatype "{media_type}"</episode>
+    ```
+    <details close>
+    <summary>🖼️Example</summary>
+    <br>
+    <p>
+      <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
+        <img alt="testing" height="100%" src="/images/Tautulli_Step4.png">
+      </a>
+    </p>
+    </details>
+
 ### Testing Mode
 
 Run the script with the `-Testing` flag. In this mode, the script will create pink posters/backgrounds with short, medium, and long texts (also in CAPS), using the values specified in the `config.json` file. 
