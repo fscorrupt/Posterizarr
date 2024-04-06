@@ -1,9 +1,9 @@
-# Plex Poster Maker
+# Poster Maker
 
 This PowerShell script automates the process of generating images for your Plex media library. Leveraging information from your Plex library, such as movie or show titles, season and episode data, it fetches relevant artwork from Fanart.tv, TMDB, TVDB, Plex and IMDB. The script is able to focus on artwork with specific languages to grab. By default, textless artwork `xx` is retrieved and will fall back to `en` if textless is not found. This is a setting a user can decide on, either to focus on textless or on text posters. It also offers both automatic and manual modes for generating posters. The manual mode can accommodate custom creations that cannot be bulk retrieved.
 
 > [!NOTE]
-Plex Poster Maker is cross-platform ready, meaning it can run on Linux, Docker (Alpine v3.17) and on Windows operating systems.
+Poster Maker is cross-platform ready, meaning it can run on Linux, Docker (Alpine v3.17) and on Windows operating systems.
 > 
 > **Supported Poster Types:**
 >- Movie/Show Posters
@@ -263,7 +263,7 @@ To use it we need to configure a script in Tautulli, please follow these instruc
     <summary>🖼️Example</summary>
     <br>
     <p>
-      <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
+      <a href="https://github.com/fscorrupt/Poster-Maker" width="100%">
         <img alt="testing" height="100%" src="/images/Tautulli_Step1.png">
       </a>
     </p>
@@ -273,7 +273,7 @@ To use it we need to configure a script in Tautulli, please follow these instruc
     <summary>🖼️Example</summary>
     <br>
     <p>
-      <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
+      <a href="https://github.com/fscorrupt/Poster-Maker" width="100%">
         <img alt="testing" height="100%" src="/images/Tautulli_Step2.png">
       </a>
     </p>
@@ -286,7 +286,7 @@ To use it we need to configure a script in Tautulli, please follow these instruc
     <summary>🖼️Example</summary>
     <br>
     <p>
-      <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
+      <a href="https://github.com/fscorrupt/Poster-Maker" width="100%">
         <img alt="testing" height="100%" src="/images/Tautulli_Step3.png">
       </a>
     </p>
@@ -300,7 +300,7 @@ To use it we need to configure a script in Tautulli, please follow these instruc
     <summary>🖼️Example</summary>
     <br>
     <p>
-      <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
+      <a href="https://github.com/fscorrupt/Poster-Maker" width="100%">
         <img alt="testing" height="100%" src="/images/Tautulli_Step4.png">
       </a>
     </p>
@@ -346,7 +346,7 @@ Run the script with the `-Testing` flag. In this mode, the script will create pi
 <summary>🖼️Posters</summary>
 <br>
 <p>
-  <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
+  <a href="https://github.com/fscorrupt/Poster-Maker" width="100%">
     <img alt="testing" height="100%" src="/images/testing.png">
   </a>
 </p>
@@ -356,7 +356,7 @@ Run the script with the `-Testing` flag. In this mode, the script will create pi
 <summary>🖼️Backgrounds</summary>
 <br>
 <p>
-  <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
+  <a href="https://github.com/fscorrupt/Poster-Maker" width="100%">
     <img alt="backgroundtesting" height="100%" src="/images/backgroundtesting.png">
   </a>
 </p>
@@ -366,7 +366,7 @@ Run the script with the `-Testing` flag. In this mode, the script will create pi
 <summary>🖼️TitleCards</summary>
 <br>
 <p>
-  <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
+  <a href="https://github.com/fscorrupt/Poster-Maker" width="100%">
     <img alt="titlecardtesting" height="100%" src="/images/titlecardtesting.png">
   </a>
 </p>
@@ -424,7 +424,7 @@ Following these steps will allow you to import the `Module1.bas` file containing
 <summary>🎥PPM Excel:</summary>
 <br>
 <p>
-  <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
+  <a href="https://github.com/fscorrupt/Poster-Maker" width="100%">
     <img alt="excel" height="100%" src="/images/PPM-xlsm.gif">
   </a>
 </p>
@@ -437,7 +437,7 @@ Following these steps will allow you to import the `Module1.bas` file containing
 <summary>🖼️Discord Webhook:</summary>
 <br>
 <p>
-  <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
+  <a href="https://github.com/fscorrupt/Poster-Maker" width="100%">
     <img alt="webhook" height="100%" src="/images/webhookexample.png">
   </a>
 </p>
@@ -450,7 +450,7 @@ Following these steps will allow you to import the `Module1.bas` file containing
 <summary>🖼️Script folder:</summary>
 <br>
 <p>
-  <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
+  <a href="https://github.com/fscorrupt/Poster-Maker" width="100%">
     <img alt="folder" height="100%" src="/images/folder.png">
   </a>
 </p>
@@ -461,7 +461,7 @@ Following these steps will allow you to import the `Module1.bas` file containing
 <summary>🖼️script output:</summary>
 <br>
 <p>
-  <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
+  <a href="https://github.com/fscorrupt/Poster-Maker" width="100%">
     <img alt="output" height="100%" src="/images/output.png">
   </a>
 </p>
@@ -470,7 +470,7 @@ Following these steps will allow you to import the `Module1.bas` file containing
 <summary>🖼️ImageChoices.csv:</summary>
 <br>
 <p>
-  <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
+  <a href="https://github.com/fscorrupt/Poster-Maker" width="100%">
     <img alt="imagecsv" height="100%" src="/images/imagecsv.png">
   </a>
 </p>
@@ -479,7 +479,7 @@ Following these steps will allow you to import the `Module1.bas` file containing
 <summary>🖼️Assets after PPM run:</summary>
 <br>
 <p>
-  <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
+  <a href="https://github.com/fscorrupt/Poster-Maker" width="100%">
     <img alt="output" height="100%" src="/images/ppm-overview.png">
   </a>
 </p>
@@ -488,7 +488,7 @@ Following these steps will allow you to import the `Module1.bas` file containing
 <summary>🖼️Assets after PMM run:</summary>
 <br>
 <p>
-  <a href="https://github.com/fscorrupt/Plex-Poster-Maker" width="100%">
+  <a href="https://github.com/fscorrupt/Poster-Maker" width="100%">
     <img alt="imagecsv" height="100%" src="/images/pmm-overview.png">
   </a>
 </p>
@@ -507,5 +507,3 @@ Feel free to customize the script further to meet your specific preferences or a
 > - Do not include images on a PR.
 
 ![versioning](/images/versioning.jpg)
-
-
