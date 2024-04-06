@@ -8,7 +8,7 @@ param (
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.1.3"
+$CurrentScriptVersion = "1.1.4"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -649,6 +649,7 @@ function GetTMDBSeasonPoster {
         if ($response) {
             if ($response.posters) {
                 $NoLangPoster = ($response.posters | Where-Object iso_639_1 -eq $null)
+                Write-Entry -Subtext "NoLandPoster: $NoLangPoster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                 if (!$NoLangPoster) {
                     if (!$global:SeasonOnlyTextless) {
                         $posterpath = (($response.posters | Sort-Object vote_average -Descending)[0]).file_path
@@ -659,6 +660,13 @@ function GetTMDBSeasonPoster {
                         $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/season/$global:SeasonNumber/images/posters"
                         $global:TMDBSeasonFallback = $global:posterurl
                         return $global:posterurl
+                        Write-Entry -Subtext "Posterpath: $posterpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        Write-Entry -Subtext "PosterUrl: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        Write-Entry -Subtext "PosterWithText: $global:PosterWithText" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        Write-Entry -Subtext "TMDBAssetTextLang: $global:TMDBAssetTextLang" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        Write-Entry -Subtext "TMDBAssetChangeUrl: $global:TMDBAssetChangeUrl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        Write-Entry -Subtext "TMDBSeasonFallback: $global:TMDBSeasonFallback" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+
                     }
                     Else {
                         Write-Entry -Subtext "Found Poster with text on TMDB, skipping because you only want textless..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
@@ -673,6 +681,10 @@ function GetTMDBSeasonPoster {
                         $global:TextlessPoster = $true
                         $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/season/$global:SeasonNumber/images/posters"
                         return $global:posterurl
+                        Write-Entry -Subtext "Posterpath: $posterpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        Write-Entry -Subtext "PosterUrl: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        Write-Entry -Subtext "TextlessPoster: $global:TextlessPoster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        Write-Entry -Subtext "TMDBAssetChangeUrl: $global:TMDBAssetChangeUrl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                     }
                 }
             }
@@ -725,6 +737,11 @@ function GetTMDBSeasonPoster {
                             $global:TMDBAssetTextLang = $lang
                             $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/season/$global:SeasonNumber/images/posters"
                         }
+                        Write-Entry -Subtext "Posterpath: $posterpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        Write-Entry -Subtext "PosterUrl: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        Write-Entry -Subtext "PosterWithText: $global:PosterWithText" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        Write-Entry -Subtext "TMDBAssetTextLang: $global:TMDBAssetTextLang" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        Write-Entry -Subtext "TMDBAssetChangeUrl: $global:TMDBAssetChangeUrl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                         return $global:posterurl
                         break
                     }
@@ -1209,6 +1226,10 @@ function GetFanartSeasonPoster {
                         Write-Entry -Subtext "Found Season Poster without Language on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                         $global:TextlessPoster = $true
                         $global:FANARTAssetChangeUrl = "https://fanart.tv/series/$id"
+                        Write-Entry -Subtext "NoLangPoster: $NoLangPoster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        Write-Entry -Subtext "PosterUrl: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        Write-Entry -Subtext "TextlessPoster: $global:TextlessPoster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        Write-Entry -Subtext "FANARTAssetChangeUrl: $global:FANARTAssetChangeUrl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                     }
                     Else {
                         if (!$global:SeasonOnlyTextless) {
@@ -1221,6 +1242,11 @@ function GetFanartSeasonPoster {
                                     $global:PosterWithText = $true
                                     $global:FANARTAssetTextLang = $lang
                                     $global:FANARTAssetChangeUrl = "https://fanart.tv/series/$id"
+                                    Write-Entry -Subtext "FoundPoster: $FoundPoster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                    Write-Entry -Subtext "PosterUrl: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                    Write-Entry -Subtext "PosterWithText: $global:PosterWithText" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                    Write-Entry -Subtext "FANARTAssetTextLang: $global:FANARTAssetTextLang" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                    Write-Entry -Subtext "FANARTAssetChangeUrl: $global:FANARTAssetChangeUrl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                                     break
                                 }
                             }
@@ -1654,7 +1680,12 @@ function GetTVDBSeasonPoster {
                                 $global:TVDBAssetTextLang = $lang
                             }
                             $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)/seasons/$($Seasonresponse.data.type.type)/$global:SeasonNumber#artwork"
-
+                            Write-Entry -Subtext "LangArtwork: $LangArtwork" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-Entry -Subtext "PosterUrl: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-Entry -Subtext "TextlessPoster: $global:TextlessPoster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-Entry -Subtext "PosterWithText: $global:PosterWithText" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-Entry -Subtext "TVDBAssetTextLang: $global:TVDBAssetTextLang" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-Entry -Subtext "TVDBAssetChangeUrl: $global:TVDBAssetChangeUrl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                             return $global:posterurl
                             break
                         }
@@ -2123,7 +2154,7 @@ function LogConfigSettings {
     }
     Write-Entry -Subtext "| Fav Provider:                 $global:FavProvider" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Preferred Lang Order:         $($global:PreferredLanguageOrder -join ',')" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Preferred Season Lang Order:         $($global:PreferredSeasonLanguageOrder -join ',')" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Preferred Season Lang Order:  $($global:PreferredSeasonLanguageOrder -join ',')" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "Plex Part" -Path $configLogging -Color Cyan -log Info
     Write-Entry -Subtext "| Excluded Libs:                $($LibstoExclude -join ',')" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Plex Url:                     $($PlexUrl[0..10] -join '')****" -Path $configLogging -Color White -log Info
@@ -5547,22 +5578,31 @@ Elseif ($Tautulli) {
                         # do a specific order
                         if ($entry.tmdbid) {
                             $global:posterurl = GetTMDBSeasonPoster
+                            Write-Entry -Message "Function GetTMDBSeasonPoster called..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                             if (!$global:posterurl) {
                                 $global:posterurl = GetFanartSeasonPoster
+                                Write-Entry -Message "Function GetFanartSeasonPoster called..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                                 $global:IsFallback = $true
+                                Write-Entry -Message "IsFallback: $global:IsFallback" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                             }
-                            if ($global:posterurl -and $global:PreferTextless -eq 'True' -and !$global:TextlessPoster) {
+                            if ($global:posterurl -and $global:SeasonPreferTextless -eq 'True' -and !$global:TextlessPoster) {
                                 $global:posterurl = GetFanartSeasonPoster
+                                Write-Entry -Message "Function GetFanartSeasonPoster called..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                                 $global:IsFallback = $true
+                                Write-Entry -Message "IsFallback: $global:IsFallback" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                             }
                             if ((!$global:posterurl -or !$global:TextlessPoster) -and $entry.tvdbid) {
                                 $global:IsFallback = $true
                                 $global:posterurl = GetTVDBSeasonPoster
+                                Write-Entry -Message "Function GetTVDBSeasonPoster called..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                Write-Entry -Message "IsFallback: $global:IsFallback" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                             }
                             if (!$global:posterurl) {
                                 $global:IsFallback = $true
-                                if ($entry.PlexSeasonUrl -and !$global:OnlyTextless) {
+                                Write-Entry -Message "IsFallback: $global:IsFallback" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                if ($entry.PlexSeasonUrl -and !$global:SeasonOnlyTextless) {
                                     GetPlexArtwork -Type ' a Season Poster' -ArtUrl $Arturl -TempImage $SeasonImage
+                                    Write-Entry -Message "Function GetPlexArtwork called..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                                 }
                                 Else {
                                     Write-Entry -Subtext "Plex Season Poster Url empty, cannot search on plex, likely there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
@@ -5575,15 +5615,20 @@ Elseif ($Tautulli) {
                         Else {
                             Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                             $global:posterurl = GetFanartSeasonPoster
+                            Write-Entry -Message "Function GetFanartSeasonPoster called..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                             if (!$global:posterurl) {
                                 $global:IsFallback = $true
+                                Write-Entry -Message "IsFallback: $global:IsFallback" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                                 if ($entry.tvdbid) {
                                     $global:posterurl = GetTVDBSeasonPoster
+                                    Write-Entry -Message "Function GetTVDBSeasonPoster called..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                                 }
                                 if (!$global:posterurl) {
                                     $global:IsFallback = $true
-                                    if ($entry.PlexSeasonUrl -and !$global:OnlyTextless) {
+                                    Write-Entry -Message "IsFallback: $global:IsFallback" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                    if ($entry.PlexSeasonUrl -and !$global:SeasonOnlyTextless) {
                                         GetPlexArtwork -Type ' a Season Poster' -ArtUrl $Arturl -TempImage $SeasonImage
+                                        Write-Entry -Message "Function GetPlexArtwork called..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                                     }
                                     Else {
                                         Write-Entry -Subtext "Plex Season Poster Url empty, cannot search on plex, likely there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
