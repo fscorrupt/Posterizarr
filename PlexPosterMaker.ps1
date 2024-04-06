@@ -8,7 +8,7 @@ param (
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.1.1"
+$CurrentScriptVersion = "1.1.2"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -942,7 +942,7 @@ function GetFanartMoviePoster {
     $global:Fallback = $null
     Write-Entry -Subtext "Searching on Fanart.tv for a movie poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     if ($global:PreferTextless -eq 'True') {
-        $ids = @($global:tmdbid, $global:tvdbid, $global:imdbid)
+        $ids = @($global:tmdbid, $global:imdbid)
         $entrytemp = $null
 
         foreach ($id in $ids) {
@@ -988,7 +988,7 @@ function GetFanartMoviePoster {
         }
     }
     Else {
-        $ids = @($global:tmdbid, $global:tvdbid, $global:imdbid)
+        $ids = @($global:tmdbid, $global:imdbid)
         $entrytemp = $null
 
         foreach ($id in $ids) {
@@ -1027,7 +1027,7 @@ function GetFanartMoviePoster {
 function GetFanartMovieBackground {
     $global:Fallback = $null
     Write-Entry -Subtext "Searching on Fanart.tv for a Background poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
-    $ids = @($global:tmdbid, $global:tvdbid, $global:imdbid)
+    $ids = @($global:tmdbid, $global:imdbid)
     $entrytemp = $null
 
     foreach ($id in $ids) {
@@ -1070,40 +1070,37 @@ function GetFanartShowPoster {
     $global:Fallback = $null
     Write-Entry -Subtext "Searching on Fanart.tv for a show poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     if ($global:PreferTextless -eq 'True') {
-        $ids = @($global:tmdbid, $global:tvdbid, $global:imdbid)
+        $id = $global:tvdbid
         $entrytemp = $null
+        if ($id) {
+            $entrytemp = Get-FanartTv -Type tv -id $id -ErrorAction SilentlyContinue
+            if ($entrytemp -and $entrytemp.tvposter) {
+                if (!($entrytemp.tvposter | Where-Object lang -eq '00')) {
+                    if (!$global:OnlyTextless) {
+                        $global:posterurl = ($entrytemp.tvposter)[0].url
 
-        foreach ($id in $ids) {
-            if ($id) {
-                $entrytemp = Get-FanartTv -Type tv -id $id -ErrorAction SilentlyContinue
-                if ($entrytemp -and $entrytemp.tvposter) {
-                    if (!($entrytemp.tvposter | Where-Object lang -eq '00')) {
-                        if (!$global:OnlyTextless) {
-                            $global:posterurl = ($entrytemp.tvposter)[0].url
+                        Write-Entry -Subtext "Found Poster with text on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                        $global:PosterWithText = $true
+                        $global:FANARTAssetTextLang = ($entrytemp.tvposter)[0].lang
+                        $global:FANARTAssetChangeUrl = "https://fanart.tv/series/$id"
 
-                            Write-Entry -Subtext "Found Poster with text on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
-                            $global:PosterWithText = $true
-                            $global:FANARTAssetTextLang = ($entrytemp.tvposter)[0].lang
-                            $global:FANARTAssetChangeUrl = "https://fanart.tv/series/$id"
-
-                            if ($global:FavProvider -eq 'FANART') {
-                                $global:Fallback = "TMDB"
-                                $global:fanartfallbackposterurl = ($entrytemp.tvposter)[0].url
-                            }
+                        if ($global:FavProvider -eq 'FANART') {
+                            $global:Fallback = "TMDB"
+                            $global:fanartfallbackposterurl = ($entrytemp.tvposter)[0].url
                         }
-                        Else {
-                            Write-Entry -Subtext "Found Poster with text on FANART, skipping because you only want textless..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
-                            $global:FANARTAssetChangeUrl = "https://fanart.tv/series/$id"
-                        }
-                        break
                     }
                     Else {
-                        $global:posterurl = ($entrytemp.tvposter | Where-Object lang -eq '00')[0].url
-                        Write-Entry -Subtext "Found Textless Poster on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
-                        $global:TextlessPoster = $true
+                        Write-Entry -Subtext "Found Poster with text on FANART, skipping because you only want textless..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
                         $global:FANARTAssetChangeUrl = "https://fanart.tv/series/$id"
-                        break
                     }
+                    break
+                }
+                Else {
+                    $global:posterurl = ($entrytemp.tvposter | Where-Object lang -eq '00')[0].url
+                    Write-Entry -Subtext "Found Textless Poster on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                    $global:TextlessPoster = $true
+                    $global:FANARTAssetChangeUrl = "https://fanart.tv/series/$id"
+                    break
                 }
             }
         }
@@ -1119,28 +1116,26 @@ function GetFanartShowPoster {
         }
     }
     Else {
-        $ids = @($global:tmdbid, $global:tvdbid, $global:imdbid)
+        $id = $global:tvdbid
         $entrytemp = $null
 
-        foreach ($id in $ids) {
-            if ($id) {
-                $entrytemp = Get-FanartTv -Type tv -id $id -ErrorAction SilentlyContinue
-                if ($entrytemp -and $entrytemp.tvposter) {
-                    foreach ($lang in $global:PreferredSeasonLanguageOrderFanart) {
-                        if (($entrytemp.tvposter | Where-Object lang -eq "$lang")) {
-                            $global:posterurl = ($entrytemp.tvposter)[0].url
-                            if ($lang -eq '00') {
-                                Write-Entry -Subtext "Found Poster without Language on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
-                            }
-                            Else {
-                                Write-Entry -Subtext "Found Poster with Language '$lang' on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
-                            }
-                            if ($lang -ne '00') {
-                                $global:PosterWithText = $true
-                                $global:FANARTAssetTextLang = $lang
-                            }
-                            break
+        if ($id) {
+            $entrytemp = Get-FanartTv -Type tv -id $id -ErrorAction SilentlyContinue
+            if ($entrytemp -and $entrytemp.tvposter) {
+                foreach ($lang in $global:PreferredSeasonLanguageOrderFanart) {
+                    if (($entrytemp.tvposter | Where-Object lang -eq "$lang")) {
+                        $global:posterurl = ($entrytemp.tvposter)[0].url
+                        if ($lang -eq '00') {
+                            Write-Entry -Subtext "Found Poster without Language on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                         }
+                        Else {
+                            Write-Entry -Subtext "Found Poster with Language '$lang' on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                        }
+                        if ($lang -ne '00') {
+                            $global:PosterWithText = $true
+                            $global:FANARTAssetTextLang = $lang
+                        }
+                        break
                     }
                 }
             }
@@ -1160,33 +1155,31 @@ function GetFanartShowPoster {
 function GetFanartShowBackground {
     $global:Fallback = $null
     Write-Entry -Subtext "Searching on Fanart.tv for a Background poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
-    $ids = @($global:tmdbid, $global:tvdbid, $global:imdbid)
+    $id = $global:tvdbid
     $entrytemp = $null
 
-    foreach ($id in $ids) {
-        if ($id) {
-            $entrytemp = Get-FanartTv -Type tv -id $id -ErrorAction SilentlyContinue
-            if ($entrytemp -and $entrytemp.showbackground) {
-                if (!($entrytemp.showbackground | Where-Object lang -eq '')) {
-                    $global:posterurl = ($entrytemp.showbackground)[0].url
-                    Write-Entry -Subtext "Found Background with text on Fanart.tv"  -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
-                    $global:PosterWithText = $true
-                    $global:FANARTAssetTextLang = ($entrytemp.showbackground)[0].lang
-                    $global:FANARTAssetChangeUrl = "https://fanart.tv/series/$id"
+    if ($id) {
+        $entrytemp = Get-FanartTv -Type tv -id $id -ErrorAction SilentlyContinue
+        if ($entrytemp -and $entrytemp.showbackground) {
+            if (!($entrytemp.showbackground | Where-Object lang -eq '')) {
+                $global:posterurl = ($entrytemp.showbackground)[0].url
+                Write-Entry -Subtext "Found Background with text on Fanart.tv"  -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                $global:PosterWithText = $true
+                $global:FANARTAssetTextLang = ($entrytemp.showbackground)[0].lang
+                $global:FANARTAssetChangeUrl = "https://fanart.tv/series/$id"
 
-                    if ($global:FavProvider -eq 'FANART') {
-                        $global:Fallback = "TMDB"
-                        $global:fanartfallbackposterurl = ($entrytemp.showbackground)[0].url
-                    }
-                    break
+                if ($global:FavProvider -eq 'FANART') {
+                    $global:Fallback = "TMDB"
+                    $global:fanartfallbackposterurl = ($entrytemp.showbackground)[0].url
                 }
-                Else {
-                    $global:posterurl = ($entrytemp.showbackground | Where-Object lang -eq '')[0].url
-                    Write-Entry -Subtext "Found Textless background on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
-                    $global:TextlessPoster = $true
-                    $global:FANARTAssetChangeUrl = "https://fanart.tv/series/$id"
-                    break
-                }
+                break
+            }
+            Else {
+                $global:posterurl = ($entrytemp.showbackground | Where-Object lang -eq '')[0].url
+                Write-Entry -Subtext "Found Textless background on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                $global:TextlessPoster = $true
+                $global:FANARTAssetChangeUrl = "https://fanart.tv/series/$id"
+                break
             }
         }
     }
@@ -1202,81 +1195,79 @@ function GetFanartShowBackground {
 }
 function GetFanartSeasonPoster {
     Write-Entry -Subtext "Searching on Fanart.tv for Season '$global:SeasonNumber' poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
-    $ids = @($global:tmdbid, $global:tvdbid, $global:imdbid)
+    $id = $global:tvdbid
     $entrytemp = $null
     if ($global:PreferTextless -eq 'True') {
-        foreach ($id in $ids) {
-            if ($id) {
-                $entrytemp = Get-FanartTv -Type tv -id $id -ErrorAction SilentlyContinue
-                if ($entrytemp.seasonposter) {
-                    if ($global:SeasonNumber -match '\b\d{1,2}\b') {
-                        $NoLangPoster = ($entrytemp.seasonposter | Where-Object { $_.lang -eq '00' -and $_.Season -eq $global:SeasonNumber } | Sort-Object likes)
-                        if ($NoLangPoster) {
-                            $global:posterurl = ($NoLangPoster | Sort-Object likes)[0].url
-                            Write-Entry -Subtext "Found Season Poster without Language on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
-                            $global:TextlessPoster = $true
-                            $global:FANARTAssetChangeUrl = "https://fanart.tv/series/$id"
-                        }
-                        Else {
-                            if (!$global:SeasonOnlyTextless) {
-                                Write-Entry -Subtext "No Texless Season Poster on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
-                                foreach ($lang in $global:PreferredSeasonLanguageOrderFanart) {
-                                    $FoundPoster = ($entrytemp.seasonposter | Where-Object { $_.lang -eq "$lang" -and $_.Season -eq $global:SeasonNumber } | Sort-Object likes)
-                                    if ($FoundPoster) {
-                                        $global:posterurl = $FoundPoster[0].url
-                                        Write-Entry -Subtext "Found season Poster with Language '$lang' on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
-                                        $global:PosterWithText = $true
-                                        $global:FANARTAssetTextLang = $lang
-                                        $global:FANARTAssetChangeUrl = "https://fanart.tv/series/$id"
-                                        break
-                                    }
-                                }
-                            }
-                            Else {
-                                Write-Entry -Subtext "Found Poster with text on FANART, skipping because you only want textless..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
-                                $global:FANARTAssetChangeUrl = "https://fanart.tv/series/$id"
-                            }
-                        }
+        if ($id) {
+            $entrytemp = Get-FanartTv -Type tv -id $id -ErrorAction SilentlyContinue
+            if ($entrytemp.seasonposter) {
+                if ($global:SeasonNumber -match '\b\d{1,2}\b') {
+                    $NoLangPoster = ($entrytemp.seasonposter | Where-Object { $_.lang -eq '00' -and $_.Season -eq $global:SeasonNumber } | Sort-Object likes)
+                    if ($NoLangPoster) {
+                        $global:posterurl = ($NoLangPoster | Sort-Object likes)[0].url
+                        Write-Entry -Subtext "Found Season Poster without Language on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                        $global:TextlessPoster = $true
+                        $global:FANARTAssetChangeUrl = "https://fanart.tv/series/$id"
                     }
                     Else {
-                        Write-Entry -Subtext "Could not get a result with '$global:SeasonNumber' on Fanart, likely season number not in correct format, fallback to Show poster." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
-                        if ($entrytemp -and $entrytemp.tvposter) {
+                        if (!$global:SeasonOnlyTextless) {
+                            Write-Entry -Subtext "No Texless Season Poster on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                             foreach ($lang in $global:PreferredSeasonLanguageOrderFanart) {
-                                if (($entrytemp.tvposter | Where-Object lang -eq "$lang")) {
-                                    $global:posterurl = ($entrytemp.tvposter)[0].url
-                                    if ($lang -eq '00') {
-                                        Write-Entry -Subtext "Found Poster without Language on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
-                                        $global:TextlessPoster = $true
-                                        $global:FANARTAssetChangeUrl = "https://fanart.tv/series/$id"
-                                    }
-                                    Else {
-                                        if (!$global:SeasonOnlyTextless) {
-                                            Write-Entry -Subtext "Found Poster with Language '$lang' on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
-                                        }
-                                    }
-                                    if (!$global:SeasonOnlyTextless -and !$global:TextlessPoster) {
-                                        if ($lang -ne '00') {
-                                            $global:PosterWithText = $true
-                                            $global:FANARTAssetTextLang = $lang
-                                            $global:FANARTAssetChangeUrl = "https://fanart.tv/series/$id"
-                                        }
-                                    }
-                                    Else {
-                                        Write-Entry -Subtext "Found Poster with text on FANART, skipping because you only want textless..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
-                                        $global:FANARTAssetChangeUrl = "https://fanart.tv/series/$id"
-                                        $global:posterurl = $null
-                                    }
+                                $FoundPoster = ($entrytemp.seasonposter | Where-Object { $_.lang -eq "$lang" -and $_.Season -eq $global:SeasonNumber } | Sort-Object likes)
+                                if ($FoundPoster) {
+                                    $global:posterurl = $FoundPoster[0].url
+                                    Write-Entry -Subtext "Found season Poster with Language '$lang' on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                                    $global:PosterWithText = $true
+                                    $global:FANARTAssetTextLang = $lang
+                                    $global:FANARTAssetChangeUrl = "https://fanart.tv/series/$id"
                                     break
                                 }
                             }
                         }
+                        Else {
+                            Write-Entry -Subtext "Found Poster with text on FANART, skipping because you only want textless..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                            $global:FANARTAssetChangeUrl = "https://fanart.tv/series/$id"
+                        }
                     }
-                    break
                 }
                 Else {
-                    $global:posterurl = $null
-                    break
+                    Write-Entry -Subtext "Could not get a result with '$global:SeasonNumber' on Fanart, likely season number not in correct format, fallback to Show poster." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                    if ($entrytemp -and $entrytemp.tvposter) {
+                        foreach ($lang in $global:PreferredSeasonLanguageOrderFanart) {
+                            if (($entrytemp.tvposter | Where-Object lang -eq "$lang")) {
+                                $global:posterurl = ($entrytemp.tvposter)[0].url
+                                if ($lang -eq '00') {
+                                    Write-Entry -Subtext "Found Poster without Language on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                                    $global:TextlessPoster = $true
+                                    $global:FANARTAssetChangeUrl = "https://fanart.tv/series/$id"
+                                }
+                                Else {
+                                    if (!$global:SeasonOnlyTextless) {
+                                        Write-Entry -Subtext "Found Poster with Language '$lang' on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                                    }
+                                }
+                                if (!$global:SeasonOnlyTextless -and !$global:TextlessPoster) {
+                                    if ($lang -ne '00') {
+                                        $global:PosterWithText = $true
+                                        $global:FANARTAssetTextLang = $lang
+                                        $global:FANARTAssetChangeUrl = "https://fanart.tv/series/$id"
+                                    }
+                                }
+                                Else {
+                                    Write-Entry -Subtext "Found Poster with text on FANART, skipping because you only want textless..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                                    $global:FANARTAssetChangeUrl = "https://fanart.tv/series/$id"
+                                    $global:posterurl = $null
+                                }
+                                break
+                            }
+                        }
+                    }
                 }
+                break
+            }
+            Else {
+                $global:posterurl = $null
+                break
             }
         }
         if ($global:posterurl) {
@@ -1288,35 +1279,33 @@ function GetFanartSeasonPoster {
         }
     }
     Else {
-        foreach ($id in $ids) {
-            if ($id) {
-                $entrytemp = Get-FanartTv -Type tv -id $id -ErrorAction SilentlyContinue
-                if ($entrytemp.seasonposter) {
-                    foreach ($lang in $global:PreferredSeasonLanguageOrderFanart) {
-                        $FoundPoster = ($entrytemp.seasonposter | Where-Object { $_.lang -eq "$lang" -and $_.Season -eq $global:SeasonNumber } | Sort-Object likes)
-                        if ($FoundPoster) {
-                            $global:posterurl = $FoundPoster[0].url
+        if ($id) {
+            $entrytemp = Get-FanartTv -Type tv -id $id -ErrorAction SilentlyContinue
+            if ($entrytemp.seasonposter) {
+                foreach ($lang in $global:PreferredSeasonLanguageOrderFanart) {
+                    $FoundPoster = ($entrytemp.seasonposter | Where-Object { $_.lang -eq "$lang" -and $_.Season -eq $global:SeasonNumber } | Sort-Object likes)
+                    if ($FoundPoster) {
+                        $global:posterurl = $FoundPoster[0].url
+                    }
+                    if ($global:posterurl) {
+                        if ($lang -eq '00') {
+                            Write-Entry -Subtext "Found season Poster without Language on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                            $global:TextlessPoster = $true
+                            $global:FANARTAssetChangeUrl = "https://fanart.tv/series/$id"
                         }
-                        if ($global:posterurl) {
-                            if ($lang -eq '00') {
-                                Write-Entry -Subtext "Found season Poster without Language on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
-                                $global:TextlessPoster = $true
-                                $global:FANARTAssetChangeUrl = "https://fanart.tv/series/$id"
-                            }
-                            Else {
-                                Write-Entry -Subtext "Found season Poster with Language '$lang' on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
-                                $global:PosterWithText = $true
-                                $global:FANARTAssetTextLang = $lang
-                                $global:FANARTAssetChangeUrl = "https://fanart.tv/series/$id"
-                                break
-                            }
+                        Else {
+                            Write-Entry -Subtext "Found season Poster with Language '$lang' on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                            $global:PosterWithText = $true
+                            $global:FANARTAssetTextLang = $lang
+                            $global:FANARTAssetChangeUrl = "https://fanart.tv/series/$id"
+                            break
                         }
                     }
                 }
-                Else {
-                    $global:posterurl = $null
-                    break
-                }
+            }
+            Else {
+                $global:posterurl = $null
+                break
             }
         }
         if ($global:posterurl) {
@@ -6226,7 +6215,7 @@ Elseif ($Tautulli) {
                                                 }
                                                 # Export the array to a CSV file
                                                 $episodetemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
-                                                SendMessage -type $episodetemp.Type -title $($global:show_name.replace('"', '\"') +" | "+ $episodetemp.Title.replace('"', '\"')) -Lib $episodetemp.LibraryName -DLSource $episodetemp.'Download Source' -lang $episodetemp.Language -favurl $episodetemp.'Fav Provider Link' -fallback $episodetemp.Fallback -Truncated $episodetemp.TextTruncated
+                                                SendMessage -type $episodetemp.Type -title $($global:show_name.replace('"', '\"') + " | " + $episodetemp.Title.replace('"', '\"')) -Lib $episodetemp.LibraryName -DLSource $episodetemp.'Download Source' -lang $episodetemp.Language -favurl $episodetemp.'Fav Provider Link' -fallback $episodetemp.Fallback -Truncated $episodetemp.TextTruncated
                                             }
                                         }
                                     }
@@ -6648,7 +6637,7 @@ Elseif ($Tautulli) {
                                                 }
                                                 # Export the array to a CSV file
                                                 $episodetemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
-                                                SendMessage -type $episodetemp.Type -title $($global:show_name.replace('"', '\"') +" | "+ $episodetemp.Title.replace('"', '\"')) -Lib $episodetemp.LibraryName -DLSource $episodetemp.'Download Source' -lang $episodetemp.Language -favurl $episodetemp.'Fav Provider Link' -fallback $episodetemp.Fallback -Truncated $episodetemp.TextTruncated
+                                                SendMessage -type $episodetemp.Type -title $($global:show_name.replace('"', '\"') + " | " + $episodetemp.Title.replace('"', '\"')) -Lib $episodetemp.LibraryName -DLSource $episodetemp.'Download Source' -lang $episodetemp.Language -favurl $episodetemp.'Fav Provider Link' -fallback $episodetemp.Fallback -Truncated $episodetemp.TextTruncated
                                             }
                                         }
                                     }
