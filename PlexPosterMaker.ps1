@@ -8,7 +8,7 @@ param (
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.1.0"
+$CurrentScriptVersion = "1.1.1"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -635,7 +635,7 @@ function GetTMDBShowPoster {
 }
 function GetTMDBSeasonPoster {
     Write-Entry -Subtext "Searching on TMDB for Season '$global:SeasonNumber' poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
-    if ($global:PreferTextless -eq 'True') {
+    if ($global:SeasonPreferTextless -eq 'True') {
         try {
             $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)/season/$global:SeasonNumber/images?append_to_response=images&language=xx&include_image_language=en,null,de" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
         }
@@ -649,7 +649,7 @@ function GetTMDBSeasonPoster {
             if ($response.posters) {
                 $NoLangPoster = ($response.posters | Where-Object iso_639_1 -eq $null)
                 if (!$NoLangPoster) {
-                    if (!$global:OnlyTextless) {
+                    if (!$global:SeasonOnlyTextless) {
                         $posterpath = (($response.posters | Sort-Object vote_average -Descending)[0]).file_path
                         $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
                         Write-Entry -Subtext "Found Poster with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
@@ -688,10 +688,10 @@ function GetTMDBSeasonPoster {
     Else {
         try {
             if ($global:SeasonNumber -match '\b\d{1,2}\b') {
-                $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)/season/$global:SeasonNumber/images?append_to_response=images&language=$($global:PreferredLanguageOrder[0])&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
+                $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)/season/$global:SeasonNumber/images?append_to_response=images&language=$($global:PreferredSeasonLanguageOrder[0])&include_image_language=$($global:PreferredSeasonLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
             }
             Else {
-                $responseBackup = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=$($PreferredLanguageOrder[0])&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
+                $responseBackup = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=$($global:PreferredSeasonLanguageOrder[0])&include_image_language=$($global:PreferredSeasonLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
             }
         }
         catch {
@@ -703,7 +703,7 @@ function GetTMDBSeasonPoster {
         if ($responseBackup) {
             if ($responseBackup.images.posters) {
                 Write-Entry -Subtext "Could not get a result with '$global:SeasonNumber' on TMDB, likely season number not in correct format, fallback to Show poster." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
-                foreach ($lang in $global:PreferredLanguageOrderTMDB) {
+                foreach ($lang in $global:PreferredSeasonLanguageOrderTMDB) {
                     if ($lang -eq 'null') {
                         $FavPoster = ($responseBackup.images.posters | Where-Object iso_639_1 -eq $null)
                     }
@@ -732,7 +732,7 @@ function GetTMDBSeasonPoster {
         }
         if ($response) {
             if ($response.posters) {
-                foreach ($lang in $global:PreferredLanguageOrderTMDB) {
+                foreach ($lang in $global:PreferredSeasonLanguageOrderTMDB) {
                     if ($lang -eq 'null') {
                         $FavPoster = ($response.posters | Where-Object iso_639_1 -eq $null)
                     }
@@ -1126,7 +1126,7 @@ function GetFanartShowPoster {
             if ($id) {
                 $entrytemp = Get-FanartTv -Type tv -id $id -ErrorAction SilentlyContinue
                 if ($entrytemp -and $entrytemp.tvposter) {
-                    foreach ($lang in $global:PreferredLanguageOrderFanart) {
+                    foreach ($lang in $global:PreferredSeasonLanguageOrderFanart) {
                         if (($entrytemp.tvposter | Where-Object lang -eq "$lang")) {
                             $global:posterurl = ($entrytemp.tvposter)[0].url
                             if ($lang -eq '00') {
@@ -1218,9 +1218,9 @@ function GetFanartSeasonPoster {
                             $global:FANARTAssetChangeUrl = "https://fanart.tv/series/$id"
                         }
                         Else {
-                            if (!$global:OnlyTextless) {
+                            if (!$global:SeasonOnlyTextless) {
                                 Write-Entry -Subtext "No Texless Season Poster on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
-                                foreach ($lang in $global:PreferredLanguageOrderFanart) {
+                                foreach ($lang in $global:PreferredSeasonLanguageOrderFanart) {
                                     $FoundPoster = ($entrytemp.seasonposter | Where-Object { $_.lang -eq "$lang" -and $_.Season -eq $global:SeasonNumber } | Sort-Object likes)
                                     if ($FoundPoster) {
                                         $global:posterurl = $FoundPoster[0].url
@@ -1241,7 +1241,7 @@ function GetFanartSeasonPoster {
                     Else {
                         Write-Entry -Subtext "Could not get a result with '$global:SeasonNumber' on Fanart, likely season number not in correct format, fallback to Show poster." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                         if ($entrytemp -and $entrytemp.tvposter) {
-                            foreach ($lang in $global:PreferredLanguageOrderFanart) {
+                            foreach ($lang in $global:PreferredSeasonLanguageOrderFanart) {
                                 if (($entrytemp.tvposter | Where-Object lang -eq "$lang")) {
                                     $global:posterurl = ($entrytemp.tvposter)[0].url
                                     if ($lang -eq '00') {
@@ -1250,11 +1250,11 @@ function GetFanartSeasonPoster {
                                         $global:FANARTAssetChangeUrl = "https://fanart.tv/series/$id"
                                     }
                                     Else {
-                                        if (!$global:OnlyTextless) {
+                                        if (!$global:SeasonOnlyTextless) {
                                             Write-Entry -Subtext "Found Poster with Language '$lang' on FANART" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                                         }
                                     }
-                                    if (!$global:OnlyTextless -and !$global:TextlessPoster) {
+                                    if (!$global:SeasonOnlyTextless -and !$global:TextlessPoster) {
                                         if ($lang -ne '00') {
                                             $global:PosterWithText = $true
                                             $global:FANARTAssetTextLang = $lang
@@ -1292,7 +1292,7 @@ function GetFanartSeasonPoster {
             if ($id) {
                 $entrytemp = Get-FanartTv -Type tv -id $id -ErrorAction SilentlyContinue
                 if ($entrytemp.seasonposter) {
-                    foreach ($lang in $global:PreferredLanguageOrderFanart) {
+                    foreach ($lang in $global:PreferredSeasonLanguageOrderFanart) {
                         $FoundPoster = ($entrytemp.seasonposter | Where-Object { $_.lang -eq "$lang" -and $_.Season -eq $global:SeasonNumber } | Sort-Object likes)
                         if ($FoundPoster) {
                             $global:posterurl = $FoundPoster[0].url
@@ -1643,7 +1643,7 @@ function GetTVDBSeasonPoster {
                     $errorCount++
                 }
                 if ($Seasonresponse) {
-                    foreach ($lang in $global:PreferredLanguageOrderTVDB) {
+                    foreach ($lang in $global:PreferredSeasonLanguageOrderTVDB) {
                         if ($lang -eq 'null') {
                             $LangArtwork = ($Seasonresponse.data.artwork | Where-Object { $_.language -like "" -and $_.type -eq '7' } | Sort-Object Score -Descending)
                         }
@@ -2018,7 +2018,6 @@ function CheckJsonPaths {
         Exit
     }
 }
-
 function Get-Platform {
     if ($global:OSType -eq 'DockerAlpine') {
         return 'Docker'
@@ -2033,7 +2032,6 @@ function Get-Platform {
         return 'Unknown'
     }
 }
-
 function Get-LatestScriptVersion {
     try {
         return Invoke-RestMethod -Uri "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/Release.txt" -Method Get -ErrorAction Stop
@@ -2043,7 +2041,6 @@ function Get-LatestScriptVersion {
         return $null
     }
 }
-
 function RotateLogs {
     param (
         [string]$ScriptRoot
@@ -2071,7 +2068,6 @@ function RotateLogs {
         Move-Item -Path "$logFolder`_$timestamp" $RotationFolder
     }
 }
-
 function CheckConfigFile {
     param (
         [string]$ScriptRoot
@@ -2085,7 +2081,6 @@ function CheckConfigFile {
         Exit
     }
 }
-
 function Test-And-Download {
     param(
         [string]$url,
@@ -2096,7 +2091,6 @@ function Test-And-Download {
         Invoke-WebRequest -Uri $url -OutFile $destination
     }
 }
-
 function RedactPlexUrl {
     param(
         [string]$url
@@ -2139,6 +2133,7 @@ function LogConfigSettings {
     }
     Write-Entry -Subtext "| Fav Provider:                 $global:FavProvider" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Preferred Lang Order:         $($global:PreferredLanguageOrder -join ',')" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Preferred Season Lang Order:         $($global:PreferredSeasonLanguageOrder -join ',')" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "Plex Part" -Path $configLogging -Color Cyan -log Info
     Write-Entry -Subtext "| Excluded Libs:                $($LibstoExclude -join ',')" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Plex Url:                     $($PlexUrl[0..10] -join '')****" -Path $configLogging -Color White -log Info
@@ -2216,7 +2211,6 @@ function LogConfigSettings {
     Write-Entry -Subtext "| Text Box Offset:              $TitleCardEPtext_offset" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "___________________________________________" -Path $configLogging -Color DarkMagenta -log Info
 }
-
 function CheckPlexAccess {
     param (
         [string]$PlexUrl,
@@ -2280,8 +2274,6 @@ function CheckPlexAccess {
         }
     }
 }
-
-
 function CheckImageMagick {
     param (
         [string]$magick,
@@ -2320,7 +2312,6 @@ function CheckImageMagick {
         }
     }
 }
-
 function CheckOverlayDimensions {
     param (
         [string]$Posteroverlay,
@@ -2359,7 +2350,6 @@ function CheckOverlayDimensions {
         Write-Entry -Subtext "TitleCard overlay is NOT correctly sized at: $BackgroundSize. Actual dimensions: $Titlecardoverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     }
 }
-
 function InvokeMagickCommand {
     param (
         [string]$Command,
@@ -2399,7 +2389,6 @@ function InvokeMagickCommand {
         Write-Entry -Subtext (GetMagickErrorMessage $errorOutput) -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log info
     }
 }
-
 function CheckCharLimit {
     # Attempt to get the registry key
     try {
@@ -2524,9 +2513,11 @@ $FanartTvAPIKey = $config.ApiPart.FanartTvAPIKey
 $PlexToken = $config.ApiPart.PlexToken
 $global:FavProvider = $config.ApiPart.FavProvider.ToUpper()
 $global:PreferredLanguageOrder = $config.ApiPart.PreferredLanguageOrder
-# default Lang order if missing in config
+$global:PreferredSeasonLanguageOrder = $config.ApiPart.PreferredSeasonLanguageOrder
+
+# Poster Lang Settings
 if (!$global:PreferredLanguageOrder) {
-    Write-Entry -Message "Lang search Order not set in Config, setting it to 'xx,en,de' for you" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+    Write-Entry -Message "Poster Lang search Order not set in Config, setting it to 'xx,en,de' for you" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     $global:PreferredLanguageOrder = "xx", "en", "de"
 }
 $global:PreferredLanguageOrderTMDB = $global:PreferredLanguageOrder.Replace('xx', 'null')
@@ -2540,6 +2531,24 @@ if ($global:PreferredLanguageOrder[0] -eq 'xx' -or $global:PreferredLanguageOrde
 }
 Else {
     $global:PreferTextless = $false
+}
+
+# Season Lang Settings
+if (!$global:PreferredSeasonLanguageOrder) {
+    Write-Entry -Message "Season Lang search Order not set in Config, setting it to 'xx,en,de' for you" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+    $global:PreferredSeasonLanguageOrder = "xx", "en", "de"
+}
+$global:PreferredSeasonLanguageOrderTMDB = $global:PreferredSeasonLanguageOrder.Replace('xx', 'null')
+$global:PreferredSeasonLanguageOrderFanart = $global:PreferredSeasonLanguageOrder.Replace('xx', '00')
+$global:PreferredSeasonLanguageOrderTVDB = $global:PreferredSeasonLanguageOrder.Replace('xx', 'null')
+if ($global:PreferredSeasonLanguageOrder[0] -eq 'xx' -or $global:PreferredSeasonLanguageOrder -eq 'xx') {
+    $global:SeasonPreferTextless = $true
+    if ( $PreferredSeasonLanguageOrder.count -eq "1") {
+        $global:SeasonOnlyTextless = $true
+    }
+}
+Else {
+    $global:SeasonPreferTextless = $false
 }
 # default to TMDB if favprovider missing
 if (!$global:FavProvider) {
@@ -4294,7 +4303,7 @@ Elseif ($Tautulli) {
                             }
                         }
 
-                        if ($global:OnlyTextless) {
+                        if ($global:OnlyTextless -and !$global:posterurl) {
                             $global:posterurl = GetFanartMoviePoster
                             if (!$global:FavProvider -eq 'FANART') {
                                 $global:IsFallback = $true
@@ -7117,7 +7126,6 @@ else {
             if ($($entry.RootFoldername)) {
                 $global:posterurl = $null
                 $global:ImageMagickError = $null
-                $global:TextlessPoster = $null
                 $global:TMDBfallbackposterurl = $null
                 $global:fanartfallbackposterurl = $null
                 $global:IsFallback = $null
@@ -7173,6 +7181,7 @@ else {
                         $global:tmdbid = $entry.tmdbid
                         $global:tvdbid = $entry.tvdbid
                         $global:imdbid = $entry.imdbid
+                        $global:TextlessPoster = $null
                         $global:posterurl = $null
                         $global:PosterWithText = $null
                         $global:AssetTextLang = $null
@@ -7216,7 +7225,7 @@ else {
                             }
                         }
 
-                        if ($global:OnlyTextless) {
+                        if ($global:OnlyTextless -and !$global:posterurl) {
                             $global:posterurl = GetFanartMoviePoster
                             if (!$global:FavProvider -eq 'FANART') {
                                 $global:IsFallback = $true
@@ -7463,6 +7472,7 @@ else {
                         $global:FANARTAssetChangeUrl = $null
                         $global:TVDBAssetChangeUrl = $null
                         $global:ImageMagickError = $null
+                        $global:TextlessPoster = $null
                         if ($PlexToken) {
                             $Arturl = $plexurl + $entry.PlexBackgroundUrl + "?X-Plex-Token=$PlexToken"
                         }
