@@ -60,7 +60,7 @@
         │   ├── webhookexample.png
         │   └── webhook.png
         ├── overlay.png
-        ├── PlexPosterMaker.ps1
+        ├── PosterMaker.ps1
         ├── README.md
         ├── Release.txt
         └── Rocky.ttf
@@ -78,14 +78,14 @@
     - Linux: 
         ```
         cd /opt/appdata/Poster-Maker
-        sudo pwsh PlexPosterMaker.ps1
+        sudo pwsh PosterMaker.ps1
         ```
     - Windows: 
         
         Open the Start menu, type Windows PowerShell, select Windows PowerShell, and then select Run as administrator
         ```
         cd C:\Github\Poster-Maker
-        .\PlexPosterMaker.ps1
+        .\PosterMaker.ps1
         ```
 1. After that it is recommended to run the script in `-Testing` Mode.
     
@@ -100,12 +100,12 @@
     - Linux:
         ```
         cd /opt/appdata/Poster-Maker
-        pwsh PlexPosterMaker.ps1 -Testing
+        pwsh PosterMaker.ps1 -Testing
         ```
     - Windows:
         ```
         cd C:\Github\Poster-Maker
-        .\PlexPosterMaker.ps1 -Testing
+        .\PosterMaker.ps1 -Testing
         ```
 5. You can now fine tune all the `width, height, color` of `borders, text boxes and text` in config.json
     - After each change of a setting just rerun the script in `-Testing` mode so you can see how it looks.
@@ -114,12 +114,12 @@
         - Linux:
             ```
             cd /opt/appdata/Poster-Maker
-            pwsh PlexPosterMaker.ps1
+            pwsh PosterMaker.ps1
             ```
         - Windows:
             ```
             cd C:\Github\Poster-Maker
-            .\PlexPosterMaker.ps1
+            .\PosterMaker.ps1
             ```
     - Configure Scheduled runs:
     
@@ -131,7 +131,7 @@
             add a new line like this (every 2 hours):
 
             ```
-            0 */2 * * * docker exec ppm pwsh PlexPosterMaker.ps1 >/dev/null 2>&1
+            0 */2 * * * docker exec ppm pwsh PosterMaker.ps1 >/dev/null 2>&1
             ```
     
         Windows:
@@ -207,14 +207,14 @@
     
         In this example `ppm` is the container name
         ```sh
-        docker exec -it ppm pwsh PlexPosterMaker.ps1 -Testing
+        docker exec -it ppm pwsh PosterMaker.ps1 -Testing
         ```
 5. You can now fine tune all the `width, height, color` of `borders, text boxes and text` in config.json
     - After each change of a setting just rerun the script in `-Testing` mode so you can see how it looks.
 6. The final step is to set a schedule and let the script run.
     - You can also trigger the poster creation on-demand, like this:
         ```sh
-        docker exec -it ppm pwsh PlexPosterMaker.ps1
+        docker exec -it ppm pwsh PosterMaker.ps1
         ```
 > [!TIP]
 > If you are an unRAID user, install the `Docker Compose Manager` plugin from the Community Apps store so that you can leverage the compose file
