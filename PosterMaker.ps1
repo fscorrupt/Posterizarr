@@ -8,7 +8,7 @@ param (
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.1.2"
+$CurrentScriptVersion = "1.1.3"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -2513,11 +2513,12 @@ if (!$global:PreferredLanguageOrder) {
 $global:PreferredLanguageOrderTMDB = $global:PreferredLanguageOrder.Replace('xx', 'null')
 $global:PreferredLanguageOrderFanart = $global:PreferredLanguageOrder.Replace('xx', '00')
 $global:PreferredLanguageOrderTVDB = $global:PreferredLanguageOrder.Replace('xx', 'null')
-if ($global:PreferredLanguageOrder[0] -eq 'xx' -or $global:PreferredLanguageOrder -eq 'xx') {
+if ($global:PreferredLanguageOrder.count -eq '1' -and $global:PreferredLanguageOrder -eq 'xx'){
     $global:PreferTextless = $true
-    if ( $PreferredLanguageOrder.count -eq "1") {
-        $global:OnlyTextless = $true
-    }
+    $global:OnlyTextless = $true
+}
+Elseif ($global:PreferredLanguageOrder[0] -eq 'xx') {
+    $global:PreferTextless = $true
 }
 Else {
     $global:PreferTextless = $false
@@ -2531,15 +2532,17 @@ if (!$global:PreferredSeasonLanguageOrder) {
 $global:PreferredSeasonLanguageOrderTMDB = $global:PreferredSeasonLanguageOrder.Replace('xx', 'null')
 $global:PreferredSeasonLanguageOrderFanart = $global:PreferredSeasonLanguageOrder.Replace('xx', '00')
 $global:PreferredSeasonLanguageOrderTVDB = $global:PreferredSeasonLanguageOrder.Replace('xx', 'null')
-if ($global:PreferredSeasonLanguageOrder[0] -eq 'xx' -or $global:PreferredSeasonLanguageOrder -eq 'xx') {
+if ($global:PreferredSeasonLanguageOrder.count -eq '1' -and $global:PreferredSeasonLanguageOrder -eq 'xx'){
     $global:SeasonPreferTextless = $true
-    if ( $PreferredSeasonLanguageOrder.count -eq "1") {
-        $global:SeasonOnlyTextless = $true
-    }
+    $global:SeasonOnlyTextless = $true
+}
+Elseif ($global:PreferredSeasonLanguageOrder[0] -eq 'xx') {
+    $global:SeasonPreferTextless = $true
 }
 Else {
     $global:SeasonPreferTextless = $false
 }
+
 # default to TMDB if favprovider missing
 if (!$global:FavProvider) {
     Write-Entry -Message "FavProvider not set in config, setting it to 'TMDB' for you" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
@@ -8405,7 +8408,7 @@ else {
                                 $global:posterurl = GetFanartSeasonPoster
                                 $global:IsFallback = $true
                             }
-                            if ($global:posterurl -and $global:PreferTextless -eq 'True' -and !$global:TextlessPoster) {
+                            if ($global:posterurl -and $global:SeasonPreferTextless -eq 'True' -and !$global:TextlessPoster) {
                                 $global:posterurl = GetFanartSeasonPoster
                                 $global:IsFallback = $true
                             }
