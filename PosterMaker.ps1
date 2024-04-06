@@ -1198,7 +1198,7 @@ function GetFanartSeasonPoster {
     Write-Entry -Subtext "Searching on Fanart.tv for Season '$global:SeasonNumber' poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     $id = $global:tvdbid
     $entrytemp = $null
-    if ($global:PreferTextless -eq 'True') {
+    if ($global:SeasonPreferTextless -eq 'True') {
         if ($id) {
             $entrytemp = Get-FanartTv -Type tv -id $id -ErrorAction SilentlyContinue
             if ($entrytemp.seasonposter) {
