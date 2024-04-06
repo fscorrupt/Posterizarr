@@ -124,14 +124,14 @@ function SendMessage {
         if ($global:NotifyUrl -like '*discord*') {
             $jsonPayload = @"
     {
-        "username": "Plex-Poster-Maker",
-        "avatar_url": "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/images/webhook.png",
+        "username": "Poster-Maker",
+        "avatar_url": "https://github.com/fscorrupt/Poster-Maker/raw/main/images/webhook.png",
         "content": "",
         "embeds": [
         {
             "author": {
             "name": "PPM @Github",
-            "url": "https://github.com/fscorrupt/Plex-Poster-Maker"
+            "url": "https://github.com/fscorrupt/Poster-Maker"
             },
             "description": "Recently Added\n\n",
             "timestamp": "$(((Get-Date).ToUniversalTime()).ToString("yyyy-MM-ddTHH:mm:ss.fffZ"))",
@@ -202,10 +202,10 @@ function SendMessage {
         Else {
             if ($global:SendNotification -eq 'True') {
                 if ($errorCount -ge '1') {
-                    apprise --notification-type="error" --title="Plex-Poster-Maker" --body="PPM run took: $FormattedTimespawn`nIt Created '$posterCount' Images`n`nDuring execution '$errorCount' Errors occurred, please check log for detailed description." "$global:NotifyUrl"
+                    apprise --notification-type="error" --title="Poster-Maker" --body="PPM run took: $FormattedTimespawn`nIt Created '$posterCount' Images`n`nDuring execution '$errorCount' Errors occurred, please check log for detailed description." "$global:NotifyUrl"
                 }
                 Else {
-                    apprise --notification-type="success" --title="Plex-Poster-Maker" --body="PPM run took: $FormattedTimespawn`nIt Created '$posterCount' Images" "$global:NotifyUrl"
+                    apprise --notification-type="success" --title="Poster-Maker" --body="PPM run took: $FormattedTimespawn`nIt Created '$posterCount' Images" "$global:NotifyUrl"
                 }
             }
         }
@@ -213,14 +213,14 @@ function SendMessage {
     if ($global:NotifyUrl -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -notlike 'PSDocker-Alpine*') {
         $jsonPayload = @"
     {
-        "username": "Plex-Poster-Maker",
-        "avatar_url": "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/images/webhook.png",
+        "username": "Poster-Maker",
+        "avatar_url": "https://github.com/fscorrupt/Poster-Maker/raw/main/images/webhook.png",
         "content": "",
         "embeds": [
         {
             "author": {
             "name": "PPM @Github",
-            "url": "https://github.com/fscorrupt/Plex-Poster-Maker"
+            "url": "https://github.com/fscorrupt/Poster-Maker"
             },
             "description": "Recently Added\n\n",
             "timestamp": "$(((Get-Date).ToUniversalTime()).ToString("yyyy-MM-ddTHH:mm:ss.fffZ"))",
@@ -1920,7 +1920,7 @@ function CheckJson {
                         Write-Entry -Message "Missing Main Attribute in your Config file: $partKey." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                         Write-Entry -Subtext "I will copy all settings from 'PosterOverlayPart'..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                         Write-Entry -Subtext "Adding it for you... In GH Readme, look for $partKey - if you want to see what changed..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                        Write-Entry -Subtext "GH Readme -> https://github.com/fscorrupt/Plex-Poster-Maker/blob/main/README.md#configuration" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                        Write-Entry -Subtext "GH Readme -> https://github.com/fscorrupt/Poster-Maker/blob/main/README.md#configuration" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                         # Convert the updated configuration object back to JSON and save it, then reload it
                         $configJson = $config | ConvertTo-Json -Depth 10
                         $configJson | Set-Content -Path $jsonFilePath -Force
@@ -1929,7 +1929,7 @@ function CheckJson {
                     Else {
                         Write-Entry -Message "Missing Main Attribute in your Config file: $partKey." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                         Write-Entry -Subtext "Adding it for you... In GH Readme, look for $partKey - if you want to see what changed..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                        Write-Entry -Subtext "GH Readme -> https://github.com/fscorrupt/Plex-Poster-Maker/blob/main/README.md#configuration" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                        Write-Entry -Subtext "GH Readme -> https://github.com/fscorrupt/Poster-Maker/blob/main/README.md#configuration" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                         $config | Add-Member -MemberType NoteProperty -Name $partKey -Value $defaultConfig.$partKey
                         $AttributeChanged = $True
                     }
@@ -1949,7 +1949,7 @@ function CheckJson {
                         if (-not $config.$partKey.PSObject.Properties.Name.tolower().Contains($propertyKey.tolower())) {
                             Write-Entry -Message "Missing Sub-Attribute in your Config file: $partKey.$propertyKey" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                             Write-Entry -Subtext "Adding it for you... In GH Readme, look for $partKey.$propertyKey - if you want to see what changed..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                            Write-Entry -Subtext "GH Readme -> https://github.com/fscorrupt/Plex-Poster-Maker/blob/main/README.md#configuration" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                            Write-Entry -Subtext "GH Readme -> https://github.com/fscorrupt/Poster-Maker/blob/main/README.md#configuration" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             # Add the property using the expected casing
                             $config.$partKey | Add-Member -MemberType NoteProperty -Name $propertyKey -Value $defaultConfig.$partKey.$propertyKey -Force
                             $AttributeChanged = $True
@@ -2023,7 +2023,7 @@ function Get-Platform {
 }
 function Get-LatestScriptVersion {
     try {
-        return Invoke-RestMethod -Uri "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/Release.txt" -Method Get -ErrorAction Stop
+        return Invoke-RestMethod -Uri "https://github.com/fscorrupt/Poster-Maker/raw/main/Release.txt" -Method Get -ErrorAction Stop
     }
     catch {
         Write-Entry -Subtext "Could not query latest script version, Error: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
@@ -2064,7 +2064,7 @@ function CheckConfigFile {
 
     if (!(Test-Path (Join-Path $ScriptRoot 'config.json'))) {
         Write-Entry -Message "Config File missing, downloading it for you..." -Path "$ScriptRoot\Logs\Scriptlog.log" -Color White -log Info
-        Invoke-WebRequest -Uri "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/config.example.json" -OutFile "$ScriptRoot\config.json"
+        Invoke-WebRequest -Uri "https://github.com/fscorrupt/Poster-Maker/raw/main/config.example.json" -OutFile "$ScriptRoot\config.json"
         Write-Entry -Subtext "Config File downloaded here: '$ScriptRoot\config.json'" -Path "$ScriptRoot\Logs\Scriptlog.log" -Color White -log Info
         Write-Entry -Subtext "Please configure the config file according to GitHub, Exit script now..." -Path "$ScriptRoot\Logs\Scriptlog.log" -Color Yellow -log Warning
         Exit
@@ -2418,7 +2418,7 @@ Write-Entry -Message "Starting..." -Path $global:ScriptRoot\Logs\Scriptlog.log -
 # Check if Config file is present
 CheckConfigFile -ScriptRoot $global:ScriptRoot
 # Test Json if something is missing
-CheckJson -jsonExampleUrl "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/config.example.json" -jsonFilePath $(Join-Path $global:ScriptRoot 'config.json')
+CheckJson -jsonExampleUrl "https://github.com/fscorrupt/Poster-Maker/raw/main/config.example.json" -jsonFilePath $(Join-Path $global:ScriptRoot 'config.json')
 # Check if Script is Latest
 if ($CurrentScriptVersion -eq $LatestScriptVersion) {
     Write-Entry -Message "You are Running Version - v$CurrentScriptVersion" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
@@ -2730,9 +2730,9 @@ if ($Testing) {
 }
 
 # Test and download files if they don't exist
-Test-And-Download -url "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/overlay.png" -destination (Join-Path $TempPath 'overlay.png')
-Test-And-Download -url "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/backgroundoverlay.png" -destination (Join-Path $TempPath 'backgroundoverlay.png')
-Test-And-Download -url "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/Rocky.ttf" -destination (Join-Path $TempPath 'Rocky.ttf')
+Test-And-Download -url "https://github.com/fscorrupt/Poster-Maker/raw/main/overlay.png" -destination (Join-Path $TempPath 'overlay.png')
+Test-And-Download -url "https://github.com/fscorrupt/Poster-Maker/raw/main/backgroundoverlay.png" -destination (Join-Path $TempPath 'backgroundoverlay.png')
+Test-And-Download -url "https://github.com/fscorrupt/Poster-Maker/raw/main/Rocky.ttf" -destination (Join-Path $TempPath 'Rocky.ttf')
 
 # Write log message
 Write-Entry -Message "Old log files cleared..." -Path $configLogging -Color White -log Info
@@ -3776,14 +3776,14 @@ Elseif ($Testing) {
     if ($global:NotifyUrl -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -notlike 'PSDocker-Alpine*') {
         $jsonPayload = @"
         {
-            "username": "Plex-Poster-Maker",
-            "avatar_url": "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/images/webhook.png",
+            "username": "Poster-Maker",
+            "avatar_url": "https://github.com/fscorrupt/Poster-Maker/raw/main/images/webhook.png",
             "content": "",
             "embeds": [
             {
                 "author": {
                 "name": "PPM @Github",
-                "url": "https://github.com/fscorrupt/Plex-Poster-Maker"
+                "url": "https://github.com/fscorrupt/Poster-Maker"
                 },
                 "description": "PPM Test run took: $FormattedTimespawn",
                 "timestamp": "$(((Get-Date).ToUniversalTime()).ToString("yyyy-MM-ddTHH:mm:ss.fffZ"))",
@@ -3821,7 +3821,7 @@ Elseif ($Testing) {
                 }
                 ],
                 "thumbnail": {
-                    "url": "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/images/webhook.png"
+                    "url": "https://github.com/fscorrupt/Poster-Maker/raw/main/images/webhook.png"
                 },
                 "footer": {
                     "text": "$Platform  | current - v$CurrentScriptVersion  | latest - v$LatestScriptVersion"
@@ -3839,14 +3839,14 @@ Elseif ($Testing) {
         if ($global:NotifyUrl -like '*discord*') {
             $jsonPayload = @"
             {
-                "username": "Plex-Poster-Maker",
-                "avatar_url": "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/images/webhook.png",
+                "username": "Poster-Maker",
+                "avatar_url": "https://github.com/fscorrupt/Poster-Maker/raw/main/images/webhook.png",
                 "content": "",
                 "embeds": [
                 {
                     "author": {
                     "name": "PPM @Github",
-                    "url": "https://github.com/fscorrupt/Plex-Poster-Maker"
+                    "url": "https://github.com/fscorrupt/Poster-Maker"
                     },
                     "description": "PPM Test run took: $FormattedTimespawn",
                     "timestamp": "$(((Get-Date).ToUniversalTime()).ToString("yyyy-MM-ddTHH:mm:ss.fffZ"))",
@@ -3884,7 +3884,7 @@ Elseif ($Testing) {
                     }
                     ],
                     "thumbnail": {
-                        "url": "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/images/webhook.png"
+                        "url": "https://github.com/fscorrupt/Poster-Maker/raw/main/images/webhook.png"
                     },
                     "footer": {
                         "text": "$Platform  | current - v$CurrentScriptVersion  | latest - v$LatestScriptVersion"
@@ -3902,10 +3902,10 @@ Elseif ($Testing) {
         Else {
             if ($global:SendNotification -eq 'True') {
                 if ($TruncatedCount -ge '1') {
-                    apprise --notification-type="error" --title="Plex-Poster-Maker" --body="PPM test run took: $FormattedTimespawn`nDuring execution '$TruncatedCount' times the text got truncated, please check log for detailed description." "$global:NotifyUrl"
+                    apprise --notification-type="error" --title="Poster-Maker" --body="PPM test run took: $FormattedTimespawn`nDuring execution '$TruncatedCount' times the text got truncated, please check log for detailed description." "$global:NotifyUrl"
                 }
                 Else {
-                    apprise --notification-type="success" --title="Plex-Poster-Maker" --body="PPM test run took: $FormattedTimespawn" "$global:NotifyUrl"
+                    apprise --notification-type="success" --title="Poster-Maker" --body="PPM test run took: $FormattedTimespawn" "$global:NotifyUrl"
                 }
             }
         }
@@ -9559,14 +9559,14 @@ else {
         if ($global:NotifyUrl -like '*discord*') {
             $jsonPayload = @"
         {
-            "username": "Plex-Poster-Maker",
-            "avatar_url": "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/images/webhook.png",
+            "username": "Poster-Maker",
+            "avatar_url": "https://github.com/fscorrupt/Poster-Maker/raw/main/images/webhook.png",
             "content": "",
             "embeds": [
             {
                 "author": {
                 "name": "PPM @Github",
-                "url": "https://github.com/fscorrupt/Plex-Poster-Maker"
+                "url": "https://github.com/fscorrupt/Poster-Maker"
                 },
                 "description": "PPM run took: $FormattedTimespawn $(if ($errorCount -ge '1') {"\n During execution Errors occurred, please check log for detailed description."})",
                 "timestamp": "$(((Get-Date).ToUniversalTime()).ToString("yyyy-MM-ddTHH:mm:ss.fffZ"))",
@@ -9629,7 +9629,7 @@ else {
                 }
                 ],
                 "thumbnail": {
-                    "url": "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/images/webhook.png"
+                    "url": "https://github.com/fscorrupt/Poster-Maker/raw/main/images/webhook.png"
                 },
                 "footer": {
                     "text": "$Platform  | current - v$CurrentScriptVersion  | latest - v$LatestScriptVersion"
@@ -9646,10 +9646,10 @@ else {
         Else {
             if ($global:SendNotification -eq 'True') {
                 if ($errorCount -ge '1') {
-                    apprise --notification-type="error" --title="Plex-Poster-Maker" --body="PPM run took: $FormattedTimespawn`nIt Created '$posterCount' Images`n`nDuring execution '$errorCount' Errors occurred, please check log for detailed description." "$global:NotifyUrl"
+                    apprise --notification-type="error" --title="Poster-Maker" --body="PPM run took: $FormattedTimespawn`nIt Created '$posterCount' Images`n`nDuring execution '$errorCount' Errors occurred, please check log for detailed description." "$global:NotifyUrl"
                 }
                 Else {
-                    apprise --notification-type="success" --title="Plex-Poster-Maker" --body="PPM run took: $FormattedTimespawn`nIt Created '$posterCount' Images" "$global:NotifyUrl"
+                    apprise --notification-type="success" --title="Poster-Maker" --body="PPM run took: $FormattedTimespawn`nIt Created '$posterCount' Images" "$global:NotifyUrl"
                 }
             }
         }
@@ -9657,14 +9657,14 @@ else {
     if ($global:NotifyUrl -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -notlike 'PSDocker-Alpine*') {
         $jsonPayload = @"
         {
-            "username": "Plex-Poster-Maker",
-            "avatar_url": "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/images/webhook.png",
+            "username": "Poster-Maker",
+            "avatar_url": "https://github.com/fscorrupt/Poster-Maker/raw/main/images/webhook.png",
             "content": "",
             "embeds": [
             {
                 "author": {
                 "name": "PPM @Github",
-                "url": "https://github.com/fscorrupt/Plex-Poster-Maker"
+                "url": "https://github.com/fscorrupt/Poster-Maker"
                 },
                 "description": "PPM run took: $FormattedTimespawn $(if ($errorCount -ge '1') {"\n During execution Errors occurred, please check log for detailed description."})",
                 "timestamp": "$(((Get-Date).ToUniversalTime()).ToString("yyyy-MM-ddTHH:mm:ss.fffZ"))",
@@ -9727,7 +9727,7 @@ else {
                 }
                 ],
                 "thumbnail": {
-                    "url": "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/images/webhook.png"
+                    "url": "https://github.com/fscorrupt/Poster-Maker/raw/main/images/webhook.png"
                 },
                 "footer": {
                     "text": "$Platform  | current - v$CurrentScriptVersion  | latest - v$LatestScriptVersion"

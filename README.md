@@ -232,7 +232,7 @@ Poster Maker is cross-platform ready, meaning it can run on Linux, Docker (Alpin
 Run the script without any parameters:
 
 ```powershell
-.\PlexPosterMaker.ps1
+.\PosterMaker.ps1
 ```
 
 This will generate posters for your entire Plex library based on the configured settings.
@@ -314,7 +314,7 @@ Run the script with the `-Testing` flag. In this mode, the script will create pi
 >This is handy for testing your configuration before applying it en masse to the actual posters. You can see how and where the text would be applied, as well as the size of the textbox.
 
 ```powershell
-.\PlexPosterMaker.ps1 -Testing
+.\PosterMaker.ps1 -Testing
 ```
 
 ### Docker
@@ -333,11 +333,11 @@ Run the script with the `-Testing` flag. In this mode, the script will create pi
 
   **Automatic Mode:**
   ```sh
-  docker exec -it ppm pwsh PlexPosterMaker.ps1
+  docker exec -it ppm pwsh PosterMaker.ps1
   ```
   **Testing Mode:**
   ```sh
-  docker exec -it ppm pwsh PlexPosterMaker.ps1 -Testing
+  docker exec -it ppm pwsh PosterMaker.ps1 -Testing
   ```
 ### Images from Testing Mode
 
@@ -383,7 +383,7 @@ Run the script with the `-Testing` flag. In this mode, the script will create pi
 Run the script with the `-Manual` switch:
 
 ```powershell
-.\PlexPosterMaker.ps1 -Manual
+.\PosterMaker.ps1 -Manual
 ```
 Follow the prompts to enter the source picture path, media folder name, and movie/show title to manually create a custom poster.
 
