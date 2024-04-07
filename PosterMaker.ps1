@@ -8,7 +8,7 @@ param (
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.1.5"
+$CurrentScriptVersion = "1.1.6"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -8452,7 +8452,7 @@ else {
                                 $global:posterurl = GetFanartSeasonPoster
                                 $global:IsFallback = $true
                             }
-                            if ($global:posterurl -and $global:SeasonPreferTextless -eq 'True' -and !$global:TextlessPoster) {
+                            if ($global:posterurl -and $global:SeasonPreferTextless -eq 'True' -and !$global:TextlessPoster -and $entry.tvdbid) {
                                 $global:posterurl = GetFanartSeasonPoster
                                 $global:IsFallback = $true
                             }
