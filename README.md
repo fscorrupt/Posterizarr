@@ -101,6 +101,7 @@ Poster Maker is cross-platform ready, meaning it can run on Linux, Docker (Alpin
     - `AssetPath`: Path to store generated posters.
     - `show_skipped`: If set to `true`, verbose logging of already created assets will be displayed; otherwise, they will be silently skipped - On large libraries, this may appear as if the script is hanging.
     - `magickinstalllocation`: Path to ImageMagick installation location where `magick.exe` is located (Otherwise leave value as `"./magick"`)
+      - The container handles this part on his own, you can leave it as it is in config.
     - `maxLogs`: Number of Log folders you want to keep in `RotatedLogs` Folder (Log History).
     - `logLevel`: Sets the verbosity of logging. 1 logs Warning/Error messages. Default is 2 which logs Info/Warning/Error messages. 3 captures Info/Warning/Error/Debug messages and is the most verbose.
     - `font`: Font file name.
