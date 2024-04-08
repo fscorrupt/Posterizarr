@@ -9,8 +9,6 @@
 <h1 align="center">Posterizarr</h1>
 
   <p align="center">
-    <a href="https://github.com/fscorrupt/Posterizarr#readme-ov-file"><strong>Explore the docs »</strong></a>
-    <br />
     <a href="https://github.com/fscorrupt/Posterizarr/issues">Report Bug</a>
     ·
     <a href="https://github.com/fscorrupt/Posterizarr/issues">Request Feature</a>
