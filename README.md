@@ -426,7 +426,7 @@ Following these steps will allow you to import the `Module1.bas` file containing
 <br>
 <p>
   <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
-    <img alt="excel" height="100%" src="/images/Posterizarr-xlsm.gif">
+    <img alt="excel" height="100%" src="/images/posterizarr-xlsm.gif">
   </a>
 </p>
 
