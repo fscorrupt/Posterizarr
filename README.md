@@ -481,7 +481,7 @@ Following these steps will allow you to import the `Module1.bas` file containing
 <br>
 <p>
   <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
-    <img alt="output" height="100%" src="/images/Posterizarr-overview.png">
+    <img alt="output" height="100%" src="/images/posterizarr-overview.png">
   </a>
 </p>
 </details>
