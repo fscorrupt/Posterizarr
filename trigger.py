@@ -12,8 +12,8 @@ def create_file(args):
         # Get current timestamp for file name uniqueness
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
 
-        # Create a file with unique name in the /ppm directory
-        filename = f"/ppm/watcher/ppm_recently_added_{timestamp}.ppm"
+        # Create a file with unique name in the /posterizarr directory
+        filename = f"/posterizarr/watcher/recently_added_{timestamp}.posterizarr"
 
         # Create the file with provided content
         with open(filename, "w") as f:
@@ -30,8 +30,8 @@ def create_file(args):
         # Get current timestamp for file name uniqueness
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
 
-        # Create a file with unique name in the /ppm directory
-        filename = f"/ppm/watcher/ppm_recently_added_{timestamp}.ppm"
+        # Create a file with unique name in the /posterizarr directory
+        filename = f"/posterizarr/watcher/recently_added_{timestamp}.posterizarr"
 
         # Create the file with provided content
         with open(filename, "w") as f:
@@ -50,8 +50,8 @@ def create_file(args):
         # Get current timestamp for file name uniqueness
         timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
 
-        # Create a file with unique name in the /ppm directory
-        filename = f"/ppm/watcher/ppm_recently_added_{timestamp}.ppm"
+        # Create a file with unique name in the /posterizarr directory
+        filename = f"/posterizarr/watcher/recently_added_{timestamp}.posterizarr"
 
         # Create the file with provided content
         with open(filename, "w") as f:

@@ -30,11 +30,11 @@
         - [Git for Linux](https://git-scm.com/download/linux)
     - Clone the Repo:
         ```bash
-        git clone https://github.com/fscorrupt/Poster-Maker.git
+        git clone https://github.com/fscorrupt/Posterizarr.git
         ```
     - After that you can switch into the cloned Repo/Folder
         ```bash
-        cd Poster-Maker
+        cd Posterizarr
         ```
     - You should see something like this:
         ```
@@ -60,12 +60,12 @@
         │   ├── webhookexample.png
         │   └── webhook.png
         ├── overlay.png
-        ├── PosterMaker.ps1
+        ├── Posterizarr.ps1
         ├── README.md
         ├── Release.txt
         └── Rocky.ttf
 1. Copy the `config.example.json` to `config.json` and adjust the settings.
-    - Enter all the api keys and tokens from **Getting Started - Step 1** under the `ApiPart` [Detailed Config Description](https://github.com/fscorrupt/Poster-Maker?tab=readme-ov-file#configuration)
+    - Enter all the api keys and tokens from **Getting Started - Step 1** under the `ApiPart` [Detailed Config Description](https://github.com/fscorrupt/Posterizarr?tab=readme-ov-file#configuration)
         - tvdbapi
         - tmdbtoken
         - FanartTvAPIKey
@@ -77,15 +77,15 @@
 1. Please start the Script **(On first run, ensure its run as Administrator/Sudo, because it has to install a Powershell Module)**
     - Linux: 
         ```
-        cd /opt/appdata/Poster-Maker
-        sudo pwsh PosterMaker.ps1
+        cd /opt/appdata/Posterizarr
+        sudo pwsh Posterizarr.ps1
         ```
     - Windows: 
         
         Open the Start menu, type Windows PowerShell, select Windows PowerShell, and then select Run as administrator
         ```
-        cd C:\Github\Poster-Maker
-        .\PosterMaker.ps1
+        cd C:\Github\Posterizarr
+        .\Posterizarr.ps1
         ```
 1. After that it is recommended to run the script in `-Testing` Mode.
     
@@ -93,19 +93,19 @@
     
     *You can find examples and more information here:* 
     
-    *[Info about Testing mode](https://github.com/fscorrupt/Poster-Maker?tab=readme-ov-file#testing-mode)*
+    *[Info about Testing mode](https://github.com/fscorrupt/Posterizarr?tab=readme-ov-file#testing-mode)*
     
-    *[Example Images](https://github.com/fscorrupt/Poster-Maker?tab=readme-ov-file#images-from-testing-mode)*
+    *[Example Images](https://github.com/fscorrupt/Posterizarr?tab=readme-ov-file#images-from-testing-mode)*
     
     - Linux:
         ```
-        cd /opt/appdata/Poster-Maker
-        pwsh PosterMaker.ps1 -Testing
+        cd /opt/appdata/Posterizarr
+        pwsh Posterizarr.ps1 -Testing
         ```
     - Windows:
         ```
-        cd C:\Github\Poster-Maker
-        .\PosterMaker.ps1 -Testing
+        cd C:\Github\Posterizarr
+        .\Posterizarr.ps1 -Testing
         ```
 5. You can now fine tune all the `width, height, color` of `borders, text boxes and text` in config.json
     - After each change of a setting just rerun the script in `-Testing` mode so you can see how it looks.
@@ -113,13 +113,13 @@
     - You can also trigger the poster creation on-demand, like this:
         - Linux:
             ```
-            cd /opt/appdata/Poster-Maker
-            pwsh PosterMaker.ps1
+            cd /opt/appdata/Posterizarr
+            pwsh Posterizarr.ps1
             ```
         - Windows:
             ```
-            cd C:\Github\Poster-Maker
-            .\PosterMaker.ps1
+            cd C:\Github\Posterizarr
+            .\Posterizarr.ps1
             ```
     - Configure Scheduled runs:
     
@@ -131,21 +131,21 @@
             add a new line like this (every 2 hours):
 
             ```
-            0 */2 * * * docker exec ppm pwsh PosterMaker.ps1 >/dev/null 2>&1
+            0 */2 * * * docker exec posterizarr pwsh Posterizarr.ps1 >/dev/null 2>&1
             ```
     
         Windows:
         - You can create a schedule task -> [How-To](https://www.sharepointdiary.com/2013/03/create-scheduled-task-for-powershell-script.html)
 ## Docker
-1. Adjust the [docker-compose.yml](https://github.com/fscorrupt/Poster-Maker/raw/main/docker-compose.yml) to fit your environment.
-    - Required environment variables and descriptions can be found [here](https://github.com/fscorrupt/Poster-Maker?tab=readme-ov-file#docker)
+1. Adjust the [docker-compose.yml](https://github.com/fscorrupt/Posterizarr/raw/main/docker-compose.yml) to fit your environment.
+    - Required environment variables and descriptions can be found [here](https://github.com/fscorrupt/Posterizarr?tab=readme-ov-file#docker)
         ```yml
         ---
         version: "3"
         services:
-        ppm:
-            hostname: "ppm"
-            container_name: "ppm"
+        posterizarr:
+            hostname: "posterizarr"
+            container_name: "posterizarr"
             environment:
             - "PGID=1000"
             - "PUID=1000"
@@ -153,12 +153,12 @@
             - "UMASK=022"
             - "TERM=xterm"
             - "RUN_TIME=10:30,19:30"
-            image: "ghcr.io/fscorrupt/docker-ppm:latest"
+            image: "ghcr.io/fscorrupt/docker-posterizarr:latest"
             restart: "unless-stopped"
             networks:
             - "proxy"
             volumes:
-            - "/opt/appdata/ppm:/config:rw"
+            - "/opt/appdata/posterizarr:/config:rw"
         networks:
         proxy:
             driver: bridge
@@ -168,21 +168,21 @@
     - Linux:
         ```
         cd /opt/appdata
-        mkdir Poster-Maker
-        cd Poster-Maker
+        mkdir Posterizarr
+        cd Posterizarr
         docker compose -up -d
         ```
     - Windows:
         ```
         cd C:\Github
-        mkdir Poster-Maker
-        cd Poster-Maker
+        mkdir Posterizarr
+        cd Posterizarr
         docker compose -up -d
         ```
     - Now it should download everything and start up your container.
 3. On first run the container will download the required files and also create the folder structure for you.
 4. Copy the `config.example.json` to `config.json` and adjust the settings.
-    - Enter all the api keys and tokens from **Getting Started - Step 1** under the `ApiPart` [Detailed Config Description](https://github.com/fscorrupt/Poster-Maker?tab=readme-ov-file#configuration)
+    - Enter all the api keys and tokens from **Getting Started - Step 1** under the `ApiPart` [Detailed Config Description](https://github.com/fscorrupt/Posterizarr?tab=readme-ov-file#configuration)
         - tvdbapi
         - tmdbtoken
         - FanartTvAPIKey
@@ -199,22 +199,22 @@
 >
 >*You can find examples and more information here:*
 >    
->*[Info about Testing mode](https://github.com/fscorrupt/Poster-Maker?tab=readme-ov-file#testing-mode)*
+>*[Info about Testing mode](https://github.com/fscorrupt/Posterizarr?tab=readme-ov-file#testing-mode)*
 >    
->*[Example Images](https://github.com/fscorrupt/Poster-Maker?tab=readme-ov-file#images-from-testing-mode)*
+>*[Example Images](https://github.com/fscorrupt/Posterizarr?tab=readme-ov-file#images-from-testing-mode)*
     
     - Docker 
     
-        In this example `ppm` is the container name
+        In this example `posterizarr` is the container name
         ```sh
-        docker exec -it ppm pwsh PosterMaker.ps1 -Testing
+        docker exec -it posterizarr pwsh Posterizarr.ps1 -Testing
         ```
 5. You can now fine tune all the `width, height, color` of `borders, text boxes and text` in config.json
     - After each change of a setting just rerun the script in `-Testing` mode so you can see how it looks.
 6. The final step is to set a schedule and let the script run.
     - You can also trigger the poster creation on-demand, like this:
         ```sh
-        docker exec -it ppm pwsh PosterMaker.ps1
+        docker exec -it posterizarr pwsh Posterizarr.ps1
         ```
 > [!TIP]
 > If you are an unRAID user, install the `Docker Compose Manager` plugin from the Community Apps store so that you can leverage the compose file
