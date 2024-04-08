@@ -8,7 +8,7 @@ param (
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.1.6"
+$CurrentScriptVersion = "1.1.7"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -8448,22 +8448,31 @@ else {
                         # do a specific order
                         if ($entry.tmdbid) {
                             $global:posterurl = GetTMDBSeasonPoster
+                            Write-Entry -Message "Function GetTMDBSeasonPoster called..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                             if (!$global:posterurl) {
                                 $global:posterurl = GetFanartSeasonPoster
+                                Write-Entry -Message "Function GetFanartSeasonPoster called..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                                 $global:IsFallback = $true
+                                Write-Entry -Message "IsFallback: $global:IsFallback" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                             }
-                            if ($global:posterurl -and $global:SeasonPreferTextless -eq 'True' -and !$global:TextlessPoster -and $entry.tvdbid) {
+                            if ($global:posterurl -and $global:SeasonPreferTextless -eq 'True' -and !$global:TextlessPoster) {
                                 $global:posterurl = GetFanartSeasonPoster
+                                Write-Entry -Message "Function GetFanartSeasonPoster called..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                                 $global:IsFallback = $true
+                                Write-Entry -Message "IsFallback: $global:IsFallback" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                             }
                             if ((!$global:posterurl -or !$global:TextlessPoster) -and $entry.tvdbid) {
                                 $global:IsFallback = $true
                                 $global:posterurl = GetTVDBSeasonPoster
+                                Write-Entry -Message "Function GetTVDBSeasonPoster called..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                Write-Entry -Message "IsFallback: $global:IsFallback" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                             }
                             if (!$global:posterurl) {
                                 $global:IsFallback = $true
-                                if ($entry.PlexSeasonUrl -and !$global:OnlyTextless) {
+                                Write-Entry -Message "IsFallback: $global:IsFallback" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                if ($entry.PlexSeasonUrl -and !$global:SeasonOnlyTextless) {
                                     GetPlexArtwork -Type ' a Season Poster' -ArtUrl $Arturl -TempImage $SeasonImage
+                                    Write-Entry -Message "Function GetPlexArtwork called..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                                 }
                                 Else {
                                     Write-Entry -Subtext "Plex Season Poster Url empty, cannot search on plex, likely there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
@@ -8476,15 +8485,20 @@ else {
                         Else {
                             Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                             $global:posterurl = GetFanartSeasonPoster
+                            Write-Entry -Message "Function GetFanartSeasonPoster called..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                             if (!$global:posterurl) {
                                 $global:IsFallback = $true
+                                Write-Entry -Message "IsFallback: $global:IsFallback" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                                 if ($entry.tvdbid) {
                                     $global:posterurl = GetTVDBSeasonPoster
+                                    Write-Entry -Message "Function GetTVDBSeasonPoster called..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                                 }
                                 if (!$global:posterurl) {
                                     $global:IsFallback = $true
-                                    if ($entry.PlexSeasonUrl -and !$global:OnlyTextless) {
+                                    Write-Entry -Message "IsFallback: $global:IsFallback" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                    if ($entry.PlexSeasonUrl -and !$global:SeasonOnlyTextless) {
                                         GetPlexArtwork -Type ' a Season Poster' -ArtUrl $Arturl -TempImage $SeasonImage
+                                        Write-Entry -Message "Function GetPlexArtwork called..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                                     }
                                     Else {
                                         Write-Entry -Subtext "Plex Season Poster Url empty, cannot search on plex, likely there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
