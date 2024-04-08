@@ -448,26 +448,6 @@ Following these steps will allow you to import the `Module1.bas` file containing
 ### Example Pictures:
 
 <details close>
-<summary>🖼️Script folder:</summary>
-<br>
-<p>
-  <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
-    <img alt="folder" height="100%" src="/images/folder.png">
-  </a>
-</p>
-
-</details>
-
-<details close>
-<summary>🖼️script output:</summary>
-<br>
-<p>
-  <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
-    <img alt="output" height="100%" src="/images/output.png">
-  </a>
-</p>
-</details>
-<details close>
 <summary>🖼️ImageChoices.csv:</summary>
 <br>
 <p>
