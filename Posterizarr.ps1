@@ -990,7 +990,7 @@ function GetFanartMoviePoster {
                         Write-Entry -Subtext "Found Textless Poster on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                         $global:TextlessPoster = $true
                         $global:FANARTAssetChangeUrl = "https://fanart.tv/movie/$id"
-                        continue
+                        break
                     }
                 }
             }
@@ -1117,7 +1117,7 @@ function GetFanartShowPoster {
                     Write-Entry -Subtext "Found Textless Poster on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                     $global:TextlessPoster = $true
                     $global:FANARTAssetChangeUrl = "https://fanart.tv/series/$id"
-                    continue
+                    break
                 }
             }
         }
