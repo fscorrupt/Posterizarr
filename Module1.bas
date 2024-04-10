@@ -2,36 +2,36 @@ Attribute VB_Name = "Module1"
 Option Explicit
 Sub PromptUser()
     Dim folderPath As String
-    Dim FilenamePPM As String
+    Dim FilenamePosterizarr As String
     Dim currentVersion As String
     
     ' Specify the current version number
-    currentVersion = "1.0.2"
+    currentVersion = "1.0.3"
     
     ' Check for updates
     CheckForUpdate currentVersion
     
     ' Get the current filename
-    FilenamePPM = ThisWorkbook.FullName
+    FilenamePosterizarr = ThisWorkbook.FullName
     
-    ' Check if the current filename is not "PPM.xlsm"
-    If InStrRev(FilenamePPM, "\PPM.xlsm") = 0 Then
-        ' Rename the workbook to "PPM.xlsm"
-        MsgBox "Renaming file to PPM.xlsm", vbInformation
-        FilenamePPM = Replace(FilenamePPM, ThisWorkbook.Name, "PPM.xlsm")
+    ' Check if the current filename is not "Posterizarr.xlsm"
+    If InStrRev(FilenamePosterizarr, "\Posterizarr.xlsm") = 0 Then
+        ' Rename the workbook to "Posterizarr.xlsm"
+        MsgBox "Renaming file to Posterizarr.xlsm", vbInformation
+        FilenamePosterizarr = Replace(FilenamePosterizarr, ThisWorkbook.Name, "Posterizarr.xlsm")
         Application.DisplayAlerts = False ' Disable alerts temporarily
-        ThisWorkbook.SaveAs Filename:=FilenamePPM, FileFormat:=xlOpenXMLWorkbookMacroEnabled, CreateBackup:=False
+        ThisWorkbook.SaveAs Filename:=FilenamePosterizarr, FileFormat:=xlOpenXMLWorkbookMacroEnabled, CreateBackup:=False
         Application.DisplayAlerts = True ' Re-enable alerts
     End If
 
-    ' Remove all sheets and only keep PPM sheet
-    KeepOnlyPPMSheet
+    ' Remove all sheets and only keep Posterizarr sheet
+    KeepOnlyPosterizarrSheet
     
-    ' Create the Fancy Button on PPM sheet
-    AddOrUpdateFancyButtonToPPM
+    ' Create the Fancy Button on Posterizarr sheet
+    AddOrUpdateFancyButtonToPosterizarr
     
     ' Prompt the user to select a folder
-    folderPath = GetFolderPath("Select the folder containing the PPM csv files")
+    folderPath = GetFolderPath("Select the folder containing the Posterizarr csv files")
     
     ' Check if a folder is selected
     If folderPath <> "" Then
@@ -44,7 +44,7 @@ Sub PromptUser()
     ' Remove personal info and save the workbook without prompting
     RemoveDocumentPersonalInfo
     Application.DisplayAlerts = False ' Disable alerts
-    ThisWorkbook.SaveAs Filename:=FilenamePPM, FileFormat:=xlOpenXMLWorkbookMacroEnabled, CreateBackup:=False
+    ThisWorkbook.SaveAs Filename:=FilenamePosterizarr, FileFormat:=xlOpenXMLWorkbookMacroEnabled, CreateBackup:=False
     Application.DisplayAlerts = True ' Re-enable alerts
     MsgBox "Workbook saved successfully.", vbInformation
 End Sub
@@ -205,8 +205,8 @@ Sub ImportCSVs(folderPath)
     ' Refresh_All
     Refresh_All_Data_Connections
     
-    ' Select "PPM"
-    ThisWorkbook.Sheets("PPM").Activate
+    ' Select "Posterizarr"
+    ThisWorkbook.Sheets("Posterizarr").Activate
 End Sub
 
 Sub Refresh_All_Data_Connections()
@@ -314,19 +314,19 @@ End Function
 Function ValidateFilenames(Filename1 As String, Filename2 As String, Filename3 As String) As Boolean
     ' Check if the files exist
     If Len(Dir(Filename1)) = 0 Then
-        MsgBox "File '" & Filename1 & "' does not exist. Did you specify the PPM Logs folder? Try again...", vbExclamation, "File Not Found"
+        MsgBox "File '" & Filename1 & "' does not exist. Did you specify the Posterizarr Logs folder? Try again...", vbExclamation, "File Not Found"
         ValidateFilenames = False
         Exit Function
     End If
     
     If Len(Dir(Filename2)) = 0 Then
-        MsgBox "File '" & Filename2 & "' does not exist. Did you specify the PPM Logs folder? Try again...", vbExclamation, "File Not Found"
+        MsgBox "File '" & Filename2 & "' does not exist. Did you specify the Posterizarr Logs folder? Try again...", vbExclamation, "File Not Found"
         ValidateFilenames = False
         Exit Function
     End If
     
     If Len(Dir(Filename3)) = 0 Then
-        MsgBox "File '" & Filename3 & "' does not exist. Did you specify the PPM Logs folder? Try again...", vbExclamation, "File Not Found"
+        MsgBox "File '" & Filename3 & "' does not exist. Did you specify the Posterizarr Logs folder? Try again...", vbExclamation, "File Not Found"
         ValidateFilenames = False
         Exit Function
     End If
@@ -335,20 +335,20 @@ Function ValidateFilenames(Filename1 As String, Filename2 As String, Filename3 A
     ValidateFilenames = True
 End Function
 
-Sub AddOrUpdateFancyButtonToPPM()
+Sub AddOrUpdateFancyButtonToPosterizarr()
     Dim shp As Shape
     Dim rng As Range
     Dim btnText As String
     Dim btnExists As Boolean
     
     ' Define the range where you want to place the button
-    Set rng = ThisWorkbook.Sheets("PPM").Range("C10")
+    Set rng = ThisWorkbook.Sheets("Posterizarr").Range("C10")
     
     ' Set button text
     btnText = "Import CSVs"
     
     ' Check if the button already exists
-    For Each shp In ThisWorkbook.Sheets("PPM").Shapes
+    For Each shp In ThisWorkbook.Sheets("Posterizarr").Shapes
         If shp.Name = "FancyButton" Then
             ' Button already exists, delete it
             shp.Delete
@@ -357,7 +357,7 @@ Sub AddOrUpdateFancyButtonToPPM()
     Next shp
     
     ' Add a rounded rectangle shape to the worksheet
-    Set shp = ThisWorkbook.Sheets("PPM").Shapes.AddShape(msoShapeRoundedRectangle, rng.Left, rng.Top, 215.25, 66.75)
+    Set shp = ThisWorkbook.Sheets("Posterizarr").Shapes.AddShape(msoShapeRoundedRectangle, rng.Left, rng.Top, 215.25, 66.75)
     
     ' Configure the shape
     With shp
@@ -402,25 +402,25 @@ Sub AddOrUpdateFancyButtonToPPM()
     End With
 End Sub
 
-Sub KeepOnlyPPMSheet()
+Sub KeepOnlyPosterizarrSheet()
     Dim ws As Worksheet
     Dim tempSheet As Worksheet
     
-    ' Create a new sheet named "ppm_temp_sheet1"
+    ' Create a new sheet named "posterizarr_temp_sheet1"
     Set tempSheet = ThisWorkbook.Sheets.Add
-    tempSheet.Name = "ppm_temp_sheet1"
+    tempSheet.Name = "posterizarr_temp_sheet1"
     
     Application.DisplayAlerts = False ' Disable alerts
     
-    ' Delete all sheets except the "ppm_temp_sheet1"
+    ' Delete all sheets except the "posterizarr_temp_sheet1"
     For Each ws In ThisWorkbook.Worksheets
         If ws.Name <> tempSheet.Name Then
             ws.Delete
         End If
     Next ws
     
-    ' Rename the "ppm_temp_sheet1" to "PPM"
-    tempSheet.Name = "PPM"
+    ' Rename the "posterizarr_temp_sheet1" to "Posterizarr"
+    tempSheet.Name = "Posterizarr"
     
     Application.DisplayAlerts = True ' Re-enable alerts
 End Sub
