@@ -8,7 +8,7 @@ param (
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.2.1"
+$CurrentScriptVersion = "1.2.2"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -983,6 +983,7 @@ function GetFanartMoviePoster {
                             Write-Entry -Subtext "Found Poster with text on FANART, skipping because you only want textless..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
                             $global:FANARTAssetChangeUrl = "https://fanart.tv/movie/$id"
                         }
+                        return $global:posterurl
                         continue
                     }
                     Else {
@@ -990,6 +991,7 @@ function GetFanartMoviePoster {
                         Write-Entry -Subtext "Found Textless Poster on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                         $global:TextlessPoster = $true
                         $global:FANARTAssetChangeUrl = "https://fanart.tv/movie/$id"
+                        return $global:posterurl
                         break
                     }
                 }
@@ -1025,6 +1027,7 @@ function GetFanartMoviePoster {
                                 $global:PosterWithText = $true
                                 $global:FANARTAssetTextLang = $lang
                             }
+                            return $global:posterurl
                             continue
                         }
                     }
@@ -1062,6 +1065,7 @@ function GetFanartMovieBackground {
                         $global:Fallback = "TMDB"
                         $global:fanartfallbackposterurl = ($entrytemp.moviebackground)[0].url
                     }
+                    return $global:posterurl
                     continue
                 }
                 Else {
@@ -1069,6 +1073,7 @@ function GetFanartMovieBackground {
                     Write-Entry -Subtext "Found Textless background on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                     $global:TextlessPoster = $true
                     $global:FANARTAssetChangeUrl = "https://fanart.tv/movie/$id"
+                    return $global:posterurl
                     continue
                 }
             }
@@ -1110,6 +1115,7 @@ function GetFanartShowPoster {
                         Write-Entry -Subtext "Found Poster with text on FANART, skipping because you only want textless..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
                         $global:FANARTAssetChangeUrl = "https://fanart.tv/series/$id"
                     }
+                    return $global:posterurl
                     continue
                 }
                 Else {
@@ -1117,6 +1123,7 @@ function GetFanartShowPoster {
                     Write-Entry -Subtext "Found Textless Poster on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                     $global:TextlessPoster = $true
                     $global:FANARTAssetChangeUrl = "https://fanart.tv/series/$id"
+                    return $global:posterurl
                     break
                 }
             }
@@ -1152,6 +1159,7 @@ function GetFanartShowPoster {
                             $global:PosterWithText = $true
                             $global:FANARTAssetTextLang = $lang
                         }
+                        return $global:posterurl
                         continue
                     }
                 }
@@ -1189,6 +1197,7 @@ function GetFanartShowBackground {
                     $global:Fallback = "TMDB"
                     $global:fanartfallbackposterurl = ($entrytemp.showbackground)[0].url
                 }
+                return $global:posterurl
                 continue
             }
             Else {
@@ -1196,6 +1205,7 @@ function GetFanartShowBackground {
                 Write-Entry -Subtext "Found Textless background on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                 $global:TextlessPoster = $true
                 $global:FANARTAssetChangeUrl = "https://fanart.tv/series/$id"
+                return $global:posterurl
                 continue
             }
         }
@@ -1246,7 +1256,7 @@ function GetFanartSeasonPoster {
                                     Write-Entry -Subtext "PosterWithText: $global:PosterWithText" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                                     Write-Entry -Subtext "FANARTAssetTextLang: $global:FANARTAssetTextLang" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                                     Write-Entry -Subtext "FANARTAssetChangeUrl: $global:FANARTAssetChangeUrl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                                    continue
+                                    return $global:posterurl
                                 }
                             }
                         }
@@ -1284,16 +1294,14 @@ function GetFanartSeasonPoster {
                                     $global:FANARTAssetChangeUrl = "https://fanart.tv/series/$id"
                                     $global:posterurl = $null
                                 }
-                                continue
+                                return $global:posterurl
                             }
                         }
                     }
                 }
-                continue
             }
             Else {
                 $global:posterurl = $null
-                continue
             }
         }
         if ($global:posterurl) {
@@ -1324,14 +1332,14 @@ function GetFanartSeasonPoster {
                             $global:PosterWithText = $true
                             $global:FANARTAssetTextLang = $lang
                             $global:FANARTAssetChangeUrl = "https://fanart.tv/series/$id"
-                            continue
+                            return $global:posterurl
                         }
                     }
                 }
             }
             Else {
                 $global:posterurl = $null
-                continue
+                return $global:posterurl
             }
         }
         if ($global:posterurl) {
@@ -1385,8 +1393,8 @@ function GetTVDBMoviePoster {
                                         $global:PosterWithText = $true
                                         $global:TVDBAssetTextLang = $lang
                                     }
-                                    return $global:posterurl
                                     $global:TVDBAssetChangeUrl = "https://thetvdb.com/movies/$($response.data.slug)#artwork"
+                                    return $global:posterurl
                                     continue
                                 }
                             }
@@ -1438,8 +1446,8 @@ function GetTVDBMoviePoster {
                                 $global:PosterWithText = $true
                                 $global:TVDBAssetTextLang = $lang
                             }
-                            return $global:posterurl
                             $global:TVDBAssetChangeUrl = "https://thetvdb.com/movies/$($response.data.slug)#artwork"
+                            return $global:posterurl
                             continue
                         }
                     }
@@ -1516,8 +1524,8 @@ function GetTVDBMovieBackground {
                                 $global:PosterWithText = $true
                                 $global:TVDBAssetTextLang = $lang
                             }
-                            return $global:posterurl
                             $global:TVDBAssetChangeUrl = "https://thetvdb.com/movies/$($response.data.slug)#artwork"
+                            return $global:posterurl
                             continue
                         }
                     }
@@ -1613,8 +1621,8 @@ function GetTVDBShowPoster {
                                 $global:PosterWithText = $true
                                 $global:TVDBAssetTextLang = $lang
                             }
-                            return $global:posterurl
                             $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)#artwork"
+                            return $global:posterurl                            
                             continue
                         }
                     }
