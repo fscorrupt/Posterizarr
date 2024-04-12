@@ -8,7 +8,7 @@ param (
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.2.2"
+$CurrentScriptVersion = "1.2.3"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -4805,7 +4805,7 @@ Elseif ($Tautulli) {
                             if ($global:OnlyTextless) {
                                 $moviebackgroundtemp = New-Object psobject
                                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
-                                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie'
+                                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie Background'
                                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
                                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Language" -Value "N/A"
@@ -4846,7 +4846,7 @@ Elseif ($Tautulli) {
             if ($global:OnlyTextless) {
                 $moviebackgroundtemp = New-Object psobject
                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
-                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie'
+                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie Background'
                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Language" -Value "N/A"
@@ -5176,7 +5176,7 @@ Elseif ($Tautulli) {
                         if ($global:OnlyTextless) {
                             $showtemp = New-Object psobject
                             $showtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
-                            $showtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie'
+                            $showtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Show'
                             $showtemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                             $showtemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
                             $showtemp | Add-Member -MemberType NoteProperty -Name "Language" -Value "N/A"
@@ -5471,7 +5471,7 @@ Elseif ($Tautulli) {
                         if ($global:OnlyTextless) {
                             $showbackgroundtemp = New-Object psobject
                             $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
-                            $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie'
+                            $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Show Background'
                             $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                             $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
                             $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Language" -Value "N/A"
@@ -5858,7 +5858,7 @@ Elseif ($Tautulli) {
                             if ($global:OnlyTextless) {
                                 $seasontemp = New-Object psobject
                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
-                                $seasontemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie'
+                                $seasontemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Season'
                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "Language" -Value "N/A"
@@ -6281,7 +6281,7 @@ Elseif ($Tautulli) {
                                         if ($global:OnlyTextless) {
                                             $episodetemp = New-Object psobject
                                             $episodetemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
-                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie'
+                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Episode'
                                             $episodetemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                             $episodetemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
                                             $episodetemp | Add-Member -MemberType NoteProperty -Name "Language" -Value "N/A"
@@ -6703,7 +6703,7 @@ Elseif ($Tautulli) {
                                         if ($global:OnlyTextless) {
                                             $episodetemp = New-Object psobject
                                             $episodetemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
-                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie'
+                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Episode'
                                             $episodetemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                             $episodetemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
                                             $episodetemp | Add-Member -MemberType NoteProperty -Name "Language" -Value "N/A"
@@ -7710,7 +7710,7 @@ else {
                             if ($global:OnlyTextless) {
                                 $moviebackgroundtemp = New-Object psobject
                                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
-                                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie'
+                                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie Background'
                                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
                                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Language" -Value "N/A"
@@ -7751,7 +7751,7 @@ else {
             if ($global:OnlyTextless) {
                 $moviebackgroundtemp = New-Object psobject
                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
-                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie'
+                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie Background'
                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Language" -Value "N/A"
@@ -8065,7 +8065,7 @@ else {
                         if ($global:OnlyTextless) {
                             $showtemp = New-Object psobject
                             $showtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
-                            $showtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie'
+                            $showtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Show'
                             $showtemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                             $showtemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
                             $showtemp | Add-Member -MemberType NoteProperty -Name "Language" -Value "N/A"
@@ -8344,7 +8344,7 @@ else {
                         if ($global:OnlyTextless) {
                             $showbackgroundtemp = New-Object psobject
                             $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
-                            $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie'
+                            $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Show Background'
                             $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                             $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
                             $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Language" -Value "N/A"
@@ -8713,7 +8713,7 @@ else {
                             if ($global:OnlyTextless) {
                                 $seasontemp = New-Object psobject
                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
-                                $seasontemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie'
+                                $seasontemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Season'
                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "Language" -Value "N/A"
@@ -9118,7 +9118,7 @@ else {
                                         if ($global:OnlyTextless) {
                                             $episodetemp = New-Object psobject
                                             $episodetemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
-                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie'
+                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Episode'
                                             $episodetemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                             $episodetemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
                                             $episodetemp | Add-Member -MemberType NoteProperty -Name "Language" -Value "N/A"
@@ -9523,7 +9523,7 @@ else {
                                         if ($global:OnlyTextless) {
                                             $episodetemp = New-Object psobject
                                             $episodetemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
-                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie'
+                                            $episodetemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Episode'
                                             $episodetemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                             $episodetemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
                                             $episodetemp | Add-Member -MemberType NoteProperty -Name "Language" -Value "N/A"
