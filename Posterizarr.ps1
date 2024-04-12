@@ -8,7 +8,7 @@ param (
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.2.4"
+$CurrentScriptVersion = "1.2.5"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -2551,7 +2551,7 @@ if (!$global:PreferredLanguageOrder) {
 $global:PreferredLanguageOrderTMDB = $global:PreferredLanguageOrder.Replace('xx', 'null')
 $global:PreferredLanguageOrderFanart = $global:PreferredLanguageOrder.Replace('xx', '00')
 $global:PreferredLanguageOrderTVDB = $global:PreferredLanguageOrder.Replace('xx', 'null')
-if ($global:PreferredLanguageOrder.count -eq '1' -and $global:PreferredLanguageOrder -eq 'xx'){
+if ($global:PreferredLanguageOrder.count -eq '1' -and $global:PreferredLanguageOrder -eq 'xx') {
     $global:PreferTextless = $true
     $global:OnlyTextless = $true
 }
@@ -2570,7 +2570,7 @@ if (!$global:PreferredSeasonLanguageOrder) {
 $global:PreferredSeasonLanguageOrderTMDB = $global:PreferredSeasonLanguageOrder.Replace('xx', 'null')
 $global:PreferredSeasonLanguageOrderFanart = $global:PreferredSeasonLanguageOrder.Replace('xx', '00')
 $global:PreferredSeasonLanguageOrderTVDB = $global:PreferredSeasonLanguageOrder.Replace('xx', 'null')
-if ($global:PreferredSeasonLanguageOrder.count -eq '1' -and $global:PreferredSeasonLanguageOrder -eq 'xx'){
+if ($global:PreferredSeasonLanguageOrder.count -eq '1' -and $global:PreferredSeasonLanguageOrder -eq 'xx') {
     $global:SeasonPreferTextless = $true
     $global:SeasonOnlyTextless = $true
 }
@@ -4627,13 +4627,13 @@ Elseif ($Tautulli) {
                                 $global:IsFallback = $true
                             }
                         }
-                        if (!$global:posterurl) {
-                            if ($global:OnlyTextless) {
-                                $global:posterurl = GetFanartMovieBackground
-                                if (!$global:FavProvider -eq 'FANART') {
-                                    $global:IsFallback = $true
-                                }
+                        if ($global:OnlyTextless -and !$global:posterurl) {
+                            $global:posterurl = GetFanartMovieBackground
+                            if (!$global:FavProvider -eq 'FANART') {
+                                $global:IsFallback = $true
                             }
+                        }
+                        if (!$global:posterurl) {
                             $global:posterurl = GetTVDBMovieBackground
                             $global:IsFallback = $true
                             if (!$global:posterurl) {
@@ -4892,6 +4892,7 @@ Elseif ($Tautulli) {
             $global:FANARTAssetChangeUrl = $null
             $global:TVDBAssetChangeUrl = $null
             $global:IsFallback = $null
+            $global:FallbackText = $null
             $global:Fallback = $null
             $global:TextlessPoster = $null
             $global:tvdbalreadysearched = $null
@@ -5252,6 +5253,7 @@ Elseif ($Tautulli) {
                     $global:AssetTextLang = $null
                     $global:Fallback = $null
                     $global:IsFallback = $null
+                    $global:FallbackText = $null
                     $global:TMDBAssetTextLang = $null
                     $global:FANARTAssetTextLang = $null
                     $global:TVDBAssetTextLang = $null
@@ -5294,10 +5296,10 @@ Elseif ($Tautulli) {
                     }
                     if ($global:TextlessPoster -eq 'true' -and $global:posterurl) {
                     }
+                    if ($global:OnlyTextless -and !$global:posterurl) {
+                        $global:posterurl = GetFanartShowBackground
+                    }
                     if (!$global:posterurl) {
-                        if ($global:OnlyTextless) {
-                            $global:posterurl = GetFanartShowBackground
-                        }
                         $global:posterurl = GetTVDBShowBackground
                         $global:IsFallback = $true
 
@@ -5500,6 +5502,7 @@ Elseif ($Tautulli) {
             # Now we can start the Season Part
             if ($global:SeasonPosters -eq 'true') {
                 $global:IsFallback = $null
+                $global:FallbackText = $null
                 $global:AssetTextLang = $null
                 $global:Fallback = $null
                 $global:TMDBAssetTextLang = $null
@@ -5518,6 +5521,7 @@ Elseif ($Tautulli) {
                 for ($i = 0; $i -lt $global:seasonNames.Count; $i++) {
                     $global:posterurl = $null
                     $global:IsFallback = $null
+                    $global:FallbackText = $null
                     $global:AssetTextLang = $null
                     $global:Fallback = $null
                     $global:TMDBAssetTextLang = $null
@@ -5912,6 +5916,7 @@ Elseif ($Tautulli) {
                     $EpisodeImage = $null
                     $global:Fallback = $null
                     $global:IsFallback = $null
+                    $global:FallbackText = $null
                     $global:TextlessPoster = $null
 
                     if (($episode.tmdbid -eq $entry.tmdbid -or $episode.tvdbid -eq $entry.tvdbid) -and $episode.'Show Name' -eq $entry.title -and $episode.'Library Name' -eq $entry.'Library Name') {
@@ -6260,7 +6265,7 @@ Elseif ($Tautulli) {
                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "Language" -Value $(if (!$global:AssetTextLang) { "Textless" }Else { $global:AssetTextLang })
-                                                $episodetemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback) { 'True' } else { 'False' })
+                                                $episodetemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback -and $global:FallbackText) { $global:FallbackText } elseif ($global:IsFallback -and !$global:FallbackText) { 'True' } Else { 'False' })
                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                                 switch -Wildcard ($global:FavProvider) {
@@ -6325,6 +6330,7 @@ Elseif ($Tautulli) {
                                 $global:PosterWithText = $null
                                 $global:Fallback = $null
                                 $global:IsFallback = $null
+                                $global:FallbackText = $null
                                 $global:ImageMagickError = $null
                                 $global:TextlessPoster = $null
                                 $global:posterurl = $null
@@ -6405,6 +6411,7 @@ Elseif ($Tautulli) {
                                                 if ($global:posterurl) {
                                                     Write-Entry -Subtext "Using the Show Background Poster as TitleCard Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                                     $global:IsFallback = $true
+                                                    $global:FallbackText = 'True-Background'
                                                 }
                                                 Else {
                                                     # Lets just try to grab a background poster.
@@ -6412,6 +6419,7 @@ Elseif ($Tautulli) {
                                                     if ($global:posterurl) {
                                                         Write-Entry -Subtext "Using the Show Background Poster as TitleCard Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                                         $global:IsFallback = $true
+                                                        $global:FallbackText = 'True-Background'
                                                     }
                                                 }
                                             }
@@ -6439,6 +6447,7 @@ Elseif ($Tautulli) {
                                                 if ($global:posterurl) {
                                                     Write-Entry -Subtext "Using the Show Background Poster as TitleCard Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                                     $global:IsFallback = $true
+                                                    $global:FallbackText = 'True-Background'
                                                 }
                                             }
                                         }
@@ -6468,6 +6477,7 @@ Elseif ($Tautulli) {
                                                 if ($global:posterurl) {
                                                     Write-Entry -Subtext "Using the Show Background Poster as TitleCard Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                                     $global:IsFallback = $true
+                                                    $global:FallbackText = 'True-Background'
                                                 }
                                                 Else {
                                                     # Lets just try to grab a background poster.
@@ -6475,6 +6485,7 @@ Elseif ($Tautulli) {
                                                     if ($global:posterurl) {
                                                         Write-Entry -Subtext "Using the Show Background Poster as TitleCard Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                                         $global:IsFallback = $true
+                                                        $global:FallbackText = 'True-Background'
                                                     }
                                                 }
                                             }
@@ -6501,6 +6512,7 @@ Elseif ($Tautulli) {
                                                 if ($global:posterurl) {
                                                     Write-Entry -Subtext "Using the Show Background Poster as TitleCard Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                                     $global:IsFallback = $true
+                                                    $global:FallbackText = 'True-Background'
                                                 }
                                             }
                                         }
@@ -6682,7 +6694,7 @@ Elseif ($Tautulli) {
                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "Language" -Value $(if (!$global:AssetTextLang) { "Textless" }Else { $global:AssetTextLang })
-                                                $episodetemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback) { 'True' } else { 'False' })
+                                                $episodetemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback -and $global:FallbackText) { $global:FallbackText } elseif ($global:IsFallback -and !$global:FallbackText) { 'True' } Else { 'False' })
                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                                 switch -Wildcard ($global:FavProvider) {
@@ -7548,13 +7560,13 @@ else {
                                 $global:IsFallback = $true
                             }
                         }
-                        if (!$global:posterurl) {
-                            if ($global:OnlyTextless) {
-                                $global:posterurl = GetFanartMovieBackground
-                                if (!$global:FavProvider -eq 'FANART') {
-                                    $global:IsFallback = $true
-                                }
+                        if ($global:OnlyTextless -and !$global:posterurl) {
+                            $global:posterurl = GetFanartMovieBackground
+                            if (!$global:FavProvider -eq 'FANART') {
+                                $global:IsFallback = $true
                             }
+                        }
+                        if (!$global:posterurl) {
                             $global:posterurl = GetTVDBMovieBackground
                             $global:IsFallback = $true
                             if (!$global:posterurl) {
@@ -7797,6 +7809,7 @@ else {
             $global:FANARTAssetChangeUrl = $null
             $global:TVDBAssetChangeUrl = $null
             $global:IsFallback = $null
+            $global:FallbackText = $null
             $global:Fallback = $null
             $global:TextlessPoster = $null
             $global:tvdbalreadysearched = $null
@@ -8141,6 +8154,7 @@ else {
                     $global:AssetTextLang = $null
                     $global:Fallback = $null
                     $global:IsFallback = $null
+                    $global:FallbackText = $null
                     $global:TMDBAssetTextLang = $null
                     $global:FANARTAssetTextLang = $null
                     $global:TVDBAssetTextLang = $null
@@ -8183,13 +8197,13 @@ else {
                     }
                     if ($global:TextlessPoster -eq 'true' -and $global:posterurl) {
                     }
+                    if ($global:OnlyTextless -and !$global:posterurl) {
+                        $global:posterurl = GetFanartShowBackground
+                    }
                     if (!$global:posterurl) {
-                        if ($global:OnlyTextless) {
-                            $global:posterurl = GetFanartShowBackground
-                        }
                         $global:posterurl = GetTVDBShowBackground
                         $global:IsFallback = $true
-
+                        $global:FallbackText = 'True-Background'
                         if (!$global:posterurl) {
                             if ($entry.PlexBackgroundUrl) {
                                 GetPlexArtwork -Type ' a Show Background' -ArtUrl $Arturl -TempImage $backgroundImage
@@ -8373,6 +8387,7 @@ else {
             # Now we can start the Season Part
             if ($global:SeasonPosters -eq 'true') {
                 $global:IsFallback = $null
+                $global:FallbackText = $null
                 $global:AssetTextLang = $null
                 $global:Fallback = $null
                 $global:TMDBAssetTextLang = $null
@@ -8390,6 +8405,7 @@ else {
                 for ($i = 0; $i -lt $global:seasonNames.Count; $i++) {
                     $global:posterurl = $null
                     $global:IsFallback = $null
+                    $global:FallbackText = $null
                     $global:AssetTextLang = $null
                     $global:Fallback = $null
                     $global:TMDBAssetTextLang = $null
@@ -8767,6 +8783,7 @@ else {
                     $EpisodeImage = $null
                     $global:Fallback = $null
                     $global:IsFallback = $null
+                    $global:FallbackText = $null
                     $global:TextlessPoster = $null
 
                     if (($episode.tmdbid -eq $entry.tmdbid -or $episode.tvdbid -eq $entry.tvdbid) -and $episode.'Show Name' -eq $entry.title -and $episode.'Library Name' -eq $entry.'Library Name') {
@@ -9098,7 +9115,7 @@ else {
                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "Language" -Value $(if (!$global:AssetTextLang) { "Textless" }Else { $global:AssetTextLang })
-                                                $episodetemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback) { 'True' } else { 'False' })
+                                                $episodetemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback -and $global:FallbackText) { $global:FallbackText } elseif ($global:IsFallback -and !$global:FallbackText) { 'True' } Else { 'False' })
                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                                 switch -Wildcard ($global:FavProvider) {
@@ -9162,6 +9179,7 @@ else {
                                 $global:PosterWithText = $null
                                 $global:Fallback = $null
                                 $global:IsFallback = $null
+                                $global:FallbackText = $null
                                 $global:ImageMagickError = $null
                                 $global:TextlessPoster = $null
                                 $global:posterurl = $null
@@ -9241,6 +9259,7 @@ else {
                                                 if ($global:posterurl) {
                                                     Write-Entry -Subtext "Using the Show Background Poster as TitleCard Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                                     $global:IsFallback = $true
+                                                    $global:FallbackText = 'True-Background'
                                                 }
                                                 Else {
                                                     # Lets just try to grab a background poster.
@@ -9248,6 +9267,7 @@ else {
                                                     if ($global:posterurl) {
                                                         Write-Entry -Subtext "Using the Show Background Poster as TitleCard Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                                         $global:IsFallback = $true
+                                                        $global:FallbackText = 'True-Background'
                                                     }
                                                 }
                                             }
@@ -9275,6 +9295,7 @@ else {
                                                 if ($global:posterurl) {
                                                     Write-Entry -Subtext "Using the Show Background Poster as TitleCard Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                                     $global:IsFallback = $true
+                                                    $global:FallbackText = 'True-Background'
                                                 }
                                             }
                                         }
@@ -9304,6 +9325,7 @@ else {
                                                 if ($global:posterurl) {
                                                     Write-Entry -Subtext "Using the Show Background Poster as TitleCard Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                                     $global:IsFallback = $true
+                                                    $global:FallbackText = 'True-Background'
                                                 }
                                                 Else {
                                                     # Lets just try to grab a background poster.
@@ -9311,6 +9333,7 @@ else {
                                                     if ($global:posterurl) {
                                                         Write-Entry -Subtext "Using the Show Background Poster as TitleCard Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                                         $global:IsFallback = $true
+                                                        $global:FallbackText = 'True-Background'
                                                     }
                                                 }
                                             }
@@ -9337,6 +9360,7 @@ else {
                                                 if ($global:posterurl) {
                                                     Write-Entry -Subtext "Using the Show Background Poster as TitleCard Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                                     $global:IsFallback = $true
+                                                    $global:FallbackText = 'True-Background'
                                                 }
                                             }
                                         }
@@ -9503,7 +9527,7 @@ else {
                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "Language" -Value $(if (!$global:AssetTextLang) { "Textless" }Else { $global:AssetTextLang })
-                                                $episodetemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback) { 'True' } else { 'False' })
+                                                $episodetemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback -and $global:FallbackText) { $global:FallbackText } elseif ($global:IsFallback -and !$global:FallbackText) { 'True' } Else { 'False' })
                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                                 switch -Wildcard ($global:FavProvider) {
