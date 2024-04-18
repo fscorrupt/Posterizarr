@@ -8,7 +8,7 @@ param (
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.2.5"
+$CurrentScriptVersion = "1.2.6"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -5603,10 +5603,18 @@ Elseif ($Tautulli) {
                                 Write-Entry -Subtext "IsFallback: $global:IsFallback" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                             }
                             if ((!$global:posterurl -or !$global:TextlessPoster) -and $entry.tvdbid) {
-                                $global:IsFallback = $true
-                                $global:posterurl = GetTVDBSeasonPoster
-                                Write-Entry -Subtext "Function GetTVDBSeasonPoster called..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                                Write-Entry -Subtext "IsFallback: $global:IsFallback" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                if ((!$global:posterurl -or !$global:TextlessPoster) -and $global:SeasonPreferTextless -eq 'True'){
+                                    $global:IsFallback = $true
+                                    $global:posterurl = GetTVDBSeasonPoster
+                                    Write-Entry -Subtext "Function GetTVDBSeasonPoster called..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                    Write-Entry -Subtext "IsFallback: $global:IsFallback" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                }
+                                if (!$global:posterurl -and $global:SeasonPreferTextless -ne 'True'){
+                                    $global:IsFallback = $true
+                                    $global:posterurl = GetTVDBSeasonPoster
+                                    Write-Entry -Subtext "Function GetTVDBSeasonPoster called..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                    Write-Entry -Subtext "IsFallback: $global:IsFallback" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                }
                             }
                             if (!$global:posterurl) {
                                 $global:IsFallback = $true
@@ -8486,10 +8494,18 @@ else {
                                 Write-Entry -Subtext "IsFallback: $global:IsFallback" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                             }
                             if ((!$global:posterurl -or !$global:TextlessPoster) -and $entry.tvdbid) {
-                                $global:IsFallback = $true
-                                $global:posterurl = GetTVDBSeasonPoster
-                                Write-Entry -Subtext "Function GetTVDBSeasonPoster called..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                                Write-Entry -Message "IsFallback: $global:IsFallback" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                if ((!$global:posterurl -or !$global:TextlessPoster) -and $global:SeasonPreferTextless -eq 'True'){
+                                    $global:IsFallback = $true
+                                    $global:posterurl = GetTVDBSeasonPoster
+                                    Write-Entry -Subtext "Function GetTVDBSeasonPoster called..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                    Write-Entry -Subtext "IsFallback: $global:IsFallback" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                }
+                                if (!$global:posterurl -and $global:SeasonPreferTextless -ne 'True'){
+                                    $global:IsFallback = $true
+                                    $global:posterurl = GetTVDBSeasonPoster
+                                    Write-Entry -Subtext "Function GetTVDBSeasonPoster called..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                    Write-Entry -Subtext "IsFallback: $global:IsFallback" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                }
                             }
                             if (!$global:posterurl) {
                                 $global:IsFallback = $true
