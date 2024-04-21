@@ -1642,7 +1642,7 @@ function GetTVDBShowPoster {
                                 $global:TVDBAssetTextLang = $lang
                             }
                             $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)#artwork"
-                            return $global:posterurl                            
+                            return $global:posterurl
                             continue
                         }
                     }
@@ -5565,7 +5565,7 @@ Elseif ($Tautulli) {
                     $global:ImageMagickError = $null
                     $global:TMDBSeasonFallback = $null
                     $global:TVDBSeasonFallback = $null
-                    $global:FANARTSeasonFallback = $null 
+                    $global:FANARTSeasonFallback = $null
                     if ($SeasonfontAllCaps -eq 'true') {
                         $global:seasonTitle = $global:seasonNames[$i].ToUpper()
                     }
@@ -8721,7 +8721,7 @@ else {
                     $global:ImageMagickError = $null
                     $global:TMDBSeasonFallback = $null
                     $global:TVDBSeasonFallback = $null
-                    $global:FANARTSeasonFallback = $null 
+                    $global:FANARTSeasonFallback = $null
                     if ($SeasonfontAllCaps -eq 'true') {
                         $global:seasonTitle = $global:seasonNames[$i].ToUpper()
                     }
