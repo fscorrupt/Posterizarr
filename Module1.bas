@@ -6,7 +6,7 @@ Sub PromptUser()
     Dim currentVersion As String
     
     ' Specify the current version number
-    currentVersion = "1.0.3"
+    currentVersion = "1.0.4"
     
     ' Check for updates
     CheckForUpdate currentVersion
@@ -115,7 +115,7 @@ Sub ImportCSVs(folderPath)
     wsImageChoices.Name = "ImageChoices"
     ThisWorkbook.Queries.Add Name:="ImageChoices", Formula:= _
         "let" & Chr(13) & "" & Chr(10) & " Source = Csv.Document(File.Contents(""" & Filename1 & """),[Delimiter="";"", Columns=9, Encoding=65001, QuoteStyle=QuoteStyle.None])," & Chr(13) & "" & Chr(10) & "    #""Promoted Headers"" = Table.PromoteHeaders(Source, [PromoteAllScalars=true])," & Chr(13) & "" & Chr(10) & "    #""Changed Type"" = Table.TransformColumnTypes(#""Promoted Headers"",{{""Title"", type text}, {""Type"", t" & _
-        "ype text}, {""Rootfolder"", type text}, {""LibraryName"", type text}, {""Language"", type text}, {""Fallback"", type logical}, {""TextTruncated"", type logical}, {""Download Source"", type text}, {""Fav Provider Link"", type text}})" & Chr(13) & "" & Chr(10) & "in" & Chr(13) & "" & Chr(10) & "    #""Changed Type"""
+        "ype text}, {""Rootfolder"", type text}, {""LibraryName"", type text}, {""Language"", type text}, {""Fallback"", type text}, {""TextTruncated"", type logical}, {""Download Source"", type text}, {""Fav Provider Link"", type text}})" & Chr(13) & "" & Chr(10) & "in" & Chr(13) & "" & Chr(10) & "    #""Changed Type"""
         
     With wsImageChoices.ListObjects.Add(SourceType:=0, Source:= _
         "OLEDB;Provider=Microsoft.Mashup.OleDb.1;Data Source=$Workbook$;Location=ImageChoices;Extended Properties=""""", Destination:=wsImageChoices.Range("$A$1")).QueryTable
