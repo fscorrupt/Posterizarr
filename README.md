@@ -40,7 +40,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux, Docker (Alpine
 
 ### **Key Features:**
 >[!TIP]
-> If you want to use the created assets with Kometa (formerly PMM) make sure to check out the [Assets doc](https://kometa.wiki/en/latest/pmm/guides/assets/)
+> If you want to use the created assets with Kometa (formerly PMM) make sure to check out the [Assets doc](https://kometa.wiki/en/latest/kometa/guides/assets/)
 >
 > You can find an example config for the Assets on my [Kometa-Configs repo](https://github.com/Kometa-Team/Community-Configs/blob/master/fscorrupt/config.yml)
 - **Resizing**: It automatically resizes every poster to 2000x3000.
@@ -126,7 +126,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux, Docker (Alpine
     - `overlayfile`: Overlay file name.
     - `backgroundoverlayfile`: Background overlay file name.
     - `titlecardoverlayfile` : Title Card overlay file name.
-    - `LibraryFolders`: Set to `false` for asset structure in one flat folder or `true` to split into library media folders like [Kometa](https://kometa.wiki/en/latest/pmm/guides/assets/#image-asset-directory-guide) needs it.
+    - `LibraryFolders`: Set to `false` for asset structure in one flat folder or `true` to split into library media folders like [Kometa](https://kometa.wiki/en/latest/kometa/guides/assets/#image-asset-directory-guide) needs it.
     - `Posters`: Set to `true` to create movie/show posters.
     - `SeasonPosters`: Set to `true` to also create season posters.
     - `BackgroundPosters`: Set to `true` to also create background posters.
@@ -263,7 +263,7 @@ The posters are all placed in `AssetPath\...`. This can then be mounted in Komet
 >
 >Its important that you update the containerpath you specified in your docker-compose.yml in your config.json, in my example it is `/assets`.
 >
-> - [IMAGE ASSET DIRECTORY GUIDE](https://kometa.wiki/en/latest/pmm/guides/assets/#image-asset-directory-guide)
+> - [IMAGE ASSET DIRECTORY GUIDE](https://kometa.wiki/en/latest/kometa/guides/assets/#image-asset-directory-guide)
 >
 > Assuming you made the config like i did, Posterizarr will now create the Posters directly in Kometa´s Asset dir.
 
