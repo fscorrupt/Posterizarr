@@ -259,7 +259,7 @@ The posters are all placed in `AssetPath\...`. This can then be mounted in Komet
 
 ### Assets Tip
 > [!TIP]
-> Have a look at the [docker-compose.yml](https://github.com/fscorrupt/Posterizarr/blob/fb5189043e0c54dc8ee59579612162ab4ffc9b6c/docker-compose.yml#L20) there is an example of the `/assets` Volume, you either can mount the PMM Assets dir to Posterizarr or vice versa, its up to you.
+> Have a look at the [docker-compose.yml](https://github.com/fscorrupt/Posterizarr/blob/fb5189043e0c54dc8ee59579612162ab4ffc9b6c/docker-compose.yml#L20) there is an example of the `/assets` Volume, you either can mount the Kometa Assets dir to Posterizarr or vice versa, its up to you.
 >
 >Its important that you update the containerpath you specified in your docker-compose.yml in your config.json, in my example it is `/assets`.
 >
