@@ -257,6 +257,16 @@ This will generate posters for your entire Plex library based on the configured 
 
 The posters are all placed in `AssetPath\...`. This can then be mounted in Plex-Meta-Manager to use as the assets folder.
 
+### Assets Tip
+> [!TIP]
+> Have a look at the [docker-compose.yml](https://github.com/fscorrupt/Posterizarr/blob/fb5189043e0c54dc8ee59579612162ab4ffc9b6c/docker-compose.yml#L20) there is an example of the `/assets` Volume, you either can mount the PMM Assets dir to Posterizarr or vice versa, its up to you.
+>
+>Its important that you update the containerpath you specified in your docker-compose.yml in your config.json, in my example it is `/assets`.
+>
+> - [IMAGE ASSET DIRECTORY GUIDE](https://metamanager.wiki/en/latest/pmm/guides/assets/#image-asset-directory-guide)
+>
+> Assuming you made the config like i did, Posterizarr will now create the Posters directly in PMMs Asset dir.
+
 ### Tautulli Mode Docker
 > [!IMPORTANT]
 > Tautulli and Posterizarr must run as a container in Docker
