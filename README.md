@@ -497,7 +497,7 @@ Following these steps will allow you to import the `Module1.bas` file containing
 <br>
 <p>
   <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
-    <img alt="imagecsv" height="100%" src="/images/kometa-overview.png">
+    <img alt="kometa-overview" height="100%" src="/images/kometa-overview.png">
   </a>
 </p>
 </details>
