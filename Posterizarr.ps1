@@ -1920,11 +1920,11 @@ function GetPlexArtwork {
 
     if ($value) {
         $ExifFound = $True
-        Write-Entry -Subtext "Artwork has exif data from posterizarr/pmm/tcm, cant take it..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+        Write-Entry -Subtext "Artwork has exif data from posterizarr/kometa/tcm, cant take it..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
         Remove-Item -LiteralPath $TempImage | out-null
     }
     Else {
-        Write-Entry -Subtext "No posterizarr/pmm/tcm exif data found, taking Plex artwork..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+        Write-Entry -Subtext "No posterizarr/kometa/tcm exif data found, taking Plex artwork..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
         $global:PlexartworkDownloaded = $true
         $global:posterurl = $ArtUrl
     }

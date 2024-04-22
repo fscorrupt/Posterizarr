@@ -40,9 +40,9 @@ Posterizarr is cross-platform ready, meaning it can run on Linux, Docker (Alpine
 
 ### **Key Features:**
 >[!TIP]
-> If you want to use the created assets with PMM make sure to check out the [Assets doc](https://metamanager.wiki/en/latest/pmm/guides/assets/)
+> If you want to use the created assets with Kometa (formerly PMM) make sure to check out the [Assets doc](https://kometa.wiki/en/latest/pmm/guides/assets/)
 >
-> You can find an example config for the Assets on my [PMM-Configs repo](https://github.com/meisnate12/Plex-Meta-Manager-Configs/blob/master/fscorrupt/config.yml)
+> You can find an example config for the Assets on my [Kometa-Configs repo](https://github.com/Kometa-Team/Community-Configs/blob/master/fscorrupt/config.yml)
 - **Resizing**: It automatically resizes every poster to 2000x3000.
 - **Overlays**: If you choose to, downloaded images will automatically have borders, text, and a gradient overlay applied.
   - Here are some gradient overlays that you can use instead of the default one [gradient-zip](gradient_background_poster_overlays.zip)
@@ -126,7 +126,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux, Docker (Alpine
     - `overlayfile`: Overlay file name.
     - `backgroundoverlayfile`: Background overlay file name.
     - `titlecardoverlayfile` : Title Card overlay file name.
-    - `LibraryFolders`: Set to `false` for asset structure in one flat folder or `true` to split into library media folders like [Plex-Meta-Manager](https://metamanager.wiki/en/latest/pmm/guides/assets/#image-asset-directory-guide) needs it.
+    - `LibraryFolders`: Set to `false` for asset structure in one flat folder or `true` to split into library media folders like [Kometa](https://kometa.wiki/en/latest/pmm/guides/assets/#image-asset-directory-guide) needs it.
     - `Posters`: Set to `true` to create movie/show posters.
     - `SeasonPosters`: Set to `true` to also create season posters.
     - `BackgroundPosters`: Set to `true` to also create background posters.
@@ -255,7 +255,7 @@ Run the script without any parameters:
 
 This will generate posters for your entire Plex library based on the configured settings.
 
-The posters are all placed in `AssetPath\...`. This can then be mounted in Plex-Meta-Manager to use as the assets folder.
+The posters are all placed in `AssetPath\...`. This can then be mounted in Kometa to use as the assets folder.
 
 ### Assets Tip
 > [!TIP]
@@ -263,9 +263,9 @@ The posters are all placed in `AssetPath\...`. This can then be mounted in Plex-
 >
 >Its important that you update the containerpath you specified in your docker-compose.yml in your config.json, in my example it is `/assets`.
 >
-> - [IMAGE ASSET DIRECTORY GUIDE](https://metamanager.wiki/en/latest/pmm/guides/assets/#image-asset-directory-guide)
+> - [IMAGE ASSET DIRECTORY GUIDE](https://kometa.wiki/en/latest/pmm/guides/assets/#image-asset-directory-guide)
 >
-> Assuming you made the config like i did, Posterizarr will now create the Posters directly in PMMs Asset dir.
+> Assuming you made the config like i did, Posterizarr will now create the Posters directly in Kometa´s Asset dir.
 
 ### Tautulli Mode Docker
 > [!IMPORTANT]
@@ -493,11 +493,11 @@ Following these steps will allow you to import the `Module1.bas` file containing
 </p>
 </details>
 <details close>
-<summary>🖼️Assets after PMM run:</summary>
+<summary>🖼️Assets after Kometa run:</summary>
 <br>
 <p>
   <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
-    <img alt="imagecsv" height="100%" src="/images/pmm-overview.png">
+    <img alt="imagecsv" height="100%" src="/images/kometa-overview.png">
   </a>
 </p>
 </details>

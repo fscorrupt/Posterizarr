@@ -43,22 +43,18 @@
         ├── config.example.json
         ├── docker-compose.yml
         ├── images
-        │   ├── backgrounds.png
         │   ├── backgroundtesting.png
         │   ├── folder.png
         │   ├── imagecsv.png
-        │   ├── movies4kpmm.png
-        │   ├── movies_pmm.png
-        │   ├── movies.png
+        │   ├── kometa-overview.png
         │   ├── output.png
-        │   ├── seasonspmm.png
-        │   ├── showspmm.png
-        │   ├── shows.png
+        │   ├── posterizarr-overview.png
+        │   ├── posterizarr-xlsm.gif
         │   ├── testing.png
-        │   ├── titlecards.png
         │   ├── titlecardtesting.png
-        │   ├── webhookexample.png
-        │   └── webhook.png
+        │   ├── versioning.png
+        │   ├── webhook.png
+        │   └── webhookexample.png
         ├── overlay.png
         ├── Posterizarr.ps1
         ├── README.md
