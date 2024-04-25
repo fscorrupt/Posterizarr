@@ -8,7 +8,7 @@ param (
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.2.9"
+$CurrentScriptVersion = "1.2.10"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -4272,7 +4272,7 @@ Elseif ($Tautulli) {
                 $global:IsFallback = $null
                 $global:PlexartworkDownloaded = $null
 
-                $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}]'
+                $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}\p{IsArabic}\p{IsHebrew}\p{IsDevanagari}\p{IsThai}\p{IsEthiopic}\p{IsGeorgian}\p{IsArmenian}\p{IsBengali}]'
                 if ($entry.title -match $cjkPattern) {
                     $Titletext = $entry.originalTitle
                 }
@@ -4929,7 +4929,7 @@ Elseif ($Tautulli) {
             $global:tvdbalreadysearched = $null
             $global:PlexartworkDownloaded = $null
 
-            $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}]'
+            $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}\p{IsArabic}\p{IsHebrew}\p{IsDevanagari}\p{IsThai}\p{IsEthiopic}\p{IsGeorgian}\p{IsArmenian}\p{IsBengali}]'
             if ($entry.title -match $cjkPattern) {
                 $Titletext = $entry.originalTitle
             }
@@ -7486,7 +7486,7 @@ else {
                 $global:IsFallback = $null
                 $global:PlexartworkDownloaded = $null
 
-                $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}]'
+                $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}\p{IsArabic}\p{IsHebrew}\p{IsDevanagari}\p{IsThai}\p{IsEthiopic}\p{IsGeorgian}\p{IsArmenian}\p{IsBengali}]'
                 if ($entry.title -match $cjkPattern) {
                     $Titletext = $entry.originalTitle
                 }
@@ -8113,7 +8113,7 @@ else {
             $global:tvdbalreadysearched = $null
             $global:PlexartworkDownloaded = $null
 
-            $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}]'
+            $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}\p{IsArabic}\p{IsHebrew}\p{IsDevanagari}\p{IsThai}\p{IsEthiopic}\p{IsGeorgian}\p{IsArmenian}\p{IsBengali}]'
             if ($entry.title -match $cjkPattern) {
                 $Titletext = $entry.originalTitle
             }
