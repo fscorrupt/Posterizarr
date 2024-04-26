@@ -20,7 +20,7 @@
 This PowerShell script automates the process of generating images for your Plex media library. Leveraging information from your Plex library, such as movie or show titles, season and episode data, it fetches relevant artwork from Fanart.tv, TMDB, TVDB, Plex and IMDB. The script is able to focus on artwork with specific languages to grab. By default, textless artwork `xx` is retrieved and will fall back to `en` if textless is not found. This is a setting a user can decide on, either to focus on textless or on text posters. It also offers both automatic and manual modes for generating posters. The manual mode can accommodate custom creations that cannot be bulk retrieved.
 
 > [!NOTE]
-Posterizarr is cross-platform ready, meaning it can run on Linux, Docker (Alpine v3.17), unRAID and on Windows operating systems.
+Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpine v3.17)](#docker), [unRAID](#unraid) and on Windows operating systems.
 > 
 > **Supported Poster Types:**
 >- Movie/Show Posters
@@ -353,7 +353,19 @@ Run the script with the `-Testing` flag. In this mode, the script will create pi
   - Change `volume` and `network` to fit your environment (Make sure you have the same network as your plex container when you use local IP of plex)
   - Change `TimeZone` to yours, otherwise it will get scheduled to a different time you may want it to.
   - You may also have to change `PUID/PGID`
+  
+  If you manually want to run the Script you can do it this way:
 
+  **Automatic Mode:**
+  ```sh
+  docker exec -it posterizarr pwsh Posterizarr.ps1
+  ```
+  **Testing Mode:**
+  ```sh
+  docker exec -it posterizarr pwsh Posterizarr.ps1 -Testing
+  ```
+
+### unRAID
 > [!TIP]
 > If you are an unRAID user, just use the Community app from @nwithan8 it is listed in Store.
     <details close>
@@ -366,17 +378,6 @@ Run the script with the `-Testing` flag. In this mode, the script will create pi
     </p>
     </details>
 
-  
-  If you manually want to run the Script you can do it this way:
-
-  **Automatic Mode:**
-  ```sh
-  docker exec -it posterizarr pwsh Posterizarr.ps1
-  ```
-  **Testing Mode:**
-  ```sh
-  docker exec -it posterizarr pwsh Posterizarr.ps1 -Testing
-  ```
 ### Images from Testing Mode
 
 
