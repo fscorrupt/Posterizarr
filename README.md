@@ -20,7 +20,7 @@
 This PowerShell script automates the process of generating images for your Plex media library. Leveraging information from your Plex library, such as movie or show titles, season and episode data, it fetches relevant artwork from Fanart.tv, TMDB, TVDB, Plex and IMDB. The script is able to focus on artwork with specific languages to grab. By default, textless artwork `xx` is retrieved and will fall back to `en` if textless is not found. This is a setting a user can decide on, either to focus on textless or on text posters. It also offers both automatic and manual modes for generating posters. The manual mode can accommodate custom creations that cannot be bulk retrieved.
 
 > [!NOTE]
-Posterizarr is cross-platform ready, meaning it can run on Linux, Docker (Alpine v3.17) and on Windows operating systems.
+Posterizarr is cross-platform ready, meaning it can run on Linux, Docker (Alpine v3.17), Unraid and on Windows operating systems.
 > 
 > **Supported Poster Types:**
 >- Movie/Show Posters
@@ -355,8 +355,18 @@ Run the script with the `-Testing` flag. In this mode, the script will create pi
   - You may also have to change `PUID/PGID`
 
 > [!TIP]
-> If you are an unRAID user, install the `Docker Compose Manager` plugin from the Community Apps store so that you can leverage the compose file
-> 
+> If you are an unRAID user, just use the Community app from @nwithan8 it is listed in Store.
+    <details close>
+    <summary>🖼️Unraid</summary>
+    <br>
+    <p>
+    <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
+       <img alt="unraid" height="100%" src="/images/unraid.jpg">
+    </a>
+    </p>
+    </details>
+
+  
   If you manually want to run the Script you can do it this way:
 
   **Automatic Mode:**
