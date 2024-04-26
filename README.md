@@ -367,7 +367,7 @@ Run the script with the `-Testing` flag. In this mode, the script will create pi
 
 ### unRAID
 > [!TIP]
-> If you are an unRAID user, just use the Community app from @nwithan8 it is listed in Store.
+> If you are an unRAID user, just use the Community app from [@nwithan8](https://github.com/nwithan8) it is listed in Store.
     <details close>
     <summary>🖼️unRAID</summary>
     <br>
