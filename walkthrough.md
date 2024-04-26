@@ -220,4 +220,13 @@
 > Have a look at the [Assets Tip](https://github.com/fscorrupt/Posterizarr?tab=readme-ov-file#assets-tip)
 
 > [!TIP]
-> If you are an unRAID user, install the `Docker Compose Manager` plugin from the Community Apps store so that you can leverage the compose file
+> If you are an unRAID user, just use the Community app from @nwithan8 it is listed in Store.
+    <details close>
+    <summary>🖼️unRAID</summary>
+    <br>
+    <p>
+    <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
+       <img alt="unRAID" height="100%" src="/images/unraid.jpg">
+    </a>
+    </p>
+    </details>
