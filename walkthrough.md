@@ -1,5 +1,17 @@
 ## Getting Started
 
+> [!TIP]
+> If you are an unRAID user, just use the Community app from @nwithan8 it is listed in Store.
+    <details close>
+    <summary>🖼️unRAID</summary>
+    <br>
+    <p>
+    <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
+       <img alt="unRAID" height="100%" src="/images/unraid.jpg">
+    </a>
+    </p>
+    </details>
+
 1. Make sure to obtain all the api keys and tokens as you will need them later on for the `config.json`.
     - **TMDB API Read Access Token:** [Obtain TMDB API Token](https://www.themoviedb.org/settings/api)
         - **NOTE** the **TMDB API Read Access Token** is the really, really long one
@@ -218,15 +230,3 @@
         ```
 > [!NOTE]
 > Have a look at the [Assets Tip](https://github.com/fscorrupt/Posterizarr?tab=readme-ov-file#assets-tip)
-
-> [!TIP]
-> If you are an unRAID user, just use the Community app from @nwithan8 it is listed in Store.
-    <details close>
-    <summary>🖼️unRAID</summary>
-    <br>
-    <p>
-    <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
-       <img alt="unRAID" height="100%" src="/images/unraid.jpg">
-    </a>
-    </p>
-    </details>
