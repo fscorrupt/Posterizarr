@@ -14,7 +14,9 @@
     <a href="https://github.com/fscorrupt/Posterizarr/issues">Request Feature</a>
   </p>
 </div>
-
+<p align="center">
+    <a href="https://buymeacoffee.com/fscorrupt" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="19" width="95"></a>
+</p>
 <br>
 
 This PowerShell script automates the process of generating images for your Plex media library. Leveraging information from your Plex library, such as movie or show titles, season and episode data, it fetches relevant artwork from Fanart.tv, TMDB, TVDB, Plex and IMDB. The script is able to focus on artwork with specific languages to grab. By default, textless artwork `xx` is retrieved and will fall back to `en` if textless is not found. This is a setting a user can decide on, either to focus on textless or on text posters. It also offers both automatic and manual modes for generating posters. The manual mode can accommodate custom creations that cannot be bulk retrieved.
