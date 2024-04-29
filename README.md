@@ -133,6 +133,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpin
     - `SeasonPosters`: Set to `true` to also create season posters.
     - `BackgroundPosters`: Set to `true` to also create background posters.
     - `TitleCards` : Set to `true` to also create title cards.
+    - `SkipTBA` : Set to `true` to skip TitleCard creation if the Titletext is `TBA`.
     </details>
     <details close>
     <summary>OverlayPart:</summary>
@@ -197,6 +198,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpin
     <br>
 
     - `UseBackgroundAsTitleCard`: Set to `true` if you prefer show background as TitleCard, default is `false` where it uses episode image as TitleCard.
+    - `BackgroundFallback`: Set to `false` if you want to skip Background fallback for TitleCard images if no TitleCard was found.
     - `AddOverlay`: Set to `true` to add the defined TitleCard overlay file to the TitleCard image.
     - `AddBorder`: Set to `true` to add a border to the TitleCard image.
     - `borderwidth`: Border width.

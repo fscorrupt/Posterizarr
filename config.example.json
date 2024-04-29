@@ -33,7 +33,8 @@
     "Posters": "true",
     "SeasonPosters": "true",
     "BackgroundPosters": "false",
-    "TitleCards": "false"
+    "TitleCards": "false",
+    "SkipTBA": "false"
   },
   "OverlayPart":{
     "ImageProcessing": "true",
@@ -83,6 +84,7 @@
   },
   "TitleCardOverlayPart": {
     "UseBackgroundAsTitleCard": "false",
+    "BackgroundFallback": "true",
     "AddOverlay": "true",
     "AddBorder": "true",
     "bordercolor": "white",
