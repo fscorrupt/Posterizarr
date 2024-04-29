@@ -8,7 +8,7 @@ param (
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.2.12"
+$CurrentScriptVersion = "1.2.13"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -123,6 +123,182 @@ function SendMessage {
     )
     if ($global:NotifyUrl -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker-Alpine*') {
         if ($global:NotifyUrl -like '*discord*') {
+            if ($SkipTBA -eq 'True' -or $SkipJapTitle -eq 'True'){
+                $jsonPayload = @"
+    {
+        "username": "Posterizarr",
+        "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/main/images/webhook.png",
+        "content": "",
+        "embeds": [
+        {
+            "author": {
+            "name": "Posterizarr @Github",
+            "url": "https://github.com/fscorrupt/Posterizarr"
+            },
+            "description": "Recently Added\n\n",
+            "timestamp": "$(((Get-Date).ToUniversalTime()).ToString("yyyy-MM-ddTHH:mm:ss.fffZ"))",
+            "color": $(if ($errorCount -ge '1') {16711680}Elseif ($global:IsFallback -eq 'True' -or $global:IsTruncated -eq 'True'){15120384}Else{5763719}),
+            "fields": [
+            {
+                "name": "",
+                "value": ":bar_chart:",
+                "inline": false
+            },
+            {
+                "name": "Type",
+                "value": "$type",
+                "inline": false
+            },
+            {
+                "name": "Fallback",
+                "value": "$fallback",
+                "inline": true
+            },
+            {
+                "name": "Language",
+                "value": "$lang",
+                "inline": true
+            },
+            {
+                "name": "Truncated",
+                "value": "$truncated",
+                "inline": true
+            },
+            {
+                "name": "TBA Skipped",
+                "value": "$SkipTBACount",
+                "inline": true
+            },
+            {
+                "name": "Jap/Chinese Skipped",
+                "value": "$SkipJapTitleCount",
+                "inline": true
+            },
+            {
+                "name": "",
+                "value": ":frame_photo:",
+                "inline": false
+            },
+            {
+                "name": "Title",
+                "value": "$title",
+                "inline": false
+            },
+            {
+                "name": "Library",
+                "value": "$Lib",
+                "inline": true
+            },
+            {
+                "name": "Fav Url",
+                "value": "$favurl",
+                "inline": true
+            }
+            ],
+            "thumbnail": {
+                "url": "$DLSource"
+            },
+            "footer": {
+                "text": "$Platform  | current - v$CurrentScriptVersion  | latest - v$LatestScriptVersion"
+            }
+
+        }
+        ]
+    }
+"@
+            }
+            Else{
+                $jsonPayload = @"
+    {
+        "username": "Posterizarr",
+        "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/main/images/webhook.png",
+        "content": "",
+        "embeds": [
+        {
+            "author": {
+            "name": "Posterizarr @Github",
+            "url": "https://github.com/fscorrupt/Posterizarr"
+            },
+            "description": "Recently Added\n\n",
+            "timestamp": "$(((Get-Date).ToUniversalTime()).ToString("yyyy-MM-ddTHH:mm:ss.fffZ"))",
+            "color": $(if ($errorCount -ge '1') {16711680}Elseif ($global:IsFallback -eq 'True' -or $global:IsTruncated -eq 'True'){15120384}Else{5763719}),
+            "fields": [
+            {
+                "name": "",
+                "value": ":bar_chart:",
+                "inline": false
+            },
+            {
+                "name": "Type",
+                "value": "$type",
+                "inline": false
+            },
+            {
+                "name": "Fallback",
+                "value": "$fallback",
+                "inline": true
+            },
+            {
+                "name": "Language",
+                "value": "$lang",
+                "inline": true
+            },
+            {
+                "name": "Truncated",
+                "value": "$truncated",
+                "inline": true
+            },
+            {
+                "name": "",
+                "value": ":frame_photo:",
+                "inline": false
+            },
+            {
+                "name": "Title",
+                "value": "$title",
+                "inline": false
+            },
+            {
+                "name": "Library",
+                "value": "$Lib",
+                "inline": true
+            },
+            {
+                "name": "Fav Url",
+                "value": "$favurl",
+                "inline": true
+            }
+            ],
+            "thumbnail": {
+                "url": "$DLSource"
+            },
+            "footer": {
+                "text": "$Platform  | current - v$CurrentScriptVersion  | latest - v$LatestScriptVersion"
+            }
+
+        }
+        ]
+    }
+"@
+            }
+            $global:NotifyUrl = $global:NotifyUrl.replace('discord://', 'https://discord.com/api/webhooks/')
+            if ($global:SendNotification -eq 'True') {
+                Push-ObjectToDiscord -strDiscordWebhook $global:NotifyUrl -objPayload $jsonPayload
+            }
+        }
+        Else {
+            if ($global:SendNotification -eq 'True') {
+                if ($errorCount -ge '1') {
+                    apprise --notification-type="error" --title="Posterizarr" --body="Run took: $FormattedTimespawn`nIt Created '$posterCount' Images`n`nDuring execution '$errorCount' Errors occurred, please check log for detailed description." "$global:NotifyUrl"
+                }
+                Else {
+                    apprise --notification-type="success" --title="Posterizarr" --body="Run took: $FormattedTimespawn`nIt Created '$posterCount' Images" "$global:NotifyUrl"
+                }
+            }
+        }
+    }
+    if ($global:NotifyUrl -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -notlike 'PSDocker-Alpine*') {
+        if ($SkipTBA -eq 'True' -or $SkipJapTitle -eq 'True'){
             $jsonPayload = @"
     {
         "username": "Posterizarr",
@@ -164,6 +340,16 @@ function SendMessage {
                 "inline": true
             },
             {
+                "name": "TBA Skipped",
+                "value": "$SkipTBACount",
+                "inline": true
+            },
+            {
+                "name": "Jap/Chinese Skipped",
+                "value": "$SkipJapTitleCount",
+                "inline": true
+            },
+            {
                 "name": "",
                 "value": ":frame_photo:",
                 "inline": false
@@ -195,24 +381,9 @@ function SendMessage {
         ]
     }
 "@
-            $global:NotifyUrl = $global:NotifyUrl.replace('discord://', 'https://discord.com/api/webhooks/')
-            if ($global:SendNotification -eq 'True') {
-                Push-ObjectToDiscord -strDiscordWebhook $global:NotifyUrl -objPayload $jsonPayload
-            }
         }
         Else {
-            if ($global:SendNotification -eq 'True') {
-                if ($errorCount -ge '1') {
-                    apprise --notification-type="error" --title="Posterizarr" --body="Run took: $FormattedTimespawn`nIt Created '$posterCount' Images`n`nDuring execution '$errorCount' Errors occurred, please check log for detailed description." "$global:NotifyUrl"
-                }
-                Else {
-                    apprise --notification-type="success" --title="Posterizarr" --body="Run took: $FormattedTimespawn`nIt Created '$posterCount' Images" "$global:NotifyUrl"
-                }
-            }
-        }
-    }
-    if ($global:NotifyUrl -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -notlike 'PSDocker-Alpine*') {
-        $jsonPayload = @"
+            jsonPayload = @"
     {
         "username": "Posterizarr",
         "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/main/images/webhook.png",
@@ -284,6 +455,7 @@ function SendMessage {
         ]
     }
 "@
+        }
         if ($global:SendNotification -eq 'True') {
             Push-ObjectToDiscord -strDiscordWebhook $global:NotifyUrl -objPayload $jsonPayload
         }
@@ -4901,6 +5073,8 @@ Elseif ($Tautulli) {
         }
     }
 
+    $SkipTBACount = 0
+    $SkipJapTitleCount = 0
     Write-Entry -Message "Starting Show/Season Poster/Background/TitleCard Creation part..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
     # Show Part
     foreach ($entry in $AllShows) {
@@ -6257,9 +6431,11 @@ Elseif ($Tautulli) {
                                 $cjkTitlePattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsThai}]'
                                 if ($SkipTBA -eq 'True' -and $global:EPTitle -eq 'TBA') {
                                     Write-Entry -Subtext "Skipping episode because Title is 'TBA'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                    $SkipTBACount++
                                 }
                                 Elseif ($SkipJapTitle -eq 'True' -and $global:EPTitle -match $cjkTitlePattern){
                                     Write-Entry -Subtext "Skipping episode because Title contains Jap/Chinese Chars" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                    $SkipJapTitleCount++
                                 }
                                 Else {
                                     if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
@@ -6653,9 +6829,11 @@ Elseif ($Tautulli) {
                                 $cjkTitlePattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsThai}]'
                                 if ($SkipTBA -eq 'True' -and $global:EPTitle -eq 'TBA') {
                                     Write-Entry -Subtext "Skipping episode because Title is 'TBA'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                    $SkipTBACount++
                                 }
                                 Elseif ($SkipJapTitle -eq 'True' -and $global:EPTitle -match $cjkTitlePattern){
                                     Write-Entry -Subtext "Skipping episode because Title contains Jap/Chinese Chars" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                    $SkipJapTitleCount++
                                 }
                                 Else {
                                     if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
@@ -7379,6 +7557,8 @@ else {
     $EpisodeCount = 0
     $BackgroundCount = 0
     $PosterUnknownCount = 0
+    $SkipTBACount = 0
+    $SkipJapTitleCount = 0
     $AllShows = $Libraries | Where-Object { $_.'Library Type' -eq 'show' }
     $AllMovies = $Libraries | Where-Object { $_.'Library Type' -eq 'movie' }
 
@@ -9202,9 +9382,11 @@ else {
                                 $cjkTitlePattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsThai}]'
                                 if ($SkipTBA -eq 'True' -and $global:EPTitle -eq 'TBA') {
                                     Write-Entry -Subtext "Skipping episode because Title is 'TBA'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                    $SkipTBACount++
                                 }
                                 Elseif ($SkipJapTitle -eq 'True' -and $global:EPTitle -match $cjkTitlePattern){
                                     Write-Entry -Subtext "Skipping episode because Title contains Jap/Chinese Chars" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                    $SkipJapTitleCount++
                                 }
                                 Else {
                                     if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
@@ -9581,9 +9763,11 @@ else {
                                 $cjkTitlePattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsThai}]'
                                 if ($SkipTBA -eq 'True' -and $global:EPTitle -eq 'TBA') {
                                     Write-Entry -Subtext "Skipping episode because Title is 'TBA'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                    $SkipTBACount++
                                 }
                                 Elseif ($SkipJapTitle -eq 'True' -and $global:EPTitle -match $cjkTitlePattern){
                                     Write-Entry -Subtext "Skipping episode because Title contains Jap/Chinese Chars" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                    $SkipJapTitleCount++
                                 }
                                 Else {
                                     if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
@@ -10016,7 +10200,101 @@ else {
     # Send Notification when running in Docker
     if ($global:NotifyUrl -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker-Alpine*') {
         if ($global:NotifyUrl -like '*discord*') {
-            $jsonPayload = @"
+            if ($SkipTBA -eq 'True' -or $SkipJapTitle -eq 'True'){
+                $jsonPayload = @"
+        {
+            "username": "Posterizarr",
+            "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/main/images/webhook.png",
+            "content": "",
+            "embeds": [
+            {
+                "author": {
+                "name": "Posterizarr @Github",
+                "url": "https://github.com/fscorrupt/Posterizarr"
+                },
+                "description": "Run took: $FormattedTimespawn $(if ($errorCount -ge '1') {"\n During execution Errors occurred, please check log for detailed description."})",
+                "timestamp": "$(((Get-Date).ToUniversalTime()).ToString("yyyy-MM-ddTHH:mm:ss.fffZ"))",
+                "color": $(if ($errorCount -ge '1') {16711680}Elseif ($Testing){8388736}Elseif ($FallbackCount.count -gt '1' -or $PosterUnknownCount -ge '1' -or $TextTruncatedCount.count -gt '1'){15120384}Else{5763719}),
+                "fields": [
+                {
+                    "name": "",
+                    "value": ":bar_chart:",
+                    "inline": false
+                },
+                {
+                    "name": "Errors",
+                    "value": "$errorCount",
+                    "inline": false
+                },
+                {
+                    "name": "Fallbacks",
+                    "value": "$($FallbackCount.count)",
+                    "inline": true
+                },
+                {
+                    "name": "Textless",
+                    "value": "$($TextlessCount.count)",
+                    "inline": true
+                },
+                {
+                    "name": "Truncated",
+                    "value": "$($TextTruncatedCount.count)",
+                    "inline": true
+                },
+                {
+                    "name": "Unknown",
+                    "value": "$PosterUnknownCount",
+                    "inline": true
+                },
+                {
+                    "name": "TBA Skipped",
+                    "value": "$SkipTBACount",
+                    "inline": true
+                },
+                {
+                    "name": "Jap/Chinese Skipped",
+                    "value": "$SkipJapTitleCount",
+                    "inline": true
+                },
+                {
+                    "name": "",
+                    "value": ":frame_photo:",
+                    "inline": false
+                },
+                {
+                    "name": "Posters",
+                    "value": "$($posterCount-$SeasonCount-$BackgroundCount-$EpisodeCount)",
+                    "inline": false
+                },
+                {
+                    "name": "Backgrounds",
+                    "value": "$BackgroundCount",
+                    "inline": true
+                },
+                {
+                    "name": "Seasons",
+                    "value": "$SeasonCount",
+                    "inline": true
+                },
+                {
+                    "name": "TitleCards",
+                    "value": "$EpisodeCount",
+                    "inline": true
+                }
+                ],
+                "thumbnail": {
+                    "url": "https://github.com/fscorrupt/Posterizarr/raw/main/images/webhook.png"
+                },
+                "footer": {
+                    "text": "$Platform  | current - v$CurrentScriptVersion  | latest - v$LatestScriptVersion"
+                }
+            }
+            ]
+        }
+"@
+            }
+            Else{
+                $jsonPayload = @"
         {
             "username": "Posterizarr",
             "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/main/images/webhook.png",
@@ -10097,6 +10375,7 @@ else {
             ]
         }
 "@
+            }
             $global:NotifyUrl = $global:NotifyUrl.replace('discord://', 'https://discord.com/api/webhooks/')
             if ($global:SendNotification -eq 'True') {
                 Push-ObjectToDiscord -strDiscordWebhook $global:NotifyUrl -objPayload $jsonPayload
@@ -10114,7 +10393,102 @@ else {
         }
     }
     if ($global:NotifyUrl -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -notlike 'PSDocker-Alpine*') {
-        $jsonPayload = @"
+        if ($SkipTBA -eq 'True' -or $SkipJapTitle -eq 'True'){
+            $jsonPayload = @"
+        {
+            "username": "Posterizarr",
+            "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/main/images/webhook.png",
+            "content": "",
+            "embeds": [
+            {
+                "author": {
+                "name": "Posterizarr @Github",
+                "url": "https://github.com/fscorrupt/Posterizarr"
+                },
+                "description": "Run took: $FormattedTimespawn $(if ($errorCount -ge '1') {"\n During execution Errors occurred, please check log for detailed description."})",
+                "timestamp": "$(((Get-Date).ToUniversalTime()).ToString("yyyy-MM-ddTHH:mm:ss.fffZ"))",
+                "color": $(if ($errorCount -ge '1') {16711680}Elseif ($Testing){8388736}Elseif ($FallbackCount.count -gt '1' -or $PosterUnknownCount -ge '1' -or $TextTruncatedCount.count -gt '1'){15120384}Else{5763719}),
+                "fields": [
+                {
+                    "name": "",
+                    "value": ":bar_chart:",
+                    "inline": false
+                },
+                {
+                    "name": "Errors",
+                    "value": "$errorCount",
+                    "inline": false
+                },
+                {
+                    "name": "Fallbacks",
+                    "value": "$($FallbackCount.count)",
+                    "inline": true
+                },
+                {
+                    "name": "Textless",
+                    "value": "$($TextlessCount.count)",
+                    "inline": true
+                },
+                {
+                    "name": "Truncated",
+                    "value": "$($TextTruncatedCount.count)",
+                    "inline": true
+                },
+                {
+                    "name": "Unknown",
+                    "value": "$PosterUnknownCount",
+                    "inline": true
+                },
+                {
+                    "name": "TBA Skipped",
+                    "value": "$SkipTBACount",
+                    "inline": true
+                },
+                {
+                    "name": "Jap/Chinese Skipped",
+                    "value": "$SkipJapTitleCount",
+                    "inline": true
+                },
+                {
+                    "name": "",
+                    "value": ":frame_photo:",
+                    "inline": false
+                },
+                {
+                    "name": "Posters",
+                    "value": "$($posterCount-$SeasonCount-$BackgroundCount-$EpisodeCount)",
+                    "inline": false
+                },
+                {
+                    "name": "Backgrounds",
+                    "value": "$BackgroundCount",
+                    "inline": true
+                },
+                {
+                    "name": "Seasons",
+                    "value": "$SeasonCount",
+                    "inline": true
+                },
+                {
+                    "name": "TitleCards",
+                    "value": "$EpisodeCount",
+                    "inline": true
+                }
+                ],
+                "thumbnail": {
+                    "url": "https://github.com/fscorrupt/Posterizarr/raw/main/images/webhook.png"
+                },
+                "footer": {
+                    "text": "$Platform  | current - v$CurrentScriptVersion  | latest - v$LatestScriptVersion"
+                }
+
+            }
+            ]
+        }
+"@
+        }
+        Else {
+            $jsonPayload = @"
         {
             "username": "Posterizarr",
             "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/main/images/webhook.png",
@@ -10196,6 +10570,7 @@ else {
             ]
         }
 "@
+        }
         if ($global:SendNotification -eq 'True') {
             Push-ObjectToDiscord -strDiscordWebhook $global:NotifyUrl -objPayload $jsonPayload
         }
