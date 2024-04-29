@@ -8,7 +8,7 @@ param (
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.2.13"
+$CurrentScriptVersion = "1.2.14"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -6430,11 +6430,11 @@ Elseif ($Tautulli) {
                                 $EpisodeTempImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\temp.jpg"
                                 $cjkTitlePattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsThai}]'
                                 if ($SkipTBA -eq 'True' -and $global:EPTitle -eq 'TBA') {
-                                    Write-Entry -Subtext "Skipping episode because Title is 'TBA'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                    Write-Entry -Subtext "Skipping $global:FileNaming of $global:show_name because Title is 'TBA'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                     $SkipTBACount++
                                 }
                                 Elseif ($SkipJapTitle -eq 'True' -and $global:EPTitle -match $cjkTitlePattern){
-                                    Write-Entry -Subtext "Skipping episode because Title contains Jap/Chinese Chars" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                    Write-Entry -Subtext "Skipping $global:FileNaming of $global:show_name because Title contains Jap/Chinese Chars" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                     $SkipJapTitleCount++
                                 }
                                 Else {
@@ -6828,11 +6828,11 @@ Elseif ($Tautulli) {
                                 $EpisodeImage = $EpisodeImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
                                 $cjkTitlePattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsThai}]'
                                 if ($SkipTBA -eq 'True' -and $global:EPTitle -eq 'TBA') {
-                                    Write-Entry -Subtext "Skipping episode because Title is 'TBA'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                    Write-Entry -Subtext "Skipping $global:FileNaming of $global:show_name because Title is 'TBA'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                     $SkipTBACount++
                                 }
                                 Elseif ($SkipJapTitle -eq 'True' -and $global:EPTitle -match $cjkTitlePattern){
-                                    Write-Entry -Subtext "Skipping episode because Title contains Jap/Chinese Chars" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                    Write-Entry -Subtext "Skipping $global:FileNaming of $global:show_name because Title contains Jap/Chinese Chars" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                     $SkipJapTitleCount++
                                 }
                                 Else {
@@ -9381,11 +9381,11 @@ else {
                                 $EpisodeTempImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\temp.jpg"
                                 $cjkTitlePattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsThai}]'
                                 if ($SkipTBA -eq 'True' -and $global:EPTitle -eq 'TBA') {
-                                    Write-Entry -Subtext "Skipping episode because Title is 'TBA'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                    Write-Entry -Subtext "Skipping $global:FileNaming of $global:show_name because Title is 'TBA'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                     $SkipTBACount++
                                 }
                                 Elseif ($SkipJapTitle -eq 'True' -and $global:EPTitle -match $cjkTitlePattern){
-                                    Write-Entry -Subtext "Skipping episode because Title contains Jap/Chinese Chars" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                    Write-Entry -Subtext "Skipping $global:FileNaming of $global:show_name because Title contains Jap/Chinese Chars" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                     $SkipJapTitleCount++
                                 }
                                 Else {
@@ -9762,11 +9762,11 @@ else {
                                 $EpisodeImage = $EpisodeImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
                                 $cjkTitlePattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsThai}]'
                                 if ($SkipTBA -eq 'True' -and $global:EPTitle -eq 'TBA') {
-                                    Write-Entry -Subtext "Skipping episode because Title is 'TBA'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                    Write-Entry -Subtext "Skipping $global:FileNaming of $global:show_name because Title is 'TBA'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                     $SkipTBACount++
                                 }
                                 Elseif ($SkipJapTitle -eq 'True' -and $global:EPTitle -match $cjkTitlePattern){
-                                    Write-Entry -Subtext "Skipping episode because Title contains Jap/Chinese Chars" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                    Write-Entry -Subtext "Skipping $global:FileNaming of $global:show_name because Title contains Jap/Chinese Chars" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                     $SkipJapTitleCount++
                                 }
                                 Else {
