@@ -17,7 +17,7 @@ services:
       - "proxy"
     volumes:
       - "/opt/appdata/posterizarr:/config:rw"
-      - "/opt/appdata/plex-meta-manager/assets:/assets:rw"
+      - "/opt/appdata/kometa/assets:/assets:rw"
 networks:
   proxy:
     driver: bridge
