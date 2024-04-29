@@ -34,7 +34,8 @@
     "SeasonPosters": "true",
     "BackgroundPosters": "false",
     "TitleCards": "false",
-    "SkipTBA": "false"
+    "SkipTBA": "false",
+    "SkipJapTitle": "false"
   },
   "OverlayPart":{
     "ImageProcessing": "true",

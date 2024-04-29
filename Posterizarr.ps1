@@ -8,7 +8,7 @@ param (
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.2.11"
+$CurrentScriptVersion = "1.2.12"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -2654,6 +2654,7 @@ $global:Posters = $config.PrerequisitePart.Posters
 $global:BackgroundPosters = $config.PrerequisitePart.BackgroundPosters
 $global:TitleCards = $config.PrerequisitePart.TitleCards
 $SkipTBA = $config.PrerequisitePart.SkipTBA
+$SkipJapTitle = $config.PrerequisitePart.SkipJapTitle
 
 # Poster Overlay Part
 $global:ImageProcessing = $config.OverlayPart.ImageProcessing
@@ -6253,8 +6254,12 @@ Elseif ($Tautulli) {
                                 $EpisodeImage = $EpisodeImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
 
                                 $EpisodeTempImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\temp.jpg"
+                                $cjkTitlePattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsThai}]'
                                 if ($SkipTBA -eq 'True' -and $global:EPTitle -eq 'TBA') {
                                     Write-Entry -Subtext "Skipping episode because Title is 'TBA'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                }
+                                Elseif ($SkipJapTitle -eq 'True' -and $global:EPTitle -match $cjkTitlePattern){
+                                    Write-Entry -Subtext "Skipping episode because Title contains Jap/Chinese Chars" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                 }
                                 Else {
                                     if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
@@ -6645,8 +6650,12 @@ Elseif ($Tautulli) {
 
                                 $EpisodeImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_$global:FileNaming.jpg"
                                 $EpisodeImage = $EpisodeImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
+                                $cjkTitlePattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsThai}]'
                                 if ($SkipTBA -eq 'True' -and $global:EPTitle -eq 'TBA') {
                                     Write-Entry -Subtext "Skipping episode because Title is 'TBA'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                }
+                                Elseif ($SkipJapTitle -eq 'True' -and $global:EPTitle -match $cjkTitlePattern){
+                                    Write-Entry -Subtext "Skipping episode because Title contains Jap/Chinese Chars" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                 }
                                 Else {
                                     if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
@@ -9190,8 +9199,12 @@ else {
                                 $EpisodeImage = $EpisodeImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
 
                                 $EpisodeTempImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\temp.jpg"
+                                $cjkTitlePattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsThai}]'
                                 if ($SkipTBA -eq 'True' -and $global:EPTitle -eq 'TBA') {
                                     Write-Entry -Subtext "Skipping episode because Title is 'TBA'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                }
+                                Elseif ($SkipJapTitle -eq 'True' -and $global:EPTitle -match $cjkTitlePattern){
+                                    Write-Entry -Subtext "Skipping episode because Title contains Jap/Chinese Chars" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                 }
                                 Else {
                                     if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
@@ -9565,8 +9578,12 @@ else {
 
                                 $EpisodeImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_$global:FileNaming.jpg"
                                 $EpisodeImage = $EpisodeImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
+                                $cjkTitlePattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsThai}]'
                                 if ($SkipTBA -eq 'True' -and $global:EPTitle -eq 'TBA') {
                                     Write-Entry -Subtext "Skipping episode because Title is 'TBA'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                }
+                                Elseif ($SkipJapTitle -eq 'True' -and $global:EPTitle -match $cjkTitlePattern){
+                                    Write-Entry -Subtext "Skipping episode because Title contains Jap/Chinese Chars" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                 }
                                 Else {
                                     if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {

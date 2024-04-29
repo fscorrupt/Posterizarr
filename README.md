@@ -134,6 +134,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpin
     - `BackgroundPosters`: Set to `true` to also create background posters.
     - `TitleCards` : Set to `true` to also create title cards.
     - `SkipTBA` : Set to `true` to skip TitleCard creation if the Titletext is `TBA`.
+    - `SkipJapTitle` : Set to `true` to skip TitleCard creation if the Titletext is `Jap or Chinese`.
     </details>
     <details close>
     <summary>OverlayPart:</summary>
