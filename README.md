@@ -289,6 +289,7 @@ To use it we need to configure a script in Tautulli, please follow these instruc
       - "/opt/appdata/posterizarr:/posterizarr:rw"
     ```
 1. Download the [trigger.py](trigger.py) from the GH and place it in the Tautulli Script dir -> [Tautulli-Wiki](https://github.com/Tautulli/Tautulli/wiki/Custom-Scripts)
+    - You may have to set `chmod +x` to the file.
 1. Open Tautulli and go to Settings -> `NOTIFICATION AGENTS`
 1. Click on `Add a new notification agent` and select `Script`
 1. Specify the script folder where you placed the script and select the script file.
