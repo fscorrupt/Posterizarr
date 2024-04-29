@@ -8,7 +8,7 @@ param (
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.2.14"
+$CurrentScriptVersion = "1.2.15"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -5752,8 +5752,9 @@ Elseif ($Tautulli) {
                     $global:SeasonNumber = $global:seasonNumbers[$i]
                     $global:SeasonRatingKey = $global:SeasonRatingKeys[$i]
                     $global:PlexSeasonUrl = $global:PlexSeasonUrls[$i]
-                    $global:season = "Season" + $global:SeasonNumber.PadLeft(2, '0')
-
+                    if ($global:SeasonNumber){
+                        $global:season = "Season" + $global:SeasonNumber.PadLeft(2, '0')
+                    }
                     if ($LibraryFolders -eq 'true') {
                         $SeasonImageoriginal = "$EntryDir\$global:season.jpg"
                         $TestPath = $EntryDir
@@ -8931,8 +8932,9 @@ else {
                     }
                     $global:SeasonNumber = $global:seasonNumbers[$i]
                     $global:PlexSeasonUrl = $global:PlexSeasonUrls[$i]
-                    $global:season = "Season" + $global:SeasonNumber.PadLeft(2, '0')
-
+                    if ($global:SeasonNumber){
+                        $global:season = "Season" + $global:SeasonNumber.PadLeft(2, '0')
+                    }
                     if ($LibraryFolders -eq 'true') {
                         $SeasonImageoriginal = "$EntryDir\$global:season.jpg"
                         $TestPath = $EntryDir
