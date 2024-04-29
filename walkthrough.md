@@ -182,14 +182,14 @@
         cd /opt/appdata
         mkdir Posterizarr
         cd Posterizarr
-        docker compose -up -d
+        docker compose up -d
         ```
     - Windows:
         ```
         cd C:\Github
         mkdir Posterizarr
         cd Posterizarr
-        docker compose -up -d
+        docker compose up -d
         ```
     - Now it should download everything and start up your container.
 3. On first run the container will download the required files and also create the folder structure for you.
