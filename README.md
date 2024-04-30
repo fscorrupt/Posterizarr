@@ -510,6 +510,10 @@ Following these steps will allow you to import the `Module1.bas` file containing
   </a>
 </p>
 </details>
+
+> [!TIP]
+> - It was made using this Posterizarr [config](MyPersonalConfig.json).
+
 <details close>
 <summary>🖼️Assets after Kometa run:</summary>
 <br>
@@ -519,6 +523,9 @@ Following these steps will allow you to import the `Module1.bas` file containing
   </a>
 </p>
 </details>
+
+> [!TIP]
+> - It was made using this Kometa [config](https://github.com/Kometa-Team/Community-Configs/tree/master/fscorrupt).
 
 ### Enjoy
 
