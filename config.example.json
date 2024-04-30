@@ -24,8 +24,8 @@
     "maxLogs": "5",
     "logLevel": "2",
     "font": "Rocky.ttf",
-    "backgroundfont": "Rocky.ttf",
-    "titlecardfont": "Rocky.ttf",
+    "backgroundfont": "Comfortaa-Medium.ttf",
+    "titlecardfont": "Comfortaa-Medium.ttf",
     "overlayfile": "overlay.png",
     "backgroundoverlayfile": "backgroundoverlay.png",
     "titlecardoverlayfile": "backgroundoverlay.png",
@@ -48,12 +48,12 @@
     "AddOverlay": "true",
     "fontcolor": "white",
     "bordercolor": "white",
-    "minPointSize": "95",
-    "maxPointSize": "250",
+    "minPointSize": "45",
+    "maxPointSize": "300",
     "borderwidth": "30",
     "MaxWidth": "1900",
     "MaxHeight": "500",
-    "text_offset": "+400"
+    "text_offset": "+430"
   },
   "SeasonPosterOverlayPart": {
     "fontAllCaps": "true",
@@ -76,10 +76,10 @@
     "AddText": "true",
     "fontcolor": "white",
     "bordercolor": "white",
-    "minPointSize": "95",
-    "maxPointSize": "250",
+    "minPointSize": "100",
+    "maxPointSize": "300",
     "borderwidth": "30",
-    "MaxWidth": "3200",
+    "MaxWidth": "3640",
     "MaxHeight": "500",
     "text_offset": "+200"
   },
@@ -95,10 +95,10 @@
     "fontAllCaps": "true",
     "AddEPTitleText": "true",
     "fontcolor": "white",
-    "minPointSize": "95",
-    "maxPointSize": "250",
+    "minPointSize": "50",
+    "maxPointSize": "150",
     "MaxWidth": "3640",
-    "MaxHeight": "350",
+    "MaxHeight": "280",
     "text_offset": "+300"
   },
   "TitleCardEPTextPart": {
@@ -107,9 +107,9 @@
     "fontAllCaps": "true",
     "AddEPText": "true",
     "fontcolor": "white",
-    "minPointSize": "60",
-    "maxPointSize": "100",
-    "MaxWidth": "1200",
+    "minPointSize": "50",
+    "maxPointSize": "80",
+    "MaxWidth": "1000",
     "MaxHeight": "120",
     "text_offset": "+150"
   }
