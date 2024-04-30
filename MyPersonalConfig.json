@@ -1,0 +1,129 @@
+{
+  "ApiPart": {
+    "tvdbapi": "xxxxxxxxxxxxxx-xxxxxxxxxxxxxxxxxxxx-xxxxxxxxxxx",
+    "tmdbtoken": "xxxxxxxxxxxxxx-xxxxxxxxxxxxxxxxxxxx-xxxxxxxxxxx",
+    "FanartTvAPIKey": "xxxxxxxxxxxxxx-xxxxxxxxxxxxxxxxxxxx-xxxxxxxxxxx",
+    "PlexToken": "xxxxxxxxxxxxxx-xxxxxxxxxxxxxxxxxxxx-xxxxxxxxxxx",
+    "FavProvider": "tmdb",
+    "PreferredLanguageOrder": [
+      "xx",
+      "en",
+      "de"
+    ],
+    "PreferredSeasonLanguageOrder": [
+      "xx",
+      "en",
+      "de"
+    ]
+  },
+  "PlexPart": {
+    "LibstoExclude": [
+      "Youtube",
+      "Audiobooks",
+      "Kids Audiobooks",
+      "Tech Trainings"
+    ],
+    "PlexUrl": "http://plex:32400"
+  },
+  "Notification": {
+    "SendNotification": "True",
+    "AppriseUrl": "discord://xxxxxxxxxxxxxx-xxxxxxxxxxxxxxxxxxxx-xxxxxxxxxxx/xxxxxxxxxxxxxx-xxxxxxxxxxxxxxxxxxxx-xxxxxxxxxxx",
+    "Discord": ""
+  },
+  "PrerequisitePart": {
+    "AssetPath": "/assets",
+    "magickinstalllocation": "C:\\PosterTemp\\ImageMagickPortable",
+    "maxLogs": "5",
+    "font": "Comfortaa-Medium.ttf",
+    "backgroundfont": "Comfortaa-Medium.ttf",
+    "titlecardfont": "Comfortaa-Medium.ttf",
+    "overlayfile": "overlay.png",
+    "backgroundoverlayfile": "backgroundoverlay.png",
+    "titlecardoverlayfile": "backgroundoverlay.png",
+    "LibraryFolders": "true",
+    "Posters": "true",
+    "SeasonPosters": "true",
+    "BackgroundPosters": "false",
+    "TitleCards": "true",
+    "show_skipped": "false",
+    "logLevel": "2",
+    "SkipTBA": "true",
+    "SkipJapTitle": "true"
+  },
+  "OverlayPart": {
+    "ImageProcessing": "true",
+    "outputQuality": "100%"
+  },
+  "PosterOverlayPart": {
+    "fontAllCaps": "true",
+    "AddBorder": "true",
+    "AddText": "true",
+    "AddOverlay": "true",
+    "fontcolor": "white",
+    "bordercolor": "white",
+    "minPointSize": "45",
+    "maxPointSize": "300",
+    "borderwidth": "30",
+    "MaxWidth": "1900",
+    "MaxHeight": "500",
+    "text_offset": "+430"
+  },
+  "BackgroundOverlayPart": {
+    "fontAllCaps": "true",
+    "AddOverlay": "true",
+    "AddBorder": "true",
+    "AddText": "true",
+    "fontcolor": "white",
+    "bordercolor": "white",
+    "minPointSize": "100",
+    "maxPointSize": "300",
+    "borderwidth": "30",
+    "MaxWidth": "3640",
+    "MaxHeight": "500",
+    "text_offset": "+200"
+  },
+  "TitleCardOverlayPart": {
+    "UseBackgroundAsTitleCard": "true",
+    "AddOverlay": "true",
+    "AddBorder": "true",
+    "bordercolor": "white",
+    "borderwidth": "30",
+    "BackgroundFallback": "true"
+  },
+  "TitleCardTitleTextPart": {
+    "fontAllCaps": "true",
+    "AddEPTitleText": "true",
+    "fontcolor": "white",
+    "minPointSize": "50",
+    "maxPointSize": "150",
+    "MaxWidth": "3640",
+    "MaxHeight": "280",
+    "text_offset": "+300"
+  },
+  "TitleCardEPTextPart": {
+    "fontAllCaps": "true",
+    "AddEPText": "true",
+    "fontcolor": "white",
+    "minPointSize": "50",
+    "maxPointSize": "80",
+    "MaxWidth": "1000",
+    "MaxHeight": "120",
+    "text_offset": "+150",
+    "SeasonTCText": "Season",
+    "EpisodeTCText": "Episode"
+  },
+  "SeasonPosterOverlayPart": {
+    "fontAllCaps": "true",
+    "AddBorder": "true",
+    "AddText": "true",
+    "AddOverlay": "true",
+    "fontcolor": "white",
+    "bordercolor": "white",
+    "minPointSize": "95",
+    "maxPointSize": "250",
+    "borderwidth": "30",
+    "MaxWidth": "1900",
+    "MaxHeight": "500",
+    "text_offset": "+400"
+  }
+}
