@@ -8,7 +8,7 @@ param (
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.2.15"
+$CurrentScriptVersion = "1.2.16"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -123,7 +123,7 @@ function SendMessage {
     )
     if ($global:NotifyUrl -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker-Alpine*') {
         if ($global:NotifyUrl -like '*discord*') {
-            if ($SkipTBA -eq 'True' -or $SkipJapTitle -eq 'True'){
+            if ($SkipTBA -eq 'True' -or $SkipJapTitle -eq 'True') {
                 $jsonPayload = @"
     {
         "username": "Posterizarr",
@@ -207,7 +207,7 @@ function SendMessage {
     }
 "@
             }
-            Else{
+            Else {
                 $jsonPayload = @"
     {
         "username": "Posterizarr",
@@ -298,7 +298,7 @@ function SendMessage {
         }
     }
     if ($global:NotifyUrl -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -notlike 'PSDocker-Alpine*') {
-        if ($SkipTBA -eq 'True' -or $SkipJapTitle -eq 'True'){
+        if ($SkipTBA -eq 'True' -or $SkipJapTitle -eq 'True') {
             $jsonPayload = @"
     {
         "username": "Posterizarr",
@@ -4166,14 +4166,14 @@ Elseif ($Tautulli) {
     # {grandparent_rating_key}	The unique identifier for the TV show or artist.
 
     $Libraries = @()
-    if ($RatingKey -and $mediatype) {
+    if (($RatingKey -or $parentratingkey -or $grandparentratingkey) -and $mediatype) {
         if ($mediatype -eq 'movie') {
             $contentquery = "video"
             $queryKey = $RatingKey
         }
         Else {
             $contentquery = "Directory"
-            $queryKey = $grandparentratingkey
+            $queryKey = if ($grandparentratingkey) { $grandparentratingkey }Else { $parentratingkey }
         }
         $extractedFolder = $null
         $Seasondata = $null
@@ -5752,7 +5752,7 @@ Elseif ($Tautulli) {
                     $global:SeasonNumber = $global:seasonNumbers[$i]
                     $global:SeasonRatingKey = $global:SeasonRatingKeys[$i]
                     $global:PlexSeasonUrl = $global:PlexSeasonUrls[$i]
-                    if ($global:SeasonNumber){
+                    if ($global:SeasonNumber) {
                         $global:season = "Season" + $global:SeasonNumber.PadLeft(2, '0')
                     }
                     if ($LibraryFolders -eq 'true') {
@@ -6434,7 +6434,7 @@ Elseif ($Tautulli) {
                                     Write-Entry -Subtext "Skipping $global:FileNaming of $global:show_name because Title is 'TBA'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                     $SkipTBACount++
                                 }
-                                Elseif ($SkipJapTitle -eq 'True' -and $global:EPTitle -match $cjkTitlePattern){
+                                Elseif ($SkipJapTitle -eq 'True' -and $global:EPTitle -match $cjkTitlePattern) {
                                     Write-Entry -Subtext "Skipping $global:FileNaming of $global:show_name because Title contains Jap/Chinese Chars" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                     $SkipJapTitleCount++
                                 }
@@ -6832,7 +6832,7 @@ Elseif ($Tautulli) {
                                     Write-Entry -Subtext "Skipping $global:FileNaming of $global:show_name because Title is 'TBA'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                     $SkipTBACount++
                                 }
-                                Elseif ($SkipJapTitle -eq 'True' -and $global:EPTitle -match $cjkTitlePattern){
+                                Elseif ($SkipJapTitle -eq 'True' -and $global:EPTitle -match $cjkTitlePattern) {
                                     Write-Entry -Subtext "Skipping $global:FileNaming of $global:show_name because Title contains Jap/Chinese Chars" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                     $SkipJapTitleCount++
                                 }
@@ -8932,7 +8932,7 @@ else {
                     }
                     $global:SeasonNumber = $global:seasonNumbers[$i]
                     $global:PlexSeasonUrl = $global:PlexSeasonUrls[$i]
-                    if ($global:SeasonNumber){
+                    if ($global:SeasonNumber) {
                         $global:season = "Season" + $global:SeasonNumber.PadLeft(2, '0')
                     }
                     if ($LibraryFolders -eq 'true') {
@@ -9386,7 +9386,7 @@ else {
                                     Write-Entry -Subtext "Skipping $global:FileNaming of $global:show_name because Title is 'TBA'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                     $SkipTBACount++
                                 }
-                                Elseif ($SkipJapTitle -eq 'True' -and $global:EPTitle -match $cjkTitlePattern){
+                                Elseif ($SkipJapTitle -eq 'True' -and $global:EPTitle -match $cjkTitlePattern) {
                                     Write-Entry -Subtext "Skipping $global:FileNaming of $global:show_name because Title contains Jap/Chinese Chars" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                     $SkipJapTitleCount++
                                 }
@@ -9767,7 +9767,7 @@ else {
                                     Write-Entry -Subtext "Skipping $global:FileNaming of $global:show_name because Title is 'TBA'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                     $SkipTBACount++
                                 }
-                                Elseif ($SkipJapTitle -eq 'True' -and $global:EPTitle -match $cjkTitlePattern){
+                                Elseif ($SkipJapTitle -eq 'True' -and $global:EPTitle -match $cjkTitlePattern) {
                                     Write-Entry -Subtext "Skipping $global:FileNaming of $global:show_name because Title contains Jap/Chinese Chars" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                     $SkipJapTitleCount++
                                 }
@@ -10202,7 +10202,7 @@ else {
     # Send Notification when running in Docker
     if ($global:NotifyUrl -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker-Alpine*') {
         if ($global:NotifyUrl -like '*discord*') {
-            if ($SkipTBA -eq 'True' -or $SkipJapTitle -eq 'True'){
+            if ($SkipTBA -eq 'True' -or $SkipJapTitle -eq 'True') {
                 $jsonPayload = @"
         {
             "username": "Posterizarr",
@@ -10295,7 +10295,7 @@ else {
         }
 "@
             }
-            Else{
+            Else {
                 $jsonPayload = @"
         {
             "username": "Posterizarr",
@@ -10395,7 +10395,7 @@ else {
         }
     }
     if ($global:NotifyUrl -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -notlike 'PSDocker-Alpine*') {
-        if ($SkipTBA -eq 'True' -or $SkipJapTitle -eq 'True'){
+        if ($SkipTBA -eq 'True' -or $SkipJapTitle -eq 'True') {
             $jsonPayload = @"
         {
             "username": "Posterizarr",
