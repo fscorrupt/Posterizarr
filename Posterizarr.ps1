@@ -8,7 +8,7 @@ param (
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.2.16"
+$CurrentScriptVersion = "1.2.17"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -2720,7 +2720,6 @@ if ($env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker-Alpine*') {
         $global:NotifyUrl = $config.Notification.Discord
         if ($global:NotifyUrl -eq 'https://discordapp.com/api/webhooks/{WebhookID}/{WebhookToken}' -and $global:SendNotification -eq 'True') {
             Write-Entry -Message "Found default Notification Url, please update url in config..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-            Pause
             Exit
         }
     }
@@ -2732,7 +2731,6 @@ Else {
     $global:NotifyUrl = $config.Notification.Discord
     if ($global:NotifyUrl -eq 'https://discordapp.com/api/webhooks/{WebhookID}/{WebhookToken}' -and $global:SendNotification -eq 'True') {
         Write-Entry -Message "Found default Notification Url, please update url in config..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-        Pause
         Exit
     }
 }
@@ -2963,13 +2961,32 @@ foreach ($path in $LogsPath, $TempPath, $TestPath, $AssetPath) {
         New-Item -ItemType Directory -Path $path -Force | Out-Null
     }
 }
+# Check temp dir if there is a Currently running file present
+$CurrentlyRunning = Join-Path $TempPath 'Posterizarr.Running'
 
+if (Test-Path $CurrentlyRunning) {
+    Write-Entry -Message "Another Posterizarr instance already running, exiting now..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+    Write-Entry -Subtext "If its a false positive message you can manually delete the 'Posterizarr.Running' file in temp dir..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Warning
+    Exit
+}
+Else {
+    New-Item -Path $CurrentlyRunning -Force | out-null
+
+    if ($Tautulli) {
+        Write-Entry -Message "Recently Added running file created..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+    }
+    Elseif ($Testing) {
+        Write-Entry -Message "Testing running file created..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+    }
+    Else {
+        Write-Entry -Message "Posterizarr running file created..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+    }
+}
 # Delete all files and subfolders within the temp directory
 if (Test-Path $TempPath) {
-    Remove-Item -Path (Join-Path $TempPath '*') -Recurse -Force
+    Get-ChildItem -Path (Join-Path $TempPath '*') -Recurse | Where-Object { $_.Name -ne 'Posterizarr.Running' } | Remove-Item -Force
     Write-Entry -Message "Deleting temp folder: $TempPath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
 }
-
 if ($Testing) {
     if ((Test-Path $TestPath)) {
         Remove-Item -Path (Join-Path $TestPath '*') -Recurse -Force
@@ -4157,6 +4174,11 @@ Elseif ($Testing) {
                 }
             }
         }
+    }
+
+    # Clear Running File
+    if (Test-Path $CurrentlyRunning) {
+        Remove-Item -LiteralPath $CurrentlyRunning | out-null
     }
 }
 Elseif ($Tautulli) {
@@ -7280,6 +7302,11 @@ Elseif ($Tautulli) {
         Write-Entry -Message "No ImageChoices.csv found, creating dummy file for you..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
     }
     Write-Entry -Message "Script execution time: $FormattedTimespawn" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+
+    # Clear Running File
+    if (Test-Path $CurrentlyRunning) {
+        Remove-Item -LiteralPath $CurrentlyRunning | out-null
+    }
 }
 else {
     Write-Entry -Message "Query plex libs..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -10576,5 +10603,10 @@ else {
         if ($global:SendNotification -eq 'True') {
             Push-ObjectToDiscord -strDiscordWebhook $global:NotifyUrl -objPayload $jsonPayload
         }
+    }
+
+    # Clear Running File
+    if (Test-Path $CurrentlyRunning) {
+        Remove-Item -LiteralPath $CurrentlyRunning | out-null
     }
 }
