@@ -2978,6 +2978,9 @@ Else {
     Elseif ($Testing) {
         Write-Entry -Message "Testing running file created..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
     }
+    Elseif ($Manual) {
+        Write-Entry -Message "Manual running file created..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+    }
     Else {
         Write-Entry -Message "Posterizarr running file created..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
     }
