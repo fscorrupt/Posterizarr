@@ -8,7 +8,7 @@ param (
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.2.17"
+$CurrentScriptVersion = "1.2.18"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -3201,6 +3201,11 @@ if ($Manual) {
         # Move file back to original naming with Brackets.
         Move-Item -LiteralPath $PosterImage -destination $PosterImageoriginal -Force -ErrorAction SilentlyContinue
         Write-Entry -Subtext "Poster created and moved to: $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Manuallog.log -Color Green -log Info
+    }
+
+    # Clear Running File
+    if (Test-Path $CurrentlyRunning) {
+        Remove-Item -LiteralPath $CurrentlyRunning | out-null
     }
 }
 Elseif ($Testing) {
