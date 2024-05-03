@@ -235,16 +235,17 @@
 >    
 >*[Example Images](https://github.com/fscorrupt/Posterizarr?tab=readme-ov-file#images-from-testing-mode)*
     
-    - Docker 
+In this example `posterizarr` is the container name
     
-        In this example `posterizarr` is the container name
-        ```sh
-        docker exec -it posterizarr pwsh Posterizarr.ps1 -Testing
-        ```
-5. You can now fine tune all the `width, height, color` of `borders, text boxes and text` in config.json
+```sh
+docker exec -it posterizarr pwsh Posterizarr.ps1 -Testing
+```
+        
+6. You can now fine tune all the `width, height, color` of `borders, text boxes and text` in config.json
     - After each change of a setting just rerun the script in `-Testing` mode so you can see how it looks.
-6. The final step is to set a schedule and let the script run.
+7. The final step is to set a schedule and let the script run.
     - You can also trigger the poster creation on-demand, like this:
+      
         ```sh
         docker exec -it posterizarr pwsh Posterizarr.ps1
         ```
