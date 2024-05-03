@@ -368,7 +368,7 @@ Run the script with the `-Manual` switch:
 ```
 Follow the prompts to enter the source picture path, media folder name, and movie/show title to manually create a custom poster.
 
-## Platforms
+## Platforms & Tools
 
 ### Docker
 - [Docker-Compose Example File](docker-compose.yml)
@@ -397,37 +397,6 @@ Follow the prompts to enter the source picture path, media folder name, and movi
 >    - Example: `06:00` or `06:00,14:00`.....
 >  - AssetPath in config needs to be `/assets` not the path you entered.
 
-### Images from Testing Mode
-
-<details close>
-<summary>🖼️Posters</summary>
-<br>
-<p>
-  <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
-    <img alt="testing" height="100%" src="/images/testing.png">
-  </a>
-</p>
-</details>
-
-<details close>
-<summary>🖼️Backgrounds</summary>
-<br>
-<p>
-  <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
-    <img alt="backgroundtesting" height="100%" src="/images/backgroundtesting.png">
-  </a>
-</p>
-</details>
-
-<details close>
-<summary>🖼️TitleCards</summary>
-<br>
-<p>
-  <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
-    <img alt="titlecardtesting" height="100%" src="/images/titlecardtesting.png">
-  </a>
-</p>
-</details>
 
 ### How to create the Posterizarr.xlsm
 <details close>
@@ -474,6 +443,38 @@ Following these steps will allow you to import the `Module1.bas` file containing
 </details>
 
 ## Showcase
+
+### Images from Testing Mode
+
+<details close>
+<summary>🖼️Posters</summary>
+<br>
+<p>
+  <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
+    <img alt="testing" height="100%" src="/images/testing.png">
+  </a>
+</p>
+</details>
+
+<details close>
+<summary>🖼️Backgrounds</summary>
+<br>
+<p>
+  <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
+    <img alt="backgroundtesting" height="100%" src="/images/backgroundtesting.png">
+  </a>
+</p>
+</details>
+
+<details close>
+<summary>🖼️TitleCards</summary>
+<br>
+<p>
+  <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
+    <img alt="titlecardtesting" height="100%" src="/images/titlecardtesting.png">
+  </a>
+</p>
+</details>
 
 ### Webhook
 
