@@ -184,6 +184,18 @@
               - "C:/Docker/Posterizarr/assets:/assets:rw"
         ```
 2. Switch to the Directory where you want to build/start the container and place the `docker-compose.yml` there.
+
+   <details close>
+    <summary>🎥How-To Video:</summary>
+    <br>
+    <p>
+      <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
+        <img alt="docker" height="100%" src="/images/docker-compose.gif">
+      </a>
+    </p>
+
+    </details>
+    
     - Linux:
         ```
         cd /opt/appdata
@@ -199,8 +211,8 @@
         docker compose up -d
         ```
     - Now it should download everything and start up your container.
-3. On first run the container will download the required files and also create the folder structure for you.
-4. Copy the `config.example.json` to `config.json` and adjust the settings.
+4. On first run the container will download the required files and also create the folder structure for you.
+5. Copy the `config.example.json` to `config.json` and adjust the settings.
     - Enter all the api keys and tokens from **Getting Started - Step 1** under the `ApiPart` [Detailed Config Description](https://github.com/fscorrupt/Posterizarr?tab=readme-ov-file#configuration)
         - tvdbapi
         - tmdbtoken
