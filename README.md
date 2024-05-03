@@ -526,11 +526,11 @@ Following these steps will allow you to import the `Module1.bas` file containing
 > [!TIP]
 > - It was made using this Kometa [config](https://github.com/Kometa-Team/Community-Configs/tree/master/fscorrupt).
 
-### Enjoy
+## Enjoy
 
 Feel free to customize the script further to meet your specific preferences or automation requirements.
 
-### PR Rules
+## PR Rules
 
 > [!IMPORTANT]
 > - Adjust on each PR the version number in script on Line 11 `$CurrentScriptVersion = "1.0.55"`
