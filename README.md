@@ -42,7 +42,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpin
 >- **Please start the script as Admin on first run, otherwise the script is not able to install the prerequisites.**
 
 
-## **Key Features:**
+## Key Features
 >[!TIP]
 > If you want to use the created assets with Kometa (formerly PMM) make sure to check out the [Assets doc](https://kometa.wiki/en/latest/kometa/guides/assets/)
 >
