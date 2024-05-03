@@ -273,6 +273,8 @@ The posters are all placed in `AssetPath\...`. This can then be mounted in Komet
 >
 > Assuming you made the config like i did, Posterizarr will now create the Posters directly in Kometa´s Asset dir.
 
+## Modes
+
 ### Tautulli Mode Docker
 > [!IMPORTANT]
 > Tautulli and Posterizarr must run as a container in Docker
@@ -352,6 +354,22 @@ Run the script with the `-Testing` flag. In this mode, the script will create pi
 .\Posterizarr.ps1 -Testing
 ```
 
+### Manual Mode
+
+> [!IMPORTANT]
+> Alpha and only tested on Windows.
+> 
+> Currently only movie/show/season poster creation integrated
+
+Run the script with the `-Manual` switch:
+
+```powershell
+.\Posterizarr.ps1 -Manual
+```
+Follow the prompts to enter the source picture path, media folder name, and movie/show title to manually create a custom poster.
+
+## Platforms
+
 ### Docker
 - [Docker-Compose Example File](docker-compose.yml)
   - Change `RUN_TIME` in yaml to your needs **- You need to use 24H Time Format**
@@ -380,7 +398,6 @@ Run the script with the `-Testing` flag. In this mode, the script will create pi
 >  - AssetPath in config needs to be `/assets` not the path you entered.
 
 ### Images from Testing Mode
-
 
 <details close>
 <summary>🖼️Posters</summary>
@@ -411,21 +428,6 @@ Run the script with the `-Testing` flag. In this mode, the script will create pi
   </a>
 </p>
 </details>
-
-
-### Manual Mode
-
-> [!IMPORTANT]
-> Alpha and only tested on Windows.
-> 
-> Currently only movie/show/season poster creation integrated
-
-Run the script with the `-Manual` switch:
-
-```powershell
-.\Posterizarr.ps1 -Manual
-```
-Follow the prompts to enter the source picture path, media folder name, and movie/show title to manually create a custom poster.
 
 ### How to create the Posterizarr.xlsm
 <details close>
@@ -470,6 +472,8 @@ Following these steps will allow you to import the `Module1.bas` file containing
 </p>
 
 </details>
+
+## Showcase
 
 ### Webhook
 
