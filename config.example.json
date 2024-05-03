@@ -23,7 +23,7 @@
     "magickinstalllocation": "C:\\PosterTemp\\ImageMagickPortable",
     "maxLogs": "5",
     "logLevel": "2",
-    "font": "Rocky.ttf",
+    "font": "Comfortaa-Medium.ttf",
     "backgroundfont": "Comfortaa-Medium.ttf",
     "titlecardfont": "Comfortaa-Medium.ttf",
     "overlayfile": "overlay.png",
