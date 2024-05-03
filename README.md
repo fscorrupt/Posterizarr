@@ -241,7 +241,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpin
 3. Rename the config file to `config.json`.
 4. Place the `overlay.png`, or whatever file you defined earlier in `overlayfile`, and `Rocky.ttf` font, or whatever font you defined earlier in `font` files in the same directory as Posterizarr.ps1 which is `$ScriptRoot`.
 
-**Usage:**
+## Usage
 - **Automatic Mode**: Execute the script without any parameters to generate posters for your entire Plex library.
 - **Testing Mode**: Run the script with the `-Testing` switch to create Test posters before you start using it.
 - **Manual Mode**: Run the script with the `-Manual` switch to create custom posters manually.
