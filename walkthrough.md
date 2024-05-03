@@ -142,30 +142,46 @@
 ## Docker
 1. Adjust the [docker-compose.yml](https://github.com/fscorrupt/Posterizarr/raw/main/docker-compose.yml) to fit your environment.
     - Required environment variables and descriptions can be found [here](https://github.com/fscorrupt/Posterizarr?tab=readme-ov-file#docker)
+
+      Docker-Compose example on Linux:
         ```yml
         ---
         version: "3"
         services:
-        posterizarr:
+          posterizarr:
             hostname: "posterizarr"
             container_name: "posterizarr"
             environment:
-            - "PGID=1000"
-            - "PUID=1000"
-            - "TZ=Europe/Berlin"
-            - "UMASK=022"
-            - "TERM=xterm"
-            - "RUN_TIME=10:30,19:30"
+              - "PGID=1000"
+              - "PUID=1000"
+              - "TZ=Europe/Berlin"
+              - "UMASK=022"
+              - "TERM=xterm"
+              - "RUN_TIME=10:30,19:30"
             image: "ghcr.io/fscorrupt/docker-posterizarr:latest"
             restart: "unless-stopped"
-            networks:
-            - "proxy"
             volumes:
-            - "/opt/appdata/posterizarr:/config:rw"
-        networks:
-        proxy:
-            driver: bridge
-            external: true
+              - "/opt/appdata/posterizarr:/config:rw"
+              - "/opt/appdata/posterizarr/assets:/assets:rw"
+        ```
+
+      Docker-Compose example on Windows:
+        ```yml
+        ---
+        version: "3"
+        services:
+          posterizarr:
+            hostname: "posterizarr"
+            container_name: "posterizarr"
+            environment:
+              - "TZ=Europe/Berlin"
+              - "TERM=xterm"
+              - "RUN_TIME=10:30,19:30"
+            image: "ghcr.io/fscorrupt/docker-posterizarr:latest"
+            restart: "unless-stopped"
+            volumes:
+              - "C:/Docker/Posterizarr:/config:rw"
+              - "C:/Docker/Posterizarr/assets:/assets:rw"
         ```
 2. Switch to the Directory where you want to build/start the container and place the `docker-compose.yml` there.
     - Linux:
@@ -193,6 +209,7 @@
     - If you are happy with the default values, you should still ensure that the AssetPath value is set properly.
         - On Linux, like this: `/PathToAsset/Dir`
         - On Docker you have to use the binded volume path you specified in `docker-compose.yml`. If you use `/assets` without an extra volume binding it will create a folder in your scriptroot where all the artwork lands.
+            - In the case from above, do not use `C:/Docker/Posterizarr/assets` or `/opt/appdata/posterizarr/assets` as asset path, you have to use `/assets` as path.
         - On Windows, like this: `C:\\PathToAsset\\Dir` 
             - **Important** - you have to use double `\\` in json.
 1. After that it is recommended to run the script in `-Testing` Mode.
