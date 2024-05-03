@@ -3,7 +3,7 @@
 <br />
 <div align="center">
   <a href="https://github.com/fscorrupt/Posterizarr">
-    <img src="/images/webhook.png" alt="Logo" width="80" height="80">
+    <img src="/images/webhook.png" alt="Logo" width="100" height="100">
   </a>
 
 <h1 align="center">Posterizarr</h1>
