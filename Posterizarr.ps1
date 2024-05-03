@@ -8,7 +8,7 @@ param (
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.2.18"
+$CurrentScriptVersion = "1.2.19"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -6484,8 +6484,11 @@ Elseif ($Tautulli) {
                                         if ($global:FavProvider -eq 'TMDB') {
                                             if ($episode.tmdbid) {
                                                 $global:posterurl = GetTMDBShowBackground
-                                                if ($global:Fallback -eq "TVDB") {
+                                                if (!$global:posterurl) {
                                                     $global:posterurl = GetTVDBShowBackground
+                                                    if (!$global:posterurl) {
+                                                        $global:posterurl = GetFanartShowBackground
+                                                    }
                                                 }
                                                 if (!$global:posterurl) {
                                                     $global:IsFallback = $true
@@ -6507,6 +6510,9 @@ Elseif ($Tautulli) {
                                                 Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                                 $global:posterurl = GetTVDBShowBackground
                                                 if (!$global:posterurl) {
+                                                    $global:posterurl = GetFanartShowBackground
+                                                }
+                                                if (!$global:posterurl) {
                                                     $global:IsFallback = $true
                                                     if ($entry.PlexTitleCardUrl) {
                                                         GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage
@@ -6523,8 +6529,11 @@ Elseif ($Tautulli) {
                                         Else {
                                             if ($episode.tvdbid) {
                                                 $global:posterurl = GetTVDBShowBackground
-                                                if ($global:Fallback -eq "TMDB") {
+                                                if (!$global:posterurl) {
                                                     $global:posterurl = GetTMDBShowBackground
+                                                    if (!$global:posterurl) {
+                                                        $global:posterurl = GetFanartShowBackground
+                                                    }
                                                 }
                                                 if (!$global:posterurl) {
                                                     $global:IsFallback = $true
@@ -6542,6 +6551,9 @@ Elseif ($Tautulli) {
                                             else {
                                                 Write-Entry -Subtext "Can't search on TVDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                                 $global:posterurl = GetTMDBShowBackground
+                                                if (!$global:posterurl) {
+                                                    $global:posterurl = GetFanartShowBackground
+                                                }
                                                 if (!$global:posterurl) {
                                                     $global:IsFallback = $true
                                                     if ($entry.PlexTitleCardUrl) {
