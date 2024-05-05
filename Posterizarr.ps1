@@ -8,7 +8,7 @@ param (
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.2.19"
+$CurrentScriptVersion = "1.2.20"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -86,6 +86,9 @@ function Write-Entry {
         $PaddedType = $PaddedType.PadRight(10)
         $Linenumber = "L" + "." + "$($MyInvocation.ScriptLineNumber)"
         if ($Linenumber.Length -eq '5') {
+            $Linenumber = $Linenumber + "  "
+        }
+        if ($Linenumber.Length -eq '6') {
             $Linenumber = $Linenumber + " "
         }
         $TypeFormatted = "[{0}] {1}|{2}" -f $Timestamp, $PaddedType.ToUpper(), $Linenumber
@@ -2825,6 +2828,7 @@ $global:BackgroundPosters = $config.PrerequisitePart.BackgroundPosters
 $global:TitleCards = $config.PrerequisitePart.TitleCards
 $SkipTBA = $config.PrerequisitePart.SkipTBA
 $SkipJapTitle = $config.PrerequisitePart.SkipJapTitle
+$AssetCleanup = $config.PrerequisitePart.AssetCleanup
 
 # Poster Overlay Part
 $global:ImageProcessing = $config.OverlayPart.ImageProcessing
@@ -4438,6 +4442,7 @@ Elseif ($Tautulli) {
     try {
         $directoryHashtable = @{}
         $allowedExtensions = @(".jpg", ".jpeg", ".png", ".bmp")
+        $totalSize = 0
 
         Get-ChildItem -Path $AssetPath -Recurse | ForEach-Object {
             if ($allowedExtensions -contains $_.Extension.ToLower()) {
@@ -4450,9 +4455,26 @@ Elseif ($Tautulli) {
                     $directoryHashtable["$directory\$basename"] = $true
                 }
             }
+            $totalSize += $_.Length
         }
+
+        # Convert bytes to kilobytes, megabytes, or gigabytes as needed
+        if ($totalSize -gt 1GB) {
+            $totalSizeString = "{0:N2} GB" -f ($totalSize / 1GB)
+        }
+        elseif ($totalSize -gt 1MB) {
+            $totalSizeString = "{0:N2} MB" -f ($totalSize / 1MB)
+        }
+        elseif ($totalSize -gt 1KB) {
+            $totalSizeString = "{0:N2} KB" -f ($totalSize / 1KB)
+        }
+        else {
+            $totalSizeString = "$totalSize bytes"
+        }
+
         Write-Entry -Subtext "Hashtable created..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
         Write-Entry -Subtext "Found: '$($directoryHashtable.count)' images in asset directory." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+        Write-Entry -Subtext "Total size of asset directory: $totalSizeString" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     }
     catch {
         Write-Entry -Subtext "Error during Hashtable creation, please check Asset dir is available..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
@@ -7709,9 +7731,26 @@ else {
                     $directoryHashtable["$directory\$basename"] = $true
                 }
             }
+            $totalSize += $_.Length
         }
+
+        # Convert bytes to kilobytes, megabytes, or gigabytes as needed
+        if ($totalSize -gt 1GB) {
+            $totalSizeString = "{0:N2} GB" -f ($totalSize / 1GB)
+        }
+        elseif ($totalSize -gt 1MB) {
+            $totalSizeString = "{0:N2} MB" -f ($totalSize / 1MB)
+        }
+        elseif ($totalSize -gt 1KB) {
+            $totalSizeString = "{0:N2} KB" -f ($totalSize / 1KB)
+        }
+        else {
+            $totalSizeString = "$totalSize bytes"
+        }
+
         Write-Entry -Subtext "Hashtable created..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
         Write-Entry -Subtext "Found: '$($directoryHashtable.count)' images in asset directory." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+        Write-Entry -Subtext "Total size of asset directory: $totalSizeString" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     }
     catch {
         Write-Entry -Subtext "Error during Hashtable creation, please check Asset dir is available..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
@@ -7724,6 +7763,8 @@ else {
     # Download poster foreach movie
     Write-Entry -Message "Starting asset creation now, this can take a while..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
     Write-Entry -Message "Starting Movie Poster Creation part..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+    
+    $checkedItems = @()
     # Movie Part
     foreach ($entry in $AllMovies) {
         try {
@@ -7780,6 +7821,7 @@ else {
                 $PosterImage = $PosterImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
                 # Now we can start the Poster Part
                 if ($global:Posters -eq 'true') {
+                    $checkedItems += $hashtestpath
                     if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
                         # Define Global Variables
                         $global:tmdbid = $entry.tmdbid
@@ -8058,7 +8100,7 @@ else {
 
                     $backgroundImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_background.jpg"
                     $backgroundImage = $backgroundImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
-
+                    $checkedItems += $hashtestpath
                     if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
                         # Define Global Variables
                         $global:tmdbid = $entry.tmdbid
@@ -8415,6 +8457,7 @@ else {
             }
             # Now we can start the Poster Part
             if ($global:Posters -eq 'true') {
+                $checkedItems += $hashtestpath
                 if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
                     Write-Entry -Message "Start Poster Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                     switch -Wildcard ($global:FavProvider) {
@@ -8695,7 +8738,7 @@ else {
 
                 $backgroundImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_background.jpg"
                 $backgroundImage = $backgroundImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
-
+                $checkedItems += $hashtestpath
                 if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
                     # Define Global Variables
                     $global:tmdbid = $entry.tmdbid
@@ -9013,6 +9056,7 @@ else {
 
                     $SeasonImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_$global:season.jpg"
                     $SeasonImage = $SeasonImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
+                    $checkedItems += $hashtestpath
                     if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
                         if ($PlexToken) {
                             $Arturl = $plexurl + $global:PlexSeasonUrl + "?X-Plex-Token=$PlexToken"
@@ -9438,6 +9482,7 @@ else {
                                     $SkipJapTitleCount++
                                 }
                                 Else {
+                                    $checkedItems += $hashtestpath
                                     if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
                                         if (!$Episodepostersearchtext) {
                                             Write-Entry -Message "Start Title Card Search for: $global:show_name - $global:SeasonEPNumber" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -9831,6 +9876,7 @@ else {
                                     $SkipJapTitleCount++
                                 }
                                 Else {
+                                    $checkedItems += $hashtestpath
                                     if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
                                         if (!$Episodepostersearchtext) {
                                             Write-Entry -Message "Start Title Card Search for: $global:show_name - $global:SeasonEPNumber" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -10196,6 +10242,50 @@ else {
             $errorCount++
         }
     }
+    
+    # Asset Cleanup
+    if ($AssetCleanup -eq 'True') {
+        $ImagesCleared = 0
+        $PathsCleared = 0
+        Write-Entry -Subtext "Starting Asset Cleanup, this can take some time..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+        $processedDirectories = @()
+        $uncheckedItems = $directoryHashtable.Keys | Where-Object { $_ -notin $checkedItems }
+
+        # Perform deletion of unchecked items
+        foreach ($uncheckedItem in $uncheckedItems) {
+            # Full path to the item
+            $uncheckedItemPath = $uncheckedItem + ".jpg"
+            
+            # Remove unchecked item from filesystem
+            Remove-Item -LiteralPath $uncheckedItemPath -Force | Out-Null
+            $ImagesCleared++
+            Write-Entry -Subtext "Removed $uncheckedItemPath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+            if ($LibraryFolders -eq 'true') {
+                # Determine the parent directory of the item
+                $parentDir = Split-Path -Path $uncheckedItemPath -Parent
+            
+                # Add the directory to the list if it's not already included
+                if ($parentDir -notin $processedDirectories) {
+                    $processedDirectories += $parentDir
+                }
+            }
+        }
+        
+        # Cleanup empty Asset dirs
+        if ($LibraryFolders -eq 'true') {
+            # After all files are removed, check each directory in the list
+            foreach ($dir in $processedDirectories) {
+                # Check if the directory is now empty (including hidden and system files)
+                if (-not (Get-ChildItem -LiteralPath $dir -Force)) {
+                    # Remove the parent directory if it is empty
+                    $PathsCleared++
+                    Remove-Item -LiteralPath $dir -Force -Recurse -Confirm:$false | Out-Null
+                    Write-Entry -Subtext "Removed empty directory: $dir" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                }
+            }
+        }
+    }   
+
     $endTime = Get-Date
     $executionTime = New-TimeSpan -Start $startTime -End $endTime
     # Format the execution time
@@ -10203,7 +10293,21 @@ else {
     $minutes = $executionTime.Minutes
     $seconds = $executionTime.Seconds
     $FormattedTimespawn = $hours.ToString() + "h " + $minutes.ToString() + "m " + $seconds.ToString() + "s "
-
+    if ($AssetCleanup -eq 'True') {
+        Write-Entry -Message "Asset Cleanup overview..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+        if ($ImagesCleared -ge '1') {
+            Write-Entry -Subtext "Images Cleard: $ImagesCleared" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+        }
+        Else {
+            Write-Entry -Subtext "Images Cleard: 0" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+        }
+        if ($PathsCleared -ge '1') {
+            Write-Entry -Subtext "Empty Folders Cleared: $PathsCleared" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+        }
+        Else {
+            Write-Entry -Subtext "Empty Folders Cleared: 0" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+        }
+    }
     Write-Entry -Message "Finished, Total images created: $posterCount" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
     if ($posterCount -ge '1') {
         Write-Entry -Message "Show/Movie Posters created: $($posterCount-$SeasonCount-$BackgroundCount-$EpisodeCount)| Season images created: $SeasonCount | Background images created: $BackgroundCount | TitleCards created: $EpisodeCount" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info

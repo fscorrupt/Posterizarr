@@ -145,6 +145,20 @@ Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpin
     - `TitleCards` : Set to `true` to also create title cards.
     - `SkipTBA` : Set to `true` to skip TitleCard creation if the Titletext is `TBA`.
     - `SkipJapTitle` : Set to `true` to skip TitleCard creation if the Titletext is `Jap or Chinese`.
+    - `AssetCleanup` : Set to `true` to cleanup Assets that are no longer in Plex.
+        
+      
+        ```diff
+        - !! IMPORTANT !! -
+
+        Risk of Data Loss from excluded Libraries: 
+        
+        When you exclude libraries, any assets within these locations may be inadvertently deleted. 
+        
+        This happens because the script interprets these assets as "not needed anymore" during its execution since they are not found or listed as part of the active scan.
+
+        Ensure that all active asset libraries are included when using that setting on true to prevent unintended deletions.
+        ```
     </details>
     <details close>
     <summary>OverlayPart:</summary>

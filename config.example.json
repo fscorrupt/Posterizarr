@@ -35,7 +35,8 @@
     "BackgroundPosters": "false",
     "TitleCards": "false",
     "SkipTBA": "false",
-    "SkipJapTitle": "false"
+    "SkipJapTitle": "false",
+    "AssetCleanup": "false"
   },
   "OverlayPart":{
     "ImageProcessing": "true",
