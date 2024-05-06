@@ -10252,6 +10252,7 @@ else {
         $PathsCleared = 0
         $savedsizestring = 0
         Write-Entry -Subtext "Starting Asset Cleanup, this can take some time..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+        Write-Entry -Subtext "Only removing Artwork with posterizarr exif data" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
         $processedDirectories = @()
         $uncheckedItems = $directoryHashtable.Keys | Where-Object { $_ -notin $checkedItems }
 
@@ -10267,11 +10268,10 @@ else {
             $ExifData = (Invoke-Expression $exifmagickcommand | Select-String -Pattern 'created with ppm|created with posterizarr')
             
             if ($ExifData) {
-                Write-Entry -Subtext "Artwork has exif data from posterizarr..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                 # Remove unchecked item from filesystem
                 Remove-Item -LiteralPath $uncheckedItemPath -Force | Out-Null
                 $ImagesCleared++
-                Write-Entry -Subtext "Removed $uncheckedItemPath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                Write-Entry -Subtext "Artwork Removed: $uncheckedItemPath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
                 if ($LibraryFolders -eq 'true') {
                     # Determine the parent directory of the item
                     $parentDir = Split-Path -Path $uncheckedItemPath -Parent
