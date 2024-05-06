@@ -8,7 +8,7 @@ param (
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.2.20"
+$CurrentScriptVersion = "1.2.21"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -2389,6 +2389,9 @@ function LogConfigSettings {
     Write-Entry -Subtext "| Create Posters:               $global:Posters" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Create Background Posters:    $global:BackgroundPosters" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Create Title Cards:           $global:TitleCards" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Skip TC creation on TBA:      $SkipTBA" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Skip TC creation on Jap char: $SkipJapTitle" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Clear Asset:                  $AssetCleanup" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "OverLay General Part" -Path $configLogging -Color Cyan -log Info
     Write-Entry -Subtext "| Process Images:               $global:ImageProcessing" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "OverLay Poster Part" -Path $configLogging -Color Cyan -log Info
@@ -10247,6 +10250,7 @@ else {
     if ($AssetCleanup -eq 'True') {
         $ImagesCleared = 0
         $PathsCleared = 0
+        $savedsizestring = 0
         Write-Entry -Subtext "Starting Asset Cleanup, this can take some time..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
         $processedDirectories = @()
         $uncheckedItems = $directoryHashtable.Keys | Where-Object { $_ -notin $checkedItems }
@@ -10256,17 +10260,26 @@ else {
             # Full path to the item
             $uncheckedItemPath = $uncheckedItem + ".jpg"
             
-            # Remove unchecked item from filesystem
-            Remove-Item -LiteralPath $uncheckedItemPath -Force | Out-Null
-            $ImagesCleared++
-            Write-Entry -Subtext "Removed $uncheckedItemPath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
-            if ($LibraryFolders -eq 'true') {
-                # Determine the parent directory of the item
-                $parentDir = Split-Path -Path $uncheckedItemPath -Parent
+            # Check if its a asset from Posterizarr
+            $exifmagickcommand = "& `"$magick`" identify -verbose `"$uncheckedItemPath`""
+            $exifmagickcommand | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
             
-                # Add the directory to the list if it's not already included
-                if ($parentDir -notin $processedDirectories) {
-                    $processedDirectories += $parentDir
+            $ExifData = (Invoke-Expression $exifmagickcommand | Select-String -Pattern 'created with ppm|created with posterizarr')
+            
+            if ($ExifData) {
+                Write-Entry -Subtext "Artwork has exif data from posterizarr..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                # Remove unchecked item from filesystem
+                Remove-Item -LiteralPath $uncheckedItemPath -Force | Out-Null
+                $ImagesCleared++
+                Write-Entry -Subtext "Removed $uncheckedItemPath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                if ($LibraryFolders -eq 'true') {
+                    # Determine the parent directory of the item
+                    $parentDir = Split-Path -Path $uncheckedItemPath -Parent
+                
+                    # Add the directory to the list if it's not already included
+                    if ($parentDir -notin $processedDirectories) {
+                        $processedDirectories += $parentDir
+                    }
                 }
             }
         }
@@ -10284,6 +10297,61 @@ else {
                 }
             }
         }
+        if ($ImagesCleared -ge '1' -or $PathsCleared -ge '1') {
+            Write-Entry -Message "Asset Cleanup overview..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+        }
+        # Check new dir Size
+        if ($ImagesCleared -ge '1') {
+            $newtotalSize = Get-ChildItem $AssetPath -Recurse | Measure-Object -Property Length -Sum
+            # Convert bytes to kilobytes, megabytes, or gigabytes as needed
+            if ($newtotalSize.Sum -gt 1GB) {
+                $newtotalSizeString = "{0:N2} GB" -f ($newtotalSize.Sum / 1GB)
+            }
+            elseif ($newtotalSize.Sum -gt 1MB) {
+                $newtotalSizeString = "{0:N2} MB" -f ($newtotalSize.Sum / 1MB)
+            }
+            elseif ($newtotalSize.Sum -gt 1KB) {
+                $newtotalSizeString = "{0:N2} KB" -f ($newtotalSize.Sum / 1KB)
+            }
+            else {
+                $newtotalSizeString = "$($newtotalSize.Sum) bytes"
+            }
+            
+            # Saved space
+            $SavedSpace = $totalSize - $newtotalSize.Sum
+
+            # Convert bytes to kilobytes, megabytes, or gigabytes as needed
+            if ($SavedSpace -gt 1GB) {
+                $savedsizestring = "{0:N2} GB" -f ($SavedSpace / 1GB)
+            }
+            elseif ($SavedSpace -gt 1MB) {
+                $savedsizestring = "{0:N2} MB" -f ($SavedSpace / 1MB)
+            }
+            elseif ($SavedSpace -gt 1KB) {
+                $savedsizestring = "{0:N2} KB" -f ($SavedSpace / 1KB)
+            }
+            else {
+                $savedsizestring = "$SavedSpace bytes"
+            }
+
+            if ($ImagesCleared -ge '1') {
+                Write-Entry -Subtext "Images Cleard: $ImagesCleared" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+            }
+            Else {
+                Write-Entry -Subtext "Images Cleard: 0" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+            }
+        }
+        if ($PathsCleared -ge '1') {
+            if ($PathsCleared -ge '1') {
+                Write-Entry -Subtext "Empty Folders Cleared: $PathsCleared" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+            }
+            Else {
+                Write-Entry -Subtext "Empty Folders Cleared: 0" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+            }
+        }
+        if ($ImagesCleared -ge '1') {
+            Write-Entry -Subtext "Cleanup saved: $savedsizestring" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+        }
     }   
 
     $endTime = Get-Date
@@ -10293,21 +10361,6 @@ else {
     $minutes = $executionTime.Minutes
     $seconds = $executionTime.Seconds
     $FormattedTimespawn = $hours.ToString() + "h " + $minutes.ToString() + "m " + $seconds.ToString() + "s "
-    if ($AssetCleanup -eq 'True') {
-        Write-Entry -Message "Asset Cleanup overview..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
-        if ($ImagesCleared -ge '1') {
-            Write-Entry -Subtext "Images Cleard: $ImagesCleared" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-        }
-        Else {
-            Write-Entry -Subtext "Images Cleard: 0" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-        }
-        if ($PathsCleared -ge '1') {
-            Write-Entry -Subtext "Empty Folders Cleared: $PathsCleared" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-        }
-        Else {
-            Write-Entry -Subtext "Empty Folders Cleared: 0" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-        }
-    }
     Write-Entry -Message "Finished, Total images created: $posterCount" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
     if ($posterCount -ge '1') {
         Write-Entry -Message "Show/Movie Posters created: $($posterCount-$SeasonCount-$BackgroundCount-$EpisodeCount)| Season images created: $SeasonCount | Background images created: $BackgroundCount | TitleCards created: $EpisodeCount" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
@@ -10362,382 +10415,416 @@ else {
         Write-Entry -Message "No ImageChoices.csv found, creating dummy file for you..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
     }
     Write-Entry -Message "Script execution time: $FormattedTimespawn" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-    # Send Notification when running in Docker
-    if ($global:NotifyUrl -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker-Alpine*') {
-        if ($global:NotifyUrl -like '*discord*') {
-            if ($SkipTBA -eq 'True' -or $SkipJapTitle -eq 'True') {
+    
+    # Send Notification
+    if ($global:NotifyUrl -like '*discord*' -and $global:SendNotification -eq 'True') {
+        if ($SkipTBA -eq 'True' -or $SkipJapTitle -eq 'True') {
+            if ($AssetCleanup -eq 'True') {
                 $jsonPayload = @"
-        {
-            "username": "Posterizarr",
-            "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/main/images/webhook.png",
-            "content": "",
-            "embeds": [
-            {
-                "author": {
-                "name": "Posterizarr @Github",
-                "url": "https://github.com/fscorrupt/Posterizarr"
-                },
-                "description": "Run took: $FormattedTimespawn $(if ($errorCount -ge '1') {"\n During execution Errors occurred, please check log for detailed description."})",
-                "timestamp": "$(((Get-Date).ToUniversalTime()).ToString("yyyy-MM-ddTHH:mm:ss.fffZ"))",
-                "color": $(if ($errorCount -ge '1') {16711680}Elseif ($Testing){8388736}Elseif ($FallbackCount.count -gt '1' -or $PosterUnknownCount -ge '1' -or $TextTruncatedCount.count -gt '1'){15120384}Else{5763719}),
-                "fields": [
                 {
-                    "name": "",
-                    "value": ":bar_chart:",
-                    "inline": false
-                },
-                {
-                    "name": "Errors",
-                    "value": "$errorCount",
-                    "inline": false
-                },
-                {
-                    "name": "Fallbacks",
-                    "value": "$($FallbackCount.count)",
-                    "inline": true
-                },
-                {
-                    "name": "Textless",
-                    "value": "$($TextlessCount.count)",
-                    "inline": true
-                },
-                {
-                    "name": "Truncated",
-                    "value": "$($TextTruncatedCount.count)",
-                    "inline": true
-                },
-                {
-                    "name": "Unknown",
-                    "value": "$PosterUnknownCount",
-                    "inline": true
-                },
-                {
-                    "name": "TBA Skipped",
-                    "value": "$SkipTBACount",
-                    "inline": true
-                },
-                {
-                    "name": "Jap/Chinese Skipped",
-                    "value": "$SkipJapTitleCount",
-                    "inline": true
-                },
-                {
-                    "name": "",
-                    "value": ":frame_photo:",
-                    "inline": false
-                },
-                {
-                    "name": "Posters",
-                    "value": "$($posterCount-$SeasonCount-$BackgroundCount-$EpisodeCount)",
-                    "inline": false
-                },
-                {
-                    "name": "Backgrounds",
-                    "value": "$BackgroundCount",
-                    "inline": true
-                },
-                {
-                    "name": "Seasons",
-                    "value": "$SeasonCount",
-                    "inline": true
-                },
-                {
-                    "name": "TitleCards",
-                    "value": "$EpisodeCount",
-                    "inline": true
+                    "username": "Posterizarr",
+                    "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/main/images/webhook.png",
+                    "content": "",
+                    "embeds": [
+                    {
+                        "author": {
+                        "name": "Posterizarr @Github",
+                        "url": "https://github.com/fscorrupt/Posterizarr"
+                        },
+                        "description": "Run took: $FormattedTimespawn $(if ($errorCount -ge '1') {"\n During execution Errors occurred, please check log for detailed description."})",
+                        "timestamp": "$(((Get-Date).ToUniversalTime()).ToString("yyyy-MM-ddTHH:mm:ss.fffZ"))",
+                        "color": $(if ($errorCount -ge '1') {16711680}Elseif ($Testing){8388736}Elseif ($FallbackCount.count -gt '1' -or $PosterUnknownCount -ge '1' -or $TextTruncatedCount.count -gt '1'){15120384}Else{5763719}),
+                        "fields": [
+                        {
+                            "name": "",
+                            "value": ":bar_chart:",
+                            "inline": false
+                        },
+                        {
+                            "name": "Errors",
+                            "value": "$errorCount",
+                            "inline": false
+                        },
+                        {
+                            "name": "Fallbacks",
+                            "value": "$($FallbackCount.count)",
+                            "inline": true
+                        },
+                        {
+                            "name": "Textless",
+                            "value": "$($TextlessCount.count)",
+                            "inline": true
+                        },
+                        {
+                            "name": "Truncated",
+                            "value": "$($TextTruncatedCount.count)",
+                            "inline": true
+                        },
+                        {
+                            "name": "Unknown",
+                            "value": "$PosterUnknownCount",
+                            "inline": true
+                        },
+                        {
+                            "name": "TBA Skipped",
+                            "value": "$SkipTBACount",
+                            "inline": true
+                        },
+                        {
+                            "name": "Jap/Chinese Skipped",
+                            "value": "$SkipJapTitleCount",
+                            "inline": true
+                        },
+                        {
+                            "name": "",
+                            "value": ":frame_photo:",
+                            "inline": false
+                        },
+                        {
+                            "name": "Posters",
+                            "value": "$($posterCount-$SeasonCount-$BackgroundCount-$EpisodeCount)",
+                            "inline": false
+                        },
+                        {
+                            "name": "Backgrounds",
+                            "value": "$BackgroundCount",
+                            "inline": true
+                        },
+                        {
+                            "name": "Seasons",
+                            "value": "$SeasonCount",
+                            "inline": true
+                        },
+                        {
+                            "name": "TitleCards",
+                            "value": "$EpisodeCount",
+                            "inline": true
+                        },
+                        {
+                            "name": "",
+                            "value": ":recycle:",
+                            "inline": false
+                        },
+                        {
+                            "name": "Images cleared",
+                            "value": "$ImagesCleared",
+                            "inline": true
+                        },
+                        {
+                            "name": "Folders Cleared",
+                            "value": "$PathsCleared",
+                            "inline": true
+                        },
+                        {
+                            "name": "Space saved",
+                            "value": "$savedsizestring",
+                            "inline": true
+                        }
+                        ],
+                        "thumbnail": {
+                            "url": "https://github.com/fscorrupt/Posterizarr/raw/main/images/webhook.png"
+                        },
+                        "footer": {
+                            "text": "$Platform  | current - v$CurrentScriptVersion  | latest - v$LatestScriptVersion"
+                        }
+                    }
+                    ]
                 }
-                ],
-                "thumbnail": {
-                    "url": "https://github.com/fscorrupt/Posterizarr/raw/main/images/webhook.png"
-                },
-                "footer": {
-                    "text": "$Platform  | current - v$CurrentScriptVersion  | latest - v$LatestScriptVersion"
-                }
-            }
-            ]
-        }
 "@
             }
             Else {
                 $jsonPayload = @"
-        {
-            "username": "Posterizarr",
-            "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/main/images/webhook.png",
-            "content": "",
-            "embeds": [
             {
-                "author": {
-                "name": "Posterizarr @Github",
-                "url": "https://github.com/fscorrupt/Posterizarr"
-                },
-                "description": "Run took: $FormattedTimespawn $(if ($errorCount -ge '1') {"\n During execution Errors occurred, please check log for detailed description."})",
-                "timestamp": "$(((Get-Date).ToUniversalTime()).ToString("yyyy-MM-ddTHH:mm:ss.fffZ"))",
-                "color": $(if ($errorCount -ge '1') {16711680}Elseif ($Testing){8388736}Elseif ($FallbackCount.count -gt '1' -or $PosterUnknownCount -ge '1' -or $TextTruncatedCount.count -gt '1'){15120384}Else{5763719}),
-                "fields": [
+                "username": "Posterizarr",
+                "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/main/images/webhook.png",
+                "content": "",
+                "embeds": [
                 {
-                    "name": "",
-                    "value": ":bar_chart:",
-                    "inline": false
-                },
-                {
-                    "name": "Errors",
-                    "value": "$errorCount",
-                    "inline": false
-                },
-                {
-                    "name": "Fallbacks",
-                    "value": "$($FallbackCount.count)",
-                    "inline": true
-                },
-                {
-                    "name": "Textless",
-                    "value": "$($TextlessCount.count)",
-                    "inline": true
-                },
-                {
-                    "name": "Truncated",
-                    "value": "$($TextTruncatedCount.count)",
-                    "inline": true
-                },
-                {
-                    "name": "Unknown",
-                    "value": "$PosterUnknownCount",
-                    "inline": true
-                },
-                {
-                    "name": "",
-                    "value": ":frame_photo:",
-                    "inline": false
-                },
-                {
-                    "name": "Posters",
-                    "value": "$($posterCount-$SeasonCount-$BackgroundCount-$EpisodeCount)",
-                    "inline": false
-                },
-                {
-                    "name": "Backgrounds",
-                    "value": "$BackgroundCount",
-                    "inline": true
-                },
-                {
-                    "name": "Seasons",
-                    "value": "$SeasonCount",
-                    "inline": true
-                },
-                {
-                    "name": "TitleCards",
-                    "value": "$EpisodeCount",
-                    "inline": true
+                    "author": {
+                    "name": "Posterizarr @Github",
+                    "url": "https://github.com/fscorrupt/Posterizarr"
+                    },
+                    "description": "Run took: $FormattedTimespawn $(if ($errorCount -ge '1') {"\n During execution Errors occurred, please check log for detailed description."})",
+                    "timestamp": "$(((Get-Date).ToUniversalTime()).ToString("yyyy-MM-ddTHH:mm:ss.fffZ"))",
+                    "color": $(if ($errorCount -ge '1') {16711680}Elseif ($Testing){8388736}Elseif ($FallbackCount.count -gt '1' -or $PosterUnknownCount -ge '1' -or $TextTruncatedCount.count -gt '1'){15120384}Else{5763719}),
+                    "fields": [
+                    {
+                        "name": "",
+                        "value": ":bar_chart:",
+                        "inline": false
+                    },
+                    {
+                        "name": "Errors",
+                        "value": "$errorCount",
+                        "inline": false
+                    },
+                    {
+                        "name": "Fallbacks",
+                        "value": "$($FallbackCount.count)",
+                        "inline": true
+                    },
+                    {
+                        "name": "Textless",
+                        "value": "$($TextlessCount.count)",
+                        "inline": true
+                    },
+                    {
+                        "name": "Truncated",
+                        "value": "$($TextTruncatedCount.count)",
+                        "inline": true
+                    },
+                    {
+                        "name": "Unknown",
+                        "value": "$PosterUnknownCount",
+                        "inline": true
+                    },
+                    {
+                        "name": "TBA Skipped",
+                        "value": "$SkipTBACount",
+                        "inline": true
+                    },
+                    {
+                        "name": "Jap/Chinese Skipped",
+                        "value": "$SkipJapTitleCount",
+                        "inline": true
+                    },
+                    {
+                        "name": "",
+                        "value": ":frame_photo:",
+                        "inline": false
+                    },
+                    {
+                        "name": "Posters",
+                        "value": "$($posterCount-$SeasonCount-$BackgroundCount-$EpisodeCount)",
+                        "inline": false
+                    },
+                    {
+                        "name": "Backgrounds",
+                        "value": "$BackgroundCount",
+                        "inline": true
+                    },
+                    {
+                        "name": "Seasons",
+                        "value": "$SeasonCount",
+                        "inline": true
+                    },
+                    {
+                        "name": "TitleCards",
+                        "value": "$EpisodeCount",
+                        "inline": true
+                    }
+                    ],
+                    "thumbnail": {
+                        "url": "https://github.com/fscorrupt/Posterizarr/raw/main/images/webhook.png"
+                    },
+                    "footer": {
+                        "text": "$Platform  | current - v$CurrentScriptVersion  | latest - v$LatestScriptVersion"
+                    }
                 }
-                ],
-                "thumbnail": {
-                    "url": "https://github.com/fscorrupt/Posterizarr/raw/main/images/webhook.png"
-                },
-                "footer": {
-                    "text": "$Platform  | current - v$CurrentScriptVersion  | latest - v$LatestScriptVersion"
-                }
+                ]
             }
-            ]
-        }
 "@
-            }
-            $global:NotifyUrl = $global:NotifyUrl.replace('discord://', 'https://discord.com/api/webhooks/')
-            if ($global:SendNotification -eq 'True') {
-                Push-ObjectToDiscord -strDiscordWebhook $global:NotifyUrl -objPayload $jsonPayload
             }
         }
         Else {
-            if ($global:SendNotification -eq 'True') {
-                if ($errorCount -ge '1') {
-                    apprise --notification-type="error" --title="Posterizarr" --body="Run took: $FormattedTimespawn`nIt Created '$posterCount' Images`n`nDuring execution '$errorCount' Errors occurred, please check log for detailed description." "$global:NotifyUrl"
+            if ($AssetCleanup -eq 'True') {
+                $jsonPayload = @"
+                {
+                    "username": "Posterizarr",
+                    "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/main/images/webhook.png",
+                    "content": "",
+                    "embeds": [
+                    {
+                        "author": {
+                        "name": "Posterizarr @Github",
+                        "url": "https://github.com/fscorrupt/Posterizarr"
+                        },
+                        "description": "Run took: $FormattedTimespawn $(if ($errorCount -ge '1') {"\n During execution Errors occurred, please check log for detailed description."})",
+                        "timestamp": "$(((Get-Date).ToUniversalTime()).ToString("yyyy-MM-ddTHH:mm:ss.fffZ"))",
+                        "color": $(if ($errorCount -ge '1') {16711680}Elseif ($Testing){8388736}Elseif ($FallbackCount.count -gt '1' -or $PosterUnknownCount -ge '1' -or $TextTruncatedCount.count -gt '1'){15120384}Else{5763719}),
+                        "fields": [
+                        {
+                            "name": "",
+                            "value": ":bar_chart:",
+                            "inline": false
+                        },
+                        {
+                            "name": "Errors",
+                            "value": "$errorCount",
+                            "inline": false
+                        },
+                        {
+                            "name": "Fallbacks",
+                            "value": "$($FallbackCount.count)",
+                            "inline": true
+                        },
+                        {
+                            "name": "Textless",
+                            "value": "$($TextlessCount.count)",
+                            "inline": true
+                        },
+                        {
+                            "name": "Truncated",
+                            "value": "$($TextTruncatedCount.count)",
+                            "inline": true
+                        },
+                        {
+                            "name": "Unknown",
+                            "value": "$PosterUnknownCount",
+                            "inline": true
+                        },
+                        {
+                            "name": "",
+                            "value": ":frame_photo:",
+                            "inline": false
+                        },
+                        {
+                            "name": "Posters",
+                            "value": "$($posterCount-$SeasonCount-$BackgroundCount-$EpisodeCount)",
+                            "inline": false
+                        },
+                        {
+                            "name": "Backgrounds",
+                            "value": "$BackgroundCount",
+                            "inline": true
+                        },
+                        {
+                            "name": "Seasons",
+                            "value": "$SeasonCount",
+                            "inline": true
+                        },
+                        {
+                            "name": "TitleCards",
+                            "value": "$EpisodeCount",
+                            "inline": true
+                        },
+                        {
+                            "name": "",
+                            "value": ":recycle:",
+                            "inline": false
+                        },
+                        {
+                            "name": "Images cleared",
+                            "value": "$ImagesCleared",
+                            "inline": true
+                        },
+                        {
+                            "name": "Folders Cleared",
+                            "value": "$PathsCleared",
+                            "inline": true
+                        },
+                        {
+                            "name": "Space saved",
+                            "value": "$savedsizestring",
+                            "inline": true
+                        }
+                        ],
+                        "thumbnail": {
+                            "url": "https://github.com/fscorrupt/Posterizarr/raw/main/images/webhook.png"
+                        },
+                        "footer": {
+                            "text": "$Platform  | current - v$CurrentScriptVersion  | latest - v$LatestScriptVersion"
+                        }
+                    }
+                    ]
                 }
-                Else {
-                    apprise --notification-type="success" --title="Posterizarr" --body="Run took: $FormattedTimespawn`nIt Created '$posterCount' Images" "$global:NotifyUrl"
+"@
+            }
+            Else {
+                $jsonPayload = @"
+                {
+                    "username": "Posterizarr",
+                    "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/main/images/webhook.png",
+                    "content": "",
+                    "embeds": [
+                    {
+                        "author": {
+                        "name": "Posterizarr @Github",
+                        "url": "https://github.com/fscorrupt/Posterizarr"
+                        },
+                        "description": "Run took: $FormattedTimespawn $(if ($errorCount -ge '1') {"\n During execution Errors occurred, please check log for detailed description."})",
+                        "timestamp": "$(((Get-Date).ToUniversalTime()).ToString("yyyy-MM-ddTHH:mm:ss.fffZ"))",
+                        "color": $(if ($errorCount -ge '1') {16711680}Elseif ($Testing){8388736}Elseif ($FallbackCount.count -gt '1' -or $PosterUnknownCount -ge '1' -or $TextTruncatedCount.count -gt '1'){15120384}Else{5763719}),
+                        "fields": [
+                        {
+                            "name": "",
+                            "value": ":bar_chart:",
+                            "inline": false
+                        },
+                        {
+                            "name": "Errors",
+                            "value": "$errorCount",
+                            "inline": false
+                        },
+                        {
+                            "name": "Fallbacks",
+                            "value": "$($FallbackCount.count)",
+                            "inline": true
+                        },
+                        {
+                            "name": "Textless",
+                            "value": "$($TextlessCount.count)",
+                            "inline": true
+                        },
+                        {
+                            "name": "Truncated",
+                            "value": "$($TextTruncatedCount.count)",
+                            "inline": true
+                        },
+                        {
+                            "name": "Unknown",
+                            "value": "$PosterUnknownCount",
+                            "inline": true
+                        },
+                        {
+                            "name": "",
+                            "value": ":frame_photo:",
+                            "inline": false
+                        },
+                        {
+                            "name": "Posters",
+                            "value": "$($posterCount-$SeasonCount-$BackgroundCount-$EpisodeCount)",
+                            "inline": false
+                        },
+                        {
+                            "name": "Backgrounds",
+                            "value": "$BackgroundCount",
+                            "inline": true
+                        },
+                        {
+                            "name": "Seasons",
+                            "value": "$SeasonCount",
+                            "inline": true
+                        },
+                        {
+                            "name": "TitleCards",
+                            "value": "$EpisodeCount",
+                            "inline": true
+                        }
+                        ],
+                        "thumbnail": {
+                            "url": "https://github.com/fscorrupt/Posterizarr/raw/main/images/webhook.png"
+                        },
+                        "footer": {
+                            "text": "$Platform  | current - v$CurrentScriptVersion  | latest - v$LatestScriptVersion"
+                        }
+                    }
+                    ]
                 }
+"@
             }
         }
+        $global:NotifyUrl = $global:NotifyUrl.replace('discord://', 'https://discord.com/api/webhooks/')
+        Push-ObjectToDiscord -strDiscordWebhook $global:NotifyUrl -objPayload $jsonPayload
     }
-    if ($global:NotifyUrl -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -notlike 'PSDocker-Alpine*') {
-        if ($SkipTBA -eq 'True' -or $SkipJapTitle -eq 'True') {
-            $jsonPayload = @"
-        {
-            "username": "Posterizarr",
-            "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/main/images/webhook.png",
-            "content": "",
-            "embeds": [
-            {
-                "author": {
-                "name": "Posterizarr @Github",
-                "url": "https://github.com/fscorrupt/Posterizarr"
-                },
-                "description": "Run took: $FormattedTimespawn $(if ($errorCount -ge '1') {"\n During execution Errors occurred, please check log for detailed description."})",
-                "timestamp": "$(((Get-Date).ToUniversalTime()).ToString("yyyy-MM-ddTHH:mm:ss.fffZ"))",
-                "color": $(if ($errorCount -ge '1') {16711680}Elseif ($Testing){8388736}Elseif ($FallbackCount.count -gt '1' -or $PosterUnknownCount -ge '1' -or $TextTruncatedCount.count -gt '1'){15120384}Else{5763719}),
-                "fields": [
-                {
-                    "name": "",
-                    "value": ":bar_chart:",
-                    "inline": false
-                },
-                {
-                    "name": "Errors",
-                    "value": "$errorCount",
-                    "inline": false
-                },
-                {
-                    "name": "Fallbacks",
-                    "value": "$($FallbackCount.count)",
-                    "inline": true
-                },
-                {
-                    "name": "Textless",
-                    "value": "$($TextlessCount.count)",
-                    "inline": true
-                },
-                {
-                    "name": "Truncated",
-                    "value": "$($TextTruncatedCount.count)",
-                    "inline": true
-                },
-                {
-                    "name": "Unknown",
-                    "value": "$PosterUnknownCount",
-                    "inline": true
-                },
-                {
-                    "name": "TBA Skipped",
-                    "value": "$SkipTBACount",
-                    "inline": true
-                },
-                {
-                    "name": "Jap/Chinese Skipped",
-                    "value": "$SkipJapTitleCount",
-                    "inline": true
-                },
-                {
-                    "name": "",
-                    "value": ":frame_photo:",
-                    "inline": false
-                },
-                {
-                    "name": "Posters",
-                    "value": "$($posterCount-$SeasonCount-$BackgroundCount-$EpisodeCount)",
-                    "inline": false
-                },
-                {
-                    "name": "Backgrounds",
-                    "value": "$BackgroundCount",
-                    "inline": true
-                },
-                {
-                    "name": "Seasons",
-                    "value": "$SeasonCount",
-                    "inline": true
-                },
-                {
-                    "name": "TitleCards",
-                    "value": "$EpisodeCount",
-                    "inline": true
-                }
-                ],
-                "thumbnail": {
-                    "url": "https://github.com/fscorrupt/Posterizarr/raw/main/images/webhook.png"
-                },
-                "footer": {
-                    "text": "$Platform  | current - v$CurrentScriptVersion  | latest - v$LatestScriptVersion"
-                }
-
+    Else {
+        if ($global:NotifyUrl -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker-Alpine*') {
+            if ($errorCount -ge '1') {
+                apprise --notification-type="error" --title="Posterizarr" --body="Run took: $FormattedTimespawn`nIt Created '$posterCount' Images`n`nDuring execution '$errorCount' Errors occurred, please check log for detailed description." "$global:NotifyUrl"
             }
-            ]
-        }
-"@
-        }
-        Else {
-            $jsonPayload = @"
-        {
-            "username": "Posterizarr",
-            "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/main/images/webhook.png",
-            "content": "",
-            "embeds": [
-            {
-                "author": {
-                "name": "Posterizarr @Github",
-                "url": "https://github.com/fscorrupt/Posterizarr"
-                },
-                "description": "Run took: $FormattedTimespawn $(if ($errorCount -ge '1') {"\n During execution Errors occurred, please check log for detailed description."})",
-                "timestamp": "$(((Get-Date).ToUniversalTime()).ToString("yyyy-MM-ddTHH:mm:ss.fffZ"))",
-                "color": $(if ($errorCount -ge '1') {16711680}Elseif ($Testing){8388736}Elseif ($FallbackCount.count -gt '1' -or $PosterUnknownCount -ge '1' -or $TextTruncatedCount.count -gt '1'){15120384}Else{5763719}),
-                "fields": [
-                {
-                    "name": "",
-                    "value": ":bar_chart:",
-                    "inline": false
-                },
-                {
-                    "name": "Errors",
-                    "value": "$errorCount",
-                    "inline": false
-                },
-                {
-                    "name": "Fallbacks",
-                    "value": "$($FallbackCount.count)",
-                    "inline": true
-                },
-                {
-                    "name": "Textless",
-                    "value": "$($TextlessCount.count)",
-                    "inline": true
-                },
-                {
-                    "name": "Truncated",
-                    "value": "$($TextTruncatedCount.count)",
-                    "inline": true
-                },
-                {
-                    "name": "Unknown",
-                    "value": "$PosterUnknownCount",
-                    "inline": true
-                },
-                {
-                    "name": "",
-                    "value": ":frame_photo:",
-                    "inline": false
-                },
-                {
-                    "name": "Posters",
-                    "value": "$($posterCount-$SeasonCount-$BackgroundCount-$EpisodeCount)",
-                    "inline": false
-                },
-                {
-                    "name": "Backgrounds",
-                    "value": "$BackgroundCount",
-                    "inline": true
-                },
-                {
-                    "name": "Seasons",
-                    "value": "$SeasonCount",
-                    "inline": true
-                },
-                {
-                    "name": "TitleCards",
-                    "value": "$EpisodeCount",
-                    "inline": true
-                }
-                ],
-                "thumbnail": {
-                    "url": "https://github.com/fscorrupt/Posterizarr/raw/main/images/webhook.png"
-                },
-                "footer": {
-                    "text": "$Platform  | current - v$CurrentScriptVersion  | latest - v$LatestScriptVersion"
-                }
-
+            Else {
+                apprise --notification-type="success" --title="Posterizarr" --body="Run took: $FormattedTimespawn`nIt Created '$posterCount' Images" "$global:NotifyUrl"
             }
-            ]
-        }
-"@
-        }
-        if ($global:SendNotification -eq 'True') {
-            Push-ObjectToDiscord -strDiscordWebhook $global:NotifyUrl -objPayload $jsonPayload
         }
     }
 
