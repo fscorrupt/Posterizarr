@@ -8,7 +8,7 @@ param (
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.2.21"
+$CurrentScriptVersion = "1.2.22"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -2938,6 +2938,13 @@ Else {
 }
 $fileExtensions = @(".otf", ".ttf", ".otc", ".ttc", ".png")
 $errorCount = 0
+
+$CurrentImagemagickversion = & $magick -version
+$CurrentImagemagickversion = [regex]::Match($CurrentImagemagickversion, 'Version: ImageMagick (\d+(\.\d+){1,2}-\d+)')
+$LatestImagemagickversion = (Invoke-RestMethod -Uri "https://api.github.com/repos/ImageMagick/ImageMagick/releases/latest" -Method Get).tag_name
+
+Write-Entry -Message "Current Imagemagick Version: $($CurrentImagemagickversion.Groups[1].Value)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+Write-Entry -Message "Latest Imagemagick Version: $LatestImagemagickversion" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
 
 # Initialize Other Variables
 $SeasonsTemp = $null
