@@ -8,7 +8,7 @@ param (
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.2.22"
+$CurrentScriptVersion = "1.2.23"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -4600,19 +4600,42 @@ Elseif ($Tautulli) {
                                 Write-Entry -Subtext "Took TMDB Fallback poster because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                                 $global:IsFallback = $true
                             }
+                            if ($global:FavProvider -eq 'TVDB' -and !$global:posterurl) {
+                                if ($entry.tmdbid) { 
+                                    $global:posterurl = GetTMDBMoviePoster 
+                                    $global:IsFallback = $true
+                                }
+                                if (!$global:posterurl) {
+                                    $global:posterurl = GetFanartMoviePoster
+                                    $global:IsFallback = $true
+                                }
+                            }
                         }
 
                         if ($global:OnlyTextless -and !$global:posterurl) {
-                            $global:posterurl = GetFanartMoviePoster
-                            if (!$global:FavProvider -eq 'FANART') {
-                                $global:IsFallback = $true
+                            if ($global:FavProvider -eq 'TVDB') {
+                                if ($entry.tmdbid) { 
+                                    $global:posterurl = GetTMDBMoviePoster 
+                                    $global:IsFallback = $true
+                                }
+                                if (!$global:posterurl) {
+                                    $global:posterurl = GetFanartMoviePoster
+                                    $global:IsFallback = $true
+                                }
+                            }
+                            Else {
+                                $global:posterurl = GetFanartMoviePoster
+                                if (!$global:FavProvider -eq 'FANART') {
+                                    $global:IsFallback = $true
+                                }
                             }
                         }
 
                         if (!$global:posterurl) {
-
-                            $global:posterurl = GetTVDBMoviePoster
-                            $global:IsFallback = $true
+                            if ($global:FavProvider -ne 'TVDB') {
+                                $global:posterurl = GetTVDBMoviePoster
+                                $global:IsFallback = $true
+                            }
                             if (!$global:posterurl -and !$global:OnlyTextless) {
                                 if ($entry.PlexPosterUrl) {
                                     GetPlexArtwork -Type ' a Movie Poster' -ArtUrl $Arturl -TempImage $PosterImage
@@ -4894,16 +4917,40 @@ Elseif ($Tautulli) {
                                 Write-Entry -Subtext "Took TMDB Fallback background because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                                 $global:IsFallback = $true
                             }
+                            if ($global:FavProvider -eq 'TVDB' -and !$global:posterurl) {
+                                if ($entry.tmdbid) { 
+                                    $global:posterurl = GetTMDBMovieBackground 
+                                    $global:IsFallback = $true
+                                }
+                                if (!$global:posterurl) {
+                                    $global:posterurl = GetFanartMovieBackground
+                                    $global:IsFallback = $true
+                                }
+                            }
                         }
                         if ($global:OnlyTextless -and !$global:posterurl) {
-                            $global:posterurl = GetFanartMovieBackground
-                            if (!$global:FavProvider -eq 'FANART') {
-                                $global:IsFallback = $true
+                            if ($global:FavProvider -eq 'TVDB') {
+                                if ($entry.tmdbid) { 
+                                    $global:posterurl = GetTMDBMovieBackground 
+                                    $global:IsFallback = $true
+                                }
+                                if (!$global:posterurl) {
+                                    $global:posterurl = GetFanartMovieBackground
+                                    $global:IsFallback = $true
+                                }
+                            }
+                            Else {
+                                $global:posterurl = GetFanartMovieBackground
+                                if (!$global:FavProvider -eq 'FANART') {
+                                    $global:IsFallback = $true
+                                }
                             }
                         }
                         if (!$global:posterurl) {
-                            $global:posterurl = GetTVDBMovieBackground
-                            $global:IsFallback = $true
+                            if ($global:FavProvider -ne 'TVDB') {
+                                $global:posterurl = GetTVDBMovieBackground
+                                $global:IsFallback = $true
+                            }
                             if (!$global:posterurl) {
                                 if ($entry.PlexBackgroundUrl) {
                                     GetPlexArtwork -Type ' a Movie Background' -ArtUrl $Arturl -TempImage $backgroundImage
@@ -5251,6 +5298,10 @@ Elseif ($Tautulli) {
                             $global:IsFallback = $true
                             $global:tvdbalreadysearched = $true
                         }
+                        if ($global:FavProvider -eq 'TVDB' -and $global:TextlessPoster -ne 'true') {
+                            $global:posterurl = GetFanartMoviePoster
+                            $global:IsFallback = $true
+                        }
                     }
 
                     if (!$global:TextlessPoster -eq 'true' -and $global:posterurl) {
@@ -5563,16 +5614,42 @@ Elseif ($Tautulli) {
                             Write-Entry -Subtext "Took TMDB Fallback background because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                             $global:IsFallback = $true
                         }
-                    }
-                    if ($global:TextlessPoster -eq 'true' -and $global:posterurl) {
+                        if ($global:FavProvider -eq 'TVDB' -and !$global:posterurl) {
+                            if ($entry.tmdbid) { 
+                                $global:posterurl = GetTMDBShowBackground 
+                                $global:IsFallback = $true
+                                $global:FallbackText = 'True-Background'
+                            }
+                            if (!$global:posterurl) {
+                                $global:posterurl = GetFanartShowBackground
+                                $global:IsFallback = $true
+                                $global:FallbackText = 'True-Background'
+                            }
+                        }
                     }
                     if ($global:OnlyTextless -and !$global:posterurl) {
-                        $global:posterurl = GetFanartShowBackground
+                        if ($global:FavProvider -eq 'TVDB') {
+                            if ($entry.tmdbid) { 
+                                $global:posterurl = GetTMDBShowBackground 
+                                $global:IsFallback = $true
+                                $global:FallbackText = 'True-Background'
+                            }
+                            if (!$global:posterurl) {
+                                $global:posterurl = GetFanartShowBackground
+                                $global:IsFallback = $true
+                                $global:FallbackText = 'True-Background'
+                            }
+                        }
+                        Else {
+                            $global:posterurl = GetFanartShowBackground
+                        }
                     }
                     if (!$global:posterurl) {
-                        $global:posterurl = GetTVDBShowBackground
-                        $global:IsFallback = $true
-
+                        if ($global:FavProvider -ne 'TVDB') {
+                            $global:posterurl = GetTVDBShowBackground
+                            $global:IsFallback = $true
+                        }
+                        $global:FallbackText = 'True-Background'
                         if (!$global:posterurl) {
                             if ($entry.PlexBackgroundUrl) {
                                 GetPlexArtwork -Type ' a Show Background' -ArtUrl $Arturl -TempImage $backgroundImage
@@ -7879,19 +7956,42 @@ else {
                                 Write-Entry -Subtext "Took TMDB Fallback poster because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                                 $global:IsFallback = $true
                             }
+                            if ($global:FavProvider -eq 'TVDB' -and !$global:posterurl) {
+                                if ($entry.tmdbid) { 
+                                    $global:posterurl = GetTMDBMoviePoster 
+                                    $global:IsFallback = $true
+                                }
+                                if (!$global:posterurl) {
+                                    $global:posterurl = GetFanartMoviePoster
+                                    $global:IsFallback = $true
+                                }
+                            }
                         }
 
                         if ($global:OnlyTextless -and !$global:posterurl) {
-                            $global:posterurl = GetFanartMoviePoster
-                            if (!$global:FavProvider -eq 'FANART') {
-                                $global:IsFallback = $true
+                            if ($global:FavProvider -eq 'TVDB') {
+                                if ($entry.tmdbid) { 
+                                    $global:posterurl = GetTMDBMoviePoster 
+                                    $global:IsFallback = $true
+                                }
+                                if (!$global:posterurl) {
+                                    $global:posterurl = GetFanartMoviePoster
+                                    $global:IsFallback = $true
+                                }
+                            }
+                            Else {
+                                $global:posterurl = GetFanartMoviePoster
+                                if (!$global:FavProvider -eq 'FANART') {
+                                    $global:IsFallback = $true
+                                }
                             }
                         }
 
                         if (!$global:posterurl) {
-
-                            $global:posterurl = GetTVDBMoviePoster
-                            $global:IsFallback = $true
+                            if ($global:FavProvider -ne 'TVDB') {
+                                $global:posterurl = GetTVDBMoviePoster
+                                $global:IsFallback = $true
+                            }
                             if (!$global:posterurl -and !$global:OnlyTextless) {
                                 if ($entry.PlexPosterUrl) {
                                     GetPlexArtwork -Type ' a Movie Poster' -ArtUrl $Arturl -TempImage $PosterImage
@@ -8158,16 +8258,40 @@ else {
                                 Write-Entry -Subtext "Took TMDB Fallback background because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                                 $global:IsFallback = $true
                             }
+                            if ($global:FavProvider -eq 'TVDB' -and !$global:posterurl) {
+                                if ($entry.tmdbid) { 
+                                    $global:posterurl = GetTMDBMovieBackground 
+                                    $global:IsFallback = $true
+                                }
+                                if (!$global:posterurl) {
+                                    $global:posterurl = GetFanartMovieBackground
+                                    $global:IsFallback = $true
+                                }
+                            }
                         }
                         if ($global:OnlyTextless -and !$global:posterurl) {
-                            $global:posterurl = GetFanartMovieBackground
-                            if (!$global:FavProvider -eq 'FANART') {
-                                $global:IsFallback = $true
+                            if ($global:FavProvider -eq 'TVDB') {
+                                if ($entry.tmdbid) { 
+                                    $global:posterurl = GetTMDBMovieBackground 
+                                    $global:IsFallback = $true
+                                }
+                                if (!$global:posterurl) {
+                                    $global:posterurl = GetFanartMovieBackground
+                                    $global:IsFallback = $true
+                                }
+                            }
+                            Else {
+                                $global:posterurl = GetFanartMovieBackground
+                                if (!$global:FavProvider -eq 'FANART') {
+                                    $global:IsFallback = $true
+                                }
                             }
                         }
                         if (!$global:posterurl) {
-                            $global:posterurl = GetTVDBMovieBackground
-                            $global:IsFallback = $true
+                            if ($global:FavProvider -ne 'TVDB') {
+                                $global:posterurl = GetTVDBMovieBackground
+                                $global:IsFallback = $true
+                            }
                             if (!$global:posterurl) {
                                 if ($entry.PlexBackgroundUrl) {
                                     GetPlexArtwork -Type ' a Movie Background' -ArtUrl $Arturl -TempImage $backgroundImage
@@ -8503,6 +8627,10 @@ else {
                             $global:IsFallback = $true
                             $global:tvdbalreadysearched = $true
                         }
+                        if ($global:FavProvider -eq 'TVDB' -and $global:TextlessPoster -ne 'true') {
+                            $global:posterurl = GetFanartMoviePoster
+                            $global:IsFallback = $true
+                        }
                     }
 
                     if (!$global:TextlessPoster -eq 'true' -and $global:posterurl) {
@@ -8799,15 +8927,41 @@ else {
                             Write-Entry -Subtext "Took TMDB Fallback background because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                             $global:IsFallback = $true
                         }
-                    }
-                    if ($global:TextlessPoster -eq 'true' -and $global:posterurl) {
+                        if ($global:FavProvider -eq 'TVDB' -and !$global:posterurl) {
+                            if ($entry.tmdbid) { 
+                                $global:posterurl = GetTMDBShowBackground 
+                                $global:IsFallback = $true
+                                $global:FallbackText = 'True-Background'
+                            }
+                            if (!$global:posterurl) {
+                                $global:posterurl = GetFanartShowBackground
+                                $global:IsFallback = $true
+                                $global:FallbackText = 'True-Background'
+                            }
+                        }
                     }
                     if ($global:OnlyTextless -and !$global:posterurl) {
-                        $global:posterurl = GetFanartShowBackground
+                        if ($global:FavProvider -eq 'TVDB') {
+                            if ($entry.tmdbid) { 
+                                $global:posterurl = GetTMDBShowBackground 
+                                $global:IsFallback = $true
+                                $global:FallbackText = 'True-Background'
+                            }
+                            if (!$global:posterurl) {
+                                $global:posterurl = GetFanartShowBackground
+                                $global:IsFallback = $true
+                                $global:FallbackText = 'True-Background'
+                            }
+                        }
+                        Else {
+                            $global:posterurl = GetFanartShowBackground
+                        }
                     }
                     if (!$global:posterurl) {
-                        $global:posterurl = GetTVDBShowBackground
-                        $global:IsFallback = $true
+                        if ($global:FavProvider -ne 'TVDB') {
+                            $global:posterurl = GetTVDBShowBackground
+                            $global:IsFallback = $true
+                        }
                         $global:FallbackText = 'True-Background'
                         if (!$global:posterurl) {
                             if ($entry.PlexBackgroundUrl) {

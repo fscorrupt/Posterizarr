@@ -104,7 +104,9 @@ Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpin
             -    `tmdb` (recommended)
             -    `fanart`
             -    `tvdb`      
-            -    `plex` (Not recommended)     
+            -    `plex` (Not recommended)  
+            
+            [Search order in script](#Search-Order)
     - `PreferredLanguageOrder`: Specify language preferences. Default is `xx,en,de` (`xx` is Textless). Example configurations can be found in the config file. 2-digit language codes can be found here: [ISO 3166-1 Lang Codes](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2).
       - If you set it to `xx` you tell the script it should only search for textless, posters with text will be skipped.
     - `PreferredSeasonLanguageOrder`: Specify language preferences for seasons. Default is `xx,en,de` (`xx` is Textless). Example configurations can be found in the config file. 2-digit language codes can be found here: [ISO 3166-1 Lang Codes](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2).
@@ -550,6 +552,134 @@ Following these steps will allow you to import the `Module1.bas` file containing
 
 > [!TIP]
 > - It was made using this Kometa [config](https://github.com/Kometa-Team/Community-Configs/tree/master/fscorrupt).
+
+### Search Order
+
+<details close>
+<summary>🖼️Movie Poster & Background:</summary>
+<br>
+<p>
+  
+  If `TMDB` is your fav Provider
+
+  - TMDB
+  - FANART
+  - TVDB
+  - PLEX
+  - IMDB (Movies only)
+
+  If `TVDB` is your fav Provider
+
+  - TVDB
+  - TMDB
+  - FANART
+  - PLEX
+  - IMDB (Movies only)
+
+  If `FANART` is your fav Provider
+
+  - FANART
+  - TMDB
+  - TVDB
+  - PLEX
+  - IMDB (Movies only)
+</p>
+</details>
+
+<details close>
+<summary>🖼️Show Poster & Background:</summary>
+<br>
+<p>
+  
+  If `TMDB` is your fav Provider
+
+  - TMDB
+  - FANART
+  - TVDB
+  - PLEX
+
+  If `FANART` is your fav Provider
+
+  - FANART
+  - TMDB
+  - TVDB
+  - PLEX
+
+  If `TVDB` is your fav Provider
+
+  - TVDB
+  - TMDB
+  - FANART
+  - PLEX
+</p>
+</details>
+
+<details close>
+<summary>🖼️Show Season Poster:</summary>
+<br>
+<p>
+  
+  If `TMDB` is your fav Provider
+
+  - TMDB
+  - FANART
+  - TVDB
+  - PLEX
+
+  If `FANART` is your fav Provider
+
+  - FANART
+  - TMDB
+  - TVDB
+  - PLEX
+
+  If `TVDB` is your fav Provider
+
+  - TVDB
+  - TMDB
+  - FANART
+  - PLEX
+</p>
+</details>
+
+<details close>
+<summary>🖼️Show TC with Background Poster:</summary>
+<br>
+<p>
+  
+  If `TMDB` is your fav Provider
+
+  - TMDB
+  - TVDB
+  - FANART
+  - PLEX
+
+  Else
+
+  - TVDB
+  - TMDB
+  - FANART
+  - PLEX
+</p>
+</details>
+<details close>
+<summary>🖼️Show TC Poster:</summary>
+<br>
+<p>
+  
+  If `TMDB` is your fav Provider
+
+  - TMDB
+  - TVDB
+  - PLEX
+
+  Else
+
+  - TVDB
+  - TMDB
+  - PLEX
+</p>
+</details>
 
 ## Enjoy
 
