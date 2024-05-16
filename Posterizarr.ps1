@@ -4601,8 +4601,8 @@ Elseif ($Tautulli) {
                                 $global:IsFallback = $true
                             }
                             if ($global:FavProvider -eq 'TVDB' -and !$global:posterurl) {
-                                if ($entry.tmdbid) { 
-                                    $global:posterurl = GetTMDBMoviePoster 
+                                if ($entry.tmdbid) {
+                                    $global:posterurl = GetTMDBMoviePoster
                                     $global:IsFallback = $true
                                 }
                                 if (!$global:posterurl) {
@@ -4614,8 +4614,8 @@ Elseif ($Tautulli) {
 
                         if ($global:OnlyTextless -and !$global:posterurl) {
                             if ($global:FavProvider -eq 'TVDB') {
-                                if ($entry.tmdbid) { 
-                                    $global:posterurl = GetTMDBMoviePoster 
+                                if ($entry.tmdbid) {
+                                    $global:posterurl = GetTMDBMoviePoster
                                     $global:IsFallback = $true
                                 }
                                 if (!$global:posterurl) {
@@ -4918,8 +4918,8 @@ Elseif ($Tautulli) {
                                 $global:IsFallback = $true
                             }
                             if ($global:FavProvider -eq 'TVDB' -and !$global:posterurl) {
-                                if ($entry.tmdbid) { 
-                                    $global:posterurl = GetTMDBMovieBackground 
+                                if ($entry.tmdbid) {
+                                    $global:posterurl = GetTMDBMovieBackground
                                     $global:IsFallback = $true
                                 }
                                 if (!$global:posterurl) {
@@ -4930,8 +4930,8 @@ Elseif ($Tautulli) {
                         }
                         if ($global:OnlyTextless -and !$global:posterurl) {
                             if ($global:FavProvider -eq 'TVDB') {
-                                if ($entry.tmdbid) { 
-                                    $global:posterurl = GetTMDBMovieBackground 
+                                if ($entry.tmdbid) {
+                                    $global:posterurl = GetTMDBMovieBackground
                                     $global:IsFallback = $true
                                 }
                                 if (!$global:posterurl) {
@@ -5615,8 +5615,8 @@ Elseif ($Tautulli) {
                             $global:IsFallback = $true
                         }
                         if ($global:FavProvider -eq 'TVDB' -and !$global:posterurl) {
-                            if ($entry.tmdbid) { 
-                                $global:posterurl = GetTMDBShowBackground 
+                            if ($entry.tmdbid) {
+                                $global:posterurl = GetTMDBShowBackground
                                 $global:IsFallback = $true
                                 $global:FallbackText = 'True-Background'
                             }
@@ -5629,8 +5629,8 @@ Elseif ($Tautulli) {
                     }
                     if ($global:OnlyTextless -and !$global:posterurl) {
                         if ($global:FavProvider -eq 'TVDB') {
-                            if ($entry.tmdbid) { 
-                                $global:posterurl = GetTMDBShowBackground 
+                            if ($entry.tmdbid) {
+                                $global:posterurl = GetTMDBShowBackground
                                 $global:IsFallback = $true
                                 $global:FallbackText = 'True-Background'
                             }
@@ -7850,7 +7850,7 @@ else {
     # Download poster foreach movie
     Write-Entry -Message "Starting asset creation now, this can take a while..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
     Write-Entry -Message "Starting Movie Poster Creation part..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
-    
+
     $checkedItems = @()
     # Movie Part
     foreach ($entry in $AllMovies) {
@@ -7957,8 +7957,8 @@ else {
                                 $global:IsFallback = $true
                             }
                             if ($global:FavProvider -eq 'TVDB' -and !$global:posterurl) {
-                                if ($entry.tmdbid) { 
-                                    $global:posterurl = GetTMDBMoviePoster 
+                                if ($entry.tmdbid) {
+                                    $global:posterurl = GetTMDBMoviePoster
                                     $global:IsFallback = $true
                                 }
                                 if (!$global:posterurl) {
@@ -7970,8 +7970,8 @@ else {
 
                         if ($global:OnlyTextless -and !$global:posterurl) {
                             if ($global:FavProvider -eq 'TVDB') {
-                                if ($entry.tmdbid) { 
-                                    $global:posterurl = GetTMDBMoviePoster 
+                                if ($entry.tmdbid) {
+                                    $global:posterurl = GetTMDBMoviePoster
                                     $global:IsFallback = $true
                                 }
                                 if (!$global:posterurl) {
@@ -8259,8 +8259,8 @@ else {
                                 $global:IsFallback = $true
                             }
                             if ($global:FavProvider -eq 'TVDB' -and !$global:posterurl) {
-                                if ($entry.tmdbid) { 
-                                    $global:posterurl = GetTMDBMovieBackground 
+                                if ($entry.tmdbid) {
+                                    $global:posterurl = GetTMDBMovieBackground
                                     $global:IsFallback = $true
                                 }
                                 if (!$global:posterurl) {
@@ -8271,8 +8271,8 @@ else {
                         }
                         if ($global:OnlyTextless -and !$global:posterurl) {
                             if ($global:FavProvider -eq 'TVDB') {
-                                if ($entry.tmdbid) { 
-                                    $global:posterurl = GetTMDBMovieBackground 
+                                if ($entry.tmdbid) {
+                                    $global:posterurl = GetTMDBMovieBackground
                                     $global:IsFallback = $true
                                 }
                                 if (!$global:posterurl) {
@@ -8928,8 +8928,8 @@ else {
                             $global:IsFallback = $true
                         }
                         if ($global:FavProvider -eq 'TVDB' -and !$global:posterurl) {
-                            if ($entry.tmdbid) { 
-                                $global:posterurl = GetTMDBShowBackground 
+                            if ($entry.tmdbid) {
+                                $global:posterurl = GetTMDBShowBackground
                                 $global:IsFallback = $true
                                 $global:FallbackText = 'True-Background'
                             }
@@ -8942,8 +8942,8 @@ else {
                     }
                     if ($global:OnlyTextless -and !$global:posterurl) {
                         if ($global:FavProvider -eq 'TVDB') {
-                            if ($entry.tmdbid) { 
-                                $global:posterurl = GetTMDBShowBackground 
+                            if ($entry.tmdbid) {
+                                $global:posterurl = GetTMDBShowBackground
                                 $global:IsFallback = $true
                                 $global:FallbackText = 'True-Background'
                             }
@@ -10406,7 +10406,7 @@ else {
             $errorCount++
         }
     }
-    
+
     # Asset Cleanup
     if ($AssetCleanup -eq 'True') {
         $ImagesCleared = 0
@@ -10421,13 +10421,13 @@ else {
         foreach ($uncheckedItem in $uncheckedItems) {
             # Full path to the item
             $uncheckedItemPath = $uncheckedItem + ".jpg"
-            
+
             # Check if its a asset from Posterizarr
             $exifmagickcommand = "& `"$magick`" identify -verbose `"$uncheckedItemPath`""
             $exifmagickcommand | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
-            
+
             $ExifData = (Invoke-Expression $exifmagickcommand | Select-String -Pattern 'created with ppm|created with posterizarr')
-            
+
             if ($ExifData) {
                 # Remove unchecked item from filesystem
                 Remove-Item -LiteralPath $uncheckedItemPath -Force | Out-Null
@@ -10436,7 +10436,7 @@ else {
                 if ($LibraryFolders -eq 'true') {
                     # Determine the parent directory of the item
                     $parentDir = Split-Path -Path $uncheckedItemPath -Parent
-                
+
                     # Add the directory to the list if it's not already included
                     if ($parentDir -notin $processedDirectories) {
                         $processedDirectories += $parentDir
@@ -10444,7 +10444,7 @@ else {
                 }
             }
         }
-        
+
         # Cleanup empty Asset dirs
         if ($LibraryFolders -eq 'true') {
             # After all files are removed, check each directory in the list
@@ -10477,7 +10477,7 @@ else {
             else {
                 $newtotalSizeString = "$($newtotalSize.Sum) bytes"
             }
-            
+
             # Saved space
             $SavedSpace = $totalSize - $newtotalSize.Sum
 
@@ -10513,7 +10513,7 @@ else {
         if ($ImagesCleared -ge '1') {
             Write-Entry -Subtext "Cleanup saved: $savedsizestring" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
         }
-    }   
+    }
 
     $endTime = Get-Date
     $executionTime = New-TimeSpan -Start $startTime -End $endTime
@@ -10576,7 +10576,7 @@ else {
         Write-Entry -Message "No ImageChoices.csv found, creating dummy file for you..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
     }
     Write-Entry -Message "Script execution time: $FormattedTimespawn" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-    
+
     # Send Notification
     if ($global:NotifyUrl -like '*discord*' -and $global:SendNotification -eq 'True') {
         if ($SkipTBA -eq 'True' -or $SkipJapTitle -eq 'True') {
