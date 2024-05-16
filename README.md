@@ -553,7 +553,7 @@ Following these steps will allow you to import the `Module1.bas` file containing
 > [!TIP]
 > - It was made using this Kometa [config](https://github.com/Kometa-Team/Community-Configs/tree/master/fscorrupt).
 
-### Search Order
+## Search Order
 
 <details close>
 <summary>🖼️Movie Poster & Background:</summary>
