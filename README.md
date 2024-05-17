@@ -537,6 +537,9 @@ Following these steps will allow you to import the `Module1.bas` file containing
   <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
     <img alt="output" height="100%" src="/images/posterizarr-overview.jpg">
   </a>
+  <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
+    <img alt="outputnew" height="100%" src="/images/posterizarr-overview-new.jpg">
+  </a>
 </p>
 </details>
 
@@ -549,6 +552,9 @@ Following these steps will allow you to import the `Module1.bas` file containing
 <p>
   <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
     <img alt="kometa-overview" height="100%" src="/images/kometa-overview.png">
+  </a>
+  <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
+    <img alt="kometa-overview-new" height="100%" src="/images/kometa-overview-new.jpg">
   </a>
 </p>
 </details>
