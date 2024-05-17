@@ -5202,8 +5202,9 @@ Elseif ($Tautulli) {
                     }
                 }
             }
-
             Else {
+                Write-Entry -Message "Rootfolder value: $($entry.RootFoldername)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                Write-Entry -Message "Path value: $($entry.Path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                 Write-Entry -Message "Missing RootFolder for: $($entry.title) - you have to manually create the poster for it..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                 Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                 $errorCount++
@@ -7419,6 +7420,8 @@ Elseif ($Tautulli) {
             }
         }
         Else {
+            Write-Entry -Message "Rootfolder value: $($entry.RootFoldername)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+            Write-Entry -Message "Path value: $($entry.Path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
             Write-Entry -Message "Missing RootFolder for: $($entry.title) - you have to manually create the poster for it..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             $errorCount++
@@ -8527,8 +8530,9 @@ else {
                     }
                 }
             }
-
             Else {
+                Write-Entry -Message "Rootfolder value: $($entry.RootFoldername)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                Write-Entry -Message "Path value: $($entry.Path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                 Write-Entry -Message "Missing RootFolder for: $($entry.title) - you have to manually create the poster for it..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                 Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                 $errorCount++
@@ -10456,6 +10460,8 @@ else {
             }
         }
         Else {
+            Write-Entry -Message "Rootfolder value: $($entry.RootFoldername)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+            Write-Entry -Message "Path value: $($entry.Path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
             Write-Entry -Message "Missing RootFolder for: $($entry.title) - you have to manually create the poster for it..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             $errorCount++
