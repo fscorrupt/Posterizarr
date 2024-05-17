@@ -519,7 +519,7 @@ Following these steps will allow you to import the `Module1.bas` file containing
 
 </details>
 
-### Example Pictures:
+### Example Pictures
 
 <details close>
 <summary>🖼️ImageChoices.csv:</summary>
