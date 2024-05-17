@@ -1,9 +1,9 @@
 {
   "ApiPart": {
-    "tvdbapi": "xxxxxxxxxxxxxx-xxxxxxxxxxxxxxxxxxxx-xxxxxxxxxxx",
-    "tmdbtoken": "xxxxxxxxxxxxxx-xxxxxxxxxxxxxxxxxxxx-xxxxxxxxxxx",
-    "FanartTvAPIKey": "xxxxxxxxxxxxxx-xxxxxxxxxxxxxxxxxxxx-xxxxxxxxxxx",
-    "PlexToken": "xxxxxxxxxxxxxx-xxxxxxxxxxxxxxxxxxxx-xxxxxxxxxxx",
+    "tvdbapi": "xxxxxxxxxxxxx",
+    "tmdbtoken": "xxxxxxxxxxxxx",
+    "FanartTvAPIKey": "xxxxxxxxxxxxx",
+    "PlexToken": "xxxxxxxxxxxxx",
     "FavProvider": "tmdb",
     "PreferredLanguageOrder": [
       "xx",
@@ -21,22 +21,23 @@
       "Youtube",
       "Audiobooks",
       "Kids Audiobooks",
-      "Tech Trainings"
+      "Tech Trainings",
+      "Kids Music"
     ],
     "PlexUrl": "http://plex:32400"
   },
   "Notification": {
     "SendNotification": "True",
-    "AppriseUrl": "discord://xxxxxxxxxxxxxx-xxxxxxxxxxxxxxxxxxxx-xxxxxxxxxxx/xxxxxxxxxxxxxx-xxxxxxxxxxxxxxxxxxxx-xxxxxxxxxxx",
+    "AppriseUrl": "discord://xxxxxxxxxx/xxxxxxxxxxxxx",
     "Discord": ""
   },
   "PrerequisitePart": {
     "AssetPath": "/assets",
     "magickinstalllocation": "C:\\PosterTemp\\ImageMagickPortable",
     "maxLogs": "5",
-    "font": "Comfortaa-Medium.ttf",
-    "backgroundfont": "Comfortaa-Medium.ttf",
-    "titlecardfont": "Comfortaa-Medium.ttf",
+    "font": "Colus-Regular.ttf",
+    "backgroundfont": "Colus-Regular.ttf",
+    "titlecardfont": "Colus-Regular.ttf",
     "overlayfile": "overlay.png",
     "backgroundoverlayfile": "backgroundoverlay.png",
     "titlecardoverlayfile": "backgroundoverlay.png",
@@ -48,7 +49,8 @@
     "show_skipped": "false",
     "logLevel": "2",
     "SkipTBA": "true",
-    "SkipJapTitle": "true"
+    "SkipJapTitle": "true",
+    "AssetCleanup": "true"
   },
   "OverlayPart": {
     "ImageProcessing": "true",
