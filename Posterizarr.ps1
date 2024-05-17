@@ -8,7 +8,7 @@ param (
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.2.23"
+$CurrentScriptVersion = "1.2.24"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -507,6 +507,9 @@ function Get-OptimalPointSize {
 }
 function GetTMDBMoviePoster {
     Write-Entry -Subtext "Searching on TMDB for a movie poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+    if (!$global:tmdbid) {
+        Write-Entry -Subtext "Cannot search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+    }
     if ($global:PreferTextless -eq 'True') {
         try {
             $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($global:tmdbid)?append_to_response=images&language=xx&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
@@ -603,6 +606,9 @@ function GetTMDBMoviePoster {
 }
 function GetTMDBMovieBackground {
     Write-Entry -Subtext "Searching on TMDB for a movie background" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+    if (!$global:tmdbid) {
+        Write-Entry -Subtext "Cannot search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+    }
     if ($global:PreferTextless -eq 'True') {
         try {
             $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($global:tmdbid)?append_to_response=images&language=xx&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
@@ -717,6 +723,9 @@ function GetTMDBMovieBackground {
 }
 function GetTMDBShowPoster {
     Write-Entry -Subtext "Searching on TMDB for a show poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+    if (!$global:tmdbid) {
+        Write-Entry -Subtext "Cannot search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+    }
     if ($global:PreferTextless -eq 'True') {
         try {
             $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=xx&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
@@ -814,6 +823,9 @@ function GetTMDBShowPoster {
 }
 function GetTMDBSeasonPoster {
     Write-Entry -Subtext "Searching on TMDB for Season '$global:SeasonNumber' poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+    if (!$global:tmdbid) {
+        Write-Entry -Subtext "Cannot search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+    }
     if ($global:SeasonPreferTextless -eq 'True') {
         try {
             $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)/season/$global:SeasonNumber/images?append_to_response=images&language=xx&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
@@ -968,6 +980,9 @@ function GetTMDBSeasonPoster {
 }
 function GetTMDBShowBackground {
     Write-Entry -Subtext "Searching on TMDB for a show background" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+    if (!$global:tmdbid) {
+        Write-Entry -Subtext "Cannot search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+    }
     if ($global:PreferTextless -eq 'True') {
         try {
             $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=xx&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
@@ -1087,6 +1102,9 @@ function GetTMDBShowBackground {
 }
 function GetTMDBTitleCard {
     Write-Entry -Subtext "Searching on TMDB for: $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+    if (!$global:tmdbid) {
+        Write-Entry -Subtext "Cannot search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+    }
     try {
         $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)/season/$($global:season_number)/episode/$($global:episodenumber)/images?append_to_response=images&language=xx&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
     }
@@ -1179,7 +1197,9 @@ function GetFanartMoviePoster {
                 }
             }
         }
-
+        if ($null -eq $ids[0] -and $null -eq $ids[1]) {
+            Write-Entry -Subtext "Cannot search on FANART, missing IDs..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+        }
         if (!$global:posterurl) {
             Write-Entry -Subtext "No movie match or poster found on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
             $global:Fallback = "TMDB"
@@ -1216,7 +1236,9 @@ function GetFanartMoviePoster {
                 }
             }
         }
-
+        if ($null -eq $ids[0] -and $null -eq $ids[1]) {
+            Write-Entry -Subtext "Cannot search on FANART, missing IDs..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+        }
         if (!$global:posterurl) {
             Write-Entry -Subtext "No movie match or poster found on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
             $global:Fallback = "TMDB"
@@ -1261,6 +1283,9 @@ function GetFanartMovieBackground {
                 }
             }
         }
+    }
+    if ($null -eq $ids[0] -and $null -eq $ids[1]) {
+        Write-Entry -Subtext "Cannot search on FANART, missing IDs..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     }
     if (!$global:posterurl) {
         Write-Entry -Subtext "No movie match or background found on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
@@ -1312,7 +1337,9 @@ function GetFanartShowPoster {
                 }
             }
         }
-
+        Else {
+            Write-Entry -Subtext "Cannot search on FANART, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+        }
         if (!$global:posterurl) {
 
             Write-Entry -Subtext "No show match or poster found on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
@@ -1349,7 +1376,9 @@ function GetFanartShowPoster {
                 }
             }
         }
-
+        Else {
+            Write-Entry -Subtext "Cannot search on FANART, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+        }
         if (!$global:posterurl) {
 
             Write-Entry -Subtext "No show match or poster found on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
@@ -1395,7 +1424,9 @@ function GetFanartShowBackground {
             }
         }
     }
-
+    Else {
+        Write-Entry -Subtext "Cannot search on FANART, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+    }
     if (!$global:posterurl) {
         Write-Entry -Subtext "No show match or background found on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
         $global:Fallback = "TMDB"
@@ -1493,6 +1524,9 @@ function GetFanartSeasonPoster {
                 $global:posterurl = $null
             }
         }
+        Else {
+            Write-Entry -Subtext "Cannot search on FANART, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+        }
         if ($global:posterurl) {
             Write-Entry -Subtext "Found season poster on Fanart" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
             return $global:posterurl
@@ -1531,6 +1565,9 @@ function GetFanartSeasonPoster {
                 $global:posterurl = $null
                 return $global:posterurl
             }
+        }
+        Else {
+            Write-Entry -Subtext "Cannot search on FANART, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
         }
         if ($global:posterurl) {
             return $global:posterurl
@@ -1653,6 +1690,9 @@ function GetTVDBMoviePoster {
             }
         }
     }
+    Else {
+        Write-Entry -Subtext "Cannot search on TVDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+    }
 }
 function GetTVDBMovieBackground {
     if ($global:tvdbid) {
@@ -1734,6 +1774,9 @@ function GetTVDBMovieBackground {
                 $global:TVDBAssetChangeUrl = "https://thetvdb.com/movies/$($response.data.slug)#artwork"
             }
         }
+    }
+    Else {
+        Write-Entry -Subtext "Cannot search on TVDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     }
 }
 function GetTVDBShowPoster {
@@ -1833,6 +1876,9 @@ function GetTVDBShowPoster {
             }
         }
     }
+    Else {
+        Write-Entry -Subtext "Cannot search on TVDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+    }
 }
 function GetTVDBSeasonPoster {
     if ($global:tvdbid) {
@@ -1913,6 +1959,9 @@ function GetTVDBSeasonPoster {
             Write-Entry -Subtext "TVDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)/seasons/$($Seasonresponse.data.type.type)/$global:SeasonNumber#artwork"
         }
+    }
+    Else {
+        Write-Entry -Subtext "Cannot search on TVDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     }
 }
 function GetTVDBShowBackground {
@@ -2013,6 +2062,9 @@ function GetTVDBShowBackground {
             }
         }
     }
+    Else {
+        Write-Entry -Subtext "Cannot search on TVDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+    }
 }
 function GetTVDBTitleCard {
     if ($global:tvdbid) {
@@ -2057,6 +2109,9 @@ function GetTVDBTitleCard {
             $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)/#artwork"
             $errorCount++
         }
+    }
+    Else {
+        Write-Entry -Subtext "Cannot search on TVDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     }
 }
 function GetIMDBPoster {
