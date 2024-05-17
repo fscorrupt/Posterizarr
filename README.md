@@ -534,11 +534,14 @@ Following these steps will allow you to import the `Module1.bas` file containing
 <summary>🖼️Assets after Posterizarr run:</summary>
 <br>
 <p>
-  <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
-    <img alt="output" height="100%" src="/images/posterizarr-overview.jpg">
-  </a>
+  Font - Colus-Regular.ttf
   <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
     <img alt="outputnew" height="100%" src="/images/posterizarr-overview-new.jpg">
+  </a>
+  
+  Font - Comfortaa-Medium.ttf
+  <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
+    <img alt="output" height="100%" src="/images/posterizarr-overview.jpg">
   </a>
 </p>
 </details>
@@ -550,11 +553,14 @@ Following these steps will allow you to import the `Module1.bas` file containing
 <summary>🖼️Assets after Kometa run:</summary>
 <br>
 <p>
-  <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
-    <img alt="kometa-overview" height="100%" src="/images/kometa-overview.png">
-  </a>
+  Font - Colus-Regular.ttf
   <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
     <img alt="kometa-overview-new" height="100%" src="/images/kometa-overview-new.jpg">
+  </a>
+
+  Font - Comfortaa-Medium.ttf
+  <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
+    <img alt="kometa-overview" height="100%" src="/images/kometa-overview.png">
   </a>
 </p>
 </details>
