@@ -571,7 +571,7 @@ Following these steps will allow you to import the `Module1.bas` file containing
 ## Search Order
 
 <details close>
-<summary>🖼️Movie Poster & Background:</summary>
+<summary>🔍Movie Poster & Background:</summary>
 <br>
 <p>
   
@@ -602,7 +602,7 @@ Following these steps will allow you to import the `Module1.bas` file containing
 </details>
 
 <details close>
-<summary>🖼️Show Poster & Background:</summary>
+<summary>🔍Show Poster & Background:</summary>
 <br>
 <p>
   
@@ -630,7 +630,7 @@ Following these steps will allow you to import the `Module1.bas` file containing
 </details>
 
 <details close>
-<summary>🖼️Show Season Poster:</summary>
+<summary>🔍Show Season Poster:</summary>
 <br>
 <p>
   
@@ -658,7 +658,7 @@ Following these steps will allow you to import the `Module1.bas` file containing
 </details>
 
 <details close>
-<summary>🖼️Show TC with Background Poster:</summary>
+<summary>🔍Show TC with Background Poster:</summary>
 <br>
 <p>
   
@@ -678,7 +678,7 @@ Following these steps will allow you to import the `Module1.bas` file containing
 </p>
 </details>
 <details close>
-<summary>🖼️Show TC Poster:</summary>
+<summary>🔍Show TC Poster:</summary>
 <br>
 <p>
   
