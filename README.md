@@ -387,16 +387,16 @@ Run the script with the `-Testing` flag. In this mode, the script will create pi
 ### Manual Mode
 
 > [!IMPORTANT]
-> Alpha and only tested on Windows.
+> Currently only movie/show/season poster creation integrated.
 > 
-> Currently only movie/show/season poster creation integrated
+> Source picture gets edited by script and  is then moved to desired asset location.
 
 Run the script with the `-Manual` switch:
 
 ```powershell
 .\Posterizarr.ps1 -Manual
 ```
-Follow the prompts to enter the source picture path, media folder name, and movie/show title to manually create a custom poster.
+Follow the prompts to enter the source picture path (Container needs Access to it), media folder name, and movie/show title to manually create a custom poster.
 
 ## Platforms & Tools
 
