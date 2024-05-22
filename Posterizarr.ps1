@@ -8,7 +8,7 @@ param (
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.2.25"
+$CurrentScriptVersion = "1.2.26"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -3131,27 +3131,39 @@ if ($global:tmdbtoken.Length -le '35') {
     Exit
 }
 
+try {
+    # tvdb token Header
+    $global:apiUrl = "https://api4.thetvdb.com/v4/login"
+    $global:requestBody = @{
+        apikey = $global:tvdbapi
+    } | ConvertTo-Json
+
+    # tvdb Header
+    $global:tvdbtokenheader = @{
+        'accept'       = 'application/json'
+        'Content-Type' = 'application/json'
+    }
+    # Make tvdb the POST request
+    $global:tvdbtoken = (Invoke-RestMethod -Uri $global:apiUrl -Headers $global:tvdbtokenheader -Method Post -Body $global:requestBody).data.token
+    $global:tvdbheader = @{}
+    $global:tvdbheader.Add("accept", "application/json")
+    $global:tvdbheader.Add("Authorization", "Bearer $global:tvdbtoken")
+}
+catch {
+    Write-Entry -Message "Could not receive TVDB Token, you may have used an legacy API key in your config file. Please use an 'Project Api Key'" -Path $configLogging -Color Red -log Error
+    Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+    $errorCount++
+    if ($global:FavProvider -eq 'TVDB'){
+        Exit
+    }
+}
+
 # tmdb Header
 $global:headers = @{}
 $global:headers.Add("accept", "application/json")
 $global:headers.Add("Authorization", "Bearer $global:tmdbtoken")
 
-# tvdb token Header
-$global:apiUrl = "https://api4.thetvdb.com/v4/login"
-$global:requestBody = @{
-    apikey = $global:tvdbapi
-} | ConvertTo-Json
 
-# tvdb Header
-$global:tvdbtokenheader = @{
-    'accept'       = 'application/json'
-    'Content-Type' = 'application/json'
-}
-# Make tvdb the POST request
-$global:tvdbtoken = (Invoke-RestMethod -Uri $global:apiUrl -Headers $global:tvdbtokenheader -Method Post -Body $global:requestBody).data.token
-$global:tvdbheader = @{}
-$global:tvdbheader.Add("accept", "application/json")
-$global:tvdbheader.Add("Authorization", "Bearer $global:tvdbtoken")
 
 # Plex Headers
 $extraPlexHeaders = @{
