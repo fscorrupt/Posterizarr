@@ -8,7 +8,7 @@ param (
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.2.26"
+$CurrentScriptVersion = "1.2.27"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -3131,30 +3131,57 @@ if ($global:tmdbtoken.Length -le '35') {
     Exit
 }
 
-try {
-    # tvdb token Header
-    $global:apiUrl = "https://api4.thetvdb.com/v4/login"
-    $global:requestBody = @{
-        apikey = $global:tvdbapi
-    } | ConvertTo-Json
+$maxRetries = 6
+$retryCount = 0
+$success = $false
+Write-Entry -Message "Trying to receive a TVDB Token..." -Path $configLogging -Color White -log Info
 
-    # tvdb Header
-    $global:tvdbtokenheader = @{
-        'accept'       = 'application/json'
-        'Content-Type' = 'application/json'
+while (-not $success -and $retryCount -lt $maxRetries) {
+    try {
+        # tvdb token Header
+        $global:apiUrl = "https://api4.thetvdb.com/v4/login"
+        $global:requestBody = @{
+            apikey = $global:tvdbapi
+        } | ConvertTo-Json
+
+        # tvdb Header
+        $global:tvdbtokenheader = @{
+            'accept'       = 'application/json'
+            'Content-Type' = 'application/json'
+        }
+        
+        # Make tvdb the POST request
+        $global:tvdbtoken = (Invoke-RestMethod -Uri $global:apiUrl -Headers $global:tvdbtokenheader -Method Post -Body $global:requestBody).data.token
+        $global:tvdbheader = @{}
+        $global:tvdbheader.Add("accept", "application/json")
+        $global:tvdbheader.Add("Authorization", "Bearer $global:tvdbtoken")
+
+        if ($global:tvdbtoken) {
+            $success = $true
+            Write-Entry -Subtext "Successfully received a TVDB Token" -Path $configLogging -Color Green -log Info
+        }
+
     }
-    # Make tvdb the POST request
-    $global:tvdbtoken = (Invoke-RestMethod -Uri $global:apiUrl -Headers $global:tvdbtokenheader -Method Post -Body $global:requestBody).data.token
-    $global:tvdbheader = @{}
-    $global:tvdbheader.Add("accept", "application/json")
-    $global:tvdbheader.Add("Authorization", "Bearer $global:tvdbtoken")
-}
-catch {
-    Write-Entry -Message "Could not receive TVDB Token, you may have used an legacy API key in your config file. Please use an 'Project Api Key'" -Path $configLogging -Color Red -log Error
-    Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-    $errorCount++
-    if ($global:FavProvider -eq 'TVDB'){
-        Exit
+    catch {
+        $retryCount++
+        
+        if ($retryCount -lt $maxRetries) {
+            Start-Sleep -Seconds 10  # Wait for 10 seconds before the next retry
+        }
+        else {
+            if ($global:FavProvider -eq 'TVDB') {
+                Write-Entry -Subtext "Could not receive a TVDB Token - $($retryCount)/$($maxRetries) - you may have used an legacy API key in your config file. Please use an 'Project Api Key'" -Path $configLogging -Color Red -log Error
+                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                $errorCount++
+                Exit
+            }
+            Else {
+                Write-Entry -Subtext "Could not receive a TVDB Token - $($retryCount)/$($maxRetries) - you may have used an legacy API key in your config file. Please use an 'Project Api Key'" -Path $configLogging -Color Red -log Error
+                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                $errorCount++
+                break
+            }
+        }
     }
 }
 
@@ -7657,7 +7684,7 @@ else {
                 $tvdbpattern = 'tvdb://(\d+)'
                 if ($Metadata.MediaContainer.$contentquery.Location) {
                     $location = $Metadata.MediaContainer.$contentquery.Location.path
-                    $location = $location.replace('\\?\','')
+                    $location = $location.replace('\\?\', '')
                     if ($location.count -gt '1') {
                         $location = $location[0]
                         $MultipleVersions = $true
@@ -7689,7 +7716,7 @@ else {
                 }
                 Else {
                     $location = $Metadata.MediaContainer.$contentquery.media.part.file
-                    $location = $location.replace('\\?\','')
+                    $location = $location.replace('\\?\', '')
                     if ($location.count -gt '1') {
                         Write-Entry -Subtext "Multi File Locations: $location" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                         $location = $location[0]
