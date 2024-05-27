@@ -153,8 +153,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpin
     - `SkipTBA` : Set to `true` to skip TitleCard creation if the Titletext is `TBA`.
     - `SkipJapTitle` : Set to `true` to skip TitleCard creation if the Titletext is `Jap or Chinese`.
     - `AssetCleanup` : Set to `true` to cleanup Assets that are no longer in Plex.
-    - `AutoUpdateIM` : Set to `true` to AutoUpdate Imagemagick Portable Version (Does not work with Docker/Unraid).
-      
+
         ```diff
         - !! IMPORTANT !! -
 
@@ -166,6 +165,8 @@ Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpin
 
         Ensure that all active asset libraries are included when using that setting on true to prevent unintended deletions.
         ```
+    - `AutoUpdateIM` : Set to `true` to AutoUpdate Imagemagick Portable Version (Does not work with Docker/Unraid).
+      - Doing this could break things, cause you then uses IM Versions that are not tested with Posterizarr.
     </details>
     <details close>
     <summary>OverlayPart:</summary>
