@@ -36,7 +36,8 @@
     "TitleCards": "false",
     "SkipTBA": "false",
     "SkipJapTitle": "false",
-    "AssetCleanup": "false"
+    "AssetCleanup": "false",
+    "AutoUpdateIM": "false"
   },
   "OverlayPart":{
     "ImageProcessing": "true",

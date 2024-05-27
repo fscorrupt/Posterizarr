@@ -8,7 +8,7 @@ param (
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.2.27"
+$CurrentScriptVersion = "1.2.28"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -2603,6 +2603,68 @@ function CheckImageMagick {
             }
         }
     }
+    Else {
+        $CurrentImagemagickversion = & $magick -version
+        $CurrentImagemagickversion = [regex]::Match($CurrentImagemagickversion, 'Version: ImageMagick (\d+(\.\d+){1,2}-\d+)')
+        if ($global:OSType -eq "DockerAlpine"){
+            $Url = "https://pkgs.alpinelinux.org/package/edge/community/x86_64/imagemagick"
+            $response = Invoke-WebRequest -Uri $url
+            $htmlContent = $response.Content
+            $regexPattern = '<th class="header">Version<\/th>\s*<td>\s*<strong>\s*<a[^>]*>([^<]+)<\/a>\s*<\/strong>\s*<\/td>'
+            $Versionmatching = [regex]::Matches($htmlContent, $regexPattern)
+        
+            if ($Versionmatching.Count -gt 0) {
+                $LatestImagemagickversion = $Versionmatching[0].Groups[1].Value.split('-')[0]
+            }
+        }
+        Elseif ($global:OSType -eq "Win32NT"){
+            $Url = "https://imagemagick.org/archive/binaries/?C=M;O=D"
+            $result = Invoke-WebRequest -Uri $Url
+            $LatestImagemagickversion = ($result.links.href | Where-Object { $_ -like '*portable-Q16-HDRI-x64.zip' } | Sort-Object -Descending)[0].Replace('-portable-Q16-HDRI-x64.zip','').Replace('ImageMagick-','')
+        }
+        Else {
+            $LatestImagemagickversion = (Invoke-RestMethod -Uri "https://api.github.com/repos/ImageMagick/ImageMagick/releases/latest" -Method Get).tag_name
+        }
+        Write-Entry -Message "Current Imagemagick Version: $($CurrentImagemagickversion.Groups[1].Value)" -Path $configLogging -Color Yellow -log Info
+        Write-Entry -Message "Latest Imagemagick Version: $LatestImagemagickversion" -Path $configLogging -Color DarkMagenta -log Info
+        
+        # Auto Update Magick
+        if ($AutoUpdateIM -eq 'True' -and $global:OSType -ne "DockerAlpine" -and $LatestImagemagickversion -gt $CurrentImagemagickversion.Groups[1].Value){
+            if ($global:OSType -eq "Win32NT"){
+                Remove-Item -LiteralPath $magickinstalllocation -Recurse -Force
+            }
+            Else {
+                Remove-Item -LiteralPath "$global:ScriptRoot/magick" -Force
+            }
+            if ($global:OSType -ne "Win32NT") {
+                if ($global:OSType -ne "DockerAlpine") {
+                    Write-Entry -Subtext "Downloading the latest Imagemagick portable version for you..." -Path $configLogging -Color Cyan -log Info
+                    $magickUrl = "https://imagemagick.org/archive/binaries/magick"
+                    Invoke-WebRequest -Uri $magickUrl -OutFile "$global:ScriptRoot/magick"
+                    chmod +x "$global:ScriptRoot/magick"
+                    Write-Entry -Subtext "Made the portable Magick executable..." -Path $configLogging -Color Green -log Info
+                }
+            }
+            else {
+                Write-Entry -Subtext "Downloading the latest Imagemagick portable version for you..." -Path $configLogging -Color Cyan -log Info
+                $result = Invoke-WebRequest "https://imagemagick.org/archive/binaries/?C=M;O=D"
+                $LatestRelease = ($result.links.href | Where-Object { $_ -like '*portable-Q16-HDRI-x64.zip' } | Sort-Object -Descending)[0]
+                $DownloadPath = Join-Path -Path $global:ScriptRoot -ChildPath (Join-Path -Path 'temp' -ChildPath $LatestRelease)
+                Invoke-WebRequest "https://imagemagick.org/archive/binaries/$LatestRelease" -OutFile $DownloadPath
+                Expand-Archive -Path $DownloadPath -DestinationPath $magickinstalllocation -Force
+                if ((Get-ChildItem -Directory -LiteralPath $magickinstalllocation).name -eq $($LatestRelease.replace('.zip', ''))) {
+                    Copy-item -Force -Recurse "$magickinstalllocation\$((Get-ChildItem -Directory -LiteralPath $magickinstalllocation).name)\*" $magickinstalllocation
+                    Remove-Item -Recurse -LiteralPath "$magickinstalllocation\$((Get-ChildItem -Directory -LiteralPath $magickinstalllocation).name)" -Force
+                }
+                if (Test-Path -LiteralPath $magickinstalllocation\magick.exe) {
+                    Write-Entry -Subtext "Placed Portable ImageMagick here: $magickinstalllocation" -Path $configLogging -Color Green -log Info
+                }
+                Else {
+                    Write-Entry -Subtext "Error During extraction, please manually install/copy portable Imagemagick from here: https://imagemagick.org/archive/binaries/$LatestRelease" -Path $configLogging -Color Red -log Error
+                }
+            }
+        }
+    }
 }
 function CheckOverlayDimensions {
     param (
@@ -2853,6 +2915,7 @@ if (!$global:FavProvider) {
 $LibstoExclude = $config.PlexPart.LibstoExclude
 $PlexUrl = $config.PlexPart.PlexUrl
 # Prerequisites Part
+$AutoUpdateIM = $config.PrerequisitePart.AutoUpdateIM
 $show_skipped = $config.PrerequisitePart.show_skipped
 $AssetPath = RemoveTrailingSlash $config.PrerequisitePart.AssetPath
 
@@ -2994,12 +3057,7 @@ Else {
 $fileExtensions = @(".otf", ".ttf", ".otc", ".ttc", ".png")
 $errorCount = 0
 
-$CurrentImagemagickversion = & $magick -version
-$CurrentImagemagickversion = [regex]::Match($CurrentImagemagickversion, 'Version: ImageMagick (\d+(\.\d+){1,2}-\d+)')
-$LatestImagemagickversion = (Invoke-RestMethod -Uri "https://api.github.com/repos/ImageMagick/ImageMagick/releases/latest" -Method Get).tag_name
 
-Write-Entry -Message "Current Imagemagick Version: $($CurrentImagemagickversion.Groups[1].Value)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
-Write-Entry -Message "Latest Imagemagick Version: $LatestImagemagickversion" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
 
 # Initialize Other Variables
 $SeasonsTemp = $null
@@ -3019,6 +3077,9 @@ if ($Manual) {
 if ($Testing) {
     $configLogging = Join-Path $LogsPath 'Testinglog.log'
 }
+
+# Check ImageMagick now:
+CheckImageMagick -magick $magick -magickinstalllocation $magickinstalllocation
 
 # Create directories if they don't exist
 foreach ($path in $LogsPath, $TempPath, $TestPath, $AssetPath) {
@@ -3103,9 +3164,6 @@ CheckJsonPaths -font $font -backgroundfont $backgroundfont -titlecardfont $title
 
 # Check Plex now:
 [xml]$Libs = CheckPlexAccess -PlexUrl $PlexUrl -PlexToken $PlexToken
-
-# Check ImageMagick now:
-CheckImageMagick -magick $magick -magickinstalllocation $magickinstalllocation
 
 # Check overlay artwork for poster, background, and titlecard dimensions
 Write-Entry -Message "Checking size of overlay files..." -Path $configLogging -Color White -log Info
