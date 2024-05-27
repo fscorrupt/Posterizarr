@@ -3042,6 +3042,7 @@ Elseif ($global:OSType -eq "Win32NT") {
 Else {
     $LatestImagemagickversion = (Invoke-RestMethod -Uri "https://api.github.com/repos/ImageMagick/ImageMagick/releases/latest" -Method Get).tag_name
 }
+$LatestImagemagickversion = $LatestImagemagickversion.replace('-','.')
 Write-Entry -Message "Latest Imagemagick Version: $LatestImagemagickversion" -Path $configLogging -Color DarkMagenta -log Info
 # Auto Update Magick
 if ($AutoUpdateIM -eq 'True' -and $global:OSType -ne "DockerAlpine" -and $LatestImagemagickversion -gt $CurrentImagemagickversion) {
