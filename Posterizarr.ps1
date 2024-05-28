@@ -202,7 +202,7 @@ function SendMessage {
                 "url": "$DLSource"
             },
             "footer": {
-                "text": "$Platform  | current - v$CurrentScriptVersion  | latest - v$LatestScriptVersion"
+                "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $CurrentImagemagickversion | IM vNext: $LatestImagemagickversion"
             }
 
         }
@@ -276,7 +276,7 @@ function SendMessage {
                 "url": "$DLSource"
             },
             "footer": {
-                "text": "$Platform  | current - v$CurrentScriptVersion  | latest - v$LatestScriptVersion"
+                "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $CurrentImagemagickversion | IM vNext: $LatestImagemagickversion"
             }
 
         }
@@ -377,7 +377,7 @@ function SendMessage {
                 "url": "$DLSource"
             },
             "footer": {
-                "text": "$Platform  | current - v$CurrentScriptVersion  | latest - v$LatestScriptVersion"
+                "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $CurrentImagemagickversion | IM vNext: $LatestImagemagickversion"
             }
 
         }
@@ -451,7 +451,7 @@ function SendMessage {
                 "url": "$DLSource"
             },
             "footer": {
-                "text": "$Platform  | current - v$CurrentScriptVersion  | latest - v$LatestScriptVersion"
+                "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $CurrentImagemagickversion | IM vNext: $LatestImagemagickversion"
             }
 
         }
@@ -4263,7 +4263,7 @@ Elseif ($Testing) {
                     "url": "https://github.com/fscorrupt/Posterizarr/raw/main/images/webhook.png"
                 },
                 "footer": {
-                    "text": "$Platform  | current - v$CurrentScriptVersion  | latest - v$LatestScriptVersion"
+                    "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $CurrentImagemagickversion | IM vNext: $LatestImagemagickversion"
                 }
 
             }
@@ -4326,7 +4326,7 @@ Elseif ($Testing) {
                         "url": "https://github.com/fscorrupt/Posterizarr/raw/main/images/webhook.png"
                     },
                     "footer": {
-                        "text": "$Platform  | current - v$CurrentScriptVersion  | latest - v$LatestScriptVersion"
+                        "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $CurrentImagemagickversion | IM vNext: $LatestImagemagickversion"
                     }
 
                 }
@@ -10845,7 +10845,7 @@ else {
                             "url": "https://github.com/fscorrupt/Posterizarr/raw/main/images/webhook.png"
                         },
                         "footer": {
-                            "text": "$Platform  | current - v$CurrentScriptVersion  | latest - v$LatestScriptVersion"
+                            "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $CurrentImagemagickversion | IM vNext: $LatestImagemagickversion"
                         }
                     }
                     ]
@@ -10938,7 +10938,7 @@ else {
                         "url": "https://github.com/fscorrupt/Posterizarr/raw/main/images/webhook.png"
                     },
                     "footer": {
-                        "text": "$Platform  | current - v$CurrentScriptVersion  | latest - v$LatestScriptVersion"
+                        "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $CurrentImagemagickversion | IM vNext: $LatestImagemagickversion"
                     }
                 }
                 ]
@@ -11043,7 +11043,7 @@ else {
                             "url": "https://github.com/fscorrupt/Posterizarr/raw/main/images/webhook.png"
                         },
                         "footer": {
-                            "text": "$Platform  | current - v$CurrentScriptVersion  | latest - v$LatestScriptVersion"
+                            "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $CurrentImagemagickversion | IM vNext: $LatestImagemagickversion"
                         }
                     }
                     ]
@@ -11126,7 +11126,7 @@ else {
                             "url": "https://github.com/fscorrupt/Posterizarr/raw/main/images/webhook.png"
                         },
                         "footer": {
-                            "text": "$Platform  | current - v$CurrentScriptVersion  | latest - v$LatestScriptVersion"
+                            "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $CurrentImagemagickversion | IM vNext: $LatestImagemagickversion"
                         }
                     }
                     ]
