@@ -8,7 +8,7 @@ param (
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.2.29"
+$CurrentScriptVersion = "1.2.30"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -7742,7 +7742,9 @@ else {
                 $tvdbpattern = 'tvdb://(\d+)'
                 if ($Metadata.MediaContainer.$contentquery.Location) {
                     $location = $Metadata.MediaContainer.$contentquery.Location.path
-                    $location = $location.replace('\\?\', '')
+                    if ($location){
+                        $location = $location.replace('\\?\', '')
+                    }
                     if ($location.count -gt '1') {
                         $location = $location[0]
                         $MultipleVersions = $true
@@ -7774,7 +7776,9 @@ else {
                 }
                 Else {
                     $location = $Metadata.MediaContainer.$contentquery.media.part.file
-                    $location = $location.replace('\\?\', '')
+                    if ($location){
+                        $location = $location.replace('\\?\', '')
+                    }
                     if ($location.count -gt '1') {
                         Write-Entry -Subtext "Multi File Locations: $location" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                         $location = $location[0]
