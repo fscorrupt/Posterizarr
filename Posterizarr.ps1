@@ -8,7 +8,7 @@ param (
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.2.30"
+$CurrentScriptVersion = "1.2.31"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -2287,11 +2287,12 @@ function CheckJsonPaths {
         [string]$backgroundfont,
         [string]$titlecardfont,
         [string]$Posteroverlay,
+        [string]$Seasonoverlay,
         [string]$Backgroundoverlay,
         [string]$titlecardoverlay
     )
 
-    $paths = @($font, $backgroundfont, $titlecardfont, $Posteroverlay, $Backgroundoverlay, $titlecardoverlay)
+    $paths = @($font, $backgroundfont, $titlecardfont, $Posteroverlay, $Backgroundoverlay, $titlecardoverlay, $Seasonoverlay)
 
     $errorCount = 0
     foreach ($path in $paths) {
@@ -2437,6 +2438,7 @@ function LogConfigSettings {
     Write-Entry -Subtext "| Used Background Font:         $backgroundfont" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Used TitleCard Font:          $titlecardfont" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Used Poster Overlay File:     $Posteroverlay" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Used Season Overlay File:     $Seasonoverlay" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Used Background Overlay File: $Backgroundoverlay" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Used TitleCard Overlay File:  $titlecardoverlay" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Create Library Folders:       $LibraryFolders" -Path $configLogging -Color White -log Info
@@ -2607,6 +2609,7 @@ function CheckImageMagick {
 function CheckOverlayDimensions {
     param (
         [string]$Posteroverlay,
+        [string]$Seasonoverlay,
         [string]$Backgroundoverlay,
         [string]$Titlecardoverlay,
         [string]$PosterSize,
@@ -2615,6 +2618,7 @@ function CheckOverlayDimensions {
 
     # Use magick to check dimensions
     $Posteroverlaydimensions = & $magick $Posteroverlay -format "%wx%h" info:
+    $Seasonoverlaydimensions = & $magick $Seasonoverlay -format "%wx%h" info:
     $Backgroundoverlaydimensions = & $magick $Backgroundoverlay -format "%wx%h" info:
     $Titlecardoverlaydimensions = & $magick $Titlecardoverlay -format "%wx%h" info:
 
@@ -2626,6 +2630,13 @@ function CheckOverlayDimensions {
         Write-Entry -Subtext "Poster overlay is NOT correctly sized at: $Postersize. Actual dimensions: $Posteroverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     }
 
+    # Check Poster Overlay Size
+    if ($Seasonoverlaydimensions -eq $PosterSize) {
+        Write-Entry -Subtext "Season overlay is correctly sized at: $Postersize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+    }
+    else {
+        Write-Entry -Subtext "Season overlay is NOT correctly sized at: $Postersize. Actual dimensions: $Seasonoverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+    }
     # Check Background Overlay Size
     if ($Backgroundoverlaydimensions -eq $BackgroundSize) {
         Write-Entry -Subtext "Background overlay is correctly sized at: $BackgroundSize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
@@ -2876,6 +2887,7 @@ $font = Join-Path -Path $global:ScriptRoot -ChildPath ('temp', $config.Prerequis
 $backgroundfont = Join-Path -Path $global:ScriptRoot -ChildPath ('temp', $config.PrerequisitePart.backgroundfont -join $($joinsymbol))
 $titlecardfont = Join-Path -Path $global:ScriptRoot -ChildPath ('temp', $config.PrerequisitePart.titlecardfont -join $($joinsymbol))
 $Posteroverlay = Join-Path -Path $global:ScriptRoot -ChildPath ('temp', $config.PrerequisitePart.overlayfile -join $($joinsymbol))
+$Seasonoverlay = Join-Path -Path $global:ScriptRoot -ChildPath ('temp', $config.PrerequisitePart.seasonoverlayfile -join $($joinsymbol))
 $Backgroundoverlay = Join-Path -Path $global:ScriptRoot -ChildPath ('temp', $config.PrerequisitePart.backgroundoverlayfile -join $($joinsymbol))
 $titlecardoverlay = Join-Path -Path $global:ScriptRoot -ChildPath ('temp', $config.PrerequisitePart.titlecardoverlayfile -join $($joinsymbol))
 $testimage = Join-Path -Path $global:ScriptRoot -ChildPath ('test', 'testimage.png' -join $($joinsymbol))
@@ -3160,14 +3172,14 @@ foreach ($file in $files) {
 }
 
 # Call the function with your variables
-CheckJsonPaths -font $font -backgroundfont $backgroundfont -titlecardfont $titlecardfont -Posteroverlay $Posteroverlay -Backgroundoverlay $Backgroundoverlay -titlecardoverlay $titlecardoverlay
+CheckJsonPaths -font $font -backgroundfont $backgroundfont -titlecardfont $titlecardfont -Posteroverlay $Posteroverlay -Backgroundoverlay $Backgroundoverlay -titlecardoverlay $titlecardoverlay -Seasonoverlay $Seasonoverlay
 
 # Check Plex now:
 [xml]$Libs = CheckPlexAccess -PlexUrl $PlexUrl -PlexToken $PlexToken
 
 # Check overlay artwork for poster, background, and titlecard dimensions
 Write-Entry -Message "Checking size of overlay files..." -Path $configLogging -Color White -log Info
-CheckOverlayDimensions -Posteroverlay "$Posteroverlay" -Backgroundoverlay "$Backgroundoverlay" -Titlecardoverlay "$titlecardoverlay" -PosterSize "$PosterSize" -BackgroundSize "$BackgroundSize"
+CheckOverlayDimensions -Posteroverlay "$Posteroverlay" -Backgroundoverlay "$Backgroundoverlay" -Titlecardoverlay "$titlecardoverlay" -PosterSize "$PosterSize" -BackgroundSize "$BackgroundSize" -Seasonoverlay "$Seasonoverlay"
 
 
 # check if fanart Module is installed
@@ -3300,6 +3312,7 @@ if ($Manual) {
     $PosterImage = $PosterImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
     if ($global:ImageProcessing -eq 'true') {
         if ($CreateSeasonPoster -eq 'y') {
+            $Posteroverlay = $Seasonoverlay
             if ($fontAllCaps -eq 'true') {
                 $joinedTitle = $SeasonPosterName.ToUpper()
             }
@@ -3682,12 +3695,12 @@ Elseif ($Testing) {
     Write-Entry -Subtext "Season Poster Part:" -Path $global:ScriptRoot\Logs\Testinglog.log -Color Green -log Info
     if ($AddSeasonText -eq 'true') {
         if ($AddSeasonBorder -eq 'true' -and $AddSeasonOverlay -eq 'true') {
-            $SeasonArgumentsShort = "`"$testimage`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Seasonborderwidthsecond`"  -bordercolor `"$Seasonbordercolor`" -border `"$Seasonborderwidth`" `"$TestSeasonPosterShort`""
-            $SeasonArgumentsMedium = "`"$testimage`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Seasonborderwidthsecond`"  -bordercolor `"$Seasonbordercolor`" -border `"$Seasonborderwidth`" `"$TestSeasonPosterMedium`""
-            $SeasonArgumentsLong = "`"$testimage`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Seasonborderwidthsecond`"  -bordercolor `"$Seasonbordercolor`" -border `"$Seasonborderwidth`" `"$TestSeasonPosterLong`""
-            $SeasonArgumentsShortCAPS = "`"$testimage`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Seasonborderwidthsecond`"  -bordercolor `"$Seasonbordercolor`" -border `"$Seasonborderwidth`" `"$TestSeasonPosterShortCAPS`""
-            $SeasonArgumentsMediumCAPS = "`"$testimage`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Seasonborderwidthsecond`"  -bordercolor `"$Seasonbordercolor`" -border `"$Seasonborderwidth`" `"$TestSeasonPosterMediumCAPS`""
-            $SeasonArgumentsLongCAPS = "`"$testimage`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Seasonborderwidthsecond`"  -bordercolor `"$Seasonbordercolor`" -border `"$Seasonborderwidth`" `"$TestSeasonPosterLongCAPS`""
+            $SeasonArgumentsShort = "`"$testimage`" `"$Seasonoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Seasonborderwidthsecond`"  -bordercolor `"$Seasonbordercolor`" -border `"$Seasonborderwidth`" `"$TestSeasonPosterShort`""
+            $SeasonArgumentsMedium = "`"$testimage`" `"$Seasonoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Seasonborderwidthsecond`"  -bordercolor `"$Seasonbordercolor`" -border `"$Seasonborderwidth`" `"$TestSeasonPosterMedium`""
+            $SeasonArgumentsLong = "`"$testimage`" `"$Seasonoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Seasonborderwidthsecond`"  -bordercolor `"$Seasonbordercolor`" -border `"$Seasonborderwidth`" `"$TestSeasonPosterLong`""
+            $SeasonArgumentsShortCAPS = "`"$testimage`" `"$Seasonoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Seasonborderwidthsecond`"  -bordercolor `"$Seasonbordercolor`" -border `"$Seasonborderwidth`" `"$TestSeasonPosterShortCAPS`""
+            $SeasonArgumentsMediumCAPS = "`"$testimage`" `"$Seasonoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Seasonborderwidthsecond`"  -bordercolor `"$Seasonbordercolor`" -border `"$Seasonborderwidth`" `"$TestSeasonPosterMediumCAPS`""
+            $SeasonArgumentsLongCAPS = "`"$testimage`" `"$Seasonoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Seasonborderwidthsecond`"  -bordercolor `"$Seasonbordercolor`" -border `"$Seasonborderwidth`" `"$TestSeasonPosterLongCAPS`""
             Write-Entry -Subtext "Adding Season Poster Borders | Adding Season Poster Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
         }
         if ($AddSeasonBorder -eq 'true' -and $AddSeasonOverlay -eq 'false') {
@@ -3700,12 +3713,12 @@ Elseif ($Testing) {
             Write-Entry -Subtext "Adding Season Poster Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
         }
         if ($AddSeasonBorder -eq 'false' -and $AddSeasonOverlay -eq 'true') {
-            $SeasonArgumentsShort = "`"$testimage`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite `"$TestSeasonPosterShort`""
-            $SeasonArgumentsMedium = "`"$testimage`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite `"$TestSeasonPosterMedium`""
-            $SeasonArgumentsLong = "`"$testimage`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite `"$TestSeasonPosterLong`""
-            $SeasonArgumentsShortCAPS = "`"$testimage`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite `"$TestSeasonPosterShortCAPS`""
-            $SeasonArgumentsMediumCAPS = "`"$testimage`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite `"$TestSeasonPosterMediumCAPS`""
-            $SeasonArgumentsLongCAPS = "`"$testimage`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite `"$TestSeasonPosterLongCAPS`""
+            $SeasonArgumentsShort = "`"$testimage`" `"$Seasonoverlay`" -gravity south -quality $global:outputQuality -composite `"$TestSeasonPosterShort`""
+            $SeasonArgumentsMedium = "`"$testimage`" `"$Seasonoverlay`" -gravity south -quality $global:outputQuality -composite `"$TestSeasonPosterMedium`""
+            $SeasonArgumentsLong = "`"$testimage`" `"$Seasonoverlay`" -gravity south -quality $global:outputQuality -composite `"$TestSeasonPosterLong`""
+            $SeasonArgumentsShortCAPS = "`"$testimage`" `"$Seasonoverlay`" -gravity south -quality $global:outputQuality -composite `"$TestSeasonPosterShortCAPS`""
+            $SeasonArgumentsMediumCAPS = "`"$testimage`" `"$Seasonoverlay`" -gravity south -quality $global:outputQuality -composite `"$TestSeasonPosterMediumCAPS`""
+            $SeasonArgumentsLongCAPS = "`"$testimage`" `"$PosterovSeasonoverlayerlay`" -gravity south -quality $global:outputQuality -composite `"$TestSeasonPosterLongCAPS`""
             Write-Entry -Subtext "Adding Season Poster Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
         }
         if ($AddSeasonBorder -eq 'false' -and $AddSeasonOverlay -eq 'false') {
@@ -3743,7 +3756,7 @@ Elseif ($Testing) {
     }
     Else {
         if ($AddBorder -eq 'true' -and $AddOverlay -eq 'true') {
-            $SeasonArgumentsTextless = "`"$testimage`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Seasonborderwidthsecond`"  -bordercolor `"$Seasonbordercolor`" -border `"$Seasonborderwidth`" `"$TestSeasonPosterTextless`""
+            $SeasonArgumentsTextless = "`"$testimage`" `"$Seasonoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Seasonborderwidthsecond`"  -bordercolor `"$Seasonbordercolor`" -border `"$Seasonborderwidth`" `"$TestSeasonPosterTextless`""
             Write-Entry -Subtext "Adding Season Poster Borders | Adding Season Poster Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
         }
         if ($AddBorder -eq 'true' -and $AddOverlay -eq 'false') {
@@ -3751,7 +3764,7 @@ Elseif ($Testing) {
             Write-Entry -Subtext "Adding Season Poster Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
         }
         if ($AddBorder -eq 'false' -and $AddOverlay -eq 'true') {
-            $SeasonArgumentsTextless = "`"$testimage`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite `"$TestSeasonPosterTextless`""
+            $SeasonArgumentsTextless = "`"$testimage`" `"$Seasonoverlay`" -gravity south -quality $global:outputQuality -composite `"$TestSeasonPosterTextless`""
             Write-Entry -Subtext "Adding Season Poster Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
         }
         if ($AddBorder -eq 'false' -and $AddOverlay -eq 'false') {
@@ -6235,7 +6248,7 @@ Elseif ($Tautulli) {
                                     if (!$global:ImageMagickError -eq 'True') {
                                         # Resize Image to 2000x3000 and apply Border and overlay
                                         if ($AddSeasonBorder -eq 'true' -and $AddSeasonOverlay -eq 'true') {
-                                            $Arguments = "`"$SeasonImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Seasonborderwidthsecond`"  -bordercolor `"$Seasonbordercolor`" -border `"$Seasonborderwidth`" `"$SeasonImage`""
+                                            $Arguments = "`"$SeasonImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Seasonoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Seasonborderwidthsecond`"  -bordercolor `"$Seasonbordercolor`" -border `"$Seasonborderwidth`" `"$SeasonImage`""
                                             Write-Entry -Subtext "Resizing it | Adding Borders | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                         }
                                         if ($AddSeasonBorder -eq 'true' -and $AddSeasonOverlay -eq 'false') {
@@ -6243,7 +6256,7 @@ Elseif ($Tautulli) {
                                             Write-Entry -Subtext "Resizing it | Adding Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                         }
                                         if ($AddSeasonBorder -eq 'false' -and $AddSeasonOverlay -eq 'true') {
-                                            $Arguments = "`"$SeasonImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite `"$SeasonImage`""
+                                            $Arguments = "`"$SeasonImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Seasonoverlay`" -gravity south -quality $global:outputQuality -composite `"$SeasonImage`""
                                             Write-Entry -Subtext "Resizing it | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                         }
                                         if ($AddSeasonBorder -eq 'false' -and $AddSeasonOverlay -eq 'false') {
@@ -6445,7 +6458,7 @@ Elseif ($Tautulli) {
                                     if (!$global:ImageMagickError -eq 'True') {
                                         # Resize Image to 2000x3000 and apply Border and overlay
                                         if ($AddSeasonBorder -eq 'true' -and $AddSeasonOverlay -eq 'true') {
-                                            $Arguments = "`"$SeasonImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Seasonborderwidthsecond`"  -bordercolor `"$Seasonbordercolor`" -border `"$Seasonborderwidth`" `"$SeasonImage`""
+                                            $Arguments = "`"$SeasonImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Seasonoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Seasonborderwidthsecond`"  -bordercolor `"$Seasonbordercolor`" -border `"$Seasonborderwidth`" `"$SeasonImage`""
                                             Write-Entry -Subtext "Resizing it | Adding Borders | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                         }
                                         if ($AddSeasonBorder -eq 'true' -and $AddSeasonOverlay -eq 'false') {
@@ -6453,7 +6466,7 @@ Elseif ($Tautulli) {
                                             Write-Entry -Subtext "Resizing it | Adding Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                         }
                                         if ($AddSeasonBorder -eq 'false' -and $AddSeasonOverlay -eq 'true') {
-                                            $Arguments = "`"$SeasonImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite `"$SeasonImage`""
+                                            $Arguments = "`"$SeasonImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Seasonoverlay`" -gravity south -quality $global:outputQuality -composite `"$SeasonImage`""
                                             Write-Entry -Subtext "Resizing it | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                         }
                                         if ($AddSeasonBorder -eq 'false' -and $AddSeasonOverlay -eq 'false') {
@@ -9539,7 +9552,7 @@ else {
                                     if (!$global:ImageMagickError -eq 'True') {
                                         # Resize Image to 2000x3000 and apply Border and overlay
                                         if ($AddSeasonBorder -eq 'true' -and $AddSeasonOverlay -eq 'true') {
-                                            $Arguments = "`"$SeasonImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Seasonborderwidthsecond`"  -bordercolor `"$Seasonbordercolor`" -border `"$Seasonborderwidth`" `"$SeasonImage`""
+                                            $Arguments = "`"$SeasonImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Seasonoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Seasonborderwidthsecond`"  -bordercolor `"$Seasonbordercolor`" -border `"$Seasonborderwidth`" `"$SeasonImage`""
                                             Write-Entry -Subtext "Resizing it | Adding Borders | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                         }
                                         if ($AddSeasonBorder -eq 'true' -and $AddSeasonOverlay -eq 'false') {
@@ -9547,7 +9560,7 @@ else {
                                             Write-Entry -Subtext "Resizing it | Adding Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                         }
                                         if ($AddSeasonBorder -eq 'false' -and $AddSeasonOverlay -eq 'true') {
-                                            $Arguments = "`"$SeasonImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite `"$SeasonImage`""
+                                            $Arguments = "`"$SeasonImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Seasonoverlay`" -gravity south -quality $global:outputQuality -composite `"$SeasonImage`""
                                             Write-Entry -Subtext "Resizing it | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                         }
                                         if ($AddSeasonBorder -eq 'false' -and $AddSeasonOverlay -eq 'false') {

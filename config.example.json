@@ -27,6 +27,7 @@
     "backgroundfont": "Comfortaa-Medium.ttf",
     "titlecardfont": "Comfortaa-Medium.ttf",
     "overlayfile": "overlay.png",
+    "seasonoverlayfile": "overlay.png",
     "backgroundoverlayfile": "backgroundoverlay.png",
     "titlecardoverlayfile": "backgroundoverlay.png",
     "LibraryFolders": "true",
