@@ -143,6 +143,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpin
     - `font`: Font file name.
     - `backgroundfont`: Background font file name.
     - `overlayfile`: Overlay file name.
+    - `seasonoverlayfile`: Season overlay file name.
     - `backgroundoverlayfile`: Background overlay file name.
     - `titlecardoverlayfile` : Title Card overlay file name.
     - `LibraryFolders`: Set to `false` for asset structure in one flat folder or `true` to split into library media folders like [Kometa](https://kometa.wiki/en/latest/kometa/guides/assets/#image-asset-directory-guide) needs it.
