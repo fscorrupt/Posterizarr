@@ -8,7 +8,7 @@ param (
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.2.31"
+$CurrentScriptVersion = "1.2.32"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -3331,7 +3331,7 @@ if ($Manual) {
         Move-Item -LiteralPath $PicturePath -destination $PosterImage -Force -ErrorAction SilentlyContinue
         Write-Entry -Subtext "Processing Poster for: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
 
-        $CommentArguments = "convert `"$PosterImage`" -set `"comment`" `"created with posterizarr`" `"$PosterImage`""
+        $CommentArguments = "`"$PosterImage`" -set `"comment`" `"created with posterizarr`" `"$PosterImage`""
         $CommentlogEntry = "`"$magick`" $CommentArguments"
         $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
         InvokeMagickCommand -Command $magick -Arguments $CommentArguments
@@ -4871,7 +4871,7 @@ Elseif ($Tautulli) {
                             }
                             if ($global:ImageProcessing -eq 'true') {
                                 Write-Entry -Subtext "Processing Poster for: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                                $CommentArguments = "convert `"$PosterImage`" -set `"comment`" `"created with posterizarr`" `"$PosterImage`""
+                                $CommentArguments = "`"$PosterImage`" -set `"comment`" `"created with posterizarr`" `"$PosterImage`""
                                 $CommentlogEntry = "`"$magick`" $CommentArguments"
                                 $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                 InvokeMagickCommand -Command $magick -Arguments $CommentArguments
@@ -5181,7 +5181,7 @@ Elseif ($Tautulli) {
                             }
                             if ($global:ImageProcessing -eq 'true') {
                                 Write-Entry -Subtext "Processing background for: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                                $CommentArguments = "convert `"$backgroundImage`" -set `"comment`" `"created with posterizarr`" `"$backgroundImage`""
+                                $CommentArguments = "`"$backgroundImage`" -set `"comment`" `"created with posterizarr`" `"$backgroundImage`""
                                 $CommentlogEntry = "`"$magick`" $CommentArguments"
                                 $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                 InvokeMagickCommand -Command $magick -Arguments $CommentArguments
@@ -5561,7 +5561,7 @@ Elseif ($Tautulli) {
                         }
                         if ($global:ImageProcessing -eq 'true') {
                             Write-Entry -Subtext "Processing Poster for: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                            $CommentArguments = "convert `"$PosterImage`" -set `"comment`" `"created with posterizarr`" `"$PosterImage`""
+                            $CommentArguments = "`"$PosterImage`" -set `"comment`" `"created with posterizarr`" `"$PosterImage`""
                             $CommentlogEntry = "`"$magick`" $CommentArguments"
                             $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                             InvokeMagickCommand -Command $magick -Arguments $CommentArguments
@@ -5881,7 +5881,7 @@ Elseif ($Tautulli) {
                         }
                         if ($global:ImageProcessing -eq 'true') {
                             Write-Entry -Subtext "Processing background for: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                            $CommentArguments = "convert `"$backgroundImage`" -set `"comment`" `"created with posterizarr`" `"$backgroundImage`""
+                            $CommentArguments = "`"$backgroundImage`" -set `"comment`" `"created with posterizarr`" `"$backgroundImage`""
                             $CommentlogEntry = "`"$magick`" $CommentArguments"
                             $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                             InvokeMagickCommand -Command $magick -Arguments $CommentArguments
@@ -6241,7 +6241,7 @@ Elseif ($Tautulli) {
                                     }
                                 }
                                 if (Get-ChildItem -LiteralPath $SeasonImage -ErrorAction SilentlyContinue) {
-                                    $CommentArguments = "convert `"$SeasonImage`" -set `"comment`" `"created with posterizarr`" `"$SeasonImage`""
+                                    $CommentArguments = "`"$SeasonImage`" -set `"comment`" `"created with posterizarr`" `"$SeasonImage`""
                                     $CommentlogEntry = "`"$magick`" $CommentArguments"
                                     $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                     InvokeMagickCommand -Command $magick -Arguments $CommentArguments
@@ -6451,7 +6451,7 @@ Elseif ($Tautulli) {
                                     }
                                 }
                                 if (Get-ChildItem -LiteralPath $SeasonImage -ErrorAction SilentlyContinue) {
-                                    $CommentArguments = "convert `"$SeasonImage`" -set `"comment`" `"created with posterizarr`" `"$SeasonImage`""
+                                    $CommentArguments = "`"$SeasonImage`" -set `"comment`" `"created with posterizarr`" `"$SeasonImage`""
                                     $CommentlogEntry = "`"$magick`" $CommentArguments"
                                     $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                     InvokeMagickCommand -Command $magick -Arguments $CommentArguments
@@ -6892,7 +6892,7 @@ Elseif ($Tautulli) {
                                                 }
                                                 Else {
                                                     if (Get-ChildItem -LiteralPath $EpisodeImage -ErrorAction SilentlyContinue) {
-                                                        $CommentArguments = "convert `"$EpisodeImage`" -set `"comment`" `"created with posterizarr`" `"$EpisodeImage`""
+                                                        $CommentArguments = "`"$EpisodeImage`" -set `"comment`" `"created with posterizarr`" `"$EpisodeImage`""
                                                         $CommentlogEntry = "`"$magick`" $CommentArguments"
                                                         $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                                         InvokeMagickCommand -Command $magick -Arguments $CommentArguments
@@ -7332,7 +7332,7 @@ Elseif ($Tautulli) {
                                                     }
                                                 }
                                                 if (Get-ChildItem -LiteralPath $EpisodeImage -ErrorAction SilentlyContinue) {
-                                                    $CommentArguments = "convert `"$EpisodeImage`" -set `"comment`" `"created with posterizarr`" `"$EpisodeImage`""
+                                                    $CommentArguments = "`"$EpisodeImage`" -set `"comment`" `"created with posterizarr`" `"$EpisodeImage`""
                                                     $CommentlogEntry = "`"$magick`" $CommentArguments"
                                                     $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                                     InvokeMagickCommand -Command $magick -Arguments $CommentArguments
@@ -8235,7 +8235,7 @@ else {
                             }
                             if ($global:ImageProcessing -eq 'true') {
                                 Write-Entry -Subtext "Processing Poster for: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                                $CommentArguments = "convert `"$PosterImage`" -set `"comment`" `"created with posterizarr`" `"$PosterImage`""
+                                $CommentArguments = "`"$PosterImage`" -set `"comment`" `"created with posterizarr`" `"$PosterImage`""
                                 $CommentlogEntry = "`"$magick`" $CommentArguments"
                                 $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                 InvokeMagickCommand -Command $magick -Arguments $CommentArguments
@@ -8530,7 +8530,7 @@ else {
                             }
                             if ($global:ImageProcessing -eq 'true') {
                                 Write-Entry -Subtext "Processing background for: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                                $CommentArguments = "convert `"$backgroundImage`" -set `"comment`" `"created with posterizarr`" `"$backgroundImage`""
+                                $CommentArguments = "`"$backgroundImage`" -set `"comment`" `"created with posterizarr`" `"$backgroundImage`""
                                 $CommentlogEntry = "`"$magick`" $CommentArguments"
                                 $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                 InvokeMagickCommand -Command $magick -Arguments $CommentArguments
@@ -8898,7 +8898,7 @@ else {
                         }
                         if ($global:ImageProcessing -eq 'true') {
                             Write-Entry -Subtext "Processing Poster for: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                            $CommentArguments = "convert `"$PosterImage`" -set `"comment`" `"created with posterizarr`" `"$PosterImage`""
+                            $CommentArguments = "`"$PosterImage`" -set `"comment`" `"created with posterizarr`" `"$PosterImage`""
                             $CommentlogEntry = "`"$magick`" $CommentArguments"
                             $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                             InvokeMagickCommand -Command $magick -Arguments $CommentArguments
@@ -9202,7 +9202,7 @@ else {
                         }
                         if ($global:ImageProcessing -eq 'true') {
                             Write-Entry -Subtext "Processing background for: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                            $CommentArguments = "convert `"$backgroundImage`" -set `"comment`" `"created with posterizarr`" `"$backgroundImage`""
+                            $CommentArguments = "`"$backgroundImage`" -set `"comment`" `"created with posterizarr`" `"$backgroundImage`""
                             $CommentlogEntry = "`"$magick`" $CommentArguments"
                             $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                             InvokeMagickCommand -Command $magick -Arguments $CommentArguments
@@ -9545,7 +9545,7 @@ else {
                                     }
                                 }
                                 if (Get-ChildItem -LiteralPath $SeasonImage -ErrorAction SilentlyContinue) {
-                                    $CommentArguments = "convert `"$SeasonImage`" -set `"comment`" `"created with posterizarr`" `"$SeasonImage`""
+                                    $CommentArguments = "`"$SeasonImage`" -set `"comment`" `"created with posterizarr`" `"$SeasonImage`""
                                     $CommentlogEntry = "`"$magick`" $CommentArguments"
                                     $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                     InvokeMagickCommand -Command $magick -Arguments $CommentArguments
@@ -9969,7 +9969,7 @@ else {
                                                 }
                                                 Else {
                                                     if (Get-ChildItem -LiteralPath $EpisodeImage -ErrorAction SilentlyContinue) {
-                                                        $CommentArguments = "convert `"$EpisodeImage`" -set `"comment`" `"created with posterizarr`" `"$EpisodeImage`""
+                                                        $CommentArguments = "`"$EpisodeImage`" -set `"comment`" `"created with posterizarr`" `"$EpisodeImage`""
                                                         $CommentlogEntry = "`"$magick`" $CommentArguments"
                                                         $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                                         InvokeMagickCommand -Command $magick -Arguments $CommentArguments
@@ -10393,7 +10393,7 @@ else {
                                                     }
                                                 }
                                                 if (Get-ChildItem -LiteralPath $EpisodeImage -ErrorAction SilentlyContinue) {
-                                                    $CommentArguments = "convert `"$EpisodeImage`" -set `"comment`" `"created with posterizarr`" `"$EpisodeImage`""
+                                                    $CommentArguments = "`"$EpisodeImage`" -set `"comment`" `"created with posterizarr`" `"$EpisodeImage`""
                                                     $CommentlogEntry = "`"$magick`" $CommentArguments"
                                                     $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                                     InvokeMagickCommand -Command $magick -Arguments $CommentArguments
