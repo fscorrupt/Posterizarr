@@ -2464,6 +2464,19 @@ function LogConfigSettings {
     Write-Entry -Subtext "| Text Box Width:               $MaxWidth" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Text Box Height:              $MaxHeight" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Text Box Offset:              $text_offset" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "OverLay Season Part" -Path $configLogging -Color Cyan -log Info
+    Write-Entry -Subtext "| All Caps on Text:             $SeasonfontAllCaps" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Add Border to Image:          $AddSeasonBorder" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Add Text to Image:            $AddSeasonText" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Add Overlay to Image:         $AddSeasonOverlay" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Font Color:                   $Seasonfontcolor" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Border Color:                 $Seasonbordercolor" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Min Font Size:                $SeasonminPointSize" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Max Font Size:                $SeasonmaxPointSize" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Border Width:                 $Seasonborderwidth" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Text Box Width:               $SeasonMaxWidth" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Text Box Height:              $SeasonMaxHeight" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Text Box Offset:              $Seasontext_offset" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "OverLay Background Part" -Path $configLogging -Color Cyan -log Info
     Write-Entry -Subtext "| All Caps on Text:             $BackgroundfontAllCaps" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Add Border to Background:     $AddBackgroundBorder" -Path $configLogging -Color White -log Info
