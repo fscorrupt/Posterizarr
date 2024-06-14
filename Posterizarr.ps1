@@ -1947,6 +1947,9 @@ function GetTVDBSeasonPoster {
                             continue
                         }
                     }
+                    if (!$global:posterurl){
+                        Write-Entry -Subtext "No Poster found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                    }
                 }
                 return $global:posterurl
             }
