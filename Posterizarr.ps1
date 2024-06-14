@@ -8,7 +8,7 @@ param (
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.2.32"
+$CurrentScriptVersion = "1.2.33"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -6122,7 +6122,7 @@ Elseif ($Tautulli) {
                             'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBSeasonPoster }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning } }
                             'FANART' { $global:posterurl = GetFanartSeasonPoster }
                             'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBSeasonPoster }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning } }
-                            'PLEX' { if ($entry.PlexSeasonUrl) { GetPlexArtwork -Type ' a Season Poster' -ArtUrl $Arturl -TempImage $SeasonImage } }
+                            'PLEX' { if ($entry.PlexSeasonUrls) { GetPlexArtwork -Type ' a Season Poster' -ArtUrl $Arturl -TempImage $SeasonImage } }
                             Default { $global:posterurl = GetFanartSeasonPoster }
                         }
                         # do a specific order
@@ -6177,7 +6177,7 @@ Elseif ($Tautulli) {
                                         Write-Entry -Subtext "IsFallback: $global:IsFallback" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                                     }
                                 }
-                                if ($entry.PlexSeasonUrl) {
+                                if ($entry.PlexSeasonUrls) {
                                     if ($global:FavProvider -ne 'PLEX') {
                                         $global:IsFallback = $true
                                         GetPlexArtwork -Type ' a Season Poster' -ArtUrl $Arturl -TempImage $SeasonImage
@@ -9426,7 +9426,7 @@ else {
                             'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBSeasonPoster }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning } }
                             'FANART' { $global:posterurl = GetFanartSeasonPoster }
                             'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBSeasonPoster }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning } }
-                            'PLEX' { if ($entry.PlexSeasonUrl) { GetPlexArtwork -Type ' a Season Poster' -ArtUrl $Arturl -TempImage $SeasonImage } }
+                            'PLEX' { if ($entry.PlexSeasonUrls) { GetPlexArtwork -Type ' a Season Poster' -ArtUrl $Arturl -TempImage $SeasonImage } }
                             Default { $global:posterurl = GetFanartSeasonPoster }
                         }
                         # do a specific order
@@ -9481,7 +9481,7 @@ else {
                                         Write-Entry -Subtext "IsFallback: $global:IsFallback" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                                     }
                                 }
-                                if ($entry.PlexSeasonUrl) {
+                                if ($entry.PlexSeasonUrls) {
                                     if ($global:FavProvider -ne 'PLEX') {
                                         $global:IsFallback = $true
                                         GetPlexArtwork -Type ' a Season Poster' -ArtUrl $Arturl -TempImage $SeasonImage
