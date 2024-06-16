@@ -3050,7 +3050,7 @@ CheckImageMagick -magick $magick -magickinstalllocation $magickinstalllocation
 $CurrentImagemagickversion = & $magick -version
 $CurrentImagemagickversion = [regex]::Match($CurrentImagemagickversion, 'Version: ImageMagick (\d+(\.\d+){1,2}-\d+)')
 $CurrentImagemagickversion = $CurrentImagemagickversion.Groups[1].Value.replace('-', '.')
-Write-Entry -Message "Current Imagemagick Version: $CurrentImagemagickversion" -Path $configLogging -Color Yellow -log Info
+Write-Entry -Message "Current Imagemagick Version: $CurrentImagemagickversion" -Path $configLogging -Color White -log Info
 if ($global:OSType -eq "DockerAlpine") {
     $Url = "https://pkgs.alpinelinux.org/package/edge/community/x86_64/imagemagick"
     $response = Invoke-WebRequest -Uri $url
@@ -3071,7 +3071,7 @@ Else {
     $LatestImagemagickversion = (Invoke-RestMethod -Uri "https://api.github.com/repos/ImageMagick/ImageMagick/releases/latest" -Method Get).tag_name
 }
 $LatestImagemagickversion = $LatestImagemagickversion.replace('-','.')
-Write-Entry -Message "Latest Imagemagick Version: $LatestImagemagickversion" -Path $configLogging -Color DarkMagenta -log Info
+Write-Entry -Message "Latest Imagemagick Version: $LatestImagemagickversion" -Path $configLogging -Color Yellow -log Info
 # Auto Update Magick
 if ($AutoUpdateIM -eq 'True' -and $global:OSType -ne "DockerAlpine" -and $LatestImagemagickversion -gt $CurrentImagemagickversion) {
     if ($global:OSType -eq "Win32NT") {
