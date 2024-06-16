@@ -375,6 +375,63 @@ To use it we need to configure a script in Tautulli, please follow these instruc
     </p>
     </details>
 
+### Tautulli Mode Windows
+> [!Note]
+> If Discord is configured it will send a Notification on each trigger.
+
+In this mode we use Tautulli to trigger Posterizarr for an specific item in Plex, like a new show, movie or episode got added.
+
+1. Open Tautulli and go to Settings -> `NOTIFICATION AGENTS`
+1. Click on `Add a new notification agent` and select `Script`
+1. Specify the script folder of Posterizarr and select the script file.
+    - You can specify a `Description` at the bottom like i did.
+    <details close>
+    <summary>🖼️Example</summary>
+    <br>
+    <p>
+      <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
+        <img alt="testing" height="100%" src="/images/Tautulli_windows_Step1.png">
+      </a>
+    </p>
+    </details>
+1. Go to `Triggers`, scroll down and select `Recently Added`.
+    <details close>
+    <summary>🖼️Example</summary>
+    <br>
+    <p>
+      <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
+        <img alt="testing" height="100%" src="/images/Tautulli_Step2.png">
+      </a>
+    </p>
+    </details>
+1. Go to `Conditions`, you can now specify when the script should get called.
+    - In my case i specified the **Media Type**: `episode, movie, show and season`
+    - I also excluded the **Youtube** Lib cause the videos i have there - **do not** have an `tmdb,tvdb or fanart ID`.
+      - This is an recommended setting, either exclude such libs or include only those libs where Posterizarr should create art for.
+    <details close>
+    <summary>🖼️Example</summary>
+    <br>
+    <p>
+      <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
+        <img alt="testing" height="100%" src="/images/Tautulli_Step3.png">
+      </a>
+    </p>
+    </details>
+1. Next go to Arguments -> Unfold `Recently Added` Menu and paste the following Argument, after that you can save it.
+    - **Please do not change the Argument otherwise the script could fail.**
+    ```sh
+    <movie>-Tautulli -RatingKey "{rating_key}" -mediatype "{media_type}"</movie><show>-Tautulli -grandparentratingkey "{grandparent_rating_key}" -mediatype "{media_type}"</show><season>-Tautulli -parentratingkey "{parent_rating_key}" -grandparentratingkey "{grandparent_rating_key}" -mediatype "{media_type}"</season><episode>-Tautulli -RatingKey "{rating_key}" -parentratingkey "{parent_rating_key}" -grandparentratingkey "{grandparent_rating_key}" -mediatype "{media_type}"</episode>
+    ```
+    <details close>
+    <summary>🖼️Example</summary>
+    <br>
+    <p>
+      <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
+        <img alt="testing" height="100%" src="/images/Tautulli_Step4.png">
+      </a>
+    </p>
+    </details>
+
 ### Testing Mode
 
 Run the script with the `-Testing` flag. In this mode, the script will create pink posters/backgrounds with short, medium, and long texts (also in CAPS), using the values specified in the `config.json` file. 
