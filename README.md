@@ -384,6 +384,7 @@ In this mode we use Tautulli to trigger Posterizarr for an specific item in Plex
 1. Open Tautulli and go to Settings -> `NOTIFICATION AGENTS`
 1. Click on `Add a new notification agent` and select `Script`
 1. Specify the script folder of Posterizarr and select the script file.
+    - Set script timeout to `0` which is unlimited. (default is `30` this would kill the script before its finished)
     - You can specify a `Description` at the bottom like i did.
     <details close>
     <summary>🖼️Example</summary>
