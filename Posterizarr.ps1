@@ -8,7 +8,7 @@ param (
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.2.33"
+$CurrentScriptVersion = "1.2.34"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -2674,6 +2674,7 @@ function InvokeMagickCommand {
         [string]$Command,
         [string]$Arguments
     )
+
     function GetMagickErrorMessage {
         param (
             [string]$ErrorMessage
@@ -2684,28 +2685,43 @@ function InvokeMagickCommand {
         return $lines[1]
     }
 
-    $processInfo = New-Object System.Diagnostics.ProcessStartInfo
-    $processInfo.FileName = $Command
-    $processInfo.Arguments = $Arguments
-    $processInfo.RedirectStandardOutput = $true
-    $processInfo.RedirectStandardError = $true
-    $processInfo.UseShellExecute = $false
-    $processInfo.CreateNoWindow = $true
+    try {
+        $processInfo = New-Object System.Diagnostics.ProcessStartInfo
+        $processInfo.FileName = $Command
+        $processInfo.Arguments = $Arguments
+        $processInfo.RedirectStandardOutput = $true
+        $processInfo.RedirectStandardError = $true
+        $processInfo.UseShellExecute = $false
+        $processInfo.CreateNoWindow = $true
 
-    $process = New-Object System.Diagnostics.Process
-    $process.StartInfo = $processInfo
-    $process.Start() | Out-Null
+        $process = New-Object System.Diagnostics.Process
+        $process.StartInfo = $processInfo
 
-    # Capture error
-    $errorOutput = $process.StandardError.ReadToEnd()
+        try {
+            $process.Start() | Out-Null
 
-    # Wait for the process to exit
-    $process.WaitForExit()
+            # Capture error
+            $errorOutput = $process.StandardError.ReadToEnd()
 
-    # Check if there was any error output
-    if (-not [string]::IsNullOrWhiteSpace($errorOutput)) {
-        Write-Entry -Subtext "An error occurred while executing the magick command:" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-        Write-Entry -Subtext (GetMagickErrorMessage $errorOutput) -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log info
+            # Wait for the process to exit
+            $process.WaitForExit()
+
+            # Check if there was any error output
+            if (-not [string]::IsNullOrWhiteSpace($errorOutput)) {
+                Write-Entry -Subtext "An error occurred while executing the magick command:" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext (GetMagickErrorMessage $errorOutput) -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Info
+            }
+        } catch {
+            Write-Entry -Subtext "Failed to start the process or read the error output:" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext $_.Exception.Message -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Info
+        } finally {
+            if ($process) {
+                $process.Dispose()
+            }
+        }
+    } catch {
+        Write-Entry -Subtext "An unexpected error occurred while setting up the process:" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        Write-Entry -Subtext $_.Exception.Message -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Info
     }
 }
 function CheckCharLimit {
