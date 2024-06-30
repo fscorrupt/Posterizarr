@@ -2709,11 +2709,15 @@ function InvokeMagickCommand {
             # Check if there was any error output
             if (-not [string]::IsNullOrWhiteSpace($errorOutput)) {
                 Write-Entry -Subtext "An error occurred while executing the magick command:" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                Write-Entry -Subtext (GetMagickErrorMessage $errorOutput) -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Info
+                Write-Entry -Subtext (GetMagickErrorMessage $errorOutput) -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                $errorCount++
             }
         } catch {
             Write-Entry -Subtext "Failed to start the process or read the error output:" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-            Write-Entry -Subtext $_.Exception.Message -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Info
+            Write-Entry -Subtext $_.Exception.Message -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            $errorCount++
         } finally {
             if ($process) {
                 $process.Dispose()
@@ -2721,7 +2725,9 @@ function InvokeMagickCommand {
         }
     } catch {
         Write-Entry -Subtext "An unexpected error occurred while setting up the process:" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-        Write-Entry -Subtext $_.Exception.Message -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Info
+        Write-Entry -Subtext $_.Exception.Message -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        $errorCount++
     }
 }
 function CheckCharLimit {
