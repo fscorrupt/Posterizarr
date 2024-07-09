@@ -1166,7 +1166,7 @@ function GetFanartMoviePoster {
                 $entrytemp = Get-FanartTv -Type movies -id $id -ErrorAction SilentlyContinue
                 if ($entrytemp -and $entrytemp.movieposter) {
                     if (!($entrytemp.movieposter | Where-Object lang -eq '00')) {
-                        if (!$global:OnlyTextless) {
+                        if (!$global:OnlyTextless -eq 'true') {
                             $global:posterurl = ($entrytemp.movieposter)[0].url
                             Write-Entry -Subtext "Found Poster with text on Fanart.tv"  -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                             $global:PosterWithText = $true
@@ -1306,7 +1306,7 @@ function GetFanartShowPoster {
             $entrytemp = Get-FanartTv -Type tv -id $id -ErrorAction SilentlyContinue
             if ($entrytemp -and $entrytemp.tvposter) {
                 if (!($entrytemp.tvposter | Where-Object lang -eq '00')) {
-                    if (!$global:OnlyTextless) {
+                    if (!$global:OnlyTextless -eq 'true') {
                         $global:posterurl = ($entrytemp.tvposter)[0].url
 
                         Write-Entry -Subtext "Found Poster with text on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
@@ -1600,7 +1600,7 @@ function GetTVDBMoviePoster {
                         return $global:posterurl
                     }
                     Else {
-                        if (!$global:OnlyTextless) {
+                        if (!$global:OnlyTextless -eq 'true') {
                             foreach ($lang in $global:PreferredLanguageOrderTVDB) {
                                 if ($lang -eq 'null') {
                                     $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "" -and $_.type -eq '14' } | Sort-Object Score)
@@ -1803,7 +1803,7 @@ function GetTVDBShowPoster {
                         $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)#artwork"
                     }
                     Else {
-                        if (!$global:OnlyTextless) {
+                        if (!$global:OnlyTextless -eq 'true') {
                             $global:posterurl = $defaultImageurl
                             Write-Entry -Subtext "Found Poster with text on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                             $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)#artwork"
@@ -1991,7 +1991,7 @@ function GetTVDBShowBackground {
                         $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)/#artwork"
                     }
                     Else {
-                        if (!$global:OnlyTextless) {
+                        if (!$global:OnlyTextless -eq 'true') {
                             $global:posterurl = $defaultImageurl
                             Write-Entry -Subtext "Found background with text on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                             $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)/#artwork"
