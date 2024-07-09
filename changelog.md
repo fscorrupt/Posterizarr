@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [1.2.35](https://github.com/fscorrupt/Posterizarr/releases/tag/1.2.35) - 2024-07-09 12:07:22
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.2.34...1.2.35
+
+### Bug Fixes
+
+- general:
+  - only textless is wanted ([818cbde](https://github.com/fscorrupt/Posterizarr/commit/818cbde817b214ea456abe99d8cd52b070e94561))
+
 ## [1.2.34](https://github.com/fscorrupt/Posterizarr/releases/tag/1.2.34) - 2024-07-01 17:50:18
 
 *No description*
