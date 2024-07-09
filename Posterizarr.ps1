@@ -8,7 +8,7 @@ param (
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.2.34"
+$CurrentScriptVersion = "1.2.35"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -524,7 +524,7 @@ function GetTMDBMoviePoster {
             if ($response.images.posters) {
                 $NoLangPoster = ($response.images.posters | Where-Object iso_639_1 -eq $null)
                 if (!$NoLangPoster) {
-                    if (!$global:OnlyTextless) {
+                    if (!$global:OnlyTextless -eq 'true') {
                         $posterpath = (($response.images.posters | Sort-Object vote_average -Descending)[0]).file_path
                         $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
                         if ($global:FavProvider -eq 'TMDB') {
@@ -623,7 +623,7 @@ function GetTMDBMovieBackground {
             if ($response.images.backdrops) {
                 $NoLangPoster = ($response.images.backdrops | Where-Object iso_639_1 -eq $null)
                 if (!$NoLangPoster) {
-                    if (!$global:OnlyTextless) {
+                    if (!$global:OnlyTextless -eq 'true') {
                         $posterpath = (($response.images.backdrops | Sort-Object vote_average -Descending)[0]).file_path
                         $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
                         if ($global:FavProvider -eq 'TMDB') {
@@ -740,7 +740,7 @@ function GetTMDBShowPoster {
             if ($response.images.posters) {
                 $NoLangPoster = ($response.images.posters | Where-Object iso_639_1 -eq $null)
                 if (!$NoLangPoster) {
-                    if (!$global:OnlyTextless) {
+                    if (!$global:OnlyTextless -eq 'true') {
                         $posterpath = (($response.images.posters | Sort-Object vote_average -Descending)[0]).file_path
                         $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
                         if ($global:FavProvider -eq 'TMDB') {
@@ -997,7 +997,7 @@ function GetTMDBShowBackground {
             if ($response.images.backdrops) {
                 $NoLangPoster = ($response.images.backdrops | Where-Object iso_639_1 -eq $null)
                 if (!$NoLangPoster) {
-                    if (!$global:OnlyTextless) {
+                    if (!$global:OnlyTextless -eq 'true') {
                         $posterpath = (($response.images.backdrops | Sort-Object vote_average -Descending)[0]).file_path
                         $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
                         if ($global:FavProvider -eq 'TMDB') {
@@ -2868,9 +2868,11 @@ if ($global:PreferredLanguageOrder.count -eq '1' -and $global:PreferredLanguageO
 }
 Elseif ($global:PreferredLanguageOrder[0] -eq 'xx') {
     $global:PreferTextless = $true
+    $global:OnlyTextless = $false
 }
 Else {
     $global:PreferTextless = $false
+    $global:OnlyTextless = $false
 }
 
 # Season Lang Settings
