@@ -12,7 +12,7 @@
     - **Plex Token:** [Optain Plex Token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/)
 
 1. For Docker please continue here: [Docker](#docker)
-1. For Linux/ARM please Start here: [ARM](#ARM)
+1. For Linux/ARM please Start here: [ARM](#arm-prerequisites)
 1. Please install Powershell
     - [Linux](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-linux?view=powershell-7.4)
     - [macOS](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-macos?view=powershell-7.4)
