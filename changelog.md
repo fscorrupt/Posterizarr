@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## [1.2.36](https://github.com/fscorrupt/Posterizarr/releases/tag/1.2.36) - 2024-07-11 07:39:51
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.2.35...1.2.36
+
+### Feature
+
+- general:
+  - Add Arm support & tvdb search fixes ([ab35be9](https://github.com/fscorrupt/Posterizarr/commit/ab35be9528c30e051804c20169f0eff340d03342))
+
+### Bug Fixes
+
+- general:
+  - only textless search ([19699cd](https://github.com/fscorrupt/Posterizarr/commit/19699cdd0aa4351270657c00fee3a5b24572d444))
+
 ## [1.2.35](https://github.com/fscorrupt/Posterizarr/releases/tag/1.2.35) - 2024-07-09 12:07:22
 
 **Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.2.34...1.2.35
