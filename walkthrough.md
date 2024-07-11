@@ -12,7 +12,7 @@
     - **Plex Token:** [Optain Plex Token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/)
 
 1. For Docker please continue here: [Docker](#docker)
-
+1. For Linux/ARM please Start here: [ARM](#ARM)
 1. Please install Powershell
     - [Linux](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-linux?view=powershell-7.4)
     - [macOS](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-macos?view=powershell-7.4)
@@ -249,5 +249,59 @@ docker exec -it posterizarr pwsh Posterizarr.ps1 -Testing
         ```sh
         docker exec -it posterizarr pwsh Posterizarr.ps1
         ```
+
+## ARM Prerequisites
+1. Install Powershell (make an sh file and run it) - [Official Link](https://learn.microsoft.com/en-us/powershell/scripting/install/community-support?view=powershell-7.4#raspberry-pi-os):
+    ```sh
+    # Prerequisites
+    # Update package lists
+    sudo apt-get update
+
+    # Install dependencies
+    sudo apt-get install jq libssl1.1 libunwind8 -y
+
+    # Download and extract PowerShell
+    # Grab the latest tar.gz
+    bits=$(getconf LONG_BIT)
+    release=$(curl -sL https://api.github.com/repos/PowerShell/PowerShell/releases/latest)
+    package=$(echo $release | jq -r ".assets[].browser_download_url" | grep "linux-arm${bits}.tar.gz")
+    wget $package
+
+    # Make folder to put powershell
+    mkdir ~/powershell
+
+    # Unpack the tar.gz file
+    tar -xvf "./${package##*/}" -C ~/powershell
+
+    # Make Powershell executable PowerShell
+    sudo chmod +x ~/powershell/pwsh
+
+    # Create Symlink
+    sudo ~/powershell/pwsh -command 'New-Item -ItemType SymbolicLink -Path "/usr/bin/pwsh" -Target "$PSHOME/pwsh" -Force'
+    ```
+1. Install ImageMagick 7:
+    ```sh
+    # Prerequisites
+    sudo apt update 
+    sudo apt install build-essential
+    apt install libjpeg-dev
+    apt install libpng-dev
+    apt install libfreetype-dev
+    
+    # Download/extract
+    wget https://imagemagick.org/archive/ImageMagick.tar.gz
+    tar xvzf ImageMagick.tar.gz
+    cd ImageMagick-7.1.1-34 # Version can differ
+
+    # Compilation and Installation
+    ./configure 
+    make
+    sudo make install 
+    sudo ldconfig /usr/local/lib
+
+    # Check if it is working
+    magick -version
+    ```
+1. Now you can Contuine on Step 5 here: [Docker](#Getting-Started)
 > [!NOTE]
 > Have a look at the [Assets Tip](https://github.com/fscorrupt/Posterizarr?tab=readme-ov-file#assets-tip)

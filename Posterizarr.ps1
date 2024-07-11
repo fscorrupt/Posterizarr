@@ -8,7 +8,7 @@ param (
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.2.35"
+$CurrentScriptVersion = "1.2.36"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -1947,7 +1947,7 @@ function GetTVDBSeasonPoster {
                             continue
                         }
                     }
-                    if (!$global:posterurl){
+                    if (!$global:posterurl) {
                         Write-Entry -Subtext "No Poster found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                     }
                 }
@@ -2072,37 +2072,53 @@ function GetTVDBShowBackground {
 function GetTVDBTitleCard {
     if ($global:tvdbid) {
         Write-Entry -Subtext "Searching on TVDB for: $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
-        try {
-            $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/series/$($global:tvdbid)/episodes/default?" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
-        }
-        catch {
-            Write-Entry -Subtext "Could not query TVDB url, error message: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-            $errorCount++
-        }
+        $allEpisodes = @()
+        $page = 0
+        
+        do {
+            try {
+                $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/series/81797/episodes/default?page=$page" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
+                $episodes = $response.data.episodes
+                $seriesData = $response.data
+        
+                if ($episodes) {
+                    $allEpisodes += $seriesData
+                    $page++
+                }
+            }
+            catch {
+                Write-Entry -Subtext "Could not query TVDB url, error message: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                $errorCount++
+                break
+            }
+        } while ($episodes -and $episodes.Count -gt 0)
+        
+        # Now $allEpisodes contains all the episodes retrieved from the API
+        
         if ($response) {
-            if ($response.data.episodes) {
-                $global:NoLangImageUrl = $response.data.episodes | Where-Object { $_.seasonNumber -eq $global:season_number -and $_.number -eq $global:episodenumber }
+            if ($allEpisodes.episodes) {
+                $global:NoLangImageUrl = $allEpisodes.episodes | Where-Object { $_.seasonNumber -eq $global:season_number -and $_.number -eq $global:episodenumber }
                 if ($global:NoLangImageUrl.image) {
                     $global:posterurl = $global:NoLangImageUrl.image
                     Write-Entry -Subtext "Found Title Card on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                     $global:TextlessPoster = $true
                     $global:PosterWithText = $null
-                    $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.series.slug)/episodes/$($global:NoLangImageUrl.id)"
+                    $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($allEpisodes.series.slug)/episodes/$($global:NoLangImageUrl.id)"
 
                     return $global:NoLangImageUrl.image
                 }
                 Else {
                     Write-Entry -Subtext "No Title Card found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                     Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                    $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)/#artwork"
+                    $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($allEpisodes.slug)/#artwork"
                     $errorCount++
                 }
             }
             Else {
                 Write-Entry -Subtext "No Title Card found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                 Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)/#artwork"
+                $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($allEpisodes.slug)/#artwork"
                 $errorCount++
             }
         }
@@ -2713,17 +2729,20 @@ function InvokeMagickCommand {
                 Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                 $errorCount++
             }
-        } catch {
+        }
+        catch {
             Write-Entry -Subtext "Failed to start the process or read the error output:" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             Write-Entry -Subtext $_.Exception.Message -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             $errorCount++
-        } finally {
+        }
+        finally {
             if ($process) {
                 $process.Dispose()
             }
         }
-    } catch {
+    }
+    catch {
         Write-Entry -Subtext "An unexpected error occurred while setting up the process:" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
         Write-Entry -Subtext $_.Exception.Message -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
         Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
@@ -3032,8 +3051,9 @@ $fontImagemagick = $font.replace('\', '\\')
 $backgroundfontImagemagick = $backgroundfont.replace('\', '\\')
 $TitleCardfontImagemagick = $TitleCardfont.replace('\', '\\')
 if ($global:OSType -ne "Win32NT") {
-    if ($global:OSType -eq "DockerAlpine") {
-        $magick = 'magick'
+    $global:OSarch = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture
+    if ($global:OSType -eq "DockerAlpine" -or $global:OSarch -eq "Arm64") {        
+        $magick = 'magick'    
     }
     Else {
         $magickinstalllocation = $global:ScriptRoot
@@ -3068,13 +3088,27 @@ if ($Testing) {
     $configLogging = Join-Path $LogsPath 'Testinglog.log'
 }
 
-# Check ImageMagick now:
-CheckImageMagick -magick $magick -magickinstalllocation $magickinstalllocation
+if ($global:OSarch -eq "Arm64") {
+    try {
+        $CurrentImagemagickversion = & $magick -version
+    }
+    catch {
+        Write-Entry -Message "Could not query installed Imagemagick" -Path $configLogging -Color Red -log Error
+        Exit
+    }
+    $CurrentImagemagickversion = [regex]::Match($CurrentImagemagickversion, 'Version: ImageMagick (\d+(\.\d+){1,2}-\d+)')
+    $CurrentImagemagickversion = $CurrentImagemagickversion.Groups[1].Value.replace('-', '.')
+    Write-Entry -Message "Current Imagemagick Version: $CurrentImagemagickversion" -Path $configLogging -Color White -log Info
+}
+Else {
+    # Check ImageMagick now:
+    CheckImageMagick -magick $magick -magickinstalllocation $magickinstalllocation
 
-$CurrentImagemagickversion = & $magick -version
-$CurrentImagemagickversion = [regex]::Match($CurrentImagemagickversion, 'Version: ImageMagick (\d+(\.\d+){1,2}-\d+)')
-$CurrentImagemagickversion = $CurrentImagemagickversion.Groups[1].Value.replace('-', '.')
-Write-Entry -Message "Current Imagemagick Version: $CurrentImagemagickversion" -Path $configLogging -Color White -log Info
+    $CurrentImagemagickversion = & $magick -version
+    $CurrentImagemagickversion = [regex]::Match($CurrentImagemagickversion, 'Version: ImageMagick (\d+(\.\d+){1,2}-\d+)')
+    $CurrentImagemagickversion = $CurrentImagemagickversion.Groups[1].Value.replace('-', '.')
+    Write-Entry -Message "Current Imagemagick Version: $CurrentImagemagickversion" -Path $configLogging -Color White -log Info
+}
 if ($global:OSType -eq "DockerAlpine") {
     $Url = "https://pkgs.alpinelinux.org/package/edge/community/x86_64/imagemagick"
     $response = Invoke-WebRequest -Uri $url
@@ -3094,10 +3128,10 @@ Elseif ($global:OSType -eq "Win32NT") {
 Else {
     $LatestImagemagickversion = (Invoke-RestMethod -Uri "https://api.github.com/repos/ImageMagick/ImageMagick/releases/latest" -Method Get).tag_name
 }
-$LatestImagemagickversion = $LatestImagemagickversion.replace('-','.')
+$LatestImagemagickversion = $LatestImagemagickversion.replace('-', '.')
 Write-Entry -Message "Latest Imagemagick Version: $LatestImagemagickversion" -Path $configLogging -Color Yellow -log Info
 # Auto Update Magick
-if ($AutoUpdateIM -eq 'True' -and $global:OSType -ne "DockerAlpine" -and $LatestImagemagickversion -gt $CurrentImagemagickversion) {
+if ($AutoUpdateIM -eq 'True' -and $global:OSType -ne "DockerAlpine" -and $LatestImagemagickversion -gt $CurrentImagemagickversion -and $global:OSarch -ne "Arm64") {
     if ($global:OSType -eq "Win32NT") {
         Remove-Item -LiteralPath $magickinstalllocation -Recurse -Force
     }
@@ -7795,7 +7829,7 @@ else {
                 $tvdbpattern = 'tvdb://(\d+)'
                 if ($Metadata.MediaContainer.$contentquery.Location) {
                     $location = $Metadata.MediaContainer.$contentquery.Location.path
-                    if ($location){
+                    if ($location) {
                         $location = $location.replace('\\?\', '')
                     }
                     if ($location.count -gt '1') {
@@ -7829,7 +7863,7 @@ else {
                 }
                 Else {
                     $location = $Metadata.MediaContainer.$contentquery.media.part.file
-                    if ($location){
+                    if ($location) {
                         $location = $location.replace('\\?\', '')
                     }
                     if ($location.count -gt '1') {
