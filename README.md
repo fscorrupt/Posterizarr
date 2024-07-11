@@ -43,6 +43,9 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
 > [!TIP]
 > Here is an installation [walkthrough](walkthrough.md)
 
+> [!IMPORTANT]
+> If you want to install it on ARM please follow this carefully [ARM prerequisites](walkthrough.md#arm-prerequisites)
+
 
 > [!WARNING]
 >- The `temp` Folder gets cleared on every Script run, so do not put files into it.
