@@ -302,6 +302,6 @@ docker exec -it posterizarr pwsh Posterizarr.ps1 -Testing
     # Check if it is working
     magick -version
     ```
-1. Now you can Contuine on Step 5 here: [Docker](#Getting-Started)
+1. Now you can Contuine on Step 5 here: [Getting Started](#Getting-Started)
 > [!NOTE]
 > Have a look at the [Assets Tip](https://github.com/fscorrupt/Posterizarr?tab=readme-ov-file#assets-tip)
