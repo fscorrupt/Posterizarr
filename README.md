@@ -18,6 +18,9 @@
     <a href="https://ko-fi.com/R6R81S6SC" target="_blank"><img src="https://storage.ko-fi.com/cdn/brandasset/logo_white_stroke_small.png" alt="Buy Me A Coffee" height="35"></a>
     <a href="https://discord.com/channels/822460010649878528/1219697354098344039" target="_blank"><img src="https://assets-global.website-files.com/6257adef93867e50d84d30e2/636e0a6a49cf127bf92de1e2_icon_clyde_blurple_RGB.png" alt="Discord" height="35"></a>
 </p>
+<p align="center">
+<a href="https://discord.com/channels/822460010649878528/1219697354098344039" target="_blank"><img src="/images/posterizarr_banner.jpg" alt="Discord" height="250"></a>
+</p>
 <br>
 
 ### Supported Platforms 💻
@@ -27,6 +30,7 @@
 [![Linux](https://img.shields.io/static/v1?style=for-the-badge&logo=linux&logoColor=FFFFFF&message=Linux&color=0D597F&label=)](walkthrough.md)
 [![Windows](https://img.shields.io/static/v1?style=for-the-badge&logo=windows&logoColor=FFFFFF&message=windows&color=097CD7&label=)](walkthrough.md)
 [![MacOS](https://img.shields.io/static/v1?style=for-the-badge&logo=apple&logoColor=FFFFFF&message=macOS&color=515151&label=)](walkthrough.md)
+[![ARM](https://img.shields.io/static/v1?style=for-the-badge&logo=raspberrypi&logoColor=FFFFFF&message=ARM&color=A22846&label=)](walkthrough.md#arm-prerequisites)
 
 ## Introduction
 This PowerShell script automates the process of generating images for your Plex media library. Leveraging information from your Plex library, such as movie or show titles, season and episode data, it fetches relevant artwork from Fanart.tv, TMDB, TVDB, Plex and IMDB. The script is able to focus on artwork with specific languages to grab. By default, textless artwork `xx` is retrieved and will fall back to `en` if textless is not found. This is a setting a user can decide on, either to focus on textless or on text posters. It also offers both automatic and manual modes for generating posters. The manual mode can accommodate custom creations that cannot be bulk retrieved.
