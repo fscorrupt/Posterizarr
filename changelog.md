@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [1.2.37](https://github.com/fscorrupt/Posterizarr/releases/tag/1.2.37) - 2024-07-14 06:23:11
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.2.36...1.2.37
+
+### Bug Fixes
+
+- general:
+  - hardcoded series id removed ([f16f032](https://github.com/fscorrupt/Posterizarr/commit/f16f03209c8d450a3aef01a6b30631e71d204218))
+
 ## [1.2.36](https://github.com/fscorrupt/Posterizarr/releases/tag/1.2.36) - 2024-07-11 07:39:51
 
 **Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.2.35...1.2.36
