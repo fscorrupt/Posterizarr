@@ -8,7 +8,7 @@ param (
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.2.37"
+$CurrentScriptVersion = "1.2.38"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -3214,9 +3214,9 @@ if ($Testing) {
 }
 
 # Test and download files if they don't exist
-Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/main/overlay.png" -destination (Join-Path $TempPath 'overlay.png')
-Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/main/backgroundoverlay.png" -destination (Join-Path $TempPath 'backgroundoverlay.png')
-Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/main/Rocky.ttf" -destination (Join-Path $TempPath 'Rocky.ttf')
+Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/main/overlay.png" -destination (Join-Path $global:ScriptRoot 'overlay.png')
+Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/main/backgroundoverlay.png" -destination (Join-Path $global:ScriptRoot 'backgroundoverlay.png')
+Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/main/Rocky.ttf" -destination (Join-Path $global:ScriptRoot 'Rocky.ttf')
 
 # Write log message
 Write-Entry -Message "Old log files cleared..." -Path $configLogging -Color White -log Info
@@ -3234,14 +3234,24 @@ else {
 }
 
 # Get files in script root with specified extensions
-$files = Get-ChildItem -Path $global:ScriptRoot -File | Where-Object { $_.Extension -in $fileExtensions } -ErrorAction SilentlyContinue
+try {
+    $files = Get-ChildItem -Path $global:ScriptRoot -File | Where-Object { $_.Extension -in $fileExtensions } -ErrorAction SilentlyContinue
+} catch {
+    Write-Entry -Subtext "Error retrieving files: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+}
 
 # Copy files to the destination directory
 foreach ($file in $files) {
-    $destinationPath = Join-Path -Path (Join-Path -Path $global:ScriptRoot -ChildPath 'temp') -ChildPath $file.Name
-    if (!(Test-Path -LiteralPath $destinationPath)) {
-        Copy-Item -Path $file.FullName -Destination $destinationPath -Force | Out-Null
-        Write-Entry -Subtext "Found File: '$($file.Name)' in ScriptRoot - copying it into temp folder..." -Path $configLogging -Color Cyan -log Info
+    try {
+        Write-Entry -Subtext "Trying to copy '$file' into temp dir..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+        $destinationPath = Join-Path -Path (Join-Path -Path $global:ScriptRoot -ChildPath 'temp') -ChildPath $file.Name
+
+        if (!(Test-Path -LiteralPath $destinationPath)) {
+            Copy-Item -Path $file.FullName -Destination $destinationPath -Force -ErrorAction Stop
+            Write-Entry -Subtext "Found File: '$($file.Name)' in ScriptRoot - copying it into temp folder..." -Path $configLogging -Color Cyan -log Info
+        }
+    } catch {
+        Write-Entry -Subtext "Error copying file '$file': $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
     }
 }
 
