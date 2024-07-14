@@ -8,7 +8,7 @@ param (
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.2.36"
+$CurrentScriptVersion = "1.2.37"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
