@@ -2077,7 +2077,7 @@ function GetTVDBTitleCard {
         
         do {
             try {
-                $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/series/81797/episodes/default?page=$page" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
+                $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/series/$($global:tvdbid)/episodes/default?page=$page" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
                 $episodes = $response.data.episodes
                 $seriesData = $response.data
         
