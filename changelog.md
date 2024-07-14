@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [1.2.38](https://github.com/fscorrupt/Posterizarr/releases/tag/1.2.38) - 2024-07-14 17:22:58
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.2.37...1.2.38
+
+### Feature
+
+- general:
+  - add more error handeling ([840b6e8](https://github.com/fscorrupt/Posterizarr/commit/840b6e8062a5a2c65583635f9066475eede43dc6))
+
 ## [1.2.37](https://github.com/fscorrupt/Posterizarr/releases/tag/1.2.37) - 2024-07-14 06:23:11
 
 **Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.2.36...1.2.37
