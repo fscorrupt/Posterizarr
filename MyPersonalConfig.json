@@ -50,7 +50,9 @@
     "logLevel": "2",
     "SkipTBA": "true",
     "SkipJapTitle": "true",
-    "AssetCleanup": "true"
+    "AssetCleanup": "true",
+    "AutoUpdateIM": "false",
+    "seasonoverlayfile": "bottom-up-fade.png"
   },
   "OverlayPart": {
     "ImageProcessing": "true",
