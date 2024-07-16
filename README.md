@@ -486,6 +486,17 @@ Follow the prompts to enter the source picture path (Container needs Access to i
   ```sh
   docker exec -it posterizarr pwsh Posterizarr.ps1 -Testing
   ```
+  **Manual Mode:**
+  ```sh
+  docker exec -it posterizarr pwsh Posterizarr.ps1 -Manual
+  ```
+If you did not used `pwsh` on docker exec you can do it this way in you `SH/BASH` shell:
+**Inside Unraid/Bash/Sh console**
+  ```sh
+  pwsh Posterizarr.ps1
+  pwsh Posterizarr.ps1 -Manual
+  pwsh Posterizarr.ps1 -Testing
+  ```
 
 ### unRAID
 > [!TIP]
