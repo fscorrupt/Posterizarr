@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [1.2.39](https://github.com/fscorrupt/Posterizarr/releases/tag/1.2.39) - 2024-07-17 12:54:07
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.2.38...1.2.39
+
+### Feature
+
+- general:
+  - Add ability to define text stroke ([adcf85f](https://github.com/fscorrupt/Posterizarr/commit/adcf85fdc95108de122053ccce4d8ce1a8549b72))
+
 ## [1.2.38](https://github.com/fscorrupt/Posterizarr/releases/tag/1.2.38) - 2024-07-14 17:22:58
 
 **Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.2.37...1.2.38
