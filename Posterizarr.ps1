@@ -8,7 +8,7 @@ param (
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.2.39"
+$CurrentScriptVersion = "1.2.40"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -21,6 +21,30 @@ $ProgressPreference = 'SilentlyContinue'
 # ImageMagick                     -> https://imagemagick.org/archive/binaries/ImageMagick-7.1.1-27-Q16-HDRI-x64-dll.exe
 # FanartTv API Powershell Wrapper -> https://github.com/Celerium/FanartTV-PowerShellWrapper
 #####################################################################################################################
+
+function Get-CPUModel {
+    if ($Platform -eq 'Docker'){
+        $cpuInfo = cat /proc/cpuinfo | Out-String
+        $cpuModelLine = $cpuInfo -split "`n" | Where-Object { $_ -like "model name*" }
+        $cpuModel = $cpuModelLine -replace "model name\s*:\s*", ""
+        $cpuModel = $cpuModel[0]
+    }
+    Elseif ($Platform -eq 'Windows'){
+        $cpuModel = (Get-CimInstance win32_processor).name
+    }
+    Elseif ($Platform -eq 'Linux'){
+        $cpuInfo = lscpu | Out-String
+        $cpuInfoLines = $cpuInfo -split "`n"
+        $cpuModel = ($cpuInfoLines | Where-Object { $_ -like "Model name*" }) -replace "Model name\s*:\s*", ""
+    }
+    Elseif ($Platform -eq 'macOS'){
+        $cpuModel = system_profiler SPHardwareDataType | grep "Processor Name" | awk -F': ' '{print $2}' | xargs
+    }
+    Else {
+        $cpuModel = 'Unknown'
+    }
+    return $cpuModel
+}
 function Set-OSTypeAndScriptRoot {
     if ($env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker-Alpine*') {
         $global:OSType = "DockerAlpine"
@@ -62,6 +86,107 @@ function Write-Entry {
     }
     # ASCII art header
     if (-not $global:HeaderWritten) {
+        # Retrieve CPU model
+        $cpuModel = Get-CPUModel
+        # Retrieve RAM Info
+        if ($Platform -eq 'Docker' -or $Platform -eq 'Linux'){
+            # Check Memory Usage (Total and Free)
+            $memoryUsage = free -m | Out-String
+            $memoryUsageLines = $memoryUsage -split "`n"
+            $memValues = $memoryUsageLines[1] -split "\s+"
+
+            $totalMemory = [int]$memValues[1]
+            $usedMemory = [int]$memValues[2]
+            $freeMemory = [int]$memValues[3]
+            $sharedMemory = [int]$memValues[4]
+            $buffersCache = [int]$memValues[5]
+            $availableMemory = [int]$memValues[6]
+            $Header = @"
+======================================================
+  _____          _            _
+ |  __ \        | |          (_)
+ | |__) |__  ___| |_ ___ _ __ _ ______ _ _ __ _ __
+ |  ___/ _ \/ __| __/ _ \ '__| |_  / _``` | '__| '__|
+ | |  | (_) \__ \ ||  __/ |  | |/ / (_| | |  | |
+ |_|   \___/|___/\__\___|_|  |_/___\__,_|_|  |_|
+
+ Current Version: $CurrentScriptVersion
+ Latest Version: $LatestScriptVersion
+ Platform: $Platform
+ 
+ CPU Model: $cpuModel
+ 
+ Total Memory: $totalMemory MB
+ Used Memory: $usedMemory MB
+ Free Memory: $freeMemory MB
+ Shared Memory: $sharedMemory MB
+ Buffers/Cache: $buffersCache MB
+ Available: $availableMemory MB
+ ======================================================
+"@
+        }
+        Elseif ($Platform -eq 'Windows'){
+            # Retrieve memory information in GB or MB
+            $memoryInfo = Get-CimInstance Win32_OperatingSystem | Select-Object @{Name = "FreePhysicalMemory"; Expression = { 
+                if ($_.FreePhysicalMemory -ge 1GB) {
+                    "$([math]::Round($_.FreePhysicalMemory / 1GB, 2)) MB"
+                }
+                elseif ($_.FreePhysicalMemory -ge 1MB) {
+                    "$([math]::Round($_.FreePhysicalMemory / 1MB, 2)) GB"
+                }
+                else {
+                    "$($_.FreePhysicalMemory)"
+                } } },
+            @{Name = "TotalVisibleMemorySize"; Expression = {
+                    if ($_.TotalVisibleMemorySize -ge 1GB) {
+                        "$([math]::Round($_.TotalVisibleMemorySize / 1GB, 2)) MB"
+                    }
+                    elseif ($_.TotalVisibleMemorySize -ge 1MB) {
+                        "$([math]::Round($_.TotalVisibleMemorySize / 1MB, 2)) GB"
+                    }
+                    else {
+                        "$($_.TotalVisibleMemorySize)"
+                    }
+                }
+            },
+            @{Name = "UsedMemory"; Expression = {
+                $totalMemory = $_.TotalVisibleMemorySize
+                $freeMemory = $_.FreePhysicalMemory
+                $usedMemory = $totalMemory - $freeMemory
+
+                if ($usedMemory -ge 1GB) {
+                    "$([math]::Round($usedMemory / 1GB, 2)) MB"
+                } elseif ($usedMemory -ge 1MB) {
+                    "$([math]::Round($usedMemory / 1MB, 2)) GB"
+                } else {
+                    $usedMemory
+                }
+            }}
+            $totalMemory = $memoryInfo.TotalVisibleMemorySize
+            $usedMemory = $memoryInfo.UsedMemory
+            $freeMemory = $memoryInfo.FreePhysicalMemory
+            $Header = @"
+======================================================
+  _____          _            _
+ |  __ \        | |          (_)
+ | |__) |__  ___| |_ ___ _ __ _ ______ _ _ __ _ __
+ |  ___/ _ \/ __| __/ _ \ '__| |_  / _``` | '__| '__|
+ | |  | (_) \__ \ ||  __/ |  | |/ / (_| | |  | |
+ |_|   \___/|___/\__\___|_|  |_/___\__,_|_|  |_|
+
+ Current Version: $CurrentScriptVersion
+ Latest Version: $LatestScriptVersion
+ Platform: $Platform
+ 
+ CPU Model: $cpuModel
+ 
+ Total Memory: $totalMemory
+ Used Memory: $usedMemory
+ Free Memory: $freeMemory
+ ======================================================
+"@
+        }
+        Else {
         $Header = @"
 ======================================================
   _____          _            _
@@ -74,8 +199,10 @@ function Write-Entry {
  Current Version: $CurrentScriptVersion
  Latest Version: $LatestScriptVersion
  Platform: $Platform
+ CPU Model: $cpuModel
  ======================================================
 "@
+        }
         Write-Host $Header
         $Header | Out-File $Path -Append
         $global:HeaderWritten = $true
@@ -2332,7 +2459,14 @@ function Get-Platform {
         return 'Docker'
     }
     elseif ($global:OSType -eq 'Unix' -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -notlike 'PSDocker-Alpine*') {
-        return 'Linux'
+        # Check if it is a Mac
+        $unameOutput = & uname
+        if ($unameOutput -like "*Darwin*"){
+            return 'macOS'
+        }
+        Else {
+            return 'Linux'
+        }
     }
     elseif ($global:OSType -eq 'Win32NT') {
         return 'Windows'
@@ -2474,6 +2608,9 @@ function LogConfigSettings {
     Write-Entry -Subtext "| All Caps on Text:             $fontAllCaps" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Add Border to Image:          $AddBorder" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Add Text to Image:            $AddText" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Add Stroke to Text:           $AddTextStroke" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Stroke color:                 $strokecolor" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Stroke width:                 $strokewidth" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Add Overlay to Image:         $AddOverlay" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Font Color:                   $fontcolor" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Border Color:                 $bordercolor" -Path $configLogging -Color White -log Info
@@ -2487,6 +2624,9 @@ function LogConfigSettings {
     Write-Entry -Subtext "| All Caps on Text:             $SeasonfontAllCaps" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Add Border to Image:          $AddSeasonBorder" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Add Text to Image:            $AddSeasonText" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Add Stroke to Text:           $AddSeasonTextStroke" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Stroke color:                 $Seasonstrokecolor" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Stroke width:                 $Seasonstrokewidth" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Add Overlay to Image:         $AddSeasonOverlay" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Font Color:                   $Seasonfontcolor" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Border Color:                 $Seasonbordercolor" -Path $configLogging -Color White -log Info
@@ -2500,6 +2640,9 @@ function LogConfigSettings {
     Write-Entry -Subtext "| All Caps on Text:             $BackgroundfontAllCaps" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Add Border to Background:     $AddBackgroundBorder" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Add Text to Background:       $AddBackgroundText" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Add Stroke to Text:           $AddBackgroundTextStroke" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Stroke color:                 $Backgroundstrokecolor" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Stroke width:                 $Backgroundstrokewidth" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Add Overlay to Background:    $AddBackgroundOverlay" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Font Color:                   $Backgroundfontcolor" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Border Color:                 $Backgroundbordercolor" -Path $configLogging -Color White -log Info
@@ -2518,6 +2661,9 @@ function LogConfigSettings {
     Write-Entry -Subtext "OverLay TitleCard Title Part" -Path $configLogging -Color Cyan -log Info
     Write-Entry -Subtext "| All Caps on Text:             $TitleCardEPTitlefontAllCaps" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Add Title to TitleCard:       $AddTitleCardEPTitleText" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Add Stroke to Text:           $AddTitleCardEPTitleTextStroke" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Stroke color:                 $TitleCardEPTitlestrokecolor" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Stroke width:                 $TitleCardEPTitlestrokewidth" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Font Color:                   $TitleCardEPTitlefontcolor" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Min Font Size:                $TitleCardEPTitleminPointSize" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Max Font Size:                $TitleCardEPTitlemaxPointSize" -Path $configLogging -Color White -log Info
@@ -2529,6 +2675,9 @@ function LogConfigSettings {
     Write-Entry -Subtext "| Episode TC Text:              $EpisodeTCText" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| All Caps on Text:             $TitleCardEPfontAllCaps" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Add Episode to TitleCard:     $AddTitleCardEPText" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Add Stroke to Text:           $AddTitleCardTextStroke" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Stroke color:                 $TitleCardstrokecolor" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Stroke width:                 $TitleCardstrokewidth" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Font Color:                   $TitleCardEPfontcolor" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Min Font Size:                $TitleCardEPminPointSize" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Max Font Size:                $TitleCardEPmaxPointSize" -Path $configLogging -Color White -log Info
@@ -3252,7 +3401,8 @@ else {
 # Get files in script root with specified extensions
 try {
     $files = Get-ChildItem -Path $global:ScriptRoot -File | Where-Object { $_.Extension -in $fileExtensions } -ErrorAction SilentlyContinue
-} catch {
+}
+catch {
     Write-Entry -Subtext "Error retrieving files: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
 }
 
@@ -3266,7 +3416,8 @@ foreach ($file in $files) {
             Copy-Item -Path $file.FullName -Destination $destinationPath -Force -ErrorAction Stop
             Write-Entry -Subtext "Found File: '$($file.Name)' in ScriptRoot - copying it into temp folder..." -Path $configLogging -Color Cyan -log Info
         }
-    } catch {
+    }
+    catch {
         Write-Entry -Subtext "Error copying file '$file': $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
     }
 }
@@ -3465,7 +3616,7 @@ if ($Manual) {
                 Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
                 
                 # Add Stroke
-                if ($AddTextStroke -eq 'true'){
+                if ($AddTextStroke -eq 'true') {
                     $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -stroke `"$strokecolor`" -strokewidth `"$strokewidth`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
                 }
                 Else {
@@ -3763,7 +3914,7 @@ Elseif ($Testing) {
         Write-Entry -Subtext "    Applying CAPS text: `"$LongTextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
         
         # Add Stroke
-        if ($AddTextStroke -eq 'true'){
+        if ($AddTextStroke -eq 'true') {
             $ArgumentsShort = "`"$TestPosterShort`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeShort`" -fill `"#0000FF`" -stroke `"$strokecolor`" -strokewidth `"$strokewidth`" -size `"$boxsize`" -background `"#ACD7E6`" caption:`"$ShortText`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -quality $global:outputQuality -composite `"$TestPosterShort`""
             $ArgumentsMedium = "`"$TestPosterMedium`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeMedium`" -fill `"#0000FF`" -stroke `"$strokecolor`" -strokewidth `"$strokewidth`" -size `"$boxsize`" -background `"#ACD7E6`" caption:`"$MediumText`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -quality $global:outputQuality -composite `"$TestPosterMedium`""
             $ArgumentsLong = "`"$TestPosterLong`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeLong`" -fill `"#0000FF`" -stroke `"$strokecolor`" -strokewidth `"$strokewidth`" -size `"$boxsize`" -background `"#ACD7E6`" caption:`"$LongText`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -quality $global:outputQuality -composite `"$TestPosterLong`""
@@ -3912,7 +4063,7 @@ Elseif ($Testing) {
         Write-Entry -Subtext "    Applying CAPS text: `"$LongTextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
         
         # Add Stroke
-        if ($AddSeasonTextStroke -eq 'true'){
+        if ($AddSeasonTextStroke -eq 'true') {
             $SeasonArgumentsShort = "`"$TestSeasonPosterShort`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeShort`" -fill `"#0000FF`" -stroke `"$Seasonstrokecolor`" -strokewidth `"$Seasonstrokewidth`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$ShortText`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterShort`""
             $SeasonArgumentsMedium = "`"$TestSeasonPosterMedium`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeMedium`" -fill `"#0000FF`" -stroke `"$Seasonstrokecolor`" -strokewidth `"$Seasonstrokewidth`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$MediumText`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterMedium`""
             $SeasonArgumentsLong = "`"$TestSeasonPosterLong`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeLong`" -fill `"#0000FF`" -stroke `"$Seasonstrokecolor`" -strokewidth `"$Seasonstrokewidth`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$LongText`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterLong`""
@@ -4058,7 +4209,7 @@ Elseif ($Testing) {
         Write-Entry -Subtext "    Applying CAPS text: `"$LongTextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
 
         # Add Stroke
-        if ($AddBackgroundTextStroke -eq 'true'){
+        if ($AddBackgroundTextStroke -eq 'true') {
             $backgroundArgumentsShort = "`"$backgroundTestPosterShort`" -gravity center -background none -layers Flatten ( -font `"$backgroundfontImagemagick`" -pointsize `"$backgroundoptimalFontSizeShort`" -fill `"#0000FF`" -stroke `"$Backgroundstrokecolor`" -strokewidth `"$Backgroundstrokewidth`" -size `"$Backgroundboxsize`" -background `"#ACD7E6`" caption:`"$ShortText`" -trim -gravity south -extent `"$Backgroundboxsize`" ) -gravity south -geometry +0+`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundTestPosterShort`""
             $backgroundArgumentsMedium = "`"$backgroundTestPosterMedium`" -gravity center -background none -layers Flatten ( -font `"$backgroundfontImagemagick`" -pointsize `"$backgroundoptimalFontSizeMedium`" -fill `"#0000FF`" -stroke `"$Backgroundstrokecolor`" -strokewidth `"$Backgroundstrokewidth`" -size `"$Backgroundboxsize`" -background `"#ACD7E6`" caption:`"$MediumText`" -trim -gravity south -extent `"$Backgroundboxsize`" ) -gravity south -geometry +0+`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundTestPosterMedium`""
             $backgroundArgumentsLong = "`"$backgroundTestPosterLong`" -gravity center -background none -layers Flatten ( -font `"$backgroundfontImagemagick`" -pointsize `"$backgroundoptimalFontSizeLong`" -fill `"#0000FF`" -stroke `"$Backgroundstrokecolor`" -strokewidth `"$Backgroundstrokewidth`" -size `"$Backgroundboxsize`" -background `"#ACD7E6`" caption:`"$LongText`" -trim -gravity south -extent `"$Backgroundboxsize`" ) -gravity south -geometry +0+`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundTestPosterLong`""
@@ -4203,7 +4354,7 @@ Elseif ($Testing) {
         Write-Entry -Subtext "    Applying CAPS text: `"$LongTextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
 
         # Add Stroke
-        if ($AddTitleCardEPTitleTextStroke -eq 'true'){
+        if ($AddTitleCardEPTitleTextStroke -eq 'true') {
             $TitleCardTitleArgumentsShort = "`"$titlecardtestPosterShort`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeShort`" -fill `"#0000FF`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background `"#ACD7E6`" caption:`"$ShortText`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterShort`""
             $TitleCardTitleArgumentsMedium = "`"$titlecardtestPosterMedium`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeMedium`" -fill `"#0000FF`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background `"#ACD7E6`" caption:`"$MediumText`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterMedium`""
             $TitleCardTitleArgumentsLong = "`"$titlecardtestPosterLong`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeLong`" -fill `"#0000FF`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background `"#ACD7E6`" caption:`"$LongText`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterLong`""
@@ -4288,7 +4439,7 @@ Elseif ($Testing) {
         Write-Entry -Subtext "    Applying text: `"$Episodetext`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
 
         # Add Stroke
-        if ($AddTitleCardTextStroke -eq 'true'){
+        if ($AddTitleCardTextStroke -eq 'true') {
             $TitleCardEPArgumentsShort = "`"$titlecardtestPosterShort`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeEpisodetext`" -fill `"#0000FF`" -stroke `"$TitleCardstrokecolor`" -strokewidth `"$TitleCardstrokewidth`" -size `"$TitleCardEPboxsize`" -background `"#ACD7E6`" caption:`"$Episodetext`" -trim -gravity south -extent `"$TitleCardEPboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterShort`""
             $TitleCardEPArgumentsMedium = "`"$titlecardtestPosterMedium`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeEpisodetext`" -fill `"#0000FF`" -stroke `"$TitleCardstrokecolor`" -strokewidth `"$TitleCardstrokewidth`" -size `"$TitleCardEPboxsize`" -background `"#ACD7E6`" caption:`"$Episodetext`" -trim -gravity south -extent `"$TitleCardEPboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterMedium`""
             $TitleCardEPArgumentsLong = "`"$titlecardtestPosterLong`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeEpisodetext`" -fill `"#0000FF`" -stroke `"$TitleCardstrokecolor`" -strokewidth `"$TitleCardstrokewidth`" -size `"$TitleCardEPboxsize`" -background `"#ACD7E6`" caption:`"$Episodetext`" -trim -gravity south -extent `"$TitleCardEPboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterLong`""
@@ -5064,7 +5215,7 @@ Elseif ($Tautulli) {
                                         if (!$global:IsTruncated) {
                                             Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                             # Add Stroke
-                                            if ($AddTextStroke -eq 'true'){
+                                            if ($AddTextStroke -eq 'true') {
                                                 $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -stroke `"$strokecolor`" -strokewidth `"$strokewidth`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
                                             }
                                             Else {
@@ -5380,7 +5531,7 @@ Elseif ($Tautulli) {
                                         if (!$global:IsTruncated) {
                                             Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                             # Add Stroke
-                                            if ($AddBackgroundTextStroke -eq 'true'){
+                                            if ($AddBackgroundTextStroke -eq 'true') {
                                                 $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -stroke `"$Backgroundstrokecolor`" -strokewidth `"$Backgroundstrokewidth`" -size `"$Backgroundboxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
                                             }
                                             Else {
@@ -5766,7 +5917,7 @@ Elseif ($Tautulli) {
                                     if (!$global:IsTruncated) {
                                         Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                         # Add Stroke
-                                        if ($AddTextStroke -eq 'true'){
+                                        if ($AddTextStroke -eq 'true') {
                                             $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -stroke `"$strokecolor`" -strokewidth `"$strokewidth`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
                                         }
                                         Else {
@@ -6092,7 +6243,7 @@ Elseif ($Tautulli) {
                                     if (!$global:IsTruncated) {
                                         Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                         # Add Stroke
-                                        if ($AddBackgroundTextStroke -eq 'true'){
+                                        if ($AddBackgroundTextStroke -eq 'true') {
                                             $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -stroke `"$Backgroundstrokecolor`" -strokewidth `"$Backgroundstrokewidth`" -size `"$Backgroundboxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
                                         }
                                         Else {
@@ -6459,7 +6610,7 @@ Elseif ($Tautulli) {
                                             if (!$global:IsTruncated) {
                                                 Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                 # Add Stroke
-                                                if ($AddSeasonTextStroke -eq 'true'){
+                                                if ($AddSeasonTextStroke -eq 'true') {
                                                     $Arguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Seasonfontcolor`" -stroke `"$Seasonstrokecolor`" -strokewidth `"$Seasonstrokewidth`" -size `"$Seasonboxsize`" -background none caption:`"$global:seasonTitle`" -trim -gravity south -extent `"$Seasonboxsize`" `) -gravity south -geometry +0`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
                                                 }
                                                 Else {
@@ -6674,7 +6825,7 @@ Elseif ($Tautulli) {
                                             if (!$global:IsTruncated) {
                                                 Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                 # Add Stroke
-                                                if ($AddSeasonTextStroke -eq 'true'){
+                                                if ($AddSeasonTextStroke -eq 'true') {
                                                     $Arguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Seasonfontcolor`" -stroke `"$Seasonstrokecolor`" -strokewidth `"$Seasonstrokewidth`" -size `"$Seasonboxsize`" -background none caption:`"$global:seasonTitle`" -trim -gravity south -extent `"$Seasonboxsize`" `) -gravity south -geometry +0`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
                                                 }
                                                 Else {
@@ -7122,7 +7273,7 @@ Elseif ($Tautulli) {
                                                                 if (!$global:IsTruncated) {
                                                                     Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                                     # Add Stroke
-                                                                    if ($AddTitleCardEPTitleTextStroke -eq 'true'){
+                                                                    if ($AddTitleCardEPTitleTextStroke -eq 'true') {
                                                                         $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
                                                                     }
                                                                     Else {
@@ -7145,7 +7296,7 @@ Elseif ($Tautulli) {
                                                                 if (!$global:IsTruncated) {
                                                                     Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                                     # Add Stroke
-                                                                    if ($AddTitleCardTextStroke -eq 'true'){
+                                                                    if ($AddTitleCardTextStroke -eq 'true') {
                                                                         $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPfontcolor`" -stroke `"$TitleCardstrokecolor`" -strokewidth `"$TitleCardstrokewidth`" -size `"$TitleCardEPboxsize`" -background none caption:`"$global:SeasonEPNumber`" -trim -gravity south -extent `"$TitleCardEPboxsize`" `) -gravity south -geometry +0`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
                                                                     }
                                                                     Else {
@@ -7572,7 +7723,7 @@ Elseif ($Tautulli) {
                                                             if (!$global:IsTruncated) {
                                                                 Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                                 # Add Stroke
-                                                                if ($AddTitleCardEPTitleTextStroke -eq 'true'){
+                                                                if ($AddTitleCardEPTitleTextStroke -eq 'true') {
                                                                     $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
                                                                 }
                                                                 Else {
@@ -7595,7 +7746,7 @@ Elseif ($Tautulli) {
                                                             if (!$global:IsTruncated) {
                                                                 Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                                 # Add Stroke
-                                                                if ($AddTitleCardTextStroke -eq 'true'){
+                                                                if ($AddTitleCardTextStroke -eq 'true') {
                                                                     $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPfontcolor`" -stroke `"$TitleCardstrokecolor`" -strokewidth `"$TitleCardstrokewidth`" -size `"$TitleCardEPboxsize`" -background none caption:`"$global:SeasonEPNumber`" -trim -gravity south -extent `"$TitleCardEPboxsize`" `) -gravity south -geometry +0`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
                                                                 }
                                                                 Else {
@@ -8482,10 +8633,10 @@ else {
                                         if (!$global:IsTruncated) {
                                             Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                             # Add Stroke
-                                            if ($AddTextStroke -eq 'true'){
+                                            if ($AddTextStroke -eq 'true') {
                                                 $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -stroke `"$strokecolor`" -strokewidth `"$strokewidth`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
                                             }
-                                            Else{
+                                            Else {
                                                 $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
                                             }
                                             Write-Entry -Subtext "Applying Poster text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -8783,7 +8934,7 @@ else {
                                         if (!$global:IsTruncated) {
                                             Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                             # Add Stroke
-                                            if ($AddBackgroundTextStroke -eq 'true'){
+                                            if ($AddBackgroundTextStroke -eq 'true') {
                                                 $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -stroke `"$Backgroundstrokecolor`" -strokewidth `"$Backgroundstrokewidth`" -size `"$Backgroundboxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
                                             }
                                             Else {
@@ -9157,7 +9308,7 @@ else {
                                     if (!$global:IsTruncated) {
                                         Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                         # Add Stroke
-                                        if ($AddTextStroke -eq 'true'){
+                                        if ($AddTextStroke -eq 'true') {
                                             $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -stroke `"$strokecolor`" -strokewidth `"$strokewidth`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
                                         }
                                         Else {
@@ -9467,7 +9618,7 @@ else {
                                     if (!$global:IsTruncated) {
                                         Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                         # Add Stroke
-                                        if ($AddBackgroundTextStroke -eq 'true'){
+                                        if ($AddBackgroundTextStroke -eq 'true') {
                                             $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -stroke `"$Backgroundstrokecolor`" -strokewidth `"$Backgroundstrokewidth`" -size `"$Backgroundboxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
                                         }
                                         Else {
@@ -9817,7 +9968,7 @@ else {
                                             if (!$global:IsTruncated) {
                                                 Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                 # Add Stroke
-                                                if ($AddSeasonTextStroke -eq 'true'){
+                                                if ($AddSeasonTextStroke -eq 'true') {
                                                     $Arguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Seasonfontcolor`" -stroke `"$Seasonstrokecolor`" -strokewidth `"$Seasonstrokewidth`" -size `"$Seasonboxsize`" -background none caption:`"$global:seasonTitle`" -trim -gravity south -extent `"$Seasonboxsize`" `) -gravity south -geometry +0`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
                                                 }
                                                 Else {
@@ -10248,7 +10399,7 @@ else {
                                                                 if (!$global:IsTruncated) {
                                                                     Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                                     # Add Stroke
-                                                                    if ($AddTitleCardEPTitleTextStroke -eq 'true'){
+                                                                    if ($AddTitleCardEPTitleTextStroke -eq 'true') {
                                                                         $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
                                                                     }
                                                                     Else {
@@ -10271,7 +10422,7 @@ else {
                                                                 if (!$global:IsTruncated) {
                                                                     Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                                     # Add Stroke
-                                                                    if ($AddTitleCardTextStroke -eq 'true'){
+                                                                    if ($AddTitleCardTextStroke -eq 'true') {
                                                                         $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPfontcolor`" -stroke `"$TitleCardstrokecolor`" -strokewidth `"$TitleCardstrokewidth`" -size `"$TitleCardEPboxsize`" -background none caption:`"$global:SeasonEPNumber`" -trim -gravity south -extent `"$TitleCardEPboxsize`" `) -gravity south -geometry +0`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
                                                                     }
                                                                     Else {
@@ -10682,7 +10833,7 @@ else {
                                                             if (!$global:IsTruncated) {
                                                                 Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                                 # Add Stroke
-                                                                if ($AddTitleCardEPTitleTextStroke -eq 'true'){
+                                                                if ($AddTitleCardEPTitleTextStroke -eq 'true') {
                                                                     $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
                                                                 }
                                                                 Else {
@@ -10705,7 +10856,7 @@ else {
                                                             if (!$global:IsTruncated) {
                                                                 Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                                 # Add Stroke
-                                                                if ($AddTitleCardTextStroke -eq 'true'){
+                                                                if ($AddTitleCardTextStroke -eq 'true') {
                                                                     $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPfontcolor`" -stroke `"$TitleCardstrokecolor`" -strokewidth `"$TitleCardstrokewidth`" -size `"$TitleCardEPboxsize`" -background none caption:`"$global:SeasonEPNumber`" -trim -gravity south -extent `"$TitleCardEPboxsize`" `) -gravity south -geometry +0`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
                                                                 }
                                                                 Else {
