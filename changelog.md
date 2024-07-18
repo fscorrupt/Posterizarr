@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [1.2.40](https://github.com/fscorrupt/Posterizarr/releases/tag/1.2.40) - 2024-07-18 06:33:45
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.2.39...1.2.40
+
+### Feature
+
+- general:
+  - add more platform logging ([4e2960a](https://github.com/fscorrupt/Posterizarr/commit/4e2960a82612749978de88a857083e356205687a))
+
 ## [1.2.39](https://github.com/fscorrupt/Posterizarr/releases/tag/1.2.39) - 2024-07-17 12:54:07
 
 **Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.2.38...1.2.39
