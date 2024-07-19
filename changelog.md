@@ -1,5 +1,32 @@
 # CHANGELOG
 
+## [1.2.40](https://github.com/fscorrupt/Posterizarr/releases/tag/1.2.40) - 2024-07-18 06:33:45
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.2.39...1.2.40
+
+### Feature
+
+- general:
+  - add more platform logging ([4e2960a](https://github.com/fscorrupt/Posterizarr/commit/4e2960a82612749978de88a857083e356205687a))
+
+## [1.2.39](https://github.com/fscorrupt/Posterizarr/releases/tag/1.2.39) - 2024-07-17 12:54:07
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.2.38...1.2.39
+
+### Feature
+
+- general:
+  - Add ability to define text stroke ([adcf85f](https://github.com/fscorrupt/Posterizarr/commit/adcf85fdc95108de122053ccce4d8ce1a8549b72))
+
+## [1.2.38](https://github.com/fscorrupt/Posterizarr/releases/tag/1.2.38) - 2024-07-14 17:22:58
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.2.37...1.2.38
+
+### Feature
+
+- general:
+  - add more error handeling ([840b6e8](https://github.com/fscorrupt/Posterizarr/commit/840b6e8062a5a2c65583635f9066475eede43dc6))
+
 ## [1.2.37](https://github.com/fscorrupt/Posterizarr/releases/tag/1.2.37) - 2024-07-14 06:23:11
 
 **Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.2.36...1.2.37

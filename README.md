@@ -190,6 +190,9 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `fontAllCaps`: Set to `true` for all caps text, else `false`.
     - `AddBorder`: Set to `true` to add a border to the image.
     - `AddText`: Set to `true` to add text to the image.
+    - `AddTextStroke`: Set to `true` to add stroke to text.
+    - `strokecolor`: Color of text stroke.
+    - `strokewidth`: Stroke width.
     - `AddOverlay`: Set to `true` to add the defined overlay file to the image.
     - `fontcolor`: Color of font text.
     - `bordercolor`: Color of border.
@@ -207,6 +210,9 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `fontAllCaps`: Set to `true` for all caps text, else `false`.
     - `AddBorder`: Set to `true` to add a border to the image.
     - `AddText`: Set to `true` to add text to the image.
+    - `AddTextStroke`: Set to `true` to add stroke to text.
+    - `strokecolor`: Color of text stroke.
+    - `strokewidth`: Stroke width.
     - `AddOverlay`: Set to `true` to add the defined overlay file to the image.
     - `fontcolor`: Color of font text.
     - `bordercolor`: Color of border.
@@ -224,6 +230,9 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `fontAllCaps`: Set to `true` for all caps text, else `false`.
     - `AddBorder`: Set to `true` to add a border to the background image.
     - `AddText`: Set to `true` to add text to the background image.
+    - `AddTextStroke`: Set to `true` to add stroke to text.
+    - `strokecolor`: Color of text stroke.
+    - `strokewidth`: Stroke width.
     - `AddOverlay`: Set to `true` to add the defined background overlay file to the background image.
     - `fontcolor`: Color of font text.
     - `bordercolor`: Color of border.
@@ -250,6 +259,9 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     <br>
 
     - `AddEPTitleText`: Set to `true` to add episode title text to the TitleCard image.
+    - `AddTextStroke`: Set to `true` to add stroke to text.
+    - `strokecolor`: Color of text stroke.
+    - `strokewidth`: Stroke width.
     - `fontAllCaps`: Set to `true` for all caps text, else `false`.
     - `fontcolor`: Color of font text.
     - `minPointSize`: Minimum size of text in TitleCard image.
@@ -268,6 +280,9 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
       - Example: `SEASON 1 • EPISODE 5` or `"SEASON 1 • AVSNITT 1"`
     - `fontAllCaps`: Set to `true` for all caps text, else `false`.
     - `AddEPText`: Set to `true` to add episode text to the TitleCard image.
+    - `AddTextStroke`: Set to `true` to add stroke to text.
+    - `strokecolor`: Color of text stroke.
+    - `strokewidth`: Stroke width.
     - `fontcolor`: Color of font text.
     - `minPointSize`: Minimum size of text in TitleCard image.
     - `maxPointSize`: Maximum size of text in TitleCard image.
@@ -486,6 +501,19 @@ Follow the prompts to enter the source picture path (Container needs Access to i
   ```sh
   docker exec -it posterizarr pwsh Posterizarr.ps1 -Testing
   ```
+  **Manual Mode:**
+  ```sh
+  docker exec -it posterizarr pwsh Posterizarr.ps1 -Manual
+  ```
+> [!TIP]  
+> If you did not used `pwsh` on docker exec you can do it this way.
+> 
+> Inside your `Unraid` or `Bash` or `Sh` console:
+> ```sh
+> pwsh Posterizarr.ps1
+> pwsh Posterizarr.ps1 -Manual
+> pwsh Posterizarr.ps1 -Testing
+> ```
 
 ### unRAID
 > [!TIP]
