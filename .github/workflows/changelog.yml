@@ -1,8 +1,5 @@
 name: Generate changelog
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 jobs:
   changelog-wiki:
