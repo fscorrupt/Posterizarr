@@ -8,7 +8,7 @@ param (
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.2.40"
+$CurrentScriptVersion = "1.2.41"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -101,6 +101,9 @@ function Write-Entry {
             $sharedMemory = [int]$memValues[4]
             $buffersCache = [int]$memValues[5]
             $availableMemory = [int]$memValues[6]
+            if (Test-Path /etc/os-release) {
+                $OSVersion = (Get-Content /etc/os-release | Select-String -Pattern "^PRETTY_NAME=").ToString().Split('=')[1].Trim('"')
+            }
             $Header = @"
 ======================================================
   _____          _            _
@@ -113,6 +116,7 @@ function Write-Entry {
  Current Version: $CurrentScriptVersion
  Latest Version: $LatestScriptVersion
  Platform: $Platform
+ OS Version: $OSVersion
  
  CPU Model: $cpuModel
  
@@ -165,6 +169,7 @@ function Write-Entry {
             $totalMemory = $memoryInfo.TotalVisibleMemorySize
             $usedMemory = $memoryInfo.UsedMemory
             $freeMemory = $memoryInfo.FreePhysicalMemory
+            $OSVersion = (Get-WmiObject -class Win32_OperatingSystem).Caption
             $Header = @"
 ======================================================
   _____          _            _
@@ -177,6 +182,7 @@ function Write-Entry {
  Current Version: $CurrentScriptVersion
  Latest Version: $LatestScriptVersion
  Platform: $Platform
+ OS Version: $OSVersion
  
  CPU Model: $cpuModel
  
@@ -3391,7 +3397,7 @@ LogConfigSettings
 Write-Entry -Message "Starting main Script now..." -Path $configLogging -Color Green -log Info
 
 # Fix asset path based on OS (do it here so that we see what is in config.json versus what script should use)
-if ($Platform -eq 'Docker' -or $Platform -eq 'Linux') {
+if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
     $AssetPath = $AssetPath.Replace('\', '/')
 }
 else {
@@ -4934,7 +4940,7 @@ Elseif ($Tautulli) {
             if ($allowedExtensions -contains $_.Extension.ToLower()) {
                 $directory = $_.Directory
                 $basename = $_.BaseName
-                if ($Platform -eq "Docker" -or $Platform -eq "Linux") {
+                if ($Platform -eq "Docker" -or $Platform -eq "Linux" -or $Platform -eq 'macOS') {
                     $directoryHashtable["$directory/$basename"] = $true
                 }
                 Else {
@@ -5010,7 +5016,7 @@ Elseif ($Tautulli) {
                     $Testfile = $($entry.RootFoldername)
                 }
 
-                if ($Platform -eq 'Docker' -or $Platform -eq 'Linux') {
+                if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
                     $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/').Replace('./', '/')
                 }
                 else {
@@ -5337,7 +5343,7 @@ Elseif ($Tautulli) {
                         $Testfile = "$($entry.RootFoldername)_background"
                     }
 
-                    if ($Platform -eq 'Docker' -or $Platform -eq 'Linux') {
+                    if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
                         $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/').Replace('./', '/')
                     }
                     else {
@@ -5729,7 +5735,7 @@ Elseif ($Tautulli) {
                 $Testfile = $($entry.RootFoldername)
             }
 
-            if ($Platform -eq 'Docker' -or $Platform -eq 'Linux') {
+            if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
                 $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/').Replace('./', '/')
             }
             else {
@@ -6038,7 +6044,7 @@ Elseif ($Tautulli) {
                     $Testfile = "$($entry.RootFoldername)_background"
                 }
 
-                if ($Platform -eq 'Docker' -or $Platform -eq 'Linux') {
+                if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
                     $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/').Replace('./', '/')
                 }
                 else {
@@ -6406,7 +6412,7 @@ Elseif ($Tautulli) {
                         $Testfile = "$($entry.RootFoldername)_$global:season"
                     }
 
-                    if ($Platform -eq 'Docker' -or $Platform -eq 'Linux') {
+                    if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
                         $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/').Replace('./', '/')
                     }
                     else {
@@ -7057,7 +7063,7 @@ Elseif ($Tautulli) {
                                     $Testfile = "$($entry.RootFoldername)_$global:FileNaming"
                                 }
 
-                                if ($Platform -eq 'Docker' -or $Platform -eq 'Linux') {
+                                if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
                                     $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/').Replace('./', '/')
                                 }
                                 else {
@@ -7484,7 +7490,7 @@ Elseif ($Tautulli) {
                                     $Testfile = "$($entry.RootFoldername)_$global:FileNaming"
                                 }
 
-                                if ($Platform -eq 'Docker' -or $Platform -eq 'Linux') {
+                                if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
                                     $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/').Replace('./', '/')
                                 }
                                 else {
@@ -8349,7 +8355,7 @@ else {
             if ($allowedExtensions -contains $_.Extension.ToLower()) {
                 $directory = $_.Directory
                 $basename = $_.BaseName
-                if ($Platform -eq "Docker" -or $Platform -eq "Linux") {
+                if ($Platform -eq "Docker" -or $Platform -eq "Linux" -or $Platform -eq 'macOS') {
                     $directoryHashtable["$directory/$basename"] = $true
                 }
                 Else {
@@ -8426,7 +8432,7 @@ else {
                     $Testfile = $($entry.RootFoldername)
                 }
 
-                if ($Platform -eq 'Docker' -or $Platform -eq 'Linux') {
+                if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
                     $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/').Replace('./', '/')
                 }
                 else {
@@ -8739,7 +8745,7 @@ else {
                         $Testfile = "$($entry.RootFoldername)_background"
                     }
 
-                    if ($Platform -eq 'Docker' -or $Platform -eq 'Linux') {
+                    if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
                         $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/').Replace('./', '/')
                     }
                     else {
@@ -9114,7 +9120,7 @@ else {
                 $Testfile = $($entry.RootFoldername)
             }
 
-            if ($Platform -eq 'Docker' -or $Platform -eq 'Linux') {
+            if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
                 $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/').Replace('./', '/')
             }
             else {
@@ -9413,7 +9419,7 @@ else {
                     $Testfile = "$($entry.RootFoldername)_background"
                 }
 
-                if ($Platform -eq 'Docker' -or $Platform -eq 'Linux') {
+                if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
                     $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/').Replace('./', '/')
                 }
                 else {
@@ -9763,7 +9769,7 @@ else {
                         $Testfile = "$($entry.RootFoldername)_$global:season"
                     }
 
-                    if ($Platform -eq 'Docker' -or $Platform -eq 'Linux') {
+                    if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
                         $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/').Replace('./', '/')
                     }
                     else {
@@ -10182,7 +10188,7 @@ else {
                                     $Testfile = "$($entry.RootFoldername)_$global:FileNaming"
                                 }
 
-                                if ($Platform -eq 'Docker' -or $Platform -eq 'Linux') {
+                                if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
                                     $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/').Replace('./', '/')
                                 }
                                 else {
@@ -10593,7 +10599,7 @@ else {
                                     $Testfile = "$($entry.RootFoldername)_$global:FileNaming"
                                 }
 
-                                if ($Platform -eq 'Docker' -or $Platform -eq 'Linux') {
+                                if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
                                     $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/').Replace('./', '/')
                                 }
                                 else {
