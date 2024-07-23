@@ -8,7 +8,7 @@ param (
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.2.41"
+$CurrentScriptVersion = "1.2.42"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -2779,6 +2779,12 @@ function CheckImageMagick {
             $LatestRelease = ($result.links.href | Where-Object { $_ -like '*portable-Q16-HDRI-x64.zip' } | Sort-Object -Descending)[0]
             $DownloadPath = Join-Path -Path $global:ScriptRoot -ChildPath (Join-Path -Path 'temp' -ChildPath $LatestRelease)
             Invoke-WebRequest "https://imagemagick.org/archive/binaries/$LatestRelease" -OutFile $DownloadPath
+            
+            # Ensure the $magickinstalllocation directory exists
+            if (-not (Test-Path -LiteralPath $magickinstalllocation)) {
+                New-Item -ItemType Directory -Path $magickinstalllocation | Out-Null
+            }
+
             Expand-Archive -Path $DownloadPath -DestinationPath $magickinstalllocation -Force
             if ((Get-ChildItem -Directory -LiteralPath $magickinstalllocation).name -eq $($LatestRelease.replace('.zip', ''))) {
                 Copy-item -Force -Recurse "$magickinstalllocation\$((Get-ChildItem -Directory -LiteralPath $magickinstalllocation).name)\*" $magickinstalllocation
