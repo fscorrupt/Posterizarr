@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## [1.2.44](https://github.com/fscorrupt/Posterizarr/releases/tag/1.2.44) - 2024-07-23 12:15:11
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.2.43...1.2.44
+
 ## [1.2.43](https://github.com/fscorrupt/Posterizarr/releases/tag/1.2.43) - 2024-07-23 11:41:51
 
 **Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.2.42...1.2.43
