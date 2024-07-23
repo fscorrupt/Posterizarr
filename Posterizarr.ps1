@@ -8,7 +8,7 @@ param (
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.2.42"
+$CurrentScriptVersion = "1.2.43"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -2778,6 +2778,12 @@ function CheckImageMagick {
             $result = Invoke-WebRequest "https://imagemagick.org/archive/binaries/?C=M;O=D"
             $LatestRelease = ($result.links.href | Where-Object { $_ -like '*portable-Q16-HDRI-x64.zip' } | Sort-Object -Descending)[0]
             $DownloadPath = Join-Path -Path $global:ScriptRoot -ChildPath (Join-Path -Path 'temp' -ChildPath $LatestRelease)
+
+            # Ensure the $temp directory exists
+            if (-not (Test-Path -LiteralPath $global:ScriptRoot\temp)) {
+                New-Item -ItemType Directory -Path $global:ScriptRoot\temp | Out-Null
+            }
+
             Invoke-WebRequest "https://imagemagick.org/archive/binaries/$LatestRelease" -OutFile $DownloadPath
             
             # Ensure the $magickinstalllocation directory exists
