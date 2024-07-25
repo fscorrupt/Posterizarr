@@ -8,7 +8,7 @@ param (
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.2.44"
+$CurrentScriptVersion = "1.2.45"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -1841,10 +1841,44 @@ function GetTVDBMovieBackground {
             }
             if ($response) {
                 if ($response.data.artworks) {
-                    $global:posterurl = ($response.data.artworks | Where-Object { $_.language -eq $null -and $_.type -eq '15' } | Sort-Object Score)[0].image
-                    Write-Entry -Subtext "Found Textless Background on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
-                    $global:TVDBAssetChangeUrl = "https://thetvdb.com/movies/$($response.data.slug)#artwork"
-                    return $global:posterurl
+                    $NoLangArtwork = $response.data.artworks | Where-Object { $null -eq $_.language -and $_.type -eq '15' }
+                    if ($NoLangArtwork){
+                        $global:posterurl = ($NoLangArtwork | Sort-Object Score)[0].image
+                        Write-Entry -Subtext "Found Textless Background on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                        $global:TVDBAssetChangeUrl = "https://thetvdb.com/movies/$($response.data.slug)#artwork"
+                        return $global:posterurl
+                    }
+                    Else {
+                        # Trying other languages
+                        foreach ($lang in $global:PreferredLanguageOrderTVDB) {
+                            if ($lang -eq 'null') {
+                                $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "" -and $_.type -eq '15' } | Sort-Object Score)
+                            }
+                            Else {
+                                $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "$lang*" -and $_.type -eq '15' } | Sort-Object Score)
+                            }
+                            if ($LangArtwork) {
+                                $global:posterurl = $LangArtwork[0].image
+                                if ($lang -eq 'null') {
+                                    Write-Entry -Subtext "Found Background without Language on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                                }
+                                Else {
+                                    Write-Entry -Subtext "Found Background with Language '$lang' on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                                }
+                                if ($lang -ne 'null') {
+                                    $global:PosterWithText = $true
+                                    $global:TVDBAssetTextLang = $lang
+                                }
+                                $global:TVDBAssetChangeUrl = "https://thetvdb.com/movies/$($response.data.slug)#artwork"
+                                return $global:posterurl
+                                continue
+                            }
+                        }
+                        if (!$global:posterurl) {
+                            Write-Entry -Subtext "No background found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                            $global:TVDBAssetChangeUrl = "https://thetvdb.com/movies/$($response.data.slug)#artwork"
+                        }
+                    }
                 }
                 Else {
                     Write-Entry -Subtext "No Background found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
