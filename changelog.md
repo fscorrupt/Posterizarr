@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [1.2.46](https://github.com/fscorrupt/Posterizarr/releases/tag/1.2.46) - 2024-07-28 16:58:12
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.2.45...1.2.46
+
+### Feature
+
+- general:
+  - Add config for TMDB Asset api sorting ([ef5ddbb](https://github.com/fscorrupt/Posterizarr/commit/ef5ddbb993787222cad5166535fe20909b5e96da))
+
 ## [1.2.45](https://github.com/fscorrupt/Posterizarr/releases/tag/1.2.45) - 2024-07-25 04:44:26
 
 **Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.2.44...1.2.45
