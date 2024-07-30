@@ -5,6 +5,7 @@
     "FanartTvAPIKey": "FANARTAPIKEY",
     "PlexToken": "",
     "FavProvider": "tmdb",
+    "tmdb_vote_sorting": "vote_average",
     "PreferredLanguageOrder": ["xx", "en", "de"],
     "PreferredSeasonLanguageOrder": ["xx", "en", "de"]
   },
