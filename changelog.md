@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [1.2.48](https://github.com/fscorrupt/Posterizarr/releases/tag/1.2.48) - 2024-08-02 16:29:23
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.2.47...1.2.48
+
+### Feature
+
+- general:
+  - only download font/overlay if required ([881f788](https://github.com/fscorrupt/Posterizarr/commit/881f78844ee3d9b0aec12edcb569046109a54f50))
+
 ## [1.2.47](https://github.com/fscorrupt/Posterizarr/releases/tag/1.2.47) - 2024-07-28 20:36:36
 
 **Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.2.46...1.2.47
