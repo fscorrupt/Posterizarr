@@ -8,7 +8,7 @@ param (
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.2.47"
+$CurrentScriptVersion = "1.2.48"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -3557,9 +3557,18 @@ if ($Testing) {
 }
 
 # Test and download files if they don't exist
-Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/main/overlay.png" -destination (Join-Path $global:ScriptRoot 'overlay.png')
-Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/main/backgroundoverlay.png" -destination (Join-Path $global:ScriptRoot 'backgroundoverlay.png')
-Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/main/Rocky.ttf" -destination (Join-Path $global:ScriptRoot 'Rocky.ttf')
+if($config.PrerequisitePart.overlayfile -eq 'overlay.png' -or $config.PrerequisitePart.seasonoverlayfile -eq 'overlay.png'){
+    Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/main/overlay.png" -destination (Join-Path $global:ScriptRoot 'overlay.png')
+}
+if($config.PrerequisitePart.backgroundoverlayfile -eq 'backgroundoverlay.png' -or $config.PrerequisitePart.titlecardoverlayfile -eq 'backgroundoverlay.png'){
+    Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/main/backgroundoverlay.png" -destination (Join-Path $global:ScriptRoot 'backgroundoverlay.png')
+}
+if($config.PrerequisitePart.font -eq 'Rocky.ttf' -or $config.PrerequisitePart.backgroundfont -eq 'Rocky.ttf' -or $config.PrerequisitePart.titlecardfont -eq 'Rocky.ttf'){
+    Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/main/Rocky.ttf" -destination (Join-Path $global:ScriptRoot 'Rocky.ttf')
+}
+if($config.PrerequisitePart.font -eq 'Colus-Regular.ttf' -or $config.PrerequisitePart.backgroundfont -eq 'Colus-Regular.ttf' -or $config.PrerequisitePart.titlecardfont -eq 'Colus-Regular.ttf'){
+    Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/main/Colus-Regular.ttf" -destination (Join-Path $global:ScriptRoot 'Colus-Regular.ttf')
+}
 
 # Write log message
 Write-Entry -Message "Old log files cleared..." -Path $configLogging -Color White -log Info
