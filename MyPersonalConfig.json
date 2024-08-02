@@ -14,7 +14,8 @@
       "xx",
       "en",
       "de"
-    ]
+    ],
+    "tmdb_vote_sorting": "vote_average"
   },
   "PlexPart": {
     "LibstoExclude": [
@@ -62,6 +63,9 @@
     "fontAllCaps": "true",
     "AddBorder": "true",
     "AddText": "true",
+    "AddTextStroke": "false",
+    "strokecolor": "black",
+    "strokewidth": "6",
     "AddOverlay": "true",
     "fontcolor": "white",
     "bordercolor": "white",
@@ -77,6 +81,9 @@
     "AddOverlay": "true",
     "AddBorder": "true",
     "AddText": "true",
+    "AddTextStroke": "false",
+    "strokecolor": "black",
+    "strokewidth": "6",
     "fontcolor": "white",
     "bordercolor": "white",
     "minPointSize": "100",
@@ -97,6 +104,9 @@
   "TitleCardTitleTextPart": {
     "fontAllCaps": "true",
     "AddEPTitleText": "true",
+    "AddTextStroke": "false",
+    "strokecolor": "black",
+    "strokewidth": "6",
     "fontcolor": "white",
     "minPointSize": "50",
     "maxPointSize": "150",
@@ -107,6 +117,9 @@
   "TitleCardEPTextPart": {
     "fontAllCaps": "true",
     "AddEPText": "true",
+    "AddTextStroke": "false",
+    "strokecolor": "black",
+    "strokewidth": "4",
     "fontcolor": "white",
     "minPointSize": "50",
     "maxPointSize": "80",
@@ -120,6 +133,9 @@
     "fontAllCaps": "true",
     "AddBorder": "true",
     "AddText": "true",
+    "AddTextStroke": "false",
+    "strokecolor": "black",
+    "strokewidth": "6",
     "AddOverlay": "true",
     "fontcolor": "white",
     "bordercolor": "white",
