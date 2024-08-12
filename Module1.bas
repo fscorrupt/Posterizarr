@@ -6,7 +6,7 @@ Sub PromptUser()
     Dim currentVersion As String
     
     ' Specify the current version number
-    currentVersion = "1.0.4"
+    currentVersion = "1.0.5"
     
     ' Check for updates
     CheckForUpdate currentVersion
@@ -144,9 +144,9 @@ Sub ImportCSVs(folderPath)
     Set wsPlexLibexport = ThisWorkbook.Worksheets.Add
     wsPlexLibexport.Name = "PlexLibexport"
     ThisWorkbook.Queries.Add Name:="PlexLibexport", Formula:= _
-        "let" & Chr(13) & "" & Chr(10) & "    Source = Csv.Document(File.Contents(""" & Filename2 & """),[Delimiter="";"", Columns=18, Encoding=65001, QuoteStyle=QuoteStyle.None])," & Chr(13) & "" & Chr(10) & "    #""Promoted Headers"" = Table.PromoteHeaders(Source, [PromoteAllScalars=true])," & Chr(13) & "" & Chr(10) & "    #""Changed Type"" = Table.TransformColumnTypes(#""Promoted Headers"",{{""Library Name"", type text}, {""" & _
-        "Library Type"", type text}, {""title"", type text}, {""originalTitle"", type text}, {""SeasonNames"", type text}, {""SeasonNumbers"", type text}, {""SeasonRatingKeys"", type text}, {""year"", Int64.Type}, {""tvdbid"", type text}, {""imdbid"", type text}, {""tmdbid"", type text}, {""ratingKey"", type text}, {""Path"", type text}, {""RootFoldername"", type text" & _
-        "}, {""MultipleVersions"", type logical}, {""PlexPosterUrl"", type text}, {""PlexBackgroundUrl"", type text}, {""PlexSeasonUrls"", type text}})" & Chr(13) & "" & Chr(10) & "in" & Chr(13) & "" & Chr(10) & "    #""Changed Type"""
+        "let" & Chr(13) & "" & Chr(10) & "    Source = Csv.Document(File.Contents(""" & Filename2 & """),[Delimiter="";"", Columns=19, Encoding=65001, QuoteStyle=QuoteStyle.None])," & Chr(13) & "" & Chr(10) & "    #""Promoted Headers"" = Table.PromoteHeaders(Source, [PromoteAllScalars=true])," & Chr(13) & "" & Chr(10) & "    #""Changed Type"" = Table.TransformColumnTypes(#""Promoted Headers"",{{""Library Name"", type text}, {""" & _
+        "Library Type"", type text}, {""Library Language"", type text}, {""title"", type text}, {""originalTitle"", type text}, {""SeasonNames"", type text}, {""SeasonNumbers"", type text}, {""SeasonRatingKeys"", type text}, {""year"", Int64.Type}, {""tvdbid"", type text}, {""imdbid"", type text}, {""tmdbid"", type text}, {""ratingKey"", type text}, {""Path"", type text}," & _
+        " {""RootFoldername"", type text}, {""MultipleVersions"", type logical}, {""PlexPosterUrl"", type text}, {""PlexBackgroundUrl"", type text}, {""PlexSeasonUrls"", type text}})" & Chr(13) & "" & Chr(10) & "in" & Chr(13) & "" & Chr(10) & "    #""Changed Type"""
 
     With wsPlexLibexport.ListObjects.Add(SourceType:=0, Source:= _
         "OLEDB;Provider=Microsoft.Mashup.OleDb.1;Data Source=$Workbook$;Location=PlexLibexport;Extended Properties=""""", Destination:=wsPlexLibexport.Range("$A$1")).QueryTable
