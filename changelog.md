@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [1.2.49](https://github.com/fscorrupt/Posterizarr/releases/tag/1.2.49) - 2024-08-12 10:38:12
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.2.48...1.2.49
+
+### Feature
+
+- general:
+  - Add RTL support ([e0ef70c](https://github.com/fscorrupt/Posterizarr/commit/e0ef70c26b38ec827c5894539365928c4667684f))
+
 ## [1.2.48](https://github.com/fscorrupt/Posterizarr/releases/tag/1.2.48) - 2024-08-02 16:29:23
 
 **Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.2.47...1.2.48
