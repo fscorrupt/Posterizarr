@@ -149,6 +149,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `maxLogs`: Number of Log folders you want to keep in `RotatedLogs` Folder (Log History).
     - `logLevel`: Sets the verbosity of logging. 1 logs Warning/Error messages. Default is 2 which logs Info/Warning/Error messages. 3 captures Info/Warning/Error/Debug messages and is the most verbose.
     - `font`: Font file name.
+    - `RTLfont`: RTL Font file name. (Right To Left)
     - `backgroundfont`: Background font file name.
     - `overlayfile`: Overlay file name.
     - `seasonoverlayfile`: Season overlay file name.

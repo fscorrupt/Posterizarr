@@ -1,4 +1,4 @@
-param (
+﻿param (
     [switch]$Manual,
     [switch]$Testing,
     [switch]$Tautulli,
@@ -8,7 +8,7 @@ param (
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.2.48"
+$CurrentScriptVersion = "1.2.49"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -21,23 +21,32 @@ $ProgressPreference = 'SilentlyContinue'
 # ImageMagick                     -> https://imagemagick.org/archive/binaries/ImageMagick-7.1.1-27-Q16-HDRI-x64-dll.exe
 # FanartTv API Powershell Wrapper -> https://github.com/Celerium/FanartTV-PowerShellWrapper
 #####################################################################################################################
-
+function ReverseRTLText {
+    param (
+        [string]$text
+    )
+    # Convert string to array of characters, reverse the array, and then join it back to a string
+    $charArray = $text.ToCharArray()
+    [Array]::Reverse($charArray)
+    $reversedText = -join $charArray
+    return $reversedText
+}
 function Get-CPUModel {
-    if ($Platform -eq 'Docker'){
+    if ($Platform -eq 'Docker') {
         $cpuInfo = cat /proc/cpuinfo | Out-String
         $cpuModelLine = $cpuInfo -split "`n" | Where-Object { $_ -like "model name*" }
         $cpuModel = $cpuModelLine -replace "model name\s*:\s*", ""
         $cpuModel = $cpuModel[0]
     }
-    Elseif ($Platform -eq 'Windows'){
+    Elseif ($Platform -eq 'Windows') {
         $cpuModel = (Get-CimInstance win32_processor).name
     }
-    Elseif ($Platform -eq 'Linux'){
+    Elseif ($Platform -eq 'Linux') {
         $cpuInfo = lscpu | Out-String
         $cpuInfoLines = $cpuInfo -split "`n"
         $cpuModel = ($cpuInfoLines | Where-Object { $_ -like "Model name*" }) -replace "Model name\s*:\s*", ""
     }
-    Elseif ($Platform -eq 'macOS'){
+    Elseif ($Platform -eq 'macOS') {
         $cpuModel = system_profiler SPHardwareDataType | grep "Processor Name" | awk -F': ' '{print $2}' | xargs
     }
     Else {
@@ -89,7 +98,7 @@ function Write-Entry {
         # Retrieve CPU model
         $cpuModel = Get-CPUModel
         # Retrieve RAM Info
-        if ($Platform -eq 'Docker' -or $Platform -eq 'Linux'){
+        if ($Platform -eq 'Docker' -or $Platform -eq 'Linux') {
             # Check Memory Usage (Total and Free)
             $memoryUsage = free -m | Out-String
             $memoryUsageLines = $memoryUsage -split "`n"
@@ -129,18 +138,19 @@ function Write-Entry {
  ======================================================
 "@
         }
-        Elseif ($Platform -eq 'Windows'){
+        Elseif ($Platform -eq 'Windows') {
             # Retrieve memory information in GB or MB
             $memoryInfo = Get-CimInstance Win32_OperatingSystem | Select-Object @{Name = "FreePhysicalMemory"; Expression = { 
-                if ($_.FreePhysicalMemory -ge 1GB) {
-                    "$([math]::Round($_.FreePhysicalMemory / 1GB, 2)) MB"
-                }
-                elseif ($_.FreePhysicalMemory -ge 1MB) {
-                    "$([math]::Round($_.FreePhysicalMemory / 1MB, 2)) GB"
-                }
-                else {
-                    "$($_.FreePhysicalMemory)"
-                } } },
+                    if ($_.FreePhysicalMemory -ge 1GB) {
+                        "$([math]::Round($_.FreePhysicalMemory / 1GB, 2)) MB"
+                    }
+                    elseif ($_.FreePhysicalMemory -ge 1MB) {
+                        "$([math]::Round($_.FreePhysicalMemory / 1MB, 2)) GB"
+                    }
+                    else {
+                        "$($_.FreePhysicalMemory)"
+                    } } 
+            },
             @{Name = "TotalVisibleMemorySize"; Expression = {
                     if ($_.TotalVisibleMemorySize -ge 1GB) {
                         "$([math]::Round($_.TotalVisibleMemorySize / 1GB, 2)) MB"
@@ -154,18 +164,21 @@ function Write-Entry {
                 }
             },
             @{Name = "UsedMemory"; Expression = {
-                $totalMemory = $_.TotalVisibleMemorySize
-                $freeMemory = $_.FreePhysicalMemory
-                $usedMemory = $totalMemory - $freeMemory
+                    $totalMemory = $_.TotalVisibleMemorySize
+                    $freeMemory = $_.FreePhysicalMemory
+                    $usedMemory = $totalMemory - $freeMemory
 
-                if ($usedMemory -ge 1GB) {
-                    "$([math]::Round($usedMemory / 1GB, 2)) MB"
-                } elseif ($usedMemory -ge 1MB) {
-                    "$([math]::Round($usedMemory / 1MB, 2)) GB"
-                } else {
-                    $usedMemory
+                    if ($usedMemory -ge 1GB) {
+                        "$([math]::Round($usedMemory / 1GB, 2)) MB"
+                    }
+                    elseif ($usedMemory -ge 1MB) {
+                        "$([math]::Round($usedMemory / 1MB, 2)) GB"
+                    }
+                    else {
+                        $usedMemory
+                    }
                 }
-            }}
+            }
             $totalMemory = $memoryInfo.TotalVisibleMemorySize
             $usedMemory = $memoryInfo.UsedMemory
             $freeMemory = $memoryInfo.FreePhysicalMemory
@@ -193,7 +206,7 @@ function Write-Entry {
 "@
         }
         Else {
-        $Header = @"
+            $Header = @"
 ======================================================
   _____          _            _
  |  __ \        | |          (_)
@@ -658,7 +671,7 @@ function GetTMDBMoviePoster {
                 $NoLangPoster = ($response.images.posters | Where-Object iso_639_1 -eq $null)
                 if (!$NoLangPoster) {
                     if (!$global:OnlyTextless -eq 'true') {
-                        if ($global:TMDBVoteSorting -eq 'Primary'){
+                        if ($global:TMDBVoteSorting -eq 'Primary') {
                             $posterpath = (($response.images.posters | Sort-Object -Descending)[0]).file_path
                         }
                         Else {
@@ -671,7 +684,7 @@ function GetTMDBMoviePoster {
                         }
                         Write-Entry -Subtext "Found Poster with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                         $global:PosterWithText = $true
-                        if ($global:TMDBVoteSorting -eq 'Primary'){
+                        if ($global:TMDBVoteSorting -eq 'Primary') {
                             $global:TMDBAssetTextLang = (($response.images.posters | Sort-Object -Descending)[0]).iso_639_1
                         }
                         Else {
@@ -685,7 +698,7 @@ function GetTMDBMoviePoster {
                     }
                 }
                 Else {
-                    if ($global:TMDBVoteSorting -eq 'Primary'){
+                    if ($global:TMDBVoteSorting -eq 'Primary') {
                         $posterpath = (($response.images.posters | Where-Object iso_639_1 -eq $null | Sort-Object -Descending)[0]).file_path
                     }
                     Else {
@@ -727,7 +740,7 @@ function GetTMDBMoviePoster {
                         $FavPoster = ($response.images.posters | Where-Object iso_639_1 -eq $lang)
                     }
                     if ($FavPoster) {
-                        if ($global:TMDBVoteSorting -eq 'Primary'){
+                        if ($global:TMDBVoteSorting -eq 'Primary') {
                             $posterpath = (($FavPoster | Sort-Object -Descending)[0]).file_path
                         }
                         Else {
@@ -777,7 +790,7 @@ function GetTMDBMovieBackground {
                 $NoLangPoster = ($response.images.backdrops | Where-Object iso_639_1 -eq $null)
                 if (!$NoLangPoster) {
                     if (!$global:OnlyTextless -eq 'true') {
-                        if ($global:TMDBVoteSorting -eq 'Primary'){
+                        if ($global:TMDBVoteSorting -eq 'Primary') {
                             $posterpath = (($response.images.backdrops | Sort-Object -Descending)[0]).file_path
                         }
                         Else {
@@ -790,7 +803,7 @@ function GetTMDBMovieBackground {
                         }
                         Write-Entry -Subtext "Found background with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                         $global:PosterWithText = $true
-                        if ($global:TMDBVoteSorting -eq 'Primary'){
+                        if ($global:TMDBVoteSorting -eq 'Primary') {
                             $global:TMDBAssetTextLang = (($response.images.backdrops | Sort-Object -Descending)[0]).iso_639_1
                         }
                         Else {
@@ -804,7 +817,7 @@ function GetTMDBMovieBackground {
                     }
                 }
                 Else {
-                    if ($global:TMDBVoteSorting -eq 'Primary'){
+                    if ($global:TMDBVoteSorting -eq 'Primary') {
                         $posterpath = (($response.images.backdrops | Where-Object iso_639_1 -eq $null | Sort-Object -Descending)[0]).file_path
                     }
                     Else {
@@ -853,7 +866,7 @@ function GetTMDBMovieBackground {
                         $FavPoster = ($response.images.backdrops | Where-Object iso_639_1 -eq $lang)
                     }
                     if ($FavPoster) {
-                        if ($global:TMDBVoteSorting -eq 'Primary'){
+                        if ($global:TMDBVoteSorting -eq 'Primary') {
                             $posterpath = (($FavPoster | Sort-Object -Descending)[0]).file_path
                         }
                         Else {
@@ -914,7 +927,7 @@ function GetTMDBShowPoster {
                 $NoLangPoster = ($response.images.posters | Where-Object iso_639_1 -eq $null)
                 if (!$NoLangPoster) {
                     if (!$global:OnlyTextless -eq 'true') {
-                        if ($global:TMDBVoteSorting -eq 'Primary'){
+                        if ($global:TMDBVoteSorting -eq 'Primary') {
                             $posterpath = (($response.images.posters | Sort-Object -Descending)[0]).file_path
                         }
                         Else {
@@ -927,7 +940,7 @@ function GetTMDBShowPoster {
                         }
                         Write-Entry -Subtext "Found Poster with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                         $global:PosterWithText = $true
-                        if ($global:TMDBVoteSorting -eq 'Primary'){
+                        if ($global:TMDBVoteSorting -eq 'Primary') {
                             $global:TMDBAssetTextLang = (($response.images.posters | Sort-Object -Descending)[0]).iso_639_1
                         }
                         Else {
@@ -942,7 +955,7 @@ function GetTMDBShowPoster {
                     }
                 }
                 Else {
-                    if ($global:TMDBVoteSorting -eq 'Primary'){
+                    if ($global:TMDBVoteSorting -eq 'Primary') {
                         $posterpath = (($response.images.posters | Where-Object iso_639_1 -eq $null | Sort-Object -Descending)[0]).file_path
                     }
                     Else {
@@ -984,7 +997,7 @@ function GetTMDBShowPoster {
                         $FavPoster = ($response.images.posters | Where-Object iso_639_1 -eq $lang)
                     }
                     if ($FavPoster) {
-                        if ($global:TMDBVoteSorting -eq 'Primary'){
+                        if ($global:TMDBVoteSorting -eq 'Primary') {
                             $posterpath = (($FavPoster | Sort-Object -Descending)[0]).file_path
                         }
                         Else {
@@ -1035,7 +1048,7 @@ function GetTMDBSeasonPoster {
                 Write-Entry -Subtext "NoLangPoster: $NoLangPoster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                 if (!$NoLangPoster) {
                     if (!$global:SeasonOnlyTextless) {
-                        if ($global:TMDBVoteSorting -eq 'Primary'){
+                        if ($global:TMDBVoteSorting -eq 'Primary') {
                             $posterpath = (($response.posters | Sort-Object -Descending)[0]).file_path
                         }
                         Else {
@@ -1044,7 +1057,7 @@ function GetTMDBSeasonPoster {
                         $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
                         Write-Entry -Subtext "Found Season Poster with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                         $global:PosterWithText = $true
-                        if ($global:TMDBVoteSorting -eq 'Primary'){
+                        if ($global:TMDBVoteSorting -eq 'Primary') {
                             $global:TMDBAssetTextLang = (($response.posters | Sort-Object -Descending)[0]).iso_639_1
                         }
                         Else {
@@ -1066,7 +1079,7 @@ function GetTMDBSeasonPoster {
                     }
                 }
                 Else {
-                    if ($global:TMDBVoteSorting -eq 'Primary'){
+                    if ($global:TMDBVoteSorting -eq 'Primary') {
                         $posterpath = (($response.posters | Where-Object iso_639_1 -eq $null | Sort-Object -Descending)[0]).file_path
                     }
                     Else {
@@ -1122,7 +1135,7 @@ function GetTMDBSeasonPoster {
                         $FavPoster = ($responseBackup.images.posters | Where-Object iso_639_1 -eq $lang)
                     }
                     if ($FavPoster) {
-                        if ($global:TMDBVoteSorting -eq 'Primary'){
+                        if ($global:TMDBVoteSorting -eq 'Primary') {
                             $posterpath = (($FavPoster | Sort-Object -Descending)[0]).file_path
                         }
                         Else {
@@ -1161,7 +1174,7 @@ function GetTMDBSeasonPoster {
                         $FavPoster = ($response.posters | Where-Object iso_639_1 -eq $lang)
                     }
                     if ($FavPoster) {
-                        if ($global:TMDBVoteSorting -eq 'Primary'){
+                        if ($global:TMDBVoteSorting -eq 'Primary') {
                             $posterpath = (($FavPoster | Sort-Object -Descending)[0]).file_path
                         }
                         Else {
@@ -1216,7 +1229,7 @@ function GetTMDBShowBackground {
                 $NoLangPoster = ($response.images.backdrops | Where-Object iso_639_1 -eq $null)
                 if (!$NoLangPoster) {
                     if (!$global:OnlyTextless -eq 'true') {
-                        if ($global:TMDBVoteSorting -eq 'Primary'){
+                        if ($global:TMDBVoteSorting -eq 'Primary') {
                             $posterpath = (($response.images.backdrops | Sort-Object -Descending)[0]).file_path
                         }
                         Else {
@@ -1229,7 +1242,7 @@ function GetTMDBShowBackground {
                         }
                         Write-Entry -Subtext "Found background with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                         $global:PosterWithText = $true
-                        if ($global:TMDBVoteSorting -eq 'Primary'){
+                        if ($global:TMDBVoteSorting -eq 'Primary') {
                             $global:TMDBAssetTextLang = (($response.images.backdrops | Sort-Object -Descending)[0]).iso_639_1
                         }
                         Else {
@@ -1243,7 +1256,7 @@ function GetTMDBShowBackground {
                     }
                 }
                 Else {
-                    if ($global:TMDBVoteSorting -eq 'Primary'){
+                    if ($global:TMDBVoteSorting -eq 'Primary') {
                         $posterpath = (($response.images.backdrops | Where-Object iso_639_1 -eq $null | Sort-Object -Descending)[0]).file_path
                     }
                     Else {
@@ -1296,7 +1309,7 @@ function GetTMDBShowBackground {
                         $FavPoster = ($response.images.backdrops | Where-Object iso_639_1 -eq $lang)
                     }
                     if ($FavPoster) {
-                        if ($global:TMDBVoteSorting -eq 'Primary'){
+                        if ($global:TMDBVoteSorting -eq 'Primary') {
                             $posterpath = (($FavPoster | Sort-Object -Descending)[0]).file_path
                         }
                         Else {
@@ -1356,7 +1369,7 @@ function GetTMDBTitleCard {
         if ($response.stills) {
             $NoLangPoster = ($response.stills | Where-Object iso_639_1 -eq $null)
             if (!$NoLangPoster) {
-                if ($global:TMDBVoteSorting -eq 'Primary'){
+                if ($global:TMDBVoteSorting -eq 'Primary') {
                     $posterpath = (($response.stills | Sort-Object -Descending)[0]).file_path
                 }
                 Else {
@@ -1365,7 +1378,7 @@ function GetTMDBTitleCard {
                 $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
                 Write-Entry -Subtext "Found Title Card with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                 $global:PosterWithText = $true
-                if ($global:TMDBVoteSorting -eq 'Primary'){
+                if ($global:TMDBVoteSorting -eq 'Primary') {
                     $global:TMDBAssetTextLang = (($response.stills | Sort-Object -Descending)[0]).iso_639_1
                 }
                 Else {
@@ -1375,7 +1388,7 @@ function GetTMDBTitleCard {
                 return $global:posterurl
             }
             Else {
-                if ($global:TMDBVoteSorting -eq 'Primary'){
+                if ($global:TMDBVoteSorting -eq 'Primary') {
                     $posterpath = (($response.stills | Where-Object iso_639_1 -eq $null | Sort-Object -Descending)[0]).file_path
                 }
                 Else {
@@ -1962,7 +1975,7 @@ function GetTVDBMovieBackground {
             if ($response) {
                 if ($response.data.artworks) {
                     $NoLangArtwork = $response.data.artworks | Where-Object { $null -eq $_.language -and $_.type -eq '15' }
-                    if ($NoLangArtwork){
+                    if ($NoLangArtwork) {
                         $global:posterurl = ($NoLangArtwork | Sort-Object Score)[0].image
                         Write-Entry -Subtext "Found Textless Background on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                         $global:TVDBAssetChangeUrl = "https://thetvdb.com/movies/$($response.data.slug)#artwork"
@@ -2590,6 +2603,7 @@ function CheckJson {
 function CheckJsonPaths {
     param (
         [string]$font,
+        [string]$RTLfont,
         [string]$backgroundfont,
         [string]$titlecardfont,
         [string]$Posteroverlay,
@@ -2598,7 +2612,7 @@ function CheckJsonPaths {
         [string]$titlecardoverlay
     )
 
-    $paths = @($font, $backgroundfont, $titlecardfont, $Posteroverlay, $Backgroundoverlay, $titlecardoverlay, $Seasonoverlay)
+    $paths = @($font, $RTLfont, $backgroundfont, $titlecardfont, $Posteroverlay, $Backgroundoverlay, $titlecardoverlay, $Seasonoverlay)
 
     $errorCount = 0
     foreach ($path in $paths) {
@@ -2621,7 +2635,7 @@ function Get-Platform {
     elseif ($global:OSType -eq 'Unix' -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -notlike 'PSDocker-Alpine*') {
         # Check if it is a Mac
         $unameOutput = & uname
-        if ($unameOutput -like "*Darwin*"){
+        if ($unameOutput -like "*Darwin*") {
             return 'macOS'
         }
         Else {
@@ -2749,6 +2763,7 @@ function LogConfigSettings {
     Write-Entry -Subtext "| # of Log Folders to retain:   $maxLogs" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Log Level:                    $logLevel" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Used Poster Font:             $font" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Used RTL Font:                $RTLfont" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Used Background Font:         $backgroundfont" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Used TitleCard Font:          $titlecardfont" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Used Poster Overlay File:     $Posteroverlay" -Path $configLogging -Color White -log Info
@@ -3020,7 +3035,12 @@ function InvokeMagickCommand {
 
         # Split the error message into lines
         $lines = $ErrorMessage -split "convert: |magick.exe: |@"
-        return $lines[1]
+        if ($lines[1]) {
+            return $lines[1]
+        }
+        Else {
+            return $lines[0]
+        }
     }
 
     try {
@@ -3246,6 +3266,28 @@ if (!$global:FavProvider) {
     $global:FavProvider = 'TMDB'
 }
 
+# Define the language direction hash table
+$global:languageDirections = @{
+    "af" = "LTR"; "am" = "LTR"; "ar" = "RTL"; "az" = "LTR"; "be" = "LTR";
+    "bg" = "LTR"; "bn" = "LTR"; "bs" = "LTR"; "ca" = "LTR"; "cs" = "LTR";
+    "cy" = "LTR"; "da" = "LTR"; "de" = "LTR"; "dv" = "RTL"; "el" = "LTR";
+    "en" = "LTR"; "eo" = "LTR"; "es" = "LTR"; "et" = "LTR"; "eu" = "LTR";
+    "fa" = "RTL"; "fi" = "LTR"; "fo" = "LTR"; "fr" = "LTR"; "ga" = "LTR";
+    "gd" = "LTR"; "gl" = "LTR"; "gu" = "LTR"; "he" = "RTL"; "hi" = "LTR";
+    "hr" = "LTR"; "hu" = "LTR"; "hy" = "LTR"; "id" = "LTR"; "is" = "LTR";
+    "it" = "LTR"; "ja" = "LTR"; "ka" = "LTR"; "kk" = "LTR"; "km" = "LTR";
+    "kn" = "LTR"; "ko" = "LTR"; "ku" = "LTR"; "ky" = "LTR"; "lo" = "LTR";
+    "lt" = "LTR"; "lv" = "LTR"; "mg" = "LTR"; "mk" = "LTR"; "ml" = "LTR";
+    "mn" = "LTR"; "mr" = "LTR"; "ms" = "LTR"; "mt" = "LTR"; "my" = "LTR";
+    "nb" = "LTR"; "ne" = "LTR"; "nl" = "LTR"; "nn" = "LTR"; "no" = "LTR";
+    "om" = "LTR"; "or" = "LTR"; "pa" = "LTR"; "pl" = "LTR"; "ps" = "RTL";
+    "pt" = "LTR"; "ro" = "LTR"; "ru" = "LTR"; "sd" = "RTL"; "si" = "LTR";
+    "sk" = "LTR"; "sl" = "LTR"; "sq" = "LTR"; "sr" = "LTR"; "sv" = "LTR";
+    "sw" = "LTR"; "ta" = "LTR"; "te" = "LTR"; "th" = "LTR"; "tk" = "LTR";
+    "tr" = "LTR"; "ug" = "RTL"; "uk" = "LTR"; "ur" = "RTL"; "uz" = "LTR";
+    "vi" = "LTR"; "yo" = "LTR"; "zh" = "LTR"
+}
+
 # Plex Part
 $LibstoExclude = $config.PlexPart.LibstoExclude
 $PlexUrl = $config.PlexPart.PlexUrl
@@ -3270,6 +3312,7 @@ Else {
     $joinsymbol = "\"
 }
 $font = Join-Path -Path $global:ScriptRoot -ChildPath ('temp', $config.PrerequisitePart.font -join $($joinsymbol))
+$RTLFont = Join-Path -Path $global:ScriptRoot -ChildPath ('temp', $config.PrerequisitePart.RTLFont -join $($joinsymbol))
 $backgroundfont = Join-Path -Path $global:ScriptRoot -ChildPath ('temp', $config.PrerequisitePart.backgroundfont -join $($joinsymbol))
 $titlecardfont = Join-Path -Path $global:ScriptRoot -ChildPath ('temp', $config.PrerequisitePart.titlecardfont -join $($joinsymbol))
 $Posteroverlay = Join-Path -Path $global:ScriptRoot -ChildPath ('temp', $config.PrerequisitePart.overlayfile -join $($joinsymbol))
@@ -3391,6 +3434,7 @@ $TitleCardEPboxsize = $TitleCardEPMaxWidth + 'x' + $TitleCardEPMaxHeight
 $PosterSize = "2000x3000"
 $BackgroundSize = "3840x2160"
 $fontImagemagick = $font.replace('\', '\\')
+$RTLfontImagemagick = $RTLFont.replace('\', '\\')
 $backgroundfontImagemagick = $backgroundfont.replace('\', '\\')
 $TitleCardfontImagemagick = $TitleCardfont.replace('\', '\\')
 if ($global:OSType -ne "Win32NT") {
@@ -3557,16 +3601,16 @@ if ($Testing) {
 }
 
 # Test and download files if they don't exist
-if($config.PrerequisitePart.overlayfile -eq 'overlay.png' -or $config.PrerequisitePart.seasonoverlayfile -eq 'overlay.png'){
+if ($config.PrerequisitePart.overlayfile -eq 'overlay.png' -or $config.PrerequisitePart.seasonoverlayfile -eq 'overlay.png') {
     Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/main/overlay.png" -destination (Join-Path $global:ScriptRoot 'overlay.png')
 }
-if($config.PrerequisitePart.backgroundoverlayfile -eq 'backgroundoverlay.png' -or $config.PrerequisitePart.titlecardoverlayfile -eq 'backgroundoverlay.png'){
+if ($config.PrerequisitePart.backgroundoverlayfile -eq 'backgroundoverlay.png' -or $config.PrerequisitePart.titlecardoverlayfile -eq 'backgroundoverlay.png') {
     Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/main/backgroundoverlay.png" -destination (Join-Path $global:ScriptRoot 'backgroundoverlay.png')
 }
-if($config.PrerequisitePart.font -eq 'Rocky.ttf' -or $config.PrerequisitePart.backgroundfont -eq 'Rocky.ttf' -or $config.PrerequisitePart.titlecardfont -eq 'Rocky.ttf'){
+if ($config.PrerequisitePart.font -eq 'Rocky.ttf' -or $config.PrerequisitePart.backgroundfont -eq 'Rocky.ttf' -or $config.PrerequisitePart.titlecardfont -eq 'Rocky.ttf') {
     Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/main/Rocky.ttf" -destination (Join-Path $global:ScriptRoot 'Rocky.ttf')
 }
-if($config.PrerequisitePart.font -eq 'Colus-Regular.ttf' -or $config.PrerequisitePart.backgroundfont -eq 'Colus-Regular.ttf' -or $config.PrerequisitePart.titlecardfont -eq 'Colus-Regular.ttf'){
+if ($config.PrerequisitePart.font -eq 'Colus-Regular.ttf' -or $config.PrerequisitePart.backgroundfont -eq 'Colus-Regular.ttf' -or $config.PrerequisitePart.titlecardfont -eq 'Colus-Regular.ttf') {
     Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/main/Colus-Regular.ttf" -destination (Join-Path $global:ScriptRoot 'Colus-Regular.ttf')
 }
 
@@ -3610,7 +3654,7 @@ foreach ($file in $files) {
 }
 
 # Call the function with your variables
-CheckJsonPaths -font $font -backgroundfont $backgroundfont -titlecardfont $titlecardfont -Posteroverlay $Posteroverlay -Backgroundoverlay $Backgroundoverlay -titlecardoverlay $titlecardoverlay -Seasonoverlay $Seasonoverlay
+CheckJsonPaths -font $font -RTLfont $RTLfont -backgroundfont $backgroundfont -titlecardfont $titlecardfont -Posteroverlay $Posteroverlay -Backgroundoverlay $Backgroundoverlay -titlecardoverlay $titlecardoverlay -Seasonoverlay $Seasonoverlay
 
 # Check Plex now:
 [xml]$Libs = CheckPlexAccess -PlexUrl $PlexUrl -PlexToken $PlexToken
@@ -5001,9 +5045,11 @@ Elseif ($Tautulli) {
         if ($tvdbid.count -gt '1') { $tvdbid = $tvdbid[0] }
         if ($tmdbid.count -gt '1') { $tmdbid = $tmdbid[0] }
         if ($imdbid.count -gt '1') { $imdbid = $imdbid[0] }
+
         $temp = New-Object psobject
         $temp | Add-Member -MemberType NoteProperty -Name "Library Name" -Value $Library.title
         $temp | Add-Member -MemberType NoteProperty -Name "Library Type" -Value $Metadata.MediaContainer.$contentquery.type
+        $temp | Add-Member -MemberType NoteProperty -Name "Library Language" -Value $($Library.language.split("-")[0])
         $temp | Add-Member -MemberType NoteProperty -Name "title" -Value $Metadata.MediaContainer.$contentquery.title
         $temp | Add-Member -MemberType NoteProperty -Name "originalTitle" -Value $Metadata.MediaContainer.$contentquery.originalTitle
         $temp | Add-Member -MemberType NoteProperty -Name "SeasonNames" -Value $SeasonNames
@@ -5090,6 +5136,7 @@ Elseif ($Tautulli) {
         $PlexLibDummycsv = New-Object psobject
         $PlexLibDummycsv | Add-Member -MemberType NoteProperty -Name "Library Name" -Value $null
         $PlexLibDummycsv | Add-Member -MemberType NoteProperty -Name "Library Type" -Value $null
+        $PlexLibDummycsv | Add-Member -MemberType NoteProperty -Name "Library Language" -Value $null
         $PlexLibDummycsv | Add-Member -MemberType NoteProperty -Name "title" -Value $null
         $PlexLibDummycsv | Add-Member -MemberType NoteProperty -Name "originalTitle" -Value $null
         $PlexLibDummycsv | Add-Member -MemberType NoteProperty -Name "SeasonNames" -Value $null
@@ -5171,9 +5218,15 @@ Elseif ($Tautulli) {
                 $global:fanartfallbackposterurl = $null
                 $global:IsFallback = $null
                 $global:PlexartworkDownloaded = $null
+                $global:langCode = $null
+                $global:direction = $null
 
-                $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}\p{IsArabic}\p{IsHebrew}\p{IsDevanagari}\p{IsThai}\p{IsEthiopic}\p{IsGeorgian}\p{IsArmenian}\p{IsBengali}]'
-                if ($entry.title -match $cjkPattern) {
+                # Determine the language direction
+                $global:langCode = $entry.'Library Language'
+                $global:direction = $global:languageDirections[$global:langCode]
+
+                $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}\p{IsArabic}\p{IsDevanagari}\p{IsThai}\p{IsEthiopic}\p{IsGeorgian}\p{IsArmenian}\p{IsBengali}]'
+                if ($entry.title -match $cjkPattern -and $entry.originalTitle) {
                     $Titletext = $entry.originalTitle
                 }
                 else {
@@ -5396,11 +5449,18 @@ Elseif ($Tautulli) {
                                     InvokeMagickCommand -Command $magick -Arguments $Arguments
 
                                     if ($AddText -eq 'true') {
+                                        if ($global:direction -eq "RTL") {
+                                            $fontImagemagick = $RTLfontImagemagick
+                                            if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
+                                                $joinedTitle = ReverseRTLText -text $joinedTitle
+                                            }
+                                        }
                                         $joinedTitle = $joinedTitle -replace '"', '""'
                                         $joinedTitlePointSize = $joinedTitle -replace '""', '""""'
                                         $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
                                         if (!$global:IsTruncated) {
                                             Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                            
                                             # Add Stroke
                                             if ($AddTextStroke -eq 'true') {
                                                 $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -stroke `"$strokecolor`" -strokewidth `"$strokewidth`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
@@ -5408,6 +5468,7 @@ Elseif ($Tautulli) {
                                             Else {
                                                 $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
                                             }
+                                            
                                             Write-Entry -Subtext "Applying Poster text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                             $logEntry = "`"$magick`" $Arguments"
                                             $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
@@ -5712,18 +5773,26 @@ Elseif ($Tautulli) {
                                     InvokeMagickCommand -Command $magick -Arguments $Arguments
 
                                     if ($AddBackgroundText -eq 'true') {
+                                        if ($global:direction -eq "RTL") {
+                                            $backgroundfontImagemagick = $RTLfontImagemagick
+                                            if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
+                                                $joinedTitle = ReverseRTLText -text $joinedTitle
+                                            }
+                                        }
                                         $joinedTitle = $joinedTitle -replace '"', '""'
                                         $joinedTitlePointSize = $joinedTitle -replace '""', '""""'
-                                        $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
+                                        $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
                                         if (!$global:IsTruncated) {
                                             Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                            
                                             # Add Stroke
                                             if ($AddBackgroundTextStroke -eq 'true') {
-                                                $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -stroke `"$Backgroundstrokecolor`" -strokewidth `"$Backgroundstrokewidth`" -size `"$Backgroundboxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
+                                                $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$backgroundfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -stroke `"$Backgroundstrokecolor`" -strokewidth `"$Backgroundstrokewidth`" -size `"$Backgroundboxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
                                             }
                                             Else {
-                                                $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -size `"$Backgroundboxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
+                                                $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$backgroundfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -size `"$Backgroundboxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
                                             }
+                                            
                                             Write-Entry -Subtext "Applying Background text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                             $logEntry = "`"$magick`" $Arguments"
                                             $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
@@ -5891,12 +5960,15 @@ Elseif ($Tautulli) {
             $global:tvdbalreadysearched = $null
             $global:PlexartworkDownloaded = $null
 
-            $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}\p{IsArabic}\p{IsHebrew}\p{IsDevanagari}\p{IsThai}\p{IsEthiopic}\p{IsGeorgian}\p{IsArmenian}\p{IsBengali}]'
+            $direction = $global:languageDirections[$langCode]
+
+            $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}\p{IsDevanagari}\p{IsThai}\p{IsEthiopic}\p{IsGeorgian}\p{IsArmenian}\p{IsBengali}]'
             if ($entry.title -match $cjkPattern) {
                 $Titletext = $entry.originalTitle
             }
             else {
                 $Titletext = $entry.title
+
             }
 
             if ($LibraryFolders -eq 'true') {
@@ -6098,11 +6170,18 @@ Elseif ($Tautulli) {
                                 InvokeMagickCommand -Command $magick -Arguments $Arguments
 
                                 if ($AddText -eq 'true') {
+                                    if ($global:direction -eq "RTL") {
+                                        $fontImagemagick = $RTLfontImagemagick
+                                        if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
+                                            $joinedTitle = ReverseRTLText -text $joinedTitle
+                                        }
+                                    }
                                     $joinedTitle = $joinedTitle -replace '"', '""'
                                     $joinedTitlePointSize = $joinedTitle -replace '""', '""""'
                                     $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
                                     if (!$global:IsTruncated) {
                                         Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                        
                                         # Add Stroke
                                         if ($AddTextStroke -eq 'true') {
                                             $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -stroke `"$strokecolor`" -strokewidth `"$strokewidth`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
@@ -6110,6 +6189,7 @@ Elseif ($Tautulli) {
                                         Else {
                                             $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
                                         }
+                                        
                                         Write-Entry -Subtext "Applying Poster text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                         $logEntry = "`"$magick`" $Arguments"
                                         $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
@@ -6424,18 +6504,26 @@ Elseif ($Tautulli) {
                                 InvokeMagickCommand -Command $magick -Arguments $Arguments
 
                                 if ($AddBackgroundText -eq 'true') {
+                                    if ($global:direction -eq "RTL") {
+                                        $backgroundfontImagemagick = $RTLfontImagemagick
+                                        if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
+                                            $joinedTitle = ReverseRTLText -text $joinedTitle
+                                        }
+                                    }
                                     $joinedTitle = $joinedTitle -replace '"', '""'
                                     $joinedTitlePointSize = $joinedTitle -replace '""', '""""'
-                                    $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
+                                    $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
                                     if (!$global:IsTruncated) {
                                         Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                        
                                         # Add Stroke
                                         if ($AddBackgroundTextStroke -eq 'true') {
-                                            $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -stroke `"$Backgroundstrokecolor`" -strokewidth `"$Backgroundstrokewidth`" -size `"$Backgroundboxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
+                                            $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$backgroundfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -stroke `"$Backgroundstrokecolor`" -strokewidth `"$Backgroundstrokewidth`" -size `"$Backgroundboxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
                                         }
                                         Else {
-                                            $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -size `"$Backgroundboxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
+                                            $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$backgroundfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -size `"$Backgroundboxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
                                         }
+                                        
                                         Write-Entry -Subtext "Applying Background text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                         $logEntry = "`"$magick`" $Arguments"
                                         $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
@@ -7454,19 +7542,40 @@ Elseif ($Tautulli) {
                                                                 if ($TitleCardEPTitlefontAllCaps -eq 'true') {
                                                                     $global:EPTitle = $global:EPTitle.ToUpper()
                                                                 }
+                                                                if ($global:direction -eq "RTL") {
+                                                                    if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
+                                                                        $global:EPTitle = ReverseRTLText -text $global:EPTitle
+                                                                    }
+                                                                }
                                                                 $global:EPTitle = $global:EPTitle -replace '"', '""'
                                                                 $joinedTitlePointSize = $global:EPTitle -replace '""', '""""'
-                                                                $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
+                                                                if ($global:direction -eq "RTL") {
+                                                                    $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $RTLfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
+                                                                }
+                                                                Else {
+                                                                    $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
+                                                                }
                                                                 if (!$global:IsTruncated) {
                                                                     Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                                                                    # Add Stroke
-                                                                    if ($AddTitleCardEPTitleTextStroke -eq 'true') {
-                                                                        $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                                    if ($global:direction -eq "RTL") {
+                                                                        # Add Stroke
+                                                                        if ($AddTitleCardEPTitleTextStroke -eq 'true') {
+                                                                            $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$RTLfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                                        }
+                                                                        Else {
+                                                                            $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$RTLfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                                        }
                                                                     }
                                                                     Else {
-                                                                        $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                                        # Add Stroke
+                                                                        if ($AddTitleCardEPTitleTextStroke -eq 'true') {
+                                                                            $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                                        }
+                                                                        Else {
+                                                                            $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                                        }
                                                                     }
-
+                                                                    
                                                                     Write-Entry -Subtext "Applying EPTitle text: `"$global:EPTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                                     $logEntry = "`"$magick`" $Arguments"
                                                                     $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
@@ -7904,19 +8013,39 @@ Elseif ($Tautulli) {
                                                             if ($TitleCardEPTitlefontAllCaps -eq 'true') {
                                                                 $global:EPTitle = $global:EPTitle.ToUpper()
                                                             }
+                                                            if ($global:direction -eq "RTL") {
+                                                                if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
+                                                                    $global:EPTitle = ReverseRTLText -text $global:EPTitle
+                                                                }
+                                                            }
                                                             $global:EPTitle = $global:EPTitle -replace '"', '""'
                                                             $joinedTitlePointSize = $global:EPTitle -replace '""', '""""'
-                                                            $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
+                                                            if ($global:direction -eq "RTL") {
+                                                                $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $RTLfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
+                                                            }
+                                                            Else {
+                                                                $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
+                                                            }
                                                             if (!$global:IsTruncated) {
                                                                 Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                                                                # Add Stroke
-                                                                if ($AddTitleCardEPTitleTextStroke -eq 'true') {
-                                                                    $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                                if ($global:direction -eq "RTL") {
+                                                                    # Add Stroke
+                                                                    if ($AddTitleCardEPTitleTextStroke -eq 'true') {
+                                                                        $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$RTLfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                                    }
+                                                                    Else {
+                                                                        $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$RTLfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                                    }
                                                                 }
                                                                 Else {
-                                                                    $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                                    # Add Stroke
+                                                                    if ($AddTitleCardEPTitleTextStroke -eq 'true') {
+                                                                        $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                                    }
+                                                                    Else {
+                                                                        $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                                    }
                                                                 }
-
                                                                 Write-Entry -Subtext "Applying EPTitle text: `"$global:EPTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                                 $logEntry = "`"$magick`" $Arguments"
                                                                 $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
@@ -8165,6 +8294,7 @@ else {
             $libtemp = New-Object psobject
             $libtemp | Add-Member -MemberType NoteProperty -Name "ID" -Value $lib.key
             $libtemp | Add-Member -MemberType NoteProperty -Name "Name" -Value $lib.title
+            $libtemp | Add-Member -MemberType NoteProperty -Name "Language" -Value $lib.language
 
             # Check if $lib.location.path is an array
             if ($lib.location.path -is [array]) {
@@ -8407,6 +8537,7 @@ else {
                 $temp = New-Object psobject
                 $temp | Add-Member -MemberType NoteProperty -Name "Library Name" -Value $Library.Name
                 $temp | Add-Member -MemberType NoteProperty -Name "Library Type" -Value $Metadata.MediaContainer.$contentquery.type
+                $temp | Add-Member -MemberType NoteProperty -Name "Library Language" -Value $($Library.language.split("-")[0])
                 $temp | Add-Member -MemberType NoteProperty -Name "title" -Value $($item.title)
                 $temp | Add-Member -MemberType NoteProperty -Name "originalTitle" -Value $($item.originalTitle)
                 $temp | Add-Member -MemberType NoteProperty -Name "SeasonNames" -Value $SeasonNames
@@ -8506,6 +8637,7 @@ else {
         $PlexLibDummycsv = New-Object psobject
         $PlexLibDummycsv | Add-Member -MemberType NoteProperty -Name "Library Name" -Value $null
         $PlexLibDummycsv | Add-Member -MemberType NoteProperty -Name "Library Type" -Value $null
+        $PlexLibDummycsv | Add-Member -MemberType NoteProperty -Name "Library Language" -Value $null
         $PlexLibDummycsv | Add-Member -MemberType NoteProperty -Name "title" -Value $null
         $PlexLibDummycsv | Add-Member -MemberType NoteProperty -Name "originalTitle" -Value $null
         $PlexLibDummycsv | Add-Member -MemberType NoteProperty -Name "SeasonNames" -Value $null
@@ -8587,8 +8719,14 @@ else {
                 $global:fanartfallbackposterurl = $null
                 $global:IsFallback = $null
                 $global:PlexartworkDownloaded = $null
+                $global:langCode = $null
+                $global:direction = $null
 
-                $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}\p{IsArabic}\p{IsHebrew}\p{IsDevanagari}\p{IsThai}\p{IsEthiopic}\p{IsGeorgian}\p{IsArmenian}\p{IsBengali}]'
+                # Determine the language direction
+                $global:langCode = $entry.'Library Language'
+                $global:direction = $global:languageDirections[$global:langCode]
+
+                $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}\p{IsDevanagari}\p{IsThai}\p{IsEthiopic}\p{IsGeorgian}\p{IsArmenian}\p{IsBengali}]'
                 if ($entry.title -match $cjkPattern) {
                     $Titletext = $entry.originalTitle
                 }
@@ -8814,11 +8952,18 @@ else {
                                     InvokeMagickCommand -Command $magick -Arguments $Arguments
 
                                     if ($AddText -eq 'true') {
+                                        if ($global:direction -eq "RTL") {
+                                            $fontImagemagick = $RTLfontImagemagick
+                                            if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
+                                                $joinedTitle = ReverseRTLText -text $joinedTitle
+                                            }
+                                        }
                                         $joinedTitle = $joinedTitle -replace '"', '""'
                                         $joinedTitlePointSize = $joinedTitle -replace '""', '""""'
                                         $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
                                         if (!$global:IsTruncated) {
                                             Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                            
                                             # Add Stroke
                                             if ($AddTextStroke -eq 'true') {
                                                 $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -stroke `"$strokecolor`" -strokewidth `"$strokewidth`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
@@ -8826,6 +8971,7 @@ else {
                                             Else {
                                                 $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
                                             }
+                                            
                                             Write-Entry -Subtext "Applying Poster text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                             $logEntry = "`"$magick`" $Arguments"
                                             $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
@@ -9115,18 +9261,26 @@ else {
                                     InvokeMagickCommand -Command $magick -Arguments $Arguments
 
                                     if ($AddBackgroundText -eq 'true') {
+                                        if ($global:direction -eq "RTL") {
+                                            $backgroundfontImagemagick = $RTLfontImagemagick
+                                            if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
+                                                $joinedTitle = ReverseRTLText -text $joinedTitle
+                                            }
+                                        }
                                         $joinedTitle = $joinedTitle -replace '"', '""'
                                         $joinedTitlePointSize = $joinedTitle -replace '""', '""""'
-                                        $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
+                                        $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
                                         if (!$global:IsTruncated) {
                                             Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                            
                                             # Add Stroke
                                             if ($AddBackgroundTextStroke -eq 'true') {
-                                                $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -stroke `"$Backgroundstrokecolor`" -strokewidth `"$Backgroundstrokewidth`" -size `"$Backgroundboxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
+                                                $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$backgroundfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -stroke `"$Backgroundstrokecolor`" -strokewidth `"$Backgroundstrokewidth`" -size `"$Backgroundboxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
                                             }
                                             Else {
-                                                $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -size `"$Backgroundboxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
+                                                $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$backgroundfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -size `"$Backgroundboxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
                                             }
+                                            
                                             Write-Entry -Subtext "Applying Background text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                             $logEntry = "`"$magick`" $Arguments"
                                             $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
@@ -9275,8 +9429,14 @@ else {
             $global:TextlessPoster = $null
             $global:tvdbalreadysearched = $null
             $global:PlexartworkDownloaded = $null
+            $global:langCode = $null
+            $global:direction = $null
+                
+            # Determine the language direction
+            $global:langCode = $entry.'Library Language'
+            $global:direction = $global:languageDirections[$global:langCode]
 
-            $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}\p{IsArabic}\p{IsHebrew}\p{IsDevanagari}\p{IsThai}\p{IsEthiopic}\p{IsGeorgian}\p{IsArmenian}\p{IsBengali}]'
+            $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}\p{IsDevanagari}\p{IsThai}\p{IsEthiopic}\p{IsGeorgian}\p{IsArmenian}\p{IsBengali}]'
             if ($entry.title -match $cjkPattern) {
                 $Titletext = $entry.originalTitle
             }
@@ -9489,11 +9649,18 @@ else {
                                 InvokeMagickCommand -Command $magick -Arguments $Arguments
 
                                 if ($AddText -eq 'true') {
+                                    if ($global:direction -eq "RTL") {
+                                        $fontImagemagick = $RTLfontImagemagick
+                                        if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
+                                            $joinedTitle = ReverseRTLText -text $joinedTitle
+                                        }
+                                    }
                                     $joinedTitle = $joinedTitle -replace '"', '""'
                                     $joinedTitlePointSize = $joinedTitle -replace '""', '""""'
                                     $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
                                     if (!$global:IsTruncated) {
                                         Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                        
                                         # Add Stroke
                                         if ($AddTextStroke -eq 'true') {
                                             $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -stroke `"$strokecolor`" -strokewidth `"$strokewidth`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
@@ -9501,6 +9668,7 @@ else {
                                         Else {
                                             $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
                                         }
+                                        
                                         Write-Entry -Subtext "Applying Poster text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                         $logEntry = "`"$magick`" $Arguments"
                                         $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
@@ -9799,18 +9967,26 @@ else {
                                 InvokeMagickCommand -Command $magick -Arguments $Arguments
 
                                 if ($AddBackgroundText -eq 'true') {
+                                    if ($global:direction -eq "RTL") {
+                                        $backgroundfontImagemagick = $RTLfontImagemagick
+                                        if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
+                                            $joinedTitle = ReverseRTLText -text $joinedTitle
+                                        }
+                                    }
                                     $joinedTitle = $joinedTitle -replace '"', '""'
                                     $joinedTitlePointSize = $joinedTitle -replace '""', '""""'
-                                    $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
+                                    $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
                                     if (!$global:IsTruncated) {
                                         Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                        
                                         # Add Stroke
                                         if ($AddBackgroundTextStroke -eq 'true') {
-                                            $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -stroke `"$Backgroundstrokecolor`" -strokewidth `"$Backgroundstrokewidth`" -size `"$Backgroundboxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
+                                            $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$backgroundfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -stroke `"$Backgroundstrokecolor`" -strokewidth `"$Backgroundstrokewidth`" -size `"$Backgroundboxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
                                         }
                                         Else {
-                                            $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -size `"$Backgroundboxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
+                                            $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$backgroundfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -size `"$Backgroundboxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
                                         }
+                                        
                                         Write-Entry -Subtext "Applying Background text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                         $logEntry = "`"$magick`" $Arguments"
                                         $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
@@ -10580,19 +10756,40 @@ else {
                                                                 if ($TitleCardEPTitlefontAllCaps -eq 'true') {
                                                                     $global:EPTitle = $global:EPTitle.ToUpper()
                                                                 }
+                                                                if ($global:direction -eq "RTL") {
+                                                                    if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
+                                                                        $global:EPTitle = ReverseRTLText -text $global:EPTitle
+                                                                    }
+                                                                }
                                                                 $global:EPTitle = $global:EPTitle -replace '"', '""'
                                                                 $joinedTitlePointSize = $global:EPTitle -replace '""', '""""'
-                                                                $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
+                                                                if ($global:direction -eq "RTL") {
+                                                                    $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $RTLfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
+                                                                }
+                                                                Else {
+                                                                    $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
+                                                                }
                                                                 if (!$global:IsTruncated) {
                                                                     Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                                                                    # Add Stroke
-                                                                    if ($AddTitleCardEPTitleTextStroke -eq 'true') {
-                                                                        $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                                    if ($global:direction -eq "RTL") {
+                                                                        # Add Stroke
+                                                                        if ($AddTitleCardEPTitleTextStroke -eq 'true') {
+                                                                            $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$RTLfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                                        }
+                                                                        Else {
+                                                                            $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$RTLfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                                        }
                                                                     }
                                                                     Else {
-                                                                        $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                                        # Add Stroke
+                                                                        if ($AddTitleCardEPTitleTextStroke -eq 'true') {
+                                                                            $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                                        }
+                                                                        Else {
+                                                                            $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                                        }
                                                                     }
-
+                                                                    
                                                                     Write-Entry -Subtext "Applying EPTitle text: `"$global:EPTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                                     $logEntry = "`"$magick`" $Arguments"
                                                                     $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
@@ -11014,19 +11211,40 @@ else {
                                                             if ($TitleCardEPTitlefontAllCaps -eq 'true') {
                                                                 $global:EPTitle = $global:EPTitle.ToUpper()
                                                             }
+                                                            if ($global:direction -eq "RTL") {
+                                                                if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
+                                                                    $global:EPTitle = ReverseRTLText -text $global:EPTitle
+                                                                }
+                                                            }
                                                             $global:EPTitle = $global:EPTitle -replace '"', '""'
                                                             $joinedTitlePointSize = $global:EPTitle -replace '""', '""""'
-                                                            $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
+                                                            if ($global:direction -eq "RTL") {
+                                                                $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $RTLfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
+                                                            }
+                                                            Else {
+                                                                $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
+                                                            }
                                                             if (!$global:IsTruncated) {
                                                                 Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                                                                # Add Stroke
-                                                                if ($AddTitleCardEPTitleTextStroke -eq 'true') {
-                                                                    $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                                if ($global:direction -eq "RTL") {
+                                                                    # Add Stroke
+                                                                    if ($AddTitleCardEPTitleTextStroke -eq 'true') {
+                                                                        $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$RTLfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                                    }
+                                                                    Else {
+                                                                        $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$RTLfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                                    }
                                                                 }
                                                                 Else {
-                                                                    $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                                    # Add Stroke
+                                                                    if ($AddTitleCardEPTitleTextStroke -eq 'true') {
+                                                                        $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                                    }
+                                                                    Else {
+                                                                        $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                                    }
                                                                 }
-
+                                                                
                                                                 Write-Entry -Subtext "Applying EPTitle text: `"$global:EPTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                                 $logEntry = "`"$magick`" $Arguments"
                                                                 $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append

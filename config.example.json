@@ -25,6 +25,7 @@
     "maxLogs": "5",
     "logLevel": "2",
     "font": "Colus-Regular.ttf",
+    "RTLFont": "Colus-Regular.ttf",
     "backgroundfont": "Colus-Regular.ttf",
     "titlecardfont": "Colus-Regular.ttf",
     "overlayfile": "overlay.png",

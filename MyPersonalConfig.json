@@ -37,6 +37,7 @@
     "magickinstalllocation": "C:\\PosterTemp\\ImageMagickPortable",
     "maxLogs": "5",
     "font": "Colus-Regular.ttf",
+    "RTLFont": "Aharoni CLM Book.ttf",
     "backgroundfont": "Colus-Regular.ttf",
     "titlecardfont": "Colus-Regular.ttf",
     "overlayfile": "bottom-up-fade.png",
