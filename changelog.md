@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [1.3.0](https://github.com/fscorrupt/Posterizarr/releases/tag/1.3.0) - 2024-08-13 08:26:33
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.2.49...1.3.0
+
+### Feature
+
+- general:
+  - Additional Api Filter ([a6e9101](https://github.com/fscorrupt/Posterizarr/commit/a6e91015d128887e7463463085104387fbec573a))
+
 ## [1.2.49](https://github.com/fscorrupt/Posterizarr/releases/tag/1.2.49) - 2024-08-12 10:38:12
 
 **Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.2.48...1.2.49
