@@ -116,11 +116,11 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
                   - that beeing said, plex should act as last resort like IMDB does for Movies and not as fav provider.
 
             [Search order in script](#Search-Order)
-    - `WidthHeightFilter`: If you set it to `true` you will add an extra dimension filter to Posters/Backgrounds(TMDB and TVDB) and Titlecards(Only on TMDB) searches.
-    - `PosterMinWidth`: Poster min width filter - greater than or equal to: `2000` (default value)
-    - `PosterMinHeight`: Poster min height filter - greater than or equal to: `3000` (default value)
-    - `BgTcMinWidth`: Background/Titlecard min width filter - greater than or equal to: `3840` (default value)
-    - `BgTcMinHeight`: Background/Titlecard min height filter - greater than or equal to: `2160` (default value)
+    - `WidthHeightFilter`: If set to `true`, an additional resolution filter will be applied to Posters/Backgrounds (TMDB and TVDB) and Titlecards (only on TMDB) searches.
+    - `PosterMinWidth`: Minimum poster width filter—greater than or equal to: `2000` (default value)
+    - `PosterMinHeight`: Minimum poster height filter—greater than or equal to: `3000` (default value)
+    - `BgTcMinWidth`: Minimum background/titlecard width filter—greater than or equal to: `3840` (default value)
+    - `BgTcMinHeight`: Minimum background/titlecard height filter—greater than or equal to: `2160` (default value)
     - `tmdb_vote_sorting`: Picture sorting via TMDB api, either by `vote_average`, `vote_count` or by `primary` (Default value is: `vote_average`).
         - `primary` = default tmdb view (like on the website)
     - `PreferredLanguageOrder`: Specify language preferences. Default is `xx,en,de` (`xx` is Textless). Example configurations can be found in the config file. 2-digit language codes can be found here: [ISO 3166-1 Lang Codes](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2).
