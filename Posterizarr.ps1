@@ -8,7 +8,7 @@
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.2.49"
+$CurrentScriptVersion = "1.3.0"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -126,9 +126,9 @@ function Write-Entry {
  Latest Version: $LatestScriptVersion
  Platform: $Platform
  OS Version: $OSVersion
- 
+
  CPU Model: $cpuModel
- 
+
  Total Memory: $totalMemory MB
  Used Memory: $usedMemory MB
  Free Memory: $freeMemory MB
@@ -140,7 +140,7 @@ function Write-Entry {
         }
         Elseif ($Platform -eq 'Windows') {
             # Retrieve memory information in GB or MB
-            $memoryInfo = Get-CimInstance Win32_OperatingSystem | Select-Object @{Name = "FreePhysicalMemory"; Expression = { 
+            $memoryInfo = Get-CimInstance Win32_OperatingSystem | Select-Object @{Name = "FreePhysicalMemory"; Expression = {
                     if ($_.FreePhysicalMemory -ge 1GB) {
                         "$([math]::Round($_.FreePhysicalMemory / 1GB, 2)) MB"
                     }
@@ -149,7 +149,7 @@ function Write-Entry {
                     }
                     else {
                         "$($_.FreePhysicalMemory)"
-                    } } 
+                    } }
             },
             @{Name = "TotalVisibleMemorySize"; Expression = {
                     if ($_.TotalVisibleMemorySize -ge 1GB) {
@@ -196,9 +196,9 @@ function Write-Entry {
  Latest Version: $LatestScriptVersion
  Platform: $Platform
  OS Version: $OSVersion
- 
+
  CPU Model: $cpuModel
- 
+
  Total Memory: $totalMemory
  Used Memory: $usedMemory
  Free Memory: $freeMemory
@@ -272,7 +272,7 @@ function SendMessage {
     )
     if ($global:NotifyUrl -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker-Alpine*') {
         if ($global:NotifyUrl -like '*discord*') {
-            if ($SkipTBA -eq 'True' -or $SkipJapTitle -eq 'True') {
+            if ($SkipTBA -eq 'true' -or $SkipJapTitle -eq 'true') {
                 $jsonPayload = @"
     {
         "username": "Posterizarr",
@@ -286,7 +286,7 @@ function SendMessage {
             },
             "description": "Recently Added\n\n",
             "timestamp": "$(((Get-Date).ToUniversalTime()).ToString("yyyy-MM-ddTHH:mm:ss.fffZ"))",
-            "color": $(if ($errorCount -ge '1') {16711680}Elseif ($global:IsFallback -eq 'True' -or $global:IsTruncated -eq 'True'){15120384}Else{5763719}),
+            "color": $(if ($errorCount -ge '1') {16711680}Elseif ($global:IsFallback -eq 'true' -or $global:IsTruncated -eq 'true'){15120384}Else{5763719}),
             "fields": [
             {
                 "name": "",
@@ -370,7 +370,7 @@ function SendMessage {
             },
             "description": "Recently Added\n\n",
             "timestamp": "$(((Get-Date).ToUniversalTime()).ToString("yyyy-MM-ddTHH:mm:ss.fffZ"))",
-            "color": $(if ($errorCount -ge '1') {16711680}Elseif ($global:IsFallback -eq 'True' -or $global:IsTruncated -eq 'True'){15120384}Else{5763719}),
+            "color": $(if ($errorCount -ge '1') {16711680}Elseif ($global:IsFallback -eq 'true' -or $global:IsTruncated -eq 'true'){15120384}Else{5763719}),
             "fields": [
             {
                 "name": "",
@@ -431,12 +431,12 @@ function SendMessage {
 "@
             }
             $global:NotifyUrl = $global:NotifyUrl.replace('discord://', 'https://discord.com/api/webhooks/')
-            if ($global:SendNotification -eq 'True') {
+            if ($global:SendNotification -eq 'true') {
                 Push-ObjectToDiscord -strDiscordWebhook $global:NotifyUrl -objPayload $jsonPayload
             }
         }
         Else {
-            if ($global:SendNotification -eq 'True') {
+            if ($global:SendNotification -eq 'true') {
                 if ($errorCount -ge '1') {
                     apprise --notification-type="error" --title="Posterizarr" --body="Run took: $FormattedTimespawn`nIt Created '$posterCount' Images`n`nDuring execution '$errorCount' Errors occurred, please check log for detailed description." "$global:NotifyUrl"
                 }
@@ -447,7 +447,7 @@ function SendMessage {
         }
     }
     if ($global:NotifyUrl -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -notlike 'PSDocker-Alpine*') {
-        if ($SkipTBA -eq 'True' -or $SkipJapTitle -eq 'True') {
+        if ($SkipTBA -eq 'true' -or $SkipJapTitle -eq 'true') {
             $jsonPayload = @"
     {
         "username": "Posterizarr",
@@ -461,7 +461,7 @@ function SendMessage {
             },
             "description": "Recently Added\n\n",
             "timestamp": "$(((Get-Date).ToUniversalTime()).ToString("yyyy-MM-ddTHH:mm:ss.fffZ"))",
-            "color": $(if ($errorCount -ge '1') {16711680}Elseif ($global:IsFallback -eq 'True' -or $global:IsTruncated -eq 'True'){15120384}Else{5763719}),
+            "color": $(if ($errorCount -ge '1') {16711680}Elseif ($global:IsFallback -eq 'true' -or $global:IsTruncated -eq 'true'){15120384}Else{5763719}),
             "fields": [
             {
                 "name": "",
@@ -545,7 +545,7 @@ function SendMessage {
             },
             "description": "Recently Added\n\n",
             "timestamp": "$(((Get-Date).ToUniversalTime()).ToString("yyyy-MM-ddTHH:mm:ss.fffZ"))",
-            "color": $(if ($errorCount -ge '1') {16711680}Elseif ($global:IsFallback -eq 'True' -or $global:IsTruncated -eq 'True'){15120384}Else{5763719}),
+            "color": $(if ($errorCount -ge '1') {16711680}Elseif ($global:IsFallback -eq 'true' -or $global:IsTruncated -eq 'true'){15120384}Else{5763719}),
             "fields": [
             {
                 "name": "",
@@ -605,7 +605,7 @@ function SendMessage {
     }
 "@
         }
-        if ($global:SendNotification -eq 'True') {
+        if ($global:SendNotification -eq 'true') {
             Push-ObjectToDiscord -strDiscordWebhook $global:NotifyUrl -objPayload $jsonPayload
         }
     }
@@ -656,7 +656,7 @@ function GetTMDBMoviePoster {
     if (!$global:tmdbid) {
         Write-Entry -Subtext "Cannot search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     }
-    if ($global:PreferTextless -eq 'True') {
+    if ($global:PreferTextless -eq 'true') {
         try {
             $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($global:tmdbid)?append_to_response=images&language=xx&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
         }
@@ -668,29 +668,71 @@ function GetTMDBMoviePoster {
         }
         if ($response) {
             if ($response.images.posters) {
-                $NoLangPoster = ($response.images.posters | Where-Object iso_639_1 -eq $null)
+                if ($global:WidthHeightFilter -eq 'true') {
+                    $NoLangPoster = ($response.images.posters | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
+                }
+                Else {
+                    $NoLangPoster = ($response.images.posters | Where-Object iso_639_1 -eq $null)
+                }
                 if (!$NoLangPoster) {
-                    if (!$global:OnlyTextless -eq 'true') {
-                        if ($global:TMDBVoteSorting -eq 'Primary') {
-                            $posterpath = (($response.images.posters | Sort-Object -Descending)[0]).file_path
+                    if ($global:OnlyTextless -eq 'false') {
+                        if ($global:WidthHeightFilter -eq 'true') {
+                            if ($global:TMDBVoteSorting -eq 'Primary') {
+                                $filteredPosters = $response.images.posters | Where-Object { $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
+
+                                if ($filteredPosters) {
+                                    $posterpath = (($filteredPosters | Sort-Object -Descending)[0]).file_path
+                                    Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                }
+                                else {
+                                    Write-Entry -Subtext "No posters found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                }
+                            }
+                            Else {
+                                $filteredPosters = $response.images.posters
+
+                                if ($filteredPosters) {
+                                    $posterpath = (($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                                    Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                }
+                                else {
+                                    Write-Entry -Subtext "No posters found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                }
+                            }
                         }
                         Else {
-                            $posterpath = (($response.images.posters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                            if ($global:TMDBVoteSorting -eq 'Primary') {
+                                $filteredPosters = $response.images.posters
+
+                                if ($filteredPosters) {
+                                    $posterpath = (($filteredPosters | Sort-Object -Descending)[0]).file_path
+                                }
+                            }
+                            Else {
+                                $filteredPosters = $response.images.posters
+
+                                if ($filteredPosters) {
+                                    $posterpath = (($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                                }
+                            }
                         }
-                        $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
-                        if ($global:FavProvider -eq 'TMDB') {
-                            $global:Fallback = "fanart"
-                            $global:tmdbfallbackposterurl = $global:posterurl
-                        }
-                        Write-Entry -Subtext "Found Poster with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
-                        $global:PosterWithText = $true
-                        if ($global:TMDBVoteSorting -eq 'Primary') {
-                            $global:TMDBAssetTextLang = (($response.images.posters | Sort-Object -Descending)[0]).iso_639_1
-                        }
-                        Else {
-                            $global:TMDBAssetTextLang = (($response.images.posters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).iso_639_1
+                        if ($posterpath) {
+                            $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
+                            if ($global:FavProvider -eq 'TMDB') {
+                                $global:Fallback = "fanart"
+                                $global:tmdbfallbackposterurl = $global:posterurl
+                            }
+                            Write-Entry -Subtext "Found Poster with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                            $global:PosterWithText = $true
+                            if ($global:TMDBVoteSorting -eq 'Primary') {
+                                $global:TMDBAssetTextLang = (($response.images.posters | Sort-Object -Descending)[0]).iso_639_1
+                            }
+                            Else {
+                                $global:TMDBAssetTextLang = (($response.images.posters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).iso_639_1
+                            }
                         }
                         $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/movie/$($global:tmdbid)/images/posters"
+                        return $global:posterurl
                     }
                     Else {
                         Write-Entry -Subtext "Found Poster with text on TMDB, skipping because you only want textless..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
@@ -698,11 +740,46 @@ function GetTMDBMoviePoster {
                     }
                 }
                 Else {
-                    if ($global:TMDBVoteSorting -eq 'Primary') {
-                        $posterpath = (($response.images.posters | Where-Object iso_639_1 -eq $null | Sort-Object -Descending)[0]).file_path
+                    if ($global:WidthHeightFilter -eq 'true') {
+                        if ($global:TMDBVoteSorting -eq 'Primary') {
+                            $filteredPosters = $response.images.posters | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
+
+                            if ($filteredPosters) {
+                                $posterpath = (($filteredPosters | Sort-Object -Descending)[0]).file_path
+                                Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                            }
+                            else {
+                                Write-Entry -Subtext "No posters found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                            }
+                        }
+                        Else {
+                            $filteredPosters = $response.images.posters | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
+
+                            if ($filteredPosters) {
+                                $posterpath = (($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                                Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                            }
+                            else {
+                                Write-Entry -Subtext "No posters found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                            }
+                        }
                     }
                     Else {
-                        $posterpath = (($response.images.posters | Where-Object iso_639_1 -eq $null | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                        if ($global:TMDBVoteSorting -eq 'Primary') {
+                            $filteredPosters = $response.images.posters | Where-Object iso_639_1 -eq $null
+
+                            if ($filteredPosters) {
+                                $posterpath = (($filteredPosters | Sort-Object -Descending)[0]).file_path
+                            }
+
+                        }
+                        Else {
+                            $filteredPosters = $response.images.posters | Where-Object iso_639_1 -eq $null
+
+                            if ($filteredPosters) {
+                                $posterpath = (($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                            }
+                        }
                     }
                     if ($posterpath) {
                         $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
@@ -734,10 +811,20 @@ function GetTMDBMoviePoster {
             if ($response.images.posters) {
                 foreach ($lang in $global:PreferredLanguageOrderTMDB) {
                     if ($lang -eq 'null') {
-                        $FavPoster = ($response.images.posters | Where-Object iso_639_1 -eq $null)
+                        if ($global:WidthHeightFilter -eq 'true') {
+                            $FavPoster = ($response.images.posters | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
+                        }
+                        Else {
+                            $FavPoster = ($response.images.posters | Where-Object iso_639_1 -eq $null)
+                        }
                     }
                     Else {
-                        $FavPoster = ($response.images.posters | Where-Object iso_639_1 -eq $lang)
+                        if ($global:WidthHeightFilter -eq 'true') {
+                            $FavPoster = ($response.images.posters | Where-Object { $_.iso_639_1 -eq $lang -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
+                        }
+                        Else {
+                            $FavPoster = ($response.images.posters | Where-Object iso_639_1 -eq $lang)
+                        }
                     }
                     if ($FavPoster) {
                         if ($global:TMDBVoteSorting -eq 'Primary') {
@@ -775,7 +862,7 @@ function GetTMDBMovieBackground {
     if (!$global:tmdbid) {
         Write-Entry -Subtext "Cannot search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     }
-    if ($global:PreferTextless -eq 'True') {
+    if ($global:PreferTextless -eq 'true') {
         try {
             $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($global:tmdbid)?append_to_response=images&language=xx&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
         }
@@ -787,27 +874,61 @@ function GetTMDBMovieBackground {
         }
         if ($response) {
             if ($response.images.backdrops) {
-                $NoLangPoster = ($response.images.backdrops | Where-Object iso_639_1 -eq $null)
+                if ($global:WidthHeightFilter -eq 'true') {
+                    $NoLangPoster = ($response.images.backdrops | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight })
+                }
+                Else {
+                    $NoLangPoster = ($response.images.backdrops | Where-Object iso_639_1 -eq $null)
+                }
                 if (!$NoLangPoster) {
-                    if (!$global:OnlyTextless -eq 'true') {
-                        if ($global:TMDBVoteSorting -eq 'Primary') {
-                            $posterpath = (($response.images.backdrops | Sort-Object -Descending)[0]).file_path
+                    if ($global:OnlyTextless -eq 'false') {
+                        if ($global:WidthHeightFilter -eq 'true') {
+                            if ($global:TMDBVoteSorting -eq 'Primary') {
+                                $filteredPosters = $response.images.backdrops | Where-Object { $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight }
+
+                                if ($filteredPosters) {
+                                    $posterpath = (($filteredPosters | Sort-Object -Descending)[0]).file_path
+                                    Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                }
+                                else {
+                                    Write-Entry -Subtext "No Background posters found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                }
+                            }
+                            Else {
+                                $filteredPosters = $response.images.backdrops | Where-Object { $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight }
+
+                                if ($filteredPosters) {
+                                    $posterpath = (($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                                    Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                }
+                                else {
+                                    Write-Entry -Subtext "No Background posters found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                }
+                            }
                         }
                         Else {
-                            $posterpath = (($response.images.backdrops | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                            if ($global:TMDBVoteSorting -eq 'Primary') {
+                                $posterpath = (($response.images.backdrops | Sort-Object -Descending)[0]).file_path
+                            }
+                            Else {
+                                $posterpath = (($response.images.backdrops | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                            }
                         }
-                        $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
-                        if ($global:FavProvider -eq 'TMDB') {
-                            $global:Fallback = "fanart"
-                            $global:tmdbfallbackposterurl = $global:posterurl
-                        }
-                        Write-Entry -Subtext "Found background with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
-                        $global:PosterWithText = $true
-                        if ($global:TMDBVoteSorting -eq 'Primary') {
-                            $global:TMDBAssetTextLang = (($response.images.backdrops | Sort-Object -Descending)[0]).iso_639_1
-                        }
-                        Else {
-                            $global:TMDBAssetTextLang = (($response.images.backdrops | Sort-Object $global:TMDBVoteSorting -Descending)[0]).iso_639_1
+                        if ($posterpath) {
+                            $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
+                            if ($global:FavProvider -eq 'TMDB') {
+                                $global:Fallback = "fanart"
+                                $global:tmdbfallbackposterurl = $global:posterurl
+                            }
+                            Write-Entry -Subtext "Found background with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                            $global:PosterWithText = $true
+                            if ($global:TMDBVoteSorting -eq 'Primary') {
+                                $global:TMDBAssetTextLang = (($response.images.backdrops | Sort-Object -Descending)[0]).iso_639_1
+                            }
+                            Else {
+                                $global:TMDBAssetTextLang = (($response.images.backdrops | Sort-Object $global:TMDBVoteSorting -Descending)[0]).iso_639_1
+                            }
+                            return $global:posterurl
                         }
                         $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/movie/$($global:tmdbid)/images/backdrops"
                     }
@@ -817,11 +938,37 @@ function GetTMDBMovieBackground {
                     }
                 }
                 Else {
-                    if ($global:TMDBVoteSorting -eq 'Primary') {
-                        $posterpath = (($response.images.backdrops | Where-Object iso_639_1 -eq $null | Sort-Object -Descending)[0]).file_path
+                    if ($global:WidthHeightFilter -eq 'true') {
+                        if ($global:TMDBVoteSorting -eq 'Primary') {
+                            $filteredPosters = $response.images.backdrops | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight }
+
+                            if ($filteredPosters) {
+                                $posterpath = (($filteredPosters | Sort-Object -Descending)[0]).file_path
+                                Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                            }
+                            else {
+                                Write-Entry -Subtext "No Background posters found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                            }
+                        }
+                        Else {
+                            $filteredPosters = $response.images.backdrops | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight }
+
+                            if ($filteredPosters) {
+                                $posterpath = (($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                                Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                            }
+                            else {
+                                Write-Entry -Subtext "No Background posters found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                            }
+                        }
                     }
                     Else {
-                        $posterpath = (($response.images.backdrops | Where-Object iso_639_1 -eq $null | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                        if ($global:TMDBVoteSorting -eq 'Primary') {
+                            $posterpath = (($response.images.backdrops | Where-Object iso_639_1 -eq $null | Sort-Object -Descending)[0]).file_path
+                        }
+                        Else {
+                            $posterpath = (($response.images.backdrops | Where-Object iso_639_1 -eq $null | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                        }
                     }
                     if ($posterpath) {
                         $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
@@ -859,11 +1006,21 @@ function GetTMDBMovieBackground {
         if ($response) {
             if ($response.images.backdrops) {
                 foreach ($lang in $global:PreferredLanguageOrderTMDB) {
-                    if ($lang -eq 'null') {
-                        $FavPoster = ($response.images.backdrops | Where-Object iso_639_1 -eq $null)
+                    if ($global:WidthHeightFilter -eq 'true') {
+                        if ($lang -eq 'null') {
+                            $FavPoster = ($response.images.backdrops | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight })
+                        }
+                        Else {
+                            $FavPoster = ($response.images.backdrops | Where-Object { iso_639_1 -eq $lang -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight })
+                        }
                     }
                     Else {
-                        $FavPoster = ($response.images.backdrops | Where-Object iso_639_1 -eq $lang)
+                        if ($lang -eq 'null') {
+                            $FavPoster = ($response.images.backdrops | Where-Object iso_639_1 -eq $null)
+                        }
+                        Else {
+                            $FavPoster = ($response.images.backdrops | Where-Object iso_639_1 -eq $lang)
+                        }
                     }
                     if ($FavPoster) {
                         if ($global:TMDBVoteSorting -eq 'Primary') {
@@ -888,8 +1045,12 @@ function GetTMDBMovieBackground {
                         continue
                     }
                 }
-                if (!$global:posterurl) {
+                if (!$global:posterurl -and $global:WidthHeightFilter -eq 'false') {
                     Write-Entry -Subtext "No Background found on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                    $global:Fallback = "fanart"
+                }
+                if (!$global:posterurl -and $global:WidthHeightFilter -eq 'true') {
+                    Write-Entry -Subtext "No Background found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                     $global:Fallback = "fanart"
                 }
             }
@@ -912,7 +1073,7 @@ function GetTMDBShowPoster {
     if (!$global:tmdbid) {
         Write-Entry -Subtext "Cannot search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     }
-    if ($global:PreferTextless -eq 'True') {
+    if ($global:PreferTextless -eq 'true') {
         try {
             $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=xx&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
         }
@@ -924,30 +1085,62 @@ function GetTMDBShowPoster {
         }
         if ($response) {
             if ($response.images.posters) {
-                $NoLangPoster = ($response.images.posters | Where-Object iso_639_1 -eq $null)
+                if ($global:WidthHeightFilter -eq 'true') {
+                    $NoLangPoster = ($response.images.posters | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
+                }
+                Else {
+                    $NoLangPoster = ($response.images.posters | Where-Object iso_639_1 -eq $null)
+                }
                 if (!$NoLangPoster) {
-                    if (!$global:OnlyTextless -eq 'true') {
-                        if ($global:TMDBVoteSorting -eq 'Primary') {
-                            $posterpath = (($response.images.posters | Sort-Object -Descending)[0]).file_path
+                    if ($global:OnlyTextless -eq 'false') {
+                        if ($global:WidthHeightFilter -eq 'true') {
+                            if ($global:TMDBVoteSorting -eq 'Primary') {
+                                $filteredPosters = $response.images.posters | Where-Object { $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
+
+                                if ($filteredPosters) {
+                                    $posterpath = (($filteredPosters | Sort-Object -Descending)[0]).file_path
+                                    $global:TMDBAssetTextLang = (($filteredPosters | Sort-Object -Descending)[0]).iso_639_1
+                                    Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                }
+                                else {
+                                    Write-Entry -Subtext "No posters found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                }
+                            }
+                            Else {
+                                $filteredPosters = $response.images.posters | Where-Object { $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
+
+                                if ($filteredPosters) {
+                                    $posterpath = (($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                                    $global:TMDBAssetTextLang = (($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).iso_639_1
+                                    Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                }
+                                else {
+                                    Write-Entry -Subtext "No posters found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                }
+                            }
                         }
                         Else {
-                            $posterpath = (($response.images.posters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                            if ($global:TMDBVoteSorting -eq 'Primary') {
+                                $posterpath = (($response.images.posters | Sort-Object -Descending)[0]).file_path
+                                $global:TMDBAssetTextLang = (($response.images.posters | Sort-Object -Descending)[0]).iso_639_1
+                            }
+                            Else {
+                                $posterpath = (($response.images.posters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                                $global:TMDBAssetTextLang = (($response.images.posters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).iso_639_1
+                            }
                         }
-                        $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
-                        if ($global:FavProvider -eq 'TMDB') {
-                            $global:Fallback = "fanart"
-                            $global:tmdbfallbackposterurl = $global:posterurl
+                        if ($posterpath) {
+                            $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
+                            if ($global:FavProvider -eq 'TMDB') {
+                                $global:Fallback = "fanart"
+                                $global:tmdbfallbackposterurl = $global:posterurl
+                            }
+                            Write-Entry -Subtext "Found Poster with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                            $global:PosterWithText = $true
+
+                            $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/images/posters"
+                            return $global:posterurl
                         }
-                        Write-Entry -Subtext "Found Poster with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
-                        $global:PosterWithText = $true
-                        if ($global:TMDBVoteSorting -eq 'Primary') {
-                            $global:TMDBAssetTextLang = (($response.images.posters | Sort-Object -Descending)[0]).iso_639_1
-                        }
-                        Else {
-                            $global:TMDBAssetTextLang = (($response.images.posters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).iso_639_1
-                        }
-                        $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/images/posters"
-                        return $global:posterurl
                     }
                     Else {
                         Write-Entry -Subtext "Found Poster with text on TMDB, skipping because you only want textless..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
@@ -955,11 +1148,37 @@ function GetTMDBShowPoster {
                     }
                 }
                 Else {
-                    if ($global:TMDBVoteSorting -eq 'Primary') {
-                        $posterpath = (($response.images.posters | Where-Object iso_639_1 -eq $null | Sort-Object -Descending)[0]).file_path
+                    if ($global:WidthHeightFilter -eq 'true') {
+                        if ($global:TMDBVoteSorting -eq 'Primary') {
+                            $filteredPosters = $response.images.posters | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
+
+                            if ($filteredPosters) {
+                                $posterpath = (($filteredPosters | Sort-Object -Descending)[0]).file_path
+                                Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                            }
+                            else {
+                                Write-Entry -Subtext "No posters found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                            }
+                        }
+                        Else {
+                            $filteredPosters = $response.images.posters | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
+
+                            if ($filteredPosters) {
+                                $posterpath = (($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                                Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                            }
+                            else {
+                                Write-Entry -Subtext "No posters found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                            }
+                        }
                     }
                     Else {
-                        $posterpath = (($response.images.posters | Where-Object iso_639_1 -eq $null | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                        if ($global:TMDBVoteSorting -eq 'Primary') {
+                            $posterpath = (($response.images.posters | Where-Object iso_639_1 -eq $null | Sort-Object -Descending)[0]).file_path
+                        }
+                        Else {
+                            $posterpath = (($response.images.posters | Where-Object iso_639_1 -eq $null | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                        }
                     }
                     if ($posterpath) {
                         $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
@@ -990,11 +1209,21 @@ function GetTMDBShowPoster {
         if ($response) {
             if ($response.images.posters) {
                 foreach ($lang in $global:PreferredLanguageOrderTMDB) {
-                    if ($lang -eq 'null') {
-                        $FavPoster = ($response.images.posters | Where-Object iso_639_1 -eq $null)
+                    if ($global:WidthHeightFilter -eq 'true') {
+                        if ($lang -eq 'null') {
+                            $FavPoster = ($response.images.posters | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
+                        }
+                        Else {
+                            $FavPoster = ($response.images.posters | Where-Object { iso_639_1 -eq $lang -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
+                        }
                     }
                     Else {
-                        $FavPoster = ($response.images.posters | Where-Object iso_639_1 -eq $lang)
+                        if ($lang -eq 'null') {
+                            $FavPoster = ($response.images.posters | Where-Object iso_639_1 -eq $null)
+                        }
+                        Else {
+                            $FavPoster = ($response.images.posters | Where-Object iso_639_1 -eq $lang)
+                        }
                     }
                     if ($FavPoster) {
                         if ($global:TMDBVoteSorting -eq 'Primary') {
@@ -1032,7 +1261,7 @@ function GetTMDBSeasonPoster {
     if (!$global:tmdbid) {
         Write-Entry -Subtext "Cannot search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     }
-    if ($global:SeasonPreferTextless -eq 'True') {
+    if ($global:SeasonPreferTextless -eq 'true') {
         try {
             $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)/season/$global:SeasonNumber/images?append_to_response=images&language=xx&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
         }
@@ -1044,34 +1273,65 @@ function GetTMDBSeasonPoster {
         }
         if ($response) {
             if ($response.posters) {
-                $NoLangPoster = ($response.posters | Where-Object iso_639_1 -eq $null)
+                if ($global:WidthHeightFilter -eq 'true') {
+                    $NoLangPoster = ($response.posters | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
+                }
+                Else {
+                    $NoLangPoster = ($response.posters | Where-Object iso_639_1 -eq $null)
+                }
                 Write-Entry -Subtext "NoLangPoster: $NoLangPoster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                 if (!$NoLangPoster) {
                     if (!$global:SeasonOnlyTextless) {
-                        if ($global:TMDBVoteSorting -eq 'Primary') {
-                            $posterpath = (($response.posters | Sort-Object -Descending)[0]).file_path
+                        if ($global:WidthHeightFilter -eq 'true') {
+                            if ($global:TMDBVoteSorting -eq 'Primary') {
+                                $filteredPosters = $response.poster | Where-Object { $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
+
+                                if ($filteredPosters) {
+                                    $posterpath = (($filteredPosters | Sort-Object -Descending)[0]).file_path
+                                    $global:TMDBAssetTextLang = (($filteredPosters | Sort-Object -Descending)[0]).iso_639_1
+                                    Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                }
+                                else {
+                                    Write-Entry -Subtext "No Season posters found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                }
+                            }
+                            Else {
+                                $filteredPosters = $response.posters | Where-Object { $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
+
+                                if ($filteredPosters) {
+                                    $posterpath = (($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                                    $global:TMDBAssetTextLang = (($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).iso_639_1
+                                    Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                }
+                                else {
+                                    Write-Entry -Subtext "No Season posters found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                }
+                            }
                         }
                         Else {
-                            $posterpath = (($response.posters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                            if ($global:TMDBVoteSorting -eq 'Primary') {
+                                $posterpath = (($response.posters | Sort-Object -Descending)[0]).file_path
+                                $global:TMDBAssetTextLang = (($response.posters | Sort-Object -Descending)[0]).iso_639_1
+                            }
+                            Else {
+                                $posterpath = (($response.posters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                                $global:TMDBAssetTextLang = (($response.posters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).iso_639_1
+                            }
                         }
-                        $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
-                        Write-Entry -Subtext "Found Season Poster with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
-                        $global:PosterWithText = $true
-                        if ($global:TMDBVoteSorting -eq 'Primary') {
-                            $global:TMDBAssetTextLang = (($response.posters | Sort-Object -Descending)[0]).iso_639_1
+                        if ($posterpath) {
+                            $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
+                            Write-Entry -Subtext "Found Season Poster with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                            $global:PosterWithText = $true
+                            $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/season/$global:SeasonNumber/images/posters"
+                            $global:TMDBSeasonFallback = $global:posterurl
+                            Write-Entry -Subtext "Posterpath: $posterpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-Entry -Subtext "PosterUrl: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-Entry -Subtext "PosterWithText: $global:PosterWithText" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-Entry -Subtext "TMDBAssetTextLang: $global:TMDBAssetTextLang" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-Entry -Subtext "TMDBAssetChangeUrl: $global:TMDBAssetChangeUrl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-Entry -Subtext "TMDBSeasonFallback: $global:TMDBSeasonFallback" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            return $global:posterurl
                         }
-                        Else {
-                            $global:TMDBAssetTextLang = (($response.posters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).iso_639_1
-                        }
-                        $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/season/$global:SeasonNumber/images/posters"
-                        $global:TMDBSeasonFallback = $global:posterurl
-                        Write-Entry -Subtext "Posterpath: $posterpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                        Write-Entry -Subtext "PosterUrl: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                        Write-Entry -Subtext "PosterWithText: $global:PosterWithText" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                        Write-Entry -Subtext "TMDBAssetTextLang: $global:TMDBAssetTextLang" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                        Write-Entry -Subtext "TMDBAssetChangeUrl: $global:TMDBAssetChangeUrl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                        Write-Entry -Subtext "TMDBSeasonFallback: $global:TMDBSeasonFallback" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                        return $global:posterurl
                     }
                     Else {
                         Write-Entry -Subtext "Found Season Poster with text on TMDB, skipping because you only want textless..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
@@ -1079,11 +1339,37 @@ function GetTMDBSeasonPoster {
                     }
                 }
                 Else {
-                    if ($global:TMDBVoteSorting -eq 'Primary') {
-                        $posterpath = (($response.posters | Where-Object iso_639_1 -eq $null | Sort-Object -Descending)[0]).file_path
+                    if ($global:WidthHeightFilter -eq 'true') {
+                        if ($global:TMDBVoteSorting -eq 'Primary') {
+                            $filteredPosters = $response.posters | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
+
+                            if ($filteredPosters) {
+                                $posterpath = (($filteredPosters | Sort-Object -Descending)[0]).file_path
+                                Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                            }
+                            else {
+                                Write-Entry -Subtext "No Season posters found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                            }
+                        }
+                        Else {
+                            $filteredPosters = $response.posters | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
+
+                            if ($filteredPosters) {
+                                $posterpath = (($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                                Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                            }
+                            else {
+                                Write-Entry -Subtext "No Season posters found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                            }
+                        }
                     }
                     Else {
-                        $posterpath = (($response.posters | Where-Object iso_639_1 -eq $null | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                        if ($global:TMDBVoteSorting -eq 'Primary') {
+                            $posterpath = (($response.posters | Where-Object iso_639_1 -eq $null | Sort-Object -Descending)[0]).file_path
+                        }
+                        Else {
+                            $posterpath = (($response.posters | Where-Object iso_639_1 -eq $null | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                        }
                     }
                     if ($posterpath) {
                         $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
@@ -1128,11 +1414,21 @@ function GetTMDBSeasonPoster {
             if ($responseBackup.images.posters) {
                 Write-Entry -Subtext "Could not get a result with '$global:SeasonNumber' on TMDB, likely season number not in correct format, fallback to Show poster." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                 foreach ($lang in $global:PreferredSeasonLanguageOrderTMDB) {
-                    if ($lang -eq 'null') {
-                        $FavPoster = ($responseBackup.images.posters | Where-Object iso_639_1 -eq $null)
+                    if ($global:WidthHeightFilter -eq 'true') {
+                        if ($lang -eq 'null') {
+                            $FavPoster = ($responseBackup.images.posters | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
+                        }
+                        Else {
+                            $FavPoster = ($responseBackup.images.posters | Where-Object { iso_639_1 -eq $lang -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
+                        }
                     }
                     Else {
-                        $FavPoster = ($responseBackup.images.posters | Where-Object iso_639_1 -eq $lang)
+                        if ($lang -eq 'null') {
+                            $FavPoster = ($responseBackup.images.posters | Where-Object iso_639_1 -eq $null)
+                        }
+                        Else {
+                            $FavPoster = ($responseBackup.images.posters | Where-Object iso_639_1 -eq $lang)
+                        }
                     }
                     if ($FavPoster) {
                         if ($global:TMDBVoteSorting -eq 'Primary') {
@@ -1167,11 +1463,21 @@ function GetTMDBSeasonPoster {
         if ($response) {
             if ($response.posters) {
                 foreach ($lang in $global:PreferredSeasonLanguageOrderTMDB) {
-                    if ($lang -eq 'null') {
-                        $FavPoster = ($response.posters | Where-Object iso_639_1 -eq $null)
+                    if ($global:WidthHeightFilter -eq 'true') {
+                        if ($lang -eq 'null') {
+                            $FavPoster = ($response.posters | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
+                        }
+                        Else {
+                            $FavPoster = ($response.posters | Where-Object { iso_639_1 -eq $lang -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
+                        }
                     }
                     Else {
-                        $FavPoster = ($response.posters | Where-Object iso_639_1 -eq $lang)
+                        if ($lang -eq 'null') {
+                            $FavPoster = ($response.posters | Where-Object iso_639_1 -eq $null)
+                        }
+                        Else {
+                            $FavPoster = ($response.posters | Where-Object iso_639_1 -eq $lang)
+                        }
                     }
                     if ($FavPoster) {
                         if ($global:TMDBVoteSorting -eq 'Primary') {
@@ -1214,7 +1520,7 @@ function GetTMDBShowBackground {
     if (!$global:tmdbid) {
         Write-Entry -Subtext "Cannot search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     }
-    if ($global:PreferTextless -eq 'True') {
+    if ($global:PreferTextless -eq 'true') {
         try {
             $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=xx&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
         }
@@ -1226,27 +1532,58 @@ function GetTMDBShowBackground {
         }
         if ($response) {
             if ($response.images.backdrops) {
-                $NoLangPoster = ($response.images.backdrops | Where-Object iso_639_1 -eq $null)
+                if ($global:WidthHeightFilter -eq 'true') {
+                    $NoLangPoster = ($response.images.backdrops | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
+                }
+                Else {
+                    $NoLangPoster = ($response.images.backdrops | Where-Object iso_639_1 -eq $null)
+                }
                 if (!$NoLangPoster) {
-                    if (!$global:OnlyTextless -eq 'true') {
-                        if ($global:TMDBVoteSorting -eq 'Primary') {
-                            $posterpath = (($response.images.backdrops | Sort-Object -Descending)[0]).file_path
+                    if ($global:OnlyTextless -eq 'false') {
+                        if ($global:WidthHeightFilter -eq 'true') {
+                            if ($global:TMDBVoteSorting -eq 'Primary') {
+                                $filteredPosters = $response.images.backdrops | Where-Object { $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
+
+                                if ($filteredPosters) {
+                                    $posterpath = (($filteredPosters | Sort-Object -Descending)[0]).file_path
+                                    $global:TMDBAssetTextLang = (($filteredPosters | Sort-Object -Descending)[0]).iso_639_1
+                                    Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                }
+                                else {
+                                    Write-Entry -Subtext "No Background posters found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                }
+                            }
+                            Else {
+                                $filteredPosters = $response.images.backdrops | Where-Object { $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
+
+                                if ($filteredPosters) {
+                                    $posterpath = (($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                                    $global:TMDBAssetTextLang = (($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).iso_639_1
+                                    Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                }
+                                else {
+                                    Write-Entry -Subtext "No Background posters found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                }
+                            }
                         }
                         Else {
-                            $posterpath = (($response.images.backdrops | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                            if ($global:TMDBVoteSorting -eq 'Primary') {
+                                $posterpath = (($response.images.backdrops | Sort-Object -Descending)[0]).file_path
+                                $global:TMDBAssetTextLang = (($response.images.backdrops | Sort-Object -Descending)[0]).iso_639_1
+                            }
+                            Else {
+                                $posterpath = (($response.images.backdrops | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                                $global:TMDBAssetTextLang = (($response.images.backdrops | Sort-Object $global:TMDBVoteSorting -Descending)[0]).iso_639_1
+                            }
                         }
-                        $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
-                        if ($global:FavProvider -eq 'TMDB') {
-                            $global:Fallback = "fanart"
-                            $global:tmdbfallbackposterurl = $global:posterurl
-                        }
-                        Write-Entry -Subtext "Found background with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
-                        $global:PosterWithText = $true
-                        if ($global:TMDBVoteSorting -eq 'Primary') {
-                            $global:TMDBAssetTextLang = (($response.images.backdrops | Sort-Object -Descending)[0]).iso_639_1
-                        }
-                        Else {
-                            $global:TMDBAssetTextLang = (($response.images.backdrops | Sort-Object $global:TMDBVoteSorting -Descending)[0]).iso_639_1
+                        if ($posterpath) {
+                            $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
+                            if ($global:FavProvider -eq 'TMDB') {
+                                $global:Fallback = "fanart"
+                                $global:tmdbfallbackposterurl = $global:posterurl
+                            }
+                            Write-Entry -Subtext "Found background with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                            $global:PosterWithText = $true
                         }
                         $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/images/backdrops"
                     }
@@ -1256,11 +1593,37 @@ function GetTMDBShowBackground {
                     }
                 }
                 Else {
-                    if ($global:TMDBVoteSorting -eq 'Primary') {
-                        $posterpath = (($response.images.backdrops | Where-Object iso_639_1 -eq $null | Sort-Object -Descending)[0]).file_path
+                    if ($global:WidthHeightFilter -eq 'true') {
+                        if ($global:TMDBVoteSorting -eq 'Primary') {
+                            $filteredPosters = $response.images.backdrops | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
+
+                            if ($filteredPosters) {
+                                $posterpath = (($filteredPosters | Sort-Object -Descending)[0]).file_path
+                                Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                            }
+                            else {
+                                Write-Entry -Subtext "No Background posters found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                            }
+                        }
+                        Else {
+                            $filteredPosters = $response.images.backdrops | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
+
+                            if ($filteredPosters) {
+                                $posterpath = (($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                                Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                            }
+                            else {
+                                Write-Entry -Subtext "No Background posters found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                            }
+                        }
                     }
                     Else {
-                        $posterpath = (($response.images.backdrops | Where-Object iso_639_1 -eq $null | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                        if ($global:TMDBVoteSorting -eq 'Primary') {
+                            $posterpath = (($response.images.backdrops | Where-Object iso_639_1 -eq $null | Sort-Object -Descending)[0]).file_path
+                        }
+                        Else {
+                            $posterpath = (($response.images.backdrops | Where-Object iso_639_1 -eq $null | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                        }
                     }
                     if ($posterpath) {
                         $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
@@ -1302,11 +1665,21 @@ function GetTMDBShowBackground {
         if ($response) {
             if ($response.images.backdrops) {
                 foreach ($lang in $global:PreferredLanguageOrderTMDB) {
-                    if ($lang -eq 'null') {
-                        $FavPoster = ($response.images.backdrops | Where-Object iso_639_1 -eq $null)
+                    if ($global:WidthHeightFilter -eq 'true') {
+                        if ($lang -eq 'null') {
+                            $FavPoster = ($response.images.backdrops | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
+                        }
+                        Else {
+                            $FavPoster = ($response.images.backdrops | Where-Object { iso_639_1 -eq $lang -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
+                        }
                     }
                     Else {
-                        $FavPoster = ($response.images.backdrops | Where-Object iso_639_1 -eq $lang)
+                        if ($lang -eq 'null') {
+                            $FavPoster = ($response.images.backdrops | Where-Object iso_639_1 -eq $null)
+                        }
+                        Else {
+                            $FavPoster = ($response.images.backdrops | Where-Object iso_639_1 -eq $lang)
+                        }
                     }
                     if ($FavPoster) {
                         if ($global:TMDBVoteSorting -eq 'Primary') {
@@ -1369,37 +1742,95 @@ function GetTMDBTitleCard {
         if ($response.stills) {
             $NoLangPoster = ($response.stills | Where-Object iso_639_1 -eq $null)
             if (!$NoLangPoster) {
-                if ($global:TMDBVoteSorting -eq 'Primary') {
-                    $posterpath = (($response.stills | Sort-Object -Descending)[0]).file_path
+                if ($global:WidthHeightFilter -eq 'true') {
+                    if ($global:TMDBVoteSorting -eq 'Primary') {
+                        $filteredPosters = $response.stills | Where-Object { $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight }
+
+                        if ($filteredPosters) {
+                            $posterpath = (($filteredPosters | Sort-Object -Descending)[0]).file_path
+                            Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                        }
+                        else {
+                            Write-Entry -Subtext "No Titlecards found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                        }
+                    }
+                    Else {
+                        $filteredPosters = $response.stills | Where-Object { $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight }
+
+                        if ($filteredPosters) {
+                            $posterpath = (($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                            Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                        }
+                        else {
+                            Write-Entry -Subtext "No Titlecards found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                        }
+                    }
                 }
                 Else {
-                    $posterpath = (($response.stills | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                    if ($global:TMDBVoteSorting -eq 'Primary') {
+                        $posterpath = (($response.stills | Sort-Object -Descending)[0]).file_path
+                    }
+                    Else {
+                        $posterpath = (($response.stills | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                    }
                 }
-                $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
-                Write-Entry -Subtext "Found Title Card with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
-                $global:PosterWithText = $true
-                if ($global:TMDBVoteSorting -eq 'Primary') {
-                    $global:TMDBAssetTextLang = (($response.stills | Sort-Object -Descending)[0]).iso_639_1
-                }
-                Else {
-                    $global:TMDBAssetTextLang = (($response.stills | Sort-Object $global:TMDBVoteSorting -Descending)[0]).iso_639_1
+                if ($posterpath) {
+                    $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
+                    Write-Entry -Subtext "Found Title Card with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                    $global:PosterWithText = $true
+                    if ($global:TMDBVoteSorting -eq 'Primary') {
+                        $global:TMDBAssetTextLang = (($response.stills | Sort-Object -Descending)[0]).iso_639_1
+                    }
+                    Else {
+                        $global:TMDBAssetTextLang = (($response.stills | Sort-Object $global:TMDBVoteSorting -Descending)[0]).iso_639_1
+                    }
                 }
                 $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/season/$global:season_number/episode/$global:episodenumber/images/backdrops"
-                return $global:posterurl
+                if ($posterurl) {
+                    return $global:posterurl
+                }
             }
             Else {
-                if ($global:TMDBVoteSorting -eq 'Primary') {
-                    $posterpath = (($response.stills | Where-Object iso_639_1 -eq $null | Sort-Object -Descending)[0]).file_path
+                if ($global:WidthHeightFilter -eq 'true') {
+                    if ($global:TMDBVoteSorting -eq 'Primary') {
+                        $filteredPosters = $response.stills | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight }
+
+                        if ($filteredPosters) {
+                            $posterpath = (($filteredPosters | Sort-Object -Descending)[0]).file_path
+                            Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                        }
+                        else {
+                            Write-Entry -Subtext "No Titlecards found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                        }
+                    }
+                    Else {
+                        $filteredPosters = $response.stills | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight }
+
+                        if ($filteredPosters) {
+                            $posterpath = (($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                            Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                        }
+                        else {
+                            Write-Entry -Subtext "No Titlecards found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                        }
+                    }
                 }
                 Else {
-                    $posterpath = (($response.stills | Where-Object iso_639_1 -eq $null | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                    if ($global:TMDBVoteSorting -eq 'Primary') {
+                        $posterpath = (($response.stills | Where-Object iso_639_1 -eq $null | Sort-Object -Descending)[0]).file_path
+                    }
+                    Else {
+                        $posterpath = (($response.stills | Where-Object iso_639_1 -eq $null | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                    }
                 }
                 if ($posterpath) {
                     $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
                     Write-Entry -Subtext "Found Textless Title Card on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                     $global:TextlessPoster = $true
                     $global:PosterWithText = $null
-                    $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/season/$global:season_number/episode/$global:episodenumber/images/backdrops"
+                }
+                $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/season/$global:season_number/episode/$global:episodenumber/images/backdrops"
+                if ($posterurl) {
                     return $global:posterurl
                 }
             }
@@ -1423,7 +1854,7 @@ function GetTMDBTitleCard {
 function GetFanartMoviePoster {
     $global:Fallback = $null
     Write-Entry -Subtext "Searching on Fanart.tv for a movie poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
-    if ($global:PreferTextless -eq 'True') {
+    if ($global:PreferTextless -eq 'true') {
         $ids = @($global:tmdbid, $global:imdbid)
         $entrytemp = $null
 
@@ -1432,7 +1863,7 @@ function GetFanartMoviePoster {
                 $entrytemp = Get-FanartTv -Type movies -id $id -ErrorAction SilentlyContinue
                 if ($entrytemp -and $entrytemp.movieposter) {
                     if (!($entrytemp.movieposter | Where-Object lang -eq '00')) {
-                        if (!$global:OnlyTextless -eq 'true') {
+                        if ($global:OnlyTextless -eq 'false') {
                             $global:posterurl = ($entrytemp.movieposter)[0].url
                             Write-Entry -Subtext "Found Poster with text on Fanart.tv"  -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                             $global:PosterWithText = $true
@@ -1565,14 +1996,14 @@ function GetFanartMovieBackground {
 function GetFanartShowPoster {
     $global:Fallback = $null
     Write-Entry -Subtext "Searching on Fanart.tv for a show poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
-    if ($global:PreferTextless -eq 'True') {
+    if ($global:PreferTextless -eq 'true') {
         $id = $global:tvdbid
         $entrytemp = $null
         if ($id) {
             $entrytemp = Get-FanartTv -Type tv -id $id -ErrorAction SilentlyContinue
             if ($entrytemp -and $entrytemp.tvposter) {
                 if (!($entrytemp.tvposter | Where-Object lang -eq '00')) {
-                    if (!$global:OnlyTextless -eq 'true') {
+                    if ($global:OnlyTextless -eq 'false') {
                         $global:posterurl = ($entrytemp.tvposter)[0].url
 
                         Write-Entry -Subtext "Found Poster with text on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
@@ -1706,7 +2137,7 @@ function GetFanartSeasonPoster {
     Write-Entry -Subtext "Searching on Fanart.tv for Season '$global:SeasonNumber' poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     $id = $global:tvdbid
     $entrytemp = $null
-    if ($global:SeasonPreferTextless -eq 'True') {
+    if ($global:SeasonPreferTextless -eq 'true') {
         if ($id) {
             $entrytemp = Get-FanartTv -Type tv -id $id -ErrorAction SilentlyContinue
             if ($entrytemp.seasonposter) {
@@ -1798,7 +2229,12 @@ function GetFanartSeasonPoster {
             return $global:posterurl
         }
         Else {
-            Write-Entry -Subtext "No Season Poster on Fanart" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+            if ($global:OnlyTextless -eq 'true'){
+                Write-Entry -Subtext "No Textless Season Poster on Fanart" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+            }
+            Else {
+                Write-Entry -Subtext "No Season Poster on Fanart" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+            }
         }
     }
     Else {
@@ -1839,13 +2275,18 @@ function GetFanartSeasonPoster {
             return $global:posterurl
         }
         Else {
-            Write-Entry -Subtext "No Season Poster on Fanart" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+            if ($global:OnlyTextless -eq 'true'){
+                Write-Entry -Subtext "No Textless Season Poster on Fanart" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+            }
+            Else {
+                Write-Entry -Subtext "No Season Poster on Fanart" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+            }
         }
     }
 }
 function GetTVDBMoviePoster {
     if ($global:tvdbid) {
-        if ($global:PreferTextless -eq 'True') {
+        if ($global:PreferTextless -eq 'true') {
             Write-Entry -Subtext "Searching on TVDB for a movie poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
             try {
                 $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/movies/$($global:tvdbid)/extended" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
@@ -1857,25 +2298,45 @@ function GetTVDBMoviePoster {
             }
             if ($response) {
                 if ($response.data.artworks) {
-                    $global:posterurltmp = ($response.data.artworks | Where-Object { $_.language -eq $null -and $_.type -eq '14' } | Sort-Object Score)
-
+                    if ($global:WidthHeightFilter -eq 'true'){
+                        $global:posterurltmp = ($response.data.artworks | Where-Object { $null -eq $_.language -and $_.type -eq '14' -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight} | Sort-Object Score)
+                    }
+                    Else {
+                        $global:posterurltmp = ($response.data.artworks | Where-Object { $null -eq $_.language -and $_.type -eq '14' } | Sort-Object Score)
+                    }
                     $global:TVDBAssetChangeUrl = "https://thetvdb.com/movies/$($response.data.slug)#artwork"
                     if ($global:posterurltmp) {
                         $global:posterurl = $global:posterurltmp[0].image
+                        if ($global:WidthHeightFilter -eq 'true'){
+                            Write-Entry -Subtext "Found a poster sized at - width: $($global:posterurltmp[0].width) | height: $($global:posterurltmp[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                        }
                         Write-Entry -Subtext "Found Textless Poster on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                         return $global:posterurl
                     }
                     Else {
-                        if (!$global:OnlyTextless -eq 'true') {
+                        if ($global:OnlyTextless -eq 'false') {
                             foreach ($lang in $global:PreferredLanguageOrderTVDB) {
-                                if ($lang -eq 'null') {
-                                    $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "" -and $_.type -eq '14' } | Sort-Object Score)
+                                if ($global:WidthHeightFilter -eq 'true'){
+                                    if ($lang -eq 'null') {
+                                        $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "" -and $_.type -eq '14' -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight} | Sort-Object Score)
+                                    }
+                                    Else {
+                                        $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "$lang*" -and $_.type -eq '14' -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight} | Sort-Object Score)
+                                    }
                                 }
                                 Else {
-                                    $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "$lang*" -and $_.type -eq '14' } | Sort-Object Score)
+                                    if ($lang -eq 'null') {
+                                        $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "" -and $_.type -eq '14' } | Sort-Object Score)
+                                    }
+                                    Else {
+                                        $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "$lang*" -and $_.type -eq '14' } | Sort-Object Score)
+                                    }
                                 }
                                 if ($LangArtwork) {
                                     $global:posterurl = $LangArtwork[0].image
+                                    if ($global:WidthHeightFilter -eq 'true'){
+                                        Write-Entry -Subtext "Found a poster sized at - width: $($LangArtwork[0].width) | height: $($LangArtwork[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                    }
                                     if ($lang -eq 'null') {
                                         Write-Entry -Subtext "Found Poster without Language on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                                     }
@@ -1893,8 +2354,8 @@ function GetTVDBMoviePoster {
                             }
                         }
                         Else {
-                            Write-Entry -Subtext "No Textless Poster on FANART, skipping because you only want textless..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
-                            $global:FANARTAssetChangeUrl = "https://fanart.tv/movie/$id"
+                            Write-Entry -Subtext "No Textless Poster on TVDB, skipping because you only want textless..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                            $global:TVDBAssetChangeUrl = "https://thetvdb.com/movies/$($response.data.slug)#artwork"
                         }
                     }
                 }
@@ -1921,14 +2382,27 @@ function GetTVDBMoviePoster {
             if ($response) {
                 if ($response.data.artworks) {
                     foreach ($lang in $global:PreferredLanguageOrderTVDB) {
-                        if ($lang -eq 'null') {
-                            $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "" -and $_.type -eq '14' } | Sort-Object Score)
+                        if ($global:WidthHeightFilter -eq 'true'){
+                            if ($lang -eq 'null') {
+                                $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "" -and $_.type -eq '14' -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight} | Sort-Object Score)
+                            }
+                            Else {
+                                $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "$lang*" -and $_.type -eq '14' -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight} | Sort-Object Score)
+                            }
                         }
                         Else {
-                            $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "$lang*" -and $_.type -eq '14' } | Sort-Object Score)
+                            if ($lang -eq 'null') {
+                                $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "" -and $_.type -eq '14' } | Sort-Object Score)
+                            }
+                            Else {
+                                $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "$lang*" -and $_.type -eq '14' } | Sort-Object Score)
+                            }
                         }
                         if ($LangArtwork) {
                             $global:posterurl = $LangArtwork[0].image
+                            if ($global:WidthHeightFilter -eq 'true'){
+                                Write-Entry -Subtext "Found a poster sized at - width: $($LangArtwork[0].width) | height: $($LangArtwork[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                            }
                             if ($lang -eq 'null') {
                                 Write-Entry -Subtext "Found Poster without Language on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                             }
@@ -1962,7 +2436,7 @@ function GetTVDBMoviePoster {
 }
 function GetTVDBMovieBackground {
     if ($global:tvdbid) {
-        if ($global:PreferTextless -eq 'True') {
+        if ($global:PreferTextless -eq 'true') {
             Write-Entry -Subtext "Searching on TVDB for a movie Background" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
             try {
                 $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/movies/$($global:tvdbid)/extended" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
@@ -1974,9 +2448,17 @@ function GetTVDBMovieBackground {
             }
             if ($response) {
                 if ($response.data.artworks) {
-                    $NoLangArtwork = $response.data.artworks | Where-Object { $null -eq $_.language -and $_.type -eq '15' }
+                    if ($global:WidthHeightFilter -eq 'true'){
+                        $NoLangArtwork = $response.data.artworks | Where-Object { $null -eq $_.language -and $_.type -eq '15' -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight}
+                    }
+                    Else {
+                        $NoLangArtwork = $response.data.artworks | Where-Object { $null -eq $_.language -and $_.type -eq '15' }
+                    }
                     if ($NoLangArtwork) {
                         $global:posterurl = ($NoLangArtwork | Sort-Object Score)[0].image
+                        if ($global:WidthHeightFilter -eq 'true'){
+                            Write-Entry -Subtext "Found a poster sized at - width: $(($NoLangArtwork | Sort-Object Score)[0].width) | height: $(($NoLangArtwork | Sort-Object Score)[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                        }
                         Write-Entry -Subtext "Found Textless Background on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                         $global:TVDBAssetChangeUrl = "https://thetvdb.com/movies/$($response.data.slug)#artwork"
                         return $global:posterurl
@@ -1984,14 +2466,27 @@ function GetTVDBMovieBackground {
                     Else {
                         # Trying other languages
                         foreach ($lang in $global:PreferredLanguageOrderTVDB) {
-                            if ($lang -eq 'null') {
-                                $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "" -and $_.type -eq '15' } | Sort-Object Score)
+                            if ($global:WidthHeightFilter -eq 'true'){
+                                if ($lang -eq 'null') {
+                                    $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "" -and $_.type -eq '15' -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight} | Sort-Object Score)
+                                }
+                                Else {
+                                    $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "$lang*" -and $_.type -eq '15' -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight} | Sort-Object Score)
+                                }
                             }
                             Else {
-                                $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "$lang*" -and $_.type -eq '15' } | Sort-Object Score)
+                                if ($lang -eq 'null') {
+                                    $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "" -and $_.type -eq '15' } | Sort-Object Score)
+                                }
+                                Else {
+                                    $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "$lang*" -and $_.type -eq '15' } | Sort-Object Score)
+                                }
                             }
                             if ($LangArtwork) {
                                 $global:posterurl = $LangArtwork[0].image
+                                if ($global:WidthHeightFilter -eq 'true'){
+                                    Write-Entry -Subtext "Found a poster sized at - width: $($LangArtwork[0].width) | height: $($LangArtwork[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                }
                                 if ($lang -eq 'null') {
                                     Write-Entry -Subtext "Found Background without Language on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                                 }
@@ -2036,14 +2531,27 @@ function GetTVDBMovieBackground {
             if ($response) {
                 if ($response.data.artworks) {
                     foreach ($lang in $global:PreferredLanguageOrderTVDB) {
-                        if ($lang -eq 'null') {
-                            $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "" -and $_.type -eq '15' } | Sort-Object Score)
+                        if ($global:WidthHeightFilter -eq 'true'){
+                            if ($lang -eq 'null') {
+                                $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "" -and $_.type -eq '15' -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight} | Sort-Object Score)
+                            }
+                            Else {
+                                $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "$lang*" -and $_.type -eq '15' -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight} | Sort-Object Score)
+                            }
                         }
                         Else {
-                            $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "$lang*" -and $_.type -eq '15' } | Sort-Object Score)
+                            if ($lang -eq 'null') {
+                                $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "" -and $_.type -eq '15' } | Sort-Object Score)
+                            }
+                            Else {
+                                $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "$lang*" -and $_.type -eq '15' } | Sort-Object Score)
+                            }
                         }
                         if ($LangArtwork) {
                             $global:posterurl = $LangArtwork[0].image
+                            if ($global:WidthHeightFilter -eq 'true'){
+                                Write-Entry -Subtext "Found a poster sized at - width: $($LangArtwork[0].width) | height: $($LangArtwork[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                            }
                             if ($lang -eq 'null') {
                                 Write-Entry -Subtext "Found Background without Language on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                             }
@@ -2082,7 +2590,7 @@ function GetTVDBMovieBackground {
 function GetTVDBShowPoster {
     if ($global:tvdbid) {
         Write-Entry -Subtext "Searching on TVDB for a poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
-        if ($global:PreferTextless -eq 'True') {
+        if ($global:PreferTextless -eq 'true') {
             try {
                 $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/series/$($global:tvdbid)/artworks" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
             }
@@ -2094,16 +2602,24 @@ function GetTVDBShowPoster {
             if ($response) {
                 if ($response.data) {
                     $defaultImageurl = $response.data.image
-                    $NoLangImageUrl = $response.data.artworks | Where-Object { $_.language -eq $null -and $_.type -eq '2' }
+                    if ($global:WidthHeightFilter -eq 'true'){
+                        $NoLangImageUrl = $response.data.artworks | Where-Object { $null -eq $_.language -and $_.type -eq '2' -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight}
+                    }
+                    Else {
+                        $NoLangImageUrl = $response.data.artworks | Where-Object { $null -eq $_.language -and $_.type -eq '2' }
+                    }
                     if ($NoLangImageUrl) {
                         $global:posterurl = $NoLangImageUrl[0].image
+                        if ($global:WidthHeightFilter -eq 'true'){
+                            Write-Entry -Subtext "Found a poster sized at - width: $($NoLangImageUrl[0].width) | height: $($NoLangImageUrl[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                        }
                         Write-Entry -Subtext "Found Textless Poster on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                         $global:TextlessPoster = $true
                         $global:PosterWithText = $null
                         $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)#artwork"
                     }
                     Else {
-                        if (!$global:OnlyTextless -eq 'true') {
+                        if ($global:OnlyTextless -eq 'false') {
                             $global:posterurl = $defaultImageurl
                             Write-Entry -Subtext "Found Poster with text on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                             $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)#artwork"
@@ -2141,14 +2657,27 @@ function GetTVDBShowPoster {
             if ($response) {
                 if ($response.data) {
                     foreach ($lang in $global:PreferredLanguageOrderTVDB) {
-                        if ($lang -eq 'null') {
-                            $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "" -and $_.type -eq '2' } | Sort-Object Score -Descending)
+                        if ($global:WidthHeightFilter -eq 'true'){
+                            if ($lang -eq 'null') {
+                                $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "" -and $_.type -eq '2' -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight} | Sort-Object Score -Descending)
+                            }
+                            Else {
+                                $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "$lang*" -and $_.type -eq '2' -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight} | Sort-Object Score -Descending)
+                            }
                         }
                         Else {
-                            $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "$lang*" -and $_.type -eq '2' } | Sort-Object Score -Descending)
+                            if ($lang -eq 'null') {
+                                $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "" -and $_.type -eq '2' } | Sort-Object Score -Descending)
+                            }
+                            Else {
+                                $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "$lang*" -and $_.type -eq '2' } | Sort-Object Score -Descending)
+                            }
                         }
                         if ($LangArtwork) {
                             $global:posterurl = $LangArtwork[0].image
+                            if ($global:WidthHeightFilter -eq 'true'){
+                                Write-Entry -Subtext "Found a poster sized at - width: $($LangArtwork[0].width) | height: $($LangArtwork[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                            }
                             if ($lang -eq 'null') {
                                 Write-Entry -Subtext "Found Poster without Language on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                             }
@@ -2208,14 +2737,27 @@ function GetTVDBSeasonPoster {
                 }
                 if ($Seasonresponse) {
                     foreach ($lang in $global:PreferredSeasonLanguageOrderTVDB) {
-                        if ($lang -eq 'null') {
-                            $LangArtwork = ($Seasonresponse.data.artwork | Where-Object { $_.language -like "" -and $_.type -eq '7' } | Sort-Object Score -Descending)
+                        if ($global:WidthHeightFilter -eq 'true'){
+                            if ($lang -eq 'null') {
+                                $LangArtwork = ($Seasonresponse.data.artwork | Where-Object { $_.language -like "" -and $_.type -eq '7' -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight} | Sort-Object Score -Descending)
+                            }
+                            Else {
+                                $LangArtwork = ($Seasonresponse.data.artwork  | Where-Object { $_.language -like "$lang*" -and $_.type -eq '7' -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight} | Sort-Object Score -Descending)
+                            }
                         }
                         Else {
-                            $LangArtwork = ($Seasonresponse.data.artwork  | Where-Object { $_.language -like "$lang*" -and $_.type -eq '7' } | Sort-Object Score -Descending)
+                            if ($lang -eq 'null') {
+                                $LangArtwork = ($Seasonresponse.data.artwork | Where-Object { $_.language -like "" -and $_.type -eq '7' } | Sort-Object Score -Descending)
+                            }
+                            Else {
+                                $LangArtwork = ($Seasonresponse.data.artwork  | Where-Object { $_.language -like "$lang*" -and $_.type -eq '7' } | Sort-Object Score -Descending)
+                            }
                         }
                         if ($LangArtwork) {
                             $global:posterurl = $LangArtwork[0].image
+                            if ($global:WidthHeightFilter -eq 'true'){
+                                Write-Entry -Subtext "Found a poster sized at - width: $($LangArtwork[0].width) | height: $($LangArtwork[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                            }
                             if ($lang -eq 'null') {
                                 Write-Entry -Subtext "Found Season Poster without Language on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                                 $global:TextlessPoster = $true
@@ -2247,7 +2789,10 @@ function GetTVDBSeasonPoster {
                             continue
                         }
                     }
-                    if (!$global:posterurl) {
+                    if (!$global:posterurl -and $global:OnlyTextless -eq 'true') {
+                        Write-Entry -Subtext "No Textless Poster found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                    }
+                    Else {
                         Write-Entry -Subtext "No Poster found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                     }
                 }
@@ -2270,7 +2815,7 @@ function GetTVDBSeasonPoster {
 function GetTVDBShowBackground {
     if ($global:tvdbid) {
         Write-Entry -Subtext "Searching on TVDB for a background" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
-        if ($global:PreferTextless -eq 'True') {
+        if ($global:PreferTextless -eq 'true') {
             try {
                 $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/series/$($global:tvdbid)/artworks" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
             }
@@ -2282,16 +2827,24 @@ function GetTVDBShowBackground {
             if ($response) {
                 if ($response.data) {
                     $defaultImageurl = $response.data.image
-                    $NoLangImageUrl = $response.data.artworks | Where-Object { $_.language -eq $null -and $_.type -eq '3' }
+                    if ($global:WidthHeightFilter -eq 'true'){
+                        $NoLangImageUrl = $response.data.artworks | Where-Object { $_.language -eq $null -and $_.type -eq '3' -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight}
+                    }
+                    Else {
+                        $NoLangImageUrl = $response.data.artworks | Where-Object { $_.language -eq $null -and $_.type -eq '3' }
+                    }
                     if ($NoLangImageUrl) {
                         $global:posterurl = $NoLangImageUrl[0].image
+                        if ($global:WidthHeightFilter -eq 'true'){
+                            Write-Entry -Subtext "Found a poster sized at - width: $($NoLangImageUrl[0].width) | height: $($NoLangImageUrl[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                        }
                         Write-Entry -Subtext "Found Textless background on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                         $global:TextlessPoster = $true
                         $global:PosterWithText = $null
                         $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)/#artwork"
                     }
                     Else {
-                        if (!$global:OnlyTextless -eq 'true') {
+                        if ($global:OnlyTextless -eq 'false') {
                             $global:posterurl = $defaultImageurl
                             Write-Entry -Subtext "Found background with text on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                             $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)/#artwork"
@@ -2325,14 +2878,27 @@ function GetTVDBShowBackground {
             if ($response) {
                 if ($response.data) {
                     foreach ($lang in $global:PreferredLanguageOrderTVDB) {
-                        if ($lang -eq 'null') {
-                            $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "" -and $_.type -eq '3' } | Sort-Object Score -Descending)
+                        if ($global:WidthHeightFilter -eq 'true'){
+                            if ($lang -eq 'null') {
+                                $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "" -and $_.type -eq '3' -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight} | Sort-Object Score -Descending)
+                            }
+                            Else {
+                                $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "$lang*" -and $_.type -eq '3' -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight} | Sort-Object Score -Descending)
+                            }
                         }
                         Else {
-                            $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "$lang*" -and $_.type -eq '3' } | Sort-Object Score -Descending)
+                            if ($lang -eq 'null') {
+                                $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "" -and $_.type -eq '3' } | Sort-Object Score -Descending)
+                            }
+                            Else {
+                                $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "$lang*" -and $_.type -eq '3' } | Sort-Object Score -Descending)
+                            }
                         }
                         if ($LangArtwork) {
                             $global:posterurl = $LangArtwork[0].image
+                            if ($global:WidthHeightFilter -eq 'true'){
+                                Write-Entry -Subtext "Found a poster sized at - width: $($LangArtwork[0].width) | height: $($LangArtwork[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                            }
                             if ($lang -eq 'null') {
                                 Write-Entry -Subtext "Found background without Language on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                             }
@@ -2374,13 +2940,13 @@ function GetTVDBTitleCard {
         Write-Entry -Subtext "Searching on TVDB for: $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
         $allEpisodes = @()
         $page = 0
-        
+
         do {
             try {
                 $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/series/$($global:tvdbid)/episodes/default?page=$page" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
                 $episodes = $response.data.episodes
                 $seriesData = $response.data
-        
+
                 if ($episodes) {
                     $allEpisodes += $seriesData
                     $page++
@@ -2393,9 +2959,9 @@ function GetTVDBTitleCard {
                 break
             }
         } while ($episodes -and $episodes.Count -gt 0)
-        
+
         # Now $allEpisodes contains all the episodes retrieved from the API
-        
+
         if ($response) {
             if ($allEpisodes.episodes) {
                 $global:NoLangImageUrl = $allEpisodes.episodes | Where-Object { $_.seasonNumber -eq $global:season_number -and $_.number -eq $global:episodenumber }
@@ -2583,7 +3149,7 @@ function CheckJson {
                 }
             }
         }
-        if ($AttributeChanged -eq 'True') {
+        if ($AttributeChanged -eq 'true') {
             # Convert the updated configuration object back to JSON and save it
             $configJson = $config | ConvertTo-Json -Depth 10
             $configJson | Set-Content -Path $jsonFilePath -Force
@@ -2749,6 +3315,11 @@ function LogConfigSettings {
         Write-Entry -Subtext "| Plex Token:                   $($PlexToken[0..7] -join '')****" -Path $configLogging -Color White -log Info
     }
     Write-Entry -Subtext "| Fav Provider:                 $global:FavProvider" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Width/Height Filtering:       $global:WidthHeightFilter" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Poster min width:             $global:PosterMinWidth" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Poster min height:            $global:PosterMinHeight" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Background/TC min width:      $global:BgTcMinWidth" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Background/TC min height:     $global:BgTcMinHeight" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| TMDB Vote Sorting:            $global:TMDBVoteSorting" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Preferred Lang Order:         $($global:PreferredLanguageOrder -join ',')" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Preferred Season Lang Order:  $($global:PreferredSeasonLanguageOrder -join ',')" -Path $configLogging -Color White -log Info
@@ -2955,7 +3526,7 @@ function CheckImageMagick {
             }
 
             Invoke-WebRequest "https://imagemagick.org/archive/binaries/$LatestRelease" -OutFile $DownloadPath
-            
+
             # Ensure the $magickinstalllocation directory exists
             if (-not (Test-Path -LiteralPath $magickinstalllocation)) {
                 New-Item -ItemType Directory -Path $magickinstalllocation | Out-Null
@@ -3186,21 +3757,21 @@ $global:SendNotification = $config.Notification.SendNotification
 
 if ($env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker-Alpine*') {
     $global:NotifyUrl = $config.Notification.AppriseUrl
-    if ($global:NotifyUrl -eq 'discord://{WebhookID}/{WebhookToken}/' -and $global:SendNotification -eq 'True') {
+    if ($global:NotifyUrl -eq 'discord://{WebhookID}/{WebhookToken}/' -and $global:SendNotification -eq 'true') {
         # Try the normal discord url
         $global:NotifyUrl = $config.Notification.Discord
-        if ($global:NotifyUrl -eq 'https://discordapp.com/api/webhooks/{WebhookID}/{WebhookToken}' -and $global:SendNotification -eq 'True') {
+        if ($global:NotifyUrl -eq 'https://discordapp.com/api/webhooks/{WebhookID}/{WebhookToken}' -and $global:SendNotification -eq 'true') {
             Write-Entry -Message "Found default Notification Url, please update url in config..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             Exit
         }
     }
-    if (!$global:NotifyUrl -and $global:SendNotification -eq 'True') {
+    if (!$global:NotifyUrl -and $global:SendNotification -eq 'true') {
         $global:NotifyUrl = $config.Notification.Discord
     }
 }
 Else {
     $global:NotifyUrl = $config.Notification.Discord
-    if ($global:NotifyUrl -eq 'https://discordapp.com/api/webhooks/{WebhookID}/{WebhookToken}' -and $global:SendNotification -eq 'True') {
+    if ($global:NotifyUrl -eq 'https://discordapp.com/api/webhooks/{WebhookID}/{WebhookToken}' -and $global:SendNotification -eq 'true') {
         Write-Entry -Message "Found default Notification Url, please update url in config..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
         Exit
     }
@@ -3211,6 +3782,11 @@ $global:tvdbapi = $config.ApiPart.tvdbapi
 $global:tmdbtoken = $config.ApiPart.tmdbtoken
 $FanartTvAPIKey = $config.ApiPart.FanartTvAPIKey
 $PlexToken = $config.ApiPart.PlexToken
+$global:WidthHeightFilter = $config.ApiPart.WidthHeightFilter
+$global:PosterMinWidth = $config.ApiPart.PosterMinWidth
+$global:PosterMinHeight = $config.ApiPart.PosterMinHeight
+$global:BgTcMinWidth = $config.ApiPart.BgTcMinWidth
+$global:BgTcMinHeight = $config.ApiPart.BgTcMinHeight
 $global:FavProvider = $config.ApiPart.FavProvider.ToUpper()
 $global:TMDBVoteSorting = $config.ApiPart.tmdb_vote_sorting
 if (!$global:TMDBVoteSorting) {
@@ -3439,8 +4015,8 @@ $backgroundfontImagemagick = $backgroundfont.replace('\', '\\')
 $TitleCardfontImagemagick = $TitleCardfont.replace('\', '\\')
 if ($global:OSType -ne "Win32NT") {
     $global:OSarch = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture
-    if ($global:OSType -eq "DockerAlpine" -or $global:OSarch -eq "Arm64") {        
-        $magick = 'magick'    
+    if ($global:OSType -eq "DockerAlpine" -or $global:OSarch -eq "Arm64") {
+        $magick = 'magick'
     }
     Else {
         $magickinstalllocation = $global:ScriptRoot
@@ -3502,7 +4078,7 @@ if ($global:OSType -eq "DockerAlpine") {
     $htmlContent = $response.Content
     $regexPattern = '<th class="header">Version<\/th>\s*<td>\s*<strong>\s*<a[^>]*>([^<]+)<\/a>\s*<\/strong>\s*<\/td>'
     $Versionmatching = [regex]::Matches($htmlContent, $regexPattern)
-    
+
     if ($Versionmatching.Count -gt 0) {
         $LatestImagemagickversion = $Versionmatching[0].Groups[1].Value.split('-')[0]
     }
@@ -3518,7 +4094,7 @@ Else {
 $LatestImagemagickversion = $LatestImagemagickversion.replace('-', '.')
 Write-Entry -Message "Latest Imagemagick Version: $LatestImagemagickversion" -Path $configLogging -Color Yellow -log Info
 # Auto Update Magick
-if ($AutoUpdateIM -eq 'True' -and $global:OSType -ne "DockerAlpine" -and $LatestImagemagickversion -gt $CurrentImagemagickversion -and $global:OSarch -ne "Arm64") {
+if ($AutoUpdateIM -eq 'true' -and $global:OSType -ne "DockerAlpine" -and $LatestImagemagickversion -gt $CurrentImagemagickversion -and $global:OSarch -ne "Arm64") {
     if ($global:OSType -eq "Win32NT") {
         Remove-Item -LiteralPath $magickinstalllocation -Recurse -Force
     }
@@ -3607,10 +4183,10 @@ if ($config.PrerequisitePart.overlayfile -eq 'overlay.png' -or $config.Prerequis
 if ($config.PrerequisitePart.backgroundoverlayfile -eq 'backgroundoverlay.png' -or $config.PrerequisitePart.titlecardoverlayfile -eq 'backgroundoverlay.png') {
     Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/main/backgroundoverlay.png" -destination (Join-Path $global:ScriptRoot 'backgroundoverlay.png')
 }
-if ($config.PrerequisitePart.font -eq 'Rocky.ttf' -or $config.PrerequisitePart.backgroundfont -eq 'Rocky.ttf' -or $config.PrerequisitePart.titlecardfont -eq 'Rocky.ttf') {
+if ($config.PrerequisitePart.font -eq 'Rocky.ttf' -or $config.PrerequisitePart.backgroundfont -eq 'Rocky.ttf' -or $config.PrerequisitePart.titlecardfont -eq 'Rocky.ttf' -or $config.PrerequisitePart.RTLFont -eq 'Rocky.ttf') {
     Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/main/Rocky.ttf" -destination (Join-Path $global:ScriptRoot 'Rocky.ttf')
 }
-if ($config.PrerequisitePart.font -eq 'Colus-Regular.ttf' -or $config.PrerequisitePart.backgroundfont -eq 'Colus-Regular.ttf' -or $config.PrerequisitePart.titlecardfont -eq 'Colus-Regular.ttf') {
+if ($config.PrerequisitePart.font -eq 'Colus-Regular.ttf' -or $config.PrerequisitePart.backgroundfont -eq 'Colus-Regular.ttf' -or $config.PrerequisitePart.titlecardfont -eq 'Colus-Regular.ttf' -or $config.PrerequisitePart.RTLFont -eq 'Colus-Regular.ttf') {
     Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/main/Colus-Regular.ttf" -destination (Join-Path $global:ScriptRoot 'Colus-Regular.ttf')
 }
 
@@ -3701,7 +4277,7 @@ while (-not $success -and $retryCount -lt $maxRetries) {
             'accept'       = 'application/json'
             'Content-Type' = 'application/json'
         }
-        
+
         # Make tvdb the POST request
         $global:tvdbtoken = (Invoke-RestMethod -Uri $global:apiUrl -Headers $global:tvdbtokenheader -Method Post -Body $global:requestBody).data.token
         $global:tvdbheader = @{}
@@ -3716,7 +4292,7 @@ while (-not $success -and $retryCount -lt $maxRetries) {
     }
     catch {
         $retryCount++
-        
+
         if ($retryCount -lt $maxRetries) {
             Start-Sleep -Seconds 10  # Wait for 10 seconds before the next retry
         }
@@ -3817,7 +4393,7 @@ if ($Manual) {
         $CommentlogEntry = "`"$magick`" $CommentArguments"
         $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
         InvokeMagickCommand -Command $magick -Arguments $CommentArguments
-        if (!$global:ImageMagickError -eq 'True') {
+        if (!$global:ImageMagickError -eq 'true') {
             # Resize Image to 2000x3000 and apply Border and overlay
             if ($AddBorder -eq 'true' -and $AddOverlay -eq 'true') {
                 $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$PosterImage`""
@@ -3845,7 +4421,7 @@ if ($Manual) {
                 $joinedTitlePointSize = $joinedTitle -replace '""', '""""'
                 $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
                 Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
-                
+
                 # Add Stroke
                 if ($AddTextStroke -eq 'true') {
                     $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -stroke `"$strokecolor`" -strokewidth `"$strokewidth`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
@@ -3869,7 +4445,7 @@ if ($Manual) {
         $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
         InvokeMagickCommand -Command $magick -Arguments $Resizeargument
     }
-    if (!$global:ImageMagickError -eq 'True') {
+    if (!$global:ImageMagickError -eq 'true') {
         # Move file back to original naming with Brackets.
         Move-Item -LiteralPath $PosterImage -destination $PosterImageoriginal -Force -ErrorAction SilentlyContinue
         Write-Entry -Subtext "Poster created and moved to: $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Manuallog.log -Color Green -log Info
@@ -3934,7 +4510,7 @@ Elseif ($Testing) {
         $TestSeasonPosterTextless = Join-Path -Path $global:ScriptRoot -ChildPath "test\SeasonPosterTextless.jpg"
     }
     # Backgrounds
-    if ($AddBackgroundText -eq 'True') {
+    if ($AddBackgroundText -eq 'true') {
         $backgroundTestPosterShort = Join-Path -Path $global:ScriptRoot -ChildPath "test\backgroundShortText.jpg"
         $backgroundTestPosterMedium = Join-Path -Path $global:ScriptRoot -ChildPath "test\backgroundMediumText.jpg"
         $backgroundTestPosterLong = Join-Path -Path $global:ScriptRoot -ChildPath "test\backgroundLongText.jpg"
@@ -3947,7 +4523,7 @@ Elseif ($Testing) {
     }
 
     # TitleCards
-    if ($AddTitleCardEPTitleText -eq 'True' -or $AddTitleCardEPText -eq 'True') {
+    if ($AddTitleCardEPTitleText -eq 'true' -or $AddTitleCardEPText -eq 'true') {
         $TitleCardTestPosterShort = Join-Path -Path $global:ScriptRoot -ChildPath "test\TitleCardShortText.jpg"
         $TitleCardTestPosterMedium = Join-Path -Path $global:ScriptRoot -ChildPath "test\TitleCardMediumText.jpg"
         $TitleCardTestPosterLong = Join-Path -Path $global:ScriptRoot -ChildPath "test\TitleCardLongText.jpg"
@@ -3959,7 +4535,7 @@ Elseif ($Testing) {
         $TitleCardTestPosterTextless = Join-Path -Path $global:ScriptRoot -ChildPath "test\TitleCardTextless.jpg"
     }
 
-    if ($AddText -eq 'true' -or $AddBackgroundText -eq 'True' -or $AddTitleCardEPTitleText -eq 'True' -or $AddTitleCardEPText -eq 'True') {
+    if ($AddText -eq 'true' -or $AddBackgroundText -eq 'true' -or $AddTitleCardEPTitleText -eq 'true' -or $AddTitleCardEPText -eq 'true') {
         Write-Entry -Subtext "Calculating Optimal Font Sizes. This may take a while..." -Path $global:ScriptRoot\Logs\Testinglog.log -Color Cyan -log Info
     }
     $TruncatedCount = 0
@@ -3998,7 +4574,7 @@ Elseif ($Testing) {
         Write-Entry -Subtext "Finished Optimal Font Sizes for season posters..." -Path $global:ScriptRoot\Logs\Testinglog.log -Color Cyan -log Info
     }
     # Optimal Background Font Size
-    if ($AddBackgroundText -eq 'True') {
+    if ($AddBackgroundText -eq 'true') {
         $backgroundoptimalFontSizeShort = Get-OptimalPointSize -text $ShortText -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
         if ($global:IsTruncated) { $TruncatedCount++ }
         $backgroundoptimalFontSizeMedium = Get-OptimalPointSize -text $MediumText -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
@@ -4015,7 +4591,7 @@ Elseif ($Testing) {
         Write-Entry -Subtext "Finished Optimal Font Sizes for backgrounds..." -Path $global:ScriptRoot\Logs\Testinglog.log -Color Cyan -log Info
     }
     # Optimal TitleCard Font Size
-    if ($AddTitleCardEPTitleText -eq 'True') {
+    if ($AddTitleCardEPTitleText -eq 'true') {
         $TitleCardoptimalFontSizeShort = Get-OptimalPointSize -text $ShortText -font $titlecardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
         if ($global:IsTruncated) { $TruncatedCount++ }
         $TitleCardoptimalFontSizeMedium = Get-OptimalPointSize -text $MediumText -font $titlecardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
@@ -4030,7 +4606,7 @@ Elseif ($Testing) {
         if ($global:IsTruncated) { $TruncatedCount++ }
     }
     # Optimal TitleCard EP Font Size
-    if ($AddTitleCardEPText -eq 'True') {
+    if ($AddTitleCardEPText -eq 'true') {
         $Episodetext = $Episodetext -replace '"', '""'
         $TitleCardoptimalFontSizeEpisodetext = Get-OptimalPointSize -text $Episodetext -font $titlecardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize
         if ($global:IsTruncated) { $TruncatedCount++ }
@@ -4038,7 +4614,7 @@ Elseif ($Testing) {
         $TitleCardoptimalFontSizeEpisodetextCAPS = Get-OptimalPointSize -text $EpisodetextCAPS -font $titlecardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize
         if ($global:IsTruncated) { $TruncatedCount++ }
     }
-    if ($AddText -eq 'true' -or $AddBackgroundText -eq 'True' -or $AddTitleCardEPTitleText -eq 'True' -or $AddTitleCardEPText -eq 'True') {
+    if ($AddText -eq 'true' -or $AddBackgroundText -eq 'true' -or $AddTitleCardEPTitleText -eq 'true' -or $AddTitleCardEPText -eq 'true') {
         Write-Entry -Subtext "Finished Optimal Font Sizes for titlecards..." -Path $global:ScriptRoot\Logs\Testinglog.log -Color Cyan -log Info
     }
 
@@ -4143,7 +4719,7 @@ Elseif ($Testing) {
         Write-Entry -Subtext "    Applying CAPS text: `"$MediumTextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
         Write-Entry -Subtext "Optimal font size for Long CAPS text is: '$optimalFontSizeLongCAPS'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
         Write-Entry -Subtext "    Applying CAPS text: `"$LongTextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
-        
+
         # Add Stroke
         if ($AddTextStroke -eq 'true') {
             $ArgumentsShort = "`"$TestPosterShort`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeShort`" -fill `"#0000FF`" -stroke `"$strokecolor`" -strokewidth `"$strokewidth`" -size `"$boxsize`" -background `"#ACD7E6`" caption:`"$ShortText`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -quality $global:outputQuality -composite `"$TestPosterShort`""
@@ -4292,7 +4868,7 @@ Elseif ($Testing) {
         Write-Entry -Subtext "    Applying CAPS text: `"$MediumTextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
         Write-Entry -Subtext "Optimal font size for Long CAPS text is: '$optimalFontSizeLongCAPS'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
         Write-Entry -Subtext "    Applying CAPS text: `"$LongTextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
-        
+
         # Add Stroke
         if ($AddSeasonTextStroke -eq 'true') {
             $SeasonArgumentsShort = "`"$TestSeasonPosterShort`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeShort`" -fill `"#0000FF`" -stroke `"$Seasonstrokecolor`" -strokewidth `"$Seasonstrokewidth`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$ShortText`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterShort`""
@@ -4423,7 +4999,7 @@ Elseif ($Testing) {
         InvokeMagickCommand -Command $magick -Arguments $BackgroundArgumentsTextless
     }
     # Text background overlay
-    if ($AddBackgroundText -eq 'True') {
+    if ($AddBackgroundText -eq 'true') {
         # Logging Background
         Write-Entry -Subtext "Optimal font size for Short text is: '$backgroundoptimalFontSizeShort'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
         Write-Entry -Subtext "    Applying text: `"$ShortText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
@@ -4486,7 +5062,7 @@ Elseif ($Testing) {
     }
     Write-Entry -Subtext "TitleCard Part:" -Path $global:ScriptRoot\Logs\Testinglog.log -Color Green -log Info
     # Border/Overlay TitleCard Part
-    if ($AddTitleCardEPTitleText -eq 'true' -or $AddTitleCardEPText -eq 'True') {
+    if ($AddTitleCardEPTitleText -eq 'true' -or $AddTitleCardEPText -eq 'true') {
         if ($Addtitlecardborder -eq 'true' -and $Addtitlecardoverlay -eq 'true') {
             $titlecardArgumentsShort = "`"$backgroundtestimage`" `"$titlecardoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$titlecardborderwidthsecond`"  -bordercolor `"$titlecardbordercolor`" -border `"$titlecardborderwidth`" `"$titlecardtestPosterShort`""
             $titlecardArgumentsMedium = "`"$backgroundtestimage`" `"$titlecardoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$titlecardborderwidthsecond`"  -bordercolor `"$titlecardbordercolor`" -border `"$titlecardborderwidth`" `"$titlecardtestPosterMedium`""
@@ -4569,7 +5145,7 @@ Elseif ($Testing) {
     }
 
     # Text TitleCard Title overlay
-    if ($AddTitleCardEPTitleText -eq 'True') {
+    if ($AddTitleCardEPTitleText -eq 'true') {
         # Logging TitleCards
         Write-Entry -Subtext "Optimal font size for Short text is: '$titlecardoptimalFontSizeShort'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
         Write-Entry -Subtext "    Applying text: `"$ShortText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
@@ -4599,7 +5175,7 @@ Elseif ($Testing) {
             $TitleCardTitleArgumentsLong = "`"$titlecardtestPosterLong`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeLong`" -fill `"#0000FF`" -size `"$TitleCardEPTitleboxsize`" -background `"#ACD7E6`" caption:`"$LongText`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterLong`""
             $TitleCardTitleArgumentsShortCAPS = "`"$titlecardtestPosterShortCAPS`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeShortCAPS`" -fill `"#0000FF`" -size `"$TitleCardEPTitleboxsize`" -background `"#ACD7E6`" caption:`"$ShortTextCAPS`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterShortCAPS`""
             $TitleCardTitleArgumentsMediumCAPS = "`"$titlecardtestPosterMediumCAPS`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeMediumCAPS`" -fill `"#0000FF`" -size `"$TitleCardEPTitleboxsize`" -background `"#ACD7E6`" caption:`"$MediumTextCAPS`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterMediumCAPS`""
-            $TitleCardTitleArgumentsLongCAPS = "`"$titlecardtestPosterLongCAPS`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeLongCAPS`" -fill `"#0000FF`" -size `"$TitleCardEPTitleboxsize`" -background `"#ACD7E6`" caption:`"$LongTextCAPS`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterLongCAPS`""    
+            $TitleCardTitleArgumentsLongCAPS = "`"$titlecardtestPosterLongCAPS`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeLongCAPS`" -fill `"#0000FF`" -size `"$TitleCardEPTitleboxsize`" -background `"#ACD7E6`" caption:`"$LongTextCAPS`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterLongCAPS`""
         }
         # Title Text Titlecard Logging
         $TitleCardTitlelogEntryShort = "`"$magick`" $TitleCardTitleArgumentsShort"
@@ -4623,7 +5199,7 @@ Elseif ($Testing) {
         InvokeMagickCommand -Command $magick -Arguments $TitleCardTitleArgumentsMediumCAPS
         InvokeMagickCommand -Command $magick -Arguments $TitleCardTitleArgumentsLongCAPS
     }
-    Elseif ($AddTitleCardEPTitleText -eq 'false' -and $AddTitleCardEPText -eq 'True') {
+    Elseif ($AddTitleCardEPTitleText -eq 'false' -and $AddTitleCardEPText -eq 'true') {
         Write-Entry -Subtext "    Applying Title textbox only to TitleCard..." -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
         $TitleCardEPTitleArgumentsNoTextShort = "`"$titlecardtestPosterShort`" -size `"$TitleCardEPTitleboxsize`" xc:`"#ACD7E6`" -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -compose over -composite `"$titlecardtestPosterShort`""
         $TitleCardEPTitleArgumentsNoTextMedium = "`"$titlecardtestPosterMedium`" -size `"$TitleCardEPTitleboxsize`" xc:`"#ACD7E6`" -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -compose over -composite `"$titlecardtestPosterMedium`""
@@ -4663,7 +5239,7 @@ Elseif ($Testing) {
         InvokeMagickCommand -Command $magick -Arguments $TitleCardTitleArgumentsNoText
     }
     # Text TitleCard EP overlay
-    if ($AddTitleCardEPText -eq 'True') {
+    if ($AddTitleCardEPText -eq 'true') {
         Write-Entry -Subtext "Optimal font size for Episode CAPS text is: '$TitleCardoptimalFontSizeEpisodetextCAPS'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
         Write-Entry -Subtext "    Applying CAPS text: `"$EpisodetextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
         Write-Entry -Subtext "Optimal font size for Episode text is: '$TitleCardoptimalFontSizeEpisodetext'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
@@ -4684,7 +5260,7 @@ Elseif ($Testing) {
             $TitleCardEPArgumentsLong = "`"$titlecardtestPosterLong`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeEpisodetext`" -fill `"#0000FF`" -size `"$TitleCardEPboxsize`" -background `"#ACD7E6`" caption:`"$Episodetext`" -trim -gravity south -extent `"$TitleCardEPboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterLong`""
             $TitleCardEPArgumentsShortCAPS = "`"$titlecardtestPosterShortCAPS`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeEpisodetextCAPS`" -fill `"#0000FF`" -size `"$TitleCardEPboxsize`" -background `"#ACD7E6`" caption:`"$EpisodetextCAPS`" -trim -gravity south -extent `"$TitleCardEPboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterShortCAPS`""
             $TitleCardEPArgumentsMediumCAPS = "`"$titlecardtestPosterMediumCAPS`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeEpisodetextCAPS`" -fill `"#0000FF`" -size `"$TitleCardEPboxsize`" -background `"#ACD7E6`" caption:`"$EpisodetextCAPS`" -trim -gravity south -extent `"$TitleCardEPboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterMediumCAPS`""
-            $TitleCardEPArgumentsLongCAPS = "`"$titlecardtestPosterLongCAPS`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeEpisodetextCAPS`" -fill `"#0000FF`" -size `"$TitleCardEPboxsize`" -background `"#ACD7E6`" caption:`"$EpisodetextCAPS`" -trim -gravity south -extent `"$TitleCardEPboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterLongCAPS`""    
+            $TitleCardEPArgumentsLongCAPS = "`"$titlecardtestPosterLongCAPS`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeEpisodetextCAPS`" -fill `"#0000FF`" -size `"$TitleCardEPboxsize`" -background `"#ACD7E6`" caption:`"$EpisodetextCAPS`" -trim -gravity south -extent `"$TitleCardEPboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterLongCAPS`""
         }
         # Episode Text Titlecard Logging
         $TitleCardEPlogEntryShort = "`"$magick`" $TitleCardEPArgumentsShort"
@@ -4708,7 +5284,7 @@ Elseif ($Testing) {
         InvokeMagickCommand -Command $magick -Arguments $TitleCardEPArgumentsMediumCAPS
         InvokeMagickCommand -Command $magick -Arguments $TitleCardEPArgumentsLongCAPS
     }
-    Elseif ($AddTitleCardEPText -eq 'false' -and $AddTitleCardEPTitleText -eq 'True') {
+    Elseif ($AddTitleCardEPText -eq 'false' -and $AddTitleCardEPTitleText -eq 'true') {
         Write-Entry -Subtext "    Applying EP textbox only to TitleCard..." -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
         $TitleCardEPArgumentsNoTextShort = "`"$titlecardtestPosterShort`" -size `"$TitleCardEPboxsize`" xc:`"#ACD7E6`" -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -compose over -composite `"$titlecardtestPosterShort`""
         $TitleCardEPArgumentsNoTextMedium = "`"$titlecardtestPosterMedium`" -size `"$TitleCardEPboxsize`" xc:`"#ACD7E6`" -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -compose over -composite `"$titlecardtestPosterMedium`""
@@ -4825,7 +5401,7 @@ Elseif ($Testing) {
             ]
         }
 "@
-        if ($global:SendNotification -eq 'True') {
+        if ($global:SendNotification -eq 'true') {
             Push-ObjectToDiscord -strDiscordWebhook $global:NotifyUrl -objPayload $jsonPayload
         }
     }
@@ -4889,12 +5465,12 @@ Elseif ($Testing) {
             }
 "@
             $global:NotifyUrl = $global:NotifyUrl.replace('discord://', 'https://discord.com/api/webhooks/')
-            if ($global:SendNotification -eq 'True') {
+            if ($global:SendNotification -eq 'true') {
                 Push-ObjectToDiscord -strDiscordWebhook $global:NotifyUrl -objPayload $jsonPayload
             }
         }
         Else {
-            if ($global:SendNotification -eq 'True') {
+            if ($global:SendNotification -eq 'true') {
                 if ($TruncatedCount -ge '1') {
                     apprise --notification-type="error" --title="Posterizarr" --body="Test run took: $FormattedTimespawn`nDuring execution '$TruncatedCount' times the text got truncated, please check log for detailed description." "$global:NotifyUrl"
                 }
@@ -5074,7 +5650,7 @@ Elseif ($Tautulli) {
     $AllShows = $Libraries | Where-Object { $_.'Library Type' -eq 'show' }
     $AllMovies = $Libraries | Where-Object { $_.'Library Type' -eq 'movie' }
 
-    if ($global:TitleCards -eq 'True' -and $mediatype -ne 'movie') {
+    if ($global:TitleCards -eq 'true' -and $mediatype -ne 'movie') {
         Write-Entry -Message "Query episodes data..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
         # Query episode info
         $Episodedata = @()
@@ -5305,7 +5881,7 @@ Elseif ($Tautulli) {
                             'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBMoviePoster } }
                             'FANART' { $global:posterurl = GetFanartMoviePoster }
                         }
-                        if ($global:PreferTextless -eq 'True') {
+                        if ($global:PreferTextless -eq 'true') {
                             if (!$global:TextlessPoster -and $global:fanartfallbackposterurl) {
                                 $global:posterurl = $global:fanartfallbackposterurl
                                 Write-Entry -Subtext "Took Fanart.tv Fallback poster because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
@@ -5426,7 +6002,7 @@ Elseif ($Tautulli) {
                                 $CommentlogEntry = "`"$magick`" $CommentArguments"
                                 $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                 InvokeMagickCommand -Command $magick -Arguments $CommentArguments
-                                if (!$global:ImageMagickError -eq 'True') {
+                                if (!$global:ImageMagickError -eq 'true') {
                                     # Calculate the height to maintain the aspect ratio with a width of 1000 pixels
                                     if ($AddBorder -eq 'true' -and $AddOverlay -eq 'true') {
                                         $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$PosterImage`""
@@ -5460,7 +6036,7 @@ Elseif ($Tautulli) {
                                         $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
                                         if (!$global:IsTruncated) {
                                             Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                                            
+
                                             # Add Stroke
                                             if ($AddTextStroke -eq 'true') {
                                                 $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -stroke `"$strokecolor`" -strokewidth `"$strokewidth`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
@@ -5468,7 +6044,7 @@ Elseif ($Tautulli) {
                                             Else {
                                                 $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
                                             }
-                                            
+
                                             Write-Entry -Subtext "Applying Poster text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                             $logEntry = "`"$magick`" $Arguments"
                                             $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
@@ -5485,7 +6061,7 @@ Elseif ($Tautulli) {
                                 InvokeMagickCommand -Command $magick -Arguments $Resizeargument
                             }
                             # Move file back to original naming with Brackets.
-                            if (!$global:ImageMagickError -eq 'True') {
+                            if (!$global:ImageMagickError -eq 'true') {
                                 if (Get-ChildItem -LiteralPath $PosterImage -ErrorAction SilentlyContinue) {
                                     if (!$global:IsTruncated) {
                                         try {
@@ -5517,8 +6093,8 @@ Elseif ($Tautulli) {
                                     $movietemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                     $movietemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
                                     $movietemp | Add-Member -MemberType NoteProperty -Name "Language" -Value $(if (!$global:AssetTextLang) { "Textless" }Else { $global:AssetTextLang })
-                                    $movietemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback) { 'True' } else { 'False' })
-                                    $movietemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
+                                    $movietemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback) { 'true' } else { 'false' })
+                                    $movietemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                     $movietemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                     switch -Wildcard ($global:FavProvider) {
                                         'TMDB' { $movietemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "N/A" }) }
@@ -5545,7 +6121,7 @@ Elseif ($Tautulli) {
                                 $movietemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
                                 $movietemp | Add-Member -MemberType NoteProperty -Name "Language" -Value "N/A"
                                 $movietemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value "N/A"
-                                $movietemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
+                                $movietemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                 $movietemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value "N/A"
                                 switch -Wildcard ($global:FavProvider) {
                                     'TMDB' { $movietemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "N/A" }) }
@@ -5561,7 +6137,7 @@ Elseif ($Tautulli) {
                         }
                     }
                     else {
-                        if ($show_skipped -eq 'True' ) {
+                        if ($show_skipped -eq 'true' ) {
                             Write-Entry -Subtext "Already exists: $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                         }
                     }
@@ -5636,7 +6212,7 @@ Elseif ($Tautulli) {
                             'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBMovieBackground } }
                             'FANART' { $global:posterurl = GetFanartMovieBackground }
                         }
-                        if ($global:PreferTextless -eq 'True') {
+                        if ($global:PreferTextless -eq 'true') {
                             if (!$global:TextlessPoster -and $global:fanartfallbackposterurl) {
                                 $global:posterurl = $global:fanartfallbackposterurl
                                 Write-Entry -Subtext "Took Fanart.tv Fallback background because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
@@ -5750,7 +6326,7 @@ Elseif ($Tautulli) {
                                 $CommentlogEntry = "`"$magick`" $CommentArguments"
                                 $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                 InvokeMagickCommand -Command $magick -Arguments $CommentArguments
-                                if (!$global:ImageMagickError -eq 'True') {
+                                if (!$global:ImageMagickError -eq 'true') {
                                     # Calculate the height to maintain the aspect ratio with a width of 1000 pixels
                                     if ($AddBackgroundBorder -eq 'true' -and $AddBackgroundOverlay -eq 'true') {
                                         $Arguments = "`"$backgroundImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$backgroundoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundImage`""
@@ -5784,7 +6360,7 @@ Elseif ($Tautulli) {
                                         $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
                                         if (!$global:IsTruncated) {
                                             Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                                            
+
                                             # Add Stroke
                                             if ($AddBackgroundTextStroke -eq 'true') {
                                                 $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$backgroundfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -stroke `"$Backgroundstrokecolor`" -strokewidth `"$Backgroundstrokewidth`" -size `"$Backgroundboxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
@@ -5792,7 +6368,7 @@ Elseif ($Tautulli) {
                                             Else {
                                                 $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$backgroundfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -size `"$Backgroundboxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
                                             }
-                                            
+
                                             Write-Entry -Subtext "Applying Background text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                             $logEntry = "`"$magick`" $Arguments"
                                             $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
@@ -5808,7 +6384,7 @@ Elseif ($Tautulli) {
                                 $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                 InvokeMagickCommand -Command $magick -Arguments $Resizeargument
                             }
-                            if (!$global:ImageMagickError -eq 'True') {
+                            if (!$global:ImageMagickError -eq 'true') {
                                 # Move file back to original naming with Brackets.
                                 if (Get-ChildItem -LiteralPath $backgroundImage -ErrorAction SilentlyContinue) {
                                     if (!$global:IsTruncated) {
@@ -5842,8 +6418,8 @@ Elseif ($Tautulli) {
                                     $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                     $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
                                     $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Language" -Value $(if (!$global:AssetTextLang) { "Textless" }Else { $global:AssetTextLang })
-                                    $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback) { 'True' } else { 'False' })
-                                    $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
+                                    $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback) { 'true' } else { 'false' })
+                                    $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                     $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                     switch -Wildcard ($global:FavProvider) {
                                         'TMDB' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "N/A" }) }
@@ -5869,7 +6445,7 @@ Elseif ($Tautulli) {
                                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
                                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Language" -Value "N/A"
                                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value "N/A"
-                                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
+                                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value "N/A"
                                 switch -Wildcard ($global:FavProvider) {
                                     'TMDB' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "N/A" }) }
@@ -5885,7 +6461,7 @@ Elseif ($Tautulli) {
                         }
                     }
                     else {
-                        if ($show_skipped -eq 'True' ) {
+                        if ($show_skipped -eq 'true' ) {
                             Write-Entry -Subtext "Already exists: $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                         }
                     }
@@ -5911,7 +6487,7 @@ Elseif ($Tautulli) {
                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Language" -Value "N/A"
                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value "N/A"
-                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
+                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value "N/A"
                 switch -Wildcard ($global:FavProvider) {
                     'TMDB' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "N/A" }) }
@@ -6029,7 +6605,7 @@ Elseif ($Tautulli) {
                         'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBShowPoster } }
                         'FANART' { $global:posterurl = GetFanartShowPoster }
                     }
-                    if ($global:PreferTextless -eq 'True') {
+                    if ($global:PreferTextless -eq 'true') {
                         if (!$global:TextlessPoster -and $global:fanartfallbackposterurl) {
                             $global:posterurl = $global:fanartfallbackposterurl
                             Write-Entry -Subtext "Took Fanart.tv Fallback poster because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
@@ -6072,7 +6648,7 @@ Elseif ($Tautulli) {
                             }
                         }
                     }
-                    if (!$global:posterurl -and !$global:plexalreadysearched -eq 'True') {
+                    if (!$global:posterurl -and !$global:plexalreadysearched -eq 'true') {
                         $global:IsFallback = $true
                         if ($entry.PlexPosterUrl -and !$global:OnlyTextless) {
                             GetPlexArtwork -Type ' a Show Poster' -ArtUrl $Arturl -TempImage $PosterImage
@@ -6091,10 +6667,10 @@ Elseif ($Tautulli) {
                     Else {
                         $joinedTitle = $Titletext
                     }
-                    if (!$global:TextlessPoster -eq 'True' -and $global:TMDBfallbackposterurl) {
+                    if (!$global:TextlessPoster -eq 'true' -and $global:TMDBfallbackposterurl) {
                         $global:posterurl = $global:TMDBfallbackposterurl
                     }
-                    if (!$global:TextlessPoster -eq 'True' -and $global:fanartfallbackposterurl) {
+                    if (!$global:TextlessPoster -eq 'true' -and $global:fanartfallbackposterurl) {
                         $global:posterurl = $global:fanartfallbackposterurl
                     }
                     if ($global:posterurl -or $global:PlexartworkDownloaded ) {
@@ -6147,7 +6723,7 @@ Elseif ($Tautulli) {
                             $CommentlogEntry = "`"$magick`" $CommentArguments"
                             $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                             InvokeMagickCommand -Command $magick -Arguments $CommentArguments
-                            if (!$global:ImageMagickError -eq 'True') {
+                            if (!$global:ImageMagickError -eq 'true') {
                                 # Calculate the height to maintain the aspect ratio with a width of 1000 pixels
                                 if ($AddBorder -eq 'true' -and $AddOverlay -eq 'true') {
                                     $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$PosterImage`""
@@ -6181,7 +6757,7 @@ Elseif ($Tautulli) {
                                     $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
                                     if (!$global:IsTruncated) {
                                         Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                                        
+
                                         # Add Stroke
                                         if ($AddTextStroke -eq 'true') {
                                             $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -stroke `"$strokecolor`" -strokewidth `"$strokewidth`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
@@ -6189,7 +6765,7 @@ Elseif ($Tautulli) {
                                         Else {
                                             $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
                                         }
-                                        
+
                                         Write-Entry -Subtext "Applying Poster text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                         $logEntry = "`"$magick`" $Arguments"
                                         $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
@@ -6205,7 +6781,7 @@ Elseif ($Tautulli) {
                             $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                             InvokeMagickCommand -Command $magick -Arguments $Resizeargument
                         }
-                        if (!$global:ImageMagickError -eq 'True') {
+                        if (!$global:ImageMagickError -eq 'true') {
                             if (Get-ChildItem -LiteralPath $PosterImage -ErrorAction SilentlyContinue) {
                                 # Move file back to original naming with Brackets.
                                 if (!$global:IsTruncated) {
@@ -6238,8 +6814,8 @@ Elseif ($Tautulli) {
                                 $showtemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                 $showtemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
                                 $showtemp | Add-Member -MemberType NoteProperty -Name "Language" -Value $(if (!$global:AssetTextLang) { "Textless" }Else { $global:AssetTextLang })
-                                $showtemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback) { 'True' } else { 'False' })
-                                $showtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
+                                $showtemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback) { 'true' } else { 'false' })
+                                $showtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                 $showtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                 switch -Wildcard ($global:FavProvider) {
                                     'TMDB' { $showtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "N/A" }) }
@@ -6265,7 +6841,7 @@ Elseif ($Tautulli) {
                             $showtemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
                             $showtemp | Add-Member -MemberType NoteProperty -Name "Language" -Value "N/A"
                             $showtemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value "N/A"
-                            $showtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
+                            $showtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                             $showtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value "N/A"
                             switch -Wildcard ($global:FavProvider) {
                                 'TMDB' { $showtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "N/A" }) }
@@ -6281,7 +6857,7 @@ Elseif ($Tautulli) {
                     }
                 }
                 else {
-                    if ($show_skipped -eq 'True' ) {
+                    if ($show_skipped -eq 'true' ) {
                         Write-Entry -Subtext "Already exists: $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                     }
                 }
@@ -6365,7 +6941,7 @@ Elseif ($Tautulli) {
                         'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBShowBackground } }
                         'FANART' { $global:posterurl = GetFanartShowBackground }
                     }
-                    if ($global:PreferTextless -eq 'True') {
+                    if ($global:PreferTextless -eq 'true') {
                         if (!$global:TextlessPoster -and $global:fanartfallbackposterurl) {
                             $global:posterurl = $global:fanartfallbackposterurl
                             Write-Entry -Subtext "Took Fanart.tv Fallback background because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
@@ -6481,7 +7057,7 @@ Elseif ($Tautulli) {
                             $CommentlogEntry = "`"$magick`" $CommentArguments"
                             $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                             InvokeMagickCommand -Command $magick -Arguments $CommentArguments
-                            if (!$global:ImageMagickError -eq 'True') {
+                            if (!$global:ImageMagickError -eq 'true') {
                                 # Calculate the height to maintain the aspect ratio with a width of 1000 pixels
                                 if ($AddBackgroundBorder -eq 'true' -and $AddBackgroundOverlay -eq 'true') {
                                     $Arguments = "`"$backgroundImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$Backgroundoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundImage`""
@@ -6515,7 +7091,7 @@ Elseif ($Tautulli) {
                                     $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
                                     if (!$global:IsTruncated) {
                                         Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                                        
+
                                         # Add Stroke
                                         if ($AddBackgroundTextStroke -eq 'true') {
                                             $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$backgroundfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -stroke `"$Backgroundstrokecolor`" -strokewidth `"$Backgroundstrokewidth`" -size `"$Backgroundboxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
@@ -6523,7 +7099,7 @@ Elseif ($Tautulli) {
                                         Else {
                                             $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$backgroundfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -size `"$Backgroundboxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
                                         }
-                                        
+
                                         Write-Entry -Subtext "Applying Background text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                         $logEntry = "`"$magick`" $Arguments"
                                         $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
@@ -6539,7 +7115,7 @@ Elseif ($Tautulli) {
                             $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                             InvokeMagickCommand -Command $magick -Arguments $Resizeargument
                         }
-                        if (!$global:ImageMagickError -eq 'True') {
+                        if (!$global:ImageMagickError -eq 'true') {
                             # Move file back to original naming with Brackets.
                             if (Get-ChildItem -LiteralPath $backgroundImage -ErrorAction SilentlyContinue) {
                                 if (!$global:IsTruncated) {
@@ -6573,8 +7149,8 @@ Elseif ($Tautulli) {
                                 $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                 $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
                                 $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Language" -Value $(if (!$global:AssetTextLang) { "Textless" }Else { $global:AssetTextLang })
-                                $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback) { 'True' } else { 'False' })
-                                $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
+                                $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback) { 'true' } else { 'false' })
+                                $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                 $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                 switch -Wildcard ($global:FavProvider) {
                                     'TMDB' { $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "N/A" }) }
@@ -6601,7 +7177,7 @@ Elseif ($Tautulli) {
                             $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
                             $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Language" -Value "N/A"
                             $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value "N/A"
-                            $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
+                            $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                             $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value "N/A"
                             switch -Wildcard ($global:FavProvider) {
                                 'TMDB' { $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "N/A" }) }
@@ -6617,7 +7193,7 @@ Elseif ($Tautulli) {
                     }
                 }
                 else {
-                    if ($show_skipped -eq 'True' ) {
+                    if ($show_skipped -eq 'true' ) {
                         Write-Entry -Subtext "Already exists: $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                     }
                 }
@@ -6720,7 +7296,7 @@ Elseif ($Tautulli) {
                             Default { $global:posterurl = GetFanartSeasonPoster }
                         }
                         # do a specific order
-                        if ($global:SeasonPreferTextless -eq 'True') {
+                        if ($global:SeasonPreferTextless -eq 'true') {
                             if (!$global:posterurl -or !$global:TextlessPoster) {
                                 if ($global:FavProvider -ne 'TMDB' -and $entry.tmdbid) {
                                     $global:posterurl = GetTMDBSeasonPoster
@@ -6855,7 +7431,7 @@ Elseif ($Tautulli) {
                                     $CommentlogEntry = "`"$magick`" $CommentArguments"
                                     $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                     InvokeMagickCommand -Command $magick -Arguments $CommentArguments
-                                    if (!$global:ImageMagickError -eq 'True') {
+                                    if (!$global:ImageMagickError -eq 'true') {
                                         # Resize Image to 2000x3000 and apply Border and overlay
                                         if ($AddSeasonBorder -eq 'true' -and $AddSeasonOverlay -eq 'true') {
                                             $Arguments = "`"$SeasonImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Seasonoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Seasonborderwidthsecond`"  -bordercolor `"$Seasonbordercolor`" -border `"$Seasonborderwidth`" `"$SeasonImage`""
@@ -6890,7 +7466,7 @@ Elseif ($Tautulli) {
                                                 }
                                                 Else {
                                                     $Arguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Seasonfontcolor`" -size `"$Seasonboxsize`" -background none caption:`"$global:seasonTitle`" -trim -gravity south -extent `"$Seasonboxsize`" `) -gravity south -geometry +0`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
-                                                }    
+                                                }
 
                                                 Write-Entry -Subtext "Applying seasonTitle text: `"$global:seasonTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                 $logEntry = "`"$magick`" $Arguments"
@@ -6958,7 +7534,7 @@ Elseif ($Tautulli) {
                                     InvokeMagickCommand -Command $magick -Arguments $Resizeargument
                                 }
                             }
-                            if (!$global:ImageMagickError -eq 'True') {
+                            if (!$global:ImageMagickError -eq 'true') {
                                 if (Get-ChildItem -LiteralPath $SeasonImage -ErrorAction SilentlyContinue) {
                                     # Move file back to original naming with Brackets.
                                     if (!$global:IsTruncated) {
@@ -6977,8 +7553,8 @@ Elseif ($Tautulli) {
                                     $seasontemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                     $seasontemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
                                     $seasontemp | Add-Member -MemberType NoteProperty -Name "Language" -Value $(if (!$global:AssetTextLang) { "Textless" }Else { $global:AssetTextLang })
-                                    $seasontemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback) { 'True' } else { 'False' })
-                                    $seasontemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
+                                    $seasontemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback) { 'true' } else { 'false' })
+                                    $seasontemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                     $seasontemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                     switch -Wildcard ($global:FavProvider) {
                                         'TMDB' { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "N/A" }) }
@@ -7003,7 +7579,7 @@ Elseif ($Tautulli) {
                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "Language" -Value "N/A"
                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value "N/A"
-                                $seasontemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
+                                $seasontemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value "N/A"
                                 switch -Wildcard ($global:FavProvider) {
                                     'TMDB' { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "N/A" }) }
@@ -7070,7 +7646,7 @@ Elseif ($Tautulli) {
                                     $CommentlogEntry = "`"$magick`" $CommentArguments"
                                     $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                     InvokeMagickCommand -Command $magick -Arguments $CommentArguments
-                                    if (!$global:ImageMagickError -eq 'True') {
+                                    if (!$global:ImageMagickError -eq 'true') {
                                         # Resize Image to 2000x3000 and apply Border and overlay
                                         if ($AddSeasonBorder -eq 'true' -and $AddSeasonOverlay -eq 'true') {
                                             $Arguments = "`"$SeasonImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Seasonoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Seasonborderwidthsecond`"  -bordercolor `"$Seasonbordercolor`" -border `"$Seasonborderwidth`" `"$SeasonImage`""
@@ -7105,7 +7681,7 @@ Elseif ($Tautulli) {
                                                 }
                                                 Else {
                                                     $Arguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Seasonfontcolor`" -size `"$Seasonboxsize`" -background none caption:`"$global:seasonTitle`" -trim -gravity south -extent `"$Seasonboxsize`" `) -gravity south -geometry +0`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
-                                                }                                                   
+                                                }
 
                                                 Write-Entry -Subtext "Applying seasonTitle text: `"$global:seasonTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                 $logEntry = "`"$magick`" $Arguments"
@@ -7173,7 +7749,7 @@ Elseif ($Tautulli) {
                                     InvokeMagickCommand -Command $magick -Arguments $Resizeargument
                                 }
                             }
-                            if (!$global:ImageMagickError -eq 'True') {
+                            if (!$global:ImageMagickError -eq 'true') {
                                 if (Get-ChildItem -LiteralPath $SeasonImage -ErrorAction SilentlyContinue) {
                                     # Move file back to original naming with Brackets.
                                     if (!$global:IsTruncated) {
@@ -7207,8 +7783,8 @@ Elseif ($Tautulli) {
                                     $seasontemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                     $seasontemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
                                     $seasontemp | Add-Member -MemberType NoteProperty -Name "Language" -Value $(if (!$global:AssetTextLang) { "Textless" }Else { $global:AssetTextLang })
-                                    $seasontemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback) { 'True' } else { 'False' })
-                                    $seasontemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
+                                    $seasontemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback) { 'true' } else { 'false' })
+                                    $seasontemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                     $seasontemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                     switch -Wildcard ($global:FavProvider) {
                                         'TMDB' { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "N/A" }) }
@@ -7234,7 +7810,7 @@ Elseif ($Tautulli) {
                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "Language" -Value "N/A"
                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value "N/A"
-                                $seasontemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
+                                $seasontemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value "N/A"
                                 switch -Wildcard ($global:FavProvider) {
                                     'TMDB' { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "N/A" }) }
@@ -7250,7 +7826,7 @@ Elseif ($Tautulli) {
                         }
                     }
                     else {
-                        if ($show_skipped -eq 'True' ) {
+                        if ($show_skipped -eq 'true' ) {
                             Write-Entry -Subtext "Already exists: $SeasonImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                         }
                     }
@@ -7293,7 +7869,7 @@ Elseif ($Tautulli) {
                         $global:episode_ratingkeys = $episode."ratingKeys".Split(",")
                         $global:titles = $episode."Title".Split(";")
                         $global:PlexTitleCardUrls = $episode."PlexTitleCardUrls".Split(",")
-                        if ($UseBackgroundAsTitleCard -eq 'True') {
+                        if ($UseBackgroundAsTitleCard -eq 'true') {
                             $global:ImageMagickError = $null
                             for ($i = 0; $i -lt $global:episode_numbers.Count; $i++) {
                                 $global:AssetTextLang = $null
@@ -7355,11 +7931,11 @@ Elseif ($Tautulli) {
 
                                 $EpisodeTempImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\temp.jpg"
                                 $cjkTitlePattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsThai}]'
-                                if ($SkipTBA -eq 'True' -and $global:EPTitle -eq 'TBA') {
+                                if ($SkipTBA -eq 'true' -and $global:EPTitle -eq 'TBA') {
                                     Write-Entry -Subtext "Skipping $global:FileNaming of $global:show_name because Title is 'TBA'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                     $SkipTBACount++
                                 }
-                                Elseif ($SkipJapTitle -eq 'True' -and $global:EPTitle -match $cjkTitlePattern) {
+                                Elseif ($SkipJapTitle -eq 'true' -and $global:EPTitle -match $cjkTitlePattern) {
                                     Write-Entry -Subtext "Skipping $global:FileNaming of $global:show_name because Title contains Jap/Chinese Chars" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                     $SkipJapTitleCount++
                                 }
@@ -7466,7 +8042,7 @@ Elseif ($Tautulli) {
                                         if ($global:posterurl -or $global:PlexartworkDownloaded ) {
                                             if ($global:ImageProcessing -eq 'true') {
                                                 try {
-                                                    if (!$global:PlexartworkDownloaded -and $global:TempImagecopied -ne 'True') {
+                                                    if (!$global:PlexartworkDownloaded -and $global:TempImagecopied -ne 'true') {
                                                         $response = Invoke-WebRequest -Uri $global:posterurl -OutFile $EpisodeImage -ErrorAction Stop
                                                         Copy-Item -LiteralPath $EpisodeImage -destination $EpisodeTempImage | Out-Null
                                                     }
@@ -7477,7 +8053,7 @@ Elseif ($Tautulli) {
                                                     Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                     $errorCount++
                                                 }
-                                                if ($global:TempImagecopied -ne 'True') {
+                                                if ($global:TempImagecopied -ne 'true') {
                                                     Write-Entry -Subtext "Title Card url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                     if ($global:posterurl -like 'https://image.tmdb.org*') {
                                                         Write-Entry -Subtext "Downloading Title Card from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
@@ -7516,7 +8092,7 @@ Elseif ($Tautulli) {
                                                         $CommentlogEntry = "`"$magick`" $CommentArguments"
                                                         $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                                         InvokeMagickCommand -Command $magick -Arguments $CommentArguments
-                                                        if (!$global:ImageMagickError -eq 'True') {
+                                                        if (!$global:ImageMagickError -eq 'true') {
                                                             # Resize Image to 2000x3000 and apply Border and overlay
                                                             if ($AddTitleCardBorder -eq 'true' -and $AddTitleCardOverlay -eq 'true') {
                                                                 $Arguments = "`"$EpisodeImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$TitleCardoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$TitleCardborderwidthsecond`"  -bordercolor `"$TitleCardbordercolor`" -border `"$TitleCardborderwidth`" `"$EpisodeImage`""
@@ -7575,7 +8151,7 @@ Elseif ($Tautulli) {
                                                                             $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
                                                                         }
                                                                     }
-                                                                    
+
                                                                     Write-Entry -Subtext "Applying EPTitle text: `"$global:EPTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                                     $logEntry = "`"$magick`" $Arguments"
                                                                     $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
@@ -7651,7 +8227,7 @@ Elseif ($Tautulli) {
                                                     InvokeMagickCommand -Command $magick -Arguments $Resizeargument
                                                 }
                                             }
-                                            if (!$global:ImageMagickError -eq 'True') {
+                                            if (!$global:ImageMagickError -eq 'true') {
                                                 if (Get-ChildItem -LiteralPath $EpisodeImage -ErrorAction SilentlyContinue) {
                                                     # Move file back to original naming with Brackets.
                                                     if (!$global:IsTruncated) {
@@ -7685,8 +8261,8 @@ Elseif ($Tautulli) {
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "Language" -Value $(if (!$global:AssetTextLang) { "Textless" }Else { $global:AssetTextLang })
-                                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback -and $global:FallbackText) { $global:FallbackText } elseif ($global:IsFallback -and !$global:FallbackText) { 'True' } Else { 'False' })
-                                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
+                                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback -and $global:FallbackText) { $global:FallbackText } elseif ($global:IsFallback -and !$global:FallbackText) { 'true' } Else { 'false' })
+                                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                                     switch -Wildcard ($global:FavProvider) {
                                                         'TMDB' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "N/A" }) }
@@ -7711,7 +8287,7 @@ Elseif ($Tautulli) {
                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "Language" -Value "N/A"
                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value "N/A"
-                                                $episodetemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
+                                                $episodetemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value "N/A"
                                                 switch -Wildcard ($global:FavProvider) {
                                                     'TMDB' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "N/A" }) }
@@ -7728,7 +8304,7 @@ Elseif ($Tautulli) {
 
                                     }
                                     else {
-                                        if ($show_skipped -eq 'True' ) {
+                                        if ($show_skipped -eq 'true' ) {
                                             Write-Entry -Subtext "Already exists: $EpisodeImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                                         }
                                     }
@@ -7796,11 +8372,11 @@ Elseif ($Tautulli) {
                                 $EpisodeImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_$global:FileNaming.jpg"
                                 $EpisodeImage = $EpisodeImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
                                 $cjkTitlePattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsThai}]'
-                                if ($SkipTBA -eq 'True' -and $global:EPTitle -eq 'TBA') {
+                                if ($SkipTBA -eq 'true' -and $global:EPTitle -eq 'TBA') {
                                     Write-Entry -Subtext "Skipping $global:FileNaming of $global:show_name because Title is 'TBA'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                     $SkipTBACount++
                                 }
-                                Elseif ($SkipJapTitle -eq 'True' -and $global:EPTitle -match $cjkTitlePattern) {
+                                Elseif ($SkipJapTitle -eq 'true' -and $global:EPTitle -match $cjkTitlePattern) {
                                     Write-Entry -Subtext "Skipping $global:FileNaming of $global:show_name because Title contains Jap/Chinese Chars" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                     $SkipJapTitleCount++
                                 }
@@ -7835,7 +8411,7 @@ Elseif ($Tautulli) {
                                                         Write-Entry -Subtext "Could not find a TitleCard on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                     }
                                                 }
-                                                if (!$global:posterurl -and $BackgroundFallback -eq 'True') {
+                                                if (!$global:posterurl -and $BackgroundFallback -eq 'true') {
                                                     # Lets just try to grab a background poster.
                                                     Write-Entry -Subtext "Fallback to Show Background..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                                     $global:posterurl = GetTMDBShowBackground
@@ -7870,7 +8446,7 @@ Elseif ($Tautulli) {
                                                         Write-Entry -Subtext "Could not find a TitleCard on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                     }
                                                 }
-                                                if (!$global:posterurl -and $BackgroundFallback -eq 'True') {
+                                                if (!$global:posterurl -and $BackgroundFallback -eq 'true') {
                                                     Write-Entry -Subtext "No Title Cards for this Episode on TVDB or TMDB..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                     # Lets just try to grab a background poster.
                                                     Write-Entry -Subtext "Fallback to Show Background..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
@@ -7901,7 +8477,7 @@ Elseif ($Tautulli) {
                                                         Write-Entry -Subtext "Could not find a TitleCard on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                     }
                                                 }
-                                                if (!$global:posterurl -and $BackgroundFallback -eq 'True') {
+                                                if (!$global:posterurl -and $BackgroundFallback -eq 'true') {
                                                     # Lets just try to grab a background poster.
                                                     Write-Entry -Subtext "Fallback to Show Background..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                                     $global:posterurl = GetTVDBShowBackground
@@ -7936,7 +8512,7 @@ Elseif ($Tautulli) {
                                                         Write-Entry -Subtext "Could not find a TitleCard on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                     }
                                                 }
-                                                if (!$global:posterurl -and $BackgroundFallback -eq 'True') {
+                                                if (!$global:posterurl -and $BackgroundFallback -eq 'true') {
                                                     # Lets just try to grab a background poster.
                                                     Write-Entry -Subtext "Fallback to Show Background..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                                     $global:posterurl = GetTMDBShowBackground
@@ -7987,7 +8563,7 @@ Elseif ($Tautulli) {
                                                     $CommentlogEntry = "`"$magick`" $CommentArguments"
                                                     $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                                     InvokeMagickCommand -Command $magick -Arguments $CommentArguments
-                                                    if (!$global:ImageMagickError -eq 'True') {
+                                                    if (!$global:ImageMagickError -eq 'true') {
                                                         # Resize Image to 2000x3000 and apply Border and overlay
                                                         if ($AddTitleCardBorder -eq 'true' -and $AddTitleCardOverlay -eq 'true') {
                                                             $Arguments = "`"$EpisodeImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$TitleCardoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$TitleCardborderwidthsecond`"  -bordercolor `"$TitleCardbordercolor`" -border `"$TitleCardborderwidth`" `"$EpisodeImage`""
@@ -8120,7 +8696,7 @@ Elseif ($Tautulli) {
                                                     InvokeMagickCommand -Command $magick -Arguments $Resizeargument
                                                 }
                                             }
-                                            if (!$global:ImageMagickError -eq 'True') {
+                                            if (!$global:ImageMagickError -eq 'true') {
                                                 if (Get-ChildItem -LiteralPath $EpisodeImage -ErrorAction SilentlyContinue) {
                                                     # Move file back to original naming with Brackets.
                                                     if (!$global:IsTruncated) {
@@ -8155,8 +8731,8 @@ Elseif ($Tautulli) {
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "Language" -Value $(if (!$global:AssetTextLang) { "Textless" }Else { $global:AssetTextLang })
-                                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback -and $global:FallbackText) { $global:FallbackText } elseif ($global:IsFallback -and !$global:FallbackText) { 'True' } Else { 'False' })
-                                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
+                                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback -and $global:FallbackText) { $global:FallbackText } elseif ($global:IsFallback -and !$global:FallbackText) { 'true' } Else { 'false' })
+                                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                                     switch -Wildcard ($global:FavProvider) {
                                                         'TMDB' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "N/A" }) }
@@ -8181,7 +8757,7 @@ Elseif ($Tautulli) {
                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "Language" -Value "N/A"
                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value "N/A"
-                                                $episodetemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
+                                                $episodetemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value "N/A"
                                                 switch -Wildcard ($global:FavProvider) {
                                                     'TMDB' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "N/A" }) }
@@ -8198,7 +8774,7 @@ Elseif ($Tautulli) {
 
                                     }
                                     else {
-                                        if ($show_skipped -eq 'True' ) {
+                                        if ($show_skipped -eq 'true' ) {
                                             Write-Entry -Subtext "Already exists: $EpisodeImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                                         }
                                     }
@@ -8234,10 +8810,10 @@ Elseif ($Tautulli) {
         Write-Entry -Message "You can find a detailed Summary of image Choices here: $global:ScriptRoot\Logs\ImageChoices.csv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
         # Calculate Summary
         $SummaryCount = Import-Csv -LiteralPath "$global:ScriptRoot\Logs\ImageChoices.csv" -Delimiter ';'
-        $FallbackCount = @($SummaryCount | Where-Object Fallback -eq 'True')
+        $FallbackCount = @($SummaryCount | Where-Object Fallback -eq 'true')
         $TextlessCount = @($SummaryCount | Where-Object Language -eq 'Textless')
-        $TextTruncatedCount = @($SummaryCount | Where-Object TextTruncated -eq 'True')
-        $TextCount = @($SummaryCount | Where-Object Textless -eq 'False')
+        $TextTruncatedCount = @($SummaryCount | Where-Object TextTruncated -eq 'true')
+        $TextCount = @($SummaryCount | Where-Object Textless -eq 'false')
         if ($TextlessCount -or $FallbackCount -or $TextCount -or $PosterUnknownCount -or $TextTruncatedCount) {
             Write-Entry -Message "This is a subset summary of all image choices from the ImageChoices.csv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
         }
@@ -8576,7 +9152,7 @@ else {
     $AllMovies = $Libraries | Where-Object { $_.'Library Type' -eq 'movie' }
 
     # Getting information of all Episodes
-    if ($global:TitleCards -eq 'True') {
+    if ($global:TitleCards -eq 'true') {
         Write-Entry -Message "Query episodes data from all Libs, this can take a while..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
         # Query episode info
         $Episodedata = @()
@@ -8808,7 +9384,7 @@ else {
                             'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBMoviePoster } }
                             'FANART' { $global:posterurl = GetFanartMoviePoster }
                         }
-                        if ($global:PreferTextless -eq 'True') {
+                        if ($global:PreferTextless -eq 'true') {
                             if (!$global:TextlessPoster -and $global:fanartfallbackposterurl) {
                                 $global:posterurl = $global:fanartfallbackposterurl
                                 Write-Entry -Subtext "Took Fanart.tv Fallback poster because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
@@ -8929,7 +9505,7 @@ else {
                                 $CommentlogEntry = "`"$magick`" $CommentArguments"
                                 $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                 InvokeMagickCommand -Command $magick -Arguments $CommentArguments
-                                if (!$global:ImageMagickError -eq 'True') {
+                                if (!$global:ImageMagickError -eq 'true') {
                                     # Calculate the height to maintain the aspect ratio with a width of 1000 pixels
                                     if ($AddBorder -eq 'true' -and $AddOverlay -eq 'true') {
                                         $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$PosterImage`""
@@ -8963,7 +9539,7 @@ else {
                                         $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
                                         if (!$global:IsTruncated) {
                                             Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                                            
+
                                             # Add Stroke
                                             if ($AddTextStroke -eq 'true') {
                                                 $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -stroke `"$strokecolor`" -strokewidth `"$strokewidth`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
@@ -8971,7 +9547,7 @@ else {
                                             Else {
                                                 $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
                                             }
-                                            
+
                                             Write-Entry -Subtext "Applying Poster text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                             $logEntry = "`"$magick`" $Arguments"
                                             $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
@@ -8988,7 +9564,7 @@ else {
                                 InvokeMagickCommand -Command $magick -Arguments $Resizeargument
                             }
                             # Move file back to original naming with Brackets.
-                            if (!$global:ImageMagickError -eq 'True') {
+                            if (!$global:ImageMagickError -eq 'true') {
                                 if (Get-ChildItem -LiteralPath $PosterImage -ErrorAction SilentlyContinue) {
                                     if (!$global:IsTruncated) {
                                         Move-Item -LiteralPath $PosterImage $PosterImageoriginal -Force -ErrorAction SilentlyContinue
@@ -9005,8 +9581,8 @@ else {
                                     $movietemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                     $movietemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
                                     $movietemp | Add-Member -MemberType NoteProperty -Name "Language" -Value $(if (!$global:AssetTextLang) { "Textless" }Else { $global:AssetTextLang })
-                                    $movietemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback) { 'True' } else { 'False' })
-                                    $movietemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
+                                    $movietemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback) { 'true' } else { 'false' })
+                                    $movietemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                     $movietemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                     switch -Wildcard ($global:FavProvider) {
                                         'TMDB' { $movietemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "N/A" }) }
@@ -9032,7 +9608,7 @@ else {
                                 $movietemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
                                 $movietemp | Add-Member -MemberType NoteProperty -Name "Language" -Value "N/A"
                                 $movietemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value "N/A"
-                                $movietemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
+                                $movietemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                 $movietemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value "N/A"
                                 switch -Wildcard ($global:FavProvider) {
                                     'TMDB' { $movietemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "N/A" }) }
@@ -9048,7 +9624,7 @@ else {
                         }
                     }
                     else {
-                        if ($show_skipped -eq 'True' ) {
+                        if ($show_skipped -eq 'true' ) {
                             Write-Entry -Subtext "Already exists: $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                         }
                     }
@@ -9124,7 +9700,7 @@ else {
                             'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBMovieBackground } }
                             'FANART' { $global:posterurl = GetFanartMovieBackground }
                         }
-                        if ($global:PreferTextless -eq 'True') {
+                        if ($global:PreferTextless -eq 'true') {
                             if (!$global:TextlessPoster -and $global:fanartfallbackposterurl) {
                                 $global:posterurl = $global:fanartfallbackposterurl
                                 Write-Entry -Subtext "Took Fanart.tv Fallback background because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
@@ -9238,7 +9814,7 @@ else {
                                 $CommentlogEntry = "`"$magick`" $CommentArguments"
                                 $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                 InvokeMagickCommand -Command $magick -Arguments $CommentArguments
-                                if (!$global:ImageMagickError -eq 'True') {
+                                if (!$global:ImageMagickError -eq 'true') {
                                     # Calculate the height to maintain the aspect ratio with a width of 1000 pixels
                                     if ($AddBackgroundBorder -eq 'true' -and $AddBackgroundOverlay -eq 'true') {
                                         $Arguments = "`"$backgroundImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$backgroundoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundImage`""
@@ -9272,7 +9848,7 @@ else {
                                         $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
                                         if (!$global:IsTruncated) {
                                             Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                                            
+
                                             # Add Stroke
                                             if ($AddBackgroundTextStroke -eq 'true') {
                                                 $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$backgroundfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -stroke `"$Backgroundstrokecolor`" -strokewidth `"$Backgroundstrokewidth`" -size `"$Backgroundboxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
@@ -9280,7 +9856,7 @@ else {
                                             Else {
                                                 $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$backgroundfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -size `"$Backgroundboxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
                                             }
-                                            
+
                                             Write-Entry -Subtext "Applying Background text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                             $logEntry = "`"$magick`" $Arguments"
                                             $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
@@ -9296,7 +9872,7 @@ else {
                                 $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                 InvokeMagickCommand -Command $magick -Arguments $Resizeargument
                             }
-                            if (!$global:ImageMagickError -eq 'True') {
+                            if (!$global:ImageMagickError -eq 'true') {
                                 # Move file back to original naming with Brackets.
                                 if (Get-ChildItem -LiteralPath $backgroundImage -ErrorAction SilentlyContinue) {
                                     if (!$global:IsTruncated) {
@@ -9315,8 +9891,8 @@ else {
                                     $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                     $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
                                     $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Language" -Value $(if (!$global:AssetTextLang) { "Textless" }Else { $global:AssetTextLang })
-                                    $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback) { 'True' } else { 'False' })
-                                    $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
+                                    $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback) { 'true' } else { 'false' })
+                                    $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                     $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                     switch -Wildcard ($global:FavProvider) {
                                         'TMDB' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "N/A" }) }
@@ -9341,7 +9917,7 @@ else {
                                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
                                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Language" -Value "N/A"
                                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value "N/A"
-                                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
+                                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value "N/A"
                                 switch -Wildcard ($global:FavProvider) {
                                     'TMDB' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "N/A" }) }
@@ -9357,7 +9933,7 @@ else {
                         }
                     }
                     else {
-                        if ($show_skipped -eq 'True' ) {
+                        if ($show_skipped -eq 'true' ) {
                             Write-Entry -Subtext "Already exists: $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                         }
                     }
@@ -9383,7 +9959,7 @@ else {
                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Language" -Value "N/A"
                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value "N/A"
-                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
+                $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value "N/A"
                 switch -Wildcard ($global:FavProvider) {
                     'TMDB' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "N/A" }) }
@@ -9431,7 +10007,7 @@ else {
             $global:PlexartworkDownloaded = $null
             $global:langCode = $null
             $global:direction = $null
-                
+
             # Determine the language direction
             $global:langCode = $entry.'Library Language'
             $global:direction = $global:languageDirections[$global:langCode]
@@ -9503,7 +10079,7 @@ else {
                         'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBShowPoster } }
                         'FANART' { $global:posterurl = GetFanartShowPoster }
                     }
-                    if ($global:PreferTextless -eq 'True') {
+                    if ($global:PreferTextless -eq 'true') {
                         if (!$global:TextlessPoster -and $global:fanartfallbackposterurl) {
                             $global:posterurl = $global:fanartfallbackposterurl
                             Write-Entry -Subtext "Took Fanart.tv Fallback poster because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
@@ -9551,7 +10127,7 @@ else {
                             }
                         }
                     }
-                    if (!$global:posterurl -and !$global:plexalreadysearched -eq 'True') {
+                    if (!$global:posterurl -and !$global:plexalreadysearched -eq 'true') {
                         $global:IsFallback = $true
                         if ($entry.PlexPosterUrl -and !$global:OnlyTextless) {
                             GetPlexArtwork -Type ' a Show Poster' -ArtUrl $Arturl -TempImage $PosterImage
@@ -9570,10 +10146,10 @@ else {
                     Else {
                         $joinedTitle = $Titletext
                     }
-                    if (!$global:TextlessPoster -eq 'True' -and $global:TMDBfallbackposterurl) {
+                    if (!$global:TextlessPoster -eq 'true' -and $global:TMDBfallbackposterurl) {
                         $global:posterurl = $global:TMDBfallbackposterurl
                     }
-                    if (!$global:TextlessPoster -eq 'True' -and $global:fanartfallbackposterurl) {
+                    if (!$global:TextlessPoster -eq 'true' -and $global:fanartfallbackposterurl) {
                         $global:posterurl = $global:fanartfallbackposterurl
                     }
                     if ($global:posterurl -or $global:PlexartworkDownloaded ) {
@@ -9626,7 +10202,7 @@ else {
                             $CommentlogEntry = "`"$magick`" $CommentArguments"
                             $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                             InvokeMagickCommand -Command $magick -Arguments $CommentArguments
-                            if (!$global:ImageMagickError -eq 'True') {
+                            if (!$global:ImageMagickError -eq 'true') {
                                 # Calculate the height to maintain the aspect ratio with a width of 1000 pixels
                                 if ($AddBorder -eq 'true' -and $AddOverlay -eq 'true') {
                                     $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$PosterImage`""
@@ -9660,7 +10236,7 @@ else {
                                     $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
                                     if (!$global:IsTruncated) {
                                         Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                                        
+
                                         # Add Stroke
                                         if ($AddTextStroke -eq 'true') {
                                             $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -stroke `"$strokecolor`" -strokewidth `"$strokewidth`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
@@ -9668,7 +10244,7 @@ else {
                                         Else {
                                             $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
                                         }
-                                        
+
                                         Write-Entry -Subtext "Applying Poster text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                         $logEntry = "`"$magick`" $Arguments"
                                         $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
@@ -9684,7 +10260,7 @@ else {
                             $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                             InvokeMagickCommand -Command $magick -Arguments $Resizeargument
                         }
-                        if (!$global:ImageMagickError -eq 'True') {
+                        if (!$global:ImageMagickError -eq 'true') {
                             if (Get-ChildItem -LiteralPath $PosterImage -ErrorAction SilentlyContinue) {
                                 # Move file back to original naming with Brackets.
                                 if (!$global:IsTruncated) {
@@ -9702,8 +10278,8 @@ else {
                                 $showtemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                 $showtemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
                                 $showtemp | Add-Member -MemberType NoteProperty -Name "Language" -Value $(if (!$global:AssetTextLang) { "Textless" }Else { $global:AssetTextLang })
-                                $showtemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback) { 'True' } else { 'False' })
-                                $showtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
+                                $showtemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback) { 'true' } else { 'false' })
+                                $showtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                 $showtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                 switch -Wildcard ($global:FavProvider) {
                                     'TMDB' { $showtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "N/A" }) }
@@ -9728,7 +10304,7 @@ else {
                             $showtemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
                             $showtemp | Add-Member -MemberType NoteProperty -Name "Language" -Value "N/A"
                             $showtemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value "N/A"
-                            $showtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
+                            $showtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                             $showtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value "N/A"
                             switch -Wildcard ($global:FavProvider) {
                                 'TMDB' { $showtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "N/A" }) }
@@ -9744,7 +10320,7 @@ else {
                     }
                 }
                 else {
-                    if ($show_skipped -eq 'True' ) {
+                    if ($show_skipped -eq 'true' ) {
                         Write-Entry -Subtext "Already exists: $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                     }
                 }
@@ -9828,7 +10404,7 @@ else {
                         'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBShowBackground } }
                         'FANART' { $global:posterurl = GetFanartShowBackground }
                     }
-                    if ($global:PreferTextless -eq 'True') {
+                    if ($global:PreferTextless -eq 'true') {
                         if (!$global:TextlessPoster -and $global:fanartfallbackposterurl) {
                             $global:posterurl = $global:fanartfallbackposterurl
                             Write-Entry -Subtext "Took Fanart.tv Fallback background because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
@@ -9944,7 +10520,7 @@ else {
                             $CommentlogEntry = "`"$magick`" $CommentArguments"
                             $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                             InvokeMagickCommand -Command $magick -Arguments $CommentArguments
-                            if (!$global:ImageMagickError -eq 'True') {
+                            if (!$global:ImageMagickError -eq 'true') {
                                 # Calculate the height to maintain the aspect ratio with a width of 1000 pixels
                                 if ($AddBackgroundBorder -eq 'true' -and $AddBackgroundOverlay -eq 'true') {
                                     $Arguments = "`"$backgroundImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$Backgroundoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundImage`""
@@ -9978,7 +10554,7 @@ else {
                                     $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
                                     if (!$global:IsTruncated) {
                                         Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                                        
+
                                         # Add Stroke
                                         if ($AddBackgroundTextStroke -eq 'true') {
                                             $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$backgroundfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -stroke `"$Backgroundstrokecolor`" -strokewidth `"$Backgroundstrokewidth`" -size `"$Backgroundboxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
@@ -9986,7 +10562,7 @@ else {
                                         Else {
                                             $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$backgroundfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -size `"$Backgroundboxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
                                         }
-                                        
+
                                         Write-Entry -Subtext "Applying Background text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                         $logEntry = "`"$magick`" $Arguments"
                                         $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
@@ -10002,7 +10578,7 @@ else {
                             $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                             InvokeMagickCommand -Command $magick -Arguments $Resizeargument
                         }
-                        if (!$global:ImageMagickError -eq 'True') {
+                        if (!$global:ImageMagickError -eq 'true') {
                             # Move file back to original naming with Brackets.
                             if (Get-ChildItem -LiteralPath $backgroundImage -ErrorAction SilentlyContinue) {
                                 if (!$global:IsTruncated) {
@@ -10021,8 +10597,8 @@ else {
                                 $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                 $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
                                 $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Language" -Value $(if (!$global:AssetTextLang) { "Textless" }Else { $global:AssetTextLang })
-                                $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback) { 'True' } else { 'False' })
-                                $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
+                                $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback) { 'true' } else { 'false' })
+                                $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                 $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                 switch -Wildcard ($global:FavProvider) {
                                     'TMDB' { $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "N/A" }) }
@@ -10048,7 +10624,7 @@ else {
                             $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
                             $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Language" -Value "N/A"
                             $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value "N/A"
-                            $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
+                            $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                             $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value "N/A"
                             switch -Wildcard ($global:FavProvider) {
                                 'TMDB' { $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "N/A" }) }
@@ -10064,7 +10640,7 @@ else {
                     }
                 }
                 else {
-                    if ($show_skipped -eq 'True' ) {
+                    if ($show_skipped -eq 'true' ) {
                         Write-Entry -Subtext "Already exists: $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                     }
                 }
@@ -10166,7 +10742,7 @@ else {
                             Default { $global:posterurl = GetFanartSeasonPoster }
                         }
                         # do a specific order
-                        if ($global:SeasonPreferTextless -eq 'True') {
+                        if ($global:SeasonPreferTextless -eq 'true') {
                             if (!$global:posterurl -or !$global:TextlessPoster) {
                                 if ($global:FavProvider -ne 'TMDB' -and $entry.tmdbid) {
                                     $global:posterurl = GetTMDBSeasonPoster
@@ -10301,7 +10877,7 @@ else {
                                     $CommentlogEntry = "`"$magick`" $CommentArguments"
                                     $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                     InvokeMagickCommand -Command $magick -Arguments $CommentArguments
-                                    if (!$global:ImageMagickError -eq 'True') {
+                                    if (!$global:ImageMagickError -eq 'true') {
                                         # Resize Image to 2000x3000 and apply Border and overlay
                                         if ($AddSeasonBorder -eq 'true' -and $AddSeasonOverlay -eq 'true') {
                                             $Arguments = "`"$SeasonImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Seasonoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Seasonborderwidthsecond`"  -bordercolor `"$Seasonbordercolor`" -border `"$Seasonborderwidth`" `"$SeasonImage`""
@@ -10404,7 +10980,7 @@ else {
                                     InvokeMagickCommand -Command $magick -Arguments $Resizeargument
                                 }
                             }
-                            if (!$global:ImageMagickError -eq 'True') {
+                            if (!$global:ImageMagickError -eq 'true') {
                                 if (Get-ChildItem -LiteralPath $SeasonImage -ErrorAction SilentlyContinue) {
                                     # Move file back to original naming with Brackets.
                                     if (!$global:IsTruncated) {
@@ -10423,8 +10999,8 @@ else {
                                     $seasontemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                     $seasontemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
                                     $seasontemp | Add-Member -MemberType NoteProperty -Name "Language" -Value $(if (!$global:AssetTextLang) { "Textless" }Else { $global:AssetTextLang })
-                                    $seasontemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback) { 'True' } else { 'False' })
-                                    $seasontemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
+                                    $seasontemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback) { 'true' } else { 'false' })
+                                    $seasontemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                     $seasontemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                     switch -Wildcard ($global:FavProvider) {
                                         'TMDB' { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "N/A" }) }
@@ -10449,7 +11025,7 @@ else {
                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "Language" -Value "N/A"
                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value "N/A"
-                                $seasontemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
+                                $seasontemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value "N/A"
                                 switch -Wildcard ($global:FavProvider) {
                                     'TMDB' { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "N/A" }) }
@@ -10465,7 +11041,7 @@ else {
                         }
                     }
                     else {
-                        if ($show_skipped -eq 'True' ) {
+                        if ($show_skipped -eq 'true' ) {
                             Write-Entry -Subtext "Already exists: $SeasonImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                         }
                     }
@@ -10507,7 +11083,7 @@ else {
                         $global:episode_numbers = $episode."Episodes".Split(",")
                         $global:titles = $episode."Title".Split(";")
                         $global:PlexTitleCardUrls = $episode."PlexTitleCardUrls".Split(",")
-                        if ($UseBackgroundAsTitleCard -eq 'True') {
+                        if ($UseBackgroundAsTitleCard -eq 'true') {
                             $global:ImageMagickError = $null
                             for ($i = 0; $i -lt $global:episode_numbers.Count; $i++) {
                                 $global:AssetTextLang = $null
@@ -10568,11 +11144,11 @@ else {
 
                                 $EpisodeTempImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\temp.jpg"
                                 $cjkTitlePattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsThai}]'
-                                if ($SkipTBA -eq 'True' -and $global:EPTitle -eq 'TBA') {
+                                if ($SkipTBA -eq 'true' -and $global:EPTitle -eq 'TBA') {
                                     Write-Entry -Subtext "Skipping $global:FileNaming of $global:show_name because Title is 'TBA'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                     $SkipTBACount++
                                 }
-                                Elseif ($SkipJapTitle -eq 'True' -and $global:EPTitle -match $cjkTitlePattern) {
+                                Elseif ($SkipJapTitle -eq 'true' -and $global:EPTitle -match $cjkTitlePattern) {
                                     Write-Entry -Subtext "Skipping $global:FileNaming of $global:show_name because Title contains Jap/Chinese Chars" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                     $SkipJapTitleCount++
                                 }
@@ -10680,7 +11256,7 @@ else {
                                         if ($global:posterurl -or $global:PlexartworkDownloaded ) {
                                             if ($global:ImageProcessing -eq 'true') {
                                                 try {
-                                                    if (!$global:PlexartworkDownloaded -and $global:TempImagecopied -ne 'True') {
+                                                    if (!$global:PlexartworkDownloaded -and $global:TempImagecopied -ne 'true') {
                                                         $response = Invoke-WebRequest -Uri $global:posterurl -OutFile $EpisodeImage -ErrorAction Stop
                                                         Copy-Item -LiteralPath $EpisodeImage -destination $EpisodeTempImage | Out-Null
                                                     }
@@ -10691,7 +11267,7 @@ else {
                                                     Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                     $errorCount++
                                                 }
-                                                if ($global:TempImagecopied -ne 'True') {
+                                                if ($global:TempImagecopied -ne 'true') {
                                                     Write-Entry -Subtext "Title Card url: $global:posterurl" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                     if ($global:posterurl -like 'https://image.tmdb.org*') {
                                                         Write-Entry -Subtext "Downloading Title Card from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
@@ -10730,7 +11306,7 @@ else {
                                                         $CommentlogEntry = "`"$magick`" $CommentArguments"
                                                         $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                                         InvokeMagickCommand -Command $magick -Arguments $CommentArguments
-                                                        if (!$global:ImageMagickError -eq 'True') {
+                                                        if (!$global:ImageMagickError -eq 'true') {
                                                             # Resize Image to 2000x3000 and apply Border and overlay
                                                             if ($AddTitleCardBorder -eq 'true' -and $AddTitleCardOverlay -eq 'true') {
                                                                 $Arguments = "`"$EpisodeImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$TitleCardoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$TitleCardborderwidthsecond`"  -bordercolor `"$TitleCardbordercolor`" -border `"$TitleCardborderwidth`" `"$EpisodeImage`""
@@ -10789,7 +11365,7 @@ else {
                                                                             $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
                                                                         }
                                                                     }
-                                                                    
+
                                                                     Write-Entry -Subtext "Applying EPTitle text: `"$global:EPTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                                     $logEntry = "`"$magick`" $Arguments"
                                                                     $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
@@ -10865,7 +11441,7 @@ else {
                                                     InvokeMagickCommand -Command $magick -Arguments $Resizeargument
                                                 }
                                             }
-                                            if (!$global:ImageMagickError -eq 'True') {
+                                            if (!$global:ImageMagickError -eq 'true') {
                                                 if (Get-ChildItem -LiteralPath $EpisodeImage -ErrorAction SilentlyContinue) {
                                                     # Move file back to original naming with Brackets.
                                                     if (!$global:IsTruncated) {
@@ -10884,8 +11460,8 @@ else {
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "Language" -Value $(if (!$global:AssetTextLang) { "Textless" }Else { $global:AssetTextLang })
-                                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback -and $global:FallbackText) { $global:FallbackText } elseif ($global:IsFallback -and !$global:FallbackText) { 'True' } Else { 'False' })
-                                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
+                                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback -and $global:FallbackText) { $global:FallbackText } elseif ($global:IsFallback -and !$global:FallbackText) { 'true' } Else { 'false' })
+                                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                                     switch -Wildcard ($global:FavProvider) {
                                                         'TMDB' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "N/A" }) }
@@ -10909,7 +11485,7 @@ else {
                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "Language" -Value "N/A"
                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value "N/A"
-                                                $episodetemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
+                                                $episodetemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value "N/A"
                                                 switch -Wildcard ($global:FavProvider) {
                                                     'TMDB' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "N/A" }) }
@@ -10926,7 +11502,7 @@ else {
 
                                     }
                                     else {
-                                        if ($show_skipped -eq 'True' ) {
+                                        if ($show_skipped -eq 'true' ) {
                                             Write-Entry -Subtext "Already exists: $EpisodeImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                                         }
                                     }
@@ -10993,11 +11569,11 @@ else {
                                 $EpisodeImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_$global:FileNaming.jpg"
                                 $EpisodeImage = $EpisodeImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
                                 $cjkTitlePattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsThai}]'
-                                if ($SkipTBA -eq 'True' -and $global:EPTitle -eq 'TBA') {
+                                if ($SkipTBA -eq 'true' -and $global:EPTitle -eq 'TBA') {
                                     Write-Entry -Subtext "Skipping $global:FileNaming of $global:show_name because Title is 'TBA'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                     $SkipTBACount++
                                 }
-                                Elseif ($SkipJapTitle -eq 'True' -and $global:EPTitle -match $cjkTitlePattern) {
+                                Elseif ($SkipJapTitle -eq 'true' -and $global:EPTitle -match $cjkTitlePattern) {
                                     Write-Entry -Subtext "Skipping $global:FileNaming of $global:show_name because Title contains Jap/Chinese Chars" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                     $SkipJapTitleCount++
                                 }
@@ -11033,7 +11609,7 @@ else {
                                                         Write-Entry -Subtext "Could not find a TitleCard on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                     }
                                                 }
-                                                if (!$global:posterurl -and $BackgroundFallback -eq 'True') {
+                                                if (!$global:posterurl -and $BackgroundFallback -eq 'true') {
                                                     # Lets just try to grab a background poster.
                                                     Write-Entry -Subtext "Fallback to Show Background..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                                     $global:posterurl = GetTMDBShowBackground
@@ -11068,7 +11644,7 @@ else {
                                                         Write-Entry -Subtext "Could not find a TitleCard on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                     }
                                                 }
-                                                if (!$global:posterurl -and $BackgroundFallback -eq 'True') {
+                                                if (!$global:posterurl -and $BackgroundFallback -eq 'true') {
                                                     Write-Entry -Subtext "No Title Cards for this Episode on TVDB or TMDB..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                     # Lets just try to grab a background poster.
                                                     Write-Entry -Subtext "Fallback to Show Background..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
@@ -11099,7 +11675,7 @@ else {
                                                         Write-Entry -Subtext "Could not find a TitleCard on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                     }
                                                 }
-                                                if (!$global:posterurl -and $BackgroundFallback -eq 'True') {
+                                                if (!$global:posterurl -and $BackgroundFallback -eq 'true') {
                                                     # Lets just try to grab a background poster.
                                                     Write-Entry -Subtext "Fallback to Show Background..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                                     $global:posterurl = GetTVDBShowBackground
@@ -11134,7 +11710,7 @@ else {
                                                         Write-Entry -Subtext "Could not find a TitleCard on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                     }
                                                 }
-                                                if (!$global:posterurl -and $BackgroundFallback -eq 'True') {
+                                                if (!$global:posterurl -and $BackgroundFallback -eq 'true') {
                                                     # Lets just try to grab a background poster.
                                                     Write-Entry -Subtext "Fallback to Show Background..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                                     $global:posterurl = GetTMDBShowBackground
@@ -11185,7 +11761,7 @@ else {
                                                     $CommentlogEntry = "`"$magick`" $CommentArguments"
                                                     $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                                     InvokeMagickCommand -Command $magick -Arguments $CommentArguments
-                                                    if (!$global:ImageMagickError -eq 'True') {
+                                                    if (!$global:ImageMagickError -eq 'true') {
                                                         # Resize Image to 2000x3000 and apply Border and overlay
                                                         if ($AddTitleCardBorder -eq 'true' -and $AddTitleCardOverlay -eq 'true') {
                                                             $Arguments = "`"$EpisodeImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$TitleCardoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$TitleCardborderwidthsecond`"  -bordercolor `"$TitleCardbordercolor`" -border `"$TitleCardborderwidth`" `"$EpisodeImage`""
@@ -11244,7 +11820,7 @@ else {
                                                                         $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
                                                                     }
                                                                 }
-                                                                
+
                                                                 Write-Entry -Subtext "Applying EPTitle text: `"$global:EPTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                                 $logEntry = "`"$magick`" $Arguments"
                                                                 $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
@@ -11319,7 +11895,7 @@ else {
                                                     InvokeMagickCommand -Command $magick -Arguments $Resizeargument
                                                 }
                                             }
-                                            if (!$global:ImageMagickError -eq 'True') {
+                                            if (!$global:ImageMagickError -eq 'true') {
                                                 if (Get-ChildItem -LiteralPath $EpisodeImage -ErrorAction SilentlyContinue) {
                                                     # Move file back to original naming with Brackets.
                                                     if (!$global:IsTruncated) {
@@ -11339,8 +11915,8 @@ else {
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "Language" -Value $(if (!$global:AssetTextLang) { "Textless" }Else { $global:AssetTextLang })
-                                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback -and $global:FallbackText) { $global:FallbackText } elseif ($global:IsFallback -and !$global:FallbackText) { 'True' } Else { 'False' })
-                                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
+                                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback -and $global:FallbackText) { $global:FallbackText } elseif ($global:IsFallback -and !$global:FallbackText) { 'true' } Else { 'false' })
+                                                    $episodetemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
                                                     switch -Wildcard ($global:FavProvider) {
                                                         'TMDB' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "N/A" }) }
@@ -11364,7 +11940,7 @@ else {
                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "Language" -Value "N/A"
                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value "N/A"
-                                                $episodetemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
+                                                $episodetemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
                                                 $episodetemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value "N/A"
                                                 switch -Wildcard ($global:FavProvider) {
                                                     'TMDB' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "N/A" }) }
@@ -11381,7 +11957,7 @@ else {
 
                                     }
                                     else {
-                                        if ($show_skipped -eq 'True' ) {
+                                        if ($show_skipped -eq 'true' ) {
                                             Write-Entry -Subtext "Already exists: $EpisodeImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                                         }
                                     }
@@ -11403,7 +11979,7 @@ else {
     }
 
     # Asset Cleanup
-    if ($AssetCleanup -eq 'True') {
+    if ($AssetCleanup -eq 'true') {
         $ImagesCleared = 0
         $PathsCleared = 0
         $savedsizestring = 0
@@ -11527,10 +12103,10 @@ else {
         Write-Entry -Message "You can find a detailed Summary of image Choices here: $global:ScriptRoot\Logs\ImageChoices.csv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
         # Calculate Summary
         $SummaryCount = Import-Csv -LiteralPath "$global:ScriptRoot\Logs\ImageChoices.csv" -Delimiter ';'
-        $FallbackCount = @($SummaryCount | Where-Object Fallback -eq 'True')
+        $FallbackCount = @($SummaryCount | Where-Object Fallback -eq 'true')
         $TextlessCount = @($SummaryCount | Where-Object Language -eq 'Textless')
-        $TextTruncatedCount = @($SummaryCount | Where-Object TextTruncated -eq 'True')
-        $TextCount = @($SummaryCount | Where-Object Textless -eq 'False')
+        $TextTruncatedCount = @($SummaryCount | Where-Object TextTruncated -eq 'true')
+        $TextCount = @($SummaryCount | Where-Object Textless -eq 'false')
         if ($TextlessCount -or $FallbackCount -or $TextCount -or $PosterUnknownCount -or $TextTruncatedCount) {
             Write-Entry -Message "This is a subset summary of all image choices from the ImageChoices.csv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
         }
@@ -11575,9 +12151,9 @@ else {
     Write-Entry -Message "Script execution time: $FormattedTimespawn" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
 
     # Send Notification
-    if ($global:NotifyUrl -like '*discord*' -and $global:SendNotification -eq 'True') {
-        if ($SkipTBA -eq 'True' -or $SkipJapTitle -eq 'True') {
-            if ($AssetCleanup -eq 'True') {
+    if ($global:NotifyUrl -like '*discord*' -and $global:SendNotification -eq 'true') {
+        if ($SkipTBA -eq 'true' -or $SkipJapTitle -eq 'true') {
+            if ($AssetCleanup -eq 'true') {
                 $jsonPayload = @"
                 {
                     "username": "Posterizarr",
@@ -11785,7 +12361,7 @@ else {
             }
         }
         Else {
-            if ($AssetCleanup -eq 'True') {
+            if ($AssetCleanup -eq 'true') {
                 $jsonPayload = @"
                 {
                     "username": "Posterizarr",
