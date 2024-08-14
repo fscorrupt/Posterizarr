@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [1.3.1](https://github.com/fscorrupt/Posterizarr/releases/tag/1.3.1) - 2024-08-14 07:04:27
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.3.0...1.3.1
+
+### Bug Fixes
+
+- general:
+  - Plex TC search could not find images ([af6b3f0](https://github.com/fscorrupt/Posterizarr/commit/af6b3f0ac91709a482f399f1cb74c858eb88bcae))
+
 ## [1.3.0](https://github.com/fscorrupt/Posterizarr/releases/tag/1.3.0) - 2024-08-13 08:26:33
 
 **Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.2.49...1.3.0
