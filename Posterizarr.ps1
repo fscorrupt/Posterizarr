@@ -8,7 +8,7 @@
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.3.0"
+$CurrentScriptVersion = "1.3.1"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -7963,7 +7963,7 @@ Elseif ($Tautulli) {
                                                 }
                                                 if (!$global:posterurl) {
                                                     $global:IsFallback = $true
-                                                    if ($entry.PlexTitleCardUrl) {
+                                                    if ($entry.PlexTitleCardUrls) {
                                                         GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage
                                                     }
                                                     Else {
@@ -7985,7 +7985,7 @@ Elseif ($Tautulli) {
                                                 }
                                                 if (!$global:posterurl) {
                                                     $global:IsFallback = $true
-                                                    if ($entry.PlexTitleCardUrl) {
+                                                    if ($entry.PlexTitleCardUrls) {
                                                         GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage
                                                     }
                                                     Else {
@@ -8008,7 +8008,7 @@ Elseif ($Tautulli) {
                                                 }
                                                 if (!$global:posterurl) {
                                                     $global:IsFallback = $true
-                                                    if ($entry.PlexTitleCardUrl) {
+                                                    if ($entry.PlexTitleCardUrls) {
                                                         GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage
                                                     }
                                                     Else {
@@ -8027,7 +8027,7 @@ Elseif ($Tautulli) {
                                                 }
                                                 if (!$global:posterurl) {
                                                     $global:IsFallback = $true
-                                                    if ($entry.PlexTitleCardUrl) {
+                                                    if ($entry.PlexTitleCardUrls) {
                                                         GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage
                                                     }
                                                     Else {
@@ -8401,7 +8401,7 @@ Elseif ($Tautulli) {
                                                 }
                                                 if (!$global:posterurl) {
                                                     $global:IsFallback = $true
-                                                    if ($entry.PlexTitleCardUrl) {
+                                                    if ($entry.PlexTitleCardUrls) {
                                                         GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage
                                                     }
                                                     Else {
@@ -8436,7 +8436,7 @@ Elseif ($Tautulli) {
                                                 $global:posterurl = GetTVDBTitleCard
                                                 if (!$global:posterurl) {
                                                     $global:IsFallback = $true
-                                                    if ($entry.PlexTitleCardUrl) {
+                                                    if ($entry.PlexTitleCardUrls) {
                                                         GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage
                                                     }
                                                     Else {
@@ -8467,7 +8467,7 @@ Elseif ($Tautulli) {
                                                 }
                                                 if (!$global:posterurl) {
                                                     $global:IsFallback = $true
-                                                    if ($entry.PlexTitleCardUrl) {
+                                                    if ($entry.PlexTitleCardUrls) {
                                                         GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage
                                                     }
                                                     Else {
@@ -8502,7 +8502,7 @@ Elseif ($Tautulli) {
                                                 $global:posterurl = GetTMDBTitleCard
                                                 if (!$global:posterurl) {
                                                     $global:IsFallback = $true
-                                                    if ($entry.PlexTitleCardUrl) {
+                                                    if ($entry.PlexTitleCardUrls) {
                                                         GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage
                                                     }
                                                     Else {
@@ -11177,7 +11177,7 @@ else {
                                                 }
                                                 if (!$global:posterurl) {
                                                     $global:IsFallback = $true
-                                                    if ($entry.PlexTitleCardUrl) {
+                                                    if ($entry.PlexTitleCardUrls) {
                                                         GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage
                                                     }
                                                     Else {
@@ -11199,7 +11199,7 @@ else {
                                                 }
                                                 if (!$global:posterurl) {
                                                     $global:IsFallback = $true
-                                                    if ($entry.PlexTitleCardUrl) {
+                                                    if ($entry.PlexTitleCardUrls) {
                                                         GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage
                                                     }
                                                     Else {
@@ -11222,7 +11222,7 @@ else {
                                                 }
                                                 if (!$global:posterurl) {
                                                     $global:IsFallback = $true
-                                                    if ($entry.PlexTitleCardUrl) {
+                                                    if ($entry.PlexTitleCardUrls) {
                                                         GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage
                                                     }
                                                     Else {
@@ -11241,7 +11241,7 @@ else {
                                                 }
                                                 if (!$global:posterurl) {
                                                     $global:IsFallback = $true
-                                                    if ($entry.PlexTitleCardUrl) {
+                                                    if ($entry.PlexTitleCardUrls) {
                                                         GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage
                                                     }
                                                     Else {
@@ -11599,7 +11599,7 @@ else {
                                                 }
                                                 if (!$global:posterurl) {
                                                     $global:IsFallback = $true
-                                                    if ($entry.PlexTitleCardUrl) {
+                                                    if ($entry.PlexTitleCardUrls) {
                                                         GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage
                                                     }
                                                     Else {
@@ -11634,7 +11634,7 @@ else {
                                                 $global:posterurl = GetTVDBTitleCard
                                                 if (!$global:posterurl) {
                                                     $global:IsFallback = $true
-                                                    if ($entry.PlexTitleCardUrl) {
+                                                    if ($entry.PlexTitleCardUrls) {
                                                         GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage
                                                     }
                                                     Else {
@@ -11665,7 +11665,7 @@ else {
                                                 }
                                                 if (!$global:posterurl) {
                                                     $global:IsFallback = $true
-                                                    if ($entry.PlexTitleCardUrl) {
+                                                    if ($entry.PlexTitleCardUrls) {
                                                         GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage
                                                     }
                                                     Else {
@@ -11700,7 +11700,7 @@ else {
                                                 $global:posterurl = GetTMDBTitleCard
                                                 if (!$global:posterurl) {
                                                     $global:IsFallback = $true
-                                                    if ($entry.PlexTitleCardUrl) {
+                                                    if ($entry.PlexTitleCardUrls) {
                                                         GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage
                                                     }
                                                     Else {
