@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [1.3.2](https://github.com/fscorrupt/Posterizarr/releases/tag/1.3.2) - 2024-08-14 07:23:10
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.3.1...1.3.2
+
+### Bug Fixes
+
+- general:
+  - another Plex search variable fix ([e8df9f9](https://github.com/fscorrupt/Posterizarr/commit/e8df9f98a09ac4b4a7b787cf4ae36968e86a520b))
+
 ## [1.3.1](https://github.com/fscorrupt/Posterizarr/releases/tag/1.3.1) - 2024-08-14 07:04:27
 
 **Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.3.0...1.3.1
