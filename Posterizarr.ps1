@@ -8,7 +8,7 @@
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.3.1"
+$CurrentScriptVersion = "1.3.2"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -5874,7 +5874,7 @@ Elseif ($Tautulli) {
                             'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBMoviePoster }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartMoviePoster } }
                             'FANART' { $global:posterurl = GetFanartMoviePoster }
                             'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBMoviePoster }Else { Write-Entry -Subtext "Can't search on TVDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartMoviePoster } }
-                            'PLEX' { if ($entry.PlexPosterUrl) { GetPlexArtwork -Type ' a Movie Poster' -ArtUrl $Arturl -TempImage $PosterImage } }
+                            'PLEX' { if ($ArtUrl) { GetPlexArtwork -Type ' a Movie Poster' -ArtUrl $Arturl -TempImage $PosterImage } }
                             Default { $global:posterurl = GetFanartMoviePoster }
                         }
                         switch -Wildcard ($global:Fallback) {
@@ -5929,7 +5929,7 @@ Elseif ($Tautulli) {
                                 $global:IsFallback = $true
                             }
                             if (!$global:posterurl -and !$global:OnlyTextless) {
-                                if ($entry.PlexPosterUrl) {
+                                if ($ArtUrl) {
                                     GetPlexArtwork -Type ' a Movie Poster' -ArtUrl $Arturl -TempImage $PosterImage
                                     $global:IsFallback = $true
                                 }
@@ -6205,7 +6205,7 @@ Elseif ($Tautulli) {
                             'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBMovieBackground }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartMovieBackground } }
                             'FANART' { $global:posterurl = GetFanartMovieBackground }
                             'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBMovieBackground }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartMovieBackground } }
-                            'PLEX' { if ($entry.PlexBackgroundUrl) { GetPlexArtwork -Type ' a Movie Background' -ArtUrl $Arturl -TempImage $backgroundImage } }
+                            'PLEX' { if ($ArtUrl) { GetPlexArtwork -Type ' a Movie Background' -ArtUrl $Arturl -TempImage $backgroundImage } }
                             Default { $global:posterurl = GetFanartMovieBackground }
                         }
                         switch -Wildcard ($global:Fallback) {
@@ -6258,7 +6258,7 @@ Elseif ($Tautulli) {
                                 $global:IsFallback = $true
                             }
                             if (!$global:posterurl) {
-                                if ($entry.PlexBackgroundUrl) {
+                                if ($ArtUrl) {
                                     GetPlexArtwork -Type ' a Movie Background' -ArtUrl $Arturl -TempImage $backgroundImage
                                     $global:IsFallback = $true
                                 }
@@ -6598,7 +6598,7 @@ Elseif ($Tautulli) {
                         'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBShowPoster }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartShowPoster } }
                         'FANART' { $global:posterurl = GetFanartShowPoster }
                         'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBShowPoster }Else { Write-Entry -Subtext "Can't search on TVDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartShowPoster } }
-                        'PLEX' { if ($entry.PlexPosterUrl) { GetPlexArtwork -Type ' a Show Poster' -ArtUrl $Arturl -TempImage $PosterImage } }
+                        'PLEX' { if ($ArtUrl) { GetPlexArtwork -Type ' a Show Poster' -ArtUrl $Arturl -TempImage $PosterImage } }
                         Default { $global:posterurl = GetFanartShowPoster }
                     }
                     switch -Wildcard ($global:Fallback) {
@@ -6636,7 +6636,7 @@ Elseif ($Tautulli) {
                         $global:posterurl = GetTVDBShowPoster
                         $global:IsFallback = $true
                         if (!$global:posterurl -and !$global:TMDBfallbackposterurl -and !$global:fanartfallbackposterurl) {
-                            if ($entry.PlexPosterUrl -and !$global:OnlyTextless) {
+                            if ($ArtUrl -and !$global:OnlyTextless) {
                                 GetPlexArtwork -Type ' a Show Poster' -ArtUrl $Arturl -TempImage $PosterImage
                                 $global:plexalreadysearched = $True
                             }
@@ -6650,7 +6650,7 @@ Elseif ($Tautulli) {
                     }
                     if (!$global:posterurl -and !$global:plexalreadysearched -eq 'true') {
                         $global:IsFallback = $true
-                        if ($entry.PlexPosterUrl -and !$global:OnlyTextless) {
+                        if ($ArtUrl -and !$global:OnlyTextless) {
                             GetPlexArtwork -Type ' a Show Poster' -ArtUrl $Arturl -TempImage $PosterImage
                             $global:plexalreadysearched = $True
                         }
@@ -6934,7 +6934,7 @@ Elseif ($Tautulli) {
                         'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBShowBackground }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartShowBackground } }
                         'FANART' { $global:posterurl = GetFanartShowBackground }
                         'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBShowBackground }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartShowBackground } }
-                        'PLEX' { if ($entry.PlexBackgroundUrl) { GetPlexArtwork -Type ' a Show Background' -ArtUrl $Arturl -TempImage $backgroundImage } }
+                        'PLEX' { if ($ArtUrl) { GetPlexArtwork -Type ' a Show Background' -ArtUrl $Arturl -TempImage $backgroundImage } }
                         Default { $global:posterurl = GetFanartShowBackground }
                     }
                     switch -Wildcard ($global:Fallback) {
@@ -6989,7 +6989,7 @@ Elseif ($Tautulli) {
                         }
                         $global:FallbackText = 'True-Background'
                         if (!$global:posterurl) {
-                            if ($entry.PlexBackgroundUrl) {
+                            if ($ArtUrl) {
                                 GetPlexArtwork -Type ' a Show Background' -ArtUrl $Arturl -TempImage $backgroundImage
                             }
                             Else {
@@ -7292,7 +7292,7 @@ Elseif ($Tautulli) {
                             'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBSeasonPoster }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning } }
                             'FANART' { $global:posterurl = GetFanartSeasonPoster }
                             'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBSeasonPoster }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning } }
-                            'PLEX' { if ($entry.PlexSeasonUrls) { GetPlexArtwork -Type ' a Season Poster' -ArtUrl $Arturl -TempImage $SeasonImage } }
+                            'PLEX' { if ($ArtUrl) { GetPlexArtwork -Type ' a Season Poster' -ArtUrl $Arturl -TempImage $SeasonImage } }
                             Default { $global:posterurl = GetFanartSeasonPoster }
                         }
                         # do a specific order
@@ -7347,7 +7347,7 @@ Elseif ($Tautulli) {
                                         Write-Entry -Subtext "IsFallback: $global:IsFallback" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                                     }
                                 }
-                                if ($entry.PlexSeasonUrls) {
+                                if ($ArtUrl) {
                                     if ($global:FavProvider -ne 'PLEX') {
                                         $global:IsFallback = $true
                                         GetPlexArtwork -Type ' a Season Poster' -ArtUrl $Arturl -TempImage $SeasonImage
@@ -7963,7 +7963,7 @@ Elseif ($Tautulli) {
                                                 }
                                                 if (!$global:posterurl) {
                                                     $global:IsFallback = $true
-                                                    if ($entry.PlexTitleCardUrls) {
+                                                    if ($ArtUrl) {
                                                         GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage
                                                     }
                                                     Else {
@@ -7985,7 +7985,7 @@ Elseif ($Tautulli) {
                                                 }
                                                 if (!$global:posterurl) {
                                                     $global:IsFallback = $true
-                                                    if ($entry.PlexTitleCardUrls) {
+                                                    if ($ArtUrl) {
                                                         GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage
                                                     }
                                                     Else {
@@ -8008,7 +8008,7 @@ Elseif ($Tautulli) {
                                                 }
                                                 if (!$global:posterurl) {
                                                     $global:IsFallback = $true
-                                                    if ($entry.PlexTitleCardUrls) {
+                                                    if ($ArtUrl) {
                                                         GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage
                                                     }
                                                     Else {
@@ -8027,7 +8027,7 @@ Elseif ($Tautulli) {
                                                 }
                                                 if (!$global:posterurl) {
                                                     $global:IsFallback = $true
-                                                    if ($entry.PlexTitleCardUrls) {
+                                                    if ($ArtUrl) {
                                                         GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage
                                                     }
                                                     Else {
@@ -8401,7 +8401,7 @@ Elseif ($Tautulli) {
                                                 }
                                                 if (!$global:posterurl) {
                                                     $global:IsFallback = $true
-                                                    if ($entry.PlexTitleCardUrls) {
+                                                    if ($ArtUrl) {
                                                         GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage
                                                     }
                                                     Else {
@@ -8436,7 +8436,7 @@ Elseif ($Tautulli) {
                                                 $global:posterurl = GetTVDBTitleCard
                                                 if (!$global:posterurl) {
                                                     $global:IsFallback = $true
-                                                    if ($entry.PlexTitleCardUrls) {
+                                                    if ($ArtUrl) {
                                                         GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage
                                                     }
                                                     Else {
@@ -8467,7 +8467,7 @@ Elseif ($Tautulli) {
                                                 }
                                                 if (!$global:posterurl) {
                                                     $global:IsFallback = $true
-                                                    if ($entry.PlexTitleCardUrls) {
+                                                    if ($ArtUrl) {
                                                         GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage
                                                     }
                                                     Else {
@@ -8502,7 +8502,7 @@ Elseif ($Tautulli) {
                                                 $global:posterurl = GetTMDBTitleCard
                                                 if (!$global:posterurl) {
                                                     $global:IsFallback = $true
-                                                    if ($entry.PlexTitleCardUrls) {
+                                                    if ($ArtUrl) {
                                                         GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage
                                                     }
                                                     Else {
@@ -9377,7 +9377,7 @@ else {
                             'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBMoviePoster }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartMoviePoster } }
                             'FANART' { $global:posterurl = GetFanartMoviePoster }
                             'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBMoviePoster }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartMoviePoster } }
-                            'PLEX' { if ($entry.PlexPosterUrl) { GetPlexArtwork -Type ' a Movie Poster' -ArtUrl $Arturl -TempImage $PosterImage } }
+                            'PLEX' { if ($ArtUrl) { GetPlexArtwork -Type ' a Movie Poster' -ArtUrl $Arturl -TempImage $PosterImage } }
                             Default { $global:posterurl = GetFanartMoviePoster }
                         }
                         switch -Wildcard ($global:Fallback) {
@@ -9432,7 +9432,7 @@ else {
                                 $global:IsFallback = $true
                             }
                             if (!$global:posterurl -and !$global:OnlyTextless) {
-                                if ($entry.PlexPosterUrl) {
+                                if ($ArtUrl) {
                                     GetPlexArtwork -Type ' a Movie Poster' -ArtUrl $Arturl -TempImage $PosterImage
                                     $global:IsFallback = $true
                                 }
@@ -9693,7 +9693,7 @@ else {
                             'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBMovieBackground }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartMovieBackground } }
                             'FANART' { $global:posterurl = GetFanartMovieBackground }
                             'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBMovieBackground }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartMovieBackground } }
-                            'PLEX' { if ($entry.PlexBackgroundUrl) { GetPlexArtwork -Type ' a Movie Background' -ArtUrl $Arturl -TempImage $backgroundImage } }
+                            'PLEX' { if ($ArtUrl) { GetPlexArtwork -Type ' a Movie Background' -ArtUrl $Arturl -TempImage $backgroundImage } }
                             Default { $global:posterurl = GetFanartMovieBackground }
                         }
                         switch -Wildcard ($global:Fallback) {
@@ -9746,7 +9746,7 @@ else {
                                 $global:IsFallback = $true
                             }
                             if (!$global:posterurl) {
-                                if ($entry.PlexBackgroundUrl) {
+                                if ($ArtUrl) {
                                     GetPlexArtwork -Type ' a Movie Background' -ArtUrl $Arturl -TempImage $backgroundImage
                                     $global:IsFallback = $true
                                 }
@@ -10072,7 +10072,7 @@ else {
                         'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBShowPoster }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartShowPoster } }
                         'FANART' { $global:posterurl = GetFanartShowPoster }
                         'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBShowPoster }Else { Write-Entry -Subtext "Can't search on TVDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartShowPoster } }
-                        'PLEX' { if ($entry.PlexPosterUrl) { GetPlexArtwork -Type ' a Show Poster' -ArtUrl $Arturl -TempImage $PosterImage } }
+                        'PLEX' { if ($ArtUrl) { GetPlexArtwork -Type ' a Show Poster' -ArtUrl $Arturl -TempImage $PosterImage } }
                         Default { $global:posterurl = GetFanartShowPoster }
                     }
                     switch -Wildcard ($global:Fallback) {
@@ -10115,7 +10115,7 @@ else {
                         $global:posterurl = GetTVDBShowPoster
                         $global:IsFallback = $true
                         if (!$global:posterurl -and !$global:TMDBfallbackposterurl -and !$global:fanartfallbackposterurl) {
-                            if ($entry.PlexPosterUrl -and !$global:OnlyTextless) {
+                            if ($ArtUrl -and !$global:OnlyTextless) {
                                 GetPlexArtwork -Type ' a Show Poster' -ArtUrl $Arturl -TempImage $PosterImage
                                 $global:plexalreadysearched = $True
                             }
@@ -10129,7 +10129,7 @@ else {
                     }
                     if (!$global:posterurl -and !$global:plexalreadysearched -eq 'true') {
                         $global:IsFallback = $true
-                        if ($entry.PlexPosterUrl -and !$global:OnlyTextless) {
+                        if ($ArtUrl -and !$global:OnlyTextless) {
                             GetPlexArtwork -Type ' a Show Poster' -ArtUrl $Arturl -TempImage $PosterImage
                             $global:plexalreadysearched = $True
                         }
@@ -10397,7 +10397,7 @@ else {
                         'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBShowBackground }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartShowBackground } }
                         'FANART' { $global:posterurl = GetFanartShowBackground }
                         'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBShowBackground }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartShowBackground } }
-                        'PLEX' { if ($entry.PlexBackgroundUrl) { GetPlexArtwork -Type ' a Show Background' -ArtUrl $Arturl -TempImage $backgroundImage } }
+                        'PLEX' { if ($ArtUrl) { GetPlexArtwork -Type ' a Show Background' -ArtUrl $Arturl -TempImage $backgroundImage } }
                         Default { $global:posterurl = GetFanartShowBackground }
                     }
                     switch -Wildcard ($global:Fallback) {
@@ -10452,7 +10452,7 @@ else {
                         }
                         $global:FallbackText = 'True-Background'
                         if (!$global:posterurl) {
-                            if ($entry.PlexBackgroundUrl) {
+                            if ($ArtUrl) {
                                 GetPlexArtwork -Type ' a Show Background' -ArtUrl $Arturl -TempImage $backgroundImage
                             }
                             Else {
@@ -10738,7 +10738,7 @@ else {
                             'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBSeasonPoster }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning } }
                             'FANART' { $global:posterurl = GetFanartSeasonPoster }
                             'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBSeasonPoster }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning } }
-                            'PLEX' { if ($entry.PlexSeasonUrls) { GetPlexArtwork -Type ' a Season Poster' -ArtUrl $Arturl -TempImage $SeasonImage } }
+                            'PLEX' { if ($ArtUrl) { GetPlexArtwork -Type ' a Season Poster' -ArtUrl $Arturl -TempImage $SeasonImage } }
                             Default { $global:posterurl = GetFanartSeasonPoster }
                         }
                         # do a specific order
@@ -10793,7 +10793,7 @@ else {
                                         Write-Entry -Subtext "IsFallback: $global:IsFallback" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                                     }
                                 }
-                                if ($entry.PlexSeasonUrls) {
+                                if ($ArtUrl) {
                                     if ($global:FavProvider -ne 'PLEX') {
                                         $global:IsFallback = $true
                                         GetPlexArtwork -Type ' a Season Poster' -ArtUrl $Arturl -TempImage $SeasonImage
@@ -11177,7 +11177,7 @@ else {
                                                 }
                                                 if (!$global:posterurl) {
                                                     $global:IsFallback = $true
-                                                    if ($entry.PlexTitleCardUrls) {
+                                                    if ($ArtUrl) {
                                                         GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage
                                                     }
                                                     Else {
@@ -11199,7 +11199,7 @@ else {
                                                 }
                                                 if (!$global:posterurl) {
                                                     $global:IsFallback = $true
-                                                    if ($entry.PlexTitleCardUrls) {
+                                                    if ($ArtUrl) {
                                                         GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage
                                                     }
                                                     Else {
@@ -11222,7 +11222,7 @@ else {
                                                 }
                                                 if (!$global:posterurl) {
                                                     $global:IsFallback = $true
-                                                    if ($entry.PlexTitleCardUrls) {
+                                                    if ($ArtUrl) {
                                                         GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage
                                                     }
                                                     Else {
@@ -11241,7 +11241,7 @@ else {
                                                 }
                                                 if (!$global:posterurl) {
                                                     $global:IsFallback = $true
-                                                    if ($entry.PlexTitleCardUrls) {
+                                                    if ($ArtUrl) {
                                                         GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage
                                                     }
                                                     Else {
@@ -11599,7 +11599,7 @@ else {
                                                 }
                                                 if (!$global:posterurl) {
                                                     $global:IsFallback = $true
-                                                    if ($entry.PlexTitleCardUrls) {
+                                                    if ($ArtUrl) {
                                                         GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage
                                                     }
                                                     Else {
@@ -11634,7 +11634,7 @@ else {
                                                 $global:posterurl = GetTVDBTitleCard
                                                 if (!$global:posterurl) {
                                                     $global:IsFallback = $true
-                                                    if ($entry.PlexTitleCardUrls) {
+                                                    if ($ArtUrl) {
                                                         GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage
                                                     }
                                                     Else {
@@ -11665,7 +11665,7 @@ else {
                                                 }
                                                 if (!$global:posterurl) {
                                                     $global:IsFallback = $true
-                                                    if ($entry.PlexTitleCardUrls) {
+                                                    if ($ArtUrl) {
                                                         GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage
                                                     }
                                                     Else {
@@ -11700,7 +11700,7 @@ else {
                                                 $global:posterurl = GetTMDBTitleCard
                                                 if (!$global:posterurl) {
                                                     $global:IsFallback = $true
-                                                    if ($entry.PlexTitleCardUrls) {
+                                                    if ($ArtUrl) {
                                                         GetPlexArtwork -Type ": $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -ArtUrl $ArtUrl -TempImage $EpisodeImage
                                                     }
                                                     Else {
