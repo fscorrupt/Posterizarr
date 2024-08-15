@@ -8,7 +8,7 @@
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.3.4"
+$CurrentScriptVersion = "1.3.5"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -656,7 +656,7 @@ function GetTMDBMoviePoster {
     if (!$global:tmdbid) {
         Write-Entry -Subtext "Cannot search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     }
-    if ($global:PreferTextless -eq 'true') {
+    if ($global:PreferTextless -eq $true) {
         try {
             $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($global:tmdbid)?append_to_response=images&language=xx&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
         }
@@ -677,7 +677,7 @@ function GetTMDBMoviePoster {
                 if (!$NoLangPoster) {
                     Write-Entry -Subtext "PreferTextless Value: $global:PreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                     Write-Entry -Subtext "OnlyTextless Value: $global:OnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                    if ($global:OnlyTextless -eq 'False') {
+                    if ($global:OnlyTextless -eq $false) {
                         if ($global:WidthHeightFilter -eq 'true') {
                             if ($global:TMDBVoteSorting -eq 'Primary') {
                                 $filteredPosters = $response.images.posters | Where-Object { $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
@@ -864,7 +864,7 @@ function GetTMDBMovieBackground {
     if (!$global:tmdbid) {
         Write-Entry -Subtext "Cannot search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     }
-    if ($global:PreferTextless -eq 'true') {
+    if ($global:PreferTextless -eq $true) {
         try {
             $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($global:tmdbid)?append_to_response=images&language=xx&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
         }
@@ -885,7 +885,7 @@ function GetTMDBMovieBackground {
                 if (!$NoLangPoster) {
                     Write-Entry -Subtext "PreferTextless Value: $global:PreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                     Write-Entry -Subtext "OnlyTextless Value: $global:OnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                    if ($global:OnlyTextless -eq 'False') {
+                    if ($global:OnlyTextless -eq $false) {
                         if ($global:WidthHeightFilter -eq 'true') {
                             if ($global:TMDBVoteSorting -eq 'Primary') {
                                 $filteredPosters = $response.images.backdrops | Where-Object { $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight }
@@ -1077,7 +1077,7 @@ function GetTMDBShowPoster {
     if (!$global:tmdbid) {
         Write-Entry -Subtext "Cannot search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     }
-    if ($global:PreferTextless -eq 'true') {
+    if ($global:PreferTextless -eq $true) {
         try {
             $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=xx&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
         }
@@ -1098,7 +1098,7 @@ function GetTMDBShowPoster {
                 if (!$NoLangPoster) {
                     Write-Entry -Subtext "PreferTextless Value: $global:PreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                     Write-Entry -Subtext "OnlyTextless Value: $global:OnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                    if ($global:OnlyTextless -eq 'False') {
+                    if ($global:OnlyTextless -eq $false) {
                         if ($global:WidthHeightFilter -eq 'true') {
                             if ($global:TMDBVoteSorting -eq 'Primary') {
                                 $filteredPosters = $response.images.posters | Where-Object { $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
@@ -1267,7 +1267,7 @@ function GetTMDBSeasonPoster {
     if (!$global:tmdbid) {
         Write-Entry -Subtext "Cannot search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     }
-    if ($global:SeasonPreferTextless -eq 'true') {
+    if ($global:SeasonPreferTextless -eq $true) {
         try {
             $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)/season/$global:SeasonNumber/images?append_to_response=images&language=xx&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
         }
@@ -1526,7 +1526,7 @@ function GetTMDBShowBackground {
     if (!$global:tmdbid) {
         Write-Entry -Subtext "Cannot search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     }
-    if ($global:PreferTextless -eq 'true') {
+    if ($global:PreferTextless -eq $true) {
         try {
             $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=xx&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
         }
@@ -1547,7 +1547,7 @@ function GetTMDBShowBackground {
                 if (!$NoLangPoster) {
                     Write-Entry -Subtext "PreferTextless Value: $global:PreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                     Write-Entry -Subtext "OnlyTextless Value: $global:OnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                    if ($global:OnlyTextless -eq 'False') {
+                    if ($global:OnlyTextless -eq $false) {
                         if ($global:WidthHeightFilter -eq 'true') {
                             if ($global:TMDBVoteSorting -eq 'Primary') {
                                 $filteredPosters = $response.images.backdrops | Where-Object { $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
@@ -1862,7 +1862,7 @@ function GetTMDBTitleCard {
 function GetFanartMoviePoster {
     $global:Fallback = $null
     Write-Entry -Subtext "Searching on Fanart.tv for a movie poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
-    if ($global:PreferTextless -eq 'true') {
+    if ($global:PreferTextless -eq $true) {
         $ids = @($global:tmdbid, $global:imdbid)
         $entrytemp = $null
 
@@ -1873,7 +1873,7 @@ function GetFanartMoviePoster {
                     if (!($entrytemp.movieposter | Where-Object lang -eq '00')) {
                         Write-Entry -Subtext "PreferTextless Value: $global:PreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                         Write-Entry -Subtext "OnlyTextless Value: $global:OnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                        if ($global:OnlyTextless -eq 'False') {
+                        if ($global:OnlyTextless -eq $false) {
                             $global:posterurl = ($entrytemp.movieposter)[0].url
                             Write-Entry -Subtext "Found Poster with text on Fanart.tv"  -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                             $global:PosterWithText = $true
@@ -2006,7 +2006,7 @@ function GetFanartMovieBackground {
 function GetFanartShowPoster {
     $global:Fallback = $null
     Write-Entry -Subtext "Searching on Fanart.tv for a show poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
-    if ($global:PreferTextless -eq 'true') {
+    if ($global:PreferTextless -eq $true) {
         $id = $global:tvdbid
         $entrytemp = $null
         if ($id) {
@@ -2015,7 +2015,7 @@ function GetFanartShowPoster {
                 if (!($entrytemp.tvposter | Where-Object lang -eq '00')) {
                     Write-Entry -Subtext "PreferTextless Value: $global:PreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                     Write-Entry -Subtext "OnlyTextless Value: $global:OnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                    if ($global:OnlyTextless -eq 'False') {
+                    if ($global:OnlyTextless -eq $false) {
                         $global:posterurl = ($entrytemp.tvposter)[0].url
 
                         Write-Entry -Subtext "Found Poster with text on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
@@ -2149,7 +2149,7 @@ function GetFanartSeasonPoster {
     Write-Entry -Subtext "Searching on Fanart.tv for Season '$global:SeasonNumber' poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     $id = $global:tvdbid
     $entrytemp = $null
-    if ($global:SeasonPreferTextless -eq 'true') {
+    if ($global:SeasonPreferTextless -eq $true) {
         if ($id) {
             $entrytemp = Get-FanartTv -Type tv -id $id -ErrorAction SilentlyContinue
             if ($entrytemp.seasonposter) {
@@ -2241,7 +2241,7 @@ function GetFanartSeasonPoster {
             return $global:posterurl
         }
         Else {
-            if ($global:OnlyTextless -eq 'True'){
+            if ($global:OnlyTextless -eq $true){
                 Write-Entry -Subtext "No Textless Season Poster on Fanart" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
             }
             Else {
@@ -2287,7 +2287,7 @@ function GetFanartSeasonPoster {
             return $global:posterurl
         }
         Else {
-            if ($global:OnlyTextless -eq 'True'){
+            if ($global:OnlyTextless -eq $true){
                 Write-Entry -Subtext "No Textless Season Poster on Fanart" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
             }
             Else {
@@ -2298,7 +2298,7 @@ function GetFanartSeasonPoster {
 }
 function GetTVDBMoviePoster {
     if ($global:tvdbid) {
-        if ($global:PreferTextless -eq 'true') {
+        if ($global:PreferTextless -eq $true) {
             Write-Entry -Subtext "Searching on TVDB for a movie poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
             try {
                 $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/movies/$($global:tvdbid)/extended" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
@@ -2328,7 +2328,7 @@ function GetTVDBMoviePoster {
                     Else {
                         Write-Entry -Subtext "PreferTextless Value: $global:PreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                         Write-Entry -Subtext "OnlyTextless Value: $global:OnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                        if ($global:OnlyTextless -eq 'False') {
+                        if ($global:OnlyTextless -eq $false) {
                             foreach ($lang in $global:PreferredLanguageOrderTVDB) {
                                 if ($global:WidthHeightFilter -eq 'true'){
                                     if ($lang -eq 'null') {
@@ -2450,7 +2450,7 @@ function GetTVDBMoviePoster {
 }
 function GetTVDBMovieBackground {
     if ($global:tvdbid) {
-        if ($global:PreferTextless -eq 'true') {
+        if ($global:PreferTextless -eq $true) {
             Write-Entry -Subtext "Searching on TVDB for a movie Background" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
             try {
                 $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/movies/$($global:tvdbid)/extended" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
@@ -2604,7 +2604,7 @@ function GetTVDBMovieBackground {
 function GetTVDBShowPoster {
     if ($global:tvdbid) {
         Write-Entry -Subtext "Searching on TVDB for a poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
-        if ($global:PreferTextless -eq 'true') {
+        if ($global:PreferTextless -eq $true) {
             try {
                 $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/series/$($global:tvdbid)/artworks" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
             }
@@ -2635,7 +2635,7 @@ function GetTVDBShowPoster {
                     Else {
                         Write-Entry -Subtext "PreferTextless Value: $global:PreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                         Write-Entry -Subtext "OnlyTextless Value: $global:OnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                        if ($global:OnlyTextless -eq 'False') {
+                        if ($global:OnlyTextless -eq $false) {
                             $global:posterurl = $defaultImageurl
                             Write-Entry -Subtext "Found Poster with text on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                             $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)#artwork"
@@ -2805,7 +2805,7 @@ function GetTVDBSeasonPoster {
                             continue
                         }
                     }
-                    if (!$global:posterurl -and $global:OnlyTextless -eq 'True') {
+                    if (!$global:posterurl -and $global:OnlyTextless -eq $true) {
                         Write-Entry -Subtext "No Textless Poster found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                     }
                     Else {
@@ -2831,7 +2831,7 @@ function GetTVDBSeasonPoster {
 function GetTVDBShowBackground {
     if ($global:tvdbid) {
         Write-Entry -Subtext "Searching on TVDB for a background" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
-        if ($global:PreferTextless -eq 'true') {
+        if ($global:PreferTextless -eq $true) {
             try {
                 $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/series/$($global:tvdbid)/artworks" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
             }
@@ -2862,7 +2862,7 @@ function GetTVDBShowBackground {
                     Else {
                         Write-Entry -Subtext "PreferTextless Value: $global:PreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                         Write-Entry -Subtext "OnlyTextless Value: $global:OnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                        if ($global:OnlyTextless -eq 'False') {
+                        if ($global:OnlyTextless -eq $false) {
                             $global:posterurl = $defaultImageurl
                             Write-Entry -Subtext "Found background with text on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                             $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)/#artwork"
@@ -3800,7 +3800,7 @@ $global:tvdbapi = $config.ApiPart.tvdbapi
 $global:tmdbtoken = $config.ApiPart.tmdbtoken
 $FanartTvAPIKey = $config.ApiPart.FanartTvAPIKey
 $PlexToken = $config.ApiPart.PlexToken
-$global:WidthHeightFilter = $config.ApiPart.WidthHeightFilter
+$global:WidthHeightFilter = $config.ApiPart.WidthHeightFilter.tolower()
 $global:PosterMinWidth = $config.ApiPart.PosterMinWidth
 $global:PosterMinHeight = $config.ApiPart.PosterMinHeight
 $global:BgTcMinWidth = $config.ApiPart.BgTcMinWidth
@@ -3885,15 +3885,15 @@ $global:languageDirections = @{
     "sk" = "LTR"; "sl" = "LTR"; "sq" = "LTR"; "sr" = "LTR"; "sv" = "LTR";
     "sw" = "LTR"; "ta" = "LTR"; "te" = "LTR"; "th" = "LTR"; "tk" = "LTR";
     "tr" = "LTR"; "ug" = "RTL"; "uk" = "LTR"; "ur" = "RTL"; "uz" = "LTR";
-    "vi" = "LTR"; "yo" = "LTR"; "zh" = "LTR"; "xx" = "LTR"
+    "vi" = "LTR"; "yo" = "LTR"; "zh" = "LTR"
 }
 
 # Plex Part
 $LibstoExclude = $config.PlexPart.LibstoExclude
 $PlexUrl = $config.PlexPart.PlexUrl
 # Prerequisites Part
-$AutoUpdateIM = $config.PrerequisitePart.AutoUpdateIM
-$show_skipped = $config.PrerequisitePart.show_skipped
+$AutoUpdateIM = $config.PrerequisitePart.AutoUpdateIM.tolower()
+$show_skipped = $config.PrerequisitePart.show_skipped.tolower()
 $AssetPath = RemoveTrailingSlash $config.PrerequisitePart.AssetPath
 
 # Check if its a Network Share
@@ -3921,27 +3921,27 @@ $Backgroundoverlay = Join-Path -Path $global:ScriptRoot -ChildPath ('temp', $con
 $titlecardoverlay = Join-Path -Path $global:ScriptRoot -ChildPath ('temp', $config.PrerequisitePart.titlecardoverlayfile -join $($joinsymbol))
 $testimage = Join-Path -Path $global:ScriptRoot -ChildPath ('test', 'testimage.png' -join $($joinsymbol))
 $backgroundtestimage = Join-Path -Path $global:ScriptRoot -ChildPath ('test', 'backgroundtestimage.png' -join $($joinsymbol))
-$LibraryFolders = $config.PrerequisitePart.LibraryFolders
-$global:SeasonPosters = $config.PrerequisitePart.SeasonPosters
-$global:Posters = $config.PrerequisitePart.Posters
-$global:BackgroundPosters = $config.PrerequisitePart.BackgroundPosters
-$global:TitleCards = $config.PrerequisitePart.TitleCards
-$SkipTBA = $config.PrerequisitePart.SkipTBA
-$SkipJapTitle = $config.PrerequisitePart.SkipJapTitle
-$AssetCleanup = $config.PrerequisitePart.AssetCleanup
+$LibraryFolders = $config.PrerequisitePart.LibraryFolders.tolower()
+$global:SeasonPosters = $config.PrerequisitePart.SeasonPosters.tolower()
+$global:Posters = $config.PrerequisitePart.Posters.tolower()
+$global:BackgroundPosters = $config.PrerequisitePart.BackgroundPosters.tolower()
+$global:TitleCards = $config.PrerequisitePart.TitleCards.tolower()
+$SkipTBA = $config.PrerequisitePart.SkipTBA.tolower()
+$SkipJapTitle = $config.PrerequisitePart.SkipJapTitle.tolower()
+$AssetCleanup = $config.PrerequisitePart.AssetCleanup.tolower()
 
 # Poster Overlay Part
-$global:ImageProcessing = $config.OverlayPart.ImageProcessing
+$global:ImageProcessing = $config.OverlayPart.ImageProcessing.tolower()
 $global:outputQuality = $config.OverlayPart.outputQuality
 
 # Poster Overlay Part
-$fontAllCaps = $config.PosterOverlayPart.fontAllCaps
-$AddBorder = $config.PosterOverlayPart.AddBorder
-$AddText = $config.PosterOverlayPart.AddText
-$AddTextStroke = $config.PosterOverlayPart.AddTextStroke
+$fontAllCaps = $config.PosterOverlayPart.fontAllCaps.tolower()
+$AddBorder = $config.PosterOverlayPart.AddBorder.tolower()
+$AddText = $config.PosterOverlayPart.AddText.tolower()
+$AddTextStroke = $config.PosterOverlayPart.AddTextStroke.tolower()
 $strokecolor = $config.PosterOverlayPart.strokecolor
 $strokewidth = $config.PosterOverlayPart.strokewidth
-$AddOverlay = $config.PosterOverlayPart.AddOverlay
+$AddOverlay = $config.PosterOverlayPart.AddOverlay.tolower()
 $fontcolor = $config.PosterOverlayPart.fontcolor
 $bordercolor = $config.PosterOverlayPart.bordercolor
 $minPointSize = $config.PosterOverlayPart.minPointSize
@@ -3954,13 +3954,13 @@ $borderwidthsecond = $borderwidth + 'x' + $borderwidth
 $boxsize = $MaxWidth + 'x' + $MaxHeight
 
 # Season Poster Overlay Part
-$SeasonfontAllCaps = $config.SeasonPosterOverlayPart.fontAllCaps
-$AddSeasonBorder = $config.SeasonPosterOverlayPart.AddBorder
-$AddSeasonText = $config.SeasonPosterOverlayPart.AddText
-$AddSeasonTextStroke = $config.SeasonPosterOverlayPart.AddTextStroke
+$SeasonfontAllCaps = $config.SeasonPosterOverlayPart.fontAllCaps.tolower()
+$AddSeasonBorder = $config.SeasonPosterOverlayPart.AddBorder.tolower()
+$AddSeasonText = $config.SeasonPosterOverlayPart.AddText.tolower()
+$AddSeasonTextStroke = $config.SeasonPosterOverlayPart.AddTextStroke.tolower()
 $Seasonstrokecolor = $config.SeasonPosterOverlayPart.strokecolor
 $Seasonstrokewidth = $config.SeasonPosterOverlayPart.strokewidth
-$AddSeasonOverlay = $config.SeasonPosterOverlayPart.AddOverlay
+$AddSeasonOverlay = $config.SeasonPosterOverlayPart.AddOverlay.tolower()
 $Seasonfontcolor = $config.SeasonPosterOverlayPart.fontcolor
 $Seasonbordercolor = $config.SeasonPosterOverlayPart.bordercolor
 $SeasonminPointSize = $config.SeasonPosterOverlayPart.minPointSize
@@ -3973,11 +3973,11 @@ $Seasonborderwidthsecond = $borderwidth + 'x' + $borderwidth
 $Seasonboxsize = $SeasonMaxWidth + 'x' + $SeasonMaxHeight
 
 # Background Overlay Part
-$BackgroundfontAllCaps = $config.BackgroundOverlayPart.fontAllCaps
-$AddBackgroundOverlay = $config.BackgroundOverlayPart.AddOverlay
-$AddBackgroundBorder = $config.BackgroundOverlayPart.AddBorder
-$AddBackgroundText = $config.BackgroundOverlayPart.AddText
-$AddBackgroundTextStroke = $config.BackgroundOverlayPart.AddTextStroke
+$BackgroundfontAllCaps = $config.BackgroundOverlayPart.fontAllCaps.tolower()
+$AddBackgroundOverlay = $config.BackgroundOverlayPart.AddOverlay.tolower()
+$AddBackgroundBorder = $config.BackgroundOverlayPart.AddBorder.tolower()
+$AddBackgroundText = $config.BackgroundOverlayPart.AddText.tolower()
+$AddBackgroundTextStroke = $config.BackgroundOverlayPart.AddTextStroke.tolower()
 $Backgroundstrokecolor = $config.BackgroundOverlayPart.strokecolor
 $Backgroundstrokewidth = $config.BackgroundOverlayPart.strokewidth
 $Backgroundfontcolor = $config.BackgroundOverlayPart.fontcolor
@@ -3992,17 +3992,17 @@ $Backgroundborderwidthsecond = $Backgroundborderwidth + 'x' + $Backgroundborderw
 $Backgroundboxsize = $BackgroundMaxWidth + 'x' + $BackgroundMaxHeight
 
 # Title Card Overlay Part
-$AddTitleCardOverlay = $config.TitleCardOverlayPart.AddOverlay
-$UseBackgroundAsTitleCard = $config.TitleCardOverlayPart.UseBackgroundAsTitleCard
-$AddTitleCardBorder = $config.TitleCardOverlayPart.AddBorder
+$AddTitleCardOverlay = $config.TitleCardOverlayPart.AddOverlay.tolower()
+$UseBackgroundAsTitleCard = $config.TitleCardOverlayPart.UseBackgroundAsTitleCard.tolower()
+$AddTitleCardBorder = $config.TitleCardOverlayPart.AddBorder.tolower()
 $TitleCardborderwidth = $config.TitleCardOverlayPart.borderwidth
 $TitleCardbordercolor = $config.TitleCardOverlayPart.bordercolor
-$BackgroundFallback = $config.TitleCardOverlayPart.BackgroundFallback
+$BackgroundFallback = $config.TitleCardOverlayPart.BackgroundFallback.tolower()
 
 # Title Card Title Text Part
-$TitleCardEPTitlefontAllCaps = $config.TitleCardTitleTextPart.fontAllCaps
-$AddTitleCardEPTitleText = $config.TitleCardTitleTextPart.AddEPTitleText
-$AddTitleCardEPTitleTextStroke = $config.TitleCardTitleTextPart.AddTextStroke
+$TitleCardEPTitlefontAllCaps = $config.TitleCardTitleTextPart.fontAllCaps.tolower()
+$AddTitleCardEPTitleText = $config.TitleCardTitleTextPart.AddEPTitleText.tolower()
+$AddTitleCardEPTitleTextStroke = $config.TitleCardTitleTextPart.AddTextStroke.tolower()
 $TitleCardEPTitlestrokecolor = $config.TitleCardTitleTextPart.strokecolor
 $TitleCardEPTitlestrokewidth = $config.TitleCardTitleTextPart.strokewidth
 $TitleCardEPTitlefontcolor = $config.TitleCardTitleTextPart.fontcolor
@@ -4015,9 +4015,9 @@ $TitleCardEPTitletext_offset = $config.TitleCardTitleTextPart.text_offset
 # Title Card EP Text Part
 $SeasonTCText = $config.TitleCardEPTextPart.SeasonTCText
 $EpisodeTCText = $config.TitleCardEPTextPart.EpisodeTCText
-$TitleCardEPfontAllCaps = $config.TitleCardEPTextPart.fontAllCaps
-$AddTitleCardEPText = $config.TitleCardEPTextPart.AddEPText
-$AddTitleCardTextStroke = $config.TitleCardEPTextPart.AddTextStroke
+$TitleCardEPfontAllCaps = $config.TitleCardEPTextPart.fontAllCaps.tolower()
+$AddTitleCardEPText = $config.TitleCardEPTextPart.AddEPText.tolower()
+$AddTitleCardTextStroke = $config.TitleCardEPTextPart.AddTextStroke.tolower()
 $TitleCardstrokecolor = $config.TitleCardEPTextPart.strokecolor
 $TitleCardstrokewidth = $config.TitleCardEPTextPart.strokewidth
 $TitleCardEPfontcolor = $config.TitleCardEPTextPart.fontcolor
@@ -5905,7 +5905,7 @@ Elseif ($Tautulli) {
                             'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBMoviePoster } }
                             'FANART' { $global:posterurl = GetFanartMoviePoster }
                         }
-                        if ($global:PreferTextless -eq 'true') {
+                        if ($global:PreferTextless -eq $true) {
                             if (!$global:TextlessPoster -and $global:fanartfallbackposterurl) {
                                 $global:posterurl = $global:fanartfallbackposterurl
                                 Write-Entry -Subtext "Took Fanart.tv Fallback poster because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
@@ -6236,7 +6236,7 @@ Elseif ($Tautulli) {
                             'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBMovieBackground } }
                             'FANART' { $global:posterurl = GetFanartMovieBackground }
                         }
-                        if ($global:PreferTextless -eq 'true') {
+                        if ($global:PreferTextless -eq $true) {
                             if (!$global:TextlessPoster -and $global:fanartfallbackposterurl) {
                                 $global:posterurl = $global:fanartfallbackposterurl
                                 Write-Entry -Subtext "Took Fanart.tv Fallback background because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
@@ -6560,7 +6560,9 @@ Elseif ($Tautulli) {
             $global:tvdbalreadysearched = $null
             $global:PlexartworkDownloaded = $null
 
-            $direction = $global:languageDirections[$langCode]
+            # Determine the language direction
+            $global:langCode = $entry.'Library Language'
+            $global:direction = $global:languageDirections[$global:langCode]
 
             $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}\p{IsDevanagari}\p{IsThai}\p{IsEthiopic}\p{IsGeorgian}\p{IsArmenian}\p{IsBengali}]'
             if ($entry.title -match $cjkPattern) {
@@ -6629,7 +6631,7 @@ Elseif ($Tautulli) {
                         'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBShowPoster } }
                         'FANART' { $global:posterurl = GetFanartShowPoster }
                     }
-                    if ($global:PreferTextless -eq 'true') {
+                    if ($global:PreferTextless -eq $true) {
                         if (!$global:TextlessPoster -and $global:fanartfallbackposterurl) {
                             $global:posterurl = $global:fanartfallbackposterurl
                             Write-Entry -Subtext "Took Fanart.tv Fallback poster because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
@@ -6965,7 +6967,7 @@ Elseif ($Tautulli) {
                         'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBShowBackground } }
                         'FANART' { $global:posterurl = GetFanartShowBackground }
                     }
-                    if ($global:PreferTextless -eq 'true') {
+                    if ($global:PreferTextless -eq $true) {
                         if (!$global:TextlessPoster -and $global:fanartfallbackposterurl) {
                             $global:posterurl = $global:fanartfallbackposterurl
                             Write-Entry -Subtext "Took Fanart.tv Fallback background because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
@@ -7320,7 +7322,7 @@ Elseif ($Tautulli) {
                             Default { $global:posterurl = GetFanartSeasonPoster }
                         }
                         # do a specific order
-                        if ($global:SeasonPreferTextless -eq 'true') {
+                        if ($global:SeasonPreferTextless -eq $true) {
                             if (!$global:posterurl -or !$global:TextlessPoster) {
                                 if ($global:FavProvider -ne 'TMDB' -and $entry.tmdbid) {
                                     $global:posterurl = GetTMDBSeasonPoster
@@ -9408,7 +9410,7 @@ else {
                             'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBMoviePoster } }
                             'FANART' { $global:posterurl = GetFanartMoviePoster }
                         }
-                        if ($global:PreferTextless -eq 'true') {
+                        if ($global:PreferTextless -eq $true) {
                             if (!$global:TextlessPoster -and $global:fanartfallbackposterurl) {
                                 $global:posterurl = $global:fanartfallbackposterurl
                                 Write-Entry -Subtext "Took Fanart.tv Fallback poster because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
@@ -9724,7 +9726,7 @@ else {
                             'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBMovieBackground } }
                             'FANART' { $global:posterurl = GetFanartMovieBackground }
                         }
-                        if ($global:PreferTextless -eq 'true') {
+                        if ($global:PreferTextless -eq $true) {
                             if (!$global:TextlessPoster -and $global:fanartfallbackposterurl) {
                                 $global:posterurl = $global:fanartfallbackposterurl
                                 Write-Entry -Subtext "Took Fanart.tv Fallback background because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
@@ -10103,7 +10105,7 @@ else {
                         'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBShowPoster } }
                         'FANART' { $global:posterurl = GetFanartShowPoster }
                     }
-                    if ($global:PreferTextless -eq 'true') {
+                    if ($global:PreferTextless -eq $true) {
                         if (!$global:TextlessPoster -and $global:fanartfallbackposterurl) {
                             $global:posterurl = $global:fanartfallbackposterurl
                             Write-Entry -Subtext "Took Fanart.tv Fallback poster because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
@@ -10428,7 +10430,7 @@ else {
                         'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBShowBackground } }
                         'FANART' { $global:posterurl = GetFanartShowBackground }
                     }
-                    if ($global:PreferTextless -eq 'true') {
+                    if ($global:PreferTextless -eq $true) {
                         if (!$global:TextlessPoster -and $global:fanartfallbackposterurl) {
                             $global:posterurl = $global:fanartfallbackposterurl
                             Write-Entry -Subtext "Took Fanart.tv Fallback background because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
@@ -10766,7 +10768,7 @@ else {
                             Default { $global:posterurl = GetFanartSeasonPoster }
                         }
                         # do a specific order
-                        if ($global:SeasonPreferTextless -eq 'true') {
+                        if ($global:SeasonPreferTextless -eq $true) {
                             if (!$global:posterurl -or !$global:TextlessPoster) {
                                 if ($global:FavProvider -ne 'TMDB' -and $entry.tmdbid) {
                                     $global:posterurl = GetTMDBSeasonPoster
