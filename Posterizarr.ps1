@@ -8,7 +8,7 @@
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.3.5"
+$CurrentScriptVersion = "1.3.6"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -1015,7 +1015,7 @@ function GetTMDBMovieBackground {
                             $FavPoster = ($response.images.backdrops | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight })
                         }
                         Else {
-                            $FavPoster = ($response.images.backdrops | Where-Object { iso_639_1 -eq $lang -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight })
+                            $FavPoster = ($response.images.backdrops | Where-Object { $_.iso_639_1 -eq $lang -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight })
                         }
                     }
                     Else {
@@ -1220,7 +1220,7 @@ function GetTMDBShowPoster {
                             $FavPoster = ($response.images.posters | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
                         }
                         Else {
-                            $FavPoster = ($response.images.posters | Where-Object { iso_639_1 -eq $lang -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
+                            $FavPoster = ($response.images.posters | Where-Object { $_.iso_639_1 -eq $lang -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
                         }
                     }
                     Else {
@@ -1425,7 +1425,7 @@ function GetTMDBSeasonPoster {
                             $FavPoster = ($responseBackup.images.posters | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
                         }
                         Else {
-                            $FavPoster = ($responseBackup.images.posters | Where-Object { iso_639_1 -eq $lang -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
+                            $FavPoster = ($responseBackup.images.posters | Where-Object { $_.iso_639_1 -eq $lang -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
                         }
                     }
                     Else {
@@ -1474,7 +1474,7 @@ function GetTMDBSeasonPoster {
                             $FavPoster = ($response.posters | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
                         }
                         Else {
-                            $FavPoster = ($response.posters | Where-Object { iso_639_1 -eq $lang -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
+                            $FavPoster = ($response.posters | Where-Object { $_.iso_639_1 -eq $lang -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
                         }
                     }
                     Else {
@@ -1678,7 +1678,7 @@ function GetTMDBShowBackground {
                             $FavPoster = ($response.images.backdrops | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
                         }
                         Else {
-                            $FavPoster = ($response.images.backdrops | Where-Object { iso_639_1 -eq $lang -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
+                            $FavPoster = ($response.images.backdrops | Where-Object { $_.iso_639_1 -eq $lang -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
                         }
                     }
                     Else {
