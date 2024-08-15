@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [1.3.5](https://github.com/fscorrupt/Posterizarr/releases/tag/1.3.5) - 2024-08-15 09:17:53
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.3.4...1.3.5
+
+### Bug Fixes
+
+- general:
+  - variable bug fixes ([687f6a8](https://github.com/fscorrupt/Posterizarr/commit/687f6a8efec662cb8c1b3c869ac1de893456fb4a))
+
 ## [1.3.4](https://github.com/fscorrupt/Posterizarr/releases/tag/1.3.4) - 2024-08-15 08:52:42
 
 **Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.3.3...1.3.4
