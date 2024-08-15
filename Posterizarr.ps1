@@ -8,7 +8,7 @@
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.3.2"
+$CurrentScriptVersion = "1.3.3"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -675,7 +675,7 @@ function GetTMDBMoviePoster {
                     $NoLangPoster = ($response.images.posters | Where-Object iso_639_1 -eq $null)
                 }
                 if (!$NoLangPoster) {
-                    if ($global:OnlyTextless -eq 'false') {
+                    if ($global:OnlyTextless -eq 'False') {
                         if ($global:WidthHeightFilter -eq 'true') {
                             if ($global:TMDBVoteSorting -eq 'Primary') {
                                 $filteredPosters = $response.images.posters | Where-Object { $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
@@ -881,7 +881,7 @@ function GetTMDBMovieBackground {
                     $NoLangPoster = ($response.images.backdrops | Where-Object iso_639_1 -eq $null)
                 }
                 if (!$NoLangPoster) {
-                    if ($global:OnlyTextless -eq 'false') {
+                    if ($global:OnlyTextless -eq 'False') {
                         if ($global:WidthHeightFilter -eq 'true') {
                             if ($global:TMDBVoteSorting -eq 'Primary') {
                                 $filteredPosters = $response.images.backdrops | Where-Object { $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight }
@@ -1092,7 +1092,7 @@ function GetTMDBShowPoster {
                     $NoLangPoster = ($response.images.posters | Where-Object iso_639_1 -eq $null)
                 }
                 if (!$NoLangPoster) {
-                    if ($global:OnlyTextless -eq 'false') {
+                    if ($global:OnlyTextless -eq 'False') {
                         if ($global:WidthHeightFilter -eq 'true') {
                             if ($global:TMDBVoteSorting -eq 'Primary') {
                                 $filteredPosters = $response.images.posters | Where-Object { $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
@@ -1539,7 +1539,7 @@ function GetTMDBShowBackground {
                     $NoLangPoster = ($response.images.backdrops | Where-Object iso_639_1 -eq $null)
                 }
                 if (!$NoLangPoster) {
-                    if ($global:OnlyTextless -eq 'false') {
+                    if ($global:OnlyTextless -eq 'False') {
                         if ($global:WidthHeightFilter -eq 'true') {
                             if ($global:TMDBVoteSorting -eq 'Primary') {
                                 $filteredPosters = $response.images.backdrops | Where-Object { $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
@@ -1863,7 +1863,7 @@ function GetFanartMoviePoster {
                 $entrytemp = Get-FanartTv -Type movies -id $id -ErrorAction SilentlyContinue
                 if ($entrytemp -and $entrytemp.movieposter) {
                     if (!($entrytemp.movieposter | Where-Object lang -eq '00')) {
-                        if ($global:OnlyTextless -eq 'false') {
+                        if ($global:OnlyTextless -eq 'False') {
                             $global:posterurl = ($entrytemp.movieposter)[0].url
                             Write-Entry -Subtext "Found Poster with text on Fanart.tv"  -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                             $global:PosterWithText = $true
@@ -2003,7 +2003,7 @@ function GetFanartShowPoster {
             $entrytemp = Get-FanartTv -Type tv -id $id -ErrorAction SilentlyContinue
             if ($entrytemp -and $entrytemp.tvposter) {
                 if (!($entrytemp.tvposter | Where-Object lang -eq '00')) {
-                    if ($global:OnlyTextless -eq 'false') {
+                    if ($global:OnlyTextless -eq 'False') {
                         $global:posterurl = ($entrytemp.tvposter)[0].url
 
                         Write-Entry -Subtext "Found Poster with text on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
@@ -2229,7 +2229,7 @@ function GetFanartSeasonPoster {
             return $global:posterurl
         }
         Else {
-            if ($global:OnlyTextless -eq 'true'){
+            if ($global:OnlyTextless -eq 'True'){
                 Write-Entry -Subtext "No Textless Season Poster on Fanart" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
             }
             Else {
@@ -2275,7 +2275,7 @@ function GetFanartSeasonPoster {
             return $global:posterurl
         }
         Else {
-            if ($global:OnlyTextless -eq 'true'){
+            if ($global:OnlyTextless -eq 'True'){
                 Write-Entry -Subtext "No Textless Season Poster on Fanart" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
             }
             Else {
@@ -2314,7 +2314,7 @@ function GetTVDBMoviePoster {
                         return $global:posterurl
                     }
                     Else {
-                        if ($global:OnlyTextless -eq 'false') {
+                        if ($global:OnlyTextless -eq 'False') {
                             foreach ($lang in $global:PreferredLanguageOrderTVDB) {
                                 if ($global:WidthHeightFilter -eq 'true'){
                                     if ($lang -eq 'null') {
@@ -2619,7 +2619,7 @@ function GetTVDBShowPoster {
                         $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)#artwork"
                     }
                     Else {
-                        if ($global:OnlyTextless -eq 'false') {
+                        if ($global:OnlyTextless -eq 'False') {
                             $global:posterurl = $defaultImageurl
                             Write-Entry -Subtext "Found Poster with text on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                             $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)#artwork"
@@ -2789,7 +2789,7 @@ function GetTVDBSeasonPoster {
                             continue
                         }
                     }
-                    if (!$global:posterurl -and $global:OnlyTextless -eq 'true') {
+                    if (!$global:posterurl -and $global:OnlyTextless -eq 'True') {
                         Write-Entry -Subtext "No Textless Poster found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                     }
                     Else {
@@ -2844,7 +2844,7 @@ function GetTVDBShowBackground {
                         $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)/#artwork"
                     }
                     Else {
-                        if ($global:OnlyTextless -eq 'false') {
+                        if ($global:OnlyTextless -eq 'False') {
                             $global:posterurl = $defaultImageurl
                             Write-Entry -Subtext "Found background with text on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                             $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)/#artwork"
