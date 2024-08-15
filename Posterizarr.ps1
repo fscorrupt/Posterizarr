@@ -8,7 +8,7 @@
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.3.3"
+$CurrentScriptVersion = "1.3.4"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -675,6 +675,8 @@ function GetTMDBMoviePoster {
                     $NoLangPoster = ($response.images.posters | Where-Object iso_639_1 -eq $null)
                 }
                 if (!$NoLangPoster) {
+                    Write-Entry -Subtext "PreferTextless Value: $global:PreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                    Write-Entry -Subtext "OnlyTextless Value: $global:OnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                     if ($global:OnlyTextless -eq 'False') {
                         if ($global:WidthHeightFilter -eq 'true') {
                             if ($global:TMDBVoteSorting -eq 'Primary') {
@@ -881,6 +883,8 @@ function GetTMDBMovieBackground {
                     $NoLangPoster = ($response.images.backdrops | Where-Object iso_639_1 -eq $null)
                 }
                 if (!$NoLangPoster) {
+                    Write-Entry -Subtext "PreferTextless Value: $global:PreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                    Write-Entry -Subtext "OnlyTextless Value: $global:OnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                     if ($global:OnlyTextless -eq 'False') {
                         if ($global:WidthHeightFilter -eq 'true') {
                             if ($global:TMDBVoteSorting -eq 'Primary') {
@@ -1092,6 +1096,8 @@ function GetTMDBShowPoster {
                     $NoLangPoster = ($response.images.posters | Where-Object iso_639_1 -eq $null)
                 }
                 if (!$NoLangPoster) {
+                    Write-Entry -Subtext "PreferTextless Value: $global:PreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                    Write-Entry -Subtext "OnlyTextless Value: $global:OnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                     if ($global:OnlyTextless -eq 'False') {
                         if ($global:WidthHeightFilter -eq 'true') {
                             if ($global:TMDBVoteSorting -eq 'Primary') {
@@ -1539,6 +1545,8 @@ function GetTMDBShowBackground {
                     $NoLangPoster = ($response.images.backdrops | Where-Object iso_639_1 -eq $null)
                 }
                 if (!$NoLangPoster) {
+                    Write-Entry -Subtext "PreferTextless Value: $global:PreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                    Write-Entry -Subtext "OnlyTextless Value: $global:OnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                     if ($global:OnlyTextless -eq 'False') {
                         if ($global:WidthHeightFilter -eq 'true') {
                             if ($global:TMDBVoteSorting -eq 'Primary') {
@@ -1863,6 +1871,8 @@ function GetFanartMoviePoster {
                 $entrytemp = Get-FanartTv -Type movies -id $id -ErrorAction SilentlyContinue
                 if ($entrytemp -and $entrytemp.movieposter) {
                     if (!($entrytemp.movieposter | Where-Object lang -eq '00')) {
+                        Write-Entry -Subtext "PreferTextless Value: $global:PreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        Write-Entry -Subtext "OnlyTextless Value: $global:OnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                         if ($global:OnlyTextless -eq 'False') {
                             $global:posterurl = ($entrytemp.movieposter)[0].url
                             Write-Entry -Subtext "Found Poster with text on Fanart.tv"  -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
@@ -2003,6 +2013,8 @@ function GetFanartShowPoster {
             $entrytemp = Get-FanartTv -Type tv -id $id -ErrorAction SilentlyContinue
             if ($entrytemp -and $entrytemp.tvposter) {
                 if (!($entrytemp.tvposter | Where-Object lang -eq '00')) {
+                    Write-Entry -Subtext "PreferTextless Value: $global:PreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                    Write-Entry -Subtext "OnlyTextless Value: $global:OnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                     if ($global:OnlyTextless -eq 'False') {
                         $global:posterurl = ($entrytemp.tvposter)[0].url
 
@@ -2314,6 +2326,8 @@ function GetTVDBMoviePoster {
                         return $global:posterurl
                     }
                     Else {
+                        Write-Entry -Subtext "PreferTextless Value: $global:PreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        Write-Entry -Subtext "OnlyTextless Value: $global:OnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                         if ($global:OnlyTextless -eq 'False') {
                             foreach ($lang in $global:PreferredLanguageOrderTVDB) {
                                 if ($global:WidthHeightFilter -eq 'true'){
@@ -2619,6 +2633,8 @@ function GetTVDBShowPoster {
                         $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)#artwork"
                     }
                     Else {
+                        Write-Entry -Subtext "PreferTextless Value: $global:PreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        Write-Entry -Subtext "OnlyTextless Value: $global:OnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                         if ($global:OnlyTextless -eq 'False') {
                             $global:posterurl = $defaultImageurl
                             Write-Entry -Subtext "Found Poster with text on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
@@ -2844,6 +2860,8 @@ function GetTVDBShowBackground {
                         $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)/#artwork"
                     }
                     Else {
+                        Write-Entry -Subtext "PreferTextless Value: $global:PreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        Write-Entry -Subtext "OnlyTextless Value: $global:OnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                         if ($global:OnlyTextless -eq 'False') {
                             $global:posterurl = $defaultImageurl
                             Write-Entry -Subtext "Found background with text on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
@@ -3807,14 +3825,20 @@ $global:PreferredLanguageOrderTVDB = $global:PreferredLanguageOrder.Replace('xx'
 if ($global:PreferredLanguageOrder.count -eq '1' -and $global:PreferredLanguageOrder -eq 'xx') {
     $global:PreferTextless = $true
     $global:OnlyTextless = $true
+    Write-Entry -Subtext "PreferTextless Value: $global:PreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+    Write-Entry -Subtext "OnlyTextless Value: $global:OnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
 }
 Elseif ($global:PreferredLanguageOrder[0] -eq 'xx') {
     $global:PreferTextless = $true
     $global:OnlyTextless = $false
+    Write-Entry -Subtext "PreferTextless Value: $global:PreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+    Write-Entry -Subtext "OnlyTextless Value: $global:OnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
 }
 Else {
     $global:PreferTextless = $false
     $global:OnlyTextless = $false
+    Write-Entry -Subtext "PreferTextless Value: $global:PreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+    Write-Entry -Subtext "OnlyTextless Value: $global:OnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
 }
 
 # Season Lang Settings
@@ -3861,7 +3885,7 @@ $global:languageDirections = @{
     "sk" = "LTR"; "sl" = "LTR"; "sq" = "LTR"; "sr" = "LTR"; "sv" = "LTR";
     "sw" = "LTR"; "ta" = "LTR"; "te" = "LTR"; "th" = "LTR"; "tk" = "LTR";
     "tr" = "LTR"; "ug" = "RTL"; "uk" = "LTR"; "ur" = "RTL"; "uz" = "LTR";
-    "vi" = "LTR"; "yo" = "LTR"; "zh" = "LTR"
+    "vi" = "LTR"; "yo" = "LTR"; "zh" = "LTR"; "xx" = "LTR"
 }
 
 # Plex Part
