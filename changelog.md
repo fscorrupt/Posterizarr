@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [1.3.6](https://github.com/fscorrupt/Posterizarr/releases/tag/1.3.6) - 2024-08-15 12:58:03
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.3.5...1.3.6
+
+### Bug Fixes
+
+- general:
+  - bug fixes on poster size filter ([252be4f](https://github.com/fscorrupt/Posterizarr/commit/252be4fc1f05720e8083982f83ee6dd4db512784))
+
 ## [1.3.5](https://github.com/fscorrupt/Posterizarr/releases/tag/1.3.5) - 2024-08-15 09:17:53
 
 **Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.3.4...1.3.5
