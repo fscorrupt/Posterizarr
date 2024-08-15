@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [1.3.4](https://github.com/fscorrupt/Posterizarr/releases/tag/1.3.4) - 2024-08-15 08:52:42
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.3.3...1.3.4
+
+### Feature
+
+- general:
+  - Add debug logging for Texless variable ([9e6e973](https://github.com/fscorrupt/Posterizarr/commit/9e6e973c2454f09b90c9029cca0f0112efff16da))
+
 ## [1.3.3](https://github.com/fscorrupt/Posterizarr/releases/tag/1.3.3) - 2024-08-15 08:22:12
 
 **Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.3.2...1.3.3
