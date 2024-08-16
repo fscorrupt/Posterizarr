@@ -1,5 +1,77 @@
 # CHANGELOG
 
+## [1.3.7](https://github.com/fscorrupt/Posterizarr/releases/tag/1.3.7) - 2024-08-16 12:16:31
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.3.6...1.3.7
+
+### Feature
+
+- general:
+  - Add support for newline insertion on specific symbols in title tex ([8be251c](https://github.com/fscorrupt/Posterizarr/commit/8be251c0249319105beff1934f393c4512d79777))
+
+## [1.3.6](https://github.com/fscorrupt/Posterizarr/releases/tag/1.3.6) - 2024-08-15 12:58:03
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.3.5...1.3.6
+
+### Bug Fixes
+
+- general:
+  - bug fixes on poster size filter ([252be4f](https://github.com/fscorrupt/Posterizarr/commit/252be4fc1f05720e8083982f83ee6dd4db512784))
+
+## [1.3.5](https://github.com/fscorrupt/Posterizarr/releases/tag/1.3.5) - 2024-08-15 09:17:53
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.3.4...1.3.5
+
+### Bug Fixes
+
+- general:
+  - variable bug fixes ([687f6a8](https://github.com/fscorrupt/Posterizarr/commit/687f6a8efec662cb8c1b3c869ac1de893456fb4a))
+
+## [1.3.4](https://github.com/fscorrupt/Posterizarr/releases/tag/1.3.4) - 2024-08-15 08:52:42
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.3.3...1.3.4
+
+### Feature
+
+- general:
+  - Add debug logging for Texless variable ([9e6e973](https://github.com/fscorrupt/Posterizarr/commit/9e6e973c2454f09b90c9029cca0f0112efff16da))
+
+## [1.3.3](https://github.com/fscorrupt/Posterizarr/releases/tag/1.3.3) - 2024-08-15 08:22:12
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.3.2...1.3.3
+
+### Bug Fixes
+
+- general:
+  - "Onlytextless" bugfixes ([94abd01](https://github.com/fscorrupt/Posterizarr/commit/94abd01b100ac9bca10ba39eac93bcffaa9099a1))
+
+## [1.3.2](https://github.com/fscorrupt/Posterizarr/releases/tag/1.3.2) - 2024-08-14 07:23:10
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.3.1...1.3.2
+
+### Bug Fixes
+
+- general:
+  - another Plex search variable fix ([e8df9f9](https://github.com/fscorrupt/Posterizarr/commit/e8df9f98a09ac4b4a7b787cf4ae36968e86a520b))
+
+## [1.3.1](https://github.com/fscorrupt/Posterizarr/releases/tag/1.3.1) - 2024-08-14 07:04:27
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.3.0...1.3.1
+
+### Bug Fixes
+
+- general:
+  - Plex TC search could not find images ([af6b3f0](https://github.com/fscorrupt/Posterizarr/commit/af6b3f0ac91709a482f399f1cb74c858eb88bcae))
+
+## [1.3.0](https://github.com/fscorrupt/Posterizarr/releases/tag/1.3.0) - 2024-08-13 08:26:33
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.2.49...1.3.0
+
+### Feature
+
+- general:
+  - Additional Api Filter ([a6e9101](https://github.com/fscorrupt/Posterizarr/commit/a6e91015d128887e7463463085104387fbec573a))
+
 ## [1.2.49](https://github.com/fscorrupt/Posterizarr/releases/tag/1.2.49) - 2024-08-12 10:38:12
 
 **Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.2.48...1.2.49

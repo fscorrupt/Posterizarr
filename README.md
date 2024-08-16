@@ -37,7 +37,7 @@ This PowerShell script automates the process of generating images for your Plex 
 
 > [!NOTE]
 Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Docker (Alpine v3.17 Base Image) does not work on ARM](#docker), [unRAID](#unraid) and on Windows operating systems.
-> 
+>
 > **Supported Poster Types:**
 >- Movie/Show Posters
 >- Movie/Show Backgrounds
@@ -69,7 +69,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
 - **Handling Multiple Versions**: It adeptly manages multiple versions of a movie/show, ensuring comprehensive coverage.
 - **CSV Export**: Produces an impressive CSV file containing all queried movie/show information during the script's runtime in `$ScriptRoot\logs\PlexLibexport.csv`
 - **Logging Capabilities**: Records valuable information to a file in `$ScriptRoot\logs\Scriptlog.log`, facilitating troubleshooting and analysis.
-    
+
     - It also generates a log with the output of every imagemagick command `$ScriptRoot\logs\ImageMagickCommands.log`.
     - Additionally, an `ImageChoices.csv` file is generated to store all the selected download options and essential information.
     - Send notification via apprise or discord [Click here for Example pictures.](#webhook).
@@ -89,7 +89,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
 >- **Fanart Personal API Key:** [Obtain Fanart API Key](https://fanart.tv/get-an-api-key)
 >- **TVDB API Key:** [Obtain TVDB API Key](https://thetvdb.com/api-information/signup)
     - **Do not** use `"Legacy API Key"`, it only works with a Project Api Key.
->- **ImageMagick:** 
+>- **ImageMagick:**
     - **Version 7.x is required** - The script handles downloading and using a portable version of ImageMagick for all platforms. **(You may need to run the Script as Admin on first run)**. If you prefer to reference your own installation or prefer to download and install it yourself, goto: [Download ImageMagick](https://imagemagick.org/script/download.php)
 >- **Powershell Version:** 5.x or higher (Docker Image uses v7.4.2).
 
@@ -110,12 +110,17 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
         - possible values are:
             -    `tmdb` (recommended)
             -    `fanart`
-            -    `tvdb`      
+            -    `tvdb`
             -    `plex` (Not recommended)
                   - if you prefer textless, do not set plex as fav provider as i cannot query if it has text or not.
                   - that beeing said, plex should act as last resort like IMDB does for Movies and not as fav provider.
-            
+
             [Search order in script](#Search-Order)
+    - `WidthHeightFilter`: If set to `true`, an additional resolution filter will be applied to Posters/Backgrounds (TMDB and TVDB) and Titlecards (only on TMDB) searches.
+    - `PosterMinWidth`: Minimum poster width filter—greater than or equal to: `2000` (default value)
+    - `PosterMinHeight`: Minimum poster height filter—greater than or equal to: `3000` (default value)
+    - `BgTcMinWidth`: Minimum background/titlecard width filter—greater than or equal to: `3840` (default value)
+    - `BgTcMinHeight`: Minimum background/titlecard height filter—greater than or equal to: `2160` (default value)
     - `tmdb_vote_sorting`: Picture sorting via TMDB api, either by `vote_average`, `vote_count` or by `primary` (Default value is: `vote_average`).
         - `primary` = default tmdb view (like on the website)
     - `PreferredLanguageOrder`: Specify language preferences. Default is `xx,en,de` (`xx` is Textless). Example configurations can be found in the config file. 2-digit language codes can be found here: [ISO 3166-1 Lang Codes](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2).
@@ -157,6 +162,8 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `titlecardoverlayfile` : Title Card overlay file name.
     - `LibraryFolders`: Set to `false` for asset structure in one flat folder or `true` to split into library media folders like [Kometa](https://kometa.wiki/en/latest/kometa/guides/assets/#image-asset-directory-guide) needs it.
     - `Posters`: Set to `true` to create movie/show posters.
+    - `NewLineOnSpecificSymbols`: Set to `true` to enable automatic insertion of a newline character at each occurrence of specific symbols in `NewLineSymbols` within the title text.
+    - `NewLineSymbols`: A list of symbols that will trigger a newline insertion when `NewLineOnSpecificSymbols` is set to `true`. Separate each symbol with a comma (e.g., " - ", ":").
     - `SeasonPosters`: Set to `true` to also create season posters.
     - `BackgroundPosters`: Set to `true` to also create background posters.
     - `TitleCards` : Set to `true` to also create title cards.
@@ -167,10 +174,10 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
         ```diff
         - !! IMPORTANT !! -
 
-        Risk of Data Loss from excluded Libraries: 
-        
-        When you exclude libraries, any assets within these locations may be inadvertently deleted. 
-        
+        Risk of Data Loss from excluded Libraries:
+
+        When you exclude libraries, any assets within these locations may be inadvertently deleted.
+
         This happens because the script interprets these assets as "not needed anymore" during its execution since they are not found or listed as part of the active scan.
 
         Ensure that all active asset libraries are included when using that setting on true to prevent unintended deletions.
@@ -459,7 +466,7 @@ In this mode we use Tautulli to trigger Posterizarr for an specific item in Plex
 
 ### Testing Mode
 
-Run the script with the `-Testing` flag. In this mode, the script will create pink posters/backgrounds with short, medium, and long texts (also in CAPS), using the values specified in the `config.json` file. 
+Run the script with the `-Testing` flag. In this mode, the script will create pink posters/backgrounds with short, medium, and long texts (also in CAPS), using the values specified in the `config.json` file.
 
 > [!TIP]
 >This is handy for testing your configuration before applying it en masse to the actual posters. You can see how and where the text would be applied, as well as the size of the textbox.
@@ -472,7 +479,7 @@ Run the script with the `-Testing` flag. In this mode, the script will create pi
 
 > [!IMPORTANT]
 > Currently only movie/show/season poster creation integrated.
-> 
+>
 > Source picture gets edited by script and  is then moved to desired asset location.
 
 Run the script with the `-Manual` switch:
@@ -492,7 +499,7 @@ Follow the prompts to enter the source picture path (Container needs Access to i
   - Change `volume` and `network` to fit your environment (Make sure you have the same network as your plex container when you use local IP of plex)
   - Change `TimeZone` to yours, otherwise it will get scheduled to a different time you may want it to.
   - You may also have to change `PUID/PGID`
-  
+
   If you manually want to run the Script you can do it this way:
 
   **Automatic Mode:**
@@ -507,9 +514,9 @@ Follow the prompts to enter the source picture path (Container needs Access to i
   ```sh
   docker exec -it posterizarr pwsh Posterizarr.ps1 -Manual
   ```
-> [!TIP]  
+> [!TIP]
 > If you did not used `pwsh` on docker exec you can do it this way.
-> 
+>
 > Inside your `Unraid` or `Bash` or `Sh` console:
 > ```sh
 > pwsh Posterizarr.ps1
@@ -635,7 +642,7 @@ Following these steps will allow you to import the `Module1.bas` file containing
   <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
     <img alt="outputnew" height="100%" src="/images/posterizarr-overview-new.jpg">
   </a>
-  
+
   Font - Comfortaa-Medium.ttf
   <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
     <img alt="output" height="100%" src="/images/posterizarr-overview.jpg">
@@ -671,7 +678,7 @@ Following these steps will allow you to import the `Module1.bas` file containing
 <summary>🔍Movie Poster & Background:</summary>
 <br>
 <p>
-  
+
   If `TMDB` is your fav Provider
 
   - TMDB
@@ -702,7 +709,7 @@ Following these steps will allow you to import the `Module1.bas` file containing
 <summary>🔍Show Poster & Background:</summary>
 <br>
 <p>
-  
+
   If `TMDB` is your fav Provider
 
   - TMDB
@@ -730,7 +737,7 @@ Following these steps will allow you to import the `Module1.bas` file containing
 <summary>🔍Show Season Poster:</summary>
 <br>
 <p>
-  
+
   If `TMDB` is your fav Provider
 
   - TMDB
@@ -758,7 +765,7 @@ Following these steps will allow you to import the `Module1.bas` file containing
 <summary>🔍Show TC with Background Poster:</summary>
 <br>
 <p>
-  
+
   If `TMDB` is your fav Provider
 
   - TMDB
@@ -778,7 +785,7 @@ Following these steps will allow you to import the `Module1.bas` file containing
 <summary>🔍Show TC Poster:</summary>
 <br>
 <p>
-  
+
   If `TMDB` is your fav Provider
 
   - TMDB

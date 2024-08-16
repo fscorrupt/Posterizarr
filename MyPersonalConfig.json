@@ -5,6 +5,11 @@
     "FanartTvAPIKey": "xxxxxxxxxxxxx",
     "PlexToken": "xxxxxxxxxxxxx",
     "FavProvider": "tmdb",
+    "WidthHeightFilter": "false",
+    "PosterMinWidth": "2000",
+    "PosterMinHeight": "3000",
+    "BgTcMinWidth": "3840",
+    "BgTcMinHeight": "2160",
     "PreferredLanguageOrder": [
       "xx",
       "en",
@@ -54,6 +59,11 @@
     "SkipJapTitle": "true",
     "AssetCleanup": "true",
     "AutoUpdateIM": "false",
+    "NewLineOnSpecificSymbols": "true",
+    "NewLineSymbols": [
+        " - ",
+        ":"
+    ],
     "seasonoverlayfile": "bottom-up-fade.png"
   },
   "OverlayPart": {

@@ -5,6 +5,11 @@
     "FanartTvAPIKey": "FANARTAPIKEY",
     "PlexToken": "",
     "FavProvider": "tmdb",
+    "WidthHeightFilter": "false",
+    "PosterMinWidth": "2000",
+    "PosterMinHeight": "3000",
+    "BgTcMinWidth": "3840",
+    "BgTcMinHeight": "2160",
     "tmdb_vote_sorting": "vote_average",
     "PreferredLanguageOrder": ["xx", "en", "de"],
     "PreferredSeasonLanguageOrder": ["xx", "en", "de"]
@@ -37,6 +42,10 @@
     "SeasonPosters": "true",
     "BackgroundPosters": "false",
     "TitleCards": "false",
+    "NewLineOnSpecificSymbols": "false",
+    "NewLineSymbols": [
+        " - "
+    ],
     "SkipTBA": "false",
     "SkipJapTitle": "false",
     "AssetCleanup": "false",
