@@ -44,7 +44,7 @@
     "TitleCards": "false",
     "NewLineOnSpecificSymbols": "false",
     "NewLineSymbols": [
-        "-"
+        " - "
     ],
     "SkipTBA": "false",
     "SkipJapTitle": "false",
