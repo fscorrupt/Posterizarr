@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [1.3.7](https://github.com/fscorrupt/Posterizarr/releases/tag/1.3.7) - 2024-08-16 12:16:31
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.3.6...1.3.7
+
+### Feature
+
+- general:
+  - Add support for newline insertion on specific symbols in title tex ([8be251c](https://github.com/fscorrupt/Posterizarr/commit/8be251c0249319105beff1934f393c4512d79777))
+
 ## [1.3.6](https://github.com/fscorrupt/Posterizarr/releases/tag/1.3.6) - 2024-08-15 12:58:03
 
 **Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.3.5...1.3.6
