@@ -61,7 +61,8 @@
     "AutoUpdateIM": "false",
     "NewLineOnSpecificSymbols": "true",
     "NewLineSymbols": [
-        "-"
+        " - ",
+        ":"
     ],
     "seasonoverlayfile": "bottom-up-fade.png"
   },
