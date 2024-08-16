@@ -59,6 +59,10 @@
     "SkipJapTitle": "true",
     "AssetCleanup": "true",
     "AutoUpdateIM": "false",
+    "NewLineOnSpecificSymbols": "true",
+    "NewLineSymbols": [
+        "-"
+    ],
     "seasonoverlayfile": "bottom-up-fade.png"
   },
   "OverlayPart": {

@@ -42,6 +42,10 @@
     "SeasonPosters": "true",
     "BackgroundPosters": "false",
     "TitleCards": "false",
+    "NewLineOnSpecificSymbols": "false",
+    "NewLineSymbols": [
+        "-"
+    ],
     "SkipTBA": "false",
     "SkipJapTitle": "false",
     "AssetCleanup": "false",

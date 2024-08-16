@@ -8,7 +8,7 @@
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.3.6"
+$CurrentScriptVersion = "1.3.7"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -3929,6 +3929,8 @@ $global:TitleCards = $config.PrerequisitePart.TitleCards.tolower()
 $SkipTBA = $config.PrerequisitePart.SkipTBA.tolower()
 $SkipJapTitle = $config.PrerequisitePart.SkipJapTitle.tolower()
 $AssetCleanup = $config.PrerequisitePart.AssetCleanup.tolower()
+$NewLineOnSpecificSymbols = $config.PrerequisitePart.NewLineOnSpecificSymbols.tolower()
+$NewLineSymbols = $config.PrerequisitePart.NewLineSymbols
 
 # Poster Overlay Part
 $global:ImageProcessing = $config.OverlayPart.ImageProcessing.tolower()
@@ -4442,6 +4444,14 @@ if ($Manual) {
 
             if ($AddText -eq 'true') {
                 $joinedTitle = $joinedTitle -replace '"', '""'
+                
+                # Loop through each symbol and replace it with a newline
+                if ($NewLineOnSpecificSymbols -eq 'true'){
+                    foreach ($symbol in $NewLineSymbols) {
+                        $joinedTitle = $joinedTitle -replace [regex]::Escape($symbol), "`n"
+                    }
+                }
+
                 $joinedTitlePointSize = $joinedTitle -replace '""', '""""'
                 $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
                 Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
@@ -6056,6 +6066,13 @@ Elseif ($Tautulli) {
                                             }
                                         }
                                         $joinedTitle = $joinedTitle -replace '"', '""'
+                                        
+                                        # Loop through each symbol and replace it with a newline
+                                        if ($NewLineOnSpecificSymbols -eq 'true'){
+                                            foreach ($symbol in $NewLineSymbols) {
+                                                $joinedTitle = $joinedTitle -replace [regex]::Escape($symbol), "`n"
+                                            }
+                                        }
                                         $joinedTitlePointSize = $joinedTitle -replace '""', '""""'
                                         $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
                                         if (!$global:IsTruncated) {
@@ -6380,6 +6397,13 @@ Elseif ($Tautulli) {
                                             }
                                         }
                                         $joinedTitle = $joinedTitle -replace '"', '""'
+
+                                        # Loop through each symbol and replace it with a newline
+                                        if ($NewLineOnSpecificSymbols -eq 'true'){
+                                            foreach ($symbol in $NewLineSymbols) {
+                                                $joinedTitle = $joinedTitle -replace [regex]::Escape($symbol), "`n"
+                                            }
+                                        }
                                         $joinedTitlePointSize = $joinedTitle -replace '""', '""""'
                                         $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
                                         if (!$global:IsTruncated) {
@@ -6779,6 +6803,13 @@ Elseif ($Tautulli) {
                                         }
                                     }
                                     $joinedTitle = $joinedTitle -replace '"', '""'
+
+                                    # Loop through each symbol and replace it with a newline
+                                    if ($NewLineOnSpecificSymbols -eq 'true'){
+                                        foreach ($symbol in $NewLineSymbols) {
+                                            $joinedTitle = $joinedTitle -replace [regex]::Escape($symbol), "`n"
+                                        }
+                                    }
                                     $joinedTitlePointSize = $joinedTitle -replace '""', '""""'
                                     $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
                                     if (!$global:IsTruncated) {
@@ -7113,6 +7144,13 @@ Elseif ($Tautulli) {
                                         }
                                     }
                                     $joinedTitle = $joinedTitle -replace '"', '""'
+
+                                    # Loop through each symbol and replace it with a newline
+                                    if ($NewLineOnSpecificSymbols -eq 'true'){
+                                        foreach ($symbol in $NewLineSymbols) {
+                                            $joinedTitle = $joinedTitle -replace [regex]::Escape($symbol), "`n"
+                                        }
+                                    }
                                     $joinedTitlePointSize = $joinedTitle -replace '""', '""""'
                                     $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
                                     if (!$global:IsTruncated) {
@@ -7482,6 +7520,13 @@ Elseif ($Tautulli) {
 
                                         if ($AddSeasonText -eq 'true') {
                                             $global:seasonTitle = $global:seasonTitle -replace '"', '""'
+
+                                            # Loop through each symbol and replace it with a newline
+                                            if ($NewLineOnSpecificSymbols -eq 'true'){
+                                                foreach ($symbol in $NewLineSymbols) {
+                                                    $global:seasonTitle = $global:seasonTitle -replace [regex]::Escape($symbol), "`n"
+                                                }
+                                            }
                                             $joinedTitlePointSize = $global:seasonTitle -replace '""', '""""'
                                             $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize
                                             if (!$global:IsTruncated) {
@@ -7697,6 +7742,13 @@ Elseif ($Tautulli) {
 
                                         if ($AddSeasonText -eq 'true') {
                                             $global:seasonTitle = $global:seasonTitle -replace '"', '""'
+
+                                            # Loop through each symbol and replace it with a newline
+                                            if ($NewLineOnSpecificSymbols -eq 'true'){
+                                                foreach ($symbol in $NewLineSymbols) {
+                                                    $global:seasonTitle = $global:seasonTitle -replace [regex]::Escape($symbol), "`n"
+                                                }
+                                            }
                                             $joinedTitlePointSize = $global:seasonTitle -replace '""', '""""'
                                             $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize
                                             if (!$global:IsTruncated) {
@@ -8150,6 +8202,13 @@ Elseif ($Tautulli) {
                                                                     }
                                                                 }
                                                                 $global:EPTitle = $global:EPTitle -replace '"', '""'
+
+                                                                # Loop through each symbol and replace it with a newline
+                                                                if ($NewLineOnSpecificSymbols -eq 'true'){
+                                                                    foreach ($symbol in $NewLineSymbols) {
+                                                                        $global:EPTitle = $global:EPTitle -replace [regex]::Escape($symbol), "`n"
+                                                                    }
+                                                                }
                                                                 $joinedTitlePointSize = $global:EPTitle -replace '""', '""""'
                                                                 if ($global:direction -eq "RTL") {
                                                                     $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $RTLfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
@@ -8621,6 +8680,13 @@ Elseif ($Tautulli) {
                                                                 }
                                                             }
                                                             $global:EPTitle = $global:EPTitle -replace '"', '""'
+
+                                                            # Loop through each symbol and replace it with a newline
+                                                            if ($NewLineOnSpecificSymbols -eq 'true'){
+                                                                foreach ($symbol in $NewLineSymbols) {
+                                                                    $global:EPTitle = $global:EPTitle -replace [regex]::Escape($symbol), "`n"
+                                                                }
+                                                            }
                                                             $joinedTitlePointSize = $global:EPTitle -replace '""', '""""'
                                                             if ($global:direction -eq "RTL") {
                                                                 $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $RTLfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
@@ -9561,6 +9627,13 @@ else {
                                             }
                                         }
                                         $joinedTitle = $joinedTitle -replace '"', '""'
+
+                                        # Loop through each symbol and replace it with a newline
+                                        if ($NewLineOnSpecificSymbols -eq 'true'){
+                                            foreach ($symbol in $NewLineSymbols) {
+                                                $joinedTitle = $joinedTitle -replace [regex]::Escape($symbol), "`n"
+                                            }
+                                        }
                                         $joinedTitlePointSize = $joinedTitle -replace '""', '""""'
                                         $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
                                         if (!$global:IsTruncated) {
@@ -9870,6 +9943,13 @@ else {
                                             }
                                         }
                                         $joinedTitle = $joinedTitle -replace '"', '""'
+
+                                        # Loop through each symbol and replace it with a newline
+                                        if ($NewLineOnSpecificSymbols -eq 'true'){
+                                            foreach ($symbol in $NewLineSymbols) {
+                                                $joinedTitle = $joinedTitle -replace [regex]::Escape($symbol), "`n"
+                                            }
+                                        }
                                         $joinedTitlePointSize = $joinedTitle -replace '""', '""""'
                                         $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
                                         if (!$global:IsTruncated) {
@@ -10258,6 +10338,13 @@ else {
                                         }
                                     }
                                     $joinedTitle = $joinedTitle -replace '"', '""'
+
+                                    # Loop through each symbol and replace it with a newline
+                                    if ($NewLineOnSpecificSymbols -eq 'true'){
+                                        foreach ($symbol in $NewLineSymbols) {
+                                            $joinedTitle = $joinedTitle -replace [regex]::Escape($symbol), "`n"
+                                        }
+                                    }
                                     $joinedTitlePointSize = $joinedTitle -replace '""', '""""'
                                     $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
                                     if (!$global:IsTruncated) {
@@ -10576,6 +10663,13 @@ else {
                                         }
                                     }
                                     $joinedTitle = $joinedTitle -replace '"', '""'
+
+                                    # Loop through each symbol and replace it with a newline
+                                    if ($NewLineOnSpecificSymbols -eq 'true'){
+                                        foreach ($symbol in $NewLineSymbols) {
+                                            $joinedTitle = $joinedTitle -replace [regex]::Escape($symbol), "`n"
+                                        }
+                                    }
                                     $joinedTitlePointSize = $joinedTitle -replace '""', '""""'
                                     $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
                                     if (!$global:IsTruncated) {
@@ -10928,6 +11022,13 @@ else {
 
                                         if ($AddSeasonText -eq 'true') {
                                             $global:seasonTitle = $global:seasonTitle -replace '"', '""'
+
+                                            # Loop through each symbol and replace it with a newline
+                                            if ($NewLineOnSpecificSymbols -eq 'true'){
+                                                foreach ($symbol in $NewLineSymbols) {
+                                                    $global:seasonTitle = $global:seasonTitle -replace [regex]::Escape($symbol), "`n"
+                                                }
+                                            }
                                             $joinedTitlePointSize = $global:seasonTitle -replace '""', '""""'
                                             $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize
                                             if (!$global:IsTruncated) {
@@ -11364,6 +11465,13 @@ else {
                                                                     }
                                                                 }
                                                                 $global:EPTitle = $global:EPTitle -replace '"', '""'
+
+                                                                # Loop through each symbol and replace it with a newline
+                                                                if ($NewLineOnSpecificSymbols -eq 'true'){
+                                                                    foreach ($symbol in $NewLineSymbols) {
+                                                                        $global:EPTitle = $global:EPTitle -replace [regex]::Escape($symbol), "`n"
+                                                                    }
+                                                                }
                                                                 $joinedTitlePointSize = $global:EPTitle -replace '""', '""""'
                                                                 if ($global:direction -eq "RTL") {
                                                                     $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $RTLfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
@@ -11819,6 +11927,13 @@ else {
                                                                 }
                                                             }
                                                             $global:EPTitle = $global:EPTitle -replace '"', '""'
+
+                                                            # Loop through each symbol and replace it with a newline
+                                                            if ($NewLineOnSpecificSymbols -eq 'true'){
+                                                                foreach ($symbol in $NewLineSymbols) {
+                                                                    $global:EPTitle = $global:EPTitle -replace [regex]::Escape($symbol), "`n"
+                                                                }
+                                                            }
                                                             $joinedTitlePointSize = $global:EPTitle -replace '""', '""""'
                                                             if ($global:direction -eq "RTL") {
                                                                 $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $RTLfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize

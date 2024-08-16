@@ -162,6 +162,8 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `titlecardoverlayfile` : Title Card overlay file name.
     - `LibraryFolders`: Set to `false` for asset structure in one flat folder or `true` to split into library media folders like [Kometa](https://kometa.wiki/en/latest/kometa/guides/assets/#image-asset-directory-guide) needs it.
     - `Posters`: Set to `true` to create movie/show posters.
+    - `NewLineOnSpecificSymbols`: Set to `true` to enable automatic insertion of a newline character at each occurrence of specific symbols in `NewLineSymbols` within the title text.
+    - `NewLineSymbols`: A list of symbols that will trigger a newline insertion when `NewLineOnSpecificSymbols` is set to `true`. Separate each symbol with a comma (e.g., "-", ":").
     - `SeasonPosters`: Set to `true` to also create season posters.
     - `BackgroundPosters`: Set to `true` to also create background posters.
     - `TitleCards` : Set to `true` to also create title cards.
