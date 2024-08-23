@@ -8,7 +8,7 @@
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.3.7"
+$CurrentScriptVersion = "1.3.9"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -5834,8 +5834,14 @@ Elseif ($Tautulli) {
                 # Determine the language direction
                 $global:langCode = $entry.'Library Language'
                 $global:direction = $global:languageDirections[$global:langCode]
+                
+                if ($Platform -eq 'Windows'){
+                    $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}\p{IsDevanagari}\p{IsThai}\p{IsEthiopic}\p{IsGeorgian}\p{IsArmenian}\p{IsBengali}]'
+                }
+                Else {
+                    $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}\p{IsArabic}\p{IsHebrew}\p{IsDevanagari}\p{IsThai}\p{IsEthiopic}\p{IsGeorgian}\p{IsArmenian}\p{IsBengali}]'
+                }
 
-                $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}\p{IsArabic}\p{IsDevanagari}\p{IsThai}\p{IsEthiopic}\p{IsGeorgian}\p{IsArmenian}\p{IsBengali}]'
                 if ($entry.title -match $cjkPattern -and $entry.originalTitle) {
                     $Titletext = $entry.originalTitle
                 }
@@ -6059,7 +6065,7 @@ Elseif ($Tautulli) {
                                     InvokeMagickCommand -Command $magick -Arguments $Arguments
 
                                     if ($AddText -eq 'true') {
-                                        if ($global:direction -eq "RTL") {
+                                        if ($global:direction -eq "RTL" -and $Platform -eq 'Windows') {
                                             $fontImagemagick = $RTLfontImagemagick
                                             if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
                                                 $joinedTitle = ReverseRTLText -text $joinedTitle
@@ -6390,7 +6396,7 @@ Elseif ($Tautulli) {
                                     InvokeMagickCommand -Command $magick -Arguments $Arguments
 
                                     if ($AddBackgroundText -eq 'true') {
-                                        if ($global:direction -eq "RTL") {
+                                        if ($global:direction -eq "RTL" -and $Platform -eq 'Windows') {
                                             $backgroundfontImagemagick = $RTLfontImagemagick
                                             if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
                                                 $joinedTitle = ReverseRTLText -text $joinedTitle
@@ -6588,7 +6594,13 @@ Elseif ($Tautulli) {
             $global:langCode = $entry.'Library Language'
             $global:direction = $global:languageDirections[$global:langCode]
 
-            $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}\p{IsDevanagari}\p{IsThai}\p{IsEthiopic}\p{IsGeorgian}\p{IsArmenian}\p{IsBengali}]'
+            if ($Platform -eq 'Windows'){
+                    $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}\p{IsDevanagari}\p{IsThai}\p{IsEthiopic}\p{IsGeorgian}\p{IsArmenian}\p{IsBengali}]'
+            }
+            Else {
+                    $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}\p{IsArabic}\p{IsHebrew}\p{IsDevanagari}\p{IsThai}\p{IsEthiopic}\p{IsGeorgian}\p{IsArmenian}\p{IsBengali}]'
+            }
+            
             if ($entry.title -match $cjkPattern) {
                 $Titletext = $entry.originalTitle
             }
@@ -6796,7 +6808,7 @@ Elseif ($Tautulli) {
                                 InvokeMagickCommand -Command $magick -Arguments $Arguments
 
                                 if ($AddText -eq 'true') {
-                                    if ($global:direction -eq "RTL") {
+                                    if ($global:direction -eq "RTL" -and $Platform -eq 'Windows') {
                                         $fontImagemagick = $RTLfontImagemagick
                                         if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
                                             $joinedTitle = ReverseRTLText -text $joinedTitle
@@ -7137,7 +7149,7 @@ Elseif ($Tautulli) {
                                 InvokeMagickCommand -Command $magick -Arguments $Arguments
 
                                 if ($AddBackgroundText -eq 'true') {
-                                    if ($global:direction -eq "RTL") {
+                                    if ($global:direction -eq "RTL" -and $Platform -eq 'Windows') {
                                         $backgroundfontImagemagick = $RTLfontImagemagick
                                         if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
                                             $joinedTitle = ReverseRTLText -text $joinedTitle
@@ -8196,7 +8208,7 @@ Elseif ($Tautulli) {
                                                                 if ($TitleCardEPTitlefontAllCaps -eq 'true') {
                                                                     $global:EPTitle = $global:EPTitle.ToUpper()
                                                                 }
-                                                                if ($global:direction -eq "RTL") {
+                                                                if ($global:direction -eq "RTL" -and $Platform -eq 'Windows') {
                                                                     if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
                                                                         $global:EPTitle = ReverseRTLText -text $global:EPTitle
                                                                     }
@@ -8210,7 +8222,7 @@ Elseif ($Tautulli) {
                                                                     }
                                                                 }
                                                                 $joinedTitlePointSize = $global:EPTitle -replace '""', '""""'
-                                                                if ($global:direction -eq "RTL") {
+                                                                if ($global:direction -eq "RTL" -and $Platform -eq 'Windows') {
                                                                     $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $RTLfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
                                                                 }
                                                                 Else {
@@ -8218,7 +8230,7 @@ Elseif ($Tautulli) {
                                                                 }
                                                                 if (!$global:IsTruncated) {
                                                                     Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                                                                    if ($global:direction -eq "RTL") {
+                                                                    if ($global:direction -eq "RTL" -and $Platform -eq 'Windows') {
                                                                         # Add Stroke
                                                                         if ($AddTitleCardEPTitleTextStroke -eq 'true') {
                                                                             $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$RTLfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
@@ -8674,7 +8686,7 @@ Elseif ($Tautulli) {
                                                             if ($TitleCardEPTitlefontAllCaps -eq 'true') {
                                                                 $global:EPTitle = $global:EPTitle.ToUpper()
                                                             }
-                                                            if ($global:direction -eq "RTL") {
+                                                            if ($global:direction -eq "RTL" -and $Platform -eq 'Windows') {
                                                                 if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
                                                                     $global:EPTitle = ReverseRTLText -text $global:EPTitle
                                                                 }
@@ -8688,7 +8700,7 @@ Elseif ($Tautulli) {
                                                                 }
                                                             }
                                                             $joinedTitlePointSize = $global:EPTitle -replace '""', '""""'
-                                                            if ($global:direction -eq "RTL") {
+                                                            if ($global:direction -eq "RTL" -and $Platform -eq 'Windows') {
                                                                 $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $RTLfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
                                                             }
                                                             Else {
@@ -8696,7 +8708,7 @@ Elseif ($Tautulli) {
                                                             }
                                                             if (!$global:IsTruncated) {
                                                                 Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                                                                if ($global:direction -eq "RTL") {
+                                                                if ($global:direction -eq "RTL" -and $Platform -eq 'Windows') {
                                                                     # Add Stroke
                                                                     if ($AddTitleCardEPTitleTextStroke -eq 'true') {
                                                                         $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$RTLfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
@@ -9394,7 +9406,13 @@ else {
                 $global:langCode = $entry.'Library Language'
                 $global:direction = $global:languageDirections[$global:langCode]
 
-                $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}\p{IsDevanagari}\p{IsThai}\p{IsEthiopic}\p{IsGeorgian}\p{IsArmenian}\p{IsBengali}]'
+                if ($Platform -eq 'Windows'){
+                    $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}\p{IsDevanagari}\p{IsThai}\p{IsEthiopic}\p{IsGeorgian}\p{IsArmenian}\p{IsBengali}]'
+                }
+                Else {
+                    $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}\p{IsArabic}\p{IsHebrew}\p{IsDevanagari}\p{IsThai}\p{IsEthiopic}\p{IsGeorgian}\p{IsArmenian}\p{IsBengali}]'
+                }
+
                 if ($entry.title -match $cjkPattern) {
                     $Titletext = $entry.originalTitle
                 }
@@ -9620,7 +9638,7 @@ else {
                                     InvokeMagickCommand -Command $magick -Arguments $Arguments
 
                                     if ($AddText -eq 'true') {
-                                        if ($global:direction -eq "RTL") {
+                                        if ($global:direction -eq "RTL" -and $Platform -eq 'Windows') {
                                             $fontImagemagick = $RTLfontImagemagick
                                             if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
                                                 $joinedTitle = ReverseRTLText -text $joinedTitle
@@ -9936,7 +9954,7 @@ else {
                                     InvokeMagickCommand -Command $magick -Arguments $Arguments
 
                                     if ($AddBackgroundText -eq 'true') {
-                                        if ($global:direction -eq "RTL") {
+                                        if ($global:direction -eq "RTL" -and $Platform -eq 'Windows') {
                                             $backgroundfontImagemagick = $RTLfontImagemagick
                                             if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
                                                 $joinedTitle = ReverseRTLText -text $joinedTitle
@@ -10118,7 +10136,13 @@ else {
             $global:langCode = $entry.'Library Language'
             $global:direction = $global:languageDirections[$global:langCode]
 
-            $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}\p{IsDevanagari}\p{IsThai}\p{IsEthiopic}\p{IsGeorgian}\p{IsArmenian}\p{IsBengali}]'
+            if ($Platform -eq 'Windows'){
+                $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}\p{IsDevanagari}\p{IsThai}\p{IsEthiopic}\p{IsGeorgian}\p{IsArmenian}\p{IsBengali}]'
+            }
+            Else {
+                $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}\p{IsArabic}\p{IsHebrew}\p{IsDevanagari}\p{IsThai}\p{IsEthiopic}\p{IsGeorgian}\p{IsArmenian}\p{IsBengali}]'
+            }
+
             if ($entry.title -match $cjkPattern) {
                 $Titletext = $entry.originalTitle
             }
@@ -10331,7 +10355,7 @@ else {
                                 InvokeMagickCommand -Command $magick -Arguments $Arguments
 
                                 if ($AddText -eq 'true') {
-                                    if ($global:direction -eq "RTL") {
+                                    if ($global:direction -eq "RTL" -and $Platform -eq 'Windows') {
                                         $fontImagemagick = $RTLfontImagemagick
                                         if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
                                             $joinedTitle = ReverseRTLText -text $joinedTitle
@@ -10656,7 +10680,7 @@ else {
                                 InvokeMagickCommand -Command $magick -Arguments $Arguments
 
                                 if ($AddBackgroundText -eq 'true') {
-                                    if ($global:direction -eq "RTL") {
+                                    if ($global:direction -eq "RTL" -and $Platform -eq 'Windows') {
                                         $backgroundfontImagemagick = $RTLfontImagemagick
                                         if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
                                             $joinedTitle = ReverseRTLText -text $joinedTitle
@@ -11459,7 +11483,7 @@ else {
                                                                 if ($TitleCardEPTitlefontAllCaps -eq 'true') {
                                                                     $global:EPTitle = $global:EPTitle.ToUpper()
                                                                 }
-                                                                if ($global:direction -eq "RTL") {
+                                                                if ($global:direction -eq "RTL" -and $Platform -eq 'Windows') {
                                                                     if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
                                                                         $global:EPTitle = ReverseRTLText -text $global:EPTitle
                                                                     }
@@ -11473,7 +11497,7 @@ else {
                                                                     }
                                                                 }
                                                                 $joinedTitlePointSize = $global:EPTitle -replace '""', '""""'
-                                                                if ($global:direction -eq "RTL") {
+                                                                if ($global:direction -eq "RTL" -and $Platform -eq 'Windows') {
                                                                     $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $RTLfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
                                                                 }
                                                                 Else {
@@ -11481,7 +11505,7 @@ else {
                                                                 }
                                                                 if (!$global:IsTruncated) {
                                                                     Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                                                                    if ($global:direction -eq "RTL") {
+                                                                    if ($global:direction -eq "RTL" -and $Platform -eq 'Windows') {
                                                                         # Add Stroke
                                                                         if ($AddTitleCardEPTitleTextStroke -eq 'true') {
                                                                             $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$RTLfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
@@ -11921,7 +11945,7 @@ else {
                                                             if ($TitleCardEPTitlefontAllCaps -eq 'true') {
                                                                 $global:EPTitle = $global:EPTitle.ToUpper()
                                                             }
-                                                            if ($global:direction -eq "RTL") {
+                                                            if ($global:direction -eq "RTL" -and $Platform -eq 'Windows') {
                                                                 if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
                                                                     $global:EPTitle = ReverseRTLText -text $global:EPTitle
                                                                 }
@@ -11935,7 +11959,7 @@ else {
                                                                 }
                                                             }
                                                             $joinedTitlePointSize = $global:EPTitle -replace '""', '""""'
-                                                            if ($global:direction -eq "RTL") {
+                                                            if ($global:direction -eq "RTL" -and $Platform -eq 'Windows') {
                                                                 $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $RTLfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
                                                             }
                                                             Else {
@@ -11943,7 +11967,7 @@ else {
                                                             }
                                                             if (!$global:IsTruncated) {
                                                                 Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                                                                if ($global:direction -eq "RTL") {
+                                                                if ($global:direction -eq "RTL" -and $Platform -eq 'Windows') {
                                                                     # Add Stroke
                                                                     if ($AddTitleCardEPTitleTextStroke -eq 'true') {
                                                                         $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$RTLfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
