@@ -1,5 +1,23 @@
 # CHANGELOG
 
+## [1.4.1](https://github.com/fscorrupt/Posterizarr/releases/tag/1.4.1) - 2024-08-26 09:28:40
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.4.0...1.4.1
+
+### Bug Fixes
+
+- general:
+  - bug fixes & cleanup ([ab634b7](https://github.com/fscorrupt/Posterizarr/commit/ab634b737dbceaf57302526bd73496d7f6e7fc82))
+
+## [1.4.0](https://github.com/fscorrupt/Posterizarr/releases/tag/1.4.0) - 2024-08-24 09:58:54
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.3.9...1.4.0
+
+### Feature
+
+- general:
+  - changes for Docker image ([d2e609f](https://github.com/fscorrupt/Posterizarr/commit/d2e609f76e54c968166772c73d51972cdee4774f))
+
 ## [1.3.9](https://github.com/fscorrupt/Posterizarr/releases/tag/1.3.9) - 2024-08-23 09:43:22
 
 **Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.3.8...1.3.9

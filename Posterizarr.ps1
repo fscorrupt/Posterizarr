@@ -8,7 +8,7 @@
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.3.9"
+$CurrentScriptVersion = "1.4.1"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -21,16 +21,6 @@ $ProgressPreference = 'SilentlyContinue'
 # ImageMagick                     -> https://imagemagick.org/archive/binaries/ImageMagick-7.1.1-27-Q16-HDRI-x64-dll.exe
 # FanartTv API Powershell Wrapper -> https://github.com/Celerium/FanartTV-PowerShellWrapper
 #####################################################################################################################
-function ReverseRTLText {
-    param (
-        [string]$text
-    )
-    # Convert string to array of characters, reverse the array, and then join it back to a string
-    $charArray = $text.ToCharArray()
-    [Array]::Reverse($charArray)
-    $reversedText = -join $charArray
-    return $reversedText
-}
 function Get-CPUModel {
     if ($Platform -eq 'Docker') {
         $cpuInfo = cat /proc/cpuinfo | Out-String
@@ -55,8 +45,8 @@ function Get-CPUModel {
     return $cpuModel
 }
 function Set-OSTypeAndScriptRoot {
-    if ($env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker-Alpine*') {
-        $global:OSType = "DockerAlpine"
+    if ($env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker*') {
+        $global:OSType = "Docker"
         $global:ScriptRoot = "./config"
     }
     Else {
@@ -270,7 +260,7 @@ function SendMessage {
         [string]$fallback,
         [string]$truncated
     )
-    if ($global:NotifyUrl -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker-Alpine*') {
+    if ($global:NotifyUrl -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker*') {
         if ($global:NotifyUrl -like '*discord*') {
             if ($SkipTBA -eq 'true' -or $SkipJapTitle -eq 'true') {
                 $jsonPayload = @"
@@ -446,7 +436,7 @@ function SendMessage {
             }
         }
     }
-    if ($global:NotifyUrl -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -notlike 'PSDocker-Alpine*') {
+    if ($global:NotifyUrl -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -notlike 'PSDocker*') {
         if ($SkipTBA -eq 'true' -or $SkipJapTitle -eq 'true') {
             $jsonPayload = @"
     {
@@ -2241,7 +2231,7 @@ function GetFanartSeasonPoster {
             return $global:posterurl
         }
         Else {
-            if ($global:OnlyTextless -eq $true){
+            if ($global:OnlyTextless -eq $true) {
                 Write-Entry -Subtext "No Textless Season Poster on Fanart" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
             }
             Else {
@@ -2287,7 +2277,7 @@ function GetFanartSeasonPoster {
             return $global:posterurl
         }
         Else {
-            if ($global:OnlyTextless -eq $true){
+            if ($global:OnlyTextless -eq $true) {
                 Write-Entry -Subtext "No Textless Season Poster on Fanart" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
             }
             Else {
@@ -2310,8 +2300,8 @@ function GetTVDBMoviePoster {
             }
             if ($response) {
                 if ($response.data.artworks) {
-                    if ($global:WidthHeightFilter -eq 'true'){
-                        $global:posterurltmp = ($response.data.artworks | Where-Object { $null -eq $_.language -and $_.type -eq '14' -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight} | Sort-Object Score)
+                    if ($global:WidthHeightFilter -eq 'true') {
+                        $global:posterurltmp = ($response.data.artworks | Where-Object { $null -eq $_.language -and $_.type -eq '14' -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight } | Sort-Object Score)
                     }
                     Else {
                         $global:posterurltmp = ($response.data.artworks | Where-Object { $null -eq $_.language -and $_.type -eq '14' } | Sort-Object Score)
@@ -2319,7 +2309,7 @@ function GetTVDBMoviePoster {
                     $global:TVDBAssetChangeUrl = "https://thetvdb.com/movies/$($response.data.slug)#artwork"
                     if ($global:posterurltmp) {
                         $global:posterurl = $global:posterurltmp[0].image
-                        if ($global:WidthHeightFilter -eq 'true'){
+                        if ($global:WidthHeightFilter -eq 'true') {
                             Write-Entry -Subtext "Found a poster sized at - width: $($global:posterurltmp[0].width) | height: $($global:posterurltmp[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                         }
                         Write-Entry -Subtext "Found Textless Poster on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
@@ -2330,12 +2320,12 @@ function GetTVDBMoviePoster {
                         Write-Entry -Subtext "OnlyTextless Value: $global:OnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                         if ($global:OnlyTextless -eq $false) {
                             foreach ($lang in $global:PreferredLanguageOrderTVDB) {
-                                if ($global:WidthHeightFilter -eq 'true'){
+                                if ($global:WidthHeightFilter -eq 'true') {
                                     if ($lang -eq 'null') {
-                                        $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "" -and $_.type -eq '14' -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight} | Sort-Object Score)
+                                        $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "" -and $_.type -eq '14' -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight } | Sort-Object Score)
                                     }
                                     Else {
-                                        $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "$lang*" -and $_.type -eq '14' -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight} | Sort-Object Score)
+                                        $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "$lang*" -and $_.type -eq '14' -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight } | Sort-Object Score)
                                     }
                                 }
                                 Else {
@@ -2348,7 +2338,7 @@ function GetTVDBMoviePoster {
                                 }
                                 if ($LangArtwork) {
                                     $global:posterurl = $LangArtwork[0].image
-                                    if ($global:WidthHeightFilter -eq 'true'){
+                                    if ($global:WidthHeightFilter -eq 'true') {
                                         Write-Entry -Subtext "Found a poster sized at - width: $($LangArtwork[0].width) | height: $($LangArtwork[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                     }
                                     if ($lang -eq 'null') {
@@ -2396,12 +2386,12 @@ function GetTVDBMoviePoster {
             if ($response) {
                 if ($response.data.artworks) {
                     foreach ($lang in $global:PreferredLanguageOrderTVDB) {
-                        if ($global:WidthHeightFilter -eq 'true'){
+                        if ($global:WidthHeightFilter -eq 'true') {
                             if ($lang -eq 'null') {
-                                $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "" -and $_.type -eq '14' -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight} | Sort-Object Score)
+                                $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "" -and $_.type -eq '14' -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight } | Sort-Object Score)
                             }
                             Else {
-                                $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "$lang*" -and $_.type -eq '14' -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight} | Sort-Object Score)
+                                $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "$lang*" -and $_.type -eq '14' -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight } | Sort-Object Score)
                             }
                         }
                         Else {
@@ -2414,7 +2404,7 @@ function GetTVDBMoviePoster {
                         }
                         if ($LangArtwork) {
                             $global:posterurl = $LangArtwork[0].image
-                            if ($global:WidthHeightFilter -eq 'true'){
+                            if ($global:WidthHeightFilter -eq 'true') {
                                 Write-Entry -Subtext "Found a poster sized at - width: $($LangArtwork[0].width) | height: $($LangArtwork[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             }
                             if ($lang -eq 'null') {
@@ -2462,15 +2452,15 @@ function GetTVDBMovieBackground {
             }
             if ($response) {
                 if ($response.data.artworks) {
-                    if ($global:WidthHeightFilter -eq 'true'){
-                        $NoLangArtwork = $response.data.artworks | Where-Object { $null -eq $_.language -and $_.type -eq '15' -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight}
+                    if ($global:WidthHeightFilter -eq 'true') {
+                        $NoLangArtwork = $response.data.artworks | Where-Object { $null -eq $_.language -and $_.type -eq '15' -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight }
                     }
                     Else {
                         $NoLangArtwork = $response.data.artworks | Where-Object { $null -eq $_.language -and $_.type -eq '15' }
                     }
                     if ($NoLangArtwork) {
                         $global:posterurl = ($NoLangArtwork | Sort-Object Score)[0].image
-                        if ($global:WidthHeightFilter -eq 'true'){
+                        if ($global:WidthHeightFilter -eq 'true') {
                             Write-Entry -Subtext "Found a poster sized at - width: $(($NoLangArtwork | Sort-Object Score)[0].width) | height: $(($NoLangArtwork | Sort-Object Score)[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                         }
                         Write-Entry -Subtext "Found Textless Background on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
@@ -2480,12 +2470,12 @@ function GetTVDBMovieBackground {
                     Else {
                         # Trying other languages
                         foreach ($lang in $global:PreferredLanguageOrderTVDB) {
-                            if ($global:WidthHeightFilter -eq 'true'){
+                            if ($global:WidthHeightFilter -eq 'true') {
                                 if ($lang -eq 'null') {
-                                    $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "" -and $_.type -eq '15' -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight} | Sort-Object Score)
+                                    $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "" -and $_.type -eq '15' -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight } | Sort-Object Score)
                                 }
                                 Else {
-                                    $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "$lang*" -and $_.type -eq '15' -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight} | Sort-Object Score)
+                                    $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "$lang*" -and $_.type -eq '15' -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight } | Sort-Object Score)
                                 }
                             }
                             Else {
@@ -2498,7 +2488,7 @@ function GetTVDBMovieBackground {
                             }
                             if ($LangArtwork) {
                                 $global:posterurl = $LangArtwork[0].image
-                                if ($global:WidthHeightFilter -eq 'true'){
+                                if ($global:WidthHeightFilter -eq 'true') {
                                     Write-Entry -Subtext "Found a poster sized at - width: $($LangArtwork[0].width) | height: $($LangArtwork[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 }
                                 if ($lang -eq 'null') {
@@ -2545,12 +2535,12 @@ function GetTVDBMovieBackground {
             if ($response) {
                 if ($response.data.artworks) {
                     foreach ($lang in $global:PreferredLanguageOrderTVDB) {
-                        if ($global:WidthHeightFilter -eq 'true'){
+                        if ($global:WidthHeightFilter -eq 'true') {
                             if ($lang -eq 'null') {
-                                $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "" -and $_.type -eq '15' -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight} | Sort-Object Score)
+                                $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "" -and $_.type -eq '15' -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight } | Sort-Object Score)
                             }
                             Else {
-                                $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "$lang*" -and $_.type -eq '15' -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight} | Sort-Object Score)
+                                $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "$lang*" -and $_.type -eq '15' -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight } | Sort-Object Score)
                             }
                         }
                         Else {
@@ -2563,7 +2553,7 @@ function GetTVDBMovieBackground {
                         }
                         if ($LangArtwork) {
                             $global:posterurl = $LangArtwork[0].image
-                            if ($global:WidthHeightFilter -eq 'true'){
+                            if ($global:WidthHeightFilter -eq 'true') {
                                 Write-Entry -Subtext "Found a poster sized at - width: $($LangArtwork[0].width) | height: $($LangArtwork[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             }
                             if ($lang -eq 'null') {
@@ -2616,15 +2606,15 @@ function GetTVDBShowPoster {
             if ($response) {
                 if ($response.data) {
                     $defaultImageurl = $response.data.image
-                    if ($global:WidthHeightFilter -eq 'true'){
-                        $NoLangImageUrl = $response.data.artworks | Where-Object { $null -eq $_.language -and $_.type -eq '2' -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight}
+                    if ($global:WidthHeightFilter -eq 'true') {
+                        $NoLangImageUrl = $response.data.artworks | Where-Object { $null -eq $_.language -and $_.type -eq '2' -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
                     }
                     Else {
                         $NoLangImageUrl = $response.data.artworks | Where-Object { $null -eq $_.language -and $_.type -eq '2' }
                     }
                     if ($NoLangImageUrl) {
                         $global:posterurl = $NoLangImageUrl[0].image
-                        if ($global:WidthHeightFilter -eq 'true'){
+                        if ($global:WidthHeightFilter -eq 'true') {
                             Write-Entry -Subtext "Found a poster sized at - width: $($NoLangImageUrl[0].width) | height: $($NoLangImageUrl[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                         }
                         Write-Entry -Subtext "Found Textless Poster on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
@@ -2673,12 +2663,12 @@ function GetTVDBShowPoster {
             if ($response) {
                 if ($response.data) {
                     foreach ($lang in $global:PreferredLanguageOrderTVDB) {
-                        if ($global:WidthHeightFilter -eq 'true'){
+                        if ($global:WidthHeightFilter -eq 'true') {
                             if ($lang -eq 'null') {
-                                $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "" -and $_.type -eq '2' -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight} | Sort-Object Score -Descending)
+                                $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "" -and $_.type -eq '2' -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight } | Sort-Object Score -Descending)
                             }
                             Else {
-                                $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "$lang*" -and $_.type -eq '2' -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight} | Sort-Object Score -Descending)
+                                $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "$lang*" -and $_.type -eq '2' -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight } | Sort-Object Score -Descending)
                             }
                         }
                         Else {
@@ -2691,7 +2681,7 @@ function GetTVDBShowPoster {
                         }
                         if ($LangArtwork) {
                             $global:posterurl = $LangArtwork[0].image
-                            if ($global:WidthHeightFilter -eq 'true'){
+                            if ($global:WidthHeightFilter -eq 'true') {
                                 Write-Entry -Subtext "Found a poster sized at - width: $($LangArtwork[0].width) | height: $($LangArtwork[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             }
                             if ($lang -eq 'null') {
@@ -2753,12 +2743,12 @@ function GetTVDBSeasonPoster {
                 }
                 if ($Seasonresponse) {
                     foreach ($lang in $global:PreferredSeasonLanguageOrderTVDB) {
-                        if ($global:WidthHeightFilter -eq 'true'){
+                        if ($global:WidthHeightFilter -eq 'true') {
                             if ($lang -eq 'null') {
-                                $LangArtwork = ($Seasonresponse.data.artwork | Where-Object { $_.language -like "" -and $_.type -eq '7' -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight} | Sort-Object Score -Descending)
+                                $LangArtwork = ($Seasonresponse.data.artwork | Where-Object { $_.language -like "" -and $_.type -eq '7' -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight } | Sort-Object Score -Descending)
                             }
                             Else {
-                                $LangArtwork = ($Seasonresponse.data.artwork  | Where-Object { $_.language -like "$lang*" -and $_.type -eq '7' -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight} | Sort-Object Score -Descending)
+                                $LangArtwork = ($Seasonresponse.data.artwork  | Where-Object { $_.language -like "$lang*" -and $_.type -eq '7' -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight } | Sort-Object Score -Descending)
                             }
                         }
                         Else {
@@ -2771,7 +2761,7 @@ function GetTVDBSeasonPoster {
                         }
                         if ($LangArtwork) {
                             $global:posterurl = $LangArtwork[0].image
-                            if ($global:WidthHeightFilter -eq 'true'){
+                            if ($global:WidthHeightFilter -eq 'true') {
                                 Write-Entry -Subtext "Found a poster sized at - width: $($LangArtwork[0].width) | height: $($LangArtwork[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             }
                             if ($lang -eq 'null') {
@@ -2843,15 +2833,15 @@ function GetTVDBShowBackground {
             if ($response) {
                 if ($response.data) {
                     $defaultImageurl = $response.data.image
-                    if ($global:WidthHeightFilter -eq 'true'){
-                        $NoLangImageUrl = $response.data.artworks | Where-Object { $_.language -eq $null -and $_.type -eq '3' -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight}
+                    if ($global:WidthHeightFilter -eq 'true') {
+                        $NoLangImageUrl = $response.data.artworks | Where-Object { $_.language -eq $null -and $_.type -eq '3' -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight }
                     }
                     Else {
                         $NoLangImageUrl = $response.data.artworks | Where-Object { $_.language -eq $null -and $_.type -eq '3' }
                     }
                     if ($NoLangImageUrl) {
                         $global:posterurl = $NoLangImageUrl[0].image
-                        if ($global:WidthHeightFilter -eq 'true'){
+                        if ($global:WidthHeightFilter -eq 'true') {
                             Write-Entry -Subtext "Found a poster sized at - width: $($NoLangImageUrl[0].width) | height: $($NoLangImageUrl[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                         }
                         Write-Entry -Subtext "Found Textless background on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
@@ -2896,12 +2886,12 @@ function GetTVDBShowBackground {
             if ($response) {
                 if ($response.data) {
                     foreach ($lang in $global:PreferredLanguageOrderTVDB) {
-                        if ($global:WidthHeightFilter -eq 'true'){
+                        if ($global:WidthHeightFilter -eq 'true') {
                             if ($lang -eq 'null') {
-                                $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "" -and $_.type -eq '3' -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight} | Sort-Object Score -Descending)
+                                $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "" -and $_.type -eq '3' -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight } | Sort-Object Score -Descending)
                             }
                             Else {
-                                $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "$lang*" -and $_.type -eq '3' -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight} | Sort-Object Score -Descending)
+                                $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "$lang*" -and $_.type -eq '3' -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight } | Sort-Object Score -Descending)
                             }
                         }
                         Else {
@@ -2914,7 +2904,7 @@ function GetTVDBShowBackground {
                         }
                         if ($LangArtwork) {
                             $global:posterurl = $LangArtwork[0].image
-                            if ($global:WidthHeightFilter -eq 'true'){
+                            if ($global:WidthHeightFilter -eq 'true') {
                                 Write-Entry -Subtext "Found a poster sized at - width: $($LangArtwork[0].width) | height: $($LangArtwork[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             }
                             if ($lang -eq 'null') {
@@ -3213,10 +3203,10 @@ function CheckJsonPaths {
     }
 }
 function Get-Platform {
-    if ($global:OSType -eq 'DockerAlpine') {
+    if ($global:OSType -eq 'Docker') {
         return 'Docker'
     }
-    elseif ($global:OSType -eq 'Unix' -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -notlike 'PSDocker-Alpine*') {
+    elseif ($global:OSType -eq 'Unix' -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -notlike 'PSDocker*') {
         # Check if it is a Mac
         $unameOutput = & uname
         if ($unameOutput -like "*Darwin*") {
@@ -3522,7 +3512,7 @@ function CheckImageMagick {
 
     if (!(Test-Path $magick)) {
         if ($global:OSType -ne "Win32NT") {
-            if ($global:OSType -ne "DockerAlpine") {
+            if ($global:OSType -ne "Docker") {
                 Write-Entry -Message "ImageMagick missing, downloading the portable version for you..." -Path $configLogging -Color Yellow -log Warning
                 $magickUrl = "https://imagemagick.org/archive/binaries/magick"
                 Invoke-WebRequest -Uri $magickUrl -OutFile "$global:ScriptRoot/magick"
@@ -3657,6 +3647,7 @@ function InvokeMagickCommand {
             if (-not [string]::IsNullOrWhiteSpace($errorOutput)) {
                 Write-Entry -Subtext "An error occurred while executing the magick command:" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                 Write-Entry -Subtext (GetMagickErrorMessage $errorOutput) -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "$errorOutput" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                 Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                 $errorCount++
             }
@@ -3773,7 +3764,7 @@ foreach ($folder in (Get-ChildItem -Path $(Join-Path $global:ScriptRoot $global:
 # Notification Part
 $global:SendNotification = $config.Notification.SendNotification
 
-if ($env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker-Alpine*') {
+if ($env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker*') {
     $global:NotifyUrl = $config.Notification.AppriseUrl
     if ($global:NotifyUrl -eq 'discord://{WebhookID}/{WebhookToken}/' -and $global:SendNotification -eq 'true') {
         # Try the normal discord url
@@ -4041,7 +4032,7 @@ $backgroundfontImagemagick = $backgroundfont.replace('\', '\\')
 $TitleCardfontImagemagick = $TitleCardfont.replace('\', '\\')
 if ($global:OSType -ne "Win32NT") {
     $global:OSarch = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture
-    if ($global:OSType -eq "DockerAlpine" -or $global:OSarch -eq "Arm64") {
+    if ($global:OSType -eq "Docker" -or $global:OSarch -eq "Arm64") {
         $magick = 'magick'
     }
     Else {
@@ -4098,7 +4089,7 @@ Else {
     $CurrentImagemagickversion = $CurrentImagemagickversion.Groups[1].Value.replace('-', '.')
     Write-Entry -Message "Current Imagemagick Version: $CurrentImagemagickversion" -Path $configLogging -Color White -log Info
 }
-if ($global:OSType -eq "DockerAlpine") {
+if ($global:OSType -eq "Docker") {
     $Url = "https://pkgs.alpinelinux.org/package/edge/community/x86_64/imagemagick"
     $response = Invoke-WebRequest -Uri $url
     $htmlContent = $response.Content
@@ -4120,7 +4111,7 @@ Else {
 $LatestImagemagickversion = $LatestImagemagickversion.replace('-', '.')
 Write-Entry -Message "Latest Imagemagick Version: $LatestImagemagickversion" -Path $configLogging -Color Yellow -log Info
 # Auto Update Magick
-if ($AutoUpdateIM -eq 'true' -and $global:OSType -ne "DockerAlpine" -and $LatestImagemagickversion -gt $CurrentImagemagickversion -and $global:OSarch -ne "Arm64") {
+if ($AutoUpdateIM -eq 'true' -and $global:OSType -ne "Docker" -and $LatestImagemagickversion -gt $CurrentImagemagickversion -and $global:OSarch -ne "Arm64") {
     if ($global:OSType -eq "Win32NT") {
         Remove-Item -LiteralPath $magickinstalllocation -Recurse -Force
     }
@@ -4128,7 +4119,7 @@ if ($AutoUpdateIM -eq 'true' -and $global:OSType -ne "DockerAlpine" -and $Latest
         Remove-Item -LiteralPath "$global:ScriptRoot/magick" -Force
     }
     if ($global:OSType -ne "Win32NT") {
-        if ($global:OSType -ne "DockerAlpine") {
+        if ($global:OSType -ne "Docker") {
             Write-Entry -Subtext "Downloading the latest Imagemagick portable version for you..." -Path $configLogging -Color Cyan -log Info
             $magickUrl = "https://imagemagick.org/archive/binaries/magick"
             Invoke-WebRequest -Uri $magickUrl -OutFile "$global:ScriptRoot/magick"
@@ -4446,7 +4437,7 @@ if ($Manual) {
                 $joinedTitle = $joinedTitle -replace '"', '""'
                 
                 # Loop through each symbol and replace it with a newline
-                if ($NewLineOnSpecificSymbols -eq 'true'){
+                if ($NewLineOnSpecificSymbols -eq 'true') {
                     foreach ($symbol in $NewLineSymbols) {
                         $joinedTitle = $joinedTitle -replace [regex]::Escape($symbol), "`n"
                     }
@@ -5377,7 +5368,7 @@ Elseif ($Testing) {
     $titlecardscount = ($gettestimages | Where-Object { $_.name -like 'Title*' }).count
     $backgroundsscount = ($gettestimages | Where-Object { $_.name -like 'back*' }).count
     $posterscount = ($gettestimages | Where-Object { $_.name -like 'poster*' -or $_.name -like 'SeasonPoster*' }).count
-    if ($global:NotifyUrl -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -notlike 'PSDocker-Alpine*') {
+    if ($global:NotifyUrl -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -notlike 'PSDocker*') {
         $jsonPayload = @"
         {
             "username": "Posterizarr",
@@ -5439,7 +5430,7 @@ Elseif ($Testing) {
             Push-ObjectToDiscord -strDiscordWebhook $global:NotifyUrl -objPayload $jsonPayload
         }
     }
-    if ($global:NotifyUrl -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker-Alpine*') {
+    if ($global:NotifyUrl -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker*') {
         if ($global:NotifyUrl -like '*discord*') {
             $jsonPayload = @"
             {
@@ -5835,12 +5826,7 @@ Elseif ($Tautulli) {
                 $global:langCode = $entry.'Library Language'
                 $global:direction = $global:languageDirections[$global:langCode]
                 
-                if ($Platform -eq 'Windows'){
-                    $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}\p{IsDevanagari}\p{IsThai}\p{IsEthiopic}\p{IsGeorgian}\p{IsArmenian}\p{IsBengali}]'
-                }
-                Else {
-                    $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}\p{IsArabic}\p{IsHebrew}\p{IsDevanagari}\p{IsThai}\p{IsEthiopic}\p{IsGeorgian}\p{IsArmenian}\p{IsBengali}]'
-                }
+                $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}\p{IsDevanagari}\p{IsThai}\p{IsEthiopic}\p{IsGeorgian}\p{IsArmenian}\p{IsBengali}]'
 
                 if ($entry.title -match $cjkPattern -and $entry.originalTitle) {
                     $Titletext = $entry.originalTitle
@@ -6065,16 +6051,13 @@ Elseif ($Tautulli) {
                                     InvokeMagickCommand -Command $magick -Arguments $Arguments
 
                                     if ($AddText -eq 'true') {
-                                        if ($global:direction -eq "RTL" -and $Platform -eq 'Windows') {
+                                        if ($global:direction -eq "RTL") {
                                             $fontImagemagick = $RTLfontImagemagick
-                                            if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
-                                                $joinedTitle = ReverseRTLText -text $joinedTitle
-                                            }
                                         }
                                         $joinedTitle = $joinedTitle -replace '"', '""'
                                         
                                         # Loop through each symbol and replace it with a newline
-                                        if ($NewLineOnSpecificSymbols -eq 'true'){
+                                        if ($NewLineOnSpecificSymbols -eq 'true') {
                                             foreach ($symbol in $NewLineSymbols) {
                                                 $joinedTitle = $joinedTitle -replace [regex]::Escape($symbol), "`n"
                                             }
@@ -6396,16 +6379,13 @@ Elseif ($Tautulli) {
                                     InvokeMagickCommand -Command $magick -Arguments $Arguments
 
                                     if ($AddBackgroundText -eq 'true') {
-                                        if ($global:direction -eq "RTL" -and $Platform -eq 'Windows') {
+                                        if ($global:direction -eq "RTL") {
                                             $backgroundfontImagemagick = $RTLfontImagemagick
-                                            if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
-                                                $joinedTitle = ReverseRTLText -text $joinedTitle
-                                            }
                                         }
                                         $joinedTitle = $joinedTitle -replace '"', '""'
 
                                         # Loop through each symbol and replace it with a newline
-                                        if ($NewLineOnSpecificSymbols -eq 'true'){
+                                        if ($NewLineOnSpecificSymbols -eq 'true') {
                                             foreach ($symbol in $NewLineSymbols) {
                                                 $joinedTitle = $joinedTitle -replace [regex]::Escape($symbol), "`n"
                                             }
@@ -6594,12 +6574,7 @@ Elseif ($Tautulli) {
             $global:langCode = $entry.'Library Language'
             $global:direction = $global:languageDirections[$global:langCode]
 
-            if ($Platform -eq 'Windows'){
-                    $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}\p{IsDevanagari}\p{IsThai}\p{IsEthiopic}\p{IsGeorgian}\p{IsArmenian}\p{IsBengali}]'
-            }
-            Else {
-                    $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}\p{IsArabic}\p{IsHebrew}\p{IsDevanagari}\p{IsThai}\p{IsEthiopic}\p{IsGeorgian}\p{IsArmenian}\p{IsBengali}]'
-            }
+            $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}\p{IsDevanagari}\p{IsThai}\p{IsEthiopic}\p{IsGeorgian}\p{IsArmenian}\p{IsBengali}]'
             
             if ($entry.title -match $cjkPattern) {
                 $Titletext = $entry.originalTitle
@@ -6808,16 +6783,13 @@ Elseif ($Tautulli) {
                                 InvokeMagickCommand -Command $magick -Arguments $Arguments
 
                                 if ($AddText -eq 'true') {
-                                    if ($global:direction -eq "RTL" -and $Platform -eq 'Windows') {
+                                    if ($global:direction -eq "RTL") {
                                         $fontImagemagick = $RTLfontImagemagick
-                                        if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
-                                            $joinedTitle = ReverseRTLText -text $joinedTitle
-                                        }
                                     }
                                     $joinedTitle = $joinedTitle -replace '"', '""'
 
                                     # Loop through each symbol and replace it with a newline
-                                    if ($NewLineOnSpecificSymbols -eq 'true'){
+                                    if ($NewLineOnSpecificSymbols -eq 'true') {
                                         foreach ($symbol in $NewLineSymbols) {
                                             $joinedTitle = $joinedTitle -replace [regex]::Escape($symbol), "`n"
                                         }
@@ -7149,16 +7121,13 @@ Elseif ($Tautulli) {
                                 InvokeMagickCommand -Command $magick -Arguments $Arguments
 
                                 if ($AddBackgroundText -eq 'true') {
-                                    if ($global:direction -eq "RTL" -and $Platform -eq 'Windows') {
+                                    if ($global:direction -eq "RTL") {
                                         $backgroundfontImagemagick = $RTLfontImagemagick
-                                        if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
-                                            $joinedTitle = ReverseRTLText -text $joinedTitle
-                                        }
                                     }
                                     $joinedTitle = $joinedTitle -replace '"', '""'
 
                                     # Loop through each symbol and replace it with a newline
-                                    if ($NewLineOnSpecificSymbols -eq 'true'){
+                                    if ($NewLineOnSpecificSymbols -eq 'true') {
                                         foreach ($symbol in $NewLineSymbols) {
                                             $joinedTitle = $joinedTitle -replace [regex]::Escape($symbol), "`n"
                                         }
@@ -7534,7 +7503,7 @@ Elseif ($Tautulli) {
                                             $global:seasonTitle = $global:seasonTitle -replace '"', '""'
 
                                             # Loop through each symbol and replace it with a newline
-                                            if ($NewLineOnSpecificSymbols -eq 'true'){
+                                            if ($NewLineOnSpecificSymbols -eq 'true') {
                                                 foreach ($symbol in $NewLineSymbols) {
                                                     $global:seasonTitle = $global:seasonTitle -replace [regex]::Escape($symbol), "`n"
                                                 }
@@ -7756,7 +7725,7 @@ Elseif ($Tautulli) {
                                             $global:seasonTitle = $global:seasonTitle -replace '"', '""'
 
                                             # Loop through each symbol and replace it with a newline
-                                            if ($NewLineOnSpecificSymbols -eq 'true'){
+                                            if ($NewLineOnSpecificSymbols -eq 'true') {
                                                 foreach ($symbol in $NewLineSymbols) {
                                                     $global:seasonTitle = $global:seasonTitle -replace [regex]::Escape($symbol), "`n"
                                                 }
@@ -8208,45 +8177,27 @@ Elseif ($Tautulli) {
                                                                 if ($TitleCardEPTitlefontAllCaps -eq 'true') {
                                                                     $global:EPTitle = $global:EPTitle.ToUpper()
                                                                 }
-                                                                if ($global:direction -eq "RTL" -and $Platform -eq 'Windows') {
-                                                                    if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
-                                                                        $global:EPTitle = ReverseRTLText -text $global:EPTitle
-                                                                    }
-                                                                }
                                                                 $global:EPTitle = $global:EPTitle -replace '"', '""'
 
+                                                                if ($global:direction -eq "RTL") {
+                                                                    $TitleCardfontImagemagick = $RTLfontImagemagick
+                                                                }
                                                                 # Loop through each symbol and replace it with a newline
-                                                                if ($NewLineOnSpecificSymbols -eq 'true'){
+                                                                if ($NewLineOnSpecificSymbols -eq 'true') {
                                                                     foreach ($symbol in $NewLineSymbols) {
                                                                         $global:EPTitle = $global:EPTitle -replace [regex]::Escape($symbol), "`n"
                                                                     }
                                                                 }
                                                                 $joinedTitlePointSize = $global:EPTitle -replace '""', '""""'
-                                                                if ($global:direction -eq "RTL" -and $Platform -eq 'Windows') {
-                                                                    $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $RTLfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
-                                                                }
-                                                                Else {
-                                                                    $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
-                                                                }
+                                                                $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
                                                                 if (!$global:IsTruncated) {
                                                                     Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                                                                    if ($global:direction -eq "RTL" -and $Platform -eq 'Windows') {
-                                                                        # Add Stroke
-                                                                        if ($AddTitleCardEPTitleTextStroke -eq 'true') {
-                                                                            $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$RTLfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
-                                                                        }
-                                                                        Else {
-                                                                            $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$RTLfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
-                                                                        }
+                                                                    # Add Stroke
+                                                                    if ($AddTitleCardEPTitleTextStroke -eq 'true') {
+                                                                        $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
                                                                     }
                                                                     Else {
-                                                                        # Add Stroke
-                                                                        if ($AddTitleCardEPTitleTextStroke -eq 'true') {
-                                                                            $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
-                                                                        }
-                                                                        Else {
-                                                                            $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
-                                                                        }
+                                                                        $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
                                                                     }
 
                                                                     Write-Entry -Subtext "Applying EPTitle text: `"$global:EPTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -8686,45 +8637,27 @@ Elseif ($Tautulli) {
                                                             if ($TitleCardEPTitlefontAllCaps -eq 'true') {
                                                                 $global:EPTitle = $global:EPTitle.ToUpper()
                                                             }
-                                                            if ($global:direction -eq "RTL" -and $Platform -eq 'Windows') {
-                                                                if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
-                                                                    $global:EPTitle = ReverseRTLText -text $global:EPTitle
-                                                                }
-                                                            }
                                                             $global:EPTitle = $global:EPTitle -replace '"', '""'
 
+                                                            if ($global:direction -eq "RTL") {
+                                                                $TitleCardfontImagemagick = $RTLfontImagemagick
+                                                            }
                                                             # Loop through each symbol and replace it with a newline
-                                                            if ($NewLineOnSpecificSymbols -eq 'true'){
+                                                            if ($NewLineOnSpecificSymbols -eq 'true') {
                                                                 foreach ($symbol in $NewLineSymbols) {
                                                                     $global:EPTitle = $global:EPTitle -replace [regex]::Escape($symbol), "`n"
                                                                 }
                                                             }
                                                             $joinedTitlePointSize = $global:EPTitle -replace '""', '""""'
-                                                            if ($global:direction -eq "RTL" -and $Platform -eq 'Windows') {
-                                                                $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $RTLfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
-                                                            }
-                                                            Else {
-                                                                $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
-                                                            }
+                                                            $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
                                                             if (!$global:IsTruncated) {
                                                                 Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                                                                if ($global:direction -eq "RTL" -and $Platform -eq 'Windows') {
-                                                                    # Add Stroke
-                                                                    if ($AddTitleCardEPTitleTextStroke -eq 'true') {
-                                                                        $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$RTLfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
-                                                                    }
-                                                                    Else {
-                                                                        $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$RTLfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
-                                                                    }
+                                                                # Add Stroke
+                                                                if ($AddTitleCardEPTitleTextStroke -eq 'true') {
+                                                                    $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
                                                                 }
                                                                 Else {
-                                                                    # Add Stroke
-                                                                    if ($AddTitleCardEPTitleTextStroke -eq 'true') {
-                                                                        $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
-                                                                    }
-                                                                    Else {
-                                                                        $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
-                                                                    }
+                                                                    $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
                                                                 }
                                                                 Write-Entry -Subtext "Applying EPTitle text: `"$global:EPTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                                 $logEntry = "`"$magick`" $Arguments"
@@ -9406,12 +9339,7 @@ else {
                 $global:langCode = $entry.'Library Language'
                 $global:direction = $global:languageDirections[$global:langCode]
 
-                if ($Platform -eq 'Windows'){
-                    $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}\p{IsDevanagari}\p{IsThai}\p{IsEthiopic}\p{IsGeorgian}\p{IsArmenian}\p{IsBengali}]'
-                }
-                Else {
-                    $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}\p{IsArabic}\p{IsHebrew}\p{IsDevanagari}\p{IsThai}\p{IsEthiopic}\p{IsGeorgian}\p{IsArmenian}\p{IsBengali}]'
-                }
+                $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}\p{IsDevanagari}\p{IsThai}\p{IsEthiopic}\p{IsGeorgian}\p{IsArmenian}\p{IsBengali}]'
 
                 if ($entry.title -match $cjkPattern) {
                     $Titletext = $entry.originalTitle
@@ -9638,16 +9566,13 @@ else {
                                     InvokeMagickCommand -Command $magick -Arguments $Arguments
 
                                     if ($AddText -eq 'true') {
-                                        if ($global:direction -eq "RTL" -and $Platform -eq 'Windows') {
+                                        if ($global:direction -eq "RTL") {
                                             $fontImagemagick = $RTLfontImagemagick
-                                            if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
-                                                $joinedTitle = ReverseRTLText -text $joinedTitle
-                                            }
                                         }
                                         $joinedTitle = $joinedTitle -replace '"', '""'
 
                                         # Loop through each symbol and replace it with a newline
-                                        if ($NewLineOnSpecificSymbols -eq 'true'){
+                                        if ($NewLineOnSpecificSymbols -eq 'true') {
                                             foreach ($symbol in $NewLineSymbols) {
                                                 $joinedTitle = $joinedTitle -replace [regex]::Escape($symbol), "`n"
                                             }
@@ -9954,16 +9879,13 @@ else {
                                     InvokeMagickCommand -Command $magick -Arguments $Arguments
 
                                     if ($AddBackgroundText -eq 'true') {
-                                        if ($global:direction -eq "RTL" -and $Platform -eq 'Windows') {
+                                        if ($global:direction -eq "RTL") {
                                             $backgroundfontImagemagick = $RTLfontImagemagick
-                                            if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
-                                                $joinedTitle = ReverseRTLText -text $joinedTitle
-                                            }
                                         }
                                         $joinedTitle = $joinedTitle -replace '"', '""'
 
                                         # Loop through each symbol and replace it with a newline
-                                        if ($NewLineOnSpecificSymbols -eq 'true'){
+                                        if ($NewLineOnSpecificSymbols -eq 'true') {
                                             foreach ($symbol in $NewLineSymbols) {
                                                 $joinedTitle = $joinedTitle -replace [regex]::Escape($symbol), "`n"
                                             }
@@ -10136,12 +10058,7 @@ else {
             $global:langCode = $entry.'Library Language'
             $global:direction = $global:languageDirections[$global:langCode]
 
-            if ($Platform -eq 'Windows'){
-                $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}\p{IsDevanagari}\p{IsThai}\p{IsEthiopic}\p{IsGeorgian}\p{IsArmenian}\p{IsBengali}]'
-            }
-            Else {
-                $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}\p{IsArabic}\p{IsHebrew}\p{IsDevanagari}\p{IsThai}\p{IsEthiopic}\p{IsGeorgian}\p{IsArmenian}\p{IsBengali}]'
-            }
+            $cjkPattern = '[\p{IsHiragana}\p{IsKatakana}\p{IsCJKUnifiedIdeographs}\p{IsCyrillic}\p{IsDevanagari}\p{IsThai}\p{IsEthiopic}\p{IsGeorgian}\p{IsArmenian}\p{IsBengali}]'
 
             if ($entry.title -match $cjkPattern) {
                 $Titletext = $entry.originalTitle
@@ -10355,16 +10272,13 @@ else {
                                 InvokeMagickCommand -Command $magick -Arguments $Arguments
 
                                 if ($AddText -eq 'true') {
-                                    if ($global:direction -eq "RTL" -and $Platform -eq 'Windows') {
+                                    if ($global:direction -eq "RTL") {
                                         $fontImagemagick = $RTLfontImagemagick
-                                        if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
-                                            $joinedTitle = ReverseRTLText -text $joinedTitle
-                                        }
                                     }
                                     $joinedTitle = $joinedTitle -replace '"', '""'
 
                                     # Loop through each symbol and replace it with a newline
-                                    if ($NewLineOnSpecificSymbols -eq 'true'){
+                                    if ($NewLineOnSpecificSymbols -eq 'true') {
                                         foreach ($symbol in $NewLineSymbols) {
                                             $joinedTitle = $joinedTitle -replace [regex]::Escape($symbol), "`n"
                                         }
@@ -10680,16 +10594,13 @@ else {
                                 InvokeMagickCommand -Command $magick -Arguments $Arguments
 
                                 if ($AddBackgroundText -eq 'true') {
-                                    if ($global:direction -eq "RTL" -and $Platform -eq 'Windows') {
+                                    if ($global:direction -eq "RTL") {
                                         $backgroundfontImagemagick = $RTLfontImagemagick
-                                        if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
-                                            $joinedTitle = ReverseRTLText -text $joinedTitle
-                                        }
                                     }
                                     $joinedTitle = $joinedTitle -replace '"', '""'
 
                                     # Loop through each symbol and replace it with a newline
-                                    if ($NewLineOnSpecificSymbols -eq 'true'){
+                                    if ($NewLineOnSpecificSymbols -eq 'true') {
                                         foreach ($symbol in $NewLineSymbols) {
                                             $joinedTitle = $joinedTitle -replace [regex]::Escape($symbol), "`n"
                                         }
@@ -11048,7 +10959,7 @@ else {
                                             $global:seasonTitle = $global:seasonTitle -replace '"', '""'
 
                                             # Loop through each symbol and replace it with a newline
-                                            if ($NewLineOnSpecificSymbols -eq 'true'){
+                                            if ($NewLineOnSpecificSymbols -eq 'true') {
                                                 foreach ($symbol in $NewLineSymbols) {
                                                     $global:seasonTitle = $global:seasonTitle -replace [regex]::Escape($symbol), "`n"
                                                 }
@@ -11483,47 +11394,28 @@ else {
                                                                 if ($TitleCardEPTitlefontAllCaps -eq 'true') {
                                                                     $global:EPTitle = $global:EPTitle.ToUpper()
                                                                 }
-                                                                if ($global:direction -eq "RTL" -and $Platform -eq 'Windows') {
-                                                                    if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
-                                                                        $global:EPTitle = ReverseRTLText -text $global:EPTitle
-                                                                    }
-                                                                }
                                                                 $global:EPTitle = $global:EPTitle -replace '"', '""'
 
+                                                                if ($global:direction -eq "RTL") {
+                                                                    $TitleCardfontImagemagick = $RTLfontImagemagick
+                                                                }
                                                                 # Loop through each symbol and replace it with a newline
-                                                                if ($NewLineOnSpecificSymbols -eq 'true'){
+                                                                if ($NewLineOnSpecificSymbols -eq 'true') {
                                                                     foreach ($symbol in $NewLineSymbols) {
                                                                         $global:EPTitle = $global:EPTitle -replace [regex]::Escape($symbol), "`n"
                                                                     }
                                                                 }
                                                                 $joinedTitlePointSize = $global:EPTitle -replace '""', '""""'
-                                                                if ($global:direction -eq "RTL" -and $Platform -eq 'Windows') {
-                                                                    $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $RTLfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
-                                                                }
-                                                                Else {
-                                                                    $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
-                                                                }
+                                                                $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
                                                                 if (!$global:IsTruncated) {
                                                                     Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                                                                    if ($global:direction -eq "RTL" -and $Platform -eq 'Windows') {
-                                                                        # Add Stroke
-                                                                        if ($AddTitleCardEPTitleTextStroke -eq 'true') {
-                                                                            $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$RTLfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
-                                                                        }
-                                                                        Else {
-                                                                            $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$RTLfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
-                                                                        }
+                                                                    # Add Stroke
+                                                                    if ($AddTitleCardEPTitleTextStroke -eq 'true') {
+                                                                        $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
                                                                     }
                                                                     Else {
-                                                                        # Add Stroke
-                                                                        if ($AddTitleCardEPTitleTextStroke -eq 'true') {
-                                                                            $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
-                                                                        }
-                                                                        Else {
-                                                                            $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
-                                                                        }
+                                                                        $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
                                                                     }
-
                                                                     Write-Entry -Subtext "Applying EPTitle text: `"$global:EPTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                                     $logEntry = "`"$magick`" $Arguments"
                                                                     $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
@@ -11945,45 +11837,26 @@ else {
                                                             if ($TitleCardEPTitlefontAllCaps -eq 'true') {
                                                                 $global:EPTitle = $global:EPTitle.ToUpper()
                                                             }
-                                                            if ($global:direction -eq "RTL" -and $Platform -eq 'Windows') {
-                                                                if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
-                                                                    $global:EPTitle = ReverseRTLText -text $global:EPTitle
-                                                                }
-                                                            }
                                                             $global:EPTitle = $global:EPTitle -replace '"', '""'
-
+                                                            if ($global:direction -eq "RTL") {
+                                                                $TitleCardfontImagemagick = $RTLfontImagemagick
+                                                            }
                                                             # Loop through each symbol and replace it with a newline
-                                                            if ($NewLineOnSpecificSymbols -eq 'true'){
+                                                            if ($NewLineOnSpecificSymbols -eq 'true') {
                                                                 foreach ($symbol in $NewLineSymbols) {
                                                                     $global:EPTitle = $global:EPTitle -replace [regex]::Escape($symbol), "`n"
                                                                 }
                                                             }
                                                             $joinedTitlePointSize = $global:EPTitle -replace '""', '""""'
-                                                            if ($global:direction -eq "RTL" -and $Platform -eq 'Windows') {
-                                                                $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $RTLfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
-                                                            }
-                                                            Else {
-                                                                $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
-                                                            }
+                                                            $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
                                                             if (!$global:IsTruncated) {
                                                                 Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                                                                if ($global:direction -eq "RTL" -and $Platform -eq 'Windows') {
-                                                                    # Add Stroke
-                                                                    if ($AddTitleCardEPTitleTextStroke -eq 'true') {
-                                                                        $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$RTLfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
-                                                                    }
-                                                                    Else {
-                                                                        $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$RTLfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
-                                                                    }
+                                                                # Add Stroke
+                                                                if ($AddTitleCardEPTitleTextStroke -eq 'true') {
+                                                                    $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
                                                                 }
                                                                 Else {
-                                                                    # Add Stroke
-                                                                    if ($AddTitleCardEPTitleTextStroke -eq 'true') {
-                                                                        $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
-                                                                    }
-                                                                    Else {
-                                                                        $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
-                                                                    }
+                                                                    $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
                                                                 }
 
                                                                 Write-Entry -Subtext "Applying EPTitle text: `"$global:EPTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -12717,7 +12590,7 @@ else {
         Push-ObjectToDiscord -strDiscordWebhook $global:NotifyUrl -objPayload $jsonPayload
     }
     Else {
-        if ($global:NotifyUrl -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker-Alpine*') {
+        if ($global:NotifyUrl -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker*' -and $global:SendNotification -eq 'true') {
             if ($errorCount -ge '1') {
                 apprise --notification-type="error" --title="Posterizarr" --body="Run took: $FormattedTimespawn`nIt Created '$posterCount' Images`n`nDuring execution '$errorCount' Errors occurred, please check log for detailed description." "$global:NotifyUrl"
             }
