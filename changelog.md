@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [1.4.1](https://github.com/fscorrupt/Posterizarr/releases/tag/1.4.1) - 2024-08-26 09:28:40
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.4.0...1.4.1
+
+### Bug Fixes
+
+- general:
+  - bug fixes & cleanup ([ab634b7](https://github.com/fscorrupt/Posterizarr/commit/ab634b737dbceaf57302526bd73496d7f6e7fc82))
+
 ## [1.4.0](https://github.com/fscorrupt/Posterizarr/releases/tag/1.4.0) - 2024-08-24 09:58:54
 
 **Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.3.9...1.4.0
