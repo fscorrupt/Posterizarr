@@ -8,7 +8,7 @@
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.4.1"
+$CurrentScriptVersion = "1.5.0"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -3336,6 +3336,7 @@ function LogConfigSettings {
     Write-Entry -Subtext "| Plex Url:                     $($PlexUrl[0..10] -join '')****" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "Prerequisites Part" -Path $configLogging -Color Cyan -log Info
     Write-Entry -Subtext "| Asset Path:                   $AssetPath" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Upload to Plex:               $Upload2Plex" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Show skipped:                 $show_skipped" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Script Root:                  $global:ScriptRoot" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Magick Location:              $magickinstalllocation" -Path $configLogging -Color White -log Info
@@ -3886,6 +3887,7 @@ $PlexUrl = $config.PlexPart.PlexUrl
 $AutoUpdateIM = $config.PrerequisitePart.AutoUpdateIM.tolower()
 $show_skipped = $config.PrerequisitePart.show_skipped.tolower()
 $AssetPath = RemoveTrailingSlash $config.PrerequisitePart.AssetPath
+$Upload2Plex = $config.PrerequisitePart.PlexUpload.tolower()
 
 # Check if its a Network Share
 if ($AssetPath.StartsWith("\")) {
@@ -5727,6 +5729,7 @@ Elseif ($Tautulli) {
         $EpisodeDummycsv | Add-Member -MemberType NoteProperty -Name "Season Number" -Value $null
         $EpisodeDummycsv | Add-Member -MemberType NoteProperty -Name "Episodes" -Value $null
         $EpisodeDummycsv | Add-Member -MemberType NoteProperty -Name "Title" -Value $null
+        $EpisodeDummycsv | Add-Member -MemberType NoteProperty -Name "RatingKeys" -Value $null
         $EpisodeDummycsv | Add-Member -MemberType NoteProperty -Name "PlexTitleCardUrls" -Value $null
 
         $EpisodeDummycsv | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\PlexEpisodeExport.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
@@ -9216,6 +9219,7 @@ else {
                 $tempseasondata | Add-Member -MemberType NoteProperty -Name "Season Number" -Value $Seasondata.MediaContainer.parentIndex
                 $tempseasondata | Add-Member -MemberType NoteProperty -Name "Episodes" -Value $($Seasondata.MediaContainer.video.index -join ',')
                 $tempseasondata | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Seasondata.MediaContainer.video.title -join ';')
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "RatingKeys" -Value $($Seasondata.MediaContainer.video.ratingKey -join ',')
                 $tempseasondata | Add-Member -MemberType NoteProperty -Name "PlexTitleCardUrls" -Value $($Seasondata.MediaContainer.video.thumb -join ',')
                 $Episodedata += $tempseasondata
                 Write-Entry -Subtext "Found [$($tempseasondata.{Show Name})] of type $($tempseasondata.Type) for season $($tempseasondata.{Season Number})" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
@@ -9609,6 +9613,23 @@ else {
                             if (!$global:ImageMagickError -eq 'true') {
                                 if (Get-ChildItem -LiteralPath $PosterImage -ErrorAction SilentlyContinue) {
                                     if (!$global:IsTruncated) {
+                                        if ($Upload2Plex -eq 'true'){
+                                            try {
+                                                Write-Entry -Subtext "Uploading Artwork to Plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                                $fileContent = [System.IO.File]::ReadAllBytes($PosterImage)
+                                                if ($PlexToken) {
+                                                    $Upload = Invoke-WebRequest -Uri "$PlexUrl/library/metadata/$($entry.ratingkey)/posters?X-Plex-Token=$PlexToken" -Method Post -Headers $extraPlexHeaders -Body $fileContent -ContentType 'application/octet-stream'
+                                                }
+                                                Else {
+                                                    $Upload = Invoke-WebRequest -Uri "$PlexUrl/library/metadata/$($entry.ratingkey)/posters?" -Method Post -Headers $extraPlexHeaders -Body $fileContent -ContentType 'application/octet-stream'
+                                                }
+                                            }
+                                            catch {
+                                                Write-Entry -Subtext "Could not upload Artwork to plex, Error Message: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                                $errorCount++
+                                            }
+                                        }
                                         Move-Item -LiteralPath $PosterImage $PosterImageoriginal -Force -ErrorAction SilentlyContinue
                                         Write-Entry -Subtext "Added: $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                                         Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
@@ -9922,6 +9943,23 @@ else {
                                 # Move file back to original naming with Brackets.
                                 if (Get-ChildItem -LiteralPath $backgroundImage -ErrorAction SilentlyContinue) {
                                     if (!$global:IsTruncated) {
+                                        if ($Upload2Plex -eq 'true'){
+                                            try {
+                                                Write-Entry -Subtext "Uploading Artwork to Plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                                $fileContent = [System.IO.File]::ReadAllBytes($backgroundImage)
+                                                if ($PlexToken) {
+                                                    $Upload = Invoke-WebRequest -Uri "$PlexUrl/library/metadata/$($entry.ratingkey)/arts?X-Plex-Token=$PlexToken" -Method Post -Headers $extraPlexHeaders -Body $fileContent -ContentType 'application/octet-stream'
+                                                }
+                                                Else {
+                                                    $Upload = Invoke-WebRequest -Uri "$PlexUrl/library/metadata/$($entry.ratingkey)/arts?" -Method Post -Headers $extraPlexHeaders -Body $fileContent -ContentType 'application/octet-stream'
+                                                }
+                                            }
+                                            catch {
+                                                Write-Entry -Subtext "Could not upload Artwork to plex, Error Message: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                                $errorCount++
+                                            }
+                                        }
                                         Move-Item -LiteralPath $backgroundImage $backgroundImageoriginal -Force -ErrorAction SilentlyContinue
                                         Write-Entry -Subtext "Added: $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                                         Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
@@ -10315,6 +10353,23 @@ else {
                             if (Get-ChildItem -LiteralPath $PosterImage -ErrorAction SilentlyContinue) {
                                 # Move file back to original naming with Brackets.
                                 if (!$global:IsTruncated) {
+                                    if ($Upload2Plex -eq 'true'){
+                                        try {
+                                            Write-Entry -Subtext "Uploading Artwork to Plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                            $fileContent = [System.IO.File]::ReadAllBytes($PosterImage)
+                                            if ($PlexToken) {
+                                                $Upload = Invoke-WebRequest -Uri "$PlexUrl/library/metadata/$($entry.ratingkey)/posters?X-Plex-Token=$PlexToken" -Method Post -Headers $extraPlexHeaders -Body $fileContent -ContentType 'application/octet-stream'
+                                            }
+                                            Else {
+                                                $Upload = Invoke-WebRequest -Uri "$PlexUrl/library/metadata/$($entry.ratingkey)/posters?" -Method Post -Headers $extraPlexHeaders -Body $fileContent -ContentType 'application/octet-stream'
+                                            }
+                                        }
+                                        catch {
+                                            Write-Entry -Subtext "Could not upload Artwork to plex, Error Message: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                            $errorCount++
+                                        }
+                                    }
                                     Move-Item -LiteralPath $PosterImage $PosterImageoriginal -Force -ErrorAction SilentlyContinue
                                     Write-Entry -Subtext "Added: $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                                     Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
@@ -10637,6 +10692,23 @@ else {
                             # Move file back to original naming with Brackets.
                             if (Get-ChildItem -LiteralPath $backgroundImage -ErrorAction SilentlyContinue) {
                                 if (!$global:IsTruncated) {
+                                    if ($Upload2Plex -eq 'true'){
+                                        try {
+                                            Write-Entry -Subtext "Uploading Artwork to Plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                            $fileContent = [System.IO.File]::ReadAllBytes($backgroundImage)
+                                            if ($PlexToken) {
+                                                $Upload = Invoke-WebRequest -Uri "$PlexUrl/library/metadata/$($entry.ratingkey)/arts?X-Plex-Token=$PlexToken" -Method Post -Headers $extraPlexHeaders -Body $fileContent -ContentType 'application/octet-stream'
+                                            }
+                                            Else {
+                                                $Upload = Invoke-WebRequest -Uri "$PlexUrl/library/metadata/$($entry.ratingkey)/arts?" -Method Post -Headers $extraPlexHeaders -Body $fileContent -ContentType 'application/octet-stream'
+                                            }
+                                        }
+                                        catch {
+                                            Write-Entry -Subtext "Could not upload Artwork to plex, Error Message: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                            $errorCount++
+                                        }
+                                    }
                                     Move-Item -LiteralPath $backgroundImage $backgroundImageoriginal -Force -ErrorAction SilentlyContinue
                                     $BackgroundCount++
                                     Write-Entry -Subtext "Added: $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
@@ -10716,6 +10788,7 @@ else {
                 $global:ImageMagickError = $null
                 $global:TextlessPoster = $null
                 $global:seasonNames = $entry.SeasonNames -split ','
+                $global:SeasonRatingKeys = $entry.SeasonRatingKeys -split ','
                 $global:seasonNumbers = $entry.seasonNumbers -split ','
                 $global:PlexSeasonUrls = $entry.PlexSeasonUrls -split ','
                 for ($i = 0; $i -lt $global:seasonNames.Count; $i++) {
@@ -10742,6 +10815,7 @@ else {
                         $global:seasonTitle = $global:seasonNames[$i]
                     }
                     $global:SeasonNumber = $global:seasonNumbers[$i]
+                    $global:SeasonRatingKey = $global:SeasonRatingKeys[$i]
                     $global:PlexSeasonUrl = $global:PlexSeasonUrls[$i]
                     if ($global:SeasonNumber) {
                         $global:season = "Season" + $global:SeasonNumber.PadLeft(2, '0')
@@ -11046,6 +11120,23 @@ else {
                                 if (Get-ChildItem -LiteralPath $SeasonImage -ErrorAction SilentlyContinue) {
                                     # Move file back to original naming with Brackets.
                                     if (!$global:IsTruncated) {
+                                        if ($Upload2Plex -eq 'true'){
+                                            try {
+                                                Write-Entry -Subtext "Uploading Artwork to Plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                                $fileContent = [System.IO.File]::ReadAllBytes($SeasonImage)
+                                                if ($PlexToken) {
+                                                    $Upload = Invoke-WebRequest -Uri "$PlexUrl/library/metadata/$($global:SeasonRatingKey)/posters?X-Plex-Token=$PlexToken" -Method Post -Headers $extraPlexHeaders -Body $fileContent -ContentType 'application/octet-stream'
+                                                }
+                                                Else {
+                                                    $Upload = Invoke-WebRequest -Uri "$PlexUrl/library/metadata/$($global:SeasonRatingKey)/posters?" -Method Post -Headers $extraPlexHeaders -Body $fileContent -ContentType 'application/octet-stream'
+                                                }
+                                            }
+                                            catch {
+                                                Write-Entry -Subtext "Could not upload Artwork to plex, Error Message: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                                $errorCount++
+                                            }
+                                        }
                                         Move-Item -LiteralPath $SeasonImage -destination $SeasonImageoriginal -Force -ErrorAction SilentlyContinue
                                         Write-Entry -Subtext "Added: $SeasonImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                                         Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
@@ -11143,6 +11234,7 @@ else {
                         $global:show_name = $episode."Show Name"
                         $global:season_number = $episode."Season Number"
                         $global:episode_numbers = $episode."Episodes".Split(",")
+                        $global:episode_ratingkeys = $episode."ratingKeys".Split(",")
                         $global:titles = $episode."Title".Split(";")
                         $global:PlexTitleCardUrls = $episode."PlexTitleCardUrls".Split(",")
                         if ($UseBackgroundAsTitleCard -eq 'true') {
@@ -11166,6 +11258,7 @@ else {
                                 $magickcommand = $null
                                 $Arturl = $null
                                 $global:PlexTitleCardUrl = $entry.PlexBackgroundUrl
+                                $global:episode_ratingkey = $($global:episode_ratingkeys[$i].Trim())
                                 $global:EPTitle = $($global:titles[$i].Trim())
                                 $global:episodenumber = $($global:episode_numbers[$i].Trim())
                                 $global:FileNaming = "S" + $global:season_number.PadLeft(2, '0') + "E" + $global:episodenumber.PadLeft(2, '0')
@@ -11495,6 +11588,23 @@ else {
                                                 if (Get-ChildItem -LiteralPath $EpisodeImage -ErrorAction SilentlyContinue) {
                                                     # Move file back to original naming with Brackets.
                                                     if (!$global:IsTruncated) {
+                                                        if ($Upload2Plex -eq 'true'){
+                                                            try {
+                                                                Write-Entry -Subtext "Uploading Artwork to Plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                                                $fileContent = [System.IO.File]::ReadAllBytes($EpisodeImage)
+                                                                if ($PlexToken) {
+                                                                    $Upload = Invoke-WebRequest -Uri "$PlexUrl/library/metadata/$($global:episode_ratingkey)/posters?X-Plex-Token=$PlexToken" -Method Post -Headers $extraPlexHeaders -Body $fileContent -ContentType 'application/octet-stream'
+                                                                }
+                                                                Else {
+                                                                    $Upload = Invoke-WebRequest -Uri "$PlexUrl/library/metadata/$($global:episode_ratingkey)/posters?" -Method Post -Headers $extraPlexHeaders -Body $fileContent -ContentType 'application/octet-stream'
+                                                                }
+                                                            }
+                                                            catch {
+                                                                Write-Entry -Subtext "Could not upload Artwork to plex, Error Message: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                                                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                                                $errorCount++
+                                                            }
+                                                        }
                                                         Move-Item -LiteralPath $EpisodeImage -destination $EpisodeImageoriginal -Force -ErrorAction SilentlyContinue
                                                         Write-Entry -Subtext "Added: $EpisodeImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                                                         Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
@@ -11586,6 +11696,7 @@ else {
                                 $magickcommand = $null
                                 $Arturl = $null
                                 $global:PlexTitleCardUrl = $($global:PlexTitleCardUrls[$i].Trim())
+                                $global:episode_ratingkey = $($global:episode_ratingkeys[$i].Trim())
                                 $global:EPTitle = $($global:titles[$i].Trim())
                                 $global:episodenumber = $($global:episode_numbers[$i].Trim())
                                 $global:FileNaming = "S" + $global:season_number.PadLeft(2, '0') + "E" + $global:episodenumber.PadLeft(2, '0')
@@ -11937,6 +12048,23 @@ else {
                                                 if (Get-ChildItem -LiteralPath $EpisodeImage -ErrorAction SilentlyContinue) {
                                                     # Move file back to original naming with Brackets.
                                                     if (!$global:IsTruncated) {
+                                                        if ($Upload2Plex -eq 'true'){
+                                                            try {
+                                                                Write-Entry -Subtext "Uploading Artwork to Plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                                                $fileContent = [System.IO.File]::ReadAllBytes($EpisodeImage)
+                                                                if ($PlexToken) {
+                                                                    $Upload = Invoke-WebRequest -Uri "$PlexUrl/library/metadata/$($global:episode_ratingkey)/posters?X-Plex-Token=$PlexToken" -Method Post -Headers $extraPlexHeaders -Body $fileContent -ContentType 'application/octet-stream'
+                                                                }
+                                                                Else {
+                                                                    $Upload = Invoke-WebRequest -Uri "$PlexUrl/library/metadata/$($global:episode_ratingkey)/posters?" -Method Post -Headers $extraPlexHeaders -Body $fileContent -ContentType 'application/octet-stream'
+                                                                }
+                                                            }
+                                                            catch {
+                                                                Write-Entry -Subtext "Could not upload Artwork to plex, Error Message: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                                                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                                                $errorCount++
+                                                            }
+                                                        }
                                                         Move-Item -LiteralPath $EpisodeImage -destination $EpisodeImageoriginal -Force -ErrorAction SilentlyContinue
                                                         Write-Entry -Subtext "Added: $EpisodeImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                                                         Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info

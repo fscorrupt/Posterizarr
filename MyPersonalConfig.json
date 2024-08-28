@@ -39,6 +39,7 @@
   },
   "PrerequisitePart": {
     "AssetPath": "/assets",
+    "PlexUpload": "false",
     "magickinstalllocation": "C:\\PosterTemp\\ImageMagickPortable",
     "maxLogs": "5",
     "font": "Colus-Regular.ttf",
