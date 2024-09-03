@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## [1.6.1](https://github.com/fscorrupt/Posterizarr/releases/tag/1.6.1) - 2024-09-03 12:59:50
+
+## 🚇 Added
+
+- Add Ability to put Show Title on Season Poster
+   - FR: #136 
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.6.0...1.6.1
+
+### Feature
+
+- general:
+  - Show Title on Season Poster ([43f84b6](https://github.com/fscorrupt/Posterizarr/commit/43f84b62793ffc1cfc5bd064d3a864215ee266c1))
+
 ## [1.6.0](https://github.com/fscorrupt/Posterizarr/releases/tag/1.6.0) - 2024-09-03 10:46:39
 
 **Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.5.0...1.6.0
