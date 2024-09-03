@@ -62,6 +62,8 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
 > If you want to use the created assets with Kometa (formerly PMM) make sure to check out the [Assets doc](https://kometa.wiki/en/latest/kometa/guides/assets/)
 >
 > You can find an example config for the Assets on my [Kometa-Configs repo](https://github.com/Kometa-Team/Community-Configs/blob/master/fscorrupt/config.yml)
+- **Upload to Plex**: If you do not have Kometa, posterizarr can directly Upload that Artwork to Plex.
+- **Upload to Jellyfin**: Posterizarr can directly upload the artwork to Jellyfin.
 - **Resizing**: It automatically resizes every poster to 2000x3000.
 - **Overlays**: If you choose to, downloaded images will automatically have borders, text, and a gradient overlay applied.
   - Here are some gradient overlays that you can use instead of the default one [gradient-zip](gradient_background_poster_overlays.zip)
