@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [1.6.0](https://github.com/fscorrupt/Posterizarr/releases/tag/1.6.0) - 2024-09-03 10:46:39
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.5.0...1.6.0
+
+### Feature
+
+- general:
+  - Add Jellyfin Support ([6395824](https://github.com/fscorrupt/Posterizarr/commit/6395824d95837252bfcc5a458195506fbb628294))
+
 ## [1.5.0](https://github.com/fscorrupt/Posterizarr/releases/tag/1.5.0) - 2024-08-28 15:53:35
 
 **Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.4.1...1.5.0
