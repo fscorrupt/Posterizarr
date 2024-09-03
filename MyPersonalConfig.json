@@ -4,6 +4,7 @@
     "tmdbtoken": "xxxxxxxxxxxxx",
     "FanartTvAPIKey": "xxxxxxxxxxxxx",
     "PlexToken": "xxxxxxxxxxxxx",
+    "JellyfinAPIKey": "xxxxxxxxxxxxx",
     "FavProvider": "tmdb",
     "WidthHeightFilter": "false",
     "PosterMinWidth": "2000",
@@ -30,7 +31,19 @@
       "Tech Trainings",
       "Kids Music"
     ],
-    "PlexUrl": "http://plex:32400"
+    "PlexUrl": "http://plex:32400",
+    "UsePlex": "true"
+  },
+  "JellyfinPart": {
+    "LibstoExclude": [
+      "Youtube",
+      "Audiobooks",
+      "KidsAudiobooks",
+      "TechTrainings",
+      "KidsMusic"
+    ],
+    "JellyfinUrl": "http://jellyfin:8096",
+    "UseJellyfin": "false"
   },
   "Notification": {
     "SendNotification": "True",
