@@ -8,7 +8,7 @@
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.6.0"
+$CurrentScriptVersion = "1.6.1"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -3387,6 +3387,8 @@ function LogConfigSettings {
     Write-Entry -Subtext "| All Caps on Text:             $SeasonfontAllCaps" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Add Border to Image:          $AddSeasonBorder" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Add Text to Image:            $AddSeasonText" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Add Show Title to Image:      $AddShowTitletoSeason" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| New Lines for Season Title:   $SeasonTextNewLines" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Add Stroke to Text:           $AddSeasonTextStroke" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Stroke color:                 $Seasonstrokecolor" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Stroke width:                 $Seasonstrokewidth" -Path $configLogging -Color White -log Info
@@ -4068,6 +4070,8 @@ $boxsize = $MaxWidth + 'x' + $MaxHeight
 $SeasonfontAllCaps = $config.SeasonPosterOverlayPart.fontAllCaps.tolower()
 $AddSeasonBorder = $config.SeasonPosterOverlayPart.AddBorder.tolower()
 $AddSeasonText = $config.SeasonPosterOverlayPart.AddText.tolower()
+$AddShowTitletoSeason = $config.SeasonPosterOverlayPart.AddShowTitletoSeason.tolower()
+$SeasonTextNewLines = $config.SeasonPosterOverlayPart.SeasonTextNewLines
 $AddSeasonTextStroke = $config.SeasonPosterOverlayPart.AddTextStroke.tolower()
 $Seasonstrokecolor = $config.SeasonPosterOverlayPart.strokecolor
 $Seasonstrokewidth = $config.SeasonPosterOverlayPart.strokewidth
@@ -5005,36 +5009,36 @@ Elseif ($Testing) {
     # Text Poster overlay
     if ($AddSeasonText -eq 'true') {
         # Logging Poster
-        Write-Entry -Subtext "Optimal font size for Short text is: '$optimalFontSizeShort'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "Optimal font size for Short text is: '$seasonoptimalFontSizeShort'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
         Write-Entry -Subtext "    Applying text: `"$ShortText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
-        Write-Entry -Subtext "Optimal font size for Medium text is: '$optimalFontSizeMedium'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "Optimal font size for Medium text is: '$seasonoptimalFontSizeMedium'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
         Write-Entry -Subtext "    Applying text: `"$MediumText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
-        Write-Entry -Subtext "Optimal font size for Long text is: '$optimalFontSizeLong'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "Optimal font size for Long text is: '$seasonoptimalFontSizeLong'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
         Write-Entry -Subtext "    Applying text: `"$LongText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
 
-        Write-Entry -Subtext "Optimal font size for Short CAPS text is: '$optimalFontSizeShortCAPS'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "Optimal font size for Short CAPS text is: '$seasonoptimalFontSizeShortCAPS'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
         Write-Entry -Subtext "    Applying CAPS text: `"$ShortTextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
-        Write-Entry -Subtext "Optimal font size for Medium CAPS text is: '$optimalFontSizeMediumCAPS'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "Optimal font size for Medium CAPS text is: '$seasonoptimalFontSizeMediumCAPS'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
         Write-Entry -Subtext "    Applying CAPS text: `"$MediumTextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
-        Write-Entry -Subtext "Optimal font size for Long CAPS text is: '$optimalFontSizeLongCAPS'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "Optimal font size for Long CAPS text is: '$seasonoptimalFontSizeLongCAPS'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
         Write-Entry -Subtext "    Applying CAPS text: `"$LongTextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
 
         # Add Stroke
         if ($AddSeasonTextStroke -eq 'true') {
-            $SeasonArgumentsShort = "`"$TestSeasonPosterShort`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeShort`" -fill `"#0000FF`" -stroke `"$Seasonstrokecolor`" -strokewidth `"$Seasonstrokewidth`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$ShortText`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterShort`""
-            $SeasonArgumentsMedium = "`"$TestSeasonPosterMedium`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeMedium`" -fill `"#0000FF`" -stroke `"$Seasonstrokecolor`" -strokewidth `"$Seasonstrokewidth`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$MediumText`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterMedium`""
-            $SeasonArgumentsLong = "`"$TestSeasonPosterLong`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeLong`" -fill `"#0000FF`" -stroke `"$Seasonstrokecolor`" -strokewidth `"$Seasonstrokewidth`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$LongText`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterLong`""
-            $SeasonArgumentsShortCAPS = "`"$TestSeasonPosterShortCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeShortCAPS`" -fill `"#0000FF`" -stroke `"$Seasonstrokecolor`" -strokewidth `"$Seasonstrokewidth`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$ShortTextCAPS`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterShortCAPS`""
-            $SeasonArgumentsMediumCAPS = "`"$TestSeasonPosterMediumCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeMediumCAPS`" -fill `"#0000FF`" -stroke `"$Seasonstrokecolor`" -strokewidth `"$Seasonstrokewidth`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$MediumTextCAPS`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterMediumCAPS`""
-            $SeasonArgumentsLongCAPS = "`"$TestSeasonPosterLongCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeLongCAPS`" -fill `"#0000FF`" -stroke `"$Seasonstrokecolor`" -strokewidth `"$Seasonstrokewidth`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$LongTextCAPS`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterLongCAPS`""
+            $SeasonArgumentsShort = "`"$TestSeasonPosterShort`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$seasonoptimalFontSizeShort`" -fill `"#0000FF`" -stroke `"$Seasonstrokecolor`" -strokewidth `"$Seasonstrokewidth`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$ShortText`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterShort`""
+            $SeasonArgumentsMedium = "`"$TestSeasonPosterMedium`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$seasonoptimalFontSizeMedium`" -fill `"#0000FF`" -stroke `"$Seasonstrokecolor`" -strokewidth `"$Seasonstrokewidth`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$MediumText`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterMedium`""
+            $SeasonArgumentsLong = "`"$TestSeasonPosterLong`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$seasonoptimalFontSizeLong`" -fill `"#0000FF`" -stroke `"$Seasonstrokecolor`" -strokewidth `"$Seasonstrokewidth`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$LongText`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterLong`""
+            $SeasonArgumentsShortCAPS = "`"$TestSeasonPosterShortCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$seasonoptimalFontSizeShortCAPS`" -fill `"#0000FF`" -stroke `"$Seasonstrokecolor`" -strokewidth `"$Seasonstrokewidth`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$ShortTextCAPS`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterShortCAPS`""
+            $SeasonArgumentsMediumCAPS = "`"$TestSeasonPosterMediumCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$seasonoptimalFontSizeMediumCAPS`" -fill `"#0000FF`" -stroke `"$Seasonstrokecolor`" -strokewidth `"$Seasonstrokewidth`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$MediumTextCAPS`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterMediumCAPS`""
+            $SeasonArgumentsLongCAPS = "`"$TestSeasonPosterLongCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$seasonoptimalFontSizeLongCAPS`" -fill `"#0000FF`" -stroke `"$Seasonstrokecolor`" -strokewidth `"$Seasonstrokewidth`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$LongTextCAPS`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterLongCAPS`""
         }
         Else {
-            $SeasonArgumentsShort = "`"$TestSeasonPosterShort`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeShort`" -fill `"#0000FF`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$ShortText`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterShort`""
-            $SeasonArgumentsMedium = "`"$TestSeasonPosterMedium`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeMedium`" -fill `"#0000FF`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$MediumText`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterMedium`""
-            $SeasonArgumentsLong = "`"$TestSeasonPosterLong`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeLong`" -fill `"#0000FF`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$LongText`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterLong`""
-            $SeasonArgumentsShortCAPS = "`"$TestSeasonPosterShortCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeShortCAPS`" -fill `"#0000FF`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$ShortTextCAPS`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterShortCAPS`""
-            $SeasonArgumentsMediumCAPS = "`"$TestSeasonPosterMediumCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeMediumCAPS`" -fill `"#0000FF`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$MediumTextCAPS`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterMediumCAPS`""
-            $SeasonArgumentsLongCAPS = "`"$TestSeasonPosterLongCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeLongCAPS`" -fill `"#0000FF`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$LongTextCAPS`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterLongCAPS`""
+            $SeasonArgumentsShort = "`"$TestSeasonPosterShort`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$seasonoptimalFontSizeShort`" -fill `"#0000FF`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$ShortText`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterShort`""
+            $SeasonArgumentsMedium = "`"$TestSeasonPosterMedium`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$seasonoptimalFontSizeMedium`" -fill `"#0000FF`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$MediumText`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterMedium`""
+            $SeasonArgumentsLong = "`"$TestSeasonPosterLong`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$seasonoptimalFontSizeLong`" -fill `"#0000FF`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$LongText`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterLong`""
+            $SeasonArgumentsShortCAPS = "`"$TestSeasonPosterShortCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$seasonoptimalFontSizeShortCAPS`" -fill `"#0000FF`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$ShortTextCAPS`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterShortCAPS`""
+            $SeasonArgumentsMediumCAPS = "`"$TestSeasonPosterMediumCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$seasonoptimalFontSizeMediumCAPS`" -fill `"#0000FF`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$MediumTextCAPS`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterMediumCAPS`""
+            $SeasonArgumentsLongCAPS = "`"$TestSeasonPosterLongCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$seasonoptimalFontSizeLongCAPS`" -fill `"#0000FF`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$LongTextCAPS`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterLongCAPS`""
         }
         # Text Poster Logging
         $SeasonlogEntryShort = "`"$magick`" $SeasonArgumentsShort"
@@ -7626,6 +7630,17 @@ Elseif ($Tautulli) {
                                         InvokeMagickCommand -Command $magick -Arguments $Arguments
 
                                         if ($AddSeasonText -eq 'true') {
+                                            if ($AddShowTitletoSeason -eq 'true') {
+                                                if ($SeasonTextNewLines -eq '1') {
+                                                    $global:seasonTitle = $Titletext + "`n" + $global:seasonTitle
+                                                }
+                                                elseif ($SeasonTextNewLines -eq '2') {
+                                                    $global:seasonTitle = $Titletext + "`n" + "`n" + $global:seasonTitle
+                                                }
+                                                else {
+                                                    $global:seasonTitle = $Titletext + "`n" + $global:seasonTitle
+                                                }
+                                            }
                                             $global:seasonTitle = $global:seasonTitle -replace '"', '""'
 
                                             # Loop through each symbol and replace it with a newline
@@ -7848,6 +7863,17 @@ Elseif ($Tautulli) {
                                         InvokeMagickCommand -Command $magick -Arguments $Arguments
 
                                         if ($AddSeasonText -eq 'true') {
+                                            if ($AddShowTitletoSeason -eq 'true') {
+                                                if ($SeasonTextNewLines -eq '1') {
+                                                    $global:seasonTitle = $Titletext + "`n" + $global:seasonTitle
+                                                }
+                                                elseif ($SeasonTextNewLines -eq '2') {
+                                                    $global:seasonTitle = $Titletext + "`n" + "`n" + $global:seasonTitle
+                                                }
+                                                else {
+                                                    $global:seasonTitle = $Titletext + "`n" + $global:seasonTitle
+                                                }
+                                            }
                                             $global:seasonTitle = $global:seasonTitle -replace '"', '""'
 
                                             # Loop through each symbol and replace it with a newline
@@ -10693,6 +10719,17 @@ Elseif ($JellyfinUrl -and $JellyfinAPIKey -and $UseJellyfin -eq 'true') {
                                         InvokeMagickCommand -Command $magick -Arguments $Arguments
 
                                         if ($AddSeasonText -eq 'true') {
+                                            if ($AddShowTitletoSeason -eq 'true') {
+                                                if ($SeasonTextNewLines -eq '1') {
+                                                    $global:seasonTitle = $Titletext + "`n" + $global:seasonTitle
+                                                }
+                                                elseif ($SeasonTextNewLines -eq '2') {
+                                                    $global:seasonTitle = $Titletext + "`n" + "`n" + $global:seasonTitle
+                                                }
+                                                else {
+                                                    $global:seasonTitle = $Titletext + "`n" + $global:seasonTitle
+                                                }
+                                            }
                                             $global:seasonTitle = $global:seasonTitle -replace '"', '""'
                                             # Loop through each symbol and replace it with a newline
                                             if ($NewLineOnSpecificSymbols -eq 'true') {
@@ -11828,9 +11865,9 @@ Elseif ($JellyfinUrl -and $JellyfinAPIKey -and $UseJellyfin -eq 'true') {
                         ]
                     }
 "@
-                }
-                Else {
-                    $jsonPayload = @"
+            }
+            Else {
+                $jsonPayload = @"
                 {
                     "username": "Posterizarr",
                     "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/main/images/webhook.png",
@@ -11921,11 +11958,11 @@ Elseif ($JellyfinUrl -and $JellyfinAPIKey -and $UseJellyfin -eq 'true') {
                     ]
                 }
 "@
-                }
             }
-            Else {
-                if ($AssetCleanup -eq 'true') {
-                    $jsonPayload = @"
+        }
+        Else {
+            if ($AssetCleanup -eq 'true') {
+                $jsonPayload = @"
                     {
                         "username": "Posterizarr",
                         "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/main/images/webhook.png",
@@ -12026,9 +12063,9 @@ Elseif ($JellyfinUrl -and $JellyfinAPIKey -and $UseJellyfin -eq 'true') {
                         ]
                     }
 "@
-                }
-                Else {
-                    $jsonPayload = @"
+            }
+            Else {
+                $jsonPayload = @"
                     {
                         "username": "Posterizarr",
                         "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/main/images/webhook.png",
@@ -12109,446 +12146,446 @@ Elseif ($JellyfinUrl -and $JellyfinAPIKey -and $UseJellyfin -eq 'true') {
                         ]
                     }
 "@
-                }
-            }
-            $global:NotifyUrl = $global:NotifyUrl.replace('discord://', 'https://discord.com/api/webhooks/')
-            Push-ObjectToDiscord -strDiscordWebhook $global:NotifyUrl -objPayload $jsonPayload
-        }
-        Else {
-            if ($global:NotifyUrl -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker*' -and $global:SendNotification -eq 'true') {
-                if ($errorCount -ge '1') {
-                    apprise --notification-type="error" --title="Posterizarr" --body="Run took: $FormattedTimespawn`nIt Created '$posterCount' Images`n`nDuring execution '$errorCount' Errors occurred, please check log for detailed description." "$global:NotifyUrl"
-                }
-                Else {
-                    apprise --notification-type="success" --title="Posterizarr" --body="Run took: $FormattedTimespawn`nIt Created '$posterCount' Images" "$global:NotifyUrl"
-                }
             }
         }
+        $global:NotifyUrl = $global:NotifyUrl.replace('discord://', 'https://discord.com/api/webhooks/')
+        Push-ObjectToDiscord -strDiscordWebhook $global:NotifyUrl -objPayload $jsonPayload
+    }
+    Else {
+        if ($global:NotifyUrl -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker*' -and $global:SendNotification -eq 'true') {
+            if ($errorCount -ge '1') {
+                apprise --notification-type="error" --title="Posterizarr" --body="Run took: $FormattedTimespawn`nIt Created '$posterCount' Images`n`nDuring execution '$errorCount' Errors occurred, please check log for detailed description." "$global:NotifyUrl"
+            }
+            Else {
+                apprise --notification-type="success" --title="Posterizarr" --body="Run took: $FormattedTimespawn`nIt Created '$posterCount' Images" "$global:NotifyUrl"
+            }
+        }
+    }
 
-        # Clear Running File
-        if (Test-Path $CurrentlyRunning) {
-            Remove-Item -LiteralPath $CurrentlyRunning | out-null
-        }
+    # Clear Running File
+    if (Test-Path $CurrentlyRunning) {
+        Remove-Item -LiteralPath $CurrentlyRunning | out-null
+    }
 }
 else {
-        Write-Entry -Message "Query plex libs..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-        $Libsoverview = @()
-        foreach ($lib in $Libs.MediaContainer.Directory) {
-            if ($lib.title -notin $LibstoExclude) {
-                $libtemp = New-Object psobject
-                $libtemp | Add-Member -MemberType NoteProperty -Name "ID" -Value $lib.key
-                $libtemp | Add-Member -MemberType NoteProperty -Name "Name" -Value $lib.title
-                $libtemp | Add-Member -MemberType NoteProperty -Name "Language" -Value $lib.language
+    Write-Entry -Message "Query plex libs..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+    $Libsoverview = @()
+    foreach ($lib in $Libs.MediaContainer.Directory) {
+        if ($lib.title -notin $LibstoExclude) {
+            $libtemp = New-Object psobject
+            $libtemp | Add-Member -MemberType NoteProperty -Name "ID" -Value $lib.key
+            $libtemp | Add-Member -MemberType NoteProperty -Name "Name" -Value $lib.title
+            $libtemp | Add-Member -MemberType NoteProperty -Name "Language" -Value $lib.language
 
-                # Check if $lib.location.path is an array
-                if ($lib.location.path -is [array]) {
-                    $paths = $lib.location.path -join ',' # Convert array to string
-                    $libtemp | Add-Member -MemberType NoteProperty -Name "Path" -Value $paths
-                }
-                else {
-                    $libtemp | Add-Member -MemberType NoteProperty -Name "Path" -Value $lib.location.path
-                }
-                # Check if Libname has chars we cant use for Folders
-                if ($lib.title -notmatch "^[^\/:*?`"<>\|\\}]+$") {
-                    Write-Entry -Message  "Lib: '$($lib.title)' contains invalid characters." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                    Write-Entry -Subtext "Please rename your lib and remove all chars that are listed here: '/, :, *, ?, `", <, >, |, \, or }'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-                    Exit
-                }
-                $Libsoverview += $libtemp
-            }
-        }
-        if ($($Libsoverview.count) -lt 1) {
-            Write-Entry -Subtext "0 libraries were found. Are you on the correct Plex server?" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-            Exit
-        }
-        Write-Entry -Subtext "Found '$($Libsoverview.count)' libs and '$($LibstoExclude.count)' are excluded..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
-        $IncludedLibraryNames = $Libsoverview.Name -join ', '
-        Write-Entry -Subtext "Included Libraries: $IncludedLibraryNames" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
-        Write-Entry -Message "Query all items from all Libs, this can take a while..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-        $Libraries = @()
-        Foreach ($Library in $Libsoverview) {
-            if ($Library.Name -notin $LibstoExclude) {
-                $PlexHeaders = @{}
-                if ($PlexToken) {
-                    $PlexHeaders['X-Plex-Token'] = $PlexToken
-                }
-
-                # Create a parent XML document
-                $Libcontent = New-Object -TypeName System.Xml.XmlDocument
-                $mediaContainerNode = $Libcontent.CreateElement('MediaContainer')
-                $Libcontent.AppendChild($mediaContainerNode) | Out-Null
-
-                # Initialize variables for pagination
-                $searchsize = 0
-                $totalContentSize = 1
-
-                # Loop until all content is retrieved
-                do {
-                    # Set headers for the current request
-                    $PlexHeaders['X-Plex-Container-Start'] = $searchsize
-                    $PlexHeaders['X-Plex-Container-Size'] = '1000'
-
-                    # Fetch content from Plex server
-                    $response = Invoke-WebRequest -Uri "$PlexUrl/library/sections/$($Library.ID)/all" -Headers $PlexHeaders
-
-                    # Convert response content to XML
-                    [xml]$additionalContent = $response.Content
-
-                    # Get total content size if not retrieved yet
-                    if ($totalContentSize -eq 1) {
-                        $totalContentSize = $additionalContent.MediaContainer.totalSize
-                    }
-
-                    # Import and append video nodes to the parent XML document
-                    $contentquery = if ($additionalContent.MediaContainer.video) {
-                        'video'
-                    }
-                    else {
-                        'Directory'
-                    }
-                    foreach ($videoNode in $additionalContent.MediaContainer.$contentquery) {
-                        $importedNode = $Libcontent.ImportNode($videoNode, $true)
-                        [void]$mediaContainerNode.AppendChild($importedNode)
-                    }
-
-                    # Update search size for next request
-                    $searchsize += [int]$additionalContent.MediaContainer.Size
-                } until ($searchsize -ge $totalContentSize)
-                if ($Libcontent.MediaContainer.video) {
-                    $contentquery = 'video'
-                }
-                Else {
-                    $contentquery = 'Directory'
-                }
-                foreach ($item in $Libcontent.MediaContainer.$contentquery) {
-                    $extractedFolder = $null
-                    $Seasondata = $null
-                    if ($PlexToken) {
-                        if ($contentquery -eq 'Directory') {
-                            try {
-                                [xml]$Metadata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey)?X-Plex-Token=$PlexToken -Headers $extraPlexHeaders).content
-                                [xml]$Seasondata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey)/children?X-Plex-Token=$PlexToken -Headers $extraPlexHeaders).content
-                            }
-                            catch {
-                                Write-Entry -Subtext "Current Seasondata Plex Query: $($PlexUrl[0..10] -join '')****/library/metadata/$($item.ratingKey)/children?X-Plex-Token=$($PlexToken[0..7] -join '')****" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                                Write-Entry -Subtext "Current Metadata Plex Query: $($PlexUrl[0..10] -join '')****/library/metadata/$($item.ratingKey)?X-Plex-Token=$($PlexToken[0..7] -join '')****" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                                Write-Entry -Subtext "An error occurred during Plex query: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                                $errorCount++
-                            }
-                        }
-                        Else {
-                            try {
-                                [xml]$Metadata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey)?X-Plex-Token=$PlexToken -Headers $extraPlexHeaders).content
-                            }
-                            catch {
-                                Write-Entry -Subtext "Current Metadata Plex Query: $($PlexUrl[0..10] -join '')****/library/metadata/$($item.ratingKey)?X-Plex-Token=$($PlexToken[0..7] -join '')****" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                                Write-Entry -Subtext "An error occurred during Plex query: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                                $errorCount++
-                            }
-                        }
-                    }
-                    Else {
-                        if ($contentquery -eq 'Directory') {
-                            try {
-                                [xml]$Metadata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey) -Headers $extraPlexHeaders).content
-                                [xml]$Seasondata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey)/children? -Headers $extraPlexHeaders).content
-                            }
-                            catch {
-                                Write-Entry -Subtext "Current Seasondata Plex Query: $($PlexUrl[0..10] -join '')****/library/metadata/$($item.ratingKey)/children?" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                                Write-Entry -Subtext "Current Metadata Plex Query: $($PlexUrl[0..10] -join '')****/library/metadata/$($item.ratingKey)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                                Write-Entry -Subtext "An error occurred during Plex query: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                                $errorCount++
-                            }
-                        }
-                        Else {
-                            try {
-                                [xml]$Metadata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey) -Headers $extraPlexHeaders).content
-                            }
-                            catch {
-                                Write-Entry -Subtext "Current Metadata Plex Query: $($PlexUrl[0..10] -join '')****/library/metadata/$($item.ratingKey)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                                Write-Entry -Subtext "An error occurred during Plex query: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                                $errorCount++
-                            }
-                        }
-                    }
-                    $metadatatemp = $Metadata.MediaContainer.$contentquery.guid.id
-                    $tmdbpattern = 'tmdb://(\d+)'
-                    $imdbpattern = 'imdb://tt(\d+)'
-                    $tvdbpattern = 'tvdb://(\d+)'
-                    if ($Metadata.MediaContainer.$contentquery.Location) {
-                        $location = $Metadata.MediaContainer.$contentquery.Location.path
-                        if ($location) {
-                            $location = $location.replace('\\?\', '')
-                        }
-                        if ($location.count -gt '1') {
-                            $location = $location[0]
-                            $MultipleVersions = $true
-                        }
-                        Else {
-                            $MultipleVersions = $false
-                        }
-                        $libpaths = $($Library.path).split(',')
-                        Write-Entry -Subtext "Plex Lib Paths before split: $($Library.path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                        Write-Entry -Subtext "Plex Lib Paths after split: $libpaths" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                        foreach ($libpath in $libpaths) {
-                            if ($location -like "$libpath/*" -or $location -like "$libpath\*") {
-                                Write-Entry -Subtext "Location: $location" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                                Write-Entry -Subtext "Libpath: $libpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                                $Matchedpath = AddTrailingSlash $libpath
-                                $libpath = $Matchedpath
-                                $extractedFolder = $location.Substring($libpath.Length)
-                                if ($extractedFolder -like '*\*') {
-                                    $extractedFolder = $extractedFolder.split('\')[0]
-                                }
-                                if ($extractedFolder -like '*/*') {
-                                    $extractedFolder = $extractedFolder.split('/')[0]
-                                }
-                                Write-Entry -Subtext "Matchedpath: $Matchedpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                                Write-Entry -Subtext "ExtractedFolder: $extractedFolder" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                                continue
-                            }
-                        }
-                    }
-                    Else {
-                        $location = $Metadata.MediaContainer.$contentquery.media.part.file
-                        if ($location) {
-                            $location = $location.replace('\\?\', '')
-                        }
-                        if ($location.count -gt '1') {
-                            Write-Entry -Subtext "Multi File Locations: $location" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                            $location = $location[0]
-                            $MultipleVersions = $true
-                        }
-                        Else {
-                            $MultipleVersions = $false
-                        }
-                        Write-Entry -Subtext "File Location: $location" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-
-                        if ($location.length -ge '256' -and $Platform -eq 'Windows') {
-                            $CheckCharLimit = CheckCharLimit
-                            if ($CheckCharLimit -eq $false) {
-                                Write-Entry -Subtext "Skipping [$($item.title)] because path length is over '256'..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-                                Write-Entry -Subtext "You can adjust it by following this: https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation?tabs=registry#enable-long-paths-in-windows-10-version-1607-and-later" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-                                continue
-                            }
-                        }
-
-                        $libpaths = $($Library.path).split(',')
-                        Write-Entry -Subtext "Plex Lib Paths before split: $($Library.path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                        Write-Entry -Subtext "Plex Lib Paths after split: $libpaths" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                        foreach ($libpath in $libpaths) {
-                            if ($location -like "$libpath/*" -or $location -like "$libpath\*") {
-                                Write-Entry -Subtext "Location: $location" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                                Write-Entry -Subtext "Libpath: $libpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                                $Matchedpath = AddTrailingSlash $libpath
-                                $libpath = $Matchedpath
-                                $extractedFolder = $location.Substring($libpath.Length)
-                                if ($extractedFolder -like '*\*') {
-                                    $extractedFolder = $extractedFolder.split('\')[0]
-                                }
-                                if ($extractedFolder -like '*/*') {
-                                    $extractedFolder = $extractedFolder.split('/')[0]
-                                }
-                                Write-Entry -Subtext "Matchedpath: $Matchedpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                                Write-Entry -Subtext "ExtractedFolder: $extractedFolder" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                                continue
-                            }
-                        }
-                    }
-                    if ($Seasondata) {
-                        $SeasonsTemp = $Seasondata.MediaContainer.Directory | Where-Object { $_.Title -ne 'All episodes' }
-                        $SeasonNames = $SeasonsTemp.Title -join ','
-                        $SeasonNumbers = $SeasonsTemp.index -join ','
-                        $SeasonRatingkeys = $SeasonsTemp.ratingKey -join ','
-                        $SeasonPosterUrl = ($SeasonsTemp | Where-Object { $_.type -eq "season" }).thumb -join ','
-                    }
-                    $matchesimdb = [regex]::Matches($metadatatemp, $imdbpattern)
-                    $matchestmdb = [regex]::Matches($metadatatemp, $tmdbpattern)
-                    $matchestvdb = [regex]::Matches($metadatatemp, $tvdbpattern)
-                    if ($matchesimdb.value) { $imdbid = $matchesimdb.value.Replace('imdb://', '') }Else { $imdbid = $null }
-                    if ($matchestmdb.value) { $tmdbid = $matchestmdb.value.Replace('tmdb://', '') }Else { $tmdbid = $null }
-                    if ($matchestvdb.value) { $tvdbid = $matchestvdb.value.Replace('tvdb://', '') }Else { $tvdbid = $null }
-
-                    # check if there are more then 1 entry in id´s
-                    if ($tvdbid.count -gt '1') { $tvdbid = $tvdbid[0] }
-                    if ($tmdbid.count -gt '1') { $tmdbid = $tmdbid[0] }
-                    if ($imdbid.count -gt '1') { $imdbid = $imdbid[0] }
-
-                    $temp = New-Object psobject
-                    $temp | Add-Member -MemberType NoteProperty -Name "Library Name" -Value $Library.Name
-                    $temp | Add-Member -MemberType NoteProperty -Name "Library Type" -Value $Metadata.MediaContainer.$contentquery.type
-                    $temp | Add-Member -MemberType NoteProperty -Name "Library Language" -Value $($Library.language.split("-")[0])
-                    $temp | Add-Member -MemberType NoteProperty -Name "title" -Value $($item.title)
-                    $temp | Add-Member -MemberType NoteProperty -Name "originalTitle" -Value $($item.originalTitle)
-                    $temp | Add-Member -MemberType NoteProperty -Name "SeasonNames" -Value $SeasonNames
-                    $temp | Add-Member -MemberType NoteProperty -Name "SeasonNumbers" -Value $SeasonNumbers
-                    $temp | Add-Member -MemberType NoteProperty -Name "SeasonRatingKeys" -Value $SeasonRatingkeys
-                    $temp | Add-Member -MemberType NoteProperty -Name "year" -Value $item.year
-                    $temp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $tvdbid
-                    $temp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value $imdbid
-                    $temp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value $tmdbid
-                    $temp | Add-Member -MemberType NoteProperty -Name "ratingKey" -Value $item.ratingKey
-                    $temp | Add-Member -MemberType NoteProperty -Name "Path" -Value $Matchedpath
-                    $temp | Add-Member -MemberType NoteProperty -Name "RootFoldername" -Value $extractedFolder
-                    $temp | Add-Member -MemberType NoteProperty -Name "MultipleVersions" -Value $MultipleVersions
-                    $temp | Add-Member -MemberType NoteProperty -Name "PlexPosterUrl" -Value $Metadata.MediaContainer.$contentquery.thumb
-                    $temp | Add-Member -MemberType NoteProperty -Name "PlexBackgroundUrl" -Value $Metadata.MediaContainer.$contentquery.art
-                    $temp | Add-Member -MemberType NoteProperty -Name "PlexSeasonUrls" -Value $SeasonPosterUrl
-                    $Libraries += $temp
-                    Write-Entry -Subtext "Found [$($temp.title)] of type $($temp.{Library Type}) in [$($temp.{Library Name})]" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                    Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                }
-            }
-        }
-        Write-Entry -Subtext "Found '$($Libraries.count)' Items..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
-        $Libraries | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\PlexLibexport.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
-        Write-Entry -Message "Export everything to a csv: $global:ScriptRoot\Logs\PlexLibexport.csv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-
-        # Initialize counter variable
-        $posterCount = 0
-        $SeasonCount = 0
-        $EpisodeCount = 0
-        $BackgroundCount = 0
-        $PosterUnknownCount = 0
-        $SkipTBACount = 0
-        $SkipJapTitleCount = 0
-        $AllShows = $Libraries | Where-Object { $_.'Library Type' -eq 'show' }
-        $AllMovies = $Libraries | Where-Object { $_.'Library Type' -eq 'movie' }
-
-        # Getting information of all Episodes
-        if ($global:TitleCards -eq 'true') {
-            Write-Entry -Message "Query episodes data from all Libs, this can take a while..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-            # Query episode info
-            $Episodedata = @()
-            foreach ($showentry in $AllShows) {
-                # Getting child entries for each season
-                $splittedkeys = $showentry.SeasonRatingKeys.split(',')
-                foreach ($key in $splittedkeys) {
-                    if ($PlexToken) {
-                        if ($contentquery -eq 'Directory') {
-                            [xml]$Seasondata = (Invoke-WebRequest $PlexUrl/library/metadata/$key/children?X-Plex-Token=$PlexToken -Headers $extraPlexHeaders).content
-                        }
-                    }
-                    Else {
-                        if ($contentquery -eq 'Directory') {
-                            [xml]$Seasondata = (Invoke-WebRequest $PlexUrl/library/metadata/$key/children? -Headers $extraPlexHeaders).content
-                        }
-                    }
-                    $tempseasondata = New-Object psobject
-                    $tempseasondata | Add-Member -MemberType NoteProperty -Name "Show Name" -Value $Seasondata.MediaContainer.grandparentTitle
-                    $tempseasondata | Add-Member -MemberType NoteProperty -Name "Type" -Value $Seasondata.MediaContainer.viewGroup
-                    $tempseasondata | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $showentry.tvdbid
-                    $tempseasondata | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value $showentry.tmdbid
-                    $tempseasondata | Add-Member -MemberType NoteProperty -Name "Library Name" -Value $showentry.'Library Name'
-                    $tempseasondata | Add-Member -MemberType NoteProperty -Name "Season Number" -Value $Seasondata.MediaContainer.parentIndex
-                    $tempseasondata | Add-Member -MemberType NoteProperty -Name "Episodes" -Value $($Seasondata.MediaContainer.video.index -join ',')
-                    $tempseasondata | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Seasondata.MediaContainer.video.title -join ';')
-                    $tempseasondata | Add-Member -MemberType NoteProperty -Name "RatingKeys" -Value $($Seasondata.MediaContainer.video.ratingKey -join ',')
-                    $tempseasondata | Add-Member -MemberType NoteProperty -Name "PlexTitleCardUrls" -Value $($Seasondata.MediaContainer.video.thumb -join ',')
-                    $Episodedata += $tempseasondata
-                    Write-Entry -Subtext "Found [$($tempseasondata.{Show Name})] of type $($tempseasondata.Type) for season $($tempseasondata.{Season Number})" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                }
-            }
-            $Episodedata | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\PlexEpisodeExport.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
-            if ($Episodedata) {
-                Write-Entry -Subtext "Found '$($Episodedata.Episodes.split(',').count)' Episodes..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
-            }
-        }
-
-        # Test if csv´s are missing and create dummy file.
-        if (!(Get-ChildItem -LiteralPath "$global:ScriptRoot\Logs\PlexEpisodeExport.csv" -ErrorAction SilentlyContinue)) {
-            $EpisodeDummycsv = New-Object psobject
-
-            # Add members to the object with empty values
-            $EpisodeDummycsv | Add-Member -MemberType NoteProperty -Name "Show Name" -Value $null
-            $EpisodeDummycsv | Add-Member -MemberType NoteProperty -Name "Type" -Value $null
-            $EpisodeDummycsv | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $null
-            $EpisodeDummycsv | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value $null
-            $EpisodeDummycsv | Add-Member -MemberType NoteProperty -Name "Library Name" -Value $null
-            $EpisodeDummycsv | Add-Member -MemberType NoteProperty -Name "Season Number" -Value $null
-            $EpisodeDummycsv | Add-Member -MemberType NoteProperty -Name "Episodes" -Value $null
-            $EpisodeDummycsv | Add-Member -MemberType NoteProperty -Name "Title" -Value $null
-            $EpisodeDummycsv | Add-Member -MemberType NoteProperty -Name "PlexTitleCardUrls" -Value $null
-
-            $EpisodeDummycsv | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\PlexEpisodeExport.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
-            Write-Entry -Message "No PlexEpisodeExport.csv found, creating dummy file for you..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-        }
-        if (!(Get-ChildItem -LiteralPath "$global:ScriptRoot\Logs\PlexLibexport.csv" -ErrorAction SilentlyContinue)) {
-            # Add members to the object with empty values
-            $PlexLibDummycsv = New-Object psobject
-            $PlexLibDummycsv | Add-Member -MemberType NoteProperty -Name "Library Name" -Value $null
-            $PlexLibDummycsv | Add-Member -MemberType NoteProperty -Name "Library Type" -Value $null
-            $PlexLibDummycsv | Add-Member -MemberType NoteProperty -Name "Library Language" -Value $null
-            $PlexLibDummycsv | Add-Member -MemberType NoteProperty -Name "title" -Value $null
-            $PlexLibDummycsv | Add-Member -MemberType NoteProperty -Name "originalTitle" -Value $null
-            $PlexLibDummycsv | Add-Member -MemberType NoteProperty -Name "SeasonNames" -Value $null
-            $PlexLibDummycsv | Add-Member -MemberType NoteProperty -Name "SeasonNumbers" -Value $null
-            $PlexLibDummycsv | Add-Member -MemberType NoteProperty -Name "SeasonRatingKeys" -Value $null
-            $PlexLibDummycsv | Add-Member -MemberType NoteProperty -Name "year" -Value $null
-            $PlexLibDummycsv | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $null
-            $PlexLibDummycsv | Add-Member -MemberType NoteProperty -Name "imdbid" -Value $null
-            $PlexLibDummycsv | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value $null
-            $PlexLibDummycsv | Add-Member -MemberType NoteProperty -Name "ratingKey" -Value $null
-            $PlexLibDummycsv | Add-Member -MemberType NoteProperty -Name "Path" -Value $null
-            $PlexLibDummycsv | Add-Member -MemberType NoteProperty -Name "RootFoldername" -Value $null
-            $PlexLibDummycsv | Add-Member -MemberType NoteProperty -Name "MultipleVersions" -Value $null
-            $PlexLibDummycsv | Add-Member -MemberType NoteProperty -Name "PlexPosterUrl" -Value $null
-            $PlexLibDummycsv | Add-Member -MemberType NoteProperty -Name "PlexBackgroundUrl" -Value $null
-            $PlexLibDummycsv | Add-Member -MemberType NoteProperty -Name "PlexSeasonUrls" -Value $null
-
-            $PlexLibDummycsv | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\PlexLibexport.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
-            Write-Entry -Message "No PlexLibexport.csv found, creating dummy file for you..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-        }
-        # Store all Files from asset dir in a hashtable
-        Write-Entry -Message "Creating Hashtable of all posters in asset dir..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-        try {
-            $directoryHashtable = @{}
-            $allowedExtensions = @(".jpg", ".jpeg", ".png", ".bmp")
-
-            Get-ChildItem -Path $AssetPath -Recurse | ForEach-Object {
-                if ($allowedExtensions -contains $_.Extension.ToLower()) {
-                    $directory = $_.Directory
-                    $basename = $_.BaseName
-                    if ($Platform -eq "Docker" -or $Platform -eq "Linux" -or $Platform -eq 'macOS') {
-                        $directoryHashtable["$directory/$basename"] = $true
-                    }
-                    Else {
-                        $directoryHashtable["$directory\$basename"] = $true
-                    }
-                }
-                $totalSize += $_.Length
-            }
-
-            # Convert bytes to kilobytes, megabytes, or gigabytes as needed
-            if ($totalSize -gt 1GB) {
-                $totalSizeString = "{0:N2} GB" -f ($totalSize / 1GB)
-            }
-            elseif ($totalSize -gt 1MB) {
-                $totalSizeString = "{0:N2} MB" -f ($totalSize / 1MB)
-            }
-            elseif ($totalSize -gt 1KB) {
-                $totalSizeString = "{0:N2} KB" -f ($totalSize / 1KB)
+            # Check if $lib.location.path is an array
+            if ($lib.location.path -is [array]) {
+                $paths = $lib.location.path -join ',' # Convert array to string
+                $libtemp | Add-Member -MemberType NoteProperty -Name "Path" -Value $paths
             }
             else {
-                $totalSizeString = "$totalSize bytes"
+                $libtemp | Add-Member -MemberType NoteProperty -Name "Path" -Value $lib.location.path
+            }
+            # Check if Libname has chars we cant use for Folders
+            if ($lib.title -notmatch "^[^\/:*?`"<>\|\\}]+$") {
+                Write-Entry -Message  "Lib: '$($lib.title)' contains invalid characters." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "Please rename your lib and remove all chars that are listed here: '/, :, *, ?, `", <, >, |, \, or }'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                Exit
+            }
+            $Libsoverview += $libtemp
+        }
+    }
+    if ($($Libsoverview.count) -lt 1) {
+        Write-Entry -Subtext "0 libraries were found. Are you on the correct Plex server?" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        Exit
+    }
+    Write-Entry -Subtext "Found '$($Libsoverview.count)' libs and '$($LibstoExclude.count)' are excluded..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+    $IncludedLibraryNames = $Libsoverview.Name -join ', '
+    Write-Entry -Subtext "Included Libraries: $IncludedLibraryNames" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+    Write-Entry -Message "Query all items from all Libs, this can take a while..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+    $Libraries = @()
+    Foreach ($Library in $Libsoverview) {
+        if ($Library.Name -notin $LibstoExclude) {
+            $PlexHeaders = @{}
+            if ($PlexToken) {
+                $PlexHeaders['X-Plex-Token'] = $PlexToken
             }
 
-            Write-Entry -Subtext "Hashtable created..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
-            Write-Entry -Subtext "Found: '$($directoryHashtable.count)' images in asset directory." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
-            Write-Entry -Subtext "Total size of asset directory: $totalSizeString" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+            # Create a parent XML document
+            $Libcontent = New-Object -TypeName System.Xml.XmlDocument
+            $mediaContainerNode = $Libcontent.CreateElement('MediaContainer')
+            $Libcontent.AppendChild($mediaContainerNode) | Out-Null
+
+            # Initialize variables for pagination
+            $searchsize = 0
+            $totalContentSize = 1
+
+            # Loop until all content is retrieved
+            do {
+                # Set headers for the current request
+                $PlexHeaders['X-Plex-Container-Start'] = $searchsize
+                $PlexHeaders['X-Plex-Container-Size'] = '1000'
+
+                # Fetch content from Plex server
+                $response = Invoke-WebRequest -Uri "$PlexUrl/library/sections/$($Library.ID)/all" -Headers $PlexHeaders
+
+                # Convert response content to XML
+                [xml]$additionalContent = $response.Content
+
+                # Get total content size if not retrieved yet
+                if ($totalContentSize -eq 1) {
+                    $totalContentSize = $additionalContent.MediaContainer.totalSize
+                }
+
+                # Import and append video nodes to the parent XML document
+                $contentquery = if ($additionalContent.MediaContainer.video) {
+                    'video'
+                }
+                else {
+                    'Directory'
+                }
+                foreach ($videoNode in $additionalContent.MediaContainer.$contentquery) {
+                    $importedNode = $Libcontent.ImportNode($videoNode, $true)
+                    [void]$mediaContainerNode.AppendChild($importedNode)
+                }
+
+                # Update search size for next request
+                $searchsize += [int]$additionalContent.MediaContainer.Size
+            } until ($searchsize -ge $totalContentSize)
+            if ($Libcontent.MediaContainer.video) {
+                $contentquery = 'video'
+            }
+            Else {
+                $contentquery = 'Directory'
+            }
+            foreach ($item in $Libcontent.MediaContainer.$contentquery) {
+                $extractedFolder = $null
+                $Seasondata = $null
+                if ($PlexToken) {
+                    if ($contentquery -eq 'Directory') {
+                        try {
+                            [xml]$Metadata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey)?X-Plex-Token=$PlexToken -Headers $extraPlexHeaders).content
+                            [xml]$Seasondata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey)/children?X-Plex-Token=$PlexToken -Headers $extraPlexHeaders).content
+                        }
+                        catch {
+                            Write-Entry -Subtext "Current Seasondata Plex Query: $($PlexUrl[0..10] -join '')****/library/metadata/$($item.ratingKey)/children?X-Plex-Token=$($PlexToken[0..7] -join '')****" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-Entry -Subtext "Current Metadata Plex Query: $($PlexUrl[0..10] -join '')****/library/metadata/$($item.ratingKey)?X-Plex-Token=$($PlexToken[0..7] -join '')****" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-Entry -Subtext "An error occurred during Plex query: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            $errorCount++
+                        }
+                    }
+                    Else {
+                        try {
+                            [xml]$Metadata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey)?X-Plex-Token=$PlexToken -Headers $extraPlexHeaders).content
+                        }
+                        catch {
+                            Write-Entry -Subtext "Current Metadata Plex Query: $($PlexUrl[0..10] -join '')****/library/metadata/$($item.ratingKey)?X-Plex-Token=$($PlexToken[0..7] -join '')****" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-Entry -Subtext "An error occurred during Plex query: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            $errorCount++
+                        }
+                    }
+                }
+                Else {
+                    if ($contentquery -eq 'Directory') {
+                        try {
+                            [xml]$Metadata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey) -Headers $extraPlexHeaders).content
+                            [xml]$Seasondata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey)/children? -Headers $extraPlexHeaders).content
+                        }
+                        catch {
+                            Write-Entry -Subtext "Current Seasondata Plex Query: $($PlexUrl[0..10] -join '')****/library/metadata/$($item.ratingKey)/children?" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-Entry -Subtext "Current Metadata Plex Query: $($PlexUrl[0..10] -join '')****/library/metadata/$($item.ratingKey)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-Entry -Subtext "An error occurred during Plex query: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            $errorCount++
+                        }
+                    }
+                    Else {
+                        try {
+                            [xml]$Metadata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey) -Headers $extraPlexHeaders).content
+                        }
+                        catch {
+                            Write-Entry -Subtext "Current Metadata Plex Query: $($PlexUrl[0..10] -join '')****/library/metadata/$($item.ratingKey)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-Entry -Subtext "An error occurred during Plex query: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            $errorCount++
+                        }
+                    }
+                }
+                $metadatatemp = $Metadata.MediaContainer.$contentquery.guid.id
+                $tmdbpattern = 'tmdb://(\d+)'
+                $imdbpattern = 'imdb://tt(\d+)'
+                $tvdbpattern = 'tvdb://(\d+)'
+                if ($Metadata.MediaContainer.$contentquery.Location) {
+                    $location = $Metadata.MediaContainer.$contentquery.Location.path
+                    if ($location) {
+                        $location = $location.replace('\\?\', '')
+                    }
+                    if ($location.count -gt '1') {
+                        $location = $location[0]
+                        $MultipleVersions = $true
+                    }
+                    Else {
+                        $MultipleVersions = $false
+                    }
+                    $libpaths = $($Library.path).split(',')
+                    Write-Entry -Subtext "Plex Lib Paths before split: $($Library.path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                    Write-Entry -Subtext "Plex Lib Paths after split: $libpaths" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                    foreach ($libpath in $libpaths) {
+                        if ($location -like "$libpath/*" -or $location -like "$libpath\*") {
+                            Write-Entry -Subtext "Location: $location" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-Entry -Subtext "Libpath: $libpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            $Matchedpath = AddTrailingSlash $libpath
+                            $libpath = $Matchedpath
+                            $extractedFolder = $location.Substring($libpath.Length)
+                            if ($extractedFolder -like '*\*') {
+                                $extractedFolder = $extractedFolder.split('\')[0]
+                            }
+                            if ($extractedFolder -like '*/*') {
+                                $extractedFolder = $extractedFolder.split('/')[0]
+                            }
+                            Write-Entry -Subtext "Matchedpath: $Matchedpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-Entry -Subtext "ExtractedFolder: $extractedFolder" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            continue
+                        }
+                    }
+                }
+                Else {
+                    $location = $Metadata.MediaContainer.$contentquery.media.part.file
+                    if ($location) {
+                        $location = $location.replace('\\?\', '')
+                    }
+                    if ($location.count -gt '1') {
+                        Write-Entry -Subtext "Multi File Locations: $location" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        $location = $location[0]
+                        $MultipleVersions = $true
+                    }
+                    Else {
+                        $MultipleVersions = $false
+                    }
+                    Write-Entry -Subtext "File Location: $location" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+
+                    if ($location.length -ge '256' -and $Platform -eq 'Windows') {
+                        $CheckCharLimit = CheckCharLimit
+                        if ($CheckCharLimit -eq $false) {
+                            Write-Entry -Subtext "Skipping [$($item.title)] because path length is over '256'..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                            Write-Entry -Subtext "You can adjust it by following this: https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation?tabs=registry#enable-long-paths-in-windows-10-version-1607-and-later" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                            continue
+                        }
+                    }
+
+                    $libpaths = $($Library.path).split(',')
+                    Write-Entry -Subtext "Plex Lib Paths before split: $($Library.path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                    Write-Entry -Subtext "Plex Lib Paths after split: $libpaths" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                    foreach ($libpath in $libpaths) {
+                        if ($location -like "$libpath/*" -or $location -like "$libpath\*") {
+                            Write-Entry -Subtext "Location: $location" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-Entry -Subtext "Libpath: $libpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            $Matchedpath = AddTrailingSlash $libpath
+                            $libpath = $Matchedpath
+                            $extractedFolder = $location.Substring($libpath.Length)
+                            if ($extractedFolder -like '*\*') {
+                                $extractedFolder = $extractedFolder.split('\')[0]
+                            }
+                            if ($extractedFolder -like '*/*') {
+                                $extractedFolder = $extractedFolder.split('/')[0]
+                            }
+                            Write-Entry -Subtext "Matchedpath: $Matchedpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-Entry -Subtext "ExtractedFolder: $extractedFolder" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            continue
+                        }
+                    }
+                }
+                if ($Seasondata) {
+                    $SeasonsTemp = $Seasondata.MediaContainer.Directory | Where-Object { $_.Title -ne 'All episodes' }
+                    $SeasonNames = $SeasonsTemp.Title -join ','
+                    $SeasonNumbers = $SeasonsTemp.index -join ','
+                    $SeasonRatingkeys = $SeasonsTemp.ratingKey -join ','
+                    $SeasonPosterUrl = ($SeasonsTemp | Where-Object { $_.type -eq "season" }).thumb -join ','
+                }
+                $matchesimdb = [regex]::Matches($metadatatemp, $imdbpattern)
+                $matchestmdb = [regex]::Matches($metadatatemp, $tmdbpattern)
+                $matchestvdb = [regex]::Matches($metadatatemp, $tvdbpattern)
+                if ($matchesimdb.value) { $imdbid = $matchesimdb.value.Replace('imdb://', '') }Else { $imdbid = $null }
+                if ($matchestmdb.value) { $tmdbid = $matchestmdb.value.Replace('tmdb://', '') }Else { $tmdbid = $null }
+                if ($matchestvdb.value) { $tvdbid = $matchestvdb.value.Replace('tvdb://', '') }Else { $tvdbid = $null }
+
+                # check if there are more then 1 entry in id´s
+                if ($tvdbid.count -gt '1') { $tvdbid = $tvdbid[0] }
+                if ($tmdbid.count -gt '1') { $tmdbid = $tmdbid[0] }
+                if ($imdbid.count -gt '1') { $imdbid = $imdbid[0] }
+
+                $temp = New-Object psobject
+                $temp | Add-Member -MemberType NoteProperty -Name "Library Name" -Value $Library.Name
+                $temp | Add-Member -MemberType NoteProperty -Name "Library Type" -Value $Metadata.MediaContainer.$contentquery.type
+                $temp | Add-Member -MemberType NoteProperty -Name "Library Language" -Value $($Library.language.split("-")[0])
+                $temp | Add-Member -MemberType NoteProperty -Name "title" -Value $($item.title)
+                $temp | Add-Member -MemberType NoteProperty -Name "originalTitle" -Value $($item.originalTitle)
+                $temp | Add-Member -MemberType NoteProperty -Name "SeasonNames" -Value $SeasonNames
+                $temp | Add-Member -MemberType NoteProperty -Name "SeasonNumbers" -Value $SeasonNumbers
+                $temp | Add-Member -MemberType NoteProperty -Name "SeasonRatingKeys" -Value $SeasonRatingkeys
+                $temp | Add-Member -MemberType NoteProperty -Name "year" -Value $item.year
+                $temp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $tvdbid
+                $temp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value $imdbid
+                $temp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value $tmdbid
+                $temp | Add-Member -MemberType NoteProperty -Name "ratingKey" -Value $item.ratingKey
+                $temp | Add-Member -MemberType NoteProperty -Name "Path" -Value $Matchedpath
+                $temp | Add-Member -MemberType NoteProperty -Name "RootFoldername" -Value $extractedFolder
+                $temp | Add-Member -MemberType NoteProperty -Name "MultipleVersions" -Value $MultipleVersions
+                $temp | Add-Member -MemberType NoteProperty -Name "PlexPosterUrl" -Value $Metadata.MediaContainer.$contentquery.thumb
+                $temp | Add-Member -MemberType NoteProperty -Name "PlexBackgroundUrl" -Value $Metadata.MediaContainer.$contentquery.art
+                $temp | Add-Member -MemberType NoteProperty -Name "PlexSeasonUrls" -Value $SeasonPosterUrl
+                $Libraries += $temp
+                Write-Entry -Subtext "Found [$($temp.title)] of type $($temp.{Library Type}) in [$($temp.{Library Name})]" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+            }
         }
-        catch {
-            Write-Entry -Subtext "Error during Hashtable creation, please check Asset dir is available..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-            Exit
+    }
+    Write-Entry -Subtext "Found '$($Libraries.count)' Items..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+    $Libraries | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\PlexLibexport.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
+    Write-Entry -Message "Export everything to a csv: $global:ScriptRoot\Logs\PlexLibexport.csv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+
+    # Initialize counter variable
+    $posterCount = 0
+    $SeasonCount = 0
+    $EpisodeCount = 0
+    $BackgroundCount = 0
+    $PosterUnknownCount = 0
+    $SkipTBACount = 0
+    $SkipJapTitleCount = 0
+    $AllShows = $Libraries | Where-Object { $_.'Library Type' -eq 'show' }
+    $AllMovies = $Libraries | Where-Object { $_.'Library Type' -eq 'movie' }
+
+    # Getting information of all Episodes
+    if ($global:TitleCards -eq 'true') {
+        Write-Entry -Message "Query episodes data from all Libs, this can take a while..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+        # Query episode info
+        $Episodedata = @()
+        foreach ($showentry in $AllShows) {
+            # Getting child entries for each season
+            $splittedkeys = $showentry.SeasonRatingKeys.split(',')
+            foreach ($key in $splittedkeys) {
+                if ($PlexToken) {
+                    if ($contentquery -eq 'Directory') {
+                        [xml]$Seasondata = (Invoke-WebRequest $PlexUrl/library/metadata/$key/children?X-Plex-Token=$PlexToken -Headers $extraPlexHeaders).content
+                    }
+                }
+                Else {
+                    if ($contentquery -eq 'Directory') {
+                        [xml]$Seasondata = (Invoke-WebRequest $PlexUrl/library/metadata/$key/children? -Headers $extraPlexHeaders).content
+                    }
+                }
+                $tempseasondata = New-Object psobject
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Show Name" -Value $Seasondata.MediaContainer.grandparentTitle
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Type" -Value $Seasondata.MediaContainer.viewGroup
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $showentry.tvdbid
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value $showentry.tmdbid
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Library Name" -Value $showentry.'Library Name'
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Season Number" -Value $Seasondata.MediaContainer.parentIndex
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Episodes" -Value $($Seasondata.MediaContainer.video.index -join ',')
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Seasondata.MediaContainer.video.title -join ';')
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "RatingKeys" -Value $($Seasondata.MediaContainer.video.ratingKey -join ',')
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "PlexTitleCardUrls" -Value $($Seasondata.MediaContainer.video.thumb -join ',')
+                $Episodedata += $tempseasondata
+                Write-Entry -Subtext "Found [$($tempseasondata.{Show Name})] of type $($tempseasondata.Type) for season $($tempseasondata.{Season Number})" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+            }
         }
-        if ($global:logLevel -eq '3') {
-            Write-Entry -Message "Output hashtable..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-            $directoryHashtable.keys | Out-File "$global:ScriptRoot\Logs\hashtable.log" -Force
+        $Episodedata | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\PlexEpisodeExport.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
+        if ($Episodedata) {
+            Write-Entry -Subtext "Found '$($Episodedata.Episodes.split(',').count)' Episodes..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
         }
+    }
+
+    # Test if csv´s are missing and create dummy file.
+    if (!(Get-ChildItem -LiteralPath "$global:ScriptRoot\Logs\PlexEpisodeExport.csv" -ErrorAction SilentlyContinue)) {
+        $EpisodeDummycsv = New-Object psobject
+
+        # Add members to the object with empty values
+        $EpisodeDummycsv | Add-Member -MemberType NoteProperty -Name "Show Name" -Value $null
+        $EpisodeDummycsv | Add-Member -MemberType NoteProperty -Name "Type" -Value $null
+        $EpisodeDummycsv | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $null
+        $EpisodeDummycsv | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value $null
+        $EpisodeDummycsv | Add-Member -MemberType NoteProperty -Name "Library Name" -Value $null
+        $EpisodeDummycsv | Add-Member -MemberType NoteProperty -Name "Season Number" -Value $null
+        $EpisodeDummycsv | Add-Member -MemberType NoteProperty -Name "Episodes" -Value $null
+        $EpisodeDummycsv | Add-Member -MemberType NoteProperty -Name "Title" -Value $null
+        $EpisodeDummycsv | Add-Member -MemberType NoteProperty -Name "PlexTitleCardUrls" -Value $null
+
+        $EpisodeDummycsv | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\PlexEpisodeExport.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
+        Write-Entry -Message "No PlexEpisodeExport.csv found, creating dummy file for you..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+    }
+    if (!(Get-ChildItem -LiteralPath "$global:ScriptRoot\Logs\PlexLibexport.csv" -ErrorAction SilentlyContinue)) {
+        # Add members to the object with empty values
+        $PlexLibDummycsv = New-Object psobject
+        $PlexLibDummycsv | Add-Member -MemberType NoteProperty -Name "Library Name" -Value $null
+        $PlexLibDummycsv | Add-Member -MemberType NoteProperty -Name "Library Type" -Value $null
+        $PlexLibDummycsv | Add-Member -MemberType NoteProperty -Name "Library Language" -Value $null
+        $PlexLibDummycsv | Add-Member -MemberType NoteProperty -Name "title" -Value $null
+        $PlexLibDummycsv | Add-Member -MemberType NoteProperty -Name "originalTitle" -Value $null
+        $PlexLibDummycsv | Add-Member -MemberType NoteProperty -Name "SeasonNames" -Value $null
+        $PlexLibDummycsv | Add-Member -MemberType NoteProperty -Name "SeasonNumbers" -Value $null
+        $PlexLibDummycsv | Add-Member -MemberType NoteProperty -Name "SeasonRatingKeys" -Value $null
+        $PlexLibDummycsv | Add-Member -MemberType NoteProperty -Name "year" -Value $null
+        $PlexLibDummycsv | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $null
+        $PlexLibDummycsv | Add-Member -MemberType NoteProperty -Name "imdbid" -Value $null
+        $PlexLibDummycsv | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value $null
+        $PlexLibDummycsv | Add-Member -MemberType NoteProperty -Name "ratingKey" -Value $null
+        $PlexLibDummycsv | Add-Member -MemberType NoteProperty -Name "Path" -Value $null
+        $PlexLibDummycsv | Add-Member -MemberType NoteProperty -Name "RootFoldername" -Value $null
+        $PlexLibDummycsv | Add-Member -MemberType NoteProperty -Name "MultipleVersions" -Value $null
+        $PlexLibDummycsv | Add-Member -MemberType NoteProperty -Name "PlexPosterUrl" -Value $null
+        $PlexLibDummycsv | Add-Member -MemberType NoteProperty -Name "PlexBackgroundUrl" -Value $null
+        $PlexLibDummycsv | Add-Member -MemberType NoteProperty -Name "PlexSeasonUrls" -Value $null
+
+        $PlexLibDummycsv | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\PlexLibexport.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
+        Write-Entry -Message "No PlexLibexport.csv found, creating dummy file for you..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+    }
+    # Store all Files from asset dir in a hashtable
+    Write-Entry -Message "Creating Hashtable of all posters in asset dir..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+    try {
+        $directoryHashtable = @{}
+        $allowedExtensions = @(".jpg", ".jpeg", ".png", ".bmp")
+
+        Get-ChildItem -Path $AssetPath -Recurse | ForEach-Object {
+            if ($allowedExtensions -contains $_.Extension.ToLower()) {
+                $directory = $_.Directory
+                $basename = $_.BaseName
+                if ($Platform -eq "Docker" -or $Platform -eq "Linux" -or $Platform -eq 'macOS') {
+                    $directoryHashtable["$directory/$basename"] = $true
+                }
+                Else {
+                    $directoryHashtable["$directory\$basename"] = $true
+                }
+            }
+            $totalSize += $_.Length
+        }
+
+        # Convert bytes to kilobytes, megabytes, or gigabytes as needed
+        if ($totalSize -gt 1GB) {
+            $totalSizeString = "{0:N2} GB" -f ($totalSize / 1GB)
+        }
+        elseif ($totalSize -gt 1MB) {
+            $totalSizeString = "{0:N2} MB" -f ($totalSize / 1MB)
+        }
+        elseif ($totalSize -gt 1KB) {
+            $totalSizeString = "{0:N2} KB" -f ($totalSize / 1KB)
+        }
+        else {
+            $totalSizeString = "$totalSize bytes"
+        }
+
+        Write-Entry -Subtext "Hashtable created..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+        Write-Entry -Subtext "Found: '$($directoryHashtable.count)' images in asset directory." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+        Write-Entry -Subtext "Total size of asset directory: $totalSizeString" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+    }
+    catch {
+        Write-Entry -Subtext "Error during Hashtable creation, please check Asset dir is available..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        Exit
+    }
+    if ($global:logLevel -eq '3') {
+        Write-Entry -Message "Output hashtable..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+        $directoryHashtable.keys | Out-File "$global:ScriptRoot\Logs\hashtable.log" -Force
+    }
 
 
     # Download poster foreach movie
@@ -14260,6 +14297,17 @@ else {
                                         InvokeMagickCommand -Command $magick -Arguments $Arguments
 
                                         if ($AddSeasonText -eq 'true') {
+                                            if ($AddShowTitletoSeason -eq 'true') {
+                                                if ($SeasonTextNewLines -eq '1') {
+                                                    $global:seasonTitle = $Titletext + "`n" + $global:seasonTitle
+                                                }
+                                                elseif ($SeasonTextNewLines -eq '2') {
+                                                    $global:seasonTitle = $Titletext + "`n" + "`n" + $global:seasonTitle
+                                                }
+                                                else {
+                                                    $global:seasonTitle = $Titletext + "`n" + $global:seasonTitle
+                                                }
+                                            }
                                             $global:seasonTitle = $global:seasonTitle -replace '"', '""'
 
                                             # Loop through each symbol and replace it with a newline

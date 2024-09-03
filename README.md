@@ -146,7 +146,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `LibstoExclude`: Libraries, by local folder name, to exclude from processing.
     - `JellyfinUrl`: Plex server URL (i.e. "http://192.168.1.1:8096" or "http://myplexserver.com:8096").
     - `UseJellyfin`: If set to `true`, you tell the script to use a Jellyfin Server (Default value is: `false`)
-      - Also have a look at the hint: [Jellyfin CSS](#Jellyfin)  
+      - Also have a look at the hint: [Jellyfin CSS](#Jellyfin)
     </details>
     <details close>
     <summary>Notification:</summary>
@@ -233,6 +233,8 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `fontAllCaps`: Set to `true` for all caps text, else `false`.
     - `AddBorder`: Set to `true` to add a border to the image.
     - `AddText`: Set to `true` to add text to the image.
+    - `AddShowTitletoSeason`: if set to `true` it will add show title to season poster (Default Value is: `false`)
+      - `SeasonTextNewLines`: How many line breaks you want after the season title, possible values are: `1` or `2` (Default Value is: `1`)
     - `AddTextStroke`: Set to `true` to add stroke to text.
     - `strokecolor`: Color of text stroke.
     - `strokewidth`: Stroke width.

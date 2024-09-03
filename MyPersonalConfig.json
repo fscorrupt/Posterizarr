@@ -158,6 +158,8 @@
     "fontAllCaps": "true",
     "AddBorder": "true",
     "AddText": "true",
+    "AddShowTitletoSeason": "false",
+    "SeasonTextNewLines": "1",
     "AddTextStroke": "false",
     "strokecolor": "black",
     "strokewidth": "6",
