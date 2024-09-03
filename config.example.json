@@ -4,6 +4,7 @@
     "tmdbtoken": "TMDBTOKEN",
     "FanartTvAPIKey": "FANARTAPIKEY",
     "PlexToken": "",
+    "JellyfinAPIKey": "JELLYFINAPIKEY",
     "FavProvider": "tmdb",
     "WidthHeightFilter": "false",
     "PosterMinWidth": "2000",
@@ -16,7 +17,13 @@
   },
   "PlexPart":{
     "LibstoExclude": ["Youtube", "Audiobooks", "Kids Audiobooks", "Tech Trainings"],
-    "PlexUrl": "http://192.168.1.93:32400"
+    "PlexUrl": "http://192.168.1.93:32400",
+    "UsePlex": "true"
+  },
+  "JellyfinPart": {
+        "LibstoExclude": ["Youtube", "Audiobooks", "KidsAudiobooks", "TechTrainings"],
+        "JellyfinUrl": "http://192.168.1.93:8096",
+        "UseJellyfin": "false"
   },
   "Notification":{
     "SendNotification":"False",
@@ -25,6 +32,7 @@
   },
   "PrerequisitePart":{
     "AssetPath": "P:\\assets",
+    "PlexUpload": "false",
     "show_skipped":"false",
     "magickinstalllocation": "C:\\PosterTemp\\ImageMagickPortable",
     "maxLogs": "5",
@@ -76,6 +84,8 @@
     "fontAllCaps": "true",
     "AddBorder": "true",
     "AddText": "true",
+    "AddShowTitletoSeason": "false",
+    "SeasonTextNewLines": "1",
     "AddTextStroke": "false",
     "strokecolor": "black",
     "strokewidth": "6",
