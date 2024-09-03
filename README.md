@@ -108,7 +108,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `tmdbtoken`: Your TMDB API Read Access Token.
     - `FanartTvAPIKey`: Your Fanart personal API key.
     - `PlexToken`: Your Plex token (Leave empty if not applicable).
-    - `JellyfinAPIKey`: Your Jellyfin API key.
+    - `JellyfinAPIKey`: Your Jellyfin API key. (You can create an API key from inside Jellyfin at Settings > Advanced > Api Keys.)
     - `FavProvider`: Set your preferred provider (default is `tmdb`).
         - possible values are:
             -    `tmdb` (recommended)
