@@ -146,6 +146,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `LibstoExclude`: Libraries, by local folder name, to exclude from processing.
     - `JellyfinUrl`: Plex server URL (i.e. "http://192.168.1.1:8096" or "http://myplexserver.com:8096").
     - `UseJellyfin`: If set to `true`, you tell the script to use a Jellyfin Server (Default value is: `false`)
+      - Also have a look at the hint: [Jellyfin CSS](#Jellyfin)  
     </details>
     <details close>
     <summary>Notification:</summary>
