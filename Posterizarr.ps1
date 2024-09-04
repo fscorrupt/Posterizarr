@@ -8,7 +8,7 @@
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.6.2"
+$CurrentScriptVersion = "1.6.3"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -10501,7 +10501,7 @@ Elseif ($JellyfinUrl -and $JellyfinAPIKey -and $UseJellyfin -eq 'true') {
                     $global:PosterWithText = $null
                     $global:ImageMagickError = $null
                     $global:TextlessPoster = $null
-                    $global:seasonNames = $season.SeasonName
+                    $global:seasonNames = $null
                     $global:posterurl = $null
                     $global:IsFallback = $null
                     $global:FallbackText = $null
@@ -10518,318 +10518,322 @@ Elseif ($JellyfinUrl -and $JellyfinAPIKey -and $UseJellyfin -eq 'true') {
                     $global:TMDBSeasonFallback = $null
                     $global:TVDBSeasonFallback = $null
                     $global:FANARTSeasonFallback = $null
-                    $global:seasonId = $season.SeasonId
-                    $global:SeasonNumber = $season."Season Number"
-                    if ($SeasonfontAllCaps -eq 'true') {
-                        $global:seasonTitle = $global:seasonNames.ToUpper()
-                        if (!$global:seasonTitle) {
-                            $global:seasonTitle = ("Season " + $global:SeasonNumber).ToUpper()
-                        }
-                    }
-                    Else {
-                        $global:seasonTitle = $global:seasonNames
-                        if (!$global:seasonTitle) {
-                            $global:seasonTitle = "Season " + $global:SeasonNumber
-                        }
-                    }
-                    if ($global:SeasonNumber) {
-                        $global:season = "Season" + $global:SeasonNumber.ToString().PadLeft(2, '0')
-                    }
-                    if ($LibraryFolders -eq 'true') {
-                        $SeasonImageoriginal = "$EntryDir\$global:season.jpg"
-                        $TestPath = $EntryDir
-                        $Testfile = "$global:season"
-                    }
-                    Else {
-                        $SeasonImageoriginal = "$AssetPath\$($entry.RootFoldername)_$global:season.jpg"
-                        $TestPath = $AssetPath
-                        $Testfile = "$($entry.RootFoldername)_$global:season"
-                    }
-
-                    if ($Platform -eq 'Docker' -or $Platform -eq 'Linux') {
-                        $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/').Replace('./', '/')
-                    }
-                    else {
-                        $fullTestPath = Resolve-Path -Path $TestPath -ErrorAction SilentlyContinue
-                        if ($fullTestPath) {
-                            $hashtestpath = ($fullTestPath.Path + "\" + $Testfile).Replace('/', '\')
+                    $global:seasonId = $null
+                    $global:SeasonNumber = $null
+                    if ($season.tmdbid -eq $entry.tmdbid -or $season.tvdbid -eq $entry.tvdbid) {
+                        $global:seasonId = $season.SeasonId
+                        $global:seasonNames = $season.SeasonName
+                        $global:SeasonNumber = $season."Season Number"
+                        if ($SeasonfontAllCaps -eq 'true') {
+                            $global:seasonTitle = $global:seasonNames.ToUpper()
+                            if (!$global:seasonTitle) {
+                                $global:seasonTitle = ("Season " + $global:SeasonNumber).ToUpper()
+                            }
                         }
                         Else {
-                            $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
+                            $global:seasonTitle = $global:seasonNames
+                            if (!$global:seasonTitle) {
+                                $global:seasonTitle = "Season " + $global:SeasonNumber
+                            }
                         }
-                    }
+                        if ($global:SeasonNumber) {
+                            $global:season = "Season" + $global:SeasonNumber.ToString().PadLeft(2, '0')
+                        }
+                        if ($LibraryFolders -eq 'true') {
+                            $SeasonImageoriginal = "$EntryDir\$global:season.jpg"
+                            $TestPath = $EntryDir
+                            $Testfile = "$global:season"
+                        }
+                        Else {
+                            $SeasonImageoriginal = "$AssetPath\$($entry.RootFoldername)_$global:season.jpg"
+                            $TestPath = $AssetPath
+                            $Testfile = "$($entry.RootFoldername)_$global:season"
+                        }
 
-                    Write-Entry -Message "Test Path is: $TestPath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                    Write-Entry -Message "Test File is: $Testfile" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                    Write-Entry -Message "Resolved Full Test Path is: $fullTestPath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                    Write-Entry -Message "Resolved hash Test Path is: $hashtestpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        if ($Platform -eq 'Docker' -or $Platform -eq 'Linux') {
+                            $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/').Replace('./', '/')
+                        }
+                        else {
+                            $fullTestPath = Resolve-Path -Path $TestPath -ErrorAction SilentlyContinue
+                            if ($fullTestPath) {
+                                $hashtestpath = ($fullTestPath.Path + "\" + $Testfile).Replace('/', '\')
+                            }
+                            Else {
+                                $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
+                            }
+                        }
 
-                    $SeasonImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_$global:season.jpg"
-                    $SeasonImage = $SeasonImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
-                    $checkedItems += $hashtestpath
-                    if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
-                        if (!$Seasonpostersearchtext) {
-                            Write-Entry -Message "Start Season Poster Search for: $global:seasonTitle" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                            $Seasonpostersearchtext = $true
-                        }
-                        switch -Wildcard ($global:FavProvider) {
-                            'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBSeasonPoster }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning } }
-                            'FANART' { $global:posterurl = GetFanartSeasonPoster }
-                            'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBSeasonPoster }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning } }
-                            Default { $global:posterurl = GetFanartSeasonPoster }
-                        }
-                        # do a specific order
-                        if ($global:SeasonPreferTextless -eq 'True') {
-                            if (!$global:posterurl -or !$global:TextlessPoster) {
-                                if ($global:FavProvider -ne 'TMDB' -and $entry.tmdbid) {
-                                    $global:posterurl = GetTMDBSeasonPoster
-                                    $global:IsFallback = $true
-                                    Write-Entry -Subtext "Function GetTMDBSeasonPoster called..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                                }
+                        Write-Entry -Message "Test Path is: $TestPath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        Write-Entry -Message "Test File is: $Testfile" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        Write-Entry -Message "Resolved Full Test Path is: $fullTestPath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        Write-Entry -Message "Resolved hash Test Path is: $hashtestpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+
+                        $SeasonImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_$global:season.jpg"
+                        $SeasonImage = $SeasonImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
+                        $checkedItems += $hashtestpath
+                        if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
+                            if (!$Seasonpostersearchtext) {
+                                Write-Entry -Message "Start Season Poster Search for: $global:seasonTitle" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                $Seasonpostersearchtext = $true
+                            }
+                            switch -Wildcard ($global:FavProvider) {
+                                'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBSeasonPoster }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning } }
+                                'FANART' { $global:posterurl = GetFanartSeasonPoster }
+                                'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBSeasonPoster }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning } }
+                                Default { $global:posterurl = GetFanartSeasonPoster }
+                            }
+                            # do a specific order
+                            if ($global:SeasonPreferTextless -eq 'True') {
                                 if (!$global:posterurl -or !$global:TextlessPoster) {
-                                    if ($global:FavProvider -ne 'FANART') {
-                                        $global:posterurl = GetFanartSeasonPoster
-                                        Write-Entry -Subtext "Function GetFanartSeasonPoster called..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                    if ($global:FavProvider -ne 'TMDB' -and $entry.tmdbid) {
+                                        $global:posterurl = GetTMDBSeasonPoster
                                         $global:IsFallback = $true
-                                        Write-Entry -Subtext "IsFallback: $global:IsFallback" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                        Write-Entry -Subtext "Function GetTMDBSeasonPoster called..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                                     }
-                                }
-                                if ((!$global:posterurl -or !$global:TextlessPoster) -and $entry.tvdbid) {
-                                    if ($global:FavProvider -ne 'TVDB') {
-                                        $global:IsFallback = $true
-                                        $global:posterurl = GetTVDBSeasonPoster
-                                        Write-Entry -Subtext "Function GetTVDBSeasonPoster called..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                                        Write-Entry -Subtext "IsFallback: $global:IsFallback" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                    if (!$global:posterurl -or !$global:TextlessPoster) {
+                                        if ($global:FavProvider -ne 'FANART') {
+                                            $global:posterurl = GetFanartSeasonPoster
+                                            Write-Entry -Subtext "Function GetFanartSeasonPoster called..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                            $global:IsFallback = $true
+                                            Write-Entry -Subtext "IsFallback: $global:IsFallback" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                        }
                                     }
-                                }
-                            }
-                            if (!$global:posterurl) {
-                                Write-Entry -Subtext "Could not find a season poster on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                            }
-                        }
-                        Else {
-                            if (!$global:posterurl) {
-                                if ($global:FavProvider -ne 'TMDB' -and $entry.tmdbid) {
-                                    $global:posterurl = GetTMDBSeasonPoster
-                                    $global:IsFallback = $true
-                                    Write-Entry -Subtext "Function GetTMDBSeasonPoster called..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                    if ((!$global:posterurl -or !$global:TextlessPoster) -and $entry.tvdbid) {
+                                        if ($global:FavProvider -ne 'TVDB') {
+                                            $global:IsFallback = $true
+                                            $global:posterurl = GetTVDBSeasonPoster
+                                            Write-Entry -Subtext "Function GetTVDBSeasonPoster called..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                            Write-Entry -Subtext "IsFallback: $global:IsFallback" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                        }
+                                    }
                                 }
                                 if (!$global:posterurl) {
-                                    if ($global:FavProvider -ne 'FANART') {
-                                        $global:posterurl = GetFanartSeasonPoster
-                                        Write-Entry -Subtext "Function GetFanartSeasonPoster called..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                    Write-Entry -Subtext "Could not find a season poster on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                }
+                            }
+                            Else {
+                                if (!$global:posterurl) {
+                                    if ($global:FavProvider -ne 'TMDB' -and $entry.tmdbid) {
+                                        $global:posterurl = GetTMDBSeasonPoster
                                         $global:IsFallback = $true
-                                        Write-Entry -Subtext "IsFallback: $global:IsFallback" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                        Write-Entry -Subtext "Function GetTMDBSeasonPoster called..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                    }
+                                    if (!$global:posterurl) {
+                                        if ($global:FavProvider -ne 'FANART') {
+                                            $global:posterurl = GetFanartSeasonPoster
+                                            Write-Entry -Subtext "Function GetFanartSeasonPoster called..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                            $global:IsFallback = $true
+                                            Write-Entry -Subtext "IsFallback: $global:IsFallback" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                        }
+                                    }
+                                    if (!$global:posterurl -and $entry.tvdbid) {
+                                        if ($global:FavProvider -ne 'TVDB') {
+                                            $global:IsFallback = $true
+                                            $global:posterurl = GetTVDBSeasonPoster
+                                            Write-Entry -Subtext "Function GetTVDBSeasonPoster called..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                            Write-Entry -Subtext "IsFallback: $global:IsFallback" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                        }
                                     }
                                 }
-                                if (!$global:posterurl -and $entry.tvdbid) {
+                                if (!$global:posterurl) {
+                                    Write-Entry -Subtext "Could not find a season poster on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                }
+                            }
+                            if ($global:TMDBSeasonFallback -and $global:PosterWithText -and $global:FavProvider -eq 'TMDB') {
+                                $global:posterurl = $global:TMDBSeasonFallback
+                                Write-Entry -Subtext "Taking Season Poster with text as fallback from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                $global:IsFallback = $true
+                            }
+                            if ($global:FANARTSeasonFallback -and $global:PosterWithText -and $global:FavProvider -eq 'FANART') {
+                                $global:posterurl = $global:FANARTSeasonFallback
+                                Write-Entry -Subtext "Taking Season Poster with text as fallback from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                $global:IsFallback = $true
+                            }
+                            if ($global:TVDBSeasonFallback -and $global:PosterWithText -and $global:FavProvider -eq 'TVDB') {
+                                $global:posterurl = $global:TVDBSeasonFallback
+                                Write-Entry -Subtext "Taking Season Poster with text as fallback from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                $global:IsFallback = $true
+                            }
+                            if ($global:posterurl) {
+                                Write-Entry -Subtext "Poster url: $global:posterurl" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
+                                if ($global:posterurl -like 'https://image.tmdb.org*') {
+                                    Write-Entry -Subtext "Downloading Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                    $global:AssetTextLang = $global:TMDBAssetTextLang
+                                    if ($global:FavProvider -ne 'TMDB') {
+                                        $global:IsFallback = $true
+                                    }
+                                }
+                                elseif ($global:posterurl -like 'https://assets.fanart.tv*') {
+                                    Write-Entry -Subtext "Downloading Poster from 'Fanart.tv'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                    $global:AssetTextLang = $global:FANARTAssetTextLang
+                                    if ($global:FavProvider -ne 'FANART') {
+                                        $global:IsFallback = $true
+                                    }
+                                }
+                                elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
+                                    Write-Entry -Subtext "Downloading Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                    $global:AssetTextLang = $global:TVDBAssetTextLang
                                     if ($global:FavProvider -ne 'TVDB') {
                                         $global:IsFallback = $true
-                                        $global:posterurl = GetTVDBSeasonPoster
-                                        Write-Entry -Subtext "Function GetTVDBSeasonPoster called..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                                        Write-Entry -Subtext "IsFallback: $global:IsFallback" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                                     }
                                 }
-                            }
-                            if (!$global:posterurl) {
-                                Write-Entry -Subtext "Could not find a season poster on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                            }
-                        }
-                        if ($global:TMDBSeasonFallback -and $global:PosterWithText -and $global:FavProvider -eq 'TMDB') {
-                            $global:posterurl = $global:TMDBSeasonFallback
-                            Write-Entry -Subtext "Taking Season Poster with text as fallback from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
-                            $global:IsFallback = $true
-                        }
-                        if ($global:FANARTSeasonFallback -and $global:PosterWithText -and $global:FavProvider -eq 'FANART') {
-                            $global:posterurl = $global:FANARTSeasonFallback
-                            Write-Entry -Subtext "Taking Season Poster with text as fallback from 'FANART'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
-                            $global:IsFallback = $true
-                        }
-                        if ($global:TVDBSeasonFallback -and $global:PosterWithText -and $global:FavProvider -eq 'TVDB') {
-                            $global:posterurl = $global:TVDBSeasonFallback
-                            Write-Entry -Subtext "Taking Season Poster with text as fallback from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
-                            $global:IsFallback = $true
-                        }
-                        if ($global:posterurl) {
-                            Write-Entry -Subtext "Poster url: $global:posterurl" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
-                            if ($global:posterurl -like 'https://image.tmdb.org*') {
-                                Write-Entry -Subtext "Downloading Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
-                                $global:AssetTextLang = $global:TMDBAssetTextLang
-                                if ($global:FavProvider -ne 'TMDB') {
-                                    $global:IsFallback = $true
+                                Else {
+                                    Write-Entry -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                    $PosterUnknownCount++
+                                    if ($global:FavProvider -ne 'IMDB') {
+                                        $global:IsFallback = $true
+                                    }
                                 }
-                            }
-                            elseif ($global:posterurl -like 'https://assets.fanart.tv*') {
-                                Write-Entry -Subtext "Downloading Poster from 'Fanart.tv'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
-                                $global:AssetTextLang = $global:FANARTAssetTextLang
-                                if ($global:FavProvider -ne 'FANART') {
-                                    $global:IsFallback = $true
+                                try {
+                                    $response = Invoke-WebRequest -Uri $global:posterurl -OutFile $SeasonImage -ErrorAction Stop
                                 }
-                            }
-                            elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
-                                Write-Entry -Subtext "Downloading Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
-                                $global:AssetTextLang = $global:TVDBAssetTextLang
-                                if ($global:FavProvider -ne 'TVDB') {
-                                    $global:IsFallback = $true
+                                catch {
+                                    $statusCode = $_.Exception.Response.StatusCode.value__
+                                    Write-Entry -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                    Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                    $errorCount++
                                 }
-                            }
-                            Else {
-                                Write-Entry -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
-                                $PosterUnknownCount++
-                                if ($global:FavProvider -ne 'IMDB') {
-                                    $global:IsFallback = $true
-                                }
-                            }
-                            try {
-                                $response = Invoke-WebRequest -Uri $global:posterurl -OutFile $SeasonImage -ErrorAction Stop
-                            }
-                            catch {
-                                $statusCode = $_.Exception.Response.StatusCode.value__
-                                Write-Entry -Subtext "An error occurred while downloading the artwork: HTTP Error $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                                $errorCount++
-                            }
-                            if ($global:ImageProcessing -eq 'true') {
-                                if (Get-ChildItem -LiteralPath $SeasonImage -ErrorAction SilentlyContinue) {
-                                    $CommentArguments = "`"$SeasonImage`" -set `"comment`" `"created with posterizarr`" `"$SeasonImage`""
-                                    $CommentlogEntry = "`"$magick`" $CommentArguments"
-                                    $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
-                                    InvokeMagickCommand -Command $magick -Arguments $CommentArguments
-                                    if (!$global:ImageMagickError -eq 'True') {
-                                        # Resize Image to 2000x3000 and apply Border and overlay
-                                        if ($AddSeasonBorder -eq 'true' -and $AddSeasonOverlay -eq 'true') {
-                                            $Arguments = "`"$SeasonImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Seasonborderwidthsecond`"  -bordercolor `"$Seasonbordercolor`" -border `"$Seasonborderwidth`" `"$SeasonImage`""
-                                            Write-Entry -Subtext "Resizing it | Adding Borders | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                                        }
-                                        if ($AddSeasonBorder -eq 'true' -and $AddSeasonOverlay -eq 'false') {
-                                            $Arguments = "`"$SeasonImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" -shave `"$Seasonborderwidthsecond`"  -bordercolor `"$Seasonbordercolor`" -border `"$Seasonborderwidth`" `"$SeasonImage`""
-                                            Write-Entry -Subtext "Resizing it | Adding Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                                        }
-                                        if ($AddSeasonBorder -eq 'false' -and $AddSeasonOverlay -eq 'true') {
-                                            $Arguments = "`"$SeasonImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite `"$SeasonImage`""
-                                            Write-Entry -Subtext "Resizing it | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                                        }
-                                        if ($AddSeasonBorder -eq 'false' -and $AddSeasonOverlay -eq 'false') {
-                                            $Arguments = "`"$SeasonImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$SeasonImage`""
-                                            Write-Entry -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                                        }
+                                if ($global:ImageProcessing -eq 'true') {
+                                    if (Get-ChildItem -LiteralPath $SeasonImage -ErrorAction SilentlyContinue) {
+                                        $CommentArguments = "`"$SeasonImage`" -set `"comment`" `"created with posterizarr`" `"$SeasonImage`""
+                                        $CommentlogEntry = "`"$magick`" $CommentArguments"
+                                        $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+                                        InvokeMagickCommand -Command $magick -Arguments $CommentArguments
+                                        if (!$global:ImageMagickError -eq 'True') {
+                                            # Resize Image to 2000x3000 and apply Border and overlay
+                                            if ($AddSeasonBorder -eq 'true' -and $AddSeasonOverlay -eq 'true') {
+                                                $Arguments = "`"$SeasonImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Seasonborderwidthsecond`"  -bordercolor `"$Seasonbordercolor`" -border `"$Seasonborderwidth`" `"$SeasonImage`""
+                                                Write-Entry -Subtext "Resizing it | Adding Borders | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                            }
+                                            if ($AddSeasonBorder -eq 'true' -and $AddSeasonOverlay -eq 'false') {
+                                                $Arguments = "`"$SeasonImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" -shave `"$Seasonborderwidthsecond`"  -bordercolor `"$Seasonbordercolor`" -border `"$Seasonborderwidth`" `"$SeasonImage`""
+                                                Write-Entry -Subtext "Resizing it | Adding Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                            }
+                                            if ($AddSeasonBorder -eq 'false' -and $AddSeasonOverlay -eq 'true') {
+                                                $Arguments = "`"$SeasonImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite `"$SeasonImage`""
+                                                Write-Entry -Subtext "Resizing it | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                            }
+                                            if ($AddSeasonBorder -eq 'false' -and $AddSeasonOverlay -eq 'false') {
+                                                $Arguments = "`"$SeasonImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$SeasonImage`""
+                                                Write-Entry -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                            }
 
-                                        $logEntry = "`"$magick`" $Arguments"
+                                            $logEntry = "`"$magick`" $Arguments"
+                                            $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+                                            InvokeMagickCommand -Command $magick -Arguments $Arguments
+
+                                            if ($AddSeasonText -eq 'true') {
+                                                if ($AddShowTitletoSeason -eq 'true') {
+                                                    if ($SeasonTextNewLines -eq '1') {
+                                                        $global:seasonTitle = $Titletext + "`n" + $global:seasonTitle
+                                                    }
+                                                    elseif ($SeasonTextNewLines -eq '2') {
+                                                        $global:seasonTitle = $Titletext + "`n" + "`n" + $global:seasonTitle
+                                                    }
+                                                    else {
+                                                        $global:seasonTitle = $Titletext + "`n" + $global:seasonTitle
+                                                    }
+                                                }
+                                                $global:seasonTitle = $global:seasonTitle -replace '"', '""'
+                                                # Loop through each symbol and replace it with a newline
+                                                if ($NewLineOnSpecificSymbols -eq 'true') {
+                                                    foreach ($symbol in $NewLineSymbols) {
+                                                        $global:seasonTitle = $global:seasonTitle -replace [regex]::Escape($symbol), "`n"
+                                                    }
+                                                }
+                                                $joinedTitlePointSize = $global:seasonTitle -replace '""', '""""'
+                                                $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize
+                                                if (!$global:IsTruncated) {
+                                                    Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+
+                                                    $Arguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Seasonfontcolor`" -size `"$Seasonboxsize`" -background none caption:`"$global:seasonTitle`" -trim -gravity south -extent `"$Seasonboxsize`" `) -gravity south -geometry +0`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
+
+                                                    Write-Entry -Subtext "Applying seasonTitle text: `"$global:seasonTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                    $logEntry = "`"$magick`" $Arguments"
+                                                    $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+                                                    InvokeMagickCommand -Command $magick -Arguments $Arguments
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                Else {
+                                    if (Get-ChildItem -LiteralPath $SeasonImage -ErrorAction SilentlyContinue) {
+                                        # Resize Image to 2000x3000
+                                        $Resizeargument = "`"$SeasonImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$SeasonImage`""
+                                        Write-Entry -Subtext "Resizing it... " -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                        $logEntry = "`"$magick`" $Resizeargument"
                                         $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
-                                        InvokeMagickCommand -Command $magick -Arguments $Arguments
-
-                                        if ($AddSeasonText -eq 'true') {
-                                            if ($AddShowTitletoSeason -eq 'true') {
-                                                if ($SeasonTextNewLines -eq '1') {
-                                                    $global:seasonTitle = $Titletext + "`n" + $global:seasonTitle
-                                                }
-                                                elseif ($SeasonTextNewLines -eq '2') {
-                                                    $global:seasonTitle = $Titletext + "`n" + "`n" + $global:seasonTitle
-                                                }
-                                                else {
-                                                    $global:seasonTitle = $Titletext + "`n" + $global:seasonTitle
-                                                }
-                                            }
-                                            $global:seasonTitle = $global:seasonTitle -replace '"', '""'
-                                            # Loop through each symbol and replace it with a newline
-                                            if ($NewLineOnSpecificSymbols -eq 'true') {
-                                                foreach ($symbol in $NewLineSymbols) {
-                                                    $global:seasonTitle = $global:seasonTitle -replace [regex]::Escape($symbol), "`n"
-                                                }
-                                            }
-                                            $joinedTitlePointSize = $global:seasonTitle -replace '""', '""""'
-                                            $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize
-                                            if (!$global:IsTruncated) {
-                                                Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-
-                                                $Arguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Seasonfontcolor`" -size `"$Seasonboxsize`" -background none caption:`"$global:seasonTitle`" -trim -gravity south -extent `"$Seasonboxsize`" `) -gravity south -geometry +0`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
-
-                                                Write-Entry -Subtext "Applying seasonTitle text: `"$global:seasonTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                                                $logEntry = "`"$magick`" $Arguments"
-                                                $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
-                                                InvokeMagickCommand -Command $magick -Arguments $Arguments
-                                            }
+                                        InvokeMagickCommand -Command $magick -Arguments $Resizeargument
+                                    }
+                                }
+                                if (!$global:ImageMagickError -eq 'True') {
+                                    if (Get-ChildItem -LiteralPath $SeasonImage -ErrorAction SilentlyContinue) {
+                                        # Move file back to original naming with Brackets.
+                                        if (!$global:IsTruncated) {
+                                            UploadJellyfinArtwork -itemId $global:seasonId -imageType "Primary" -imagePath $SeasonImage
+                                            Move-Item -LiteralPath $SeasonImage -destination $SeasonImageoriginal -Force -ErrorAction SilentlyContinue
+                                            Write-Entry -Subtext "Added: $SeasonImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                                            Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
+                                            $SeasonCount++
+                                            $posterCount++
                                         }
+                                        Else {
+                                            Write-Entry -Subtext "Skipping asset move because text is truncated..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                        }
+                                        $seasontemp = New-Object psobject
+                                        $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Titletext + " | " + $global:season)
+                                        $seasontemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Season'
+                                        $seasontemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
+                                        $seasontemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
+                                        $seasontemp | Add-Member -MemberType NoteProperty -Name "Language" -Value $(if (!$global:AssetTextLang) { "Textless" }Else { $global:AssetTextLang })
+                                        $seasontemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback) { 'True' } else { 'False' })
+                                        $seasontemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
+                                        $seasontemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
+                                        switch -Wildcard ($global:FavProvider) {
+                                            'TMDB' { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "N/A" }) }
+                                            'FANART' { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "N/A" }) }
+                                            'TVDB' { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
+                                            Default { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
+                                        }
+                                        # Export the array to a CSV file
+                                        $seasontemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                                     }
                                 }
                             }
                             Else {
-                                if (Get-ChildItem -LiteralPath $SeasonImage -ErrorAction SilentlyContinue) {
-                                    # Resize Image to 2000x3000
-                                    $Resizeargument = "`"$SeasonImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$SeasonImage`""
-                                    Write-Entry -Subtext "Resizing it... " -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                                    $logEntry = "`"$magick`" $Resizeargument"
-                                    $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
-                                    InvokeMagickCommand -Command $magick -Arguments $Resizeargument
-                                }
-                            }
-                            if (!$global:ImageMagickError -eq 'True') {
-                                if (Get-ChildItem -LiteralPath $SeasonImage -ErrorAction SilentlyContinue) {
-                                    # Move file back to original naming with Brackets.
-                                    if (!$global:IsTruncated) {
-                                        UploadJellyfinArtwork -itemId $global:seasonId -imageType "Primary" -imagePath $SeasonImage
-                                        Move-Item -LiteralPath $SeasonImage -destination $SeasonImageoriginal -Force -ErrorAction SilentlyContinue
-                                        Write-Entry -Subtext "Added: $SeasonImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
-                                        Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
-                                        $SeasonCount++
-                                        $posterCount++
-                                    }
-                                    Else {
-                                        Write-Entry -Subtext "Skipping asset move because text is truncated..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-                                    }
+                                Write-Entry -Subtext "Missing poster URL for: $global:seasonTitle" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
+                                Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
+                                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                if ($global:OnlyTextless) {
                                     $seasontemp = New-Object psobject
-                                    $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Titletext + " | " + $global:season)
+                                    $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
                                     $seasontemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Season'
                                     $seasontemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                     $seasontemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
-                                    $seasontemp | Add-Member -MemberType NoteProperty -Name "Language" -Value $(if (!$global:AssetTextLang) { "Textless" }Else { $global:AssetTextLang })
-                                    $seasontemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value $(if ($global:IsFallback) { 'True' } else { 'False' })
+                                    $seasontemp | Add-Member -MemberType NoteProperty -Name "Language" -Value "N/A"
+                                    $seasontemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value "N/A"
                                     $seasontemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
-                                    $seasontemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $global:posterurl
+                                    $seasontemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value "N/A"
                                     switch -Wildcard ($global:FavProvider) {
                                         'TMDB' { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "N/A" }) }
                                         'FANART' { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "N/A" }) }
                                         'TVDB' { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
                                         Default { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
                                     }
+
                                     # Export the array to a CSV file
                                     $seasontemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                                 }
+                                $errorCount++
                             }
                         }
-                        Else {
-                            Write-Entry -Subtext "Missing poster URL for: $global:seasonTitle" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
-                            Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
-                            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                            if ($global:OnlyTextless) {
-                                $seasontemp = New-Object psobject
-                                $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
-                                $seasontemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Season'
-                                $seasontemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
-                                $seasontemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
-                                $seasontemp | Add-Member -MemberType NoteProperty -Name "Language" -Value "N/A"
-                                $seasontemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value "N/A"
-                                $seasontemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'True' } else { 'False' })
-                                $seasontemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value "N/A"
-                                switch -Wildcard ($global:FavProvider) {
-                                    'TMDB' { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TMDBAssetChangeUrl) { $global:TMDBAssetChangeUrl }Else { "N/A" }) }
-                                    'FANART' { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:FANARTAssetChangeUrl) { $global:FANARTAssetChangeUrl }Else { "N/A" }) }
-                                    'TVDB' { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
-                                    Default { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
-                                }
-
-                                # Export the array to a CSV file
-                                $seasontemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
+                        else {
+                            if ($show_skipped -eq 'True' ) {
+                                Write-Entry -Subtext "Already exists: $SeasonImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                             }
-                            $errorCount++
                         }
                     }
-                    else {
-                        if ($show_skipped -eq 'True' ) {
-                            Write-Entry -Subtext "Already exists: $SeasonImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
-                        }
-                    }
-
                 }
             }
             # Now we can start the Episode Part
