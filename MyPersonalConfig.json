@@ -54,7 +54,7 @@
       "TechTrainings",
       "KidsMusic"
     ],
-    "EmbyUrl": "http://192.168.1.20:8096/emby",
+    "EmbyUrl": "http://emby:8096/emby",
     "UseEmby": "false"
     },
   "Notification": {
