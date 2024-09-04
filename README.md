@@ -158,7 +158,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     <br>
 
     - `LibstoExclude`: Libraries, by local folder name, to exclude from processing.
-    - `EmbyUrl`: Plex server URL (i.e. "http://192.168.1.1:8096" or "http://myplexserver.com:8096").
+    - `EmbyUrl`: Plex server URL (i.e. "http://192.168.1.1:8096/emby" or "http://myplexserver.com:8096/emby").
     - `UseEmby`: If set to `true`, you tell the script to use a Emby Server (Default value is: `false`)
     </details>
     <details close>
