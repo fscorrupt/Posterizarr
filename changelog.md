@@ -2,17 +2,6 @@
 
 ## [1.6.2](https://github.com/fscorrupt/Posterizarr/releases/tag/1.6.2) - 2024-09-04 06:44:54
 
-## 🐛 Fixes
-
-- Fix json attribute add failing
-
-**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.6.1...1.6.2
-
-### Bug Fixes
-
-- general:
-  - json attribute adding error ([de8f9d5](https://github.com/fscorrupt/Posterizarr/commit/de8f9d5c5e9fda0d5dd1738f5a125d0efbed1dbc))
-
 ## [1.6.1](https://github.com/fscorrupt/Posterizarr/releases/tag/1.6.1) - 2024-09-03 12:59:50
 
 ## [1.6.0](https://github.com/fscorrupt/Posterizarr/releases/tag/1.6.0) - 2024-09-03 10:46:39
