@@ -364,6 +364,18 @@ The posters are all placed in `AssetPath\...`. This can then be mounted in Komet
 > - [IMAGE ASSET DIRECTORY GUIDE](https://kometa.wiki/en/latest/kometa/guides/assets/#image-asset-directory-guide)
 >
 > Assuming you made the config like i did, Posterizarr will now create the Posters directly in Kometa´s Asset dir.
+> 
+> If you use Kometa make sure to set this settings on each Library in Kometa Config:
+```yaml
+libraries:
+  4K TV Shows:
+    settings:
+      asset_directory: /assets/4K TV Shows
+      prioritize_assets: true
+    operations:
+      assets_for_all: true
+```
+
 
 ## Modes
 
