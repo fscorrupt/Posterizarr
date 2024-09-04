@@ -33,7 +33,7 @@
 [![ARM](https://img.shields.io/static/v1?style=for-the-badge&logo=raspberrypi&logoColor=FFFFFF&message=ARM&color=A22846&label=)](walkthrough.md#arm-prerequisites)
 
 ## Introduction
-This PowerShell script automates the process of generating images for your Plex/Jellyfin media library. Leveraging information from your Plex/Jellyfin library, such as movie or show titles, season and episode data, it fetches relevant artwork from Fanart.tv, TMDB, TVDB, Plex and IMDB. The script is able to focus on artwork with specific languages to grab. By default, textless artwork `xx` is retrieved and will fall back to `en` if textless is not found. This is a setting a user can decide on, either to focus on textless or on text posters. It also offers both automatic and manual modes for generating posters. The manual mode can accommodate custom creations that cannot be bulk retrieved.
+This PowerShell script automates the process of generating images for your Plex/Jellyfin/Emby media library. Leveraging information from your Plex/Jellyfin/Emby library, such as movie or show titles, season and episode data, it fetches relevant artwork from Fanart.tv, TMDB, TVDB, Plex and IMDB. The script is able to focus on artwork with specific languages to grab. By default, textless artwork `xx` is retrieved and will fall back to `en` if textless is not found. This is a setting a user can decide on, either to focus on textless or on text posters. It also offers both automatic and manual modes for generating posters. The manual mode can accommodate custom creations that cannot be bulk retrieved.
 
 > [!NOTE]
 Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Docker (Ubuntu 22.04 Base Image) does not work on ARM](#docker), [unRAID](#unraid) and on Windows operating systems.
@@ -50,7 +50,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
 > [!IMPORTANT]
 > You do not have to redeploy the container if the script version changes because it is not part of the container.
 > Container rebuilds only happen when there are changes to the ImageMagick, PowerShell, or other prerequisite versions.
-> 
+>
 > If you want to install it on ARM please follow this carefully [ARM prerequisites](walkthrough.md#arm-prerequisites)
 
 
@@ -67,18 +67,19 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
 > You can find an example config for the Assets on my [Kometa-Configs repo](https://github.com/Kometa-Team/Community-Configs/blob/master/fscorrupt/config.yml)
 - **Upload to Plex**: If you do not have Kometa, posterizarr can directly Upload that Artwork to Plex.
 - **Upload to Jellyfin**: Posterizarr can directly upload the artwork to Jellyfin.
+- **Upload to Emby**: Posterizarr can directly upload the artwork to Emby.
 - **Resizing**: It automatically resizes every poster to 2000x3000.
 - **Overlays**: If you choose to, downloaded images will automatically have borders, text, and a gradient overlay applied.
   - Here are some gradient overlays that you can use instead of the default one [gradient-zip](gradient_background_poster_overlays.zip)
-- **Automatic Library Search**: The script autonomously searches for libraries within your Plex/Jellyfin server, enhancing its usability.
+- **Automatic Library Search**: The script autonomously searches for libraries within your Plex/Jellyfin/Emby server, enhancing its usability.
 - **Handling Multiple Versions**: It adeptly manages multiple versions of a movie/show, ensuring comprehensive coverage.
-- **CSV Export**: Produces an impressive CSV file containing all queried movie/show information during the script's runtime in `$ScriptRoot\logs\PlexLibexport.csv` or `$ScriptRoot\logs\JellyfinLibexport.csv`
+- **CSV Export**: Produces an impressive CSV file containing all queried movie/show information during the script's runtime in `$ScriptRoot\logs\PlexLibexport.csv` or `$ScriptRoot\logs\OtherMediaServerLibExport.csv`
 - **Logging Capabilities**: Records valuable information to a file in `$ScriptRoot\logs\Scriptlog.log`, facilitating troubleshooting and analysis.
 
     - It also generates a log with the output of every imagemagick command `$ScriptRoot\logs\ImageMagickCommands.log`.
     - Additionally, an `ImageChoices.csv` file is generated to store all the selected download options and essential information.
     - Send notification via apprise or discord [Click here for Example pictures.](#webhook).
-- **Cross-platform Compatibility**: Ensures seamless operation across Linux, Docker, and Windows Plex/Jellyfin servers, enhancing versatility.
+- **Cross-platform Compatibility**: Ensures seamless operation across Linux, Docker, and Windows Plex/Jellyfin/Emby servers, enhancing versatility.
 - **Poster/Background/TitleCard Creation**: It searches fanart/tmdb/tvdb/Plex for posters/backgrounds/titlecards and resizes the downloaded image to 3840x2160 (for titlecards and backgrounds) or 2000x3000 (for posters), fallback is grabbing artwork from imdb.
 
 > [!NOTE]
@@ -112,6 +113,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `FanartTvAPIKey`: Your Fanart personal API key.
     - `PlexToken`: Your Plex token (Leave empty if not applicable).
     - `JellyfinAPIKey`: Your Jellyfin API key. (You can create an API key from inside Jellyfin at Settings > Advanced > Api Keys.)
+    - `EmbyAPIKey`: Your Emby API key. (You can create an API key from inside Emby at Settings > Advanced > Api Keys.)
     - `FavProvider`: Set your preferred provider (default is `tmdb`).
         - possible values are:
             -    `tmdb` (recommended)
@@ -150,6 +152,14 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `JellyfinUrl`: Plex server URL (i.e. "http://192.168.1.1:8096" or "http://myplexserver.com:8096").
     - `UseJellyfin`: If set to `true`, you tell the script to use a Jellyfin Server (Default value is: `false`)
       - Also have a look at the hint: [Jellyfin CSS](#Jellyfin)
+    </details>
+    <details close>
+    <summary>EmbyPart:</summary>
+    <br>
+
+    - `LibstoExclude`: Libraries, by local folder name, to exclude from processing.
+    - `EmbyUrl`: Plex server URL (i.e. "http://192.168.1.1:8096" or "http://myplexserver.com:8096").
+    - `UseEmby`: If set to `true`, you tell the script to use a Emby Server (Default value is: `false`)
     </details>
     <details close>
     <summary>Notification:</summary>

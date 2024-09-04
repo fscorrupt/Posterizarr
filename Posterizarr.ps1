@@ -8,7 +8,7 @@
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.6.3"
+$CurrentScriptVersion = "1.7.0"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -3341,6 +3341,11 @@ function LogConfigSettings {
         Write-Entry -Subtext "| Excluded Libs:                $($LibstoExclude -join ',')" -Path $configLogging -Color White -log Info
         Write-Entry -Subtext "| Jellyfin Url:                     $($JellyfinUrl[0..10] -join '')****" -Path $configLogging -Color White -log Info
     }
+    if ($UseEmby -eq 'true') {
+        Write-Entry -Subtext "Emby Part" -Path $configLogging -Color Cyan -log Info
+        Write-Entry -Subtext "| Excluded Libs:                $($LibstoExclude -join ',')" -Path $configLogging -Color White -log Info
+        Write-Entry -Subtext "| Emby Url:                     $($EmbyUrl[0..10] -join '')****" -Path $configLogging -Color White -log Info
+    }
     Write-Entry -Subtext "Prerequisites Part" -Path $configLogging -Color Cyan -log Info
     Write-Entry -Subtext "| Asset Path:                   $AssetPath" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Upload to Plex:               $Upload2Plex" -Path $configLogging -Color White -log Info
@@ -3730,7 +3735,35 @@ function CheckJellyfinAccess {
         }
     }
 }
-function UploadJellyfinArtwork {
+function CheckEmbyAccess {
+    param (
+        [string]$EmbyUrl,
+        [string]$EmbyAPI
+    )
+
+    if ($EmbyAPI) {
+        Write-Entry -Message "Checking Emby access now..." -Path $configLogging -Color White -log Info
+        try {
+            $response = Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/System/Info?api_key=$OtherMediaServerApiKey" -ErrorAction Stop
+            if ($response.version) {
+                Write-Entry -Subtext "Emby access is working..." -Path $configLogging -Color Green -log Info
+            }
+            else {
+                Write-Entry -Message "Could not access Emby" -Path $configLogging -Color Red -Log Error
+                Write-Entry -Subtext "Please check token and url..." -Path $configLogging -Color Red -log Error
+                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                $errorCount++
+                Exit
+            }
+        }
+        catch {
+            Write-Entry -Subtext "Could not access Emby" -Path $configLogging -Color Red -Log Error
+            Write-Entry -Subtext "Error occurred while accessing Emby server: $($_.Exception.Message)" -Path $configLogging -Color Red -log Error
+            Exit
+        }
+    }
+}
+function UploadOtherMediaServerArtwork {
     param (
         [string]$itemId,
         [string]$imageType,
@@ -3738,15 +3771,15 @@ function UploadJellyfinArtwork {
     )
 
     # Check if current image already has exif data
-    $Imageinfo = Invoke-RestMethod -Method Get -Uri "$JellyfinUrl/items/$itemId/images/?api_key=$JellyfinAPIKey"
+    $Imageinfo = Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/items/$itemId/images/?api_key=$OtherMediaServerApiKey"
     $Imageinfotemp = $Imageinfo | Where-Object imagetype -eq $imageType | Select-Object Height, Width, Path
     if ($Imageinfotemp) {
         $Imageinfotemp = $imageinfotemp[0]
     }
     # Set the API endpoint URL for magick exif check
     if (($imageinfotemp.Height) -and ($imageinfotemp.width)) {
-        $JellyfinImageUrl = "$JellyfinUrl/items/$itemId/images/$imageType/?api_key=$JellyfinAPIKey&width=$($imageinfotemp.width)&height=$($imageinfotemp.Height)"
-        $magickcommand = "& `"$magick`" identify -verbose `"$JellyfinImageUrl`""
+        $ImageUrl = "$OtherMediaServerUrl/items/$itemId/images/$imageType/?api_key=$OtherMediaServerApiKey&width=$($imageinfotemp.width)&height=$($imageinfotemp.Height)"
+        $magickcommand = "& `"$magick`" identify -verbose `"$ImageUrl`""
         $magickcommand | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
 
         # Execute command and get exif data
@@ -3780,7 +3813,7 @@ function UploadJellyfinArtwork {
         }
 
         # Set the API endpoint URL
-        $apiUrl = "$JellyfinUrl/items/$itemId/images/$imageType/?api_key=$JellyfinAPIKey"
+        $apiUrl = "$OtherMediaServerUrl/items/$itemId/images/$imageType/?api_key=$OtherMediaServerApiKey"
 
         # Make the API request to upload the image
         try {
@@ -3899,6 +3932,7 @@ $global:tmdbtoken = $config.ApiPart.tmdbtoken
 $FanartTvAPIKey = $config.ApiPart.FanartTvAPIKey
 $PlexToken = $config.ApiPart.PlexToken
 $JellyfinAPIKey = $config.ApiPart.JellyfinAPIKey
+$EmbyAPIKey = $config.ApiPart.EmbyAPIKey
 $global:WidthHeightFilter = $config.ApiPart.WidthHeightFilter.tolower()
 $global:PosterMinWidth = $config.ApiPart.PosterMinWidth
 $global:PosterMinHeight = $config.ApiPart.PosterMinHeight
@@ -3999,6 +4033,19 @@ $JellyfinUrl = $config.JellyfinPart.JellyfinUrl
 $UseJellyfin = $config.JellyfinPart.UseJellyfin.tolower()
 if ($UseJellyfin -eq 'true') {
     $LibstoExclude = $config.JellyfinPart.LibstoExclude
+    $OtherMediaServerUrl = $JellyfinUrl
+    $UseOtherMediaServer = $UseJellyfin
+    $OtherMediaServerApiKey = $JellyfinAPIKey
+}
+
+# Emby Part
+$EmbyUrl = $config.EmbyPart.EmbyUrl
+$UseEmby = $config.EmbyPart.UseEmby.tolower()
+if ($UseEmby -eq 'true') {
+    $LibstoExclude = $config.EmbyPart.LibstoExclude
+    $OtherMediaServerUrl = $EmbyUrl
+    $UseOtherMediaServer = $UseEmby
+    $OtherMediaServerApiKey = $EmbyAPIKey
 }
 
 # Prerequisites Part
@@ -4379,6 +4426,10 @@ if ($UsePlex -eq 'true') {
 if ($UseJellyfin -eq 'true') {
     # Check Jellyfin now:
     CheckJellyfinAccess -JellyfinUrl $JellyfinUrl -JellyfinApi $JellyfinAPIKey
+}
+if ($UseEmby -eq 'true') {
+    # Check Emby now:
+    CheckEmbyAccess -EmbyUrl $EmbyUrl -EmbyAPI $EmbyAPIKey
 }
 
 # Check overlay artwork for poster, background, and titlecard dimensions
@@ -9051,24 +9102,24 @@ Elseif ($Tautulli) {
         Remove-Item -LiteralPath $CurrentlyRunning | out-null
     }
 }
-Elseif ($JellyfinUrl -and $JellyfinAPIKey -and $UseJellyfin -eq 'true') {
-    Write-Entry -Message "Query Jellyfin..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaServer -eq 'true') {
+    Write-Entry -Message "Query Jellyfin/Emby..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
     Write-Entry -Message "Query all items from all Libs, this can take a while..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-    $PreferredMetadataLanguage = (Invoke-RestMethod -Method Get -Uri "$JellyfinUrl/System/Configuration?api_key=$JellyfinAPIKey").PreferredMetadataLanguage
-    $allShowsquery = "$JellyfinUrl/Items?api_key=$JellyfinAPIKey&Recursive=true&Fields=ProviderIds,SeasonUserData,OriginalTitle,Path,Overview&IncludeItemTypes=Series"
-    $allMoviesquery = "$JellyfinUrl/Items?api_key=$JellyfinAPIKey&Recursive=true&Fields=ProviderIds,OriginalTitle,Settings,Path,Overview&IncludeItemTypes=Movie"
+    $PreferredMetadataLanguage = (Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/System/Configuration?api_key=$OtherMediaServerApiKey").PreferredMetadataLanguage
+    $allShowsquery = "$OtherMediaServerUrl/Items?api_key=$OtherMediaServerApiKey&Recursive=true&Fields=ProviderIds,SeasonUserData,OriginalTitle,Path,Overview&IncludeItemTypes=Series"
+    $allMoviesquery = "$OtherMediaServerUrl/Items?api_key=$OtherMediaServerApiKey&Recursive=true&Fields=ProviderIds,OriginalTitle,Settings,Path,Overview&IncludeItemTypes=Movie"
     $AllShows = Invoke-RestMethod -Method Get -Uri $allShowsquery
     $AllMovies = Invoke-RestMethod -Method Get -Uri $allMoviesquery
 
     $Libraries = @()
     foreach ($Movie in $AllMovies.Items) {
-        $Libtemp = Invoke-RestMethod -Method Get -Uri "$JellyfinUrl/Items/$($Movie.Id)/Ancestors?api_key=$JellyfinAPIKey"
-        $lib = $Libtemp | Where-Object { $_.Type -eq 'Folder' } | Select-Object Name, Path
-        if ($lib.name -notin $LibstoExclude) {
-            if ($Movie.Path -like "$($lib.Path)/*" -or $Movie.Path -like "$($lib.Path)\*") {
+        if ($UseEmby -eq 'true'){
+            $Libtemp = Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/Items/$($Movie.Id)/Ancestors?api_key=$OtherMediaServerApiKey"
+            $lib = $Libtemp | Where-Object { $_.Type -eq 'Folder' } | Select-Object Name, Path
+            if ($lib.name -notin $LibstoExclude) {
                 Write-Entry -Subtext "Location: $($Movie.Path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                Write-Entry -Subtext "Libpath: $($lib.Path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                $Matchedpath = AddTrailingSlash $($lib.Path)
+                Write-Entry -Subtext "Libpath: $($lib.Path[1])" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                $Matchedpath = AddTrailingSlash $($lib.Path[1])
                 $libpath = $Matchedpath
                 $extractedFolder = $Movie.Path.Substring($libpath.Length)
                 if ($extractedFolder -like '*\*') {
@@ -9079,30 +9130,68 @@ Elseif ($JellyfinUrl -and $JellyfinAPIKey -and $UseJellyfin -eq 'true') {
                 }
                 Write-Entry -Subtext "Matchedpath: $Matchedpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                 Write-Entry -Subtext "ExtractedFolder: $extractedFolder" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                $temp = New-Object psobject
+                $temp | Add-Member -MemberType NoteProperty -Name "Library Name" -Value $lib.name[1]
+                $temp | Add-Member -MemberType NoteProperty -Name "Library Type" -Value $Movie.Type
+                $temp | Add-Member -MemberType NoteProperty -Name "Library Language" -Value $PreferredMetadataLanguage
+                $temp | Add-Member -MemberType NoteProperty -Name "Id" -Value $Movie.Id
+                $temp | Add-Member -MemberType NoteProperty -Name "title" -Value $Movie.Name
+                $temp | Add-Member -MemberType NoteProperty -Name "originalTitle" -Value $Movie.OriginalTitle
+                $temp | Add-Member -MemberType NoteProperty -Name "year" -Value $Movie.ProductionYear
+                $temp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value $Movie.ProviderIds.Imdb
+                $temp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value $Movie.ProviderIds.Tmdb
+                $temp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $Movie.ProviderIds.Tvdb
+                $temp | Add-Member -MemberType NoteProperty -Name "Path" -Value $lib.Path[1]
+                $temp | Add-Member -MemberType NoteProperty -Name "RootFoldername" -Value $extractedFolder
+                $temp | Add-Member -MemberType NoteProperty -Name "OtherMediaServerPosterUrl" -Value $Movie.ImageTags.Primary
+                $temp | Add-Member -MemberType NoteProperty -Name "OtherMediaServerBackgroundUrl" -Value $($Movie.BackdropImageTags -join ",")
+                $Libraries += $temp
+                Write-Entry -Subtext "Found [$($temp.title)] of type $($temp.{Library Type}) in [$($temp.{Library Name})]" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
             }
-            $temp = New-Object psobject
-            $temp | Add-Member -MemberType NoteProperty -Name "Library Name" -Value $lib.name
-            $temp | Add-Member -MemberType NoteProperty -Name "Library Type" -Value $Movie.Type
-            $temp | Add-Member -MemberType NoteProperty -Name "Library Language" -Value $PreferredMetadataLanguage
-            $temp | Add-Member -MemberType NoteProperty -Name "Id" -Value $Movie.Id
-            $temp | Add-Member -MemberType NoteProperty -Name "title" -Value $Movie.Name
-            $temp | Add-Member -MemberType NoteProperty -Name "originalTitle" -Value $Movie.OriginalTitle
-            $temp | Add-Member -MemberType NoteProperty -Name "year" -Value $Movie.ProductionYear
-            $temp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value $Movie.ProviderIds.Imdb
-            $temp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value $Movie.ProviderIds.Tmdb
-            $temp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $Movie.ProviderIds.Tvdb
-            $temp | Add-Member -MemberType NoteProperty -Name "Path" -Value $lib.Path
-            $temp | Add-Member -MemberType NoteProperty -Name "RootFoldername" -Value $extractedFolder
-            $temp | Add-Member -MemberType NoteProperty -Name "JellyfinPosterUrl" -Value $Movie.ImageTags.Primary
-            $temp | Add-Member -MemberType NoteProperty -Name "JellyfinBackgroundUrl" -Value $($Movie.BackdropImageTags -join ",")
-            $Libraries += $temp
-            Write-Entry -Subtext "Found [$($temp.title)] of type $($temp.{Library Type}) in [$($temp.{Library Name})]" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-            Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+        }
+        Else {
+            $Libtemp = Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/Items/$($Movie.Id)/Ancestors?api_key=$OtherMediaServerApiKey"
+            $lib = $Libtemp | Where-Object { $_.Type -eq 'Folder' } | Select-Object Name, Path
+            if ($lib.name -notin $LibstoExclude) {
+                if ($Movie.Path -like "$($lib.Path)/*" -or $Movie.Path -like "$($lib.Path)\*") {
+                    Write-Entry -Subtext "Location: $($Movie.Path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                    Write-Entry -Subtext "Libpath: $($lib.Path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                    $Matchedpath = AddTrailingSlash $($lib.Path)
+                    $libpath = $Matchedpath
+                    $extractedFolder = $Movie.Path.Substring($libpath.Length)
+                    if ($extractedFolder -like '*\*') {
+                        $extractedFolder = $extractedFolder.split('\')[0]
+                    }
+                    if ($extractedFolder -like '*/*') {
+                        $extractedFolder = $extractedFolder.split('/')[0]
+                    }
+                    Write-Entry -Subtext "Matchedpath: $Matchedpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                    Write-Entry -Subtext "ExtractedFolder: $extractedFolder" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                }
+                $temp = New-Object psobject
+                $temp | Add-Member -MemberType NoteProperty -Name "Library Name" -Value $lib.name
+                $temp | Add-Member -MemberType NoteProperty -Name "Library Type" -Value $Movie.Type
+                $temp | Add-Member -MemberType NoteProperty -Name "Library Language" -Value $PreferredMetadataLanguage
+                $temp | Add-Member -MemberType NoteProperty -Name "Id" -Value $Movie.Id
+                $temp | Add-Member -MemberType NoteProperty -Name "title" -Value $Movie.Name
+                $temp | Add-Member -MemberType NoteProperty -Name "originalTitle" -Value $Movie.OriginalTitle
+                $temp | Add-Member -MemberType NoteProperty -Name "year" -Value $Movie.ProductionYear
+                $temp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value $Movie.ProviderIds.Imdb
+                $temp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value $Movie.ProviderIds.Tmdb
+                $temp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $Movie.ProviderIds.Tvdb
+                $temp | Add-Member -MemberType NoteProperty -Name "Path" -Value $lib.Path
+                $temp | Add-Member -MemberType NoteProperty -Name "RootFoldername" -Value $extractedFolder
+                $temp | Add-Member -MemberType NoteProperty -Name "OtherMediaServerPosterUrl" -Value $Movie.ImageTags.Primary
+                $temp | Add-Member -MemberType NoteProperty -Name "OtherMediaServerBackgroundUrl" -Value $($Movie.BackdropImageTags -join ",")
+                $Libraries += $temp
+                Write-Entry -Subtext "Found [$($temp.title)] of type $($temp.{Library Type}) in [$($temp.{Library Name})]" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+            }
         }
     }
-
     foreach ($Show in $AllShows.Items) {
-        $Libtemp = Invoke-RestMethod -Method Get -Uri "$JellyfinUrl/Items/$($Show.Id)/Ancestors?api_key=$JellyfinAPIKey"
+        $Libtemp = Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/Items/$($Show.Id)/Ancestors?api_key=$OtherMediaServerApiKey"
         $lib = $Libtemp | Where-Object { $_.Type -eq 'Folder' } | Select-Object Name, path
         if ($lib.name -notin $LibstoExclude) {
             if ($Show.Path -like "$($lib.Path)/*" -or $Show.Path -like "$($lib.Path)\*") {
@@ -9133,51 +9222,86 @@ Elseif ($JellyfinUrl -and $JellyfinAPIKey -and $UseJellyfin -eq 'true') {
             $temp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $Show.ProviderIds.Tvdb
             $temp | Add-Member -MemberType NoteProperty -Name "Path" -Value $lib.Path
             $temp | Add-Member -MemberType NoteProperty -Name "RootFoldername" -Value $extractedFolder
-            $temp | Add-Member -MemberType NoteProperty -Name "JellyfinPosterUrl" -Value $Show.ImageTags.Primary
-            $temp | Add-Member -MemberType NoteProperty -Name "JellyfinBackgroundUrl" -Value $($Show.BackdropImageTags -join ",")
+            $temp | Add-Member -MemberType NoteProperty -Name "OtherMediaServerPosterUrl" -Value $Show.ImageTags.Primary
+            $temp | Add-Member -MemberType NoteProperty -Name "OtherMediaServerBackgroundUrl" -Value $($Show.BackdropImageTags -join ",")
             $Libraries += $temp
             Write-Entry -Subtext "Found [$($temp.title)] of type $($temp.{Library Type}) in [$($temp.{Library Name})]" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
             Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
         }
     }
     Write-Entry -Subtext "Found '$($Libraries.count)' Items..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
-    $Libraries | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\JellyfinLibExport.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
-    Write-Entry -Message "Export everything to a csv: $global:ScriptRoot\Logs\JellyfinLibExport.csv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+    $Libraries | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\OtherMediaServerLibExport.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
+    Write-Entry -Message "Export everything to a csv: $global:ScriptRoot\Logs\OtherMediaServerLibExport.csv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
     $Episodedata = @()
     foreach ($show in $AllShows.Items) {
-        $Libtemp = Invoke-RestMethod -Method Get -Uri "$JellyfinUrl/Items/$($Show.Id)/Ancestors?api_key=$JellyfinAPIKey"
-        $lib = $Libtemp | Where-Object { $_.Type -eq 'Folder' } | Select-Object Name, path
-        if ($lib.name -notin $LibstoExclude) {
-            # extract seasons
-            $Seasonstemp = Invoke-RestMethod -Method Get -Uri "$JellyfinUrl/shows/$($show.id)/Episodes?api_key=$JellyfinAPIKey"
-            $seasons = $Seasonstemp.Items | Where-Object { $_.LocationType -eq 'FileSystem' } | Select-Object ParentIndexNumber, SeasonId, ImageTags -Unique
+        if ($UseEmby -eq 'true'){
+            $Libtemp = Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/Items/$($Show.Id)/Ancestors?api_key=$OtherMediaServerApiKey"
+            $lib = $Libtemp | Where-Object { $_.Type -eq 'Folder' } | Select-Object Name, path
+            if ($lib.name -notin $LibstoExclude) {
+                # extract seasons
+                $Seasonstemp = Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/shows/$($show.id)/Episodes?api_key=$OtherMediaServerApiKey"
+                $seasons = $Seasonstemp.Items | Where-Object { $_.Type -eq 'Episode' } | Select-Object ParentIndexNumber, SeasonId, ImageTags -Unique
 
-            foreach ($Season in $Seasons) {
-                $SeasonEpisodestemp = Invoke-RestMethod -Method Get -Uri "$JellyfinUrl/shows/$($show.id)/Episodes?seasonid=$($Season.SeasonId)&api_key=$JellyfinAPIKey"
-                $SeasonEpisodes = $SeasonEpisodestemp.Items | Where-Object { $_.LocationType -eq 'FileSystem' } | Select-Object indexnumber, SeriesId, SeasonId, ImageTags, Id, Name -Unique
-                $tempseasondata = New-Object psobject
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Show Name" -Value $show.Name
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Show Original Name" -Value $show.OriginalTitle
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Library Language" -Value $PreferredMetadataLanguage
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "ShowID" -Value $($SeasonEpisodes.SeriesId[0] -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "SeasonId" -Value $($SeasonEpisodes.SeasonId[0] -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "EpisodeIds" -Value $($SeasonEpisodes.id -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $show.ProviderIds.tvdb
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "imdbid" -Value $show.ProviderIds.imdb
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value $show.ProviderIds.tmdb
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "type" -Value 'Episode'
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Season Number" -Value $Season.ParentIndexNumber
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "SeasonName" -Value $($Season.SeasonName -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Episodes" -Value $($SeasonEpisodes.indexnumber -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Title" -Value $($SeasonEpisodes.Name -join ';')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "JellyfinTitleCardTag" -Value $($SeasonEpisodes.ImageTags.Primary -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "JellyfinSeasonTag" -Value $($Season.ImageTags.Primary -join ',')
-                $Episodedata += $tempseasondata
-                Write-Entry -Subtext "Found [$($tempseasondata.{Show Name})] of type $($tempseasondata.Type) for season $($tempseasondata.{Season Number})" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                foreach ($Season in $Seasons) {
+                    $SeasonEpisodestemp = Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/shows/$($show.id)/Episodes?seasonid=$($Season.SeasonId)&api_key=$OtherMediaServerApiKey"
+                    $SeasonEpisodes = $SeasonEpisodestemp.Items | Where-Object { $_.Type -eq 'Episode' } | Select-Object indexnumber, SeriesId, SeasonId, ImageTags, Id, Name -Unique
+                    $tempseasondata = New-Object psobject
+                    $tempseasondata | Add-Member -MemberType NoteProperty -Name "Show Name" -Value $show.Name
+                    $tempseasondata | Add-Member -MemberType NoteProperty -Name "Show Original Name" -Value $show.OriginalTitle
+                    $tempseasondata | Add-Member -MemberType NoteProperty -Name "Library Language" -Value $PreferredMetadataLanguage
+                    $tempseasondata | Add-Member -MemberType NoteProperty -Name "ShowID" -Value $($SeasonEpisodes.SeriesId[0] -join ',')
+                    $tempseasondata | Add-Member -MemberType NoteProperty -Name "SeasonId" -Value $($SeasonEpisodes.SeasonId[0] -join ',')
+                    $tempseasondata | Add-Member -MemberType NoteProperty -Name "EpisodeIds" -Value $($SeasonEpisodes.id -join ',')
+                    $tempseasondata | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $show.ProviderIds.tvdb
+                    $tempseasondata | Add-Member -MemberType NoteProperty -Name "imdbid" -Value $show.ProviderIds.imdb
+                    $tempseasondata | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value $show.ProviderIds.tmdb
+                    $tempseasondata | Add-Member -MemberType NoteProperty -Name "type" -Value 'Episode'
+                    $tempseasondata | Add-Member -MemberType NoteProperty -Name "Season Number" -Value $Season.ParentIndexNumber
+                    $tempseasondata | Add-Member -MemberType NoteProperty -Name "SeasonName" -Value $($Season.SeasonName -join ',')
+                    $tempseasondata | Add-Member -MemberType NoteProperty -Name "Episodes" -Value $($SeasonEpisodes.indexnumber -join ',')
+                    $tempseasondata | Add-Member -MemberType NoteProperty -Name "Title" -Value $($SeasonEpisodes.Name -join ';')
+                    $tempseasondata | Add-Member -MemberType NoteProperty -Name "OtherMediaServerTitleCardTag" -Value $($SeasonEpisodes.ImageTags.Primary -join ',')
+                    $tempseasondata | Add-Member -MemberType NoteProperty -Name "OtherMediaServerSeasonTag" -Value $($Season.ImageTags.Primary -join ',')
+                    $Episodedata += $tempseasondata
+                    Write-Entry -Subtext "Found [$($tempseasondata.{Show Name})] of type $($tempseasondata.Type) for season $($tempseasondata.{Season Number})" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                }
+            }
+        }
+        Else {
+            $Libtemp = Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/Items/$($Show.Id)/Ancestors?api_key=$OtherMediaServerApiKey"
+            $lib = $Libtemp | Where-Object { $_.Type -eq 'Folder' } | Select-Object Name, path
+            if ($lib.name -notin $LibstoExclude) {
+                # extract seasons
+                $Seasonstemp = Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/shows/$($show.id)/Episodes?api_key=$OtherMediaServerApiKey"
+                $seasons = $Seasonstemp.Items | Where-Object { $_.LocationType -eq 'FileSystem' } | Select-Object ParentIndexNumber, SeasonId, ImageTags -Unique
+
+                foreach ($Season in $Seasons) {
+                    $SeasonEpisodestemp = Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/shows/$($show.id)/Episodes?seasonid=$($Season.SeasonId)&api_key=$OtherMediaServerApiKey"
+                    $SeasonEpisodes = $SeasonEpisodestemp.Items | Where-Object { $_.LocationType -eq 'FileSystem' } | Select-Object indexnumber, SeriesId, SeasonId, ImageTags, Id, Name -Unique
+                    $tempseasondata = New-Object psobject
+                    $tempseasondata | Add-Member -MemberType NoteProperty -Name "Show Name" -Value $show.Name
+                    $tempseasondata | Add-Member -MemberType NoteProperty -Name "Show Original Name" -Value $show.OriginalTitle
+                    $tempseasondata | Add-Member -MemberType NoteProperty -Name "Library Language" -Value $PreferredMetadataLanguage
+                    $tempseasondata | Add-Member -MemberType NoteProperty -Name "ShowID" -Value $($SeasonEpisodes.SeriesId[0] -join ',')
+                    $tempseasondata | Add-Member -MemberType NoteProperty -Name "SeasonId" -Value $($SeasonEpisodes.SeasonId[0] -join ',')
+                    $tempseasondata | Add-Member -MemberType NoteProperty -Name "EpisodeIds" -Value $($SeasonEpisodes.id -join ',')
+                    $tempseasondata | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $show.ProviderIds.tvdb
+                    $tempseasondata | Add-Member -MemberType NoteProperty -Name "imdbid" -Value $show.ProviderIds.imdb
+                    $tempseasondata | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value $show.ProviderIds.tmdb
+                    $tempseasondata | Add-Member -MemberType NoteProperty -Name "type" -Value 'Episode'
+                    $tempseasondata | Add-Member -MemberType NoteProperty -Name "Season Number" -Value $Season.ParentIndexNumber
+                    $tempseasondata | Add-Member -MemberType NoteProperty -Name "SeasonName" -Value $($Season.SeasonName -join ',')
+                    $tempseasondata | Add-Member -MemberType NoteProperty -Name "Episodes" -Value $($SeasonEpisodes.indexnumber -join ',')
+                    $tempseasondata | Add-Member -MemberType NoteProperty -Name "Title" -Value $($SeasonEpisodes.Name -join ';')
+                    $tempseasondata | Add-Member -MemberType NoteProperty -Name "OtherMediaServerTitleCardTag" -Value $($SeasonEpisodes.ImageTags.Primary -join ',')
+                    $tempseasondata | Add-Member -MemberType NoteProperty -Name "OtherMediaServerSeasonTag" -Value $($Season.ImageTags.Primary -join ',')
+                    $Episodedata += $tempseasondata
+                    Write-Entry -Subtext "Found [$($tempseasondata.{Show Name})] of type $($tempseasondata.Type) for season $($tempseasondata.{Season Number})" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                }
             }
         }
     }
-    $Episodedata | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\JellyfinEpisodeExport.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
+    $Episodedata | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\OtherMediaServerEpisodeExport.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
     if ($Episodedata) {
         Write-Entry -Subtext "Found '$($Episodedata.Episodes.split(',').count)' Episodes..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     }
@@ -9489,8 +9613,7 @@ Elseif ($JellyfinUrl -and $JellyfinAPIKey -and $UseJellyfin -eq 'true') {
                             if (!$global:ImageMagickError -eq 'True') {
                                 if (Get-ChildItem -LiteralPath $PosterImage -ErrorAction SilentlyContinue) {
                                     if (!$global:IsTruncated) {
-                                        # Uploading Poster to Jellyfin
-                                        UploadJellyfinArtwork -itemId $entry.id -imageType "Primary" -imagePath $PosterImage
+                                        UploadOtherMediaServerArtwork -itemId $entry.id -imageType "Primary" -imagePath $PosterImage
                                         Move-Item -LiteralPath $PosterImage $PosterImageoriginal -Force -ErrorAction SilentlyContinue
                                         Write-Entry -Subtext "Added: $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                                         Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
@@ -9776,7 +9899,7 @@ Elseif ($JellyfinUrl -and $JellyfinAPIKey -and $UseJellyfin -eq 'true') {
                                 # Move file back to original naming with Brackets.
                                 if (Get-ChildItem -LiteralPath $backgroundImage -ErrorAction SilentlyContinue) {
                                     if (!$global:IsTruncated) {
-                                        UploadJellyfinArtwork -itemId $entry.id -imageType "Backdrop" -imagePath $backgroundImage
+                                        UploadOtherMediaServerArtwork -itemId $entry.id -imageType "Backdrop" -imagePath $backgroundImage
                                         Move-Item -LiteralPath $backgroundImage $backgroundImageoriginal -Force -ErrorAction SilentlyContinue
                                         Write-Entry -Subtext "Added: $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                                         Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
@@ -10126,7 +10249,7 @@ Elseif ($JellyfinUrl -and $JellyfinAPIKey -and $UseJellyfin -eq 'true') {
                             if (Get-ChildItem -LiteralPath $PosterImage -ErrorAction SilentlyContinue) {
                                 # Move file back to original naming with Brackets.
                                 if (!$global:IsTruncated) {
-                                    UploadJellyfinArtwork -itemId $entry.Id -imageType "Primary" -imagePath $PosterImage
+                                    UploadOtherMediaServerArtwork -itemId $entry.Id -imageType "Primary" -imagePath $PosterImage
                                     Move-Item -LiteralPath $PosterImage $PosterImageoriginal -Force -ErrorAction SilentlyContinue
                                     Write-Entry -Subtext "Added: $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                                     Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
@@ -10420,7 +10543,7 @@ Elseif ($JellyfinUrl -and $JellyfinAPIKey -and $UseJellyfin -eq 'true') {
                             # Move file back to original naming with Brackets.
                             if (Get-ChildItem -LiteralPath $backgroundImage -ErrorAction SilentlyContinue) {
                                 if (!$global:IsTruncated) {
-                                    UploadJellyfinArtwork -itemId $entry.id -imageType "Backdrop" -imagePath $backgroundImage
+                                    UploadOtherMediaServerArtwork -itemId $entry.id -imageType "Backdrop" -imagePath $backgroundImage
                                     Move-Item -LiteralPath $backgroundImage $backgroundImageoriginal -Force -ErrorAction SilentlyContinue
                                     $BackgroundCount++
                                     Write-Entry -Subtext "Added: $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
@@ -10771,7 +10894,7 @@ Elseif ($JellyfinUrl -and $JellyfinAPIKey -and $UseJellyfin -eq 'true') {
                                     if (Get-ChildItem -LiteralPath $SeasonImage -ErrorAction SilentlyContinue) {
                                         # Move file back to original naming with Brackets.
                                         if (!$global:IsTruncated) {
-                                            UploadJellyfinArtwork -itemId $global:seasonId -imageType "Primary" -imagePath $SeasonImage
+                                            UploadOtherMediaServerArtwork -itemId $global:seasonId -imageType "Primary" -imagePath $SeasonImage
                                             Move-Item -LiteralPath $SeasonImage -destination $SeasonImageoriginal -Force -ErrorAction SilentlyContinue
                                             Write-Entry -Subtext "Added: $SeasonImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                                             Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
@@ -11141,7 +11264,7 @@ Elseif ($JellyfinUrl -and $JellyfinAPIKey -and $UseJellyfin -eq 'true') {
                                                 if (Get-ChildItem -LiteralPath $EpisodeImage -ErrorAction SilentlyContinue) {
                                                     # Move file back to original naming with Brackets.
                                                     if (!$global:IsTruncated) {
-                                                        UploadJellyfinArtwork -itemId $global:episodeid -imageType "Primary" -imagePath $EpisodeImage
+                                                        UploadOtherMediaServerArtwork -itemId $global:episodeid -imageType "Primary" -imagePath $EpisodeImage
                                                         Move-Item -LiteralPath $EpisodeImage -destination $EpisodeImageoriginal -Force -ErrorAction SilentlyContinue
                                                         Write-Entry -Subtext "Added: $EpisodeImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                                                         Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
@@ -11503,7 +11626,7 @@ Elseif ($JellyfinUrl -and $JellyfinAPIKey -and $UseJellyfin -eq 'true') {
                                                 if (Get-ChildItem -LiteralPath $EpisodeImage -ErrorAction SilentlyContinue) {
                                                     # Move file back to original naming with Brackets.
                                                     if (!$global:IsTruncated) {
-                                                        UploadJellyfinArtwork -itemId $global:episodeid -imageType "Primary" -imagePath $EpisodeImage
+                                                        UploadOtherMediaServerArtwork -itemId $global:episodeid -imageType "Primary" -imagePath $EpisodeImage
                                                         Move-Item -LiteralPath $EpisodeImage -destination $EpisodeImageoriginal -Force -ErrorAction SilentlyContinue
                                                         Write-Entry -Subtext "Added: $EpisodeImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                                                         Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
