@@ -5,6 +5,7 @@
     "FanartTvAPIKey": "xxxxxxxxxxxxx",
     "PlexToken": "xxxxxxxxxxxxx",
     "JellyfinAPIKey": "xxxxxxxxxxxxx",
+    "EmbyAPIKey": "xxxxxxxxxxxxx",
     "FavProvider": "tmdb",
     "WidthHeightFilter": "false",
     "PosterMinWidth": "2000",
@@ -45,6 +46,17 @@
     "JellyfinUrl": "http://jellyfin:8096",
     "UseJellyfin": "false"
   },
+  "EmbyPart": {
+    "LibstoExclude": [
+      "Youtube",
+      "Audiobooks",
+      "KidsAudiobooks",
+      "TechTrainings",
+      "KidsMusic"
+    ],
+    "EmbyUrl": "http://192.168.1.20:8096/emby",
+    "UseEmby": "false"
+    },
   "Notification": {
     "SendNotification": "True",
     "AppriseUrl": "discord://xxxxxxxxxx/xxxxxxxxxxxxx",
