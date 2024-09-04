@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## [1.7.0](https://github.com/fscorrupt/Posterizarr/releases/tag/1.7.0) - 2024-09-04 12:28:05
+
+## 🚇 Added
+
+- Add Emby Support
+   - FR: #138 
+   
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.6.3...1.7.0
+
+### Feature
+
+- general:
+  - Add Emby Support ([eb13409](https://github.com/fscorrupt/Posterizarr/commit/eb134095f0dfbb695d6cedc6b6d6ac3cf23232ea))
+
 ## [1.6.3](https://github.com/fscorrupt/Posterizarr/releases/tag/1.6.3) - 2024-09-04 08:53:29
 
 ## [1.6.2](https://github.com/fscorrupt/Posterizarr/releases/tag/1.6.2) - 2024-09-04 06:44:54
