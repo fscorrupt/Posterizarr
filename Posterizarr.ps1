@@ -8,7 +8,7 @@
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.6.1"
+$CurrentScriptVersion = "1.6.2"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -3108,7 +3108,7 @@ function CheckJson {
             if (-not $config.PSObject.Properties.Name.Contains($partKey)) {
                 if (-not $config.PSObject.Properties.Name.tolower().Contains($partKey.tolower())) {
                     # Add "SeasonPosterOverlayPart" if it's missing in $config
-                    if (-not $config.PSObject.Properties.Name.tolower().Contains("SeasonPosterOverlayPart")) {
+                    if (-not $config.PSObject.Properties.Name.tolower().Contains("seasonposteroverlaypart")) {
                         $config | Add-Member -MemberType NoteProperty -Name "SeasonPosterOverlayPart" -Value $defaultConfig.PosterOverlayPart
                         Write-Entry -Message "Missing Main Attribute in your Config file: $partKey." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                         Write-Entry -Subtext "I will copy all settings from 'PosterOverlayPart'..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
