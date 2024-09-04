@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## [1.6.3](https://github.com/fscorrupt/Posterizarr/releases/tag/1.6.3) - 2024-09-04 08:53:29
+
+## 🐛 Fixes
+
+- Fix jellyfin season poster bug
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.6.2...1.6.3
+
+### Bug Fixes
+
+- general:
+  - jellyfin season poster bug ([f5dcc94](https://github.com/fscorrupt/Posterizarr/commit/f5dcc9454d589155455c804b7b0001f00cb14b62))
+
 ## [1.6.2](https://github.com/fscorrupt/Posterizarr/releases/tag/1.6.2) - 2024-09-04 06:44:54
 
 ## [1.6.1](https://github.com/fscorrupt/Posterizarr/releases/tag/1.6.1) - 2024-09-03 12:59:50
