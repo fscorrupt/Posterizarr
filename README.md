@@ -51,6 +51,8 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
 > You do not have to redeploy the container if the script version changes because it is not part of the container.
 > Container rebuilds only happen when there are changes to the ImageMagick, PowerShell, or other prerequisite versions.
 >
+> Do not enable more then one media server.
+>
 > If you want to install it on ARM please follow this carefully [ARM prerequisites](walkthrough.md#arm-prerequisites)
 
 
@@ -364,7 +366,7 @@ The posters are all placed in `AssetPath\...`. This can then be mounted in Komet
 > - [IMAGE ASSET DIRECTORY GUIDE](https://kometa.wiki/en/latest/kometa/guides/assets/#image-asset-directory-guide)
 >
 > Assuming you made the config like i did, Posterizarr will now create the Posters directly in Kometa´s Asset dir.
-> 
+>
 > If you use Kometa make sure to set this settings on each Library in Kometa Config:
 ```yaml
 libraries:

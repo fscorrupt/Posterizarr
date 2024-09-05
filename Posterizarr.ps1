@@ -8,7 +8,7 @@
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.7.0"
+$CurrentScriptVersion = "1.7.1"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -3322,6 +3322,12 @@ function LogConfigSettings {
     if ($PlexToken) {
         Write-Entry -Subtext "| Plex Token:                   $($PlexToken[0..7] -join '')****" -Path $configLogging -Color White -log Info
     }
+    if ($JellyfinAPIKey) {
+        Write-Entry -Subtext "| Jellyfin API Key:             $($JellyfinAPIKey[0..7] -join '')****" -Path $configLogging -Color White -log Info
+    }
+    if ($EmbyAPIKey) {
+        Write-Entry -Subtext "| Emby API Key:                 $($EmbyAPIKey[0..7] -join '')****" -Path $configLogging -Color White -log Info
+    }
     Write-Entry -Subtext "| Fav Provider:                 $global:FavProvider" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Width/Height Filtering:       $global:WidthHeightFilter" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Poster min width:             $global:PosterMinWidth" -Path $configLogging -Color White -log Info
@@ -4046,6 +4052,19 @@ if ($UseEmby -eq 'true') {
     $OtherMediaServerUrl = $EmbyUrl
     $UseOtherMediaServer = $UseEmby
     $OtherMediaServerApiKey = $EmbyAPIKey
+}
+
+# Count how many media servers are enabled
+$enabledServers = 0
+if ($UseEmby -eq 'true') { $enabledServers++ }
+if ($UseJellyfin -eq 'true') { $enabledServers++ }
+if ($UsePlex -eq 'true') { $enabledServers++ }
+
+# If more than one media server is enabled, exit with an error
+if ($enabledServers -gt 1) {
+    Write-Entry -Message "You have enabled more than one media server - Please use only one." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+    Write-Entry -Subtext "Exiting Posterizarr now..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+    Exit 0
 }
 
 # Prerequisites Part
