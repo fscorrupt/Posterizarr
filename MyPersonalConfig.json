@@ -33,7 +33,8 @@
       "Kids Music"
     ],
     "PlexUrl": "http://plex:32400",
-    "UsePlex": "true"
+    "UsePlex": "true",
+    "UploadExistingAssets": "false"
   },
   "JellyfinPart": {
     "LibstoExclude": [
@@ -44,7 +45,8 @@
       "KidsMusic"
     ],
     "JellyfinUrl": "http://jellyfin:8096",
-    "UseJellyfin": "false"
+    "UseJellyfin": "false",
+    "UploadExistingAssets": "false"
   },
   "EmbyPart": {
     "LibstoExclude": [
@@ -54,8 +56,9 @@
       "TechTrainings",
       "KidsMusic"
     ],
-    "EmbyUrl": "http://192.168.1.20:8096/emby",
-    "UseEmby": "false"
+    "EmbyUrl": "http://emby:8096/emby",
+    "UseEmby": "false",
+    "UploadExistingAssets": "false"
     },
   "Notification": {
     "SendNotification": "True",

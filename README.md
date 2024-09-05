@@ -16,7 +16,7 @@
 </div>
 <p align="center">
     <a href="https://ko-fi.com/R6R81S6SC" target="_blank"><img src="https://storage.ko-fi.com/cdn/brandasset/logo_white_stroke_small.png" alt="Buy Me A Coffee" height="35"></a>
-    <a href="https://discord.com/channels/822460010649878528/1219697354098344039" target="_blank"><img src="https://assets-global.website-files.com/6257adef93867e50d84d30e2/636e0a6a49cf127bf92de1e2_icon_clyde_blurple_RGB.png" alt="Discord" height="35"></a>
+    <a href="https://discord.gg/fYyJQSGt54" target="_blank"><img src="https://assets-global.website-files.com/6257adef93867e50d84d30e2/636e0a6a49cf127bf92de1e2_icon_clyde_blurple_RGB.png" alt="Discord" height="35"></a>
 </p>
 <p align="center">
 <a href="https://discord.com/channels/822460010649878528/1219697354098344039" target="_blank"><img src="/images/posterizarr_banner.jpg" alt="Discord" height="10%"></a>
@@ -50,6 +50,8 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
 > [!IMPORTANT]
 > You do not have to redeploy the container if the script version changes because it is not part of the container.
 > Container rebuilds only happen when there are changes to the ImageMagick, PowerShell, or other prerequisite versions.
+>
+> Do not enable more then one media server.
 >
 > If you want to install it on ARM please follow this carefully [ARM prerequisites](walkthrough.md#arm-prerequisites)
 
@@ -143,6 +145,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `LibstoExclude`: Libraries, by name, to exclude from processing.
     - `PlexUrl`: Plex server URL (i.e. "http://192.168.1.1:32400" or "http://myplexserver.com:32400").
     - `UsePlex`: If set to `true`, you tell the script to use a Plex Server (Default value is: `true`)
+    - `UploadExistingAssets`: If set to `true`, the script will check local assets and upload them to Plex, but only if Plex does not already have EXIF data from Posterizarr, Kometa, or TCM for the artwork being uploaded.
     </details>
     <details close>
     <summary>JellyfinPart:</summary>
@@ -152,6 +155,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `JellyfinUrl`: Plex server URL (i.e. "http://192.168.1.1:8096" or "http://myplexserver.com:8096").
     - `UseJellyfin`: If set to `true`, you tell the script to use a Jellyfin Server (Default value is: `false`)
       - Also have a look at the hint: [Jellyfin CSS](#Jellyfin)
+    - `UploadExistingAssets`: If set to `true`, the script will check local assets and upload them to Jellyfin, but only if Jellyfin does not already have EXIF data from Posterizarr, Kometa, or TCM for the artwork being uploaded.
     </details>
     <details close>
     <summary>EmbyPart:</summary>
@@ -160,6 +164,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `LibstoExclude`: Libraries, by local folder name, to exclude from processing.
     - `EmbyUrl`: Plex server URL (i.e. "http://192.168.1.1:8096/emby" or "http://myplexserver.com:8096/emby").
     - `UseEmby`: If set to `true`, you tell the script to use a Emby Server (Default value is: `false`)
+    - `UploadExistingAssets`: If set to `true`, the script will check local assets and upload them to Emby, but only if Emby does not already have EXIF data from Posterizarr, Kometa, or TCM for the artwork being uploaded.
     </details>
     <details close>
     <summary>Notification:</summary>
@@ -364,6 +369,18 @@ The posters are all placed in `AssetPath\...`. This can then be mounted in Komet
 > - [IMAGE ASSET DIRECTORY GUIDE](https://kometa.wiki/en/latest/kometa/guides/assets/#image-asset-directory-guide)
 >
 > Assuming you made the config like i did, Posterizarr will now create the Posters directly in Kometa´s Asset dir.
+>
+> If you use Kometa make sure to set this settings on each Library in Kometa Config:
+```yaml
+libraries:
+  4K TV Shows:
+    settings:
+      asset_directory: /assets/4K TV Shows
+      prioritize_assets: true
+    operations:
+      assets_for_all: true
+```
+
 
 ## Modes
 
