@@ -145,6 +145,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `LibstoExclude`: Libraries, by name, to exclude from processing.
     - `PlexUrl`: Plex server URL (i.e. "http://192.168.1.1:32400" or "http://myplexserver.com:32400").
     - `UsePlex`: If set to `true`, you tell the script to use a Plex Server (Default value is: `true`)
+    - `UploadExistingAssets`: If set to `true`, the script will check local assets and upload them to Plex, but only if Plex does not already have EXIF data from Posterizarr, Kometa, or TCM for the artwork being uploaded.
     </details>
     <details close>
     <summary>JellyfinPart:</summary>
@@ -154,6 +155,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `JellyfinUrl`: Plex server URL (i.e. "http://192.168.1.1:8096" or "http://myplexserver.com:8096").
     - `UseJellyfin`: If set to `true`, you tell the script to use a Jellyfin Server (Default value is: `false`)
       - Also have a look at the hint: [Jellyfin CSS](#Jellyfin)
+    - `UploadExistingAssets`: If set to `true`, the script will check local assets and upload them to Jellyfin, but only if Jellyfin does not already have EXIF data from Posterizarr, Kometa, or TCM for the artwork being uploaded.
     </details>
     <details close>
     <summary>EmbyPart:</summary>
@@ -162,6 +164,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `LibstoExclude`: Libraries, by local folder name, to exclude from processing.
     - `EmbyUrl`: Plex server URL (i.e. "http://192.168.1.1:8096/emby" or "http://myplexserver.com:8096/emby").
     - `UseEmby`: If set to `true`, you tell the script to use a Emby Server (Default value is: `false`)
+    - `UploadExistingAssets`: If set to `true`, the script will check local assets and upload them to Emby, but only if Emby does not already have EXIF data from Posterizarr, Kometa, or TCM for the artwork being uploaded.
     </details>
     <details close>
     <summary>Notification:</summary>

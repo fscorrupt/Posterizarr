@@ -19,17 +19,20 @@
   "PlexPart":{
     "LibstoExclude": ["Youtube", "Audiobooks", "Kids Audiobooks", "Tech Trainings"],
     "PlexUrl": "http://192.168.1.93:32400",
-    "UsePlex": "true"
+    "UsePlex": "true",
+    "UploadExistingAssets": "false"
   },
   "JellyfinPart": {
     "LibstoExclude": ["Youtube", "Audiobooks", "KidsAudiobooks", "TechTrainings"],
     "JellyfinUrl": "http://192.168.1.93:8096",
-    "UseJellyfin": "false"
+    "UseJellyfin": "false",
+    "UploadExistingAssets": "false"
   },
   "EmbyPart": {
     "LibstoExclude": ["Youtube", "Audiobooks", "KidsAudiobooks", "TechTrainings"],
     "EmbyUrl": "http://192.168.1.93:8096/emby",
-    "UseEmby": "false"
+    "UseEmby": "false",
+    "UploadExistingAssets": "false"
   },
   "Notification":{
     "SendNotification":"False",

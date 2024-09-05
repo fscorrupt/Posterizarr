@@ -8,7 +8,7 @@
     [string]$mediatype
 )
 
-$CurrentScriptVersion = "1.7.1"
+$CurrentScriptVersion = "1.8.0"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -3024,7 +3024,9 @@ function GetPlexArtwork {
         [string]$ArtUrl,
         [string]$TempImage
     )
+
     Write-Entry -Subtext "Searching on Plex for$Type" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+
     try {
         Invoke-WebRequest -Uri $ArtUrl -OutFile $TempImage -Headers $extraPlexHeaders
     }
@@ -3043,7 +3045,12 @@ function GetPlexArtwork {
 
     if ($value) {
         $ExifFound = $True
-        Write-Entry -Subtext "Artwork has exif data from posterizarr/kometa/tcm, cant take it..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+        if ($global:UploadExistingAssets -eq 'true'){
+            Write-Entry -Subtext "Artwork has exif data from posterizarr/kometa/tcm, skip upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+        }
+        Else {
+            Write-Entry -Subtext "Artwork has exif data from posterizarr/kometa/tcm, cant take it..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+        }
         Remove-Item -LiteralPath $TempImage | out-null
     }
     Else {
@@ -3341,16 +3348,19 @@ function LogConfigSettings {
         Write-Entry -Subtext "Plex Part" -Path $configLogging -Color Cyan -log Info
         Write-Entry -Subtext "| Excluded Libs:                $($LibstoExclude -join ',')" -Path $configLogging -Color White -log Info
         Write-Entry -Subtext "| Plex Url:                     $($PlexUrl[0..10] -join '')****" -Path $configLogging -Color White -log Info
+        Write-Entry -Subtext "| Upload Existing Assets:       $global:UploadExistingAssets" -Path $configLogging -Color White -log Info
     }
     if ($UseJellyfin -eq 'true') {
         Write-Entry -Subtext "Jellyfin Part" -Path $configLogging -Color Cyan -log Info
         Write-Entry -Subtext "| Excluded Libs:                $($LibstoExclude -join ',')" -Path $configLogging -Color White -log Info
-        Write-Entry -Subtext "| Jellyfin Url:                     $($JellyfinUrl[0..10] -join '')****" -Path $configLogging -Color White -log Info
+        Write-Entry -Subtext "| Jellyfin Url:                 $($JellyfinUrl[0..10] -join '')****" -Path $configLogging -Color White -log Info
+        Write-Entry -Subtext "| Upload Existing Assets:       $global:UploadExistingAssets" -Path $configLogging -Color White -log Info
     }
     if ($UseEmby -eq 'true') {
         Write-Entry -Subtext "Emby Part" -Path $configLogging -Color Cyan -log Info
         Write-Entry -Subtext "| Excluded Libs:                $($LibstoExclude -join ',')" -Path $configLogging -Color White -log Info
         Write-Entry -Subtext "| Emby Url:                     $($EmbyUrl[0..10] -join '')****" -Path $configLogging -Color White -log Info
+        Write-Entry -Subtext "| Upload Existing Assets:       $global:UploadExistingAssets" -Path $configLogging -Color White -log Info
     }
     Write-Entry -Subtext "Prerequisites Part" -Path $configLogging -Color Cyan -log Info
     Write-Entry -Subtext "| Asset Path:                   $AssetPath" -Path $configLogging -Color White -log Info
@@ -3825,6 +3835,7 @@ function UploadOtherMediaServerArtwork {
         try {
             $response = Invoke-RestMethod -Uri $apiUrl -Method Post -Body $imageBase64 -ContentType $contentType -ErrorAction Stop
             Write-Entry -Subtext "Image successfully uploaded..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+            $UploadCount++
         }
         catch {
             # Enhanced error handling
@@ -4032,6 +4043,7 @@ $PlexUrl = $config.PlexPart.PlexUrl
 $UsePlex = $config.PlexPart.UsePlex.tolower()
 if ($UsePlex -eq 'true') {
     $LibstoExclude = $config.PlexPart.LibstoExclude
+    $global:UploadExistingAssets = $config.PlexPart.UploadExistingAssets.tolower()
 }
 
 # Jellyfin Part
@@ -4042,6 +4054,7 @@ if ($UseJellyfin -eq 'true') {
     $OtherMediaServerUrl = $JellyfinUrl
     $UseOtherMediaServer = $UseJellyfin
     $OtherMediaServerApiKey = $JellyfinAPIKey
+    $global:UploadExistingAssets = $config.JellyfinPart.UploadExistingAssets.tolower()
 }
 
 # Emby Part
@@ -4052,6 +4065,7 @@ if ($UseEmby -eq 'true') {
     $OtherMediaServerUrl = $EmbyUrl
     $UseOtherMediaServer = $UseEmby
     $OtherMediaServerApiKey = $EmbyAPIKey
+    $global:UploadExistingAssets = $config.EmbyPart.UploadExistingAssets.tolower()
 }
 
 # Count how many media servers are enabled
@@ -4234,7 +4248,7 @@ Else {
 }
 $fileExtensions = @(".otf", ".ttf", ".otc", ".ttc", ".png")
 $errorCount = 0
-
+$UploadCount = 0
 
 
 # Initialize Other Variables
@@ -9690,8 +9704,15 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                         }
                     }
                     else {
-                        if ($show_skipped -eq 'True' ) {
-                            Write-Entry -Subtext "Already exists: $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                        if ($global:UploadExistingAssets -eq 'true'){
+                            Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                            Write-Entry -Subtext "Searching for $Titletext Artwork on Media Server." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                            UploadOtherMediaServerArtwork -itemId $entry.id -imageType "Primary" -imagePath $PosterImageoriginal
+                        }
+                        Else {
+                            if ($show_skipped -eq 'True' ) {
+                                Write-Entry -Subtext "Already exists: $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                            }
                         }
                     }
                 }
@@ -9976,8 +9997,15 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                         }
                     }
                     else {
-                        if ($show_skipped -eq 'True' ) {
-                            Write-Entry -Subtext "Already exists: $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                        if ($global:UploadExistingAssets -eq 'true'){
+                            Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                            Write-Entry -Subtext "Searching for $Titletext Artwork on Media Server." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                            UploadOtherMediaServerArtwork -itemId $entry.id -imageType "Backdrop" -imagePath $backgroundImageoriginal
+                        }
+                        Else {
+                            if ($show_skipped -eq 'True' ) {
+                                Write-Entry -Subtext "Already exists: $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                            }
                         }
                     }
                 }
@@ -10325,8 +10353,15 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                     }
                 }
                 else {
-                    if ($show_skipped -eq 'True' ) {
-                        Write-Entry -Subtext "Already exists: $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                    if ($global:UploadExistingAssets -eq 'true'){
+                        Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                        Write-Entry -Subtext "Searching for $Titletext Artwork on Media Server." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                        UploadOtherMediaServerArtwork -itemId $entry.id -imageType "Primary" -imagePath $PosterImageoriginal
+                    }
+                    Else {
+                        if ($show_skipped -eq 'True' ) {
+                            Write-Entry -Subtext "Already exists: $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                        }
                     }
                 }
             }
@@ -10621,8 +10656,15 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                     }
                 }
                 else {
-                    if ($show_skipped -eq 'True' ) {
-                        Write-Entry -Subtext "Already exists: $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                    if ($global:UploadExistingAssets -eq 'true'){
+                        Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                        Write-Entry -Subtext "Searching for $Titletext Artwork on Media Server." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                        UploadOtherMediaServerArtwork -itemId $entry.id -imageType "Backdrop" -imagePath $backgroundImageoriginal
+                    }
+                    Else {
+                        if ($show_skipped -eq 'True' ) {
+                            Write-Entry -Subtext "Already exists: $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                        }
                     }
                 }
             }
@@ -10971,8 +11013,15 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                             }
                         }
                         else {
-                            if ($show_skipped -eq 'True' ) {
-                                Write-Entry -Subtext "Already exists: $SeasonImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                            if ($global:UploadExistingAssets -eq 'true'){
+                                Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                                Write-Entry -Subtext "Searching for $Titletext Artwork on Media Server." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                                UploadOtherMediaServerArtwork -itemId $entry.id -imageType "Primary" -imagePath $SeasonImageoriginal
+                            }
+                            Else {
+                                if ($show_skipped -eq 'True' ) {
+                                    Write-Entry -Subtext "Already exists: $SeasonImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                                }
                             }
                         }
                     }
@@ -11341,8 +11390,15 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
 
                                     }
                                     else {
-                                        if ($show_skipped -eq 'True' ) {
-                                            Write-Entry -Subtext "Already exists: $EpisodeImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                                        if ($global:UploadExistingAssets -eq 'true'){
+                                            Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                                            Write-Entry -Subtext "Searching for $Titletext Artwork on Media Server." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                                            UploadOtherMediaServerArtwork -itemId $entry.id -imageType "Primary" -imagePath $EpisodeImageoriginal
+                                        }
+                                        Else {
+                                            if ($show_skipped -eq 'True' ) {
+                                                Write-Entry -Subtext "Already exists: $EpisodeImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                                            }
                                         }
                                     }
                                 }
@@ -11704,8 +11760,15 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
 
                                     }
                                     else {
-                                        if ($show_skipped -eq 'True' ) {
-                                            Write-Entry -Subtext "Already exists: $EpisodeImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                                        if ($global:UploadExistingAssets -eq 'true'){
+                                            Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                                            Write-Entry -Subtext "Searching for $Titletext Artwork on Media Server." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                                            UploadOtherMediaServerArtwork -itemId $entry.id -imageType "Primary" -imagePath $EpisodeImageoriginal
+                                        }
+                                        Else {
+                                            if ($show_skipped -eq 'True' ) {
+                                                Write-Entry -Subtext "Already exists: $EpisodeImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                                            }
                                         }
                                     }
                                 }
@@ -11842,6 +11905,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
     $seconds = $executionTime.Seconds
     $FormattedTimespawn = $hours.ToString() + "h " + $minutes.ToString() + "m " + $seconds.ToString() + "s "
     Write-Entry -Message "Finished, Total images created: $posterCount" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+    if ($UploadCount -ge '1') {
+        Write-Entry -Message "Finished, Total images Uploaded: $UploadCount" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+    }
     if ($posterCount -ge '1') {
         Write-Entry -Message "Show/Movie Posters created: $($posterCount-$SeasonCount-$BackgroundCount-$EpisodeCount)| Season images created: $SeasonCount | Background images created: $BackgroundCount | TitleCards created: $EpisodeCount" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
     }
@@ -13100,8 +13166,37 @@ else {
                         }
                     }
                     else {
-                        if ($show_skipped -eq 'true' ) {
-                            Write-Entry -Subtext "Already exists: $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                        if ($global:UploadExistingAssets -eq 'true') {
+                            Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                            try {
+                                GetPlexArtwork -Type " $Titletext | $global:FileNaming Artwork." -ArtUrl $Arturl -TempImage $EpisodeImage
+                                if ($global:PlexartworkDownloaded -eq 'true'){
+                                    Write-Entry -Subtext "Uploading Existing Artwork for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                    $fileContent = [System.IO.File]::ReadAllBytes($PosterImageoriginal)
+                                    if ($PlexToken) {
+                                        $Upload = Invoke-WebRequest -Uri "$PlexUrl/library/metadata/$($entry.ratingkey)/posters?X-Plex-Token=$PlexToken" -Method Post -Headers $extraPlexHeaders -Body $fileContent -ContentType 'application/octet-stream'
+                                    }
+                                    Else {
+                                        $Upload = Invoke-WebRequest -Uri "$PlexUrl/library/metadata/$($entry.ratingkey)/posters?" -Method Post -Headers $extraPlexHeaders -Body $fileContent -ContentType 'application/octet-stream'
+                                    }
+                                    Write-Entry -Subtext "Artwork uploaded successfully..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                                    $UploadCount++
+                                }
+                            }
+                            catch {
+                                Write-Entry -Subtext "Could not upload Artwork to plex, Error Message: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                $errorCount++
+                            }
+                            if (Test-Path $EpisodeImage -ErrorAction SilentlyContinue) {
+                                Remove-Item -LiteralPath $EpisodeImage | Out-Null
+                                Write-Entry -Message "Deleting Temp Image: $EpisodeImage" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                            }
+                        }
+                        Else {
+                            if ($show_skipped -eq 'true' ) {
+                                Write-Entry -Subtext "Already exists: $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                            }
                         }
                     }
                 }
@@ -13430,8 +13525,37 @@ else {
                         }
                     }
                     else {
-                        if ($show_skipped -eq 'true' ) {
-                            Write-Entry -Subtext "Already exists: $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                        if ($global:UploadExistingAssets -eq 'true') {
+                            Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                            try {
+                                GetPlexArtwork -Type " $Titletext Artwork." -ArtUrl $Arturl -TempImage $backgroundImage
+                                if ($global:PlexartworkDownloaded -eq 'true'){
+                                    Write-Entry -Subtext "Uploading Existing Artwork for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                    $fileContent = [System.IO.File]::ReadAllBytes($backgroundImageoriginal)
+                                    if ($PlexToken) {
+                                        $Upload = Invoke-WebRequest -Uri "$PlexUrl/library/metadata/$($entry.ratingkey)/posters?X-Plex-Token=$PlexToken" -Method Post -Headers $extraPlexHeaders -Body $fileContent -ContentType 'application/octet-stream'
+                                    }
+                                    Else {
+                                        $Upload = Invoke-WebRequest -Uri "$PlexUrl/library/metadata/$($entry.ratingkey)/posters?" -Method Post -Headers $extraPlexHeaders -Body $fileContent -ContentType 'application/octet-stream'
+                                    }
+                                    Write-Entry -Subtext "Artwork uploaded successfully..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                                    $UploadCount++
+                                }
+                            }
+                            catch {
+                                Write-Entry -Subtext "Could not upload Artwork to plex, Error Message: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                $errorCount++
+                            }
+                            if (Test-Path $backgroundImage -ErrorAction SilentlyContinue) {
+                                Remove-Item -LiteralPath $backgroundImage | Out-Null
+                                Write-Entry -Message "Deleting Temp Image: $backgroundImage" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                            }
+                        }
+                        Else {
+                            if ($show_skipped -eq 'true' ) {
+                                Write-Entry -Subtext "Already exists: $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                            }
                         }
                     }
                 }
@@ -13839,8 +13963,37 @@ else {
                     }
                 }
                 else {
-                    if ($show_skipped -eq 'true' ) {
-                        Write-Entry -Subtext "Already exists: $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                    if ($global:UploadExistingAssets -eq 'true') {
+                        Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                        try {
+                            GetPlexArtwork -Type " $Titletext Artwork." -ArtUrl $Arturl -TempImage $PosterImage
+                            if ($global:PlexartworkDownloaded -eq 'true'){
+                                Write-Entry -Subtext "Uploading Existing Artwork for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                $fileContent = [System.IO.File]::ReadAllBytes($PosterImageoriginal)
+                                if ($PlexToken) {
+                                    $Upload = Invoke-WebRequest -Uri "$PlexUrl/library/metadata/$($entry.ratingkey)/posters?X-Plex-Token=$PlexToken" -Method Post -Headers $extraPlexHeaders -Body $fileContent -ContentType 'application/octet-stream'
+                                }
+                                Else {
+                                    $Upload = Invoke-WebRequest -Uri "$PlexUrl/library/metadata/$($entry.ratingkey)/posters?" -Method Post -Headers $extraPlexHeaders -Body $fileContent -ContentType 'application/octet-stream'
+                                }
+                                Write-Entry -Subtext "Artwork uploaded successfully..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                                $UploadCount++
+                            }
+                        }
+                        catch {
+                            Write-Entry -Subtext "Could not upload Artwork to plex, Error Message: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            $errorCount++
+                        }
+                        if (Test-Path $PosterImage -ErrorAction SilentlyContinue) {
+                            Remove-Item -LiteralPath $PosterImage | Out-Null
+                            Write-Entry -Message "Deleting Temp Image: $PosterImage" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                        }
+                    }
+                    Else {
+                        if ($show_skipped -eq 'true' ) {
+                            Write-Entry -Subtext "Already exists: $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                        }
                     }
                 }
             }
@@ -14180,8 +14333,37 @@ else {
                     }
                 }
                 else {
-                    if ($show_skipped -eq 'true' ) {
-                        Write-Entry -Subtext "Already exists: $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                    if ($global:UploadExistingAssets -eq 'true') {
+                        Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                        try {
+                            GetPlexArtwork -Type " $Titletext Artwork." -ArtUrl $Arturl -TempImage $backgroundImage
+                            if ($global:PlexartworkDownloaded -eq 'true'){
+                                Write-Entry -Subtext "Uploading Existing Artwork for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                $fileContent = [System.IO.File]::ReadAllBytes($backgroundImageoriginal)
+                                if ($PlexToken) {
+                                    $Upload = Invoke-WebRequest -Uri "$PlexUrl/library/metadata/$($entry.ratingkey)/posters?X-Plex-Token=$PlexToken" -Method Post -Headers $extraPlexHeaders -Body $fileContent -ContentType 'application/octet-stream'
+                                }
+                                Else {
+                                    $Upload = Invoke-WebRequest -Uri "$PlexUrl/library/metadata/$($entry.ratingkey)/posters?" -Method Post -Headers $extraPlexHeaders -Body $fileContent -ContentType 'application/octet-stream'
+                                }
+                                Write-Entry -Subtext "Artwork uploaded successfully..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                                $UploadCount++
+                            }
+                        }
+                        catch {
+                            Write-Entry -Subtext "Could not upload Artwork to plex, Error Message: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            $errorCount++
+                        }
+                        if (Test-Path $backgroundImage -ErrorAction SilentlyContinue) {
+                            Remove-Item -LiteralPath $backgroundImage | Out-Null
+                            Write-Entry -Message "Deleting Temp Image: $backgroundImage" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                        }
+                    }
+                    Else {
+                        if ($show_skipped -eq 'true' ) {
+                            Write-Entry -Subtext "Already exists: $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                        }
                     }
                 }
             }
@@ -14618,8 +14800,37 @@ else {
                         }
                     }
                     else {
-                        if ($show_skipped -eq 'true' ) {
-                            Write-Entry -Subtext "Already exists: $SeasonImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                        if ($global:UploadExistingAssets -eq 'true') {
+                            Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                            try {
+                                GetPlexArtwork -Type " $Titletext | $global:season Artwork." -ArtUrl $Arturl -TempImage $SeasonImage
+                                if ($global:PlexartworkDownloaded -eq 'true'){
+                                    Write-Entry -Subtext "Uploading Existing Artwork for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                    $fileContent = [System.IO.File]::ReadAllBytes($SeasonImageoriginal)
+                                    if ($PlexToken) {
+                                        $Upload = Invoke-WebRequest -Uri "$PlexUrl/library/metadata/$($global:SeasonRatingKey)/posters?X-Plex-Token=$PlexToken" -Method Post -Headers $extraPlexHeaders -Body $fileContent -ContentType 'application/octet-stream'
+                                    }
+                                    Else {
+                                        $Upload = Invoke-WebRequest -Uri "$PlexUrl/library/metadata/$($global:SeasonRatingKey)/posters?" -Method Post -Headers $extraPlexHeaders -Body $fileContent -ContentType 'application/octet-stream'
+                                    }
+                                    Write-Entry -Subtext "Artwork uploaded successfully..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                                    $UploadCount++
+                                }
+                            }
+                            catch {
+                                Write-Entry -Subtext "Could not upload Artwork to plex, Error Message: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                $errorCount++
+                            }
+                            if (Test-Path $SeasonImage -ErrorAction SilentlyContinue) {
+                                Remove-Item -LiteralPath $SeasonImage | Out-Null
+                                Write-Entry -Message "Deleting Temp Image: $SeasonImage" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                            }
+                        }
+                        Else {
+                            if ($show_skipped -eq 'true' ) {
+                                Write-Entry -Subtext "Already exists: $SeasonImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                            }
                         }
                     }
                 }
@@ -15086,8 +15297,37 @@ else {
 
                                     }
                                     else {
-                                        if ($show_skipped -eq 'true' ) {
-                                            Write-Entry -Subtext "Already exists: $EpisodeImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                                        if ($global:UploadExistingAssets -eq 'true') {
+                                            Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                                            try {
+                                                GetPlexArtwork -Type " $Titletext | $global:FileNaming Artwork." -ArtUrl $Arturl -TempImage $EpisodeImage
+                                                if ($global:PlexartworkDownloaded -eq 'true'){
+                                                    Write-Entry -Subtext "Uploading Existing Artwork for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                    $fileContent = [System.IO.File]::ReadAllBytes($EpisodeImageoriginal)
+                                                    if ($PlexToken) {
+                                                        $Upload = Invoke-WebRequest -Uri "$PlexUrl/library/metadata/$($global:episode_ratingkey)/posters?X-Plex-Token=$PlexToken" -Method Post -Headers $extraPlexHeaders -Body $fileContent -ContentType 'application/octet-stream'
+                                                    }
+                                                    Else {
+                                                        $Upload = Invoke-WebRequest -Uri "$PlexUrl/library/metadata/$($global:episode_ratingkey)/posters?" -Method Post -Headers $extraPlexHeaders -Body $fileContent -ContentType 'application/octet-stream'
+                                                    }
+                                                    Write-Entry -Subtext "Artwork uploaded successfully..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                                                    $UploadCount++
+                                                }
+                                            }
+                                            catch {
+                                                Write-Entry -Subtext "Could not upload Artwork to plex, Error Message: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                                $errorCount++
+                                            }
+                                            if (Test-Path $EpisodeImage -ErrorAction SilentlyContinue) {
+                                                Remove-Item -LiteralPath $EpisodeImage | Out-Null
+                                                Write-Entry -Message "Deleting Temp Image: $EpisodeImage" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                            }
+                                        }
+                                        Else {
+                                            if ($show_skipped -eq 'true' ) {
+                                                Write-Entry -Subtext "Already exists: $EpisodeImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                                            }
                                         }
                                     }
                                 }
@@ -15164,16 +15404,16 @@ else {
                                 }
                                 Else {
                                     $checkedItems += $hashtestpath
+                                    if ($PlexToken) {
+                                        $Arturl = $plexurl + $global:PlexTitleCardUrl + "?X-Plex-Token=$PlexToken"
+                                    }
+                                    Else {
+                                        $Arturl = $plexurl + $global:PlexTitleCardUrl
+                                    }
                                     if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
                                         if (!$Episodepostersearchtext) {
                                             Write-Entry -Message "Start Title Card Search for: $global:show_name - $global:SeasonEPNumber" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                             $Episodepostersearchtext = $true
-                                        }
-                                        if ($PlexToken) {
-                                            $Arturl = $plexurl + $global:PlexTitleCardUrl + "?X-Plex-Token=$PlexToken"
-                                        }
-                                        Else {
-                                            $Arturl = $plexurl + $global:PlexTitleCardUrl
                                         }
                                         # now search for TitleCards
                                         if ($global:FavProvider -eq 'TMDB') {
@@ -15547,8 +15787,37 @@ else {
 
                                     }
                                     else {
-                                        if ($show_skipped -eq 'true' ) {
-                                            Write-Entry -Subtext "Already exists: $EpisodeImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                                        if ($global:UploadExistingAssets -eq 'true') {
+                                            Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                                            try {
+                                                GetPlexArtwork -Type " $Titletext | $global:FileNaming Artwork." -ArtUrl $Arturl -TempImage $EpisodeImage
+                                                if ($global:PlexartworkDownloaded -eq 'true'){
+                                                    Write-Entry -Subtext "Uploading Existing Artwork for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                    $fileContent = [System.IO.File]::ReadAllBytes($EpisodeImageoriginal)
+                                                    if ($PlexToken) {
+                                                        $Upload = Invoke-WebRequest -Uri "$PlexUrl/library/metadata/$($global:episode_ratingkey)/posters?X-Plex-Token=$PlexToken" -Method Post -Headers $extraPlexHeaders -Body $fileContent -ContentType 'application/octet-stream'
+                                                    }
+                                                    Else {
+                                                        $Upload = Invoke-WebRequest -Uri "$PlexUrl/library/metadata/$($global:episode_ratingkey)/posters?" -Method Post -Headers $extraPlexHeaders -Body $fileContent -ContentType 'application/octet-stream'
+                                                    }
+                                                    Write-Entry -Subtext "Artwork uploaded successfully..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                                                    $UploadCount++
+                                                }
+                                            }
+                                            catch {
+                                                Write-Entry -Subtext "Could not upload Artwork to plex, Error Message: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                                $errorCount++
+                                            }
+                                            if (Test-Path $EpisodeImage -ErrorAction SilentlyContinue) {
+                                                Remove-Item -LiteralPath $EpisodeImage | Out-Null
+                                                Write-Entry -Message "Deleting Temp Image: $EpisodeImage" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                            }
+                                        }
+                                        Else {
+                                            if ($show_skipped -eq 'true' ) {
+                                                Write-Entry -Subtext "Already exists: $EpisodeImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                                            }
                                         }
                                     }
                                 }
@@ -15686,6 +15955,9 @@ else {
     $seconds = $executionTime.Seconds
     $FormattedTimespawn = $hours.ToString() + "h " + $minutes.ToString() + "m " + $seconds.ToString() + "s "
     Write-Entry -Message "Finished, Total images created: $posterCount" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+    if ($UploadCount -ge '1') {
+        Write-Entry -Message "Finished, Total images Uploaded: $UploadCount" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+    }
     if ($posterCount -ge '1') {
         Write-Entry -Message "Show/Movie Posters created: $($posterCount-$SeasonCount-$BackgroundCount-$EpisodeCount)| Season images created: $SeasonCount | Background images created: $BackgroundCount | TitleCards created: $EpisodeCount" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
     }
