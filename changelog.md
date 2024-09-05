@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## [1.8.1](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.1) - 2024-09-05 11:41:02
+
+## 🐛 Fixes
+
+- Emby/Jellyfin root folder
+	- fixing that the rootfolder also matches Lib Name like in Plex, to be able to use 1 asset folder.
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.8.0...1.8.1
+
+### Bug Fixes
+
+- general:
+  - Emby/Jellyfin root folder ([c4de8ee](https://github.com/fscorrupt/Posterizarr/commit/c4de8eef692c1e748aa58ec8fa8e34a19bb2bc2e))
+
 ## [1.8.0](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.0) - 2024-09-05 07:59:24
 
 ## [1.7.1](https://github.com/fscorrupt/Posterizarr/releases/tag/1.7.1) - 2024-09-05 04:57:13
