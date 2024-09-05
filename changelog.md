@@ -2,18 +2,6 @@
 
 ## [1.8.0](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.0) - 2024-09-05 07:59:24
 
-## 🚇 Added
-
-- Add Ability to Upload existing Artwork to Plex/Jellyfin/Emby
-   - Handy on Server switches or when all metadata is gone
-
-**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.7.1...1.8.0
-
-### Feature
-
-- general:
-  - Add Upload of existing Artwork ([2c008ab](https://github.com/fscorrupt/Posterizarr/commit/2c008ab1344fcdf24bfd6c0179558dfc5c49ca57))
-
 ## [1.7.1](https://github.com/fscorrupt/Posterizarr/releases/tag/1.7.1) - 2024-09-05 04:57:13
 
 ## [1.7.0](https://github.com/fscorrupt/Posterizarr/releases/tag/1.7.0) - 2024-09-04 12:28:05
