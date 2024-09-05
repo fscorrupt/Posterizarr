@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## [1.7.1](https://github.com/fscorrupt/Posterizarr/releases/tag/1.7.1) - 2024-09-05 04:57:13
+
+## 🐛 Fixes
+
+- Fix multiple media servers enabled
+	- exit script if true
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.7.0...1.7.1
+
+### Bug Fixes
+
+- general:
+  - Script exit on multiple Media Servers ([9b7e1b2](https://github.com/fscorrupt/Posterizarr/commit/9b7e1b2232533f6036dc7829243feb00b3cf6db0))
+
 ## [1.7.0](https://github.com/fscorrupt/Posterizarr/releases/tag/1.7.0) - 2024-09-04 12:28:05
 
 ## [1.6.3](https://github.com/fscorrupt/Posterizarr/releases/tag/1.6.3) - 2024-09-04 08:53:29
