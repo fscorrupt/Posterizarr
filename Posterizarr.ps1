@@ -5185,10 +5185,10 @@ function MassDownloadPlexArtwork {
             }
 
             if ($ImagesCleared -ge '1') {
-                Write-Entry -Subtext "Images Cleard: $ImagesCleared" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                Write-Entry -Subtext "Images Cleared: $ImagesCleared" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
             }
             Else {
-                Write-Entry -Subtext "Images Cleard: 0" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                Write-Entry -Subtext "Images Cleared: 0" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
             }
         }
         if ($PathsCleared -ge '1') {
@@ -13607,10 +13607,10 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                 }
 
                 if ($ImagesCleared -ge '1') {
-                    Write-Entry -Subtext "Images Cleard: $ImagesCleared" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                    Write-Entry -Subtext "Images Cleared: $ImagesCleared" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                 }
                 Else {
-                    Write-Entry -Subtext "Images Cleard: 0" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                    Write-Entry -Subtext "Images Cleared: 0" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                 }
             }
             if ($PathsCleared -ge '1') {
@@ -17657,10 +17657,10 @@ else {
                 }
 
                 if ($ImagesCleared -ge '1') {
-                    Write-Entry -Subtext "Images Cleard: $ImagesCleared" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                    Write-Entry -Subtext "Images Cleared: $ImagesCleared" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                 }
                 Else {
-                    Write-Entry -Subtext "Images Cleard: 0" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                    Write-Entry -Subtext "Images Cleared: 0" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                 }
             }
             if ($PathsCleared -ge '1') {
