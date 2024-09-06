@@ -2,23 +2,6 @@
 
 ## [1.8.2](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.2) - 2024-09-06 11:47:39
 
-## 🚇 Added
-
-- Add an Backup switch
-	- You can now backup all your Assets from Plex.	
-
-## 🐛 Fixes
-
-- Emby/Jellyfin query issue
-	- fixed an issue where the query had no title or provider IDs
-
-**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.8.1...1.8.2
-
-### Feature
-
-- general:
-  - Add Backup Swich ([888f2c8](https://github.com/fscorrupt/Posterizarr/commit/888f2c8afd16912ad17917adef2b3301e0204643))
-
 ## [1.8.1](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.1) - 2024-09-05 11:41:02
 
 ## [1.8.0](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.0) - 2024-09-05 07:59:24
