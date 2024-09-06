@@ -70,6 +70,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
 - **Upload to Plex**: If you do not have Kometa, posterizarr can directly Upload that Artwork to Plex.
 - **Upload to Jellyfin**: Posterizarr can directly upload the artwork to Jellyfin.
 - **Upload to Emby**: Posterizarr can directly upload the artwork to Emby.
+- **Backup**: Downloading every Artwork from Plex to a backupshare (With kometa folder structure)
 - **Resizing**: It automatically resizes every poster to 2000x3000.
 - **Overlays**: If you choose to, downloaded images will automatically have borders, text, and a gradient overlay applied.
   - Here are some gradient overlays that you can use instead of the default one [gradient-zip](gradient_background_poster_overlays.zip)
