@@ -41,6 +41,7 @@
   },
   "PrerequisitePart":{
     "AssetPath": "P:\\assets",
+    "BackupPath": "P:\\assetsbackup",
     "PlexUpload": "false",
     "show_skipped":"false",
     "magickinstalllocation": "C:\\PosterTemp\\ImageMagickPortable",

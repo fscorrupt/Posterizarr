@@ -70,6 +70,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
 - **Upload to Plex**: If you do not have Kometa, posterizarr can directly Upload that Artwork to Plex.
 - **Upload to Jellyfin**: Posterizarr can directly upload the artwork to Jellyfin.
 - **Upload to Emby**: Posterizarr can directly upload the artwork to Emby.
+- **Backup**: Downloading every Artwork from Plex to a backupshare (With kometa folder structure)
 - **Resizing**: It automatically resizes every poster to 2000x3000.
 - **Overlays**: If you choose to, downloaded images will automatically have borders, text, and a gradient overlay applied.
   - Here are some gradient overlays that you can use instead of the default one [gradient-zip](gradient_background_poster_overlays.zip)
@@ -179,6 +180,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     <br>
 
     - `AssetPath`: Path to store generated posters.
+    - `BackupPath`: Path to store/download Plex posters.
     - `PlexUpload`: If set to `true`, Posterizarr will directly upload the artwork to Plex (handy if you do not use Kometa).
     - `show_skipped`: If set to `true`, verbose logging of already created assets will be displayed; otherwise, they will be silently skipped - On large libraries, this may appear as if the script is hanging.
     - `magickinstalllocation`: Path to ImageMagick installation location where `magick.exe` is located (Otherwise leave value as `"./magick"`)
@@ -342,6 +344,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
 - **Automatic Mode**: Execute the script without any parameters to generate posters for your entire Plex library.
 - **Testing Mode**: Run the script with the `-Testing` switch to create Test posters before you start using it.
 - **Manual Mode**: Run the script with the `-Manual` switch to create custom posters manually.
+- **Backup Mode**: Run the script with the `-Backup` switch to download every artwork from plex (only those what are set to `true` in config)
 
 > [!NOTE]
 >- Ensure PowerShell execution policy allows script execution.
@@ -534,6 +537,17 @@ Run the script with the `-Manual` switch:
 .\Posterizarr.ps1 -Manual
 ```
 Follow the prompts to enter the source picture path (Container needs Access to it), media folder name, and movie/show title to manually create a custom poster.
+
+### Backup Mode
+
+Run the script with the `-Backup` flag. In this mode, the script will download every artwork you have in plex, using the values specified in the `config.json` file.
+
+> [!TIP]
+>This is handy for creating a backup or if you want an second assetfolder with kometa/tcm EXIF data for jellyfin/emby.
+
+```powershell
+.\Posterizarr.ps1 -Backup
+```
 
 ## Platforms & Tools
 
