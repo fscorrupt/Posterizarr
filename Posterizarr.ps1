@@ -6012,7 +6012,7 @@ if ($AutoUpdateIM -eq 'true' -and $global:OSType -ne "Docker" -and $LatestImagem
 }
 
 # Create directories if they don't exist
-foreach ($path in $LogsPath, $TempPath, $TestPath, $AssetPath, $BackupPath) {
+foreach ($path in $LogsPath, $TempPath, $TestPath, $AssetPath) {
     if (!(Test-Path $path)) {
         if ($global:OSType -ne "Win32NT" -and $path -eq 'P:\assets') {
             Write-Entry -Message 'Please change default asset Path...' -Path $configLogging -Color Red -log Error
