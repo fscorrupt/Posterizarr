@@ -549,6 +549,24 @@ Run the script with the `-Backup` flag. In this mode, the script will download e
 .\Posterizarr.ps1 -Backup
 ```
 
+### Sync Modes
+> [!IMPORTANT]
+> The script calculates the hash of the artwork from both servers to determine if they differ, and only if they do it gets synced.
+#### Jellyfin
+Run the script with the `-SyncJelly` flag. In this mode, the script will sync every artwork you have in plex to jellyfin.
+
+```powershell
+.\Posterizarr.ps1 -SyncJelly
+```
+#### Emby
+Run the script with the `-SyncEmby` flag. In this mode, the script will sync every artwork you have in plex to emby.
+
+```powershell
+.\Posterizarr.ps1 -SyncEmby
+```
+> [!TIP]
+>This is handy if you want to run the sync after a kometa run, then you have kometa ovlerayed images in jelly/emby
+
 ## Platforms & Tools
 
 ### Docker
