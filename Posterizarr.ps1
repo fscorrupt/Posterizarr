@@ -5528,6 +5528,11 @@ function SyncPlexArtwork {
         $remoteImageBytes = $imageResponse.Content
         $remoteImageContentType = $imageResponse.headers.'Content-Type'
 
+        # If content type is an array, select the first element
+        if ($remoteImageContentType -is [System.Array]) {
+            $remoteImageContentType = $remoteImageContentType[0]
+        }
+
         # Calculate the hash of the remote image
         $remoteImageHash = GetHash -imageBytes $remoteImageBytes
 
