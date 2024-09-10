@@ -11682,6 +11682,10 @@ Elseif ($SyncJelly -or $SyncEmby){
             $errorCount++
         }
     }
+    # Clear Running File
+    if (Test-Path $CurrentlyRunning) {
+        Remove-Item -LiteralPath $CurrentlyRunning | out-null
+    }
 }
 Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaServer -eq 'true') {
         $posterCount = 0
