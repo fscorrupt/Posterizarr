@@ -10896,18 +10896,17 @@ Elseif ($Backup) {
 }
 Elseif ($SyncJelly -or $SyncEmby){
     [xml]$Libs = CheckPlexAccess -PlexUrl $PlexUrl -PlexToken $PlexToken
+    $LibstoExclude = $config.PlexPart.LibstoExclude
 
     if ($SyncJelly) {
         # Check Jellyfin now:
         CheckJellyfinAccess -JellyfinUrl $JellyfinUrl -JellyfinApi $JellyfinAPIKey
-        $LibstoExclude = $config.JellyfinPart.LibstoExclude
         $OtherMediaServerUrl = $JellyfinUrl
         $OtherMediaServerApiKey = $JellyfinAPIKey
     }
     if ($SyncEmby) {
         # Check Emby now:
         CheckEmbyAccess -EmbyUrl $EmbyUrl -EmbyAPI $EmbyAPIKey
-        $LibstoExclude = $config.EmbyPart.LibstoExclude
         $OtherMediaServerUrl = $EmbyUrl
         $OtherMediaServerApiKey = $EmbyAPIKey
     }
