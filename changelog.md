@@ -2,16 +2,6 @@
 
 ## [1.8.4](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.4) - 2024-09-10 14:56:46
 
-## 🐛 Fixes
-- fix: season 0 bug and leftover cleanup
-
-**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.8.3...1.8.4
-
-### Bug Fixes
-
-- general:
-  - Season 0 Sync & Remove leftovers ([d01b538](https://github.com/fscorrupt/Posterizarr/commit/d01b538043ff54e7c80814fe9d1ea74dbd8243d8))
-
 ## [1.8.3](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.3) - 2024-09-10 11:40:56
 
 ## [1.8.2](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.2) - 2024-09-06 11:47:39
