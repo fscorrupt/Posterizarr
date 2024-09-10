@@ -11,7 +11,7 @@
     [switch]$SyncEmby
 )
 
-$CurrentScriptVersion = "1.8.3"
+$CurrentScriptVersion = "1.8.4"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -5775,7 +5775,6 @@ $UsePlex = $config.PlexPart.UsePlex.tolower()
 if ($UsePlex -eq 'true') {
     $LibstoExclude = $config.PlexPart.LibstoExclude
     $global:UploadExistingAssets = $config.PlexPart.UploadExistingAssets.tolower()
-    $PlexIsSource = 'false'
 }
 
 # Jellyfin Part
@@ -5787,7 +5786,6 @@ if ($UseJellyfin -eq 'true') {
     $UseOtherMediaServer = $UseJellyfin
     $OtherMediaServerApiKey = $JellyfinAPIKey
     $global:UploadExistingAssets = $config.JellyfinPart.UploadExistingAssets.tolower()
-    $PlexIsSource = $config.JellyfinPart.PlexIsSource.tolower()
 }
 
 # Emby Part
@@ -5799,7 +5797,6 @@ if ($UseEmby -eq 'true') {
     $UseOtherMediaServer = $UseEmby
     $OtherMediaServerApiKey = $EmbyAPIKey
     $global:UploadExistingAssets = $config.EmbyPart.UploadExistingAssets.tolower()
-    $PlexIsSource = $config.EmbyPart.PlexIsSource.tolower()
 }
 
 # Count how many media servers are enabled
@@ -6203,7 +6200,7 @@ foreach ($file in $files) {
 CheckJsonPaths -font $font -RTLfont $RTLfont -backgroundfont $backgroundfont -titlecardfont $titlecardfont -Posteroverlay $Posteroverlay -Backgroundoverlay $Backgroundoverlay -titlecardoverlay $titlecardoverlay -Seasonoverlay $Seasonoverlay
 
 # Check Plex now:
-if ($PlexIsSource -eq 'false' -and !$SyncJelly -and !$SyncEmby) {
+if (!$SyncJelly -and !$SyncEmby) {
     if ($UsePlex -eq 'true') {
         [xml]$Libs = CheckPlexAccess -PlexUrl $PlexUrl -PlexToken $PlexToken
     }
@@ -6308,14 +6305,6 @@ $extraPlexHeaders = @{
 }
 
 #### MAIN SCRIPT START ####
-if ($PlexIsSource -eq 'true' -and !$SyncJelly -and !$SyncEmb) {
-    $global:PlexIsArtworkSource = 'true'
-    [xml]$Libs = CheckPlexAccess -PlexUrl $PlexUrl -PlexToken $PlexToken
-}
-Else {
-    $global:PlexIsArtworkSource = 'false'
-}
-$conditionProcessed = $false
 if ($Manual) {
     Write-Entry -Message "Manual Poster Creation Started" -Path $global:ScriptRoot\Logs\Manuallog.log -Color DarkMagenta -log Info
     $PicturePath = Read-Host "Enter path to source picture"
@@ -11487,6 +11476,11 @@ Elseif ($SyncJelly -or $SyncEmby){
     $OtherAllShows = $OtherLibraries | Where-Object { $_.'Library Type' -eq 'Series' }
     $OtherAllMovies = $OtherLibraries | Where-Object { $_.'Library Type' -eq 'Movie' }
 
+    $OtherEpisodedata | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\OtherEpisodedata.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
+    $OtherLibraries | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\OtherLibraries.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
+    $Episodedata | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\Episodedata.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
+    $Libraries | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\Libraries.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
+
     # START HERE
     Write-Entry -Message "Starting arwork sync now, this can take a while..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
     Write-Entry -Message "Starting movie arwork sync part..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
@@ -11601,10 +11595,9 @@ Elseif ($SyncJelly -or $SyncEmby){
             }
             # Now we can start the Season Poster Part
             if ($global:SeasonPosters -eq 'true') {
-                $global:seasonNames = $entry.SeasonNames -split ','
                 $global:seasonNumbers = $entry.seasonNumbers -split ','
                 $global:PlexSeasonUrls = $entry.PlexSeasonUrls -split ','
-                for ($i = 0; $i -lt $global:seasonNames.Count; $i++) {
+                for ($i = 0; $i -lt $global:seasonNumbers.Count; $i++) {
                     $global:SeasonNumber = $global:seasonNumbers[$i]
                     $global:PlexSeasonUrl = $global:PlexSeasonUrls[$i]
 
@@ -11616,7 +11609,7 @@ Elseif ($SyncJelly -or $SyncEmby){
                     }
 
                     $matchingSeason = $OtherEpisodedata| Where-Object {
-                        ($_.Title -eq $entry.Title -or $_.originalTitle -eq $entry.originalTitle) -and
+                        ($_.'Show Name'  -eq $entry.Title -or $_.'Show Name' -eq $entry.originalTitle -or $_."Show Original Name" -eq $entry.originalTitle -or $_."Show Original Name" -eq $entry.Title) -and
                         $_."Library Name" -eq $entry."Library Name" -and
                         $_."Season Number" -eq $global:SeasonNumber -and (
                             $_.TmdbId -eq $entry.TmdbId -or
