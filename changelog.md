@@ -1,5 +1,24 @@
 # CHANGELOG
 
+## [1.8.3](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.3) - 2024-09-10 11:40:56
+
+## 🚇 Added
+
+- Add a Sync switch for Jelly/Emby
+	- with this you can sync all artworks from plex to jelly/emby (hash gets compared)
+
+## 🐛 Fixes
+
+* Fixed spelling errors by @kevbentz in https://github.com/fscorrupt/Posterizarr/pull/140
+
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.8.2...1.8.3
+
+### Feature
+
+- general:
+  - Add a Sync switch for Jelly/Emby ([a80507f](https://github.com/fscorrupt/Posterizarr/commit/a80507fbcf57b4a46dde4873d76c944a9b83e2ed))
+
 ## [1.8.2](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.2) - 2024-09-06 11:47:39
 
 ## [1.8.1](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.1) - 2024-09-05 11:41:02
