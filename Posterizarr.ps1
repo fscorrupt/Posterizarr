@@ -6,10 +6,12 @@
     [string]$parentratingkey,
     [string]$grandparentratingkey,
     [string]$mediatype,
-    [switch]$Backup
+    [switch]$Backup,
+    [switch]$SyncJelly,
+    [switch]$SyncEmby
 )
 
-$CurrentScriptVersion = "1.8.2"
+$CurrentScriptVersion = "1.8.3"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -46,6 +48,19 @@ function Get-CPUModel {
         $cpuModel = 'Unknown'
     }
     return $cpuModel
+}
+function GetHash {
+    param ([byte[]]$imageBytes)
+
+    # Create a hash algorithm instance (SHA256)
+    $hashAlgorithm = [System.Security.Cryptography.SHA256]::Create()
+
+    # Compute the hash from the byte array
+    $hashBytes = $hashAlgorithm.ComputeHash($imageBytes)
+
+    # Convert the hash bytes to a readable hex string
+    $hashString = [BitConverter]::ToString($hashBytes) -replace "-", ""
+    return $hashString
 }
 function Set-OSTypeAndScriptRoot {
     if ($env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker*') {
@@ -3764,7 +3779,7 @@ function CheckEmbyAccess {
     if ($EmbyAPI) {
         Write-Entry -Message "Checking Emby access now..." -Path $configLogging -Color White -log Info
         try {
-            $response = Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/System/Info?api_key=$OtherMediaServerApiKey" -ErrorAction Stop
+            $response = Invoke-RestMethod -Method Get -Uri "$EmbyUrl/System/Info?api_key=$EmbyAPI" -ErrorAction Stop
             if ($response.version) {
                 Write-Entry -Subtext "Emby access is working..." -Path $configLogging -Color Green -log Info
             }
@@ -5498,6 +5513,67 @@ function MassDownloadPlexArtwork {
     }
 
 }
+function SyncPlexArtwork {
+    param(
+        [string]$ArtUrl,
+        [string]$DestUrl,
+        [string]$imageType,
+        [string]$title
+    )
+    # Get the remote image and calculate its hash
+    $imageResponse = Invoke-WebRequest -Uri $ArtUrl -Headers $extraPlexHeaders -UseBasicParsing
+
+    if ($imageResponse.StatusCode -eq 200) {
+        # Read the image content as bytes directly from the response
+        $remoteImageBytes = $imageResponse.Content
+        $remoteImageContentType = $imageResponse.headers.'Content-Type'
+
+        # Calculate the hash of the remote image
+        $remoteImageHash = GetHash -imageBytes $remoteImageBytes
+
+        # Get the current image from Emby/Jellyfin (if available) and calculate its hash
+        $existingImageResponse = Invoke-WebRequest -Uri $DestUrl -UseBasicParsing
+
+        if ($existingImageResponse.StatusCode -eq 200) {
+            # Read the existing image as bytes
+            $existingImageBytes = $existingImageResponse.Content
+
+            # Calculate the hash of the existing image
+            $existingImageHash = GetHash -imageBytes $existingImageBytes
+
+            # Compare the hashes
+            if ($remoteImageHash -ne $existingImageHash) {
+                Write-Entry -Message "Push new Artwork to Jelly/Emby - $title" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                if ($imageType -eq 'Backdrop'){
+                    # Make the API request to delete the image
+                    try {
+                        $response = Invoke-RestMethod -Uri $DestUrl -Method Delete -ErrorAction Stop
+                    }
+                    catch {
+                        Write-Entry -Subtext "Error deleting image: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    }
+                }
+                # Convert the remote image bytes to base64
+                $imageBase64 = [Convert]::ToBase64String($remoteImageBytes)
+
+                # Make the API request to upload the image
+                try {
+                    $response = Invoke-RestMethod -Uri $DestUrl -Method Post -Body $imageBase64 -ContentType $remoteImageContentType -ErrorAction Stop
+                    Write-Entry -Subtext "Image uploaded successfully." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                }
+                catch {
+                    Write-Entry -Subtext "Error uploading image: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                }
+            }
+        }
+        else {
+            Write-Entry -Subtext "Error retrieving the existing image from the media server." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        }
+    }
+    else {
+        Write-Entry -Subtext "Error retrieving the image from the URL." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+    }
+}
 #### FUNCTION END ####
 
 ##### PRE-START #####
@@ -6122,7 +6198,7 @@ foreach ($file in $files) {
 CheckJsonPaths -font $font -RTLfont $RTLfont -backgroundfont $backgroundfont -titlecardfont $titlecardfont -Posteroverlay $Posteroverlay -Backgroundoverlay $Backgroundoverlay -titlecardoverlay $titlecardoverlay -Seasonoverlay $Seasonoverlay
 
 # Check Plex now:
-if ($PlexIsSource -eq 'false') {
+if ($PlexIsSource -eq 'false' -and !$SyncJelly -and !$SyncEmby) {
     if ($UsePlex -eq 'true') {
         [xml]$Libs = CheckPlexAccess -PlexUrl $PlexUrl -PlexToken $PlexToken
     }
@@ -6227,7 +6303,7 @@ $extraPlexHeaders = @{
 }
 
 #### MAIN SCRIPT START ####
-if ($PlexIsSource -eq 'true') {
+if ($PlexIsSource -eq 'true' -and !$SyncJelly -and !$SyncEmb) {
     $global:PlexIsArtworkSource = 'true'
     [xml]$Libs = CheckPlexAccess -PlexUrl $PlexUrl -PlexToken $PlexToken
 }
@@ -10818,6 +10894,798 @@ Elseif ($Tautulli) {
 Elseif ($Backup) {
     MassDownloadPlexArtwork
 }
+Elseif ($SyncJelly -or $SyncEmby){
+    [xml]$Libs = CheckPlexAccess -PlexUrl $PlexUrl -PlexToken $PlexToken
+
+    if ($SyncJelly) {
+        # Check Jellyfin now:
+        CheckJellyfinAccess -JellyfinUrl $JellyfinUrl -JellyfinApi $JellyfinAPIKey
+        $LibstoExclude = $config.JellyfinPart.LibstoExclude
+        $OtherMediaServerUrl = $JellyfinUrl
+        $OtherMediaServerApiKey = $JellyfinAPIKey
+    }
+    if ($SyncEmby) {
+        # Check Emby now:
+        CheckEmbyAccess -EmbyUrl $EmbyUrl -EmbyAPI $EmbyAPIKey
+        $LibstoExclude = $config.EmbyPart.LibstoExclude
+        $OtherMediaServerUrl = $EmbyUrl
+        $OtherMediaServerApiKey = $EmbyAPIKey
+    }
+
+    Write-Entry -Message "Query plex libs..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+    $Libsoverview = @()
+    foreach ($lib in $Libs.MediaContainer.Directory) {
+        if ($lib.title -notin $LibstoExclude) {
+            $libtemp = New-Object psobject
+            $libtemp | Add-Member -MemberType NoteProperty -Name "ID" -Value $lib.key
+            $libtemp | Add-Member -MemberType NoteProperty -Name "Name" -Value $lib.title
+            $libtemp | Add-Member -MemberType NoteProperty -Name "Language" -Value $lib.language
+
+            # Check if $lib.location.path is an array
+            if ($lib.location.path -is [array]) {
+                $paths = $lib.location.path -join ',' # Convert array to string
+                $libtemp | Add-Member -MemberType NoteProperty -Name "Path" -Value $paths
+            }
+            else {
+                $libtemp | Add-Member -MemberType NoteProperty -Name "Path" -Value $lib.location.path
+            }
+            # Check if Libname has chars we cant use for Folders
+            if ($lib.title -notmatch "^[^\/:*?`"<>\|\\}]+$") {
+                Write-Entry -Message  "Lib: '$($lib.title)' contains invalid characters." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "Please rename your lib and remove all chars that are listed here: '/, :, *, ?, `", <, >, |, \, or }'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                Exit
+            }
+            $Libsoverview += $libtemp
+        }
+    }
+    if ($($Libsoverview.count) -lt 1) {
+        Write-Entry -Subtext "0 libraries were found. Are you on the correct Plex server?" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        Exit
+    }
+    Write-Entry -Subtext "Found '$($Libsoverview.count)' libs and '$($LibstoExclude.count)' are excluded..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+    $IncludedLibraryNames = $Libsoverview.Name -join ', '
+    Write-Entry -Subtext "Included Libraries: $IncludedLibraryNames" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+    Write-Entry -Message "Query all items from all Libs, this can take a while..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+    $Libraries = @()
+    Foreach ($Library in $Libsoverview) {
+        if ($Library.Name -notin $LibstoExclude) {
+            $PlexHeaders = @{}
+            if ($PlexToken) {
+                $PlexHeaders['X-Plex-Token'] = $PlexToken
+            }
+
+            # Create a parent XML document
+            $Libcontent = New-Object -TypeName System.Xml.XmlDocument
+            $mediaContainerNode = $Libcontent.CreateElement('MediaContainer')
+            $Libcontent.AppendChild($mediaContainerNode) | Out-Null
+
+            # Initialize variables for pagination
+            $searchsize = 0
+            $totalContentSize = 1
+
+            # Loop until all content is retrieved
+            do {
+                # Set headers for the current request
+                $PlexHeaders['X-Plex-Container-Start'] = $searchsize
+                $PlexHeaders['X-Plex-Container-Size'] = '1000'
+
+                # Fetch content from Plex server
+                $response = Invoke-WebRequest -Uri "$PlexUrl/library/sections/$($Library.ID)/all" -Headers $PlexHeaders
+
+                # Convert response content to XML
+                [xml]$additionalContent = $response.Content
+
+                # Get total content size if not retrieved yet
+                if ($totalContentSize -eq 1) {
+                    $totalContentSize = $additionalContent.MediaContainer.totalSize
+                }
+
+                # Import and append video nodes to the parent XML document
+                $contentquery = if ($additionalContent.MediaContainer.video) {
+                    'video'
+                }
+                else {
+                    'Directory'
+                }
+                foreach ($videoNode in $additionalContent.MediaContainer.$contentquery) {
+                    $importedNode = $Libcontent.ImportNode($videoNode, $true)
+                    [void]$mediaContainerNode.AppendChild($importedNode)
+                }
+
+                # Update search size for next request
+                $searchsize += [int]$additionalContent.MediaContainer.Size
+            } until ($searchsize -ge $totalContentSize)
+            if ($Libcontent.MediaContainer.video) {
+                $contentquery = 'video'
+            }
+            Else {
+                $contentquery = 'Directory'
+            }
+            foreach ($item in $Libcontent.MediaContainer.$contentquery) {
+                $extractedFolder = $null
+                $Seasondata = $null
+                if ($PlexToken) {
+                    if ($contentquery -eq 'Directory') {
+                        try {
+                            [xml]$Metadata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey)?X-Plex-Token=$PlexToken -Headers $extraPlexHeaders).content
+                            [xml]$Seasondata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey)/children?X-Plex-Token=$PlexToken -Headers $extraPlexHeaders).content
+                        }
+                        catch {
+                            Write-Entry -Subtext "Current Seasondata Plex Query: $($PlexUrl[0..10] -join '')****/library/metadata/$($item.ratingKey)/children?X-Plex-Token=$($PlexToken[0..7] -join '')****" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-Entry -Subtext "Current Metadata Plex Query: $($PlexUrl[0..10] -join '')****/library/metadata/$($item.ratingKey)?X-Plex-Token=$($PlexToken[0..7] -join '')****" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-Entry -Subtext "An error occurred during Plex query: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            $errorCount++
+                        }
+                    }
+                    Else {
+                        try {
+                            [xml]$Metadata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey)?X-Plex-Token=$PlexToken -Headers $extraPlexHeaders).content
+                        }
+                        catch {
+                            Write-Entry -Subtext "Current Metadata Plex Query: $($PlexUrl[0..10] -join '')****/library/metadata/$($item.ratingKey)?X-Plex-Token=$($PlexToken[0..7] -join '')****" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-Entry -Subtext "An error occurred during Plex query: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            $errorCount++
+                        }
+                    }
+                }
+                Else {
+                    if ($contentquery -eq 'Directory') {
+                        try {
+                            [xml]$Metadata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey) -Headers $extraPlexHeaders).content
+                            [xml]$Seasondata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey)/children? -Headers $extraPlexHeaders).content
+                        }
+                        catch {
+                            Write-Entry -Subtext "Current Seasondata Plex Query: $($PlexUrl[0..10] -join '')****/library/metadata/$($item.ratingKey)/children?" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-Entry -Subtext "Current Metadata Plex Query: $($PlexUrl[0..10] -join '')****/library/metadata/$($item.ratingKey)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-Entry -Subtext "An error occurred during Plex query: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            $errorCount++
+                        }
+                    }
+                    Else {
+                        try {
+                            [xml]$Metadata = (Invoke-WebRequest $PlexUrl/library/metadata/$($item.ratingKey) -Headers $extraPlexHeaders).content
+                        }
+                        catch {
+                            Write-Entry -Subtext "Current Metadata Plex Query: $($PlexUrl[0..10] -join '')****/library/metadata/$($item.ratingKey)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-Entry -Subtext "An error occurred during Plex query: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            $errorCount++
+                        }
+                    }
+                }
+                $metadatatemp = $Metadata.MediaContainer.$contentquery.guid.id
+                $tmdbpattern = 'tmdb://(\d+)'
+                $imdbpattern = 'imdb://tt(\d+)'
+                $tvdbpattern = 'tvdb://(\d+)'
+                if ($Metadata.MediaContainer.$contentquery.Location) {
+                    $location = $Metadata.MediaContainer.$contentquery.Location.path
+                    if ($location) {
+                        $location = $location.replace('\\?\', '')
+                    }
+                    if ($location.count -gt '1') {
+                        $location = $location[0]
+                        $MultipleVersions = $true
+                    }
+                    Else {
+                        $MultipleVersions = $false
+                    }
+                    $libpaths = $($Library.path).split(',')
+                    Write-Entry -Subtext "Plex Lib Paths before split: $($Library.path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                    Write-Entry -Subtext "Plex Lib Paths after split: $libpaths" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                    foreach ($libpath in $libpaths) {
+                        if ($location -like "$libpath/*" -or $location -like "$libpath\*") {
+                            Write-Entry -Subtext "Location: $location" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-Entry -Subtext "Libpath: $libpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            $Matchedpath = AddTrailingSlash $libpath
+                            $libpath = $Matchedpath
+                            $extractedFolder = $location.Substring($libpath.Length)
+                            if ($extractedFolder -like '*\*') {
+                                $extractedFolder = $extractedFolder.split('\')[0]
+                            }
+                            if ($extractedFolder -like '*/*') {
+                                $extractedFolder = $extractedFolder.split('/')[0]
+                            }
+                            Write-Entry -Subtext "Matchedpath: $Matchedpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-Entry -Subtext "ExtractedFolder: $extractedFolder" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            continue
+                        }
+                    }
+                }
+                Else {
+                    $location = $Metadata.MediaContainer.$contentquery.media.part.file
+                    if ($location) {
+                        $location = $location.replace('\\?\', '')
+                    }
+                    if ($location.count -gt '1') {
+                        Write-Entry -Subtext "Multi File Locations: $location" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        $location = $location[0]
+                        $MultipleVersions = $true
+                    }
+                    Else {
+                        $MultipleVersions = $false
+                    }
+                    Write-Entry -Subtext "File Location: $location" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+
+                    if ($location.length -ge '256' -and $Platform -eq 'Windows') {
+                        $CheckCharLimit = CheckCharLimit
+                        if ($CheckCharLimit -eq $false) {
+                            Write-Entry -Subtext "Skipping [$($item.title)] because path length is over '256'..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                            Write-Entry -Subtext "You can adjust it by following this: https://learn.microsoft.com/en-us/windows/win32/fileio/maximum-file-path-limitation?tabs=registry#enable-long-paths-in-windows-10-version-1607-and-later" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                            continue
+                        }
+                    }
+
+                    $libpaths = $($Library.path).split(',')
+                    Write-Entry -Subtext "Plex Lib Paths before split: $($Library.path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                    Write-Entry -Subtext "Plex Lib Paths after split: $libpaths" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                    foreach ($libpath in $libpaths) {
+                        if ($location -like "$libpath/*" -or $location -like "$libpath\*") {
+                            Write-Entry -Subtext "Location: $location" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-Entry -Subtext "Libpath: $libpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            $Matchedpath = AddTrailingSlash $libpath
+                            $libpath = $Matchedpath
+                            $extractedFolder = $location.Substring($libpath.Length)
+                            if ($extractedFolder -like '*\*') {
+                                $extractedFolder = $extractedFolder.split('\')[0]
+                            }
+                            if ($extractedFolder -like '*/*') {
+                                $extractedFolder = $extractedFolder.split('/')[0]
+                            }
+                            Write-Entry -Subtext "Matchedpath: $Matchedpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-Entry -Subtext "ExtractedFolder: $extractedFolder" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            continue
+                        }
+                    }
+                }
+                if ($Seasondata) {
+                    $SeasonsTemp = $Seasondata.MediaContainer.Directory | Where-Object { $_.Title -ne 'All episodes' }
+                    $SeasonNames = $SeasonsTemp.Title -join ','
+                    $SeasonNumbers = $SeasonsTemp.index -join ','
+                    $SeasonRatingkeys = $SeasonsTemp.ratingKey -join ','
+                    $SeasonPosterUrl = ($SeasonsTemp | Where-Object { $_.type -eq "season" }).thumb -join ','
+                }
+                $matchesimdb = [regex]::Matches($metadatatemp, $imdbpattern)
+                $matchestmdb = [regex]::Matches($metadatatemp, $tmdbpattern)
+                $matchestvdb = [regex]::Matches($metadatatemp, $tvdbpattern)
+                if ($matchesimdb.value) { $imdbid = $matchesimdb.value.Replace('imdb://', '') }Else { $imdbid = $null }
+                if ($matchestmdb.value) { $tmdbid = $matchestmdb.value.Replace('tmdb://', '') }Else { $tmdbid = $null }
+                if ($matchestvdb.value) { $tvdbid = $matchestvdb.value.Replace('tvdb://', '') }Else { $tvdbid = $null }
+
+                # check if there are more then 1 entry in id´s
+                if ($tvdbid.count -gt '1') { $tvdbid = $tvdbid[0] }
+                if ($tmdbid.count -gt '1') { $tmdbid = $tmdbid[0] }
+                if ($imdbid.count -gt '1') { $imdbid = $imdbid[0] }
+
+                $temp = New-Object psobject
+                $temp | Add-Member -MemberType NoteProperty -Name "Library Name" -Value $Library.Name
+                $temp | Add-Member -MemberType NoteProperty -Name "Library Type" -Value $Metadata.MediaContainer.$contentquery.type
+                $temp | Add-Member -MemberType NoteProperty -Name "Library Language" -Value $($Library.language.split("-")[0])
+                $temp | Add-Member -MemberType NoteProperty -Name "title" -Value $($item.title)
+                $temp | Add-Member -MemberType NoteProperty -Name "originalTitle" -Value $($item.originalTitle)
+                $temp | Add-Member -MemberType NoteProperty -Name "SeasonNames" -Value $SeasonNames
+                $temp | Add-Member -MemberType NoteProperty -Name "SeasonNumbers" -Value $SeasonNumbers
+                $temp | Add-Member -MemberType NoteProperty -Name "SeasonRatingKeys" -Value $SeasonRatingkeys
+                $temp | Add-Member -MemberType NoteProperty -Name "year" -Value $item.year
+                $temp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $tvdbid
+                $temp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value $imdbid
+                $temp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value $tmdbid
+                $temp | Add-Member -MemberType NoteProperty -Name "ratingKey" -Value $item.ratingKey
+                $temp | Add-Member -MemberType NoteProperty -Name "Path" -Value $Matchedpath
+                $temp | Add-Member -MemberType NoteProperty -Name "RootFoldername" -Value $extractedFolder
+                $temp | Add-Member -MemberType NoteProperty -Name "MultipleVersions" -Value $MultipleVersions
+                $temp | Add-Member -MemberType NoteProperty -Name "PlexPosterUrl" -Value $Metadata.MediaContainer.$contentquery.thumb
+                $temp | Add-Member -MemberType NoteProperty -Name "PlexBackgroundUrl" -Value $Metadata.MediaContainer.$contentquery.art
+                $temp | Add-Member -MemberType NoteProperty -Name "PlexSeasonUrls" -Value $SeasonPosterUrl
+                $Libraries += $temp
+                Write-Entry -Subtext "Found [$($temp.title)] of type $($temp.{Library Type}) in [$($temp.{Library Name})]" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+            }
+        }
+    }
+    Write-Entry -Subtext "Found '$($Libraries.count)' Items..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+
+    # Initialize counter variable
+    $posterCount = 0
+    $SeasonCount = 0
+    $EpisodeCount = 0
+    $BackgroundCount = 0
+    $PosterUnknownCount = 0
+    $SkipTBACount = 0
+    $SkipJapTitleCount = 0
+    $AllShows = $Libraries | Where-Object { $_.'Library Type' -eq 'show' }
+    $AllMovies = $Libraries | Where-Object { $_.'Library Type' -eq 'movie' }
+
+    # Getting information of all Episodes
+    if ($global:TitleCards -eq 'true') {
+        Write-Entry -Message "Query episodes data from all Libs, this can take a while..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+        # Query episode info
+        $Episodedata = @()
+        foreach ($showentry in $AllShows) {
+            # Getting child entries for each season
+            $splittedkeys = $showentry.SeasonRatingKeys.split(',')
+            foreach ($key in $splittedkeys) {
+                if ($PlexToken) {
+                    if ($contentquery -eq 'Directory') {
+                        [xml]$Seasondata = (Invoke-WebRequest $PlexUrl/library/metadata/$key/children?X-Plex-Token=$PlexToken -Headers $extraPlexHeaders).content
+                    }
+                }
+                Else {
+                    if ($contentquery -eq 'Directory') {
+                        [xml]$Seasondata = (Invoke-WebRequest $PlexUrl/library/metadata/$key/children? -Headers $extraPlexHeaders).content
+                    }
+                }
+                $tempseasondata = New-Object psobject
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Show Name" -Value $Seasondata.MediaContainer.grandparentTitle
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Type" -Value $Seasondata.MediaContainer.viewGroup
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $showentry.tvdbid
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value $showentry.tmdbid
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Library Name" -Value $showentry.'Library Name'
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Season Number" -Value $Seasondata.MediaContainer.parentIndex
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Episodes" -Value $($Seasondata.MediaContainer.video.index -join ',')
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Seasondata.MediaContainer.video.title -join ';')
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "RatingKeys" -Value $($Seasondata.MediaContainer.video.ratingKey -join ',')
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "PlexTitleCardUrls" -Value $($Seasondata.MediaContainer.video.thumb -join ',')
+                $Episodedata += $tempseasondata
+                Write-Entry -Subtext "Found [$($tempseasondata.{Show Name})] of type $($tempseasondata.Type) for season $($tempseasondata.{Season Number})" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+            }
+        }
+        if ($Episodedata) {
+            Write-Entry -Subtext "Found '$($Episodedata.Episodes.split(',').count)' Episodes..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+        }
+    }
+
+    # Query Jellyfin/Emby
+    Write-Entry -Message "Query Jellyfin/Emby..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+    Write-Entry -Message "Query all items from all Libs, this can take a while..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+    $PreferredMetadataLanguage = (Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/System/Configuration?api_key=$OtherMediaServerApiKey").PreferredMetadataLanguage
+    $allShowsquery = "$OtherMediaServerUrl/Items?api_key=$OtherMediaServerApiKey&Recursive=true&Fields=ProviderIds,SeasonUserData,OriginalTitle,Path,Overview&IncludeItemTypes=Series"
+    $allMoviesquery = "$OtherMediaServerUrl/Items?api_key=$OtherMediaServerApiKey&Recursive=true&Fields=ProviderIds,OriginalTitle,Settings,Path,Overview&IncludeItemTypes=Movie"
+    $OtherAllShows = Invoke-RestMethod -Method Get -Uri $allShowsquery
+    $OtherAllMovies = Invoke-RestMethod -Method Get -Uri $allMoviesquery
+    $OtherLibraries = @()
+    foreach ($Movie in $OtherAllMovies.Items) {
+        if ($SyncEmby) {
+            $Libtemp = Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/Items/$($Movie.Id)/Ancestors?api_key=$OtherMediaServerApiKey"
+            $lib = $Libtemp | Where-Object { $_.Type -eq 'Folder' } | Select-Object Name, Path
+
+            $libraryQuery = "$OtherMediaServerUrl/Library/VirtualFolders?api_key=$OtherMediaServerApiKey"
+            $librarytemp = Invoke-RestMethod -Method Get -Uri $libraryQuery
+            $librariestemp = $librarytemp | Where-Object { $_.CollectionType -eq 'movies' } | Select-Object Name, Locations -Unique
+
+            if ($lib.name -notin $LibstoExclude) {
+                foreach ($singlelibrary in $librariestemp) {
+                    # Loop through each location in the library's Locations array
+                    foreach ($location in $singlelibrary.Locations) {
+                        # Compare lib.Path with each location
+                        if ($Movie.Path -like "$location/*" -or $Movie.Path -like "$location\*") {
+                            $SingleLibName = $singlelibrary.Name
+                            break # Exit loop after match
+                        }
+                    }
+                }
+                Write-Entry -Subtext "Location: $($Movie.Path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                Write-Entry -Subtext "Libpath: $($lib.Path[1])" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                $Matchedpath = AddTrailingSlash $($lib.Path[1])
+                $libpath = $Matchedpath
+                $extractedFolder = $Movie.Path.Substring($libpath.Length)
+                if ($extractedFolder -like '*\*') {
+                    $extractedFolder = $extractedFolder.split('\')[0]
+                }
+                if ($extractedFolder -like '*/*') {
+                    $extractedFolder = $extractedFolder.split('/')[0]
+                }
+                Write-Entry -Subtext "Matchedpath: $Matchedpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                Write-Entry -Subtext "ExtractedFolder: $extractedFolder" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                $temp = New-Object psobject
+                $temp | Add-Member -MemberType NoteProperty -Name "Library Name" -Value $SingleLibName
+                $temp | Add-Member -MemberType NoteProperty -Name "Library Type" -Value $Movie.Type
+                $temp | Add-Member -MemberType NoteProperty -Name "Library Language" -Value $PreferredMetadataLanguage
+                $temp | Add-Member -MemberType NoteProperty -Name "Id" -Value $Movie.Id
+                $temp | Add-Member -MemberType NoteProperty -Name "title" -Value $Movie.Name
+                $temp | Add-Member -MemberType NoteProperty -Name "originalTitle" -Value $Movie.OriginalTitle
+                $temp | Add-Member -MemberType NoteProperty -Name "year" -Value $Movie.ProductionYear
+                $temp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value $Movie.ProviderIds.Imdb
+                $temp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value $Movie.ProviderIds.Tmdb
+                $temp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $Movie.ProviderIds.Tvdb
+                $temp | Add-Member -MemberType NoteProperty -Name "Path" -Value $lib.Path[1]
+                $temp | Add-Member -MemberType NoteProperty -Name "RootFoldername" -Value $extractedFolder
+                $temp | Add-Member -MemberType NoteProperty -Name "OtherMediaServerPosterUrl" -Value $Movie.ImageTags.Primary
+                $temp | Add-Member -MemberType NoteProperty -Name "OtherMediaServerBackgroundUrl" -Value $($Movie.BackdropImageTags -join ",")
+                $OtherLibraries += $temp
+                Write-Entry -Subtext "Found [$($temp.title)] of type $($temp.{Library Type}) in [$($temp.{Library Name})]" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+            }
+        }
+        Else {
+            $Libtemp = Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/Items/$($Movie.Id)/Ancestors?api_key=$OtherMediaServerApiKey"
+            $lib = $Libtemp | Where-Object { $_.Type -eq 'Folder' } | Select-Object Name, Path
+
+            $libraryQuery = "$OtherMediaServerUrl/Library/VirtualFolders?api_key=$OtherMediaServerApiKey"
+            $librarytemp = Invoke-RestMethod -Method Get -Uri $libraryQuery
+            $librariestemp = $librarytemp | Where-Object { $_.CollectionType -eq 'movies' } | Select-Object Name, Locations -Unique
+
+            if ($Movie.Path -like "$($lib.Path)/*" -or $Movie.Path -like "$($lib.Path)\*") {
+                foreach ($singlelibrary in $librariestemp) {
+                    # Loop through each location in the library's Locations array
+                    foreach ($location in $singlelibrary.Locations) {
+                        # Compare lib.Path with each location
+                        if ($Movie.Path -like "$location/*" -or $Movie.Path -like "$location\*") {
+                            $SingleLibName = $singlelibrary.Name
+                            break # Exit loop after match
+                        }
+                    }
+                }
+                if ($SingleLibName -notin $LibstoExclude) {
+                    Write-Entry -Subtext "Location: $($Movie.Path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                    Write-Entry -Subtext "Libpath: $($lib.Path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                    $Matchedpath = AddTrailingSlash $($lib.Path)
+                    $libpath = $Matchedpath
+                    $extractedFolder = $Movie.Path.Substring($libpath.Length)
+                    if ($extractedFolder -like '*\*') {
+                        $extractedFolder = $extractedFolder.split('\')[0]
+                    }
+                    if ($extractedFolder -like '*/*') {
+                        $extractedFolder = $extractedFolder.split('/')[0]
+                    }
+                    Write-Entry -Subtext "Matchedpath: $Matchedpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                    Write-Entry -Subtext "ExtractedFolder: $extractedFolder" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                }
+            }
+            if ($SingleLibName -notin $LibstoExclude) {
+                $temp = New-Object psobject
+                $temp | Add-Member -MemberType NoteProperty -Name "Library Name" -Value $SingleLibName
+                $temp | Add-Member -MemberType NoteProperty -Name "Library Type" -Value $Movie.Type
+                $temp | Add-Member -MemberType NoteProperty -Name "Library Language" -Value $PreferredMetadataLanguage
+                $temp | Add-Member -MemberType NoteProperty -Name "Id" -Value $Movie.Id
+                $temp | Add-Member -MemberType NoteProperty -Name "title" -Value $Movie.Name
+                $temp | Add-Member -MemberType NoteProperty -Name "originalTitle" -Value $Movie.OriginalTitle
+                $temp | Add-Member -MemberType NoteProperty -Name "year" -Value $Movie.ProductionYear
+                $temp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value $Movie.ProviderIds.Imdb
+                $temp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value $Movie.ProviderIds.Tmdb
+                $temp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $Movie.ProviderIds.Tvdb
+                $temp | Add-Member -MemberType NoteProperty -Name "Path" -Value $lib.Path
+                $temp | Add-Member -MemberType NoteProperty -Name "RootFoldername" -Value $extractedFolder
+                $temp | Add-Member -MemberType NoteProperty -Name "OtherMediaServerPosterUrl" -Value $Movie.ImageTags.Primary
+                $temp | Add-Member -MemberType NoteProperty -Name "OtherMediaServerBackgroundUrl" -Value $($Movie.BackdropImageTags -join ",")
+                $OtherLibraries += $temp
+                Write-Entry -Subtext "Found [$($temp.title)] of type $($temp.{Library Type}) in [$($temp.{Library Name})]" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+            }
+        }
+    }
+    foreach ($Show in $OtherAllShows.Items) {
+        $Libtemp = Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/Items/$($Show.Id)/Ancestors?api_key=$OtherMediaServerApiKey"
+        $lib = $Libtemp | Where-Object { $_.Type -eq 'Folder' } | Select-Object Name, path
+
+        $libraryQuery = "$OtherMediaServerUrl/Library/VirtualFolders?api_key=$OtherMediaServerApiKey"
+        $librarytemp = Invoke-RestMethod -Method Get -Uri $libraryQuery
+        $librariestemp = $librarytemp | Where-Object { $_.CollectionType -eq 'tvshows' } | Select-Object Name, Locations -Unique
+
+        if ($Show.Path -like "$($lib.Path)/*" -or $Show.Path -like "$($lib.Path)\*") {
+            foreach ($singlelibrary in $librariestemp) {
+                # Loop through each location in the library's Locations array
+                foreach ($location in $singlelibrary.Locations) {
+                    # Compare lib.Path with each location
+                    if ($Show.Path -like "$location/*" -or $Show.Path -like "$location\*") {
+                        $SingleLibName = $singlelibrary.Name
+                        break # Exit loop after match
+                    }
+                }
+            }
+            if ($SingleLibName -notin $LibstoExclude) {
+                Write-Entry -Subtext "Location: $($Show.Path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                Write-Entry -Subtext "Libpath: $($lib.Path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                $Matchedpath = AddTrailingSlash $($lib.Path)
+                $libpath = $Matchedpath
+                $extractedFolder = $Show.Path.Substring($libpath.Length)
+                if ($extractedFolder -like '*\*') {
+                    $extractedFolder = $extractedFolder.split('\')[0]
+                }
+                if ($extractedFolder -like '*/*') {
+                    $extractedFolder = $extractedFolder.split('/')[0]
+                }
+                Write-Entry -Subtext "Matchedpath: $Matchedpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                Write-Entry -Subtext "ExtractedFolder: $extractedFolder" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+            }
+        }
+        if ($SingleLibName -notin $LibstoExclude) {
+            $temp = New-Object psobject
+            $temp | Add-Member -MemberType NoteProperty -Name "Library Name" -Value $SingleLibName
+            $temp | Add-Member -MemberType NoteProperty -Name "Library Type" -Value $Show.Type
+            $temp | Add-Member -MemberType NoteProperty -Name "Library Language" -Value $PreferredMetadataLanguage
+            $temp | Add-Member -MemberType NoteProperty -Name "Id" -Value $Show.Id
+            $temp | Add-Member -MemberType NoteProperty -Name "title" -Value $Show.Name
+            $temp | Add-Member -MemberType NoteProperty -Name "originalTitle" -Value $Show.OriginalTitle
+            $temp | Add-Member -MemberType NoteProperty -Name "year" -Value $Show.ProductionYear
+            $temp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value $Show.ProviderIds.Imdb
+            $temp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value $Show.ProviderIds.Tmdb
+            $temp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $Show.ProviderIds.Tvdb
+            $temp | Add-Member -MemberType NoteProperty -Name "Path" -Value $lib.Path
+            $temp | Add-Member -MemberType NoteProperty -Name "RootFoldername" -Value $extractedFolder
+            $temp | Add-Member -MemberType NoteProperty -Name "OtherMediaServerPosterUrl" -Value $Show.ImageTags.Primary
+            $temp | Add-Member -MemberType NoteProperty -Name "OtherMediaServerBackgroundUrl" -Value $($Show.BackdropImageTags -join ",")
+            $OtherLibraries += $temp
+            Write-Entry -Subtext "Found [$($temp.title)] of type $($temp.{Library Type}) in [$($temp.{Library Name})]" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+            Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+        }
+    }
+    Write-Entry -Subtext "Found '$($OtherLibraries.count)' Items..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+    $OtherEpisodedata = @()
+    $TempShowLibs = $OtherLibraries | Where-Object { $_."Library Type" -eq 'Series' }
+    foreach ($show in $TempShowLibs) {
+        if ($SyncEmby) {
+            # extract seasons
+            $Seasonstemp = Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/shows/$($show.id)/Episodes?api_key=$OtherMediaServerApiKey"
+            $seasons = $Seasonstemp.Items | Where-Object { $_.Type -eq 'Episode' } | Select-Object ParentIndexNumber, SeasonId, ImageTags -Unique
+            foreach ($Season in $Seasons) {
+                $SeasonEpisodestemp = Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/shows/$($show.id)/Episodes?seasonid=$($Season.SeasonId)&api_key=$OtherMediaServerApiKey"
+                $SeasonEpisodes = $SeasonEpisodestemp.Items | Where-Object { $_.Type -eq 'Episode' } | Select-Object indexnumber, SeriesId, SeasonId, ImageTags, Id, Name -Unique
+                $tempseasondata = New-Object psobject
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Library Name" -Value $show."Library Name"
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Show Name" -Value $show.title
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Show Original Name" -Value $show.OriginalTitle
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Library Language" -Value $PreferredMetadataLanguage
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "ShowID" -Value $($SeasonEpisodes.SeriesId[0] -join ',')
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "SeasonId" -Value $($SeasonEpisodes.SeasonId[0] -join ',')
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "EpisodeIds" -Value $($SeasonEpisodes.id -join ',')
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $show.tvdbid
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "imdbid" -Value $show.imdbid
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value $show.tmdbid
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "type" -Value 'Episode'
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Season Number" -Value $Season.ParentIndexNumber
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "SeasonName" -Value $($Season.SeasonName -join ',')
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Episodes" -Value $($SeasonEpisodes.indexnumber -join ',')
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Title" -Value $($SeasonEpisodes.Name -join ';')
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "OtherMediaServerTitleCardTag" -Value $($SeasonEpisodes.ImageTags.Primary -join ',')
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "OtherMediaServerSeasonTag" -Value $($Season.ImageTags.Primary -join ',')
+                $OtherEpisodedata += $tempseasondata
+                Write-Entry -Subtext "Found [$($tempseasondata.{Show Name})] of type $($tempseasondata.Type) for season $($tempseasondata.{Season Number})" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+            }
+        }
+        Else {
+            # extract seasons
+            $Seasonstemp = Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/shows/$($show.id)/Episodes?api_key=$OtherMediaServerApiKey"
+            $seasons = $Seasonstemp.Items | Where-Object { $_.LocationType -eq 'FileSystem' } | Select-Object ParentIndexNumber, SeasonId, ImageTags -Unique
+
+            foreach ($Season in $Seasons) {
+                $SeasonEpisodestemp = Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/shows/$($show.id)/Episodes?seasonid=$($Season.SeasonId)&api_key=$OtherMediaServerApiKey"
+                $SeasonEpisodes = $SeasonEpisodestemp.Items | Where-Object { $_.LocationType -eq 'FileSystem' } | Select-Object indexnumber, SeriesId, SeasonId, ImageTags, Id, Name -Unique
+                $tempseasondata = New-Object psobject
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Library Name" -Value $show."Library Name"
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Show Name" -Value $show.title
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Show Original Name" -Value $show.OriginalTitle
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Library Language" -Value $PreferredMetadataLanguage
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "ShowID" -Value $($SeasonEpisodes.SeriesId[0] -join ',')
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "SeasonId" -Value $($SeasonEpisodes.SeasonId[0] -join ',')
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "EpisodeIds" -Value $($SeasonEpisodes.id -join ',')
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $show.tvdbid
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "imdbid" -Value $show.imdbid
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value $show.tmdbid
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "type" -Value 'Episode'
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Season Number" -Value $Season.ParentIndexNumber
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "SeasonName" -Value $($Season.SeasonName -join ',')
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Episodes" -Value $($SeasonEpisodes.indexnumber -join ',')
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Title" -Value $($SeasonEpisodes.Name -join ';')
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "OtherMediaServerTitleCardTag" -Value $($SeasonEpisodes.ImageTags.Primary -join ',')
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "OtherMediaServerSeasonTag" -Value $($Season.ImageTags.Primary -join ',')
+                $OtherEpisodedata += $tempseasondata
+                Write-Entry -Subtext "Found [$($tempseasondata.{Show Name})] of type $($tempseasondata.Type) for season $($tempseasondata.{Season Number})" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+            }
+        }
+    }
+    if ($OtherEpisodedata) {
+        Write-Entry -Subtext "Found '$($OtherEpisodedata.Episodes.split(',').count)' Episodes..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+    }
+
+    $OtherAllShows = $OtherLibraries | Where-Object { $_.'Library Type' -eq 'Series' }
+    $OtherAllMovies = $OtherLibraries | Where-Object { $_.'Library Type' -eq 'Movie' }
+
+    # START HERE
+    Write-Entry -Message "Starting arwork sync now, this can take a while..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+    Write-Entry -Message "Starting movie arwork sync part..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+    # Movie Part
+    foreach ($entry in $AllMovies) {
+        try {
+            # Now we can start the Poster Part
+            if ($global:Posters -eq 'true') {
+                $global:posterurl = $null
+                $global:PosterWithText = $null
+                if ($PlexToken) {
+                    $Arturl = $plexurl + $entry.PlexPosterUrl + "?X-Plex-Token=$PlexToken"
+                }
+                Else {
+                    $Arturl = $plexurl + $entry.PlexPosterUrl
+                }
+                $matchingMovie = $OtherAllMovies | Where-Object {
+                    $_.Title -eq $entry.Title -and
+                    $_."Library Name" -eq $entry."Library Name" -and (
+                        $_.TmdbId -eq $entry.TmdbId -or
+                        $_.TvdbId -eq $entry.TvdbId -or
+                        $_.ImdbId -eq $entry.ImdbId
+                    )
+                }
+                if ($matchingMovie){
+                    $imageType = "Primary"
+                    $DestUrl = "$OtherMediaServerUrl/items/$($matchingMovie.id)/images/$imageType/?api_key=$OtherMediaServerApiKey"
+                    SyncPlexArtwork -ArtUrl $Arturl -DestUrl $DestUrl -imagetype $imageType -title $entry.Title
+                }
+            }
+            # Now we can start the Background Poster Part
+            if ($global:BackgroundPosters -eq 'true') {
+                $global:posterurl = $null
+                $global:PosterWithText = $null
+                if ($PlexToken) {
+                    $Arturl = $plexurl + $entry.PlexBackgroundUrl + "?X-Plex-Token=$PlexToken"
+                }
+                Else {
+                    $Arturl = $plexurl + $entry.PlexBackgroundUrl
+                }
+
+                $matchingMovie = $OtherAllMovies | Where-Object {
+                    $_.Title -eq $entry.Title -and
+                    $_."Library Name" -eq $entry."Library Name" -and (
+                        $_.TmdbId -eq $entry.TmdbId -or
+                        $_.TvdbId -eq $entry.TvdbId -or
+                        $_.ImdbId -eq $entry.ImdbId
+                    )
+                }
+                if ($matchingMovie){
+                    $BackgroundTitle = $entry.Title+" | Background"
+                    $imageType = "Backdrop"
+                    $DestUrl = "$OtherMediaServerUrl/items/$($matchingMovie.id)/images/$imageType/?api_key=$OtherMediaServerApiKey"
+                    SyncPlexArtwork -ArtUrl $Arturl -DestUrl $DestUrl -imagetype $imageType -title $BackgroundTitle
+                }
+            }
+        }
+        catch {
+            Write-Entry -Subtext "Could not sync movies to jelly/emby, error message: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            write-Entry -Subtext "At line $($_.InvocationInfo.ScriptLineNumber)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            $errorCount++
+        }
+    }
+    Write-Entry -Message "Starting show arwork sync part..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+    foreach ($entry in $AllShows) {
+        try {
+            # Now we can start the Poster Part
+            if ($global:Posters -eq 'true') {
+                if ($PlexToken) {
+                    $Arturl = $plexurl + $entry.PlexPosterUrl + "?X-Plex-Token=$PlexToken"
+                }
+                Else {
+                    $Arturl = $plexurl + $entry.PlexPosterUrl
+                }
+
+                $matchingShow = $OtherAllShows | Where-Object {
+                    ($_.Title -eq $entry.Title -or $_.originalTitle -eq $entry.originalTitle) -and
+                    $_."Library Name" -eq $entry."Library Name" -and (
+                        $_.TmdbId -eq $entry.TmdbId -or
+                        $_.TvdbId -eq $entry.TvdbId
+                    )
+                }
+                if ($matchingShow){
+                    $imageType = "Primary"
+                    $DestUrl = "$OtherMediaServerUrl/items/$($matchingShow.id)/images/$imageType/?api_key=$OtherMediaServerApiKey"
+                    SyncPlexArtwork -ArtUrl $Arturl -DestUrl $DestUrl -imagetype $imageType -title $entry.Title
+                }
+            }
+            # Now we can start the Background Poster Part
+            if ($global:BackgroundPosters -eq 'true') {
+                if ($PlexToken) {
+                    $Arturl = $plexurl + $entry.PlexBackgroundUrl + "?X-Plex-Token=$PlexToken"
+                }
+                Else {
+                    $Arturl = $plexurl + $entry.PlexBackgroundUrl
+                }
+
+                $matchingMovie = $OtherAllMovies | Where-Object {
+                    ($_.Title -eq $entry.Title -or $_.originalTitle -eq $entry.originalTitle) -and
+                    $_."Library Name" -eq $entry."Library Name" -and (
+                        $_.TmdbId -eq $entry.TmdbId -or
+                        $_.TvdbId -eq $entry.TvdbId
+                    )
+                }
+                if ($matchingMovie){
+                    $BackgroundTitle = $entry.Title+" | Background"
+                    $imageType = "Backdrop"
+                    $DestUrl = "$OtherMediaServerUrl/items/$($matchingMovie.id)/images/$imageType/?api_key=$OtherMediaServerApiKey"
+                    SyncPlexArtwork -ArtUrl $Arturl -DestUrl $DestUrl -imagetype $imageType -title $BackgroundTitle
+                }
+            }
+            # Now we can start the Season Poster Part
+            if ($global:SeasonPosters -eq 'true') {
+                $global:seasonNames = $entry.SeasonNames -split ','
+                $global:seasonNumbers = $entry.seasonNumbers -split ','
+                $global:PlexSeasonUrls = $entry.PlexSeasonUrls -split ','
+                for ($i = 0; $i -lt $global:seasonNames.Count; $i++) {
+                    $global:SeasonNumber = $global:seasonNumbers[$i]
+                    $global:PlexSeasonUrl = $global:PlexSeasonUrls[$i]
+
+                    if ($PlexToken) {
+                        $Arturl = $plexurl + $global:PlexSeasonUrl + "?X-Plex-Token=$PlexToken"
+                    }
+                    Else {
+                        $Arturl = $plexurl + $global:PlexSeasonUrl
+                    }
+
+                    $matchingSeason = $OtherEpisodedata| Where-Object {
+                        ($_.Title -eq $entry.Title -or $_.originalTitle -eq $entry.originalTitle) -and
+                        $_."Library Name" -eq $entry."Library Name" -and
+                        $_."Season Number" -eq $global:SeasonNumber -and (
+                            $_.TmdbId -eq $entry.TmdbId -or
+                            $_.TvdbId -eq $entry.TvdbId
+                        )
+                    }
+                    if ($matchingSeason){
+                        $SeasonTitle = $entry.Title+" | Season $global:SeasonNumber"
+                        $imageType = "Primary"
+                        $DestUrl = "$OtherMediaServerUrl/items/$($matchingSeason.SeasonId)/images/$imageType/?api_key=$OtherMediaServerApiKey"
+                        SyncPlexArtwork -ArtUrl $Arturl -DestUrl $DestUrl -imagetype $imageType -title $SeasonTitle
+                    }
+                }
+            }
+            # Now we can start the Title Card Part
+            if ($global:TitleCards -eq 'true') {
+                foreach ($episode in $Episodedata) {
+                    $global:show_name = $episode."Show Name"
+                    $global:season_number = $episode."Season Number"
+                    $global:episode_numbers = $episode."Episodes".Split(",")
+                    $global:PlexTitleCardUrls = $episode."PlexTitleCardUrls".Split(",")
+
+                    # Match based on Show name, tmdbid, tvdbid, and Library Name
+                    if (($episode.tmdbid -eq $entry.tmdbid -or $episode.tvdbid -eq $entry.tvdbid) -and
+                        ($episode.'Show Name' -eq $entry.title -or $episode.'Show Name' -eq $entry.originalTitle) -and
+                        $episode.'Library Name' -eq $entry.'Library Name') {
+
+                        # Loop through episodes in $episode_numbers
+                        for ($i = 0; $i -lt $global:episode_numbers.Count; $i++) {
+                            $global:PlexTitleCardUrl = $($global:PlexTitleCardUrls[$i].Trim())
+                            $global:episodenumber = $($global:episode_numbers[$i].Trim())
+
+                            if ($PlexToken) {
+                                $Arturl = $plexurl + $global:PlexTitleCardUrl + "?X-Plex-Token=$PlexToken"
+                            } else {
+                                $Arturl = $plexurl + $global:PlexTitleCardUrl
+                            }
+
+                            # Find matching episode in OtherEpisodedata
+                            $matchingEpisode = $OtherEpisodedata | Where-Object {
+                                ($_.'Show Name' -eq $entry.title -or $_.'Show Name' -eq $entry.originalTitle) -and
+                                $_."Library Name" -eq $entry."Library Name" -and
+                                $_."Season Number" -eq $global:season_number -and
+                                ($_.Episodes.Split(",") -contains $global:episodenumber) -and (
+                                    $_.TmdbId -eq $entry.TmdbId -or
+                                    $_.TvdbId -eq $entry.TvdbId
+                                )
+                            }
+                            if ($matchingEpisode) {
+                                # Select the matching episode ID based on the current index
+                                $global:episodeid = $matchingEpisode.EpisodeIds.Split(",")[$i]
+                                # Construct the show title with the current episode number
+                                $ShowTitle = "$($entry.Title) | Season $($global:season_number) - Episode $global:episodenumber"
+                                # Define the image type and destination URL
+                                $imageType = "Primary"
+                                $DestUrl = "$OtherMediaServerUrl/items/$($global:episodeid)/images/$imageType/?api_key=$OtherMediaServerApiKey"
+
+                                # Call the SyncPlexArtwork function to sync the artwork
+                                SyncPlexArtwork -ArtUrl $Arturl -DestUrl $DestUrl -imagetype $imageType -title $ShowTitle
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        catch {
+            Write-Entry -Subtext "Could not sync shows to jelly/emby, error message: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            write-Entry -Subtext "At line $($_.InvocationInfo.ScriptLineNumber)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            $errorCount++
+        }
+    }
+}
 Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaServer -eq 'true') {
         $posterCount = 0
         $SeasonCount = 0
@@ -14527,7 +15395,6 @@ else {
             Write-Entry -Message "Output hashtable..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
             $directoryHashtable.keys | Out-File "$global:ScriptRoot\Logs\hashtable.log" -Force
         }
-
 
         # Download poster foreach movie
         Write-Entry -Message "Starting asset creation now, this can take a while..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
