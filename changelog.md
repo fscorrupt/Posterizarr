@@ -2,19 +2,6 @@
 
 ## [1.8.5](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.5) - 2024-09-11 14:40:38
 
-## 🐛 Fixes
-- better error hadeling for jelly/ Emby sync
-- better logging for the sync
-- summary on sync end
-- additional debug logging for sync
-
-**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.8.4...1.8.5
-
-### Bug Fixes
-
-- general:
-  - Error handeling on jelly/emby sync ([d00273c](https://github.com/fscorrupt/Posterizarr/commit/d00273cb24482df6ed41f8ac840689389c4a361b))
-
 ## [1.8.4](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.4) - 2024-09-10 14:56:46
 
 ## [1.8.3](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.3) - 2024-09-10 11:40:56
