@@ -11482,8 +11482,8 @@ Elseif ($SyncJelly -or $SyncEmby){
     $Libraries | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\Libraries.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
 
     # START HERE
-    Write-Entry -Message "Starting arwork sync now, this can take a while..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-    Write-Entry -Message "Starting movie arwork sync part..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+    Write-Entry -Message "Starting artwork sync now, this can take a while..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+    Write-Entry -Message "Starting movie artwork sync part..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
     # Movie Part
     foreach ($entry in $AllMovies) {
         try {
@@ -11545,7 +11545,7 @@ Elseif ($SyncJelly -or $SyncEmby){
             $errorCount++
         }
     }
-    Write-Entry -Message "Starting show arwork sync part..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+    Write-Entry -Message "Starting show artwork sync part..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
     foreach ($entry in $AllShows) {
         try {
             # Now we can start the Poster Part
