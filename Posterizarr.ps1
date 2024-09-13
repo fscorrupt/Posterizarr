@@ -11,7 +11,7 @@
     [switch]$SyncEmby
 )
 
-$CurrentScriptVersion = "1.8.5"
+$CurrentScriptVersion = "1.8.6"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -15884,7 +15884,7 @@ else {
                         if ($global:UploadExistingAssets -eq 'true') {
                             Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                             try {
-                                GetPlexArtwork -Type " $Titletext | $global:FileNaming Artwork." -ArtUrl $Arturl -TempImage $EpisodeImage
+                                GetPlexArtwork -Type "$Titletext Artwork." -ArtUrl $Arturl -TempImage $PosterImage
                                 if ($global:PlexartworkDownloaded -eq 'true'){
                                     Write-Entry -Subtext "Uploading Existing Artwork for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                     $fileContent = [System.IO.File]::ReadAllBytes($PosterImageoriginal)
@@ -16243,7 +16243,7 @@ else {
                         if ($global:UploadExistingAssets -eq 'true') {
                             Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                             try {
-                                GetPlexArtwork -Type " $Titletext Artwork." -ArtUrl $Arturl -TempImage $backgroundImage
+                                GetPlexArtwork -Type " $Titletext | Backgound Artwork." -ArtUrl $Arturl -TempImage $backgroundImage
                                 if ($global:PlexartworkDownloaded -eq 'true'){
                                     Write-Entry -Subtext "Uploading Existing Artwork for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                     $fileContent = [System.IO.File]::ReadAllBytes($backgroundImageoriginal)
@@ -17051,7 +17051,7 @@ else {
                     if ($global:UploadExistingAssets -eq 'true') {
                         Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                         try {
-                            GetPlexArtwork -Type " $Titletext Artwork." -ArtUrl $Arturl -TempImage $backgroundImage
+                            GetPlexArtwork -Type " $Titletext | Background Artwork." -ArtUrl $Arturl -TempImage $backgroundImage
                             if ($global:PlexartworkDownloaded -eq 'true'){
                                 Write-Entry -Subtext "Uploading Existing Artwork for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 $fileContent = [System.IO.File]::ReadAllBytes($backgroundImageoriginal)
