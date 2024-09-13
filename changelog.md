@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## [1.8.6](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.6) - 2024-09-13 08:28:25
+
+## 🐛 Fixes
+- Var fix on `Plex` Upload existing Posters
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.8.5...1.8.6
+
+### Bug Fixes
+
+- general:
+  - false variable on Upload existing ([eca149a](https://github.com/fscorrupt/Posterizarr/commit/eca149aa088c5955db9fdda568b1c82386ba4f4a))
+
 ## [1.8.5](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.5) - 2024-09-11 14:40:38
 
 ## [1.8.4](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.4) - 2024-09-10 14:56:46
