@@ -223,7 +223,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     <summary>OverlayPart:</summary>
     <br>
 
-    - `ImageProcessing`: Set to `true` if you want the ImageMagick part; if false, it only downloads the posters.
+    - `ImageProcessing`: Set to `true` if you want the ImageMagick part (text, overlay and/or border); if `false`, it only downloads the posters.
     - `outputQuality`: Image output quality, default is `92%` if you set it to `100%` the image size gets doubled.
     </details>
     <details close>
