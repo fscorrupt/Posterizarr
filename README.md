@@ -180,7 +180,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     <br>
 
     - `AssetPath`: Path to store generated posters.
-    - `BackupPath`: Path to store/download Plex posters.
+    - `BackupPath`: Path to store/download Plex posters when using the [backup switch](#backup-mode).
     - `PlexUpload`: If set to `true`, Posterizarr will directly upload the artwork to Plex (handy if you do not use Kometa).
     - `show_skipped`: If set to `true`, verbose logging of already created assets will be displayed; otherwise, they will be silently skipped - On large libraries, this may appear as if the script is hanging.
     - `magickinstalllocation`: Path to ImageMagick installation location where `magick.exe` is located (Otherwise leave value as `"./magick"`)
