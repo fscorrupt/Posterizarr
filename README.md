@@ -904,7 +904,7 @@ Feel free to customize the script further to meet your specific preferences or a
 ## PR Rules
 
 > [!IMPORTANT]
-> - Adjust on each PR the version number in script on Line 11 `$CurrentScriptVersion = "1.0.55"`
+> - Adjust on each PR the version number in script on Line 14 `$CurrentScriptVersion = "1.8.6"`
 > - Adjust the version number in [Release.txt](Release.txt) to match the one in script.
 >   - this is required because the script checks against this file if a newer version is available.
 > - Do not include images on a PR.
