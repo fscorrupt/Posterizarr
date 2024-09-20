@@ -65,7 +65,13 @@ function GetHash {
 function Set-OSTypeAndScriptRoot {
     if ($env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker*') {
         $global:OSType = "Docker"
-        $global:ScriptRoot = "./config"
+        $currentuser = whoami
+        if ($currentuser -eq 'posterizarr'){
+            $global:ScriptRoot = "/config"
+        }
+        Else {
+            $global:ScriptRoot = "./config"
+        }
     }
     Else {
         $global:ScriptRoot = $PSScriptRoot
