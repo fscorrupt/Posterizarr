@@ -2,22 +2,6 @@
 
 ## [1.8.7](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.7) - 2024-09-23 17:39:37
 
-## 🐛 Fixes
-- `primary` sorting on TMDB now reflects website/api.
-
-**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.8.6...1.8.7
-
-### Feature
-
-- general:
-  - Prereq for docker container ([e4c7a74](https://github.com/fscorrupt/Posterizarr/commit/e4c7a74c3832f9a4cd2b6c4344ea87bea3efe55b))
-
-### Bug Fixes
-
-- general:
-  - Issue with TMDB sorting ([42feee8](https://github.com/fscorrupt/Posterizarr/commit/42feee8ddbb14decae417e55ef56ff54051311f8))
-  - from upper to_lower ([9d27fcb](https://github.com/fscorrupt/Posterizarr/commit/9d27fcbac9d326f72592575525bb3ec845ae7b5b))
-
 ## [1.8.6](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.6) - 2024-09-13 08:28:25
 
 ## [1.8.5](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.5) - 2024-09-11 14:40:38
