@@ -11,7 +11,7 @@
     [switch]$SyncEmby
 )
 
-$CurrentScriptVersion = "1.8.6"
+$CurrentScriptVersion = "1.8.7"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -697,8 +697,8 @@ function GetTMDBMoviePoster {
                                 $filteredPosters = $response.images.posters | Where-Object { $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
 
                                 if ($filteredPosters) {
-                                    $posterpath = (($filteredPosters | Sort-Object -Descending)[0]).file_path
-                                    Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                    $posterpath = $filteredPosters[0].file_path
+                                    Write-Entry -Subtext "Found a poster sized at - width: $($filteredPosters[0].width) | height: $($filteredPosters[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 }
                                 else {
                                     Write-Entry -Subtext "No posters found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
@@ -721,7 +721,7 @@ function GetTMDBMoviePoster {
                                 $filteredPosters = $response.images.posters
 
                                 if ($filteredPosters) {
-                                    $posterpath = (($filteredPosters | Sort-Object -Descending)[0]).file_path
+                                    $posterpath = $filteredPosters[0].file_path
                                 }
                             }
                             Else {
@@ -741,7 +741,7 @@ function GetTMDBMoviePoster {
                             Write-Entry -Subtext "Found Poster with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                             $global:PosterWithText = $true
                             if ($global:TMDBVoteSorting -eq 'primary') {
-                                $global:TMDBAssetTextLang = (($response.images.posters | Sort-Object -Descending)[0]).iso_639_1
+                                $global:TMDBAssetTextLang = $response.images.posters[0].iso_639_1
                             }
                             Else {
                                 $global:TMDBAssetTextLang = (($response.images.posters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).iso_639_1
@@ -761,8 +761,8 @@ function GetTMDBMoviePoster {
                             $filteredPosters = $response.images.posters | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
 
                             if ($filteredPosters) {
-                                $posterpath = (($filteredPosters | Sort-Object -Descending)[0]).file_path
-                                Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                $posterpath = $filteredPosters[0].file_path
+                                Write-Entry -Subtext "Found a poster sized at - width: $($filteredPosters[0].width) | height: $($filteredPosters[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             }
                             else {
                                 Write-Entry -Subtext "No posters found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
@@ -783,9 +783,8 @@ function GetTMDBMoviePoster {
                     Else {
                         if ($global:TMDBVoteSorting -eq 'primary') {
                             $filteredPosters = $response.images.posters | Where-Object iso_639_1 -eq $null
-
                             if ($filteredPosters) {
-                                $posterpath = (($filteredPosters | Sort-Object -Descending)[0]).file_path
+                                $posterpath = $filteredPosters[0].file_path
                             }
 
                         }
@@ -844,7 +843,7 @@ function GetTMDBMoviePoster {
                     }
                     if ($FavPoster) {
                         if ($global:TMDBVoteSorting -eq 'primary') {
-                            $posterpath = (($FavPoster | Sort-Object -Descending)[0]).file_path
+                            $posterpath = $FavPoster[0].file_path
                         }
                         Else {
                             $posterpath = (($FavPoster | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
@@ -905,8 +904,8 @@ function GetTMDBMovieBackground {
                                 $filteredPosters = $response.images.backdrops | Where-Object { $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight }
 
                                 if ($filteredPosters) {
-                                    $posterpath = (($filteredPosters | Sort-Object -Descending)[0]).file_path
-                                    Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                    $posterpath = $filteredPosters[0].file_path
+                                    Write-Entry -Subtext "Found a poster sized at - width: $($filteredPosters[0].width) | height: $($filteredPosters[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 }
                                 else {
                                     Write-Entry -Subtext "No Background posters found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
@@ -926,7 +925,7 @@ function GetTMDBMovieBackground {
                         }
                         Else {
                             if ($global:TMDBVoteSorting -eq 'primary') {
-                                $posterpath = (($response.images.backdrops | Sort-Object -Descending)[0]).file_path
+                                $posterpath = $response.images.backdrops[0].file_path
                             }
                             Else {
                                 $posterpath = (($response.images.backdrops | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
@@ -941,7 +940,7 @@ function GetTMDBMovieBackground {
                             Write-Entry -Subtext "Found background with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                             $global:PosterWithText = $true
                             if ($global:TMDBVoteSorting -eq 'primary') {
-                                $global:TMDBAssetTextLang = (($response.images.backdrops | Sort-Object -Descending)[0]).iso_639_1
+                                $global:TMDBAssetTextLang = $response.images.backdrops[0].iso_639_1
                             }
                             Else {
                                 $global:TMDBAssetTextLang = (($response.images.backdrops | Sort-Object $global:TMDBVoteSorting -Descending)[0]).iso_639_1
@@ -961,8 +960,8 @@ function GetTMDBMovieBackground {
                             $filteredPosters = $response.images.backdrops | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight }
 
                             if ($filteredPosters) {
-                                $posterpath = (($filteredPosters | Sort-Object -Descending)[0]).file_path
-                                Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                $posterpath = $filteredPosters[0].file_path
+                                Write-Entry -Subtext "Found a poster sized at - width: $($filteredPosters[0].width) | height: $($filteredPosters[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             }
                             else {
                                 Write-Entry -Subtext "No Background posters found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
@@ -982,7 +981,7 @@ function GetTMDBMovieBackground {
                     }
                     Else {
                         if ($global:TMDBVoteSorting -eq 'primary') {
-                            $posterpath = (($response.images.backdrops | Where-Object iso_639_1 -eq $null | Sort-Object -Descending)[0]).file_path
+                            $posterpath = (($response.images.backdrops | Where-Object iso_639_1 -eq $null)[0]).file_path
                         }
                         Else {
                             $posterpath = (($response.images.backdrops | Where-Object iso_639_1 -eq $null | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
@@ -1042,7 +1041,7 @@ function GetTMDBMovieBackground {
                     }
                     if ($FavPoster) {
                         if ($global:TMDBVoteSorting -eq 'primary') {
-                            $posterpath = (($FavPoster | Sort-Object -Descending)[0]).file_path
+                            $posterpath = $FavPoster[0].file_path
                         }
                         Else {
                             $posterpath = (($FavPoster | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
@@ -1118,9 +1117,9 @@ function GetTMDBShowPoster {
                                 $filteredPosters = $response.images.posters | Where-Object { $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
 
                                 if ($filteredPosters) {
-                                    $posterpath = (($filteredPosters | Sort-Object -Descending)[0]).file_path
-                                    $global:TMDBAssetTextLang = (($filteredPosters | Sort-Object -Descending)[0]).iso_639_1
-                                    Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                    $posterpath = $filteredPosters[0].file_path
+                                    $global:TMDBAssetTextLang = $filteredPosters[0].iso_639_1
+                                    Write-Entry -Subtext "Found a poster sized at - width: $($filteredPosters[0].width) | height: $($filteredPosters[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 }
                                 else {
                                     Write-Entry -Subtext "No posters found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
@@ -1141,8 +1140,8 @@ function GetTMDBShowPoster {
                         }
                         Else {
                             if ($global:TMDBVoteSorting -eq 'primary') {
-                                $posterpath = (($response.images.posters | Sort-Object -Descending)[0]).file_path
-                                $global:TMDBAssetTextLang = (($response.images.posters | Sort-Object -Descending)[0]).iso_639_1
+                                $posterpath = $response.images.posters[0].file_path
+                                $global:TMDBAssetTextLang = $response.images.posters[0].iso_639_1
                             }
                             Else {
                                 $posterpath = (($response.images.posters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
@@ -1173,8 +1172,8 @@ function GetTMDBShowPoster {
                             $filteredPosters = $response.images.posters | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
 
                             if ($filteredPosters) {
-                                $posterpath = (($filteredPosters | Sort-Object -Descending)[0]).file_path
-                                Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                $posterpath = $filteredPosters[0].file_path
+                                Write-Entry -Subtext "Found a poster sized at - width: $($filteredPosters[0].width) | height: $($filteredPosters[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             }
                             else {
                                 Write-Entry -Subtext "No posters found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
@@ -1194,7 +1193,7 @@ function GetTMDBShowPoster {
                     }
                     Else {
                         if ($global:TMDBVoteSorting -eq 'primary') {
-                            $posterpath = (($response.images.posters | Where-Object iso_639_1 -eq $null | Sort-Object -Descending)[0]).file_path
+                            $posterpath = (($response.images.posters | Where-Object iso_639_1 -eq $null)[0]).file_path
                         }
                         Else {
                             $posterpath = (($response.images.posters | Where-Object iso_639_1 -eq $null | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
@@ -1247,7 +1246,7 @@ function GetTMDBShowPoster {
                     }
                     if ($FavPoster) {
                         if ($global:TMDBVoteSorting -eq 'primary') {
-                            $posterpath = (($FavPoster | Sort-Object -Descending)[0]).file_path
+                            $posterpath = $FavPoster[0].file_path
                         }
                         Else {
                             $posterpath = (($FavPoster | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
@@ -1307,9 +1306,9 @@ function GetTMDBSeasonPoster {
                                 $filteredPosters = $response.poster | Where-Object { $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
 
                                 if ($filteredPosters) {
-                                    $posterpath = (($filteredPosters | Sort-Object -Descending)[0]).file_path
-                                    $global:TMDBAssetTextLang = (($filteredPosters | Sort-Object -Descending)[0]).iso_639_1
-                                    Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                    $posterpath = $filteredPosters[0].file_path
+                                    $global:TMDBAssetTextLang = $filteredPosters[0].iso_639_1
+                                    Write-Entry -Subtext "Found a poster sized at - width: $($filteredPosters[0].width) | height: $($filteredPosters[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 }
                                 else {
                                     Write-Entry -Subtext "No Season posters found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
@@ -1330,8 +1329,8 @@ function GetTMDBSeasonPoster {
                         }
                         Else {
                             if ($global:TMDBVoteSorting -eq 'primary') {
-                                $posterpath = (($response.posters | Sort-Object -Descending)[0]).file_path
-                                $global:TMDBAssetTextLang = (($response.posters | Sort-Object -Descending)[0]).iso_639_1
+                                $posterpath = $response.posters[0].file_path
+                                $global:TMDBAssetTextLang = $response.posters[0].iso_639_1
                             }
                             Else {
                                 $posterpath = (($response.posters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
@@ -1364,8 +1363,8 @@ function GetTMDBSeasonPoster {
                             $filteredPosters = $response.posters | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
 
                             if ($filteredPosters) {
-                                $posterpath = (($filteredPosters | Sort-Object -Descending)[0]).file_path
-                                Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                $posterpath = $filteredPosters[0].file_path
+                                Write-Entry -Subtext "Found a poster sized at - width: $($filteredPosters[0].width) | height: $($filteredPosters[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             }
                             else {
                                 Write-Entry -Subtext "No Season posters found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
@@ -1385,7 +1384,7 @@ function GetTMDBSeasonPoster {
                     }
                     Else {
                         if ($global:TMDBVoteSorting -eq 'primary') {
-                            $posterpath = (($response.posters | Where-Object iso_639_1 -eq $null | Sort-Object -Descending)[0]).file_path
+                            $posterpath = (($response.posters | Where-Object iso_639_1 -eq $null)[0]).file_path
                         }
                         Else {
                             $posterpath = (($response.posters | Where-Object iso_639_1 -eq $null | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
@@ -1452,7 +1451,7 @@ function GetTMDBSeasonPoster {
                     }
                     if ($FavPoster) {
                         if ($global:TMDBVoteSorting -eq 'primary') {
-                            $posterpath = (($FavPoster | Sort-Object -Descending)[0]).file_path
+                            $posterpath = $FavPoster[0].file_path
                         }
                         Else {
                             $posterpath = (($FavPoster | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
@@ -1501,7 +1500,7 @@ function GetTMDBSeasonPoster {
                     }
                     if ($FavPoster) {
                         if ($global:TMDBVoteSorting -eq 'primary') {
-                            $posterpath = (($FavPoster | Sort-Object -Descending)[0]).file_path
+                            $posterpath = $FavPoster[0].file_path
                         }
                         Else {
                             $posterpath = (($FavPoster | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
@@ -1567,9 +1566,9 @@ function GetTMDBShowBackground {
                                 $filteredPosters = $response.images.backdrops | Where-Object { $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
 
                                 if ($filteredPosters) {
-                                    $posterpath = (($filteredPosters | Sort-Object -Descending)[0]).file_path
-                                    $global:TMDBAssetTextLang = (($filteredPosters | Sort-Object -Descending)[0]).iso_639_1
-                                    Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                    $posterpath = $filteredPosters[0].file_path
+                                    $global:TMDBAssetTextLang = $filteredPosters[0].iso_639_1
+                                    Write-Entry -Subtext "Found a poster sized at - width: $($filteredPosters[0].width) | height: $($filteredPosters[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 }
                                 else {
                                     Write-Entry -Subtext "No Background posters found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
@@ -1590,8 +1589,8 @@ function GetTMDBShowBackground {
                         }
                         Else {
                             if ($global:TMDBVoteSorting -eq 'primary') {
-                                $posterpath = (($response.images.backdrops | Sort-Object -Descending)[0]).file_path
-                                $global:TMDBAssetTextLang = (($response.images.backdrops | Sort-Object -Descending)[0]).iso_639_1
+                                $posterpath = $response.images.backdrops[0].file_path
+                                $global:TMDBAssetTextLang = $response.images.backdrops[0].iso_639_1
                             }
                             Else {
                                 $posterpath = (($response.images.backdrops | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
@@ -1620,8 +1619,8 @@ function GetTMDBShowBackground {
                             $filteredPosters = $response.images.backdrops | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
 
                             if ($filteredPosters) {
-                                $posterpath = (($filteredPosters | Sort-Object -Descending)[0]).file_path
-                                Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                $posterpath = $filteredPosters[0].file_path
+                                Write-Entry -Subtext "Found a poster sized at - width: $($filteredPosters[0].width) | height: $($filteredPosters[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             }
                             else {
                                 Write-Entry -Subtext "No Background posters found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
@@ -1641,7 +1640,7 @@ function GetTMDBShowBackground {
                     }
                     Else {
                         if ($global:TMDBVoteSorting -eq 'primary') {
-                            $posterpath = (($response.images.backdrops | Where-Object iso_639_1 -eq $null | Sort-Object -Descending)[0]).file_path
+                            $posterpath = (($response.images.backdrops | Where-Object iso_639_1 -eq $null)[0]).file_path
                         }
                         Else {
                             $posterpath = (($response.images.backdrops | Where-Object iso_639_1 -eq $null | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
@@ -1705,7 +1704,7 @@ function GetTMDBShowBackground {
                     }
                     if ($FavPoster) {
                         if ($global:TMDBVoteSorting -eq 'primary') {
-                            $posterpath = (($FavPoster | Sort-Object -Descending)[0]).file_path
+                            $posterpath = $FavPoster[0].file_path
                         }
                         Else {
                             $posterpath = (($FavPoster | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
@@ -1769,8 +1768,8 @@ function GetTMDBTitleCard {
                         $filteredPosters = $response.stills | Where-Object { $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight }
 
                         if ($filteredPosters) {
-                            $posterpath = (($filteredPosters | Sort-Object -Descending)[0]).file_path
-                            Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                            $posterpath = $filteredPosters[0].file_path
+                            Write-Entry -Subtext "Found a poster sized at - width: $($filteredPosters[0].width) | height: $($filteredPosters[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                         }
                         else {
                             Write-Entry -Subtext "No Titlecards found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
@@ -1790,7 +1789,7 @@ function GetTMDBTitleCard {
                 }
                 Else {
                     if ($global:TMDBVoteSorting -eq 'primary') {
-                        $posterpath = (($response.stills | Sort-Object -Descending)[0]).file_path
+                        $posterpath = $response.stills[0].file_path
                     }
                     Else {
                         $posterpath = (($response.stills | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
@@ -1801,7 +1800,7 @@ function GetTMDBTitleCard {
                     Write-Entry -Subtext "Found Title Card with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                     $global:PosterWithText = $true
                     if ($global:TMDBVoteSorting -eq 'primary') {
-                        $global:TMDBAssetTextLang = (($response.stills | Sort-Object -Descending)[0]).iso_639_1
+                        $global:TMDBAssetTextLang = $response.stills[0].iso_639_1
                     }
                     Else {
                         $global:TMDBAssetTextLang = (($response.stills | Sort-Object $global:TMDBVoteSorting -Descending)[0]).iso_639_1
@@ -1818,8 +1817,8 @@ function GetTMDBTitleCard {
                         $filteredPosters = $response.stills | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight }
 
                         if ($filteredPosters) {
-                            $posterpath = (($filteredPosters | Sort-Object -Descending)[0]).file_path
-                            Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                            $posterpath = $filteredPosters[0].file_path
+                            Write-Entry -Subtext "Found a poster sized at - width: $($filteredPosters[0].width) | height: $($filteredPosters[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                         }
                         else {
                             Write-Entry -Subtext "No Titlecards found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
@@ -1839,7 +1838,7 @@ function GetTMDBTitleCard {
                 }
                 Else {
                     if ($global:TMDBVoteSorting -eq 'primary') {
-                        $posterpath = (($response.stills | Where-Object iso_639_1 -eq $null | Sort-Object -Descending)[0]).file_path
+                        $posterpath = (($response.stills | Where-Object iso_639_1 -eq $null)[0]).file_path
                     }
                     Else {
                         $posterpath = (($response.stills | Where-Object iso_639_1 -eq $null | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
