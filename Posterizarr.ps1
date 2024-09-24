@@ -1,4 +1,4 @@
-﻿param (
+param (
     [switch]$Manual,
     [switch]$Testing,
     [switch]$Tautulli,
@@ -66,7 +66,7 @@ function Set-OSTypeAndScriptRoot {
     if ($env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker*') {
         $global:OSType = "Docker"
         $currentuser = whoami
-        if ($currentuser -eq 'posterizarr'){
+        if ($currentuser -eq 'posterizarr' -or $currentuser -eq 'abc'){
             $global:ScriptRoot = "/config"
         }
         Else {
