@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [1.8.8](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.8) - 2024-09-24 06:19:14
+
+## 🚇 Added
+
+- Add the ability to specify line spacing
+	- FR #142
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.8.7...1.8.8
+
 ## [1.8.7](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.7) - 2024-09-23 17:39:37
 
 ## [1.8.6](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.6) - 2024-09-13 08:28:25
