@@ -249,6 +249,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `MaxWidth`: Maximum width of text box.
     - `MaxHeight`: Maximum height of text box.
     - `text_offset`: Text box offset from the bottom of the picture.
+    - `lineSpacing`: Adjust the height between lines of text (Default is `0`)
     </details>
     <details close>
     <summary>SeasonPosterOverlayPart:</summary>
@@ -271,6 +272,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `MaxWidth`: Maximum width of text box.
     - `MaxHeight`: Maximum height of text box.
     - `text_offset`: Text box offset from the bottom of the picture.
+    - `lineSpacing`: Adjust the height between lines of text (Default is `0`)
     </details>
     <details close>
     <summary>BackgroundOverlayPart:</summary>
@@ -291,6 +293,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `MaxWidth`: Maximum width of text box in background image.
     - `MaxHeight`: Maximum height of text box in background image.
     - `text_offset`: Text box offset from the bottom of the background image.
+    - `lineSpacing`: Adjust the height between lines of text (Default is `0`)
     </details>
     <details close>
     <summary>TitleCardOverlayPart:</summary>
@@ -318,6 +321,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `MaxWidth`: Maximum width of text box in TitleCard image.
     - `MaxHeight`: Maximum height of text box in TitleCard image.
     - `text_offset`: Text box offset from the bottom of the TitleCard image.
+    - `lineSpacing`: Adjust the height between lines of text (Default is `0`)
     </details>
     <details close>
     <summary>TitleCardEpisodeTextPart:</summary>
@@ -338,6 +342,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `MaxWidth`: Maximum width of text box in TitleCard image.
     - `MaxHeight`: Maximum height of text box in TitleCard image.
     - `text_offset`: Text box offset from the bottom of the TitleCard image.
+    - `lineSpacing`: Adjust the height between lines of text (Default is `0`)
     </details>
     <br>
 

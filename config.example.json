@@ -88,7 +88,8 @@
     "borderwidth": "30",
     "MaxWidth": "1900",
     "MaxHeight": "500",
-    "text_offset": "+430"
+    "text_offset": "+430",
+    "lineSpacing": "0"
   },
   "SeasonPosterOverlayPart": {
     "fontAllCaps": "true",
@@ -107,7 +108,8 @@
     "borderwidth": "30",
     "MaxWidth": "1900",
     "MaxHeight": "500",
-    "text_offset": "+400"
+    "text_offset": "+400",
+    "lineSpacing": "0"
   },
   "BackgroundOverlayPart": {
     "fontAllCaps": "true",
@@ -124,7 +126,8 @@
     "borderwidth": "30",
     "MaxWidth": "3640",
     "MaxHeight": "500",
-    "text_offset": "+200"
+    "text_offset": "+200",
+    "lineSpacing": "0"
   },
   "TitleCardOverlayPart": {
     "UseBackgroundAsTitleCard": "false",
@@ -145,7 +148,8 @@
     "maxPointSize": "150",
     "MaxWidth": "3640",
     "MaxHeight": "280",
-    "text_offset": "+300"
+    "text_offset": "+300",
+    "lineSpacing": "0"
   },
   "TitleCardEPTextPart": {
     "SeasonTCText": "Season",
@@ -160,6 +164,7 @@
     "maxPointSize": "80",
     "MaxWidth": "1000",
     "MaxHeight": "120",
-    "text_offset": "+150"
+    "text_offset": "+150",
+    "lineSpacing": "0"
   }
 }
