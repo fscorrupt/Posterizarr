@@ -11,7 +11,7 @@ param (
     [switch]$SyncEmby
 )
 
-$CurrentScriptVersion = "1.8.8"
+$CurrentScriptVersion = "1.8.9"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -6257,16 +6257,21 @@ if (!$SyncJelly -and !$SyncEmby) {
 Write-Entry -Message "Checking size of overlay files..." -Path $configLogging -Color White -log Info
 CheckOverlayDimensions -Posteroverlay "$Posteroverlay" -Backgroundoverlay "$Backgroundoverlay" -Titlecardoverlay "$titlecardoverlay" -PosterSize "$PosterSize" -BackgroundSize "$BackgroundSize" -Seasonoverlay "$Seasonoverlay"
 
+# Check if the FanartTvAPI module is installed
+$module = Get-Module -ListAvailable -Name FanartTvAPI
 
-# check if fanart Module is installed
-if (!(Get-InstalledModule -Name FanartTvAPI)) {
-    Write-Entry -Message "FanartTvAPI Module missing, installing it for you..." -Path $configLogging -Color Red -log Error
-    Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-    $errorCount++
-    Install-Module -Name FanartTvAPI -Force -Confirm -AllowClobber
-
-    Write-Entry -Subtext "FanartTvAPI Module installed, importing it now..." -Path $configLogging -Color Green -log Info
-    Import-Module -Name FanartTvAPI
+if (-not $module) {
+    # Try to install the module
+    try {
+        Install-Module -Name $moduleName -Force -SkipPublisherCheck -AllowPrerelease -Scope AllUsers
+        Write-Entry -Message "FanartTvAPI Module missing, installing it for you..." -Path $configLogging -Color Red -log Error
+        Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        $errorCount++
+        Write-Entry -Subtext "FanartTvAPI Module installed, importing it now..." -Path $configLogging -Color Green -log Info
+        Import-Module -Name FanartTvAPI
+    } catch {
+        Write-Host "Failed to install $moduleName module. Error: $_"
+    }
 }
 # Add Fanart API
 Add-FanartTvAPIKey -Api_Key $FanartTvAPIKey
