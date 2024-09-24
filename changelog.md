@@ -2,16 +2,6 @@
 
 ## [1.8.9](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.9) - 2024-09-24 14:54:15
 
-## 🐛 Fixes
-- Update fanart module check
-
-**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.8.8...1.8.9
-
-### Bug Fixes
-
-- general:
-  - Update fanart module check ([3f5768f](https://github.com/fscorrupt/Posterizarr/commit/3f5768f83bf999942459d41ef7c90ea008ffec4c))
-
 ## [1.8.8](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.8) - 2024-09-24 06:19:14
 
 ## [1.8.7](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.7) - 2024-09-23 17:39:37
