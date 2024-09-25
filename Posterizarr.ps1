@@ -3434,6 +3434,7 @@ function LogConfigSettings {
     Write-Entry -Subtext "| Text Box Width:               $MaxWidth" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Text Box Height:              $MaxHeight" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Text Box Offset:              $text_offset" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Line Spacing:                 $lineSpacing" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "OverLay Season Part" -Path $configLogging -Color Cyan -log Info
     Write-Entry -Subtext "| All Caps on Text:             $SeasonfontAllCaps" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Add Border to Image:          $AddSeasonBorder" -Path $configLogging -Color White -log Info
@@ -3452,6 +3453,7 @@ function LogConfigSettings {
     Write-Entry -Subtext "| Text Box Width:               $SeasonMaxWidth" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Text Box Height:              $SeasonMaxHeight" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Text Box Offset:              $Seasontext_offset" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Line Spacing:                 $SeasonlineSpacing" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "OverLay Background Part" -Path $configLogging -Color Cyan -log Info
     Write-Entry -Subtext "| All Caps on Text:             $BackgroundfontAllCaps" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Add Border to Background:     $AddBackgroundBorder" -Path $configLogging -Color White -log Info
@@ -3468,6 +3470,7 @@ function LogConfigSettings {
     Write-Entry -Subtext "| Text Box Width:               $BackgroundMaxWidth" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Text Box Height:              $BackgroundMaxHeight" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Text Box Offset:              $Backgroundtext_offset" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Line Spacing:                 $BackgroundlineSpacing" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "OverLay TitleCard Part" -Path $configLogging -Color Cyan -log Info
     Write-Entry -Subtext "| Use Background as Title Card: $UseBackgroundAsTitleCard" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Add Border to Background:     $AddTitleCardBorder" -Path $configLogging -Color White -log Info
@@ -3486,6 +3489,7 @@ function LogConfigSettings {
     Write-Entry -Subtext "| Text Box Width:               $TitleCardEPTitleMaxWidth" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Text Box Height:              $TitleCardEPTitleMaxHeight" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Text Box Offset:              $TitleCardEPTitletext_offset" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Line Spacing:                 $TitleCardEPTitlelineSpacing" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "OverLay TitleCard EP Part" -Path $configLogging -Color Cyan -log Info
     Write-Entry -Subtext "| Season TC Text:               $SeasonTCText" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Episode TC Text:              $EpisodeTCText" -Path $configLogging -Color White -log Info
@@ -3500,6 +3504,7 @@ function LogConfigSettings {
     Write-Entry -Subtext "| Text Box Width:               $TitleCardEPMaxWidth" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Text Box Height:              $TitleCardEPMaxHeight" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Text Box Offset:              $TitleCardEPtext_offset" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Line Spacing:                 $TitleCardEPlineSpacing" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "___________________________________________" -Path $configLogging -Color DarkMagenta -log Info
 }
 function CheckPlexAccess {
