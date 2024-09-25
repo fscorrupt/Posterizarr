@@ -2,16 +2,6 @@
 
 ## [1.8.10](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.10) - 2024-09-25 11:10:02
 
-## 🐛 Fixes
-- jelly $null query
-
-**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.8.9...1.8.10
-
-### Bug Fixes
-
-- general:
-  - jellyfin ID query error ([abc73e3](https://github.com/fscorrupt/Posterizarr/commit/abc73e306ebc4fc171ec0973635ecb1406d5826f))
-
 ## [1.8.9](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.9) - 2024-09-24 14:54:15
 
 ## [1.8.8](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.8) - 2024-09-24 06:19:14
