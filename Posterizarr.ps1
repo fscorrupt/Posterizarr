@@ -11,7 +11,7 @@ param (
     [switch]$SyncEmby
 )
 
-$CurrentScriptVersion = "1.8.9"
+$CurrentScriptVersion = "1.8.10"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -11494,13 +11494,20 @@ Elseif ($SyncJelly -or $SyncEmby){
             foreach ($Season in $Seasons) {
                 $SeasonEpisodestemp = Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/shows/$($show.id)/Episodes?seasonid=$($Season.SeasonId)&api_key=$OtherMediaServerApiKey"
                 $SeasonEpisodes = $SeasonEpisodestemp.Items | Where-Object { $_.LocationType -eq 'FileSystem' } | Select-Object indexnumber, SeriesId, SeasonId, ImageTags, Id, Name -Unique
+
+                # Calculate the ShowID value
+                $ShowID = if ($SeasonEpisodes.SeriesId) { $SeasonEpisodes.SeriesId[0] -join ',' } else { $null }
+
+                # Calculate the SeasonId value
+                $SeasonId = if ($SeasonEpisodes.SeasonId) { $SeasonEpisodes.SeasonId[0] -join ',' } else { $null }
+
                 $tempseasondata = New-Object psobject
                 $tempseasondata | Add-Member -MemberType NoteProperty -Name "Library Name" -Value $show."Library Name"
                 $tempseasondata | Add-Member -MemberType NoteProperty -Name "Show Name" -Value $show.title
                 $tempseasondata | Add-Member -MemberType NoteProperty -Name "Show Original Name" -Value $show.OriginalTitle
                 $tempseasondata | Add-Member -MemberType NoteProperty -Name "Library Language" -Value $PreferredMetadataLanguage
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "ShowID" -Value $($SeasonEpisodes.SeriesId[0] -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "SeasonId" -Value $($SeasonEpisodes.SeasonId[0] -join ',')
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "ShowID" -Value $ShowID
+                $tempseasondata | Add-Member -MemberType NoteProperty -Name "SeasonId" -Value $SeasonId
                 $tempseasondata | Add-Member -MemberType NoteProperty -Name "EpisodeIds" -Value $($SeasonEpisodes.id -join ',')
                 $tempseasondata | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $show.tvdbid
                 $tempseasondata | Add-Member -MemberType NoteProperty -Name "imdbid" -Value $show.imdbid
