@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [1.8.11](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.11) - 2024-09-26 07:02:05
+
+## 🚇 Added
+
+- Add the ability to add show tilte to season poster - similar like for titlecards.
+	- FR #136
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.8.10...1.8.11
+
 ## [1.8.10](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.10) - 2024-09-25 11:10:02
 
 ## [1.8.9](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.9) - 2024-09-24 14:54:15
