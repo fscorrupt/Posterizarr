@@ -2,16 +2,6 @@
 
 ## [1.8.12](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.12) - 2024-09-26 08:24:20
 
-## 🐛 Fixes
-- Remove config attributes if obsolete
-
-**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.8.11...1.8.12
-
-### Bug Fixes
-
-- general:
-  - Remove config attributes if obsolete ([e057050](https://github.com/fscorrupt/Posterizarr/commit/e05705058106248c5b0e2cdd4817683193bc432b))
-
 ## [1.8.11](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.11) - 2024-09-26 07:02:05
 
 ## [1.8.10](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.10) - 2024-09-25 11:10:02
