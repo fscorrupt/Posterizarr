@@ -187,7 +187,7 @@
     "MaxHeight": "500",
     "text_offset": "+400"
   },
-  "ShowTilteOnSeasonPosterPart": {
+  "ShowTitleOnSeasonPosterPart": {
     "AddShowTitletoSeason": "false",
     "fontAllCaps": "true",
     "AddTextStroke": "false",

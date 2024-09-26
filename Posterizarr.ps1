@@ -11,7 +11,7 @@ param (
     [switch]$SyncEmby
 )
 
-$CurrentScriptVersion = "1.8.12"
+$CurrentScriptVersion = "1.8.13"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -5981,19 +5981,19 @@ $Seasonborderwidthsecond = $borderwidth + 'x' + $borderwidth
 $Seasonboxsize = $SeasonMaxWidth + 'x' + $SeasonMaxHeight
 
 # Show Title on Season Poster Overlay Part
-$ShowOnSeasonfontAllCaps = $config.ShowTilteOnSeasonPosterPart.fontAllCaps.tolower()
-$AddShowTitletoSeason = $config.ShowTilteOnSeasonPosterPart.AddShowTitletoSeason.tolower()
-$AddShowOnSeasonTextStroke = $config.ShowTilteOnSeasonPosterPart.AddTextStroke.tolower()
-$ShowOnSeasonstrokecolor = $config.ShowTilteOnSeasonPosterPart.strokecolor
-$ShowOnSeasonstrokewidth = $config.ShowTilteOnSeasonPosterPart.strokewidth
-$ShowOnSeasonfontcolor = $config.ShowTilteOnSeasonPosterPart.fontcolor
-$ShowOnSeasonminPointSize = $config.ShowTilteOnSeasonPosterPart.minPointSize
-$ShowOnSeasonmaxPointSize = $config.ShowTilteOnSeasonPosterPart.maxPointSize
-$ShowOnSeasonMaxWidth = $config.ShowTilteOnSeasonPosterPart.MaxWidth
-$ShowOnSeasonMaxHeight = $config.ShowTilteOnSeasonPosterPart.MaxHeight
-$ShowOnSeasontext_offset = $config.ShowTilteOnSeasonPosterPart.text_offset
+$ShowOnSeasonfontAllCaps = $config.ShowTitleOnSeasonPosterPart.fontAllCaps.tolower()
+$AddShowTitletoSeason = $config.ShowTitleOnSeasonPosterPart.AddShowTitletoSeason.tolower()
+$AddShowOnSeasonTextStroke = $config.ShowTitleOnSeasonPosterPart.AddTextStroke.tolower()
+$ShowOnSeasonstrokecolor = $config.ShowTitleOnSeasonPosterPart.strokecolor
+$ShowOnSeasonstrokewidth = $config.ShowTitleOnSeasonPosterPart.strokewidth
+$ShowOnSeasonfontcolor = $config.ShowTitleOnSeasonPosterPart.fontcolor
+$ShowOnSeasonminPointSize = $config.ShowTitleOnSeasonPosterPart.minPointSize
+$ShowOnSeasonmaxPointSize = $config.ShowTitleOnSeasonPosterPart.maxPointSize
+$ShowOnSeasonMaxWidth = $config.ShowTitleOnSeasonPosterPart.MaxWidth
+$ShowOnSeasonMaxHeight = $config.ShowTitleOnSeasonPosterPart.MaxHeight
+$ShowOnSeasontext_offset = $config.ShowTitleOnSeasonPosterPart.text_offset
 $ShowOnSeasonboxsize = $ShowOnSeasonMaxWidth + 'x' + $ShowOnSeasonMaxHeight
-$ShowOnSeasonlineSpacing = $config.ShowTilteOnSeasonPosterPart.lineSpacing
+$ShowOnSeasonlineSpacing = $config.ShowTitleOnSeasonPosterPart.lineSpacing
 
 # Background Overlay Part
 $BackgroundfontAllCaps = $config.BackgroundOverlayPart.fontAllCaps.tolower()

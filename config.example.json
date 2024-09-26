@@ -132,7 +132,7 @@
     "text_offset": "+400",
     "lineSpacing": "0"
   },
-  "ShowTilteOnSeasonPosterPart": {
+  "ShowTitleOnSeasonPosterPart": {
     "AddShowTitletoSeason": "false",
     "fontAllCaps": "true",
     "AddTextStroke": "false",
