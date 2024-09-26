@@ -11,7 +11,7 @@ param (
     [switch]$SyncEmby
 )
 
-$CurrentScriptVersion = "1.8.11"
+$CurrentScriptVersion = "1.8.12"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -3137,6 +3137,29 @@ function CheckJson {
             $config = @{}
         }
 
+        # Remove keys from config that are no longer in the default config
+        foreach ($existingKey in $config.PSObject.Properties.Name) {
+            if (-not $defaultConfig.PSObject.Properties.Name.Contains($existingKey)) {
+                Write-Entry -Message "Removing obsolete Main Attribute from your Config file: $existingKey." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                $config.PSObject.Properties.Remove($existingKey)
+                $AttributeChanged = $True
+            }
+        }
+
+        # Remove sub-attributes no longer in the default config
+        foreach ($partKey in $config.PSObject.Properties.Name) {
+            if ($defaultConfig.PSObject.Properties.Name.Contains($partKey)) {
+                # Check each sub-attribute in the part
+                foreach ($existingSubKey in $config.$partKey.PSObject.Properties.Name) {
+                    if (-not $defaultConfig.$partKey.PSObject.Properties.Name.Contains($existingSubKey)) {
+                        Write-Entry -Message "Removing obsolete Sub-Attribute from your Config file: $partKey.$existingSubKey." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                        $config.$partKey.PSObject.Properties.Remove($existingSubKey)
+                        $AttributeChanged = $True
+                    }
+                }
+            }
+        }
+
         # Check and add missing keys from the default configuration
         foreach ($partKey in $defaultConfig.PSObject.Properties.Name) {
             # Check if the part exists in the current configuration
@@ -3192,6 +3215,7 @@ function CheckJson {
                 }
             }
         }
+
         if ($AttributeChanged -eq 'true') {
             # Convert the updated configuration object back to JSON and save it
             $configJson = $config | ConvertTo-Json -Depth 10
@@ -3209,6 +3233,8 @@ function CheckJson {
         Exit
     }
 }
+
+
 function CheckJsonPaths {
     param (
         [string]$font,
