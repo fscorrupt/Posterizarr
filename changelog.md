@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## [1.8.13](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.13) - 2024-09-26 13:28:25
+
+## 🐛 Fixes
+- fix spelling error on new config item
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.8.12...1.8.13
+
+### Bug Fixes
+
+- general:
+  - spelling error in config ([2c0cf9e](https://github.com/fscorrupt/Posterizarr/commit/2c0cf9e5ed89c2706017ff90fc422057185781fc))
+
 ## [1.8.12](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.12) - 2024-09-26 08:24:20
 
 ## [1.8.11](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.11) - 2024-09-26 07:02:05
