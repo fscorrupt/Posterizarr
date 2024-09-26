@@ -254,8 +254,6 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `fontAllCaps`: Set to `true` for all caps text, else `false`.
     - `AddBorder`: Set to `true` to add a border to the image.
     - `AddText`: Set to `true` to add text to the image.
-    - `AddShowTitletoSeason`: if set to `true` it will add show title to season poster (Default Value is: `false`)
-      - `SeasonTextNewLines`: How many line breaks you want after the season title, possible values are: `1` or `2` (Default Value is: `1`)
     - `AddTextStroke`: Set to `true` to add stroke to text.
     - `strokecolor`: Color of text stroke.
     - `strokewidth`: Stroke width.
@@ -265,6 +263,23 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `minPointSize`: Minimum size of text in poster.
     - `maxPointSize`: Maximum size of text in poster.
     - `borderwidth`: Border width.
+    - `MaxWidth`: Maximum width of text box.
+    - `MaxHeight`: Maximum height of text box.
+    - `text_offset`: Text box offset from the bottom of the picture.
+    - `lineSpacing`: Adjust the height between lines of text (Default is `0`)
+    </details>
+    <details close>
+    <summary>ShowTilteOnSeasonPosterPart:</summary>
+    <br>
+
+    - `fontAllCaps`: Set to `true` for all caps text, else `false`.
+    - `AddShowTitletoSeason`: if set to `true` it will add show title to season poster (Default Value is: `false`)
+    - `AddTextStroke`: Set to `true` to add stroke to text.
+    - `strokecolor`: Color of text stroke.
+    - `strokewidth`: Stroke width.
+    - `fontcolor`: Color of font text.
+    - `minPointSize`: Minimum size of text in poster.
+    - `maxPointSize`: Maximum size of text in poster.
     - `MaxWidth`: Maximum width of text box.
     - `MaxHeight`: Maximum height of text box.
     - `text_offset`: Text box offset from the bottom of the picture.

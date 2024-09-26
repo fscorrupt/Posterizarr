@@ -1,5 +1,5 @@
 {
-  "ApiPart":{
+  "ApiPart": {
     "tvdbapi": "TVDBAPIKEY",
     "tmdbtoken": "TMDBTOKEN",
     "FanartTvAPIKey": "FANARTAPIKEY",
@@ -13,37 +13,60 @@
     "BgTcMinWidth": "3840",
     "BgTcMinHeight": "2160",
     "tmdb_vote_sorting": "vote_average",
-    "PreferredLanguageOrder": ["xx", "en", "de"],
-    "PreferredSeasonLanguageOrder": ["xx", "en", "de"]
+    "PreferredLanguageOrder": [
+      "xx",
+      "en",
+      "de"
+    ],
+    "PreferredSeasonLanguageOrder": [
+      "xx",
+      "en",
+      "de"
+    ]
   },
-  "PlexPart":{
-    "LibstoExclude": ["Youtube", "Audiobooks", "Kids Audiobooks", "Tech Trainings"],
+  "PlexPart": {
+    "LibstoExclude": [
+      "Youtube",
+      "Audiobooks",
+      "Kids Audiobooks",
+      "Tech Trainings"
+    ],
     "PlexUrl": "http://192.168.1.93:32400",
     "UsePlex": "true",
     "UploadExistingAssets": "false"
   },
   "JellyfinPart": {
-    "LibstoExclude": ["Youtube", "Audiobooks", "KidsAudiobooks", "TechTrainings"],
+    "LibstoExclude": [
+      "Youtube",
+      "Audiobooks",
+      "KidsAudiobooks",
+      "TechTrainings"
+    ],
     "JellyfinUrl": "http://192.168.1.93:8096",
     "UseJellyfin": "false",
     "UploadExistingAssets": "false"
   },
   "EmbyPart": {
-    "LibstoExclude": ["Youtube", "Audiobooks", "KidsAudiobooks", "TechTrainings"],
+    "LibstoExclude": [
+      "Youtube",
+      "Audiobooks",
+      "KidsAudiobooks",
+      "TechTrainings"
+    ],
     "EmbyUrl": "http://192.168.1.93:8096/emby",
     "UseEmby": "false",
     "UploadExistingAssets": "false"
   },
-  "Notification":{
-    "SendNotification":"False",
+  "Notification": {
+    "SendNotification": "False",
     "AppriseUrl": "discord://{WebhookID}/{WebhookToken}/",
     "Discord": "https://discordapp.com/api/webhooks/{WebhookID}/{WebhookToken}"
   },
-  "PrerequisitePart":{
+  "PrerequisitePart": {
     "AssetPath": "P:\\assets",
     "BackupPath": "P:\\assetsbackup",
     "PlexUpload": "false",
-    "show_skipped":"false",
+    "show_skipped": "false",
     "magickinstalllocation": "C:\\PosterTemp\\ImageMagickPortable",
     "maxLogs": "5",
     "logLevel": "2",
@@ -62,14 +85,14 @@
     "TitleCards": "false",
     "NewLineOnSpecificSymbols": "false",
     "NewLineSymbols": [
-        " - "
+      " - "
     ],
     "SkipTBA": "false",
     "SkipJapTitle": "false",
     "AssetCleanup": "false",
     "AutoUpdateIM": "false"
   },
-  "OverlayPart":{
+  "OverlayPart": {
     "ImageProcessing": "true",
     "outputQuality": "92%"
   },
@@ -95,8 +118,6 @@
     "fontAllCaps": "true",
     "AddBorder": "true",
     "AddText": "true",
-    "AddShowTitletoSeason": "false",
-    "SeasonTextNewLines": "1",
     "AddTextStroke": "false",
     "strokecolor": "black",
     "strokewidth": "6",
@@ -109,6 +130,20 @@
     "MaxWidth": "1900",
     "MaxHeight": "500",
     "text_offset": "+400",
+    "lineSpacing": "0"
+  },
+  "ShowTilteOnSeasonPosterPart": {
+    "AddShowTitletoSeason": "false",
+    "fontAllCaps": "true",
+    "AddTextStroke": "false",
+    "strokecolor": "black",
+    "strokewidth": "6",
+    "fontcolor": "white",
+    "minPointSize": "45",
+    "maxPointSize": "300",
+    "MaxWidth": "1900",
+    "MaxHeight": "500",
+    "text_offset": "+300",
     "lineSpacing": "0"
   },
   "BackgroundOverlayPart": {
