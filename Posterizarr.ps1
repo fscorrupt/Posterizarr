@@ -11,7 +11,7 @@ param (
     [switch]$SyncEmby
 )
 
-$CurrentScriptVersion = "1.8.13"
+$CurrentScriptVersion = "1.8.14"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -9564,18 +9564,18 @@ Elseif ($Tautulli) {
 
                                         if ($AddSeasonText -eq 'true') {
                                             $global:seasonTitle = $global:seasonTitle -replace '"', '""'
-
+                                            $global:ShowTitleOnSeason = $titletext -replace '"', '""'
                                             # Loop through each symbol and replace it with a newline
                                             if ($NewLineOnSpecificSymbols -eq 'true') {
                                                 foreach ($symbol in $NewLineSymbols) {
                                                     $global:seasonTitle = $global:seasonTitle -replace [regex]::Escape($symbol), "`n"
                                                     if ($AddShowTitletoSeason -eq 'true') {
-                                                        $global:ShowOnseasonTitle = $titletext -replace [regex]::Escape($symbol), "`n"
+                                                        $global:ShowTitleOnSeason = $global:ShowTitleOnSeason -replace [regex]::Escape($symbol), "`n"
                                                     }
                                                 }
                                             }
                                             $joinedTitlePointSize = $global:seasonTitle -replace '""', '""""'
-                                            $joinedShowTitlePointSize = $global:ShowOnseasonTitle -replace '""', '""""'
+                                            $joinedShowTitlePointSize = $global:ShowTitleOnSeason  -replace '""', '""""'
                                             if ($AddShowTitletoSeason -eq 'true') {
                                                 $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize -lineSpacing $SeasonlineSpacing
                                                 $ShowoptimalFontSize = Get-OptimalPointSize -text $joinedShowTitlePointSize -font $fontImagemagick -box_width $ShowOnSeasonMaxWidth  -box_height $ShowOnSeasonMaxHeight -min_pointsize $ShowOnSeasonminPointSize -max_pointsize $ShowOnSeasonmaxPointSize -lineSpacing $ShowOnSeasonlineSpacing
@@ -9599,13 +9599,13 @@ Elseif ($Tautulli) {
                                                     # Show Part
                                                     # Add Stroke
                                                     if ($AddShowOnSeasonTextStroke -eq 'true') {
-                                                        $ShowOnSeasonArguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$ShowoptimalFontSize`" -fill `"$ShowOnSeasonfontcolor`" -stroke `"$ShowOnSeasonstrokecolor`" -strokewidth `"$ShowOnSeasonstrokewidth`" -size `"$ShowOnSeasonboxsize`" -background none -interline-spacing `"$ShowOnSeasonlineSpacing`" caption:`"$global:ShowOnseasonTitle`" -trim -gravity south -extent `"$ShowOnSeasonboxsize`" `) -gravity south -geometry +0`"$ShowOnSeasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
+                                                        $ShowOnSeasonArguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$ShowoptimalFontSize`" -fill `"$ShowOnSeasonfontcolor`" -stroke `"$ShowOnSeasonstrokecolor`" -strokewidth `"$ShowOnSeasonstrokewidth`" -size `"$ShowOnSeasonboxsize`" -background none -interline-spacing `"$ShowOnSeasonlineSpacing`" caption:`"$global:ShowTitleOnSeason `" -trim -gravity south -extent `"$ShowOnSeasonboxsize`" `) -gravity south -geometry +0`"$ShowOnSeasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
                                                     }
                                                     Else {
-                                                        $ShowOnSeasonArguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$ShowoptimalFontSize`" -fill `"$ShowOnSeasonfontcolor`" -size `"$ShowOnSeasonboxsize`" -background none -interline-spacing `"$ShowOnSeasonlineSpacing`" caption:`"$global:ShowOnseasonTitle`" -trim -gravity south -extent `"$ShowOnSeasonboxsize`" `) -gravity south -geometry +0`"$ShowOnSeasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
+                                                        $ShowOnSeasonArguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$ShowoptimalFontSize`" -fill `"$ShowOnSeasonfontcolor`" -size `"$ShowOnSeasonboxsize`" -background none -interline-spacing `"$ShowOnSeasonlineSpacing`" caption:`"$global:ShowTitleOnSeason `" -trim -gravity south -extent `"$ShowOnSeasonboxsize`" `) -gravity south -geometry +0`"$ShowOnSeasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
                                                     }
 
-                                                    Write-Entry -Subtext "Applying showTitle text: `"$global:ShowOnseasonTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                    Write-Entry -Subtext "Applying showTitle text: `"$global:ShowTitleOnSeason `"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                     $logEntry = "`"$magick`" $ShowOnSeasonArguments"
                                                     $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                                     InvokeMagickCommand -Command $magick -Arguments $ShowOnSeasonArguments
@@ -9827,18 +9827,18 @@ Elseif ($Tautulli) {
 
                                         if ($AddSeasonText -eq 'true') {
                                             $global:seasonTitle = $global:seasonTitle -replace '"', '""'
-
+                                            $global:ShowTitleOnSeason = $titletext -replace '"', '""'
                                             # Loop through each symbol and replace it with a newline
                                             if ($NewLineOnSpecificSymbols -eq 'true') {
                                                 foreach ($symbol in $NewLineSymbols) {
                                                     $global:seasonTitle = $global:seasonTitle -replace [regex]::Escape($symbol), "`n"
                                                     if ($AddShowTitletoSeason -eq 'true') {
-                                                        $global:ShowOnseasonTitle = $titletext -replace [regex]::Escape($symbol), "`n"
+                                                        $global:ShowTitleOnSeason = $global:ShowTitleOnSeason -replace [regex]::Escape($symbol), "`n"
                                                     }
                                                 }
                                             }
                                             $joinedTitlePointSize = $global:seasonTitle -replace '""', '""""'
-                                            $joinedShowTitlePointSize = $global:ShowOnseasonTitle -replace '""', '""""'
+                                            $joinedShowTitlePointSize = $global:ShowTitleOnSeason  -replace '""', '""""'
                                             if ($AddShowTitletoSeason -eq 'true') {
                                                 $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize -lineSpacing $SeasonlineSpacing
                                                 $ShowoptimalFontSize = Get-OptimalPointSize -text $joinedShowTitlePointSize -font $fontImagemagick -box_width $ShowOnSeasonMaxWidth  -box_height $ShowOnSeasonMaxHeight -min_pointsize $ShowOnSeasonminPointSize -max_pointsize $ShowOnSeasonmaxPointSize -lineSpacing $ShowOnSeasonlineSpacing
@@ -9862,13 +9862,13 @@ Elseif ($Tautulli) {
                                                     # Show Part
                                                     # Add Stroke
                                                     if ($AddShowOnSeasonTextStroke -eq 'true') {
-                                                        $ShowOnSeasonArguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$ShowoptimalFontSize`" -fill `"$ShowOnSeasonfontcolor`" -stroke `"$ShowOnSeasonstrokecolor`" -strokewidth `"$ShowOnSeasonstrokewidth`" -size `"$ShowOnSeasonboxsize`" -background none -interline-spacing `"$ShowOnSeasonlineSpacing`" caption:`"$global:ShowOnseasonTitle`" -trim -gravity south -extent `"$ShowOnSeasonboxsize`" `) -gravity south -geometry +0`"$ShowOnSeasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
+                                                        $ShowOnSeasonArguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$ShowoptimalFontSize`" -fill `"$ShowOnSeasonfontcolor`" -stroke `"$ShowOnSeasonstrokecolor`" -strokewidth `"$ShowOnSeasonstrokewidth`" -size `"$ShowOnSeasonboxsize`" -background none -interline-spacing `"$ShowOnSeasonlineSpacing`" caption:`"$global:ShowTitleOnSeason `" -trim -gravity south -extent `"$ShowOnSeasonboxsize`" `) -gravity south -geometry +0`"$ShowOnSeasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
                                                     }
                                                     Else {
-                                                        $ShowOnSeasonArguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$ShowoptimalFontSize`" -fill `"$ShowOnSeasonfontcolor`" -size `"$ShowOnSeasonboxsize`" -background none -interline-spacing `"$ShowOnSeasonlineSpacing`" caption:`"$global:ShowOnseasonTitle`" -trim -gravity south -extent `"$ShowOnSeasonboxsize`" `) -gravity south -geometry +0`"$ShowOnSeasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
+                                                        $ShowOnSeasonArguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$ShowoptimalFontSize`" -fill `"$ShowOnSeasonfontcolor`" -size `"$ShowOnSeasonboxsize`" -background none -interline-spacing `"$ShowOnSeasonlineSpacing`" caption:`"$global:ShowTitleOnSeason `" -trim -gravity south -extent `"$ShowOnSeasonboxsize`" `) -gravity south -geometry +0`"$ShowOnSeasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
                                                     }
 
-                                                    Write-Entry -Subtext "Applying showTitle text: `"$global:ShowOnseasonTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                    Write-Entry -Subtext "Applying showTitle text: `"$global:ShowTitleOnSeason `"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                     $logEntry = "`"$magick`" $ShowOnSeasonArguments"
                                                     $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                                     InvokeMagickCommand -Command $magick -Arguments $ShowOnSeasonArguments
@@ -13767,17 +13767,18 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
 
                                             if ($AddSeasonText -eq 'true') {
                                                 $global:seasonTitle = $global:seasonTitle -replace '"', '""'
+                                                $global:ShowTitleOnSeason = $titletext -replace '"', '""'
                                                 # Loop through each symbol and replace it with a newline
                                                 if ($NewLineOnSpecificSymbols -eq 'true') {
                                                     foreach ($symbol in $NewLineSymbols) {
                                                         $global:seasonTitle = $global:seasonTitle -replace [regex]::Escape($symbol), "`n"
                                                         if ($AddShowTitletoSeason -eq 'true') {
-                                                            $global:ShowOnseasonTitle = $titletext -replace [regex]::Escape($symbol), "`n"
+                                                            $global:ShowTitleOnSeason = $global:ShowTitleOnSeason -replace [regex]::Escape($symbol), "`n"
                                                         }
                                                     }
                                                 }
                                                 $joinedTitlePointSize = $global:seasonTitle -replace '""', '""""'
-                                                $joinedShowTitlePointSize = $global:ShowOnseasonTitle -replace '""', '""""'
+                                                $joinedShowTitlePointSize = $global:ShowTitleOnSeason  -replace '""', '""""'
                                                 if ($AddShowTitletoSeason -eq 'true') {
                                                     $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize -lineSpacing $SeasonlineSpacing
                                                     $ShowoptimalFontSize = Get-OptimalPointSize -text $joinedShowTitlePointSize -font $fontImagemagick -box_width $ShowOnSeasonMaxWidth  -box_height $ShowOnSeasonMaxHeight -min_pointsize $ShowOnSeasonminPointSize -max_pointsize $ShowOnSeasonmaxPointSize -lineSpacing $ShowOnSeasonlineSpacing
@@ -13801,13 +13802,13 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                                         # Show Part
                                                         # Add Stroke
                                                         if ($AddShowOnSeasonTextStroke -eq 'true') {
-                                                            $ShowOnSeasonArguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$ShowoptimalFontSize`" -fill `"$ShowOnSeasonfontcolor`" -stroke `"$ShowOnSeasonstrokecolor`" -strokewidth `"$ShowOnSeasonstrokewidth`" -size `"$ShowOnSeasonboxsize`" -background none -interline-spacing `"$ShowOnSeasonlineSpacing`" caption:`"$global:ShowOnseasonTitle`" -trim -gravity south -extent `"$ShowOnSeasonboxsize`" `) -gravity south -geometry +0`"$ShowOnSeasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
+                                                            $ShowOnSeasonArguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$ShowoptimalFontSize`" -fill `"$ShowOnSeasonfontcolor`" -stroke `"$ShowOnSeasonstrokecolor`" -strokewidth `"$ShowOnSeasonstrokewidth`" -size `"$ShowOnSeasonboxsize`" -background none -interline-spacing `"$ShowOnSeasonlineSpacing`" caption:`"$global:ShowTitleOnSeason `" -trim -gravity south -extent `"$ShowOnSeasonboxsize`" `) -gravity south -geometry +0`"$ShowOnSeasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
                                                         }
                                                         Else {
-                                                            $ShowOnSeasonArguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$ShowoptimalFontSize`" -fill `"$ShowOnSeasonfontcolor`" -size `"$ShowOnSeasonboxsize`" -background none -interline-spacing `"$ShowOnSeasonlineSpacing`" caption:`"$global:ShowOnseasonTitle`" -trim -gravity south -extent `"$ShowOnSeasonboxsize`" `) -gravity south -geometry +0`"$ShowOnSeasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
+                                                            $ShowOnSeasonArguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$ShowoptimalFontSize`" -fill `"$ShowOnSeasonfontcolor`" -size `"$ShowOnSeasonboxsize`" -background none -interline-spacing `"$ShowOnSeasonlineSpacing`" caption:`"$global:ShowTitleOnSeason `" -trim -gravity south -extent `"$ShowOnSeasonboxsize`" `) -gravity south -geometry +0`"$ShowOnSeasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
                                                         }
 
-                                                        Write-Entry -Subtext "Applying showTitle text: `"$global:ShowOnseasonTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                        Write-Entry -Subtext "Applying showTitle text: `"$global:ShowTitleOnSeason `"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                         $logEntry = "`"$magick`" $ShowOnSeasonArguments"
                                                         $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                                         InvokeMagickCommand -Command $magick -Arguments $ShowOnSeasonArguments
@@ -17519,18 +17520,18 @@ else {
 
                                         if ($AddSeasonText -eq 'true') {
                                             $global:seasonTitle = $global:seasonTitle -replace '"', '""'
-
+                                            $global:ShowTitleOnSeason = $titletext -replace '"', '""'
                                             # Loop through each symbol and replace it with a newline
                                             if ($NewLineOnSpecificSymbols -eq 'true') {
                                                 foreach ($symbol in $NewLineSymbols) {
                                                     $global:seasonTitle = $global:seasonTitle -replace [regex]::Escape($symbol), "`n"
                                                     if ($AddShowTitletoSeason -eq 'true') {
-                                                        $global:ShowOnseasonTitle = $titletext -replace [regex]::Escape($symbol), "`n"
+                                                        $global:ShowTitleOnSeason = $global:ShowTitleOnSeason -replace [regex]::Escape($symbol), "`n"
                                                     }
                                                 }
                                             }
                                             $joinedTitlePointSize = $global:seasonTitle -replace '""', '""""'
-                                            $joinedShowTitlePointSize = $global:ShowOnseasonTitle -replace '""', '""""'
+                                            $joinedShowTitlePointSize = $global:ShowTitleOnSeason  -replace '""', '""""'
                                             if ($AddShowTitletoSeason -eq 'true') {
                                                 $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize -lineSpacing $SeasonlineSpacing
                                                 $ShowoptimalFontSize = Get-OptimalPointSize -text $joinedShowTitlePointSize -font $fontImagemagick -box_width $ShowOnSeasonMaxWidth  -box_height $ShowOnSeasonMaxHeight -min_pointsize $ShowOnSeasonminPointSize -max_pointsize $ShowOnSeasonmaxPointSize -lineSpacing $ShowOnSeasonlineSpacing
@@ -17554,13 +17555,13 @@ else {
                                                     # Show Part
                                                     # Add Stroke
                                                     if ($AddShowOnSeasonTextStroke -eq 'true') {
-                                                        $ShowOnSeasonArguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$ShowoptimalFontSize`" -fill `"$ShowOnSeasonfontcolor`" -stroke `"$ShowOnSeasonstrokecolor`" -strokewidth `"$ShowOnSeasonstrokewidth`" -size `"$ShowOnSeasonboxsize`" -background none -interline-spacing `"$ShowOnSeasonlineSpacing`" caption:`"$global:ShowOnseasonTitle`" -trim -gravity south -extent `"$ShowOnSeasonboxsize`" `) -gravity south -geometry +0`"$ShowOnSeasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
+                                                        $ShowOnSeasonArguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$ShowoptimalFontSize`" -fill `"$ShowOnSeasonfontcolor`" -stroke `"$ShowOnSeasonstrokecolor`" -strokewidth `"$ShowOnSeasonstrokewidth`" -size `"$ShowOnSeasonboxsize`" -background none -interline-spacing `"$ShowOnSeasonlineSpacing`" caption:`"$global:ShowTitleOnSeason `" -trim -gravity south -extent `"$ShowOnSeasonboxsize`" `) -gravity south -geometry +0`"$ShowOnSeasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
                                                     }
                                                     Else {
-                                                        $ShowOnSeasonArguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$ShowoptimalFontSize`" -fill `"$ShowOnSeasonfontcolor`" -size `"$ShowOnSeasonboxsize`" -background none -interline-spacing `"$ShowOnSeasonlineSpacing`" caption:`"$global:ShowOnseasonTitle`" -trim -gravity south -extent `"$ShowOnSeasonboxsize`" `) -gravity south -geometry +0`"$ShowOnSeasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
+                                                        $ShowOnSeasonArguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$ShowoptimalFontSize`" -fill `"$ShowOnSeasonfontcolor`" -size `"$ShowOnSeasonboxsize`" -background none -interline-spacing `"$ShowOnSeasonlineSpacing`" caption:`"$global:ShowTitleOnSeason `" -trim -gravity south -extent `"$ShowOnSeasonboxsize`" `) -gravity south -geometry +0`"$ShowOnSeasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
                                                     }
 
-                                                    Write-Entry -Subtext "Applying showTitle text: `"$global:ShowOnseasonTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                    Write-Entry -Subtext "Applying showTitle text: `"$global:ShowTitleOnSeason `"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                     $logEntry = "`"$magick`" $ShowOnSeasonArguments"
                                                     $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                                     InvokeMagickCommand -Command $magick -Arguments $ShowOnSeasonArguments
