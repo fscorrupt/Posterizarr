@@ -2,16 +2,6 @@
 
 ## [1.8.14](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.14) - 2024-09-27 17:38:00
 
-## 🐛 Fixes
-- possible escape fix for imagemagick
-
-**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.8.13...1.8.14
-
-### Bug Fixes
-
-- general:
-  - possible excape fix for imagemagick ([8619f7a](https://github.com/fscorrupt/Posterizarr/commit/8619f7a4c8d52abfb76adfd552dab1761a2f5246))
-
 ## [1.8.13](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.13) - 2024-09-26 13:28:25
 
 ## [1.8.12](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.12) - 2024-09-26 08:24:20
