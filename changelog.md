@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## [1.8.15](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.15) - 2024-09-28 16:03:45
+
+## 🐛 Fixes
+- wrong font size
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.8.14...1.8.15
+
+### Bug Fixes
+
+- general:
+  - wrong font size ([740ecf1](https://github.com/fscorrupt/Posterizarr/commit/740ecf1c6db53e14098f33319d601917213986f1))
+
 ## [1.8.14](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.14) - 2024-09-27 17:38:00
 
 ## [1.8.13](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.13) - 2024-09-26 13:28:25
