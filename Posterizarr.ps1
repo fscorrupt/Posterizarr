@@ -11,7 +11,7 @@ param (
     [switch]$SyncEmby
 )
 
-$CurrentScriptVersion = "1.8.14"
+$CurrentScriptVersion = "1.8.15"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -9564,7 +9564,12 @@ Elseif ($Tautulli) {
 
                                         if ($AddSeasonText -eq 'true') {
                                             $global:seasonTitle = $global:seasonTitle -replace '"', '""'
-                                            $global:ShowTitleOnSeason = $titletext -replace '"', '""'
+                                            if ($ShowOnSeasonfontAllCaps -eq 'true'){
+                                                $global:ShowTitleOnSeason = $titletext.ToUpper() -replace '"', '""'
+                                            }
+                                            Else{
+                                                $global:ShowTitleOnSeason = $titletext -replace '"', '""'
+                                            }
                                             # Loop through each symbol and replace it with a newline
                                             if ($NewLineOnSpecificSymbols -eq 'true') {
                                                 foreach ($symbol in $NewLineSymbols) {
@@ -9605,7 +9610,7 @@ Elseif ($Tautulli) {
                                                         $ShowOnSeasonArguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$ShowoptimalFontSize`" -fill `"$ShowOnSeasonfontcolor`" -size `"$ShowOnSeasonboxsize`" -background none -interline-spacing `"$ShowOnSeasonlineSpacing`" caption:`"$global:ShowTitleOnSeason `" -trim -gravity south -extent `"$ShowOnSeasonboxsize`" `) -gravity south -geometry +0`"$ShowOnSeasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
                                                     }
 
-                                                    Write-Entry -Subtext "Applying showTitle text: `"$global:ShowTitleOnSeason `"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                    Write-Entry -Subtext "Applying showTitle text: `"$global:ShowTitleOnSeason`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                     $logEntry = "`"$magick`" $ShowOnSeasonArguments"
                                                     $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                                     InvokeMagickCommand -Command $magick -Arguments $ShowOnSeasonArguments
@@ -9827,7 +9832,12 @@ Elseif ($Tautulli) {
 
                                         if ($AddSeasonText -eq 'true') {
                                             $global:seasonTitle = $global:seasonTitle -replace '"', '""'
-                                            $global:ShowTitleOnSeason = $titletext -replace '"', '""'
+                                            if ($ShowOnSeasonfontAllCaps -eq 'true'){
+                                                $global:ShowTitleOnSeason = $titletext.ToUpper() -replace '"', '""'
+                                            }
+                                            Else{
+                                                $global:ShowTitleOnSeason = $titletext -replace '"', '""'
+                                            }
                                             # Loop through each symbol and replace it with a newline
                                             if ($NewLineOnSpecificSymbols -eq 'true') {
                                                 foreach ($symbol in $NewLineSymbols) {
@@ -9868,7 +9878,7 @@ Elseif ($Tautulli) {
                                                         $ShowOnSeasonArguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$ShowoptimalFontSize`" -fill `"$ShowOnSeasonfontcolor`" -size `"$ShowOnSeasonboxsize`" -background none -interline-spacing `"$ShowOnSeasonlineSpacing`" caption:`"$global:ShowTitleOnSeason `" -trim -gravity south -extent `"$ShowOnSeasonboxsize`" `) -gravity south -geometry +0`"$ShowOnSeasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
                                                     }
 
-                                                    Write-Entry -Subtext "Applying showTitle text: `"$global:ShowTitleOnSeason `"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                    Write-Entry -Subtext "Applying showTitle text: `"$global:ShowTitleOnSeason`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                     $logEntry = "`"$magick`" $ShowOnSeasonArguments"
                                                     $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                                     InvokeMagickCommand -Command $magick -Arguments $ShowOnSeasonArguments
@@ -13767,7 +13777,12 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
 
                                             if ($AddSeasonText -eq 'true') {
                                                 $global:seasonTitle = $global:seasonTitle -replace '"', '""'
-                                                $global:ShowTitleOnSeason = $titletext -replace '"', '""'
+                                                if ($ShowOnSeasonfontAllCaps -eq 'true'){
+                                                    $global:ShowTitleOnSeason = $titletext.ToUpper() -replace '"', '""'
+                                                }
+                                                Else{
+                                                    $global:ShowTitleOnSeason = $titletext -replace '"', '""'
+                                                }
                                                 # Loop through each symbol and replace it with a newline
                                                 if ($NewLineOnSpecificSymbols -eq 'true') {
                                                     foreach ($symbol in $NewLineSymbols) {
@@ -13808,7 +13823,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                                             $ShowOnSeasonArguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$ShowoptimalFontSize`" -fill `"$ShowOnSeasonfontcolor`" -size `"$ShowOnSeasonboxsize`" -background none -interline-spacing `"$ShowOnSeasonlineSpacing`" caption:`"$global:ShowTitleOnSeason `" -trim -gravity south -extent `"$ShowOnSeasonboxsize`" `) -gravity south -geometry +0`"$ShowOnSeasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
                                                         }
 
-                                                        Write-Entry -Subtext "Applying showTitle text: `"$global:ShowTitleOnSeason `"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                        Write-Entry -Subtext "Applying showTitle text: `"$global:ShowTitleOnSeason`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                         $logEntry = "`"$magick`" $ShowOnSeasonArguments"
                                                         $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                                         InvokeMagickCommand -Command $magick -Arguments $ShowOnSeasonArguments
@@ -17520,7 +17535,12 @@ else {
 
                                         if ($AddSeasonText -eq 'true') {
                                             $global:seasonTitle = $global:seasonTitle -replace '"', '""'
-                                            $global:ShowTitleOnSeason = $titletext -replace '"', '""'
+                                            if ($ShowOnSeasonfontAllCaps -eq 'true'){
+                                                $global:ShowTitleOnSeason = $titletext.ToUpper() -replace '"', '""'
+                                            }
+                                            Else{
+                                                $global:ShowTitleOnSeason = $titletext -replace '"', '""'
+                                            }
                                             # Loop through each symbol and replace it with a newline
                                             if ($NewLineOnSpecificSymbols -eq 'true') {
                                                 foreach ($symbol in $NewLineSymbols) {
@@ -17561,7 +17581,7 @@ else {
                                                         $ShowOnSeasonArguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$ShowoptimalFontSize`" -fill `"$ShowOnSeasonfontcolor`" -size `"$ShowOnSeasonboxsize`" -background none -interline-spacing `"$ShowOnSeasonlineSpacing`" caption:`"$global:ShowTitleOnSeason `" -trim -gravity south -extent `"$ShowOnSeasonboxsize`" `) -gravity south -geometry +0`"$ShowOnSeasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
                                                     }
 
-                                                    Write-Entry -Subtext "Applying showTitle text: `"$global:ShowTitleOnSeason `"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                    Write-Entry -Subtext "Applying showTitle text: `"$global:ShowTitleOnSeason`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                     $logEntry = "`"$magick`" $ShowOnSeasonArguments"
                                                     $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                                     InvokeMagickCommand -Command $magick -Arguments $ShowOnSeasonArguments
