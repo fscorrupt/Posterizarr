@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## [1.8.16](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.16) - 2024-09-29 07:14:45
+
+## 🚇 Added
+
+- add show on season into testing mode
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.8.15...1.8.16
+
 ## [1.8.15](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.15) - 2024-09-28 16:03:45
 
 ## [1.8.14](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.14) - 2024-09-27 17:38:00
