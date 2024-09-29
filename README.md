@@ -23,7 +23,7 @@
 </p>
 <br>
 
-### Supported Platforms 💻
+## Supported Platforms 💻
 
 [![Docker](https://img.shields.io/static/v1?style=for-the-badge&logo=docker&logoColor=FFFFFF&message=docker&color=1E63EE&label=)](walkthrough.md)
 [![Unraid](https://img.shields.io/static/v1?style=for-the-badge&logo=unraid&logoColor=FFFFFF&message=unraid&color=E8402A&label=)](walkthrough.md)
