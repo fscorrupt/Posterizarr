@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## [1.8.17](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.17) - 2024-09-30 12:22:15
+
+## 🐛 Fixes
+- Slow Jelly query & IM Version Query
+	- rewrote the episode query part for jellyfin - it is now 10x faster as before.
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.8.16...1.8.17
+
+### Bug Fixes
+
+- general:
+  - Slow Jelly query & IM Version Query ([098c1b9](https://github.com/fscorrupt/Posterizarr/commit/098c1b9fc6e1d0c443b2729cd54fefb19acd2608))
+
 ## [1.8.16](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.16) - 2024-09-29 07:14:45
 
 ## [1.8.15](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.15) - 2024-09-28 16:03:45
