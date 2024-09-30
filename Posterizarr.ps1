@@ -11,7 +11,7 @@ param (
     [switch]$SyncEmby
 )
 
-$CurrentScriptVersion = "1.8.16"
+$CurrentScriptVersion = "1.8.17"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -66,7 +66,7 @@ function Set-OSTypeAndScriptRoot {
     if ($env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker*') {
         $global:OSType = "Docker"
         $currentuser = whoami
-        if ($currentuser -eq 'posterizarr' -or $currentuser -eq 'abc' -or $env:VIRTUAL_ENV -eq '/lsiopy'){
+        if ($currentuser -eq 'posterizarr' -or $currentuser -eq 'abc' -or $env:VIRTUAL_ENV -eq '/lsiopy') {
             $global:ScriptRoot = "/config"
         }
         Else {
@@ -3478,7 +3478,7 @@ function LogConfigSettings {
     Write-Entry -Subtext "| Text Box Height:              $SeasonMaxHeight" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Text Box Offset:              $Seasontext_offset" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Line Spacing:                 $SeasonlineSpacing" -Path $configLogging -Color White -log Info
-    if ($AddShowTitletoSeason -eq 'true'){
+    if ($AddShowTitletoSeason -eq 'true') {
         Write-Entry -Subtext "Show Text on Season Part" -Path $configLogging -Color Cyan -log Info
         Write-Entry -Subtext "| All Caps on Text:             $ShowOnSeasonfontAllCaps" -Path $configLogging -Color White -log Info
         Write-Entry -Subtext "| Add Stroke to Text:           $AddShowOnSeasonTextStroke" -Path $configLogging -Color White -log Info
@@ -5603,7 +5603,7 @@ function SyncPlexArtwork {
             # Compare the hashes
             if ($remoteImageHash -ne $existingImageHash) {
                 Write-Entry -Message "Push new Artwork to Jelly/Emby - $title" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                if ($imageType -eq 'Backdrop'){
+                if ($imageType -eq 'Backdrop') {
                     # Make the API request to delete the image
                     try {
                         $response = Invoke-RestMethod -Uri $DestUrl -Method Delete -ErrorAction Stop
@@ -6125,7 +6125,8 @@ if ($global:OSType -eq "Docker") {
     $Url = "https://pkgs.alpinelinux.org/package/edge/community/x86_64/imagemagick"
     $response = Invoke-WebRequest -Uri $url
     $htmlContent = $response.Content
-    $regexPattern = '<th class="header">Version<\/th>\s*<td>\s*<strong>\s*<a[^>]*>([^<]+)<\/a>\s*<\/strong>\s*<\/td>'
+    #$regexPattern = '<th class="header">Version<\/th>\s*<td>\s*<strong>\s*<a[^>]*>([^<]+)<\/a>\s*<\/strong>\s*<\/td>' # Old Pattern 20240929
+    $regexPattern = '<th class="header">Version<\/th>\s*<td>\s*<strong>([\d\.]+-r\d+)<\/strong>\s*<\/td>'
     $Versionmatching = [regex]::Matches($htmlContent, $regexPattern)
 
     if ($Versionmatching.Count -gt 0) {
@@ -6140,8 +6141,11 @@ Elseif ($global:OSType -eq "Win32NT") {
 Else {
     $LatestImagemagickversion = (Invoke-RestMethod -Uri "https://api.github.com/repos/ImageMagick/ImageMagick/releases/latest" -Method Get).tag_name
 }
-$LatestImagemagickversion = $LatestImagemagickversion.replace('-', '.')
-Write-Entry -Message "Latest Imagemagick Version: $LatestImagemagickversion" -Path $configLogging -Color Yellow -log Info
+if ($LatestImagemagickversion) {
+    $LatestImagemagickversion = $LatestImagemagickversion.replace('-', '.')
+    Write-Entry -Message "Latest Imagemagick Version: $LatestImagemagickversion" -Path $configLogging -Color Yellow -log Info
+}
+
 # Auto Update Magick
 if ($AutoUpdateIM -eq 'true' -and $global:OSType -ne "Docker" -and $LatestImagemagickversion -gt $CurrentImagemagickversion -and $global:OSarch -ne "Arm64") {
     if ($global:OSType -eq "Win32NT") {
@@ -6324,7 +6328,8 @@ if (-not $module) {
         $errorCount++
         Write-Entry -Subtext "FanartTvAPI Module installed, importing it now..." -Path $configLogging -Color Green -log Info
         Import-Module -Name FanartTvAPI
-    } catch {
+    }
+    catch {
         Write-Host "Failed to install $moduleName module. Error: $_"
     }
 }
@@ -6653,14 +6658,14 @@ Elseif ($Testing) {
             if ($global:IsTruncated) { $TruncatedCount++ }
             $ShowoptimalFontSizeLong = Get-OptimalPointSize -text $LongText -font $fontImagemagick -box_width $ShowOnSeasonMaxWidth  -box_height $ShowOnSeasonMaxHeight -min_pointsize $ShowOnSeasonminPointSize -max_pointsize $ShowOnSeasonmaxPointSize -lineSpacing $ShowOnSeasonlineSpacing
             if ($global:IsTruncated) { $TruncatedCount++ }
-    
+
             $ShowoptimalFontSizeShortCAPS = Get-OptimalPointSize -text $ShortTextCAPS -font $fontImagemagick -box_width $ShowOnSeasonMaxWidth  -box_height $ShowOnSeasonMaxHeight -min_pointsize $ShowOnSeasonminPointSize -max_pointsize $ShowOnSeasonmaxPointSize -lineSpacing $ShowOnSeasonlineSpacing
             if ($global:IsTruncated) { $TruncatedCount++ }
             $ShowoptimalFontSizeMediumCAPS = Get-OptimalPointSize -text $MediumTextCAPS -font $fontImagemagick -box_width $ShowOnSeasonMaxWidth  -box_height $ShowOnSeasonMaxHeight -min_pointsize $ShowOnSeasonminPointSize -max_pointsize $ShowOnSeasonmaxPointSize -lineSpacing $ShowOnSeasonlineSpacing
             if ($global:IsTruncated) { $TruncatedCount++ }
             $ShowoptimalFontSizeLongCAPS = Get-OptimalPointSize -text $LongTextCAPS -font $fontImagemagick -box_width $ShowOnSeasonMaxWidth  -box_height $ShowOnSeasonMaxHeight -min_pointsize $ShowOnSeasonminPointSize -max_pointsize $ShowOnSeasonmaxPointSize -lineSpacing $ShowOnSeasonlineSpacing
             if ($global:IsTruncated) { $TruncatedCount++ }
-            
+
             # Season
             $seasonoptimalFontSizeShort = Get-OptimalPointSize -text $ShortText -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize -lineSpacing $SeasonlineSpacing
             if ($global:IsTruncated) { $TruncatedCount++ }
@@ -9654,10 +9659,10 @@ Elseif ($Tautulli) {
 
                                         if ($AddSeasonText -eq 'true') {
                                             $global:seasonTitle = $global:seasonTitle -replace '"', '""'
-                                            if ($ShowOnSeasonfontAllCaps -eq 'true'){
+                                            if ($ShowOnSeasonfontAllCaps -eq 'true') {
                                                 $global:ShowTitleOnSeason = $titletext.ToUpper() -replace '"', '""'
                                             }
-                                            Else{
+                                            Else {
                                                 $global:ShowTitleOnSeason = $titletext -replace '"', '""'
                                             }
                                             # Loop through each symbol and replace it with a newline
@@ -9670,7 +9675,7 @@ Elseif ($Tautulli) {
                                                 }
                                             }
                                             $joinedTitlePointSize = $global:seasonTitle -replace '""', '""""'
-                                            $joinedShowTitlePointSize = $global:ShowTitleOnSeason  -replace '""', '""""'
+                                            $joinedShowTitlePointSize = $global:ShowTitleOnSeason -replace '""', '""""'
                                             if ($AddShowTitletoSeason -eq 'true') {
                                                 $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize -lineSpacing $SeasonlineSpacing
                                                 $ShowoptimalFontSize = Get-OptimalPointSize -text $joinedShowTitlePointSize -font $fontImagemagick -box_width $ShowOnSeasonMaxWidth  -box_height $ShowOnSeasonMaxHeight -min_pointsize $ShowOnSeasonminPointSize -max_pointsize $ShowOnSeasonmaxPointSize -lineSpacing $ShowOnSeasonlineSpacing
@@ -9922,10 +9927,10 @@ Elseif ($Tautulli) {
 
                                         if ($AddSeasonText -eq 'true') {
                                             $global:seasonTitle = $global:seasonTitle -replace '"', '""'
-                                            if ($ShowOnSeasonfontAllCaps -eq 'true'){
+                                            if ($ShowOnSeasonfontAllCaps -eq 'true') {
                                                 $global:ShowTitleOnSeason = $titletext.ToUpper() -replace '"', '""'
                                             }
-                                            Else{
+                                            Else {
                                                 $global:ShowTitleOnSeason = $titletext -replace '"', '""'
                                             }
                                             # Loop through each symbol and replace it with a newline
@@ -9938,7 +9943,7 @@ Elseif ($Tautulli) {
                                                 }
                                             }
                                             $joinedTitlePointSize = $global:seasonTitle -replace '""', '""""'
-                                            $joinedShowTitlePointSize = $global:ShowTitleOnSeason  -replace '""', '""""'
+                                            $joinedShowTitlePointSize = $global:ShowTitleOnSeason -replace '""', '""""'
                                             if ($AddShowTitletoSeason -eq 'true') {
                                                 $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize -lineSpacing $SeasonlineSpacing
                                                 $ShowoptimalFontSize = Get-OptimalPointSize -text $joinedShowTitlePointSize -font $fontImagemagick -box_width $ShowOnSeasonMaxWidth  -box_height $ShowOnSeasonMaxHeight -min_pointsize $ShowOnSeasonminPointSize -max_pointsize $ShowOnSeasonmaxPointSize -lineSpacing $ShowOnSeasonlineSpacing
@@ -11147,7 +11152,7 @@ Elseif ($Tautulli) {
 Elseif ($Backup) {
     MassDownloadPlexArtwork
 }
-Elseif ($SyncJelly -or $SyncEmby){
+Elseif ($SyncJelly -or $SyncEmby) {
     # Initialize counter variable
     $posterCount = 0
     $SeasonCount = 0
@@ -11493,8 +11498,10 @@ Elseif ($SyncJelly -or $SyncEmby){
     Write-Entry -Message "Query all items from all Libs, this can take a while..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
     $PreferredMetadataLanguage = (Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/System/Configuration?api_key=$OtherMediaServerApiKey").PreferredMetadataLanguage
     $allShowsquery = "$OtherMediaServerUrl/Items?api_key=$OtherMediaServerApiKey&Recursive=true&Fields=ProviderIds,SeasonUserData,OriginalTitle,Path,Overview&IncludeItemTypes=Series"
+    $allEpisodesquery = "$OtherMediaServerUrl/Items?api_key=$OtherMediaServerApiKey&Recursive=true&Fields=ProviderIds,SeasonUserData,OriginalTitle,Path,Overview,Settings&IncludeItemTypes=Episode"
     $allMoviesquery = "$OtherMediaServerUrl/Items?api_key=$OtherMediaServerApiKey&Recursive=true&Fields=ProviderIds,OriginalTitle,Settings,Path,Overview&IncludeItemTypes=Movie"
     $OtherAllShows = Invoke-RestMethod -Method Get -Uri $allShowsquery
+    $OtherAllEpisodes = Invoke-RestMethod -Method Get -Uri $allEpisodesquery
     $OtherAllMovies = Invoke-RestMethod -Method Get -Uri $allMoviesquery
     $OtherLibraries = @()
     foreach ($Movie in $OtherAllMovies.Items) {
@@ -11667,81 +11674,83 @@ Elseif ($SyncJelly -or $SyncEmby){
     $OtherEpisodedata = @()
     $TempShowLibs = $OtherLibraries | Where-Object { $_."Library Type" -eq 'Series' }
     foreach ($show in $TempShowLibs) {
-        if ($SyncEmby) {
-            # extract seasons
-            $Seasonstemp = Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/shows/$($show.id)/Episodes?api_key=$OtherMediaServerApiKey"
-            $seasons = $Seasonstemp.Items | Where-Object { $_.Type -eq 'Episode' } | Select-Object ParentIndexNumber, SeasonId, ImageTags -Unique
-            foreach ($Season in $Seasons) {
-                $SeasonEpisodestemp = Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/shows/$($show.id)/Episodes?seasonid=$($Season.SeasonId)&api_key=$OtherMediaServerApiKey"
-                $SeasonEpisodes = $SeasonEpisodestemp.Items | Where-Object { $_.Type -eq 'Episode' } | Select-Object indexnumber, SeriesId, SeasonId, ImageTags, Id, Name -Unique
-                $tempseasondata = New-Object psobject
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Library Name" -Value $show."Library Name"
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Show Name" -Value $show.title
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Show Original Name" -Value $show.OriginalTitle
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Library Language" -Value $PreferredMetadataLanguage
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "ShowID" -Value $($SeasonEpisodes.SeriesId[0] -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "SeasonId" -Value $($SeasonEpisodes.SeasonId[0] -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "EpisodeIds" -Value $($SeasonEpisodes.id -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $show.tvdbid
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "imdbid" -Value $show.imdbid
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value $show.tmdbid
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "type" -Value 'Episode'
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Season Number" -Value $Season.ParentIndexNumber
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "SeasonName" -Value $($Season.SeasonName -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Episodes" -Value $($SeasonEpisodes.indexnumber -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Title" -Value $($SeasonEpisodes.Name -join ';')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "OtherMediaServerTitleCardTag" -Value $($SeasonEpisodes.ImageTags.Primary -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "OtherMediaServerSeasonTag" -Value $($Season.ImageTags.Primary -join ',')
-                $OtherEpisodedata += $tempseasondata
-                Write-Entry -Subtext "Found [$($tempseasondata.{Show Name})] of type $($tempseasondata.Type) for season $($tempseasondata.{Season Number})" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+        # Iterate through all shows
+        $seasons = $OtherAllEpisodes.Items | Where-Object { $_.SeriesId -eq $show.id } | Group-Object -Property SeasonName | Sort-Object -Property Name
+        foreach ($Season in $Seasons) {
+            # Sort episodes within the season by IndexNumber
+            $SeasonEpisodes = $Season.Group | Sort-Object -Property indexnumber
+
+            # Collect episode IDs, Titles, and PrimaryImageTags
+            $EpisodeIds = ($SeasonEpisodes.Id -join ',')
+            $EpisodeTitles = ($SeasonEpisodes.Name -join ';')
+            $Episodes = ($SeasonEpisodes.IndexNumber -join ',')
+            $Thumbs = ($SeasonEpisodes.ImageTags.Primary -join ',')
+
+            # Calculate the ShowID and SeasonId
+            $ShowID = if ($SeasonEpisodes.SeriesId) { $SeasonEpisodes.SeriesId[0] } else { $null }
+            $SeasonId = if ($SeasonEpisodes.SeasonId) { $SeasonEpisodes.SeasonId[0] } else { $null }
+
+            # Create an object for the current season
+            $seasonObject = [PSCustomObject]@{
+                "Library Name"                 = $show."Library Name"
+                "Show Name"                    = $show.title
+                "Show Original Name"           = $show.OriginalTitle
+                "Library Language"             = $PreferredMetadataLanguage
+                "ShowID"                       = $ShowID
+                "SeasonId"                     = $SeasonId
+                "EpisodeIds"                   = $EpisodeIds
+                "tvdbid"                       = $show.tvdbid
+                "imdbid"                       = $show.imdbid
+                "tmdbid"                       = $show.tmdbid
+                "type"                         = "Episode"
+                "Season Number"                = $SeasonEpisodes[0].ParentIndexNumber
+                "SeasonName"                   = $Season.Name
+                "Episodes"                     = $Episodes
+                "Title"                        = $EpisodeTitles
+                "OtherMediaServerTitleCardTag" = $Thumbs
+                "OtherMediaServerSeasonTag"    = $SeasonEpisodes[0].SeriesPrimaryImageTag
             }
-        }
-        Else {
-            # extract seasons
-            $Seasonstemp = Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/shows/$($show.id)/Episodes?api_key=$OtherMediaServerApiKey"
-            $seasons = $Seasonstemp.Items | Where-Object { $_.LocationType -eq 'FileSystem' } | Select-Object ParentIndexNumber, SeasonId, ImageTags -Unique
 
-            foreach ($Season in $Seasons) {
-                $SeasonEpisodestemp = Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/shows/$($show.id)/Episodes?seasonid=$($Season.SeasonId)&api_key=$OtherMediaServerApiKey"
-                $SeasonEpisodes = $SeasonEpisodestemp.Items | Where-Object { $_.LocationType -eq 'FileSystem' } | Select-Object indexnumber, SeriesId, SeasonId, ImageTags, Id, Name -Unique
-
-                # Calculate the ShowID value
-                $ShowID = if ($SeasonEpisodes.SeriesId) { $SeasonEpisodes.SeriesId[0] -join ',' } else { $null }
-
-                # Calculate the SeasonId value
-                $SeasonId = if ($SeasonEpisodes.SeasonId) { $SeasonEpisodes.SeasonId[0] -join ',' } else { $null }
-
-                $tempseasondata = New-Object psobject
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Library Name" -Value $show."Library Name"
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Show Name" -Value $show.title
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Show Original Name" -Value $show.OriginalTitle
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Library Language" -Value $PreferredMetadataLanguage
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "ShowID" -Value $ShowID
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "SeasonId" -Value $SeasonId
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "EpisodeIds" -Value $($SeasonEpisodes.id -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $show.tvdbid
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "imdbid" -Value $show.imdbid
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value $show.tmdbid
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "type" -Value 'Episode'
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Season Number" -Value $Season.ParentIndexNumber
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "SeasonName" -Value $($Season.SeasonName -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Episodes" -Value $($SeasonEpisodes.indexnumber -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Title" -Value $($SeasonEpisodes.Name -join ';')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "OtherMediaServerTitleCardTag" -Value $($SeasonEpisodes.ImageTags.Primary -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "OtherMediaServerSeasonTag" -Value $($Season.ImageTags.Primary -join ',')
-                $OtherEpisodedata += $tempseasondata
-                Write-Entry -Subtext "Found [$($tempseasondata.{Show Name})] of type $($tempseasondata.Type) for season $($tempseasondata.{Season Number})" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-            }
+            # Add the season object to the array
+            $OtherEpisodedata += $seasonObject
         }
     }
-    if ($OtherEpisodedata) {
-        Write-Entry -Subtext "Found '$($OtherEpisodedata.Episodes.split(',').count)' Episodes..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+    if ($OtherAllEpisodes) {
+        Write-Entry -Subtext "Found '$($OtherAllEpisodes.items.count)' Episodes..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     }
 
     $OtherAllShows = $OtherLibraries | Where-Object { $_.'Library Type' -eq 'Series' }
     $OtherAllMovies = $OtherLibraries | Where-Object { $_.'Library Type' -eq 'Movie' }
 
-    $OtherEpisodedata | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\OtherEpisodedata.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
+    # Create an empty array to hold the custom objects
+    $FormattedData = @()
+
+    # Iterate over each item in $OtherEpisodedata
+    foreach ($data in $OtherEpisodedata) {
+        # Create a custom object for each episode using the variables
+        $FormattedData += [PSCustomObject]@{
+            'Library Name'                 = $data.'Library Name'
+            'Show Name'                    = $data.'Show Name'
+            'Show Original Name'           = $data.'Show Original Name'
+            'Library Language'             = $data.'Library Language'
+            'ShowID'                       = $data.'ShowID'
+            'SeasonId'                     = $data.'SeasonId'
+            'EpisodeIds'                   = $data.'EpisodeIds'
+            'tvdbid'                       = $data.'tvdbid'
+            'imdbid'                       = $data.'imdbid'
+            'tmdbid'                       = $data.'tmdbid'
+            'type'                         = $data.'type'
+            'Season Number'                = $data.'Season Number'
+            'SeasonName'                   = $data.'SeasonName'
+            'Episodes'                     = $data.'Episodes'
+            'Title'                        = $data.'Title'
+            'OtherMediaServerTitleCardTag' = $data.'OtherMediaServerTitleCardTag'
+            'OtherMediaServerSeasonTag'    = $data.'OtherMediaServerSeasonTag'
+        }
+    }
+
+    # Export the formatted data to CSV
+    $FormattedData | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\OtherEpisodedata.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
     $OtherLibraries | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\OtherLibraries.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
     $Episodedata | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\Episodedata.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
     $Libraries | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\Libraries.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
@@ -11770,7 +11779,7 @@ Elseif ($SyncJelly -or $SyncEmby){
                         $_.ImdbId -eq $entry.ImdbId
                     )
                 }
-                if ($matchingMovie){
+                if ($matchingMovie) {
                     $MovieTitle = $entry.Title
                     $imageType = "Primary"
                     $DestUrl = "$OtherMediaServerUrl/items/$($matchingMovie.id)/images/$imageType/?api_key=$OtherMediaServerApiKey"
@@ -11796,8 +11805,8 @@ Elseif ($SyncJelly -or $SyncEmby){
                         $_.ImdbId -eq $entry.ImdbId
                     )
                 }
-                if ($matchingMovie){
-                    $MovieTitle = $entry.Title+" | Background"
+                if ($matchingMovie) {
+                    $MovieTitle = $entry.Title + " | Background"
                     $imageType = "Backdrop"
                     $DestUrl = "$OtherMediaServerUrl/items/$($matchingMovie.id)/images/$imageType/?api_key=$OtherMediaServerApiKey"
                     SyncPlexArtwork -ArtUrl $Arturl -DestUrl $DestUrl -imagetype $imageType -title $MovieTitle -artworktype 'background'
@@ -11831,7 +11840,7 @@ Elseif ($SyncJelly -or $SyncEmby){
                         $_.TvdbId -eq $entry.TvdbId
                     )
                 }
-                if ($matchingShow){
+                if ($matchingShow) {
                     $ShowTitle = $entry.Title
                     $imageType = "Primary"
                     $DestUrl = "$OtherMediaServerUrl/items/$($matchingShow.id)/images/$imageType/?api_key=$OtherMediaServerApiKey"
@@ -11854,8 +11863,8 @@ Elseif ($SyncJelly -or $SyncEmby){
                         $_.TvdbId -eq $entry.TvdbId
                     )
                 }
-                if ($matchingMovie){
-                    $ShowTitle = $entry.Title+" | Background"
+                if ($matchingMovie) {
+                    $ShowTitle = $entry.Title + " | Background"
                     $imageType = "Backdrop"
                     $DestUrl = "$OtherMediaServerUrl/items/$($matchingMovie.id)/images/$imageType/?api_key=$OtherMediaServerApiKey"
                     SyncPlexArtwork -ArtUrl $Arturl -DestUrl $DestUrl -imagetype $imageType -title $ShowTitle -artworktype 'background'
@@ -11876,16 +11885,16 @@ Elseif ($SyncJelly -or $SyncEmby){
                         $Arturl = $plexurl + $global:PlexSeasonUrl
                     }
 
-                    $matchingSeason = $OtherEpisodedata| Where-Object {
-                        ($_.'Show Name'  -eq $entry.Title -or $_.'Show Name' -eq $entry.originalTitle -or $_."Show Original Name" -eq $entry.originalTitle -or $_."Show Original Name" -eq $entry.Title) -and
+                    $matchingSeason = $OtherEpisodedata | Where-Object {
+                        ($_.'Show Name' -eq $entry.Title -or $_.'Show Name' -eq $entry.originalTitle -or $_."Show Original Name" -eq $entry.originalTitle -or $_."Show Original Name" -eq $entry.Title) -and
                         $_."Library Name" -eq $entry."Library Name" -and
                         $_."Season Number" -eq $global:SeasonNumber -and (
                             $_.TmdbId -eq $entry.TmdbId -or
                             $_.TvdbId -eq $entry.TvdbId
                         )
                     }
-                    if ($matchingSeason){
-                        $ShowTitle = $entry.Title+" | Season $global:SeasonNumber"
+                    if ($matchingSeason) {
+                        $ShowTitle = $entry.Title + " | Season $global:SeasonNumber"
                         $imageType = "Primary"
                         $DestUrl = "$OtherMediaServerUrl/items/$($matchingSeason.SeasonId)/images/$imageType/?api_key=$OtherMediaServerApiKey"
                         SyncPlexArtwork -ArtUrl $Arturl -DestUrl $DestUrl -imagetype $imageType -title $ShowTitle -artworktype 'season'
@@ -11912,7 +11921,8 @@ Elseif ($SyncJelly -or $SyncEmby){
 
                             if ($PlexToken) {
                                 $Arturl = $plexurl + $global:PlexTitleCardUrl + "?X-Plex-Token=$PlexToken"
-                            } else {
+                            }
+                            else {
                                 $Arturl = $plexurl + $global:PlexTitleCardUrl
                             }
 
@@ -12058,9 +12068,11 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
     Write-Entry -Message "Query all items from all Libs, this can take a while..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
     $PreferredMetadataLanguage = (Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/System/Configuration?api_key=$OtherMediaServerApiKey").PreferredMetadataLanguage
     $allShowsquery = "$OtherMediaServerUrl/Items?api_key=$OtherMediaServerApiKey&Recursive=true&Fields=ProviderIds,SeasonUserData,OriginalTitle,Path,Overview&IncludeItemTypes=Series"
+    $allEpisodesquery = "$OtherMediaServerUrl/Items?api_key=$OtherMediaServerApiKey&Recursive=true&Fields=ProviderIds,SeasonUserData,OriginalTitle,Path,Overview,Settings&IncludeItemTypes=Episode"
     $allMoviesquery = "$OtherMediaServerUrl/Items?api_key=$OtherMediaServerApiKey&Recursive=true&Fields=ProviderIds,OriginalTitle,Settings,Path,Overview&IncludeItemTypes=Movie"
     $AllShows = Invoke-RestMethod -Method Get -Uri $allShowsquery
     $AllMovies = Invoke-RestMethod -Method Get -Uri $allMoviesquery
+    $AllEpisodes = Invoke-RestMethod -Method Get -Uri $allEpisodesquery
     $Libraries = @()
     foreach ($Movie in $AllMovies.Items) {
         if ($UseEmby -eq 'true') {
@@ -12231,70 +12243,82 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
     Write-Entry -Subtext "Found '$($Libraries.count)' Items..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     $Libraries | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\OtherMediaServerLibExport.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
     Write-Entry -Message "Export everything to a csv: $global:ScriptRoot\Logs\OtherMediaServerLibExport.csv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+
     $Episodedata = @()
     $TempShowLibs = $Libraries | Where-Object { $_."Library Type" -eq 'Series' }
     foreach ($show in $TempShowLibs) {
-        if ($UseEmby -eq 'true') {
-            # extract seasons
-            $Seasonstemp = Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/shows/$($show.id)/Episodes?api_key=$OtherMediaServerApiKey"
-            $seasons = $Seasonstemp.Items | Where-Object { $_.Type -eq 'Episode' } | Select-Object ParentIndexNumber, SeasonId, ImageTags -Unique
-            foreach ($Season in $Seasons) {
-                $SeasonEpisodestemp = Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/shows/$($show.id)/Episodes?seasonid=$($Season.SeasonId)&api_key=$OtherMediaServerApiKey"
-                $SeasonEpisodes = $SeasonEpisodestemp.Items | Where-Object { $_.Type -eq 'Episode' } | Select-Object indexnumber, SeriesId, SeasonId, ImageTags, Id, Name -Unique
-                $tempseasondata = New-Object psobject
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Show Name" -Value $show.title
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Show Original Name" -Value $show.OriginalTitle
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Library Language" -Value $PreferredMetadataLanguage
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "ShowID" -Value $($SeasonEpisodes.SeriesId[0] -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "SeasonId" -Value $($SeasonEpisodes.SeasonId[0] -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "EpisodeIds" -Value $($SeasonEpisodes.id -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $show.tvdbid
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "imdbid" -Value $show.imdbid
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value $show.tmdbid
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "type" -Value 'Episode'
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Season Number" -Value $Season.ParentIndexNumber
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "SeasonName" -Value $($Season.SeasonName -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Episodes" -Value $($SeasonEpisodes.indexnumber -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Title" -Value $($SeasonEpisodes.Name -join ';')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "OtherMediaServerTitleCardTag" -Value $($SeasonEpisodes.ImageTags.Primary -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "OtherMediaServerSeasonTag" -Value $($Season.ImageTags.Primary -join ',')
-                $Episodedata += $tempseasondata
-                Write-Entry -Subtext "Found [$($tempseasondata.{Show Name})] of type $($tempseasondata.Type) for season $($tempseasondata.{Season Number})" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-            }
-        }
-        Else {
-            # extract seasons
-            $Seasonstemp = Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/shows/$($show.id)/Episodes?api_key=$OtherMediaServerApiKey"
-            $seasons = $Seasonstemp.Items | Where-Object { $_.LocationType -eq 'FileSystem' } | Select-Object ParentIndexNumber, SeasonId, ImageTags -Unique
+        # Iterate through all shows
+        $seasons = $AllEpisodes.Items | Where-Object { $_.SeriesId -eq $show.id } | Group-Object -Property SeasonName | Sort-Object -Property Name
+        foreach ($Season in $Seasons) {
+            # Sort episodes within the season by IndexNumber
+            $SeasonEpisodes = $Season.Group | Sort-Object -Property indexnumber
 
-            foreach ($Season in $Seasons) {
-                $SeasonEpisodestemp = Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/shows/$($show.id)/Episodes?seasonid=$($Season.SeasonId)&api_key=$OtherMediaServerApiKey"
-                $SeasonEpisodes = $SeasonEpisodestemp.Items | Where-Object { $_.LocationType -eq 'FileSystem' } | Select-Object indexnumber, SeriesId, SeasonId, ImageTags, Id, Name -Unique
-                $tempseasondata = New-Object psobject
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Show Name" -Value $show.title
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Show Original Name" -Value $show.OriginalTitle
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Library Language" -Value $PreferredMetadataLanguage
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "ShowID" -Value $($SeasonEpisodes.SeriesId[0] -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "SeasonId" -Value $($SeasonEpisodes.SeasonId[0] -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "EpisodeIds" -Value $($SeasonEpisodes.id -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $show.tvdbid
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "imdbid" -Value $show.imdbid
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value $show.tmdbid
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "type" -Value 'Episode'
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Season Number" -Value $Season.ParentIndexNumber
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "SeasonName" -Value $($Season.SeasonName -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Episodes" -Value $($SeasonEpisodes.indexnumber -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Title" -Value $($SeasonEpisodes.Name -join ';')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "OtherMediaServerTitleCardTag" -Value $($SeasonEpisodes.ImageTags.Primary -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "OtherMediaServerSeasonTag" -Value $($Season.ImageTags.Primary -join ',')
-                $Episodedata += $tempseasondata
-                Write-Entry -Subtext "Found [$($tempseasondata.{Show Name})] of type $($tempseasondata.Type) for season $($tempseasondata.{Season Number})" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+            # Collect episode IDs, Titles, and PrimaryImageTags
+            $EpisodeIds = ($SeasonEpisodes.Id -join ',')
+            $EpisodeTitles = ($SeasonEpisodes.Name -join ';')
+            $Episodes = ($SeasonEpisodes.IndexNumber -join ',')
+            $Thumbs = ($SeasonEpisodes.ImageTags.Primary -join ',')
+
+            # Calculate the ShowID and SeasonId
+            $ShowID = if ($SeasonEpisodes.SeriesId) { $SeasonEpisodes.SeriesId[0] } else { $null }
+            $SeasonId = if ($SeasonEpisodes.SeasonId) { $SeasonEpisodes.SeasonId[0] } else { $null }
+
+            # Create an object for the current season
+            $seasonObject = [PSCustomObject]@{
+                "Library Name"                 = $show."Library Name"
+                "Show Name"                    = $show.title
+                "Show Original Name"           = $show.OriginalTitle
+                "Library Language"             = $PreferredMetadataLanguage
+                "ShowID"                       = $ShowID
+                "SeasonId"                     = $SeasonId
+                "EpisodeIds"                   = $EpisodeIds
+                "tvdbid"                       = $show.tvdbid
+                "imdbid"                       = $show.imdbid
+                "tmdbid"                       = $show.tmdbid
+                "type"                         = "Episode"
+                "Season Number"                = $SeasonEpisodes[0].ParentIndexNumber
+                "SeasonName"                   = $Season.Name
+                "Episodes"                     = $Episodes
+                "Title"                        = $EpisodeTitles
+                "OtherMediaServerTitleCardTag" = $Thumbs
+                "OtherMediaServerSeasonTag"    = $SeasonEpisodes[0].SeriesPrimaryImageTag
             }
+
+            # Add the season object to the array
+            $Episodedata += $seasonObject
         }
     }
-    $Episodedata | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\OtherMediaServerEpisodeExport.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
-    if ($Episodedata) {
-        Write-Entry -Subtext "Found '$($Episodedata.Episodes.split(',').count)' Episodes..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+    # Create an empty array to hold the custom objects
+    $FormattedData = @()
+
+    # Iterate over each item in $OtherEpisodedata
+    foreach ($data in $Episodedata) {
+        # Create a custom object for each episode using the variables
+        $FormattedData += [PSCustomObject]@{
+            'Library Name'                 = $data.'Library Name'
+            'Show Name'                    = $data.'Show Name'
+            'Show Original Name'           = $data.'Show Original Name'
+            'Library Language'             = $data.'Library Language'
+            'ShowID'                       = $data.'ShowID'
+            'SeasonId'                     = $data.'SeasonId'
+            'EpisodeIds'                   = $data.'EpisodeIds'
+            'tvdbid'                       = $data.'tvdbid'
+            'imdbid'                       = $data.'imdbid'
+            'tmdbid'                       = $data.'tmdbid'
+            'type'                         = $data.'type'
+            'Season Number'                = $data.'Season Number'
+            'SeasonName'                   = $data.'SeasonName'
+            'Episodes'                     = $data.'Episodes'
+            'Title'                        = $data.'Title'
+            'OtherMediaServerTitleCardTag' = $data.'OtherMediaServerTitleCardTag'
+            'OtherMediaServerSeasonTag'    = $data.'OtherMediaServerSeasonTag'
+        }
+    }
+
+    # Export the formatted data to CSV
+    $FormattedData | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\OtherMediaServerEpisodeExport.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
+    if ($AllEpisodes) {
+        Write-Entry -Subtext "Found '$($AllEpisodes.Items.count)' Episodes..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     }
 
     $AllShows = $Libraries | Where-Object { $_.'Library Type' -eq 'Series' }
@@ -12663,7 +12687,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                         }
                     }
                     else {
-                        if ($global:UploadExistingAssets -eq 'true'){
+                        if ($global:UploadExistingAssets -eq 'true') {
                             Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                             Write-Entry -Subtext "Searching for $Titletext Artwork on Media Server." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                             UploadOtherMediaServerArtwork -itemId $entry.id -imageType "Primary" -imagePath $PosterImageoriginal
@@ -12956,7 +12980,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                         }
                     }
                     else {
-                        if ($global:UploadExistingAssets -eq 'true'){
+                        if ($global:UploadExistingAssets -eq 'true') {
                             Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                             Write-Entry -Subtext "Searching for $Titletext Artwork on Media Server." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                             UploadOtherMediaServerArtwork -itemId $entry.id -imageType "Backdrop" -imagePath $backgroundImageoriginal
@@ -13312,7 +13336,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                     }
                 }
                 else {
-                    if ($global:UploadExistingAssets -eq 'true'){
+                    if ($global:UploadExistingAssets -eq 'true') {
                         Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                         Write-Entry -Subtext "Searching for $Titletext Artwork on Media Server." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                         UploadOtherMediaServerArtwork -itemId $entry.id -imageType "Primary" -imagePath $PosterImageoriginal
@@ -13615,7 +13639,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                     }
                 }
                 else {
-                    if ($global:UploadExistingAssets -eq 'true'){
+                    if ($global:UploadExistingAssets -eq 'true') {
                         Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                         Write-Entry -Subtext "Searching for $Titletext Artwork on Media Server." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                         UploadOtherMediaServerArtwork -itemId $entry.id -imageType "Backdrop" -imagePath $backgroundImageoriginal
@@ -13867,10 +13891,10 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
 
                                             if ($AddSeasonText -eq 'true') {
                                                 $global:seasonTitle = $global:seasonTitle -replace '"', '""'
-                                                if ($ShowOnSeasonfontAllCaps -eq 'true'){
+                                                if ($ShowOnSeasonfontAllCaps -eq 'true') {
                                                     $global:ShowTitleOnSeason = $titletext.ToUpper() -replace '"', '""'
                                                 }
-                                                Else{
+                                                Else {
                                                     $global:ShowTitleOnSeason = $titletext -replace '"', '""'
                                                 }
                                                 # Loop through each symbol and replace it with a newline
@@ -13883,7 +13907,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                                     }
                                                 }
                                                 $joinedTitlePointSize = $global:seasonTitle -replace '""', '""""'
-                                                $joinedShowTitlePointSize = $global:ShowTitleOnSeason  -replace '""', '""""'
+                                                $joinedShowTitlePointSize = $global:ShowTitleOnSeason -replace '""', '""""'
                                                 if ($AddShowTitletoSeason -eq 'true') {
                                                     $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize -lineSpacing $SeasonlineSpacing
                                                     $ShowoptimalFontSize = Get-OptimalPointSize -text $joinedShowTitlePointSize -font $fontImagemagick -box_width $ShowOnSeasonMaxWidth  -box_height $ShowOnSeasonMaxHeight -min_pointsize $ShowOnSeasonminPointSize -max_pointsize $ShowOnSeasonmaxPointSize -lineSpacing $ShowOnSeasonlineSpacing
@@ -14013,7 +14037,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                             }
                         }
                         else {
-                            if ($global:UploadExistingAssets -eq 'true'){
+                            if ($global:UploadExistingAssets -eq 'true') {
                                 Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                                 Write-Entry -Subtext "Searching for $Titletext Artwork on Media Server." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                                 UploadOtherMediaServerArtwork -itemId $entry.id -imageType "Primary" -imagePath $SeasonImageoriginal
@@ -14390,10 +14414,10 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
 
                                     }
                                     else {
-                                        if ($global:UploadExistingAssets -eq 'true'){
+                                        if ($global:UploadExistingAssets -eq 'true') {
                                             Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                                             Write-Entry -Subtext "Searching for $Titletext Artwork on Media Server." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
-                                            UploadOtherMediaServerArtwork -itemId $entry.id -imageType "Primary" -imagePath $EpisodeImageoriginal
+                                            UploadOtherMediaServerArtwork -itemId $global:episodeid -imageType "Primary" -imagePath $EpisodeImageoriginal
                                         }
                                         Else {
                                             if ($show_skipped -eq 'True' ) {
@@ -14760,10 +14784,10 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
 
                                     }
                                     else {
-                                        if ($global:UploadExistingAssets -eq 'true'){
+                                        if ($global:UploadExistingAssets -eq 'true') {
                                             Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                                             Write-Entry -Subtext "Searching for $Titletext Artwork on Media Server." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
-                                            UploadOtherMediaServerArtwork -itemId $entry.id -imageType "Primary" -imagePath $EpisodeImageoriginal
+                                            UploadOtherMediaServerArtwork -itemId $global:episodeid -imageType "Primary" -imagePath $EpisodeImageoriginal
                                         }
                                         Else {
                                             if ($show_skipped -eq 'True' ) {
@@ -16169,7 +16193,7 @@ else {
                             Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                             try {
                                 GetPlexArtwork -Type "$Titletext Artwork." -ArtUrl $Arturl -TempImage $PosterImage
-                                if ($global:PlexartworkDownloaded -eq 'true'){
+                                if ($global:PlexartworkDownloaded -eq 'true') {
                                     Write-Entry -Subtext "Uploading Existing Artwork for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                     $fileContent = [System.IO.File]::ReadAllBytes($PosterImageoriginal)
                                     if ($PlexToken) {
@@ -16528,7 +16552,7 @@ else {
                             Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                             try {
                                 GetPlexArtwork -Type " $Titletext | Backgound Artwork." -ArtUrl $Arturl -TempImage $backgroundImage
-                                if ($global:PlexartworkDownloaded -eq 'true'){
+                                if ($global:PlexartworkDownloaded -eq 'true') {
                                     Write-Entry -Subtext "Uploading Existing Artwork for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                     $fileContent = [System.IO.File]::ReadAllBytes($backgroundImageoriginal)
                                     if ($PlexToken) {
@@ -16966,7 +16990,7 @@ else {
                         Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                         try {
                             GetPlexArtwork -Type " $Titletext Artwork." -ArtUrl $Arturl -TempImage $PosterImage
-                            if ($global:PlexartworkDownloaded -eq 'true'){
+                            if ($global:PlexartworkDownloaded -eq 'true') {
                                 Write-Entry -Subtext "Uploading Existing Artwork for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 $fileContent = [System.IO.File]::ReadAllBytes($PosterImageoriginal)
                                 if ($PlexToken) {
@@ -17336,7 +17360,7 @@ else {
                         Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                         try {
                             GetPlexArtwork -Type " $Titletext | Background Artwork." -ArtUrl $Arturl -TempImage $backgroundImage
-                            if ($global:PlexartworkDownloaded -eq 'true'){
+                            if ($global:PlexartworkDownloaded -eq 'true') {
                                 Write-Entry -Subtext "Uploading Existing Artwork for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 $fileContent = [System.IO.File]::ReadAllBytes($backgroundImageoriginal)
                                 if ($PlexToken) {
@@ -17625,10 +17649,10 @@ else {
 
                                         if ($AddSeasonText -eq 'true') {
                                             $global:seasonTitle = $global:seasonTitle -replace '"', '""'
-                                            if ($ShowOnSeasonfontAllCaps -eq 'true'){
+                                            if ($ShowOnSeasonfontAllCaps -eq 'true') {
                                                 $global:ShowTitleOnSeason = $titletext.ToUpper() -replace '"', '""'
                                             }
-                                            Else{
+                                            Else {
                                                 $global:ShowTitleOnSeason = $titletext -replace '"', '""'
                                             }
                                             # Loop through each symbol and replace it with a newline
@@ -17641,7 +17665,7 @@ else {
                                                 }
                                             }
                                             $joinedTitlePointSize = $global:seasonTitle -replace '""', '""""'
-                                            $joinedShowTitlePointSize = $global:ShowTitleOnSeason  -replace '""', '""""'
+                                            $joinedShowTitlePointSize = $global:ShowTitleOnSeason -replace '""', '""""'
                                             if ($AddShowTitletoSeason -eq 'true') {
                                                 $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize -lineSpacing $SeasonlineSpacing
                                                 $ShowoptimalFontSize = Get-OptimalPointSize -text $joinedShowTitlePointSize -font $fontImagemagick -box_width $ShowOnSeasonMaxWidth  -box_height $ShowOnSeasonMaxHeight -min_pointsize $ShowOnSeasonminPointSize -max_pointsize $ShowOnSeasonmaxPointSize -lineSpacing $ShowOnSeasonlineSpacing
@@ -17838,7 +17862,7 @@ else {
                             Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                             try {
                                 GetPlexArtwork -Type " $Titletext | $global:season Artwork." -ArtUrl $Arturl -TempImage $SeasonImage
-                                if ($global:PlexartworkDownloaded -eq 'true'){
+                                if ($global:PlexartworkDownloaded -eq 'true') {
                                     Write-Entry -Subtext "Uploading Existing Artwork for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                     $fileContent = [System.IO.File]::ReadAllBytes($SeasonImageoriginal)
                                     if ($PlexToken) {
@@ -18335,7 +18359,7 @@ else {
                                             Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                                             try {
                                                 GetPlexArtwork -Type " $Titletext | $global:FileNaming Artwork." -ArtUrl $Arturl -TempImage $EpisodeImage
-                                                if ($global:PlexartworkDownloaded -eq 'true'){
+                                                if ($global:PlexartworkDownloaded -eq 'true') {
                                                     Write-Entry -Subtext "Uploading Existing Artwork for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                     $fileContent = [System.IO.File]::ReadAllBytes($EpisodeImageoriginal)
                                                     if ($PlexToken) {
@@ -18825,7 +18849,7 @@ else {
                                             Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                                             try {
                                                 GetPlexArtwork -Type " $Titletext | $global:FileNaming Artwork." -ArtUrl $Arturl -TempImage $EpisodeImage
-                                                if ($global:PlexartworkDownloaded -eq 'true'){
+                                                if ($global:PlexartworkDownloaded -eq 'true') {
                                                     Write-Entry -Subtext "Uploading Existing Artwork for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                     $fileContent = [System.IO.File]::ReadAllBytes($EpisodeImageoriginal)
                                                     if ($PlexToken) {
