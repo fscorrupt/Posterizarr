@@ -108,7 +108,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
 2. Update the following variables with your API keys and preferences:
 
     <details close>
-    <summary>ApiPart:</summary>
+    <summary>ApiPart [click to unfold]</summary>
     <br>
 
     - `tvdbapi`: Your TVDB Project API key.
@@ -140,7 +140,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
       - If you set it to `xx` you tell the script it should only search for textless, posters with text will be skipped.
     </details>
     <details close>
-    <summary>PlexPart:</summary>
+    <summary>PlexPart [click to unfold]</summary>
     <br>
 
     - `LibstoExclude`: Libraries, by name, to exclude from processing.
@@ -149,7 +149,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `UploadExistingAssets`: If set to `true`, the script will check local assets and upload them to Plex, but only if Plex does not already have EXIF data from Posterizarr, Kometa, or TCM for the artwork being uploaded.
     </details>
     <details close>
-    <summary>JellyfinPart:</summary>
+    <summary>JellyfinPart [click to unfold]</summary>
     <br>
 
     - `LibstoExclude`: Libraries, by local folder name, to exclude from processing.
@@ -159,7 +159,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `UploadExistingAssets`: If set to `true`, the script will check local assets and upload them to Jellyfin, but only if Jellyfin does not already have EXIF data from Posterizarr, Kometa, or TCM for the artwork being uploaded.
     </details>
     <details close>
-    <summary>EmbyPart:</summary>
+    <summary>EmbyPart [click to unfold]</summary>
     <br>
 
     - `LibstoExclude`: Libraries, by local folder name, to exclude from processing.
@@ -168,7 +168,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `UploadExistingAssets`: If set to `true`, the script will check local assets and upload them to Emby, but only if Emby does not already have EXIF data from Posterizarr, Kometa, or TCM for the artwork being uploaded.
     </details>
     <details close>
-    <summary>Notification:</summary>
+    <summary>Notification [click to unfold]</summary>
     <br>
 
     - `SendNotification`: Set to `true` if you want to send notifications via discord or apprise, else `false`.
@@ -176,7 +176,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `Discord`: Discord Webhook Url.
     </details>
     <details close>
-    <summary>PrerequisitePart:</summary>
+    <summary>PrerequisitePart [click to unfold]</summary>
     <br>
 
     - `AssetPath`: Path to store generated posters.
@@ -220,14 +220,14 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
       - Doing this could break things, cause you then uses IM Versions that are not tested with Posterizarr.
     </details>
     <details close>
-    <summary>OverlayPart:</summary>
+    <summary>OverlayPart [click to unfold]</summary>
     <br>
 
     - `ImageProcessing`: Set to `true` if you want the ImageMagick part (text, overlay and/or border); if `false`, it only downloads the posters.
     - `outputQuality`: Image output quality, default is `92%` if you set it to `100%` the image size gets doubled.
     </details>
     <details close>
-    <summary>PosterOverlayPart:</summary>
+    <summary>PosterOverlayPart [click to unfold]</summary>
     <br>
 
     - `fontAllCaps`: Set to `true` for all caps text, else `false`.
@@ -248,7 +248,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `lineSpacing`: Adjust the height between lines of text (Default is `0`)
     </details>
     <details close>
-    <summary>SeasonPosterOverlayPart:</summary>
+    <summary>SeasonPosterOverlayPart [click to unfold]</summary>
     <br>
 
     - `fontAllCaps`: Set to `true` for all caps text, else `false`.
@@ -269,7 +269,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `lineSpacing`: Adjust the height between lines of text (Default is `0`)
     </details>
     <details close>
-    <summary>ShowTilteOnSeasonPosterPart:</summary>
+    <summary>ShowTilteOnSeasonPosterPart [click to unfold]</summary>
     <br>
 
     - `fontAllCaps`: Set to `true` for all caps text, else `false`.
@@ -286,7 +286,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `lineSpacing`: Adjust the height between lines of text (Default is `0`)
     </details>
     <details close>
-    <summary>BackgroundOverlayPart:</summary>
+    <summary>BackgroundOverlayPart [click to unfold]</summary>
     <br>
 
     - `fontAllCaps`: Set to `true` for all caps text, else `false`.
@@ -307,7 +307,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `lineSpacing`: Adjust the height between lines of text (Default is `0`)
     </details>
     <details close>
-    <summary>TitleCardOverlayPart:</summary>
+    <summary>TitleCardOverlayPart [click to unfold]</summary>
     <br>
 
     - `UseBackgroundAsTitleCard`: Set to `true` if you prefer show background as TitleCard, default is `false` where it uses episode image as TitleCard.
@@ -318,7 +318,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `bordercolor`: Color of border.
     </details>
     <details close>
-    <summary>TitleCardTitleTextPart:</summary>
+    <summary>TitleCardTitleTextPart [click to unfold]</summary>
     <br>
 
     - `AddEPTitleText`: Set to `true` to add episode title text to the TitleCard image.
@@ -335,7 +335,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `lineSpacing`: Adjust the height between lines of text (Default is `0`)
     </details>
     <details close>
-    <summary>TitleCardEpisodeTextPart:</summary>
+    <summary>TitleCardEpisodeTextPart [click to unfold]</summary>
     <br>
 
     - `SeasonTCText`: You can Specify the default text for `Season` that appears on TitleCard.
