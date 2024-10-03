@@ -11,7 +11,7 @@ param (
     [switch]$SyncEmby
 )
 
-$CurrentScriptVersion = "1.8.17"
+$CurrentScriptVersion = "1.8.18"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -6411,12 +6411,18 @@ $extraPlexHeaders = @{
 #### MAIN SCRIPT START ####
 if ($Manual) {
     Write-Entry -Message "Manual Poster Creation Started" -Path $global:ScriptRoot\Logs\Manuallog.log -Color DarkMagenta -log Info
-    $PicturePath = Read-Host "Enter path to source picture"
+    $PicturePath = Read-Host "Enter local path or url to source picture"
     $FolderName = Read-Host "Enter Media Foldername (how plex sees it)"
     $Titletext = Read-Host "Enter Movie/Show Title"
     $CreateSeasonPoster = Read-Host "Create Season Poster? (y/n)"
 
-    $PicturePath = $PicturePath.replace('"', '')
+    if ($PicturePath -like 'http*'){
+        $isWebPic = 'true'
+        $PicturePath = $PicturePath.replace('"', '')
+    }
+    Else {
+        $PicturePath = $PicturePath.replace('"', '')
+    }
     $FolderName = $FolderName.replace('"', '')
     $Titletext = $Titletext.replace('"', '')
 
@@ -6470,7 +6476,13 @@ if ($Manual) {
                 $joinedTitle = $Titletext
             }
         }
-        Move-Item -LiteralPath $PicturePath -destination $PosterImage -Force -ErrorAction SilentlyContinue
+        if ($isWebPic -eq 'true'){
+            Write-Entry -Subtext "Downloading Image from: $PicturePath" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
+            Invoke-WebRequest -Uri $PicturePath -OutFile $PosterImage
+        }
+        Else{
+            Move-Item -LiteralPath $PicturePath -destination $PosterImage -Force -ErrorAction SilentlyContinue
+        }
         Write-Entry -Subtext "Processing Poster for: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
 
         $CommentArguments = "`"$PosterImage`" -set `"comment`" `"created with posterizarr`" `"$PosterImage`""
