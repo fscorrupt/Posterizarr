@@ -2,12 +2,6 @@
 
 ## [1.8.18](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.18) - 2024-10-03 10:01:32
 
-## 🚇 Added
-
-- add ability to specify url for manual run
-
-**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.8.17...1.8.18
-
 ## [1.8.17](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.17) - 2024-09-30 12:22:15
 
 ## [1.8.16](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.16) - 2024-09-29 07:14:45
