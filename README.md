@@ -429,7 +429,7 @@ To use it we need to configure a script in Tautulli, please follow these instruc
 1. Specify the script folder where you placed the script and select the script file.
     - You can specify a `Description` at the bottom like i did.
     <details close>
-    <summary>🖼️Example</summary>
+    <summary>🖼️Example [click to unfold]</summary>
     <br>
     <p>
       <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
@@ -439,7 +439,7 @@ To use it we need to configure a script in Tautulli, please follow these instruc
     </details>
 1. Go to `Triggers`, scroll down and select `Recently Added`.
     <details close>
-    <summary>🖼️Example</summary>
+    <summary>🖼️Example [click to unfold]</summary>
     <br>
     <p>
       <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
@@ -452,7 +452,7 @@ To use it we need to configure a script in Tautulli, please follow these instruc
     - I also excluded the **Youtube** Lib cause the videos i have there - **do not** have an `tmdb,tvdb or fanart ID`.
       - This is an recommended setting, either exclude such libs or include only those libs where Posterizarr should create art for.
     <details close>
-    <summary>🖼️Example</summary>
+    <summary>🖼️Example [click to unfold]</summary>
     <br>
     <p>
       <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
@@ -466,7 +466,7 @@ To use it we need to configure a script in Tautulli, please follow these instruc
     <movie>RatingKey "{rating_key}" mediatype "{media_type}"</movie><show>grandparentratingkey "{grandparent_rating_key}" mediatype "{media_type}"</show><season>parentratingkey "{parent_rating_key}" grandparentratingkey "{grandparent_rating_key}" mediatype "{media_type}"</season><episode>RatingKey "{rating_key}" parentratingkey "{parent_rating_key}" grandparentratingkey "{grandparent_rating_key}" mediatype "{media_type}"</episode>
     ```
     <details close>
-    <summary>🖼️Example</summary>
+    <summary>🖼️Example [click to unfold]</summary>
     <br>
     <p>
       <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
@@ -487,7 +487,7 @@ In this mode we use Tautulli to trigger Posterizarr for an specific item in Plex
     - Set the script timeout to `0`, which is unlimited. (The default is `30`, which would kill the script before it finishes.)
     - You can specify a `Description` at the bottom like i did.
     <details close>
-    <summary>🖼️Example</summary>
+    <summary>🖼️Example [click to unfold]</summary>
     <br>
     <p>
       <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
@@ -497,7 +497,7 @@ In this mode we use Tautulli to trigger Posterizarr for an specific item in Plex
     </details>
 1. Go to `Triggers`, scroll down and select `Recently Added`.
     <details close>
-    <summary>🖼️Example</summary>
+    <summary>🖼️Example [click to unfold]</summary>
     <br>
     <p>
       <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
@@ -510,7 +510,7 @@ In this mode we use Tautulli to trigger Posterizarr for an specific item in Plex
     - I also excluded the **Youtube** Lib cause the videos i have there - **do not** have an `tmdb,tvdb or fanart ID`.
       - This is an recommended setting, either exclude such libs or include only those libs where Posterizarr should create art for.
     <details close>
-    <summary>🖼️Example</summary>
+    <summary>🖼️Example [click to unfold]</summary>
     <br>
     <p>
       <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
@@ -524,7 +524,7 @@ In this mode we use Tautulli to trigger Posterizarr for an specific item in Plex
     <movie>-Tautulli -RatingKey "{rating_key}" -mediatype "{media_type}"</movie><show>-Tautulli -grandparentratingkey "{grandparent_rating_key}" -mediatype "{media_type}"</show><season>-Tautulli -parentratingkey "{parent_rating_key}" -grandparentratingkey "{grandparent_rating_key}" -mediatype "{media_type}"</season><episode>-Tautulli -RatingKey "{rating_key}" -parentratingkey "{parent_rating_key}" -grandparentratingkey "{grandparent_rating_key}" -mediatype "{media_type}"</episode>
     ```
     <details close>
-    <summary>🖼️Example</summary>
+    <summary>🖼️Example [click to unfold]</summary>
     <br>
     <p>
       <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
@@ -632,7 +632,7 @@ Run the script with the `-SyncEmby` flag. In this mode, the script will sync eve
 
 ### How to create the Posterizarr.xlsm
 <details close>
-<summary>📝Posterizarr Excel Creation using Module1.bas:</summary>
+<summary>📝Posterizarr Excel Creation using Module1.bas [click to unfold]</summary>
 <br>
 
 1. **Open Excel**: First, open Microsoft Excel on your computer. You can do this by clicking on the Excel icon in your applications menu or by searching for "Excel" in your computer's search bar and selecting it from the results.
@@ -664,7 +664,7 @@ Following these steps will allow you to import the `Module1.bas` file containing
 
 ### How to use the Posterizarr.xlsm
 <details close>
-<summary>🎥Posterizarr Excel:</summary>
+<summary>🎥Posterizarr Excel [click to unfold]</summary>
 <br>
 <p>
   <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
@@ -683,7 +683,7 @@ In order to view the `16:9` episode posters without getting cropped to `3:2`, yo
 }
 ```
 <details close>
-<summary>CSS How-To:</summary>
+<summary>CSS How-To [click to unfold]</summary>
 <br>
 <p>
   <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
@@ -698,7 +698,7 @@ In order to view the `16:9` episode posters without getting cropped to `3:2`, yo
 ### Images from Testing Mode
 
 <details close>
-<summary>🖼️Posters</summary>
+<summary>🖼️Posters [click to unfold]</summary>
 <br>
 <p>
   <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
@@ -708,7 +708,7 @@ In order to view the `16:9` episode posters without getting cropped to `3:2`, yo
 </details>
 
 <details close>
-<summary>🖼️Backgrounds</summary>
+<summary>🖼️Backgrounds [click to unfold]</summary>
 <br>
 <p>
   <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
@@ -718,7 +718,7 @@ In order to view the `16:9` episode posters without getting cropped to `3:2`, yo
 </details>
 
 <details close>
-<summary>🖼️TitleCards</summary>
+<summary>🖼️TitleCards [click to unfold]</summary>
 <br>
 <p>
   <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
@@ -730,7 +730,7 @@ In order to view the `16:9` episode posters without getting cropped to `3:2`, yo
 ### Webhook
 
 <details close>
-<summary>🖼️Discord Webhook:</summary>
+<summary>🖼️Discord Webhook [click to unfold]</summary>
 <br>
 <p>
   <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
@@ -743,7 +743,7 @@ In order to view the `16:9` episode posters without getting cropped to `3:2`, yo
 ### Example Pictures
 
 <details close>
-<summary>🖼️ImageChoices.csv:</summary>
+<summary>🖼️ImageChoices.csv [click to unfold]</summary>
 <br>
 <p>
   <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
@@ -752,7 +752,7 @@ In order to view the `16:9` episode posters without getting cropped to `3:2`, yo
 </p>
 </details>
 <details close>
-<summary>🖼️Assets after Posterizarr run:</summary>
+<summary>🖼️Assets after Posterizarr run [click to unfold]</summary>
 <br>
 <p>
   Font - Colus-Regular.ttf
@@ -771,7 +771,7 @@ In order to view the `16:9` episode posters without getting cropped to `3:2`, yo
 > - It was made using this Posterizarr [config](MyPersonalConfig.json).
 
 <details close>
-<summary>🖼️Assets after Kometa run:</summary>
+<summary>🖼️Assets after Kometa run [click to unfold]</summary>
 <br>
 <p>
   Font - Colus-Regular.ttf
@@ -792,7 +792,7 @@ In order to view the `16:9` episode posters without getting cropped to `3:2`, yo
 ## Search Order
 
 <details close>
-<summary>🔍Movie Poster & Background:</summary>
+<summary>🔍Movie Poster & Background [click to unfold]</summary>
 <br>
 <p>
 
@@ -823,7 +823,7 @@ In order to view the `16:9` episode posters without getting cropped to `3:2`, yo
 </details>
 
 <details close>
-<summary>🔍Show Poster & Background:</summary>
+<summary>🔍Show Poster & Background [click to unfold]</summary>
 <br>
 <p>
 
@@ -851,7 +851,7 @@ In order to view the `16:9` episode posters without getting cropped to `3:2`, yo
 </details>
 
 <details close>
-<summary>🔍Show Season Poster:</summary>
+<summary>🔍Show Season Poster [click to unfold]</summary>
 <br>
 <p>
 
@@ -879,7 +879,7 @@ In order to view the `16:9` episode posters without getting cropped to `3:2`, yo
 </details>
 
 <details close>
-<summary>🔍Show TC with Background Poster:</summary>
+<summary>🔍Show TC with Background Poster [click to unfold]</summary>
 <br>
 <p>
 
@@ -899,7 +899,7 @@ In order to view the `16:9` episode posters without getting cropped to `3:2`, yo
 </p>
 </details>
 <details close>
-<summary>🔍Show TC Poster:</summary>
+<summary>🔍Show TC Poster [click to unfold]</summary>
 <br>
 <p>
 
