@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## [1.8.19](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.19) - 2024-10-08 06:00:26
+
+## 🐛 Fixes
+- Fix -testing mode
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.8.18...1.8.19
+
+### Bug Fixes
+
+- general:
+  - -testing mode ([1145458](https://github.com/fscorrupt/Posterizarr/commit/114545808b9e0e293e81e11b27589deb95d1d2d8))
+
 ## [1.8.18](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.18) - 2024-10-03 10:01:32
 
 ## [1.8.17](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.17) - 2024-09-30 12:22:15
