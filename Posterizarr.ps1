@@ -11,7 +11,7 @@ param (
     [switch]$SyncEmby
 )
 
-$CurrentScriptVersion = "1.8.18"
+$CurrentScriptVersion = "1.8.19"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -3464,7 +3464,6 @@ function LogConfigSettings {
     Write-Entry -Subtext "| All Caps on Text:             $SeasonfontAllCaps" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Add Border to Image:          $AddSeasonBorder" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Add Text to Image:            $AddSeasonText" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Add Show Title to Image:      $AddShowTitletoSeason" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Add Stroke to Text:           $AddSeasonTextStroke" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Stroke color:                 $Seasonstrokecolor" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Stroke width:                 $Seasonstrokewidth" -Path $configLogging -Color White -log Info
@@ -6602,7 +6601,7 @@ Elseif ($Testing) {
     }
 
     # Season Posters
-    if ($AddText -eq 'true') {
+    if ($AddSeasonText -eq 'true') {
         $TestSeasonPosterShort = Join-Path -Path $global:ScriptRoot -ChildPath "test\SeasonPosterShortText.jpg"
         $TestSeasonPosterMedium = Join-Path -Path $global:ScriptRoot -ChildPath "test\SeasonPosterMediumText.jpg"
         $TestSeasonPosterLong = Join-Path -Path $global:ScriptRoot -ChildPath "test\SeasonPosterLongText.jpg"
@@ -6932,7 +6931,7 @@ Elseif ($Testing) {
             $SeasonArgumentsLong = "`"$testimage`" `"$Seasonoverlay`" -gravity south -quality $global:outputQuality -composite `"$TestSeasonPosterLong`""
             $SeasonArgumentsShortCAPS = "`"$testimage`" `"$Seasonoverlay`" -gravity south -quality $global:outputQuality -composite `"$TestSeasonPosterShortCAPS`""
             $SeasonArgumentsMediumCAPS = "`"$testimage`" `"$Seasonoverlay`" -gravity south -quality $global:outputQuality -composite `"$TestSeasonPosterMediumCAPS`""
-            $SeasonArgumentsLongCAPS = "`"$testimage`" `"$PosterovSeasonoverlayerlay`" -gravity south -quality $global:outputQuality -composite `"$TestSeasonPosterLongCAPS`""
+            $SeasonArgumentsLongCAPS = "`"$testimage`" `"$Seasonoverlay`" -gravity south -quality $global:outputQuality -composite `"$TestSeasonPosterLongCAPS`""
             Write-Entry -Subtext "Adding Season Poster Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
         }
         if ($AddSeasonBorder -eq 'false' -and $AddSeasonOverlay -eq 'false') {
