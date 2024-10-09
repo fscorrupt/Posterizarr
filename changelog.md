@@ -1,5 +1,33 @@
 # CHANGELOG
 
+## [1.8.19](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.19) - 2024-10-08 06:00:26
+
+## [1.8.18](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.18) - 2024-10-03 10:01:32
+
+## [1.8.17](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.17) - 2024-09-30 12:22:15
+
+## [1.8.16](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.16) - 2024-09-29 07:14:45
+
+## [1.8.15](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.15) - 2024-09-28 16:03:45
+
+## [1.8.14](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.14) - 2024-09-27 17:38:00
+
+## [1.8.13](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.13) - 2024-09-26 13:28:25
+
+## [1.8.12](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.12) - 2024-09-26 08:24:20
+
+## [1.8.11](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.11) - 2024-09-26 07:02:05
+
+## [1.8.10](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.10) - 2024-09-25 11:10:02
+
+## [1.8.9](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.9) - 2024-09-24 14:54:15
+
+## [1.8.8](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.8) - 2024-09-24 06:19:14
+
+## [1.8.7](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.7) - 2024-09-23 17:39:37
+
+## [1.8.6](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.6) - 2024-09-13 08:28:25
+
 ## [1.8.5](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.5) - 2024-09-11 14:40:38
 
 ## [1.8.4](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.4) - 2024-09-10 14:56:46

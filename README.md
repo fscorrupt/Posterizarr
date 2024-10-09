@@ -23,7 +23,7 @@
 </p>
 <br>
 
-### Supported Platforms 💻
+## Supported Platforms 💻
 
 [![Docker](https://img.shields.io/static/v1?style=for-the-badge&logo=docker&logoColor=FFFFFF&message=docker&color=1E63EE&label=)](walkthrough.md)
 [![Unraid](https://img.shields.io/static/v1?style=for-the-badge&logo=unraid&logoColor=FFFFFF&message=unraid&color=E8402A&label=)](walkthrough.md)
@@ -102,13 +102,13 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - **Version 7.x is required** - The script handles downloading and using a portable version of ImageMagick for all platforms. **(You may need to run the Script as Admin on first run)**. If you prefer to reference your own installation or prefer to download and install it yourself, goto: [Download ImageMagick](https://imagemagick.org/script/download.php)
 >- **Powershell Version:** 5.x or higher (Docker Image uses v7.4.2).
 
-## Configuration:
+# Configuration
 
 1. Open `config.example.json` located in the script directory.
 2. Update the following variables with your API keys and preferences:
 
     <details close>
-    <summary>ApiPart:</summary>
+    <summary>ApiPart [click to unfold]</summary>
     <br>
 
     - `tvdbapi`: Your TVDB Project API key.
@@ -140,7 +140,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
       - If you set it to `xx` you tell the script it should only search for textless, posters with text will be skipped.
     </details>
     <details close>
-    <summary>PlexPart:</summary>
+    <summary>PlexPart [click to unfold]</summary>
     <br>
 
     - `LibstoExclude`: Libraries, by name, to exclude from processing.
@@ -149,7 +149,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `UploadExistingAssets`: If set to `true`, the script will check local assets and upload them to Plex, but only if Plex does not already have EXIF data from Posterizarr, Kometa, or TCM for the artwork being uploaded.
     </details>
     <details close>
-    <summary>JellyfinPart:</summary>
+    <summary>JellyfinPart [click to unfold]</summary>
     <br>
 
     - `LibstoExclude`: Libraries, by local folder name, to exclude from processing.
@@ -159,7 +159,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `UploadExistingAssets`: If set to `true`, the script will check local assets and upload them to Jellyfin, but only if Jellyfin does not already have EXIF data from Posterizarr, Kometa, or TCM for the artwork being uploaded.
     </details>
     <details close>
-    <summary>EmbyPart:</summary>
+    <summary>EmbyPart [click to unfold]</summary>
     <br>
 
     - `LibstoExclude`: Libraries, by local folder name, to exclude from processing.
@@ -168,7 +168,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `UploadExistingAssets`: If set to `true`, the script will check local assets and upload them to Emby, but only if Emby does not already have EXIF data from Posterizarr, Kometa, or TCM for the artwork being uploaded.
     </details>
     <details close>
-    <summary>Notification:</summary>
+    <summary>Notification [click to unfold]</summary>
     <br>
 
     - `SendNotification`: Set to `true` if you want to send notifications via discord or apprise, else `false`.
@@ -176,11 +176,11 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `Discord`: Discord Webhook Url.
     </details>
     <details close>
-    <summary>PrerequisitePart:</summary>
+    <summary>PrerequisitePart [click to unfold]</summary>
     <br>
 
     - `AssetPath`: Path to store generated posters.
-    - `BackupPath`: Path to store/download Plex posters.
+    - `BackupPath`: Path to store/download Plex posters when using the [backup switch](#backup-mode).
     - `PlexUpload`: If set to `true`, Posterizarr will directly upload the artwork to Plex (handy if you do not use Kometa).
     - `show_skipped`: If set to `true`, verbose logging of already created assets will be displayed; otherwise, they will be silently skipped - On large libraries, this may appear as if the script is hanging.
     - `magickinstalllocation`: Path to ImageMagick installation location where `magick.exe` is located (Otherwise leave value as `"./magick"`)
@@ -220,14 +220,14 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
       - Doing this could break things, cause you then uses IM Versions that are not tested with Posterizarr.
     </details>
     <details close>
-    <summary>OverlayPart:</summary>
+    <summary>OverlayPart [click to unfold]</summary>
     <br>
 
-    - `ImageProcessing`: Set to `true` if you want the ImageMagick part; if false, it only downloads the posters.
+    - `ImageProcessing`: Set to `true` if you want the ImageMagick part (text, overlay and/or border); if `false`, it only downloads the posters.
     - `outputQuality`: Image output quality, default is `92%` if you set it to `100%` the image size gets doubled.
     </details>
     <details close>
-    <summary>PosterOverlayPart:</summary>
+    <summary>PosterOverlayPart [click to unfold]</summary>
     <br>
 
     - `fontAllCaps`: Set to `true` for all caps text, else `false`.
@@ -245,31 +245,48 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `MaxWidth`: Maximum width of text box.
     - `MaxHeight`: Maximum height of text box.
     - `text_offset`: Text box offset from the bottom of the picture.
+    - `lineSpacing`: Adjust the height between lines of text (Default is `0`)
     </details>
     <details close>
-    <summary>SeasonPosterOverlayPart:</summary>
+    <summary>SeasonPosterOverlayPart [click to unfold]</summary>
     <br>
 
     - `fontAllCaps`: Set to `true` for all caps text, else `false`.
     - `AddBorder`: Set to `true` to add a border to the image.
     - `AddText`: Set to `true` to add text to the image.
+    - `AddTextStroke`: Set to `true` to add stroke to text.
+    - `strokecolor`: Color of text stroke.
+    - `strokewidth`: Stroke width.
+    - `AddOverlay`: Set to `true` to add the defined overlay file to the image.
+    - `fontcolor`: Color of font text.
+    - `bordercolor`: Color of border.
+    - `minPointSize`: Minimum size of text in poster.
+    - `maxPointSize`: Maximum size of text in poster.
+    - `borderwidth`: Border width.
+    - `MaxWidth`: Maximum width of text box.
+    - `MaxHeight`: Maximum height of text box.
+    - `text_offset`: Text box offset from the bottom of the picture.
+    - `lineSpacing`: Adjust the height between lines of text (Default is `0`)
+    </details>
+    <details close>
+    <summary>ShowTilteOnSeasonPosterPart [click to unfold]</summary>
+    <br>
+
+    - `fontAllCaps`: Set to `true` for all caps text, else `false`.
     - `AddShowTitletoSeason`: if set to `true` it will add show title to season poster (Default Value is: `false`)
-      - `SeasonTextNewLines`: How many line breaks you want after the season title, possible values are: `1` or `2` (Default Value is: `1`)
     - `AddTextStroke`: Set to `true` to add stroke to text.
     - `strokecolor`: Color of text stroke.
     - `strokewidth`: Stroke width.
-    - `AddOverlay`: Set to `true` to add the defined overlay file to the image.
     - `fontcolor`: Color of font text.
-    - `bordercolor`: Color of border.
     - `minPointSize`: Minimum size of text in poster.
     - `maxPointSize`: Maximum size of text in poster.
-    - `borderwidth`: Border width.
     - `MaxWidth`: Maximum width of text box.
     - `MaxHeight`: Maximum height of text box.
     - `text_offset`: Text box offset from the bottom of the picture.
+    - `lineSpacing`: Adjust the height between lines of text (Default is `0`)
     </details>
     <details close>
-    <summary>BackgroundOverlayPart:</summary>
+    <summary>BackgroundOverlayPart [click to unfold]</summary>
     <br>
 
     - `fontAllCaps`: Set to `true` for all caps text, else `false`.
@@ -287,9 +304,10 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `MaxWidth`: Maximum width of text box in background image.
     - `MaxHeight`: Maximum height of text box in background image.
     - `text_offset`: Text box offset from the bottom of the background image.
+    - `lineSpacing`: Adjust the height between lines of text (Default is `0`)
     </details>
     <details close>
-    <summary>TitleCardOverlayPart:</summary>
+    <summary>TitleCardOverlayPart [click to unfold]</summary>
     <br>
 
     - `UseBackgroundAsTitleCard`: Set to `true` if you prefer show background as TitleCard, default is `false` where it uses episode image as TitleCard.
@@ -300,7 +318,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `bordercolor`: Color of border.
     </details>
     <details close>
-    <summary>TitleCardTitleTextPart:</summary>
+    <summary>TitleCardTitleTextPart [click to unfold]</summary>
     <br>
 
     - `AddEPTitleText`: Set to `true` to add episode title text to the TitleCard image.
@@ -314,9 +332,10 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `MaxWidth`: Maximum width of text box in TitleCard image.
     - `MaxHeight`: Maximum height of text box in TitleCard image.
     - `text_offset`: Text box offset from the bottom of the TitleCard image.
+    - `lineSpacing`: Adjust the height between lines of text (Default is `0`)
     </details>
     <details close>
-    <summary>TitleCardEpisodeTextPart:</summary>
+    <summary>TitleCardEpisodeTextPart [click to unfold]</summary>
     <br>
 
     - `SeasonTCText`: You can Specify the default text for `Season` that appears on TitleCard.
@@ -334,6 +353,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `MaxWidth`: Maximum width of text box in TitleCard image.
     - `MaxHeight`: Maximum height of text box in TitleCard image.
     - `text_offset`: Text box offset from the bottom of the TitleCard image.
+    - `lineSpacing`: Adjust the height between lines of text (Default is `0`)
     </details>
     <br>
 
@@ -409,7 +429,7 @@ To use it we need to configure a script in Tautulli, please follow these instruc
 1. Specify the script folder where you placed the script and select the script file.
     - You can specify a `Description` at the bottom like i did.
     <details close>
-    <summary>🖼️Example</summary>
+    <summary>🖼️Example [click to unfold]</summary>
     <br>
     <p>
       <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
@@ -419,7 +439,7 @@ To use it we need to configure a script in Tautulli, please follow these instruc
     </details>
 1. Go to `Triggers`, scroll down and select `Recently Added`.
     <details close>
-    <summary>🖼️Example</summary>
+    <summary>🖼️Example [click to unfold]</summary>
     <br>
     <p>
       <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
@@ -432,7 +452,7 @@ To use it we need to configure a script in Tautulli, please follow these instruc
     - I also excluded the **Youtube** Lib cause the videos i have there - **do not** have an `tmdb,tvdb or fanart ID`.
       - This is an recommended setting, either exclude such libs or include only those libs where Posterizarr should create art for.
     <details close>
-    <summary>🖼️Example</summary>
+    <summary>🖼️Example [click to unfold]</summary>
     <br>
     <p>
       <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
@@ -446,7 +466,7 @@ To use it we need to configure a script in Tautulli, please follow these instruc
     <movie>RatingKey "{rating_key}" mediatype "{media_type}"</movie><show>grandparentratingkey "{grandparent_rating_key}" mediatype "{media_type}"</show><season>parentratingkey "{parent_rating_key}" grandparentratingkey "{grandparent_rating_key}" mediatype "{media_type}"</season><episode>RatingKey "{rating_key}" parentratingkey "{parent_rating_key}" grandparentratingkey "{grandparent_rating_key}" mediatype "{media_type}"</episode>
     ```
     <details close>
-    <summary>🖼️Example</summary>
+    <summary>🖼️Example [click to unfold]</summary>
     <br>
     <p>
       <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
@@ -467,7 +487,7 @@ In this mode we use Tautulli to trigger Posterizarr for an specific item in Plex
     - Set the script timeout to `0`, which is unlimited. (The default is `30`, which would kill the script before it finishes.)
     - You can specify a `Description` at the bottom like i did.
     <details close>
-    <summary>🖼️Example</summary>
+    <summary>🖼️Example [click to unfold]</summary>
     <br>
     <p>
       <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
@@ -477,7 +497,7 @@ In this mode we use Tautulli to trigger Posterizarr for an specific item in Plex
     </details>
 1. Go to `Triggers`, scroll down and select `Recently Added`.
     <details close>
-    <summary>🖼️Example</summary>
+    <summary>🖼️Example [click to unfold]</summary>
     <br>
     <p>
       <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
@@ -490,7 +510,7 @@ In this mode we use Tautulli to trigger Posterizarr for an specific item in Plex
     - I also excluded the **Youtube** Lib cause the videos i have there - **do not** have an `tmdb,tvdb or fanart ID`.
       - This is an recommended setting, either exclude such libs or include only those libs where Posterizarr should create art for.
     <details close>
-    <summary>🖼️Example</summary>
+    <summary>🖼️Example [click to unfold]</summary>
     <br>
     <p>
       <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
@@ -504,7 +524,7 @@ In this mode we use Tautulli to trigger Posterizarr for an specific item in Plex
     <movie>-Tautulli -RatingKey "{rating_key}" -mediatype "{media_type}"</movie><show>-Tautulli -grandparentratingkey "{grandparent_rating_key}" -mediatype "{media_type}"</show><season>-Tautulli -parentratingkey "{parent_rating_key}" -grandparentratingkey "{grandparent_rating_key}" -mediatype "{media_type}"</season><episode>-Tautulli -RatingKey "{rating_key}" -parentratingkey "{parent_rating_key}" -grandparentratingkey "{grandparent_rating_key}" -mediatype "{media_type}"</episode>
     ```
     <details close>
-    <summary>🖼️Example</summary>
+    <summary>🖼️Example [click to unfold]</summary>
     <br>
     <p>
       <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
@@ -582,24 +602,24 @@ Run the script with the `-SyncEmby` flag. In this mode, the script will sync eve
 
   **Automatic Mode:**
   ```sh
-  docker exec -it posterizarr pwsh Posterizarr.ps1
+  docker exec -it posterizarr pwsh /config/Posterizarr.ps1
   ```
   **Testing Mode:**
   ```sh
-  docker exec -it posterizarr pwsh Posterizarr.ps1 -Testing
+  docker exec -it posterizarr pwsh /config/Posterizarr.ps1 -Testing
   ```
   **Manual Mode:**
   ```sh
-  docker exec -it posterizarr pwsh Posterizarr.ps1 -Manual
+  docker exec -it posterizarr pwsh /config/Posterizarr.ps1 -Manual
   ```
 > [!TIP]
 > If you did not used `pwsh` on docker exec you can do it this way.
 >
 > Inside your `Unraid` or `Bash` or `Sh` console:
 > ```sh
-> pwsh Posterizarr.ps1
-> pwsh Posterizarr.ps1 -Manual
-> pwsh Posterizarr.ps1 -Testing
+> pwsh /config/Posterizarr.ps1
+> pwsh /config/Posterizarr.ps1 -Manual
+> pwsh /config/Posterizarr.ps1 -Testing
 > ```
 
 ### unRAID
@@ -612,7 +632,7 @@ Run the script with the `-SyncEmby` flag. In this mode, the script will sync eve
 
 ### How to create the Posterizarr.xlsm
 <details close>
-<summary>📝Posterizarr Excel Creation using Module1.bas:</summary>
+<summary>📝Posterizarr Excel Creation using Module1.bas [click to unfold]</summary>
 <br>
 
 1. **Open Excel**: First, open Microsoft Excel on your computer. You can do this by clicking on the Excel icon in your applications menu or by searching for "Excel" in your computer's search bar and selecting it from the results.
@@ -644,7 +664,7 @@ Following these steps will allow you to import the `Module1.bas` file containing
 
 ### How to use the Posterizarr.xlsm
 <details close>
-<summary>🎥Posterizarr Excel:</summary>
+<summary>🎥Posterizarr Excel [click to unfold]</summary>
 <br>
 <p>
   <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
@@ -663,7 +683,7 @@ In order to view the `16:9` episode posters without getting cropped to `3:2`, yo
 }
 ```
 <details close>
-<summary>CSS How-To:</summary>
+<summary>CSS How-To [click to unfold]</summary>
 <br>
 <p>
   <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
@@ -678,7 +698,7 @@ In order to view the `16:9` episode posters without getting cropped to `3:2`, yo
 ### Images from Testing Mode
 
 <details close>
-<summary>🖼️Posters</summary>
+<summary>🖼️Posters [click to unfold]</summary>
 <br>
 <p>
   <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
@@ -688,7 +708,7 @@ In order to view the `16:9` episode posters without getting cropped to `3:2`, yo
 </details>
 
 <details close>
-<summary>🖼️Backgrounds</summary>
+<summary>🖼️Backgrounds [click to unfold]</summary>
 <br>
 <p>
   <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
@@ -698,7 +718,7 @@ In order to view the `16:9` episode posters without getting cropped to `3:2`, yo
 </details>
 
 <details close>
-<summary>🖼️TitleCards</summary>
+<summary>🖼️TitleCards [click to unfold]</summary>
 <br>
 <p>
   <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
@@ -710,7 +730,7 @@ In order to view the `16:9` episode posters without getting cropped to `3:2`, yo
 ### Webhook
 
 <details close>
-<summary>🖼️Discord Webhook:</summary>
+<summary>🖼️Discord Webhook [click to unfold]</summary>
 <br>
 <p>
   <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
@@ -723,7 +743,7 @@ In order to view the `16:9` episode posters without getting cropped to `3:2`, yo
 ### Example Pictures
 
 <details close>
-<summary>🖼️ImageChoices.csv:</summary>
+<summary>🖼️ImageChoices.csv [click to unfold]</summary>
 <br>
 <p>
   <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
@@ -732,7 +752,7 @@ In order to view the `16:9` episode posters without getting cropped to `3:2`, yo
 </p>
 </details>
 <details close>
-<summary>🖼️Assets after Posterizarr run:</summary>
+<summary>🖼️Assets after Posterizarr run [click to unfold]</summary>
 <br>
 <p>
   Font - Colus-Regular.ttf
@@ -751,7 +771,7 @@ In order to view the `16:9` episode posters without getting cropped to `3:2`, yo
 > - It was made using this Posterizarr [config](MyPersonalConfig.json).
 
 <details close>
-<summary>🖼️Assets after Kometa run:</summary>
+<summary>🖼️Assets after Kometa run [click to unfold]</summary>
 <br>
 <p>
   Font - Colus-Regular.ttf
@@ -772,7 +792,7 @@ In order to view the `16:9` episode posters without getting cropped to `3:2`, yo
 ## Search Order
 
 <details close>
-<summary>🔍Movie Poster & Background:</summary>
+<summary>🔍Movie Poster & Background [click to unfold]</summary>
 <br>
 <p>
 
@@ -803,7 +823,7 @@ In order to view the `16:9` episode posters without getting cropped to `3:2`, yo
 </details>
 
 <details close>
-<summary>🔍Show Poster & Background:</summary>
+<summary>🔍Show Poster & Background [click to unfold]</summary>
 <br>
 <p>
 
@@ -831,7 +851,7 @@ In order to view the `16:9` episode posters without getting cropped to `3:2`, yo
 </details>
 
 <details close>
-<summary>🔍Show Season Poster:</summary>
+<summary>🔍Show Season Poster [click to unfold]</summary>
 <br>
 <p>
 
@@ -859,7 +879,7 @@ In order to view the `16:9` episode posters without getting cropped to `3:2`, yo
 </details>
 
 <details close>
-<summary>🔍Show TC with Background Poster:</summary>
+<summary>🔍Show TC with Background Poster [click to unfold]</summary>
 <br>
 <p>
 
@@ -879,7 +899,7 @@ In order to view the `16:9` episode posters without getting cropped to `3:2`, yo
 </p>
 </details>
 <details close>
-<summary>🔍Show TC Poster:</summary>
+<summary>🔍Show TC Poster [click to unfold]</summary>
 <br>
 <p>
 
@@ -904,7 +924,7 @@ Feel free to customize the script further to meet your specific preferences or a
 ## PR Rules
 
 > [!IMPORTANT]
-> - Adjust on each PR the version number in script on Line 11 `$CurrentScriptVersion = "1.0.55"`
+> - Adjust on each PR the version number in script on Line 14 `$CurrentScriptVersion = "1.8.6"`
 > - Adjust the version number in [Release.txt](Release.txt) to match the one in script.
 >   - this is required because the script checks against this file if a newer version is available.
 > - Do not include images on a PR.

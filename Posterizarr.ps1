@@ -1,4 +1,4 @@
-﻿param (
+param (
     [switch]$Manual,
     [switch]$Testing,
     [switch]$Tautulli,
@@ -11,7 +11,7 @@
     [switch]$SyncEmby
 )
 
-$CurrentScriptVersion = "1.8.5"
+$CurrentScriptVersion = "1.8.19"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -65,7 +65,13 @@ function GetHash {
 function Set-OSTypeAndScriptRoot {
     if ($env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker*') {
         $global:OSType = "Docker"
-        $global:ScriptRoot = "./config"
+        $currentuser = whoami
+        if ($currentuser -eq 'posterizarr' -or $currentuser -eq 'abc' -or $env:VIRTUAL_ENV -eq '/lsiopy') {
+            $global:ScriptRoot = "/config"
+        }
+        Else {
+            $global:ScriptRoot = "./config"
+        }
     }
     Else {
         $global:ScriptRoot = $PSScriptRoot
@@ -637,15 +643,20 @@ function Get-OptimalPointSize {
         [int]$box_width,
         [int]$box_height,
         [int]$min_pointsize,
-        [int]$max_pointsize
+        [int]$max_pointsize,
+        [int]$lineSpacing  # New parameter for line height
     )
-    # stolen and adapted from: https://github.com/bullmoose20/Plex-Stuff/blob/9d231d871a4676c8da7d4cbab482181a35756524/create_defaults/create_default_posters.ps1#L477
     $global:IsTruncated = $null
-    # Construct the command with correct font option
-    $cmd = "& `"$magick`" -size ${box_width}x${box_height} -font `"$fontImagemagick`" -gravity center -fill black caption:`"$text`" -format `"%[caption:pointsize]`" info:"
+
+    # Construct the command with interline spacing and font option
+    $cmd = "& `"$magick`" -size ${box_width}x${box_height} -font `"$fontImagemagick`" -gravity center -fill black -interline-spacing ${lineSpacing} caption:`"$text`" -format `"%[caption:pointsize]`" info:"
+
+    # Log the command for debugging purposes
     $cmd | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
-    # Execute command and get point size
+
+    # Execute the command and get the current point size
     $current_pointsize = [int](Invoke-Expression $cmd | Out-String).Trim()
+
     # Apply point size limits
     if ($current_pointsize -gt $max_pointsize) {
         $current_pointsize = $max_pointsize
@@ -687,12 +698,12 @@ function GetTMDBMoviePoster {
                     Write-Entry -Subtext "OnlyTextless Value: $global:OnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                     if ($global:OnlyTextless -eq $false) {
                         if ($global:WidthHeightFilter -eq 'true') {
-                            if ($global:TMDBVoteSorting -eq 'Primary') {
+                            if ($global:TMDBVoteSorting -eq 'primary') {
                                 $filteredPosters = $response.images.posters | Where-Object { $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
 
                                 if ($filteredPosters) {
-                                    $posterpath = (($filteredPosters | Sort-Object -Descending)[0]).file_path
-                                    Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                    $posterpath = $filteredPosters[0].file_path
+                                    Write-Entry -Subtext "Found a poster sized at - width: $($filteredPosters[0].width) | height: $($filteredPosters[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 }
                                 else {
                                     Write-Entry -Subtext "No posters found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
@@ -711,11 +722,11 @@ function GetTMDBMoviePoster {
                             }
                         }
                         Else {
-                            if ($global:TMDBVoteSorting -eq 'Primary') {
+                            if ($global:TMDBVoteSorting -eq 'primary') {
                                 $filteredPosters = $response.images.posters
 
                                 if ($filteredPosters) {
-                                    $posterpath = (($filteredPosters | Sort-Object -Descending)[0]).file_path
+                                    $posterpath = $filteredPosters[0].file_path
                                 }
                             }
                             Else {
@@ -734,8 +745,8 @@ function GetTMDBMoviePoster {
                             }
                             Write-Entry -Subtext "Found Poster with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                             $global:PosterWithText = $true
-                            if ($global:TMDBVoteSorting -eq 'Primary') {
-                                $global:TMDBAssetTextLang = (($response.images.posters | Sort-Object -Descending)[0]).iso_639_1
+                            if ($global:TMDBVoteSorting -eq 'primary') {
+                                $global:TMDBAssetTextLang = $response.images.posters[0].iso_639_1
                             }
                             Else {
                                 $global:TMDBAssetTextLang = (($response.images.posters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).iso_639_1
@@ -751,12 +762,12 @@ function GetTMDBMoviePoster {
                 }
                 Else {
                     if ($global:WidthHeightFilter -eq 'true') {
-                        if ($global:TMDBVoteSorting -eq 'Primary') {
+                        if ($global:TMDBVoteSorting -eq 'primary') {
                             $filteredPosters = $response.images.posters | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
 
                             if ($filteredPosters) {
-                                $posterpath = (($filteredPosters | Sort-Object -Descending)[0]).file_path
-                                Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                $posterpath = $filteredPosters[0].file_path
+                                Write-Entry -Subtext "Found a poster sized at - width: $($filteredPosters[0].width) | height: $($filteredPosters[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             }
                             else {
                                 Write-Entry -Subtext "No posters found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
@@ -775,11 +786,10 @@ function GetTMDBMoviePoster {
                         }
                     }
                     Else {
-                        if ($global:TMDBVoteSorting -eq 'Primary') {
+                        if ($global:TMDBVoteSorting -eq 'primary') {
                             $filteredPosters = $response.images.posters | Where-Object iso_639_1 -eq $null
-
                             if ($filteredPosters) {
-                                $posterpath = (($filteredPosters | Sort-Object -Descending)[0]).file_path
+                                $posterpath = $filteredPosters[0].file_path
                             }
 
                         }
@@ -837,8 +847,8 @@ function GetTMDBMoviePoster {
                         }
                     }
                     if ($FavPoster) {
-                        if ($global:TMDBVoteSorting -eq 'Primary') {
-                            $posterpath = (($FavPoster | Sort-Object -Descending)[0]).file_path
+                        if ($global:TMDBVoteSorting -eq 'primary') {
+                            $posterpath = $FavPoster[0].file_path
                         }
                         Else {
                             $posterpath = (($FavPoster | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
@@ -895,12 +905,12 @@ function GetTMDBMovieBackground {
                     Write-Entry -Subtext "OnlyTextless Value: $global:OnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                     if ($global:OnlyTextless -eq $false) {
                         if ($global:WidthHeightFilter -eq 'true') {
-                            if ($global:TMDBVoteSorting -eq 'Primary') {
+                            if ($global:TMDBVoteSorting -eq 'primary') {
                                 $filteredPosters = $response.images.backdrops | Where-Object { $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight }
 
                                 if ($filteredPosters) {
-                                    $posterpath = (($filteredPosters | Sort-Object -Descending)[0]).file_path
-                                    Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                    $posterpath = $filteredPosters[0].file_path
+                                    Write-Entry -Subtext "Found a poster sized at - width: $($filteredPosters[0].width) | height: $($filteredPosters[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 }
                                 else {
                                     Write-Entry -Subtext "No Background posters found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
@@ -919,8 +929,8 @@ function GetTMDBMovieBackground {
                             }
                         }
                         Else {
-                            if ($global:TMDBVoteSorting -eq 'Primary') {
-                                $posterpath = (($response.images.backdrops | Sort-Object -Descending)[0]).file_path
+                            if ($global:TMDBVoteSorting -eq 'primary') {
+                                $posterpath = $response.images.backdrops[0].file_path
                             }
                             Else {
                                 $posterpath = (($response.images.backdrops | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
@@ -934,8 +944,8 @@ function GetTMDBMovieBackground {
                             }
                             Write-Entry -Subtext "Found background with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                             $global:PosterWithText = $true
-                            if ($global:TMDBVoteSorting -eq 'Primary') {
-                                $global:TMDBAssetTextLang = (($response.images.backdrops | Sort-Object -Descending)[0]).iso_639_1
+                            if ($global:TMDBVoteSorting -eq 'primary') {
+                                $global:TMDBAssetTextLang = $response.images.backdrops[0].iso_639_1
                             }
                             Else {
                                 $global:TMDBAssetTextLang = (($response.images.backdrops | Sort-Object $global:TMDBVoteSorting -Descending)[0]).iso_639_1
@@ -951,12 +961,12 @@ function GetTMDBMovieBackground {
                 }
                 Else {
                     if ($global:WidthHeightFilter -eq 'true') {
-                        if ($global:TMDBVoteSorting -eq 'Primary') {
+                        if ($global:TMDBVoteSorting -eq 'primary') {
                             $filteredPosters = $response.images.backdrops | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight }
 
                             if ($filteredPosters) {
-                                $posterpath = (($filteredPosters | Sort-Object -Descending)[0]).file_path
-                                Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                $posterpath = $filteredPosters[0].file_path
+                                Write-Entry -Subtext "Found a poster sized at - width: $($filteredPosters[0].width) | height: $($filteredPosters[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             }
                             else {
                                 Write-Entry -Subtext "No Background posters found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
@@ -975,8 +985,8 @@ function GetTMDBMovieBackground {
                         }
                     }
                     Else {
-                        if ($global:TMDBVoteSorting -eq 'Primary') {
-                            $posterpath = (($response.images.backdrops | Where-Object iso_639_1 -eq $null | Sort-Object -Descending)[0]).file_path
+                        if ($global:TMDBVoteSorting -eq 'primary') {
+                            $posterpath = (($response.images.backdrops | Where-Object iso_639_1 -eq $null)[0]).file_path
                         }
                         Else {
                             $posterpath = (($response.images.backdrops | Where-Object iso_639_1 -eq $null | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
@@ -1035,8 +1045,8 @@ function GetTMDBMovieBackground {
                         }
                     }
                     if ($FavPoster) {
-                        if ($global:TMDBVoteSorting -eq 'Primary') {
-                            $posterpath = (($FavPoster | Sort-Object -Descending)[0]).file_path
+                        if ($global:TMDBVoteSorting -eq 'primary') {
+                            $posterpath = $FavPoster[0].file_path
                         }
                         Else {
                             $posterpath = (($FavPoster | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
@@ -1108,13 +1118,13 @@ function GetTMDBShowPoster {
                     Write-Entry -Subtext "OnlyTextless Value: $global:OnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                     if ($global:OnlyTextless -eq $false) {
                         if ($global:WidthHeightFilter -eq 'true') {
-                            if ($global:TMDBVoteSorting -eq 'Primary') {
+                            if ($global:TMDBVoteSorting -eq 'primary') {
                                 $filteredPosters = $response.images.posters | Where-Object { $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
 
                                 if ($filteredPosters) {
-                                    $posterpath = (($filteredPosters | Sort-Object -Descending)[0]).file_path
-                                    $global:TMDBAssetTextLang = (($filteredPosters | Sort-Object -Descending)[0]).iso_639_1
-                                    Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                    $posterpath = $filteredPosters[0].file_path
+                                    $global:TMDBAssetTextLang = $filteredPosters[0].iso_639_1
+                                    Write-Entry -Subtext "Found a poster sized at - width: $($filteredPosters[0].width) | height: $($filteredPosters[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 }
                                 else {
                                     Write-Entry -Subtext "No posters found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
@@ -1134,9 +1144,9 @@ function GetTMDBShowPoster {
                             }
                         }
                         Else {
-                            if ($global:TMDBVoteSorting -eq 'Primary') {
-                                $posterpath = (($response.images.posters | Sort-Object -Descending)[0]).file_path
-                                $global:TMDBAssetTextLang = (($response.images.posters | Sort-Object -Descending)[0]).iso_639_1
+                            if ($global:TMDBVoteSorting -eq 'primary') {
+                                $posterpath = $response.images.posters[0].file_path
+                                $global:TMDBAssetTextLang = $response.images.posters[0].iso_639_1
                             }
                             Else {
                                 $posterpath = (($response.images.posters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
@@ -1163,12 +1173,12 @@ function GetTMDBShowPoster {
                 }
                 Else {
                     if ($global:WidthHeightFilter -eq 'true') {
-                        if ($global:TMDBVoteSorting -eq 'Primary') {
+                        if ($global:TMDBVoteSorting -eq 'primary') {
                             $filteredPosters = $response.images.posters | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
 
                             if ($filteredPosters) {
-                                $posterpath = (($filteredPosters | Sort-Object -Descending)[0]).file_path
-                                Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                $posterpath = $filteredPosters[0].file_path
+                                Write-Entry -Subtext "Found a poster sized at - width: $($filteredPosters[0].width) | height: $($filteredPosters[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             }
                             else {
                                 Write-Entry -Subtext "No posters found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
@@ -1187,8 +1197,8 @@ function GetTMDBShowPoster {
                         }
                     }
                     Else {
-                        if ($global:TMDBVoteSorting -eq 'Primary') {
-                            $posterpath = (($response.images.posters | Where-Object iso_639_1 -eq $null | Sort-Object -Descending)[0]).file_path
+                        if ($global:TMDBVoteSorting -eq 'primary') {
+                            $posterpath = (($response.images.posters | Where-Object iso_639_1 -eq $null)[0]).file_path
                         }
                         Else {
                             $posterpath = (($response.images.posters | Where-Object iso_639_1 -eq $null | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
@@ -1240,8 +1250,8 @@ function GetTMDBShowPoster {
                         }
                     }
                     if ($FavPoster) {
-                        if ($global:TMDBVoteSorting -eq 'Primary') {
-                            $posterpath = (($FavPoster | Sort-Object -Descending)[0]).file_path
+                        if ($global:TMDBVoteSorting -eq 'primary') {
+                            $posterpath = $FavPoster[0].file_path
                         }
                         Else {
                             $posterpath = (($FavPoster | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
@@ -1297,13 +1307,13 @@ function GetTMDBSeasonPoster {
                 if (!$NoLangPoster) {
                     if (!$global:SeasonOnlyTextless) {
                         if ($global:WidthHeightFilter -eq 'true') {
-                            if ($global:TMDBVoteSorting -eq 'Primary') {
+                            if ($global:TMDBVoteSorting -eq 'primary') {
                                 $filteredPosters = $response.poster | Where-Object { $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
 
                                 if ($filteredPosters) {
-                                    $posterpath = (($filteredPosters | Sort-Object -Descending)[0]).file_path
-                                    $global:TMDBAssetTextLang = (($filteredPosters | Sort-Object -Descending)[0]).iso_639_1
-                                    Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                    $posterpath = $filteredPosters[0].file_path
+                                    $global:TMDBAssetTextLang = $filteredPosters[0].iso_639_1
+                                    Write-Entry -Subtext "Found a poster sized at - width: $($filteredPosters[0].width) | height: $($filteredPosters[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 }
                                 else {
                                     Write-Entry -Subtext "No Season posters found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
@@ -1323,9 +1333,9 @@ function GetTMDBSeasonPoster {
                             }
                         }
                         Else {
-                            if ($global:TMDBVoteSorting -eq 'Primary') {
-                                $posterpath = (($response.posters | Sort-Object -Descending)[0]).file_path
-                                $global:TMDBAssetTextLang = (($response.posters | Sort-Object -Descending)[0]).iso_639_1
+                            if ($global:TMDBVoteSorting -eq 'primary') {
+                                $posterpath = $response.posters[0].file_path
+                                $global:TMDBAssetTextLang = $response.posters[0].iso_639_1
                             }
                             Else {
                                 $posterpath = (($response.posters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
@@ -1354,12 +1364,12 @@ function GetTMDBSeasonPoster {
                 }
                 Else {
                     if ($global:WidthHeightFilter -eq 'true') {
-                        if ($global:TMDBVoteSorting -eq 'Primary') {
+                        if ($global:TMDBVoteSorting -eq 'primary') {
                             $filteredPosters = $response.posters | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
 
                             if ($filteredPosters) {
-                                $posterpath = (($filteredPosters | Sort-Object -Descending)[0]).file_path
-                                Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                $posterpath = $filteredPosters[0].file_path
+                                Write-Entry -Subtext "Found a poster sized at - width: $($filteredPosters[0].width) | height: $($filteredPosters[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             }
                             else {
                                 Write-Entry -Subtext "No Season posters found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
@@ -1378,8 +1388,8 @@ function GetTMDBSeasonPoster {
                         }
                     }
                     Else {
-                        if ($global:TMDBVoteSorting -eq 'Primary') {
-                            $posterpath = (($response.posters | Where-Object iso_639_1 -eq $null | Sort-Object -Descending)[0]).file_path
+                        if ($global:TMDBVoteSorting -eq 'primary') {
+                            $posterpath = (($response.posters | Where-Object iso_639_1 -eq $null)[0]).file_path
                         }
                         Else {
                             $posterpath = (($response.posters | Where-Object iso_639_1 -eq $null | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
@@ -1445,8 +1455,8 @@ function GetTMDBSeasonPoster {
                         }
                     }
                     if ($FavPoster) {
-                        if ($global:TMDBVoteSorting -eq 'Primary') {
-                            $posterpath = (($FavPoster | Sort-Object -Descending)[0]).file_path
+                        if ($global:TMDBVoteSorting -eq 'primary') {
+                            $posterpath = $FavPoster[0].file_path
                         }
                         Else {
                             $posterpath = (($FavPoster | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
@@ -1494,8 +1504,8 @@ function GetTMDBSeasonPoster {
                         }
                     }
                     if ($FavPoster) {
-                        if ($global:TMDBVoteSorting -eq 'Primary') {
-                            $posterpath = (($FavPoster | Sort-Object -Descending)[0]).file_path
+                        if ($global:TMDBVoteSorting -eq 'primary') {
+                            $posterpath = $FavPoster[0].file_path
                         }
                         Else {
                             $posterpath = (($FavPoster | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
@@ -1557,13 +1567,13 @@ function GetTMDBShowBackground {
                     Write-Entry -Subtext "OnlyTextless Value: $global:OnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                     if ($global:OnlyTextless -eq $false) {
                         if ($global:WidthHeightFilter -eq 'true') {
-                            if ($global:TMDBVoteSorting -eq 'Primary') {
+                            if ($global:TMDBVoteSorting -eq 'primary') {
                                 $filteredPosters = $response.images.backdrops | Where-Object { $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
 
                                 if ($filteredPosters) {
-                                    $posterpath = (($filteredPosters | Sort-Object -Descending)[0]).file_path
-                                    $global:TMDBAssetTextLang = (($filteredPosters | Sort-Object -Descending)[0]).iso_639_1
-                                    Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                    $posterpath = $filteredPosters[0].file_path
+                                    $global:TMDBAssetTextLang = $filteredPosters[0].iso_639_1
+                                    Write-Entry -Subtext "Found a poster sized at - width: $($filteredPosters[0].width) | height: $($filteredPosters[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 }
                                 else {
                                     Write-Entry -Subtext "No Background posters found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
@@ -1583,9 +1593,9 @@ function GetTMDBShowBackground {
                             }
                         }
                         Else {
-                            if ($global:TMDBVoteSorting -eq 'Primary') {
-                                $posterpath = (($response.images.backdrops | Sort-Object -Descending)[0]).file_path
-                                $global:TMDBAssetTextLang = (($response.images.backdrops | Sort-Object -Descending)[0]).iso_639_1
+                            if ($global:TMDBVoteSorting -eq 'primary') {
+                                $posterpath = $response.images.backdrops[0].file_path
+                                $global:TMDBAssetTextLang = $response.images.backdrops[0].iso_639_1
                             }
                             Else {
                                 $posterpath = (($response.images.backdrops | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
@@ -1610,12 +1620,12 @@ function GetTMDBShowBackground {
                 }
                 Else {
                     if ($global:WidthHeightFilter -eq 'true') {
-                        if ($global:TMDBVoteSorting -eq 'Primary') {
+                        if ($global:TMDBVoteSorting -eq 'primary') {
                             $filteredPosters = $response.images.backdrops | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
 
                             if ($filteredPosters) {
-                                $posterpath = (($filteredPosters | Sort-Object -Descending)[0]).file_path
-                                Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                $posterpath = $filteredPosters[0].file_path
+                                Write-Entry -Subtext "Found a poster sized at - width: $($filteredPosters[0].width) | height: $($filteredPosters[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             }
                             else {
                                 Write-Entry -Subtext "No Background posters found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
@@ -1634,8 +1644,8 @@ function GetTMDBShowBackground {
                         }
                     }
                     Else {
-                        if ($global:TMDBVoteSorting -eq 'Primary') {
-                            $posterpath = (($response.images.backdrops | Where-Object iso_639_1 -eq $null | Sort-Object -Descending)[0]).file_path
+                        if ($global:TMDBVoteSorting -eq 'primary') {
+                            $posterpath = (($response.images.backdrops | Where-Object iso_639_1 -eq $null)[0]).file_path
                         }
                         Else {
                             $posterpath = (($response.images.backdrops | Where-Object iso_639_1 -eq $null | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
@@ -1698,8 +1708,8 @@ function GetTMDBShowBackground {
                         }
                     }
                     if ($FavPoster) {
-                        if ($global:TMDBVoteSorting -eq 'Primary') {
-                            $posterpath = (($FavPoster | Sort-Object -Descending)[0]).file_path
+                        if ($global:TMDBVoteSorting -eq 'primary') {
+                            $posterpath = $FavPoster[0].file_path
                         }
                         Else {
                             $posterpath = (($FavPoster | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
@@ -1759,12 +1769,12 @@ function GetTMDBTitleCard {
             $NoLangPoster = ($response.stills | Where-Object iso_639_1 -eq $null)
             if (!$NoLangPoster) {
                 if ($global:WidthHeightFilter -eq 'true') {
-                    if ($global:TMDBVoteSorting -eq 'Primary') {
+                    if ($global:TMDBVoteSorting -eq 'primary') {
                         $filteredPosters = $response.stills | Where-Object { $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight }
 
                         if ($filteredPosters) {
-                            $posterpath = (($filteredPosters | Sort-Object -Descending)[0]).file_path
-                            Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                            $posterpath = $filteredPosters[0].file_path
+                            Write-Entry -Subtext "Found a poster sized at - width: $($filteredPosters[0].width) | height: $($filteredPosters[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                         }
                         else {
                             Write-Entry -Subtext "No Titlecards found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
@@ -1783,8 +1793,8 @@ function GetTMDBTitleCard {
                     }
                 }
                 Else {
-                    if ($global:TMDBVoteSorting -eq 'Primary') {
-                        $posterpath = (($response.stills | Sort-Object -Descending)[0]).file_path
+                    if ($global:TMDBVoteSorting -eq 'primary') {
+                        $posterpath = $response.stills[0].file_path
                     }
                     Else {
                         $posterpath = (($response.stills | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
@@ -1794,8 +1804,8 @@ function GetTMDBTitleCard {
                     $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
                     Write-Entry -Subtext "Found Title Card with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                     $global:PosterWithText = $true
-                    if ($global:TMDBVoteSorting -eq 'Primary') {
-                        $global:TMDBAssetTextLang = (($response.stills | Sort-Object -Descending)[0]).iso_639_1
+                    if ($global:TMDBVoteSorting -eq 'primary') {
+                        $global:TMDBAssetTextLang = $response.stills[0].iso_639_1
                     }
                     Else {
                         $global:TMDBAssetTextLang = (($response.stills | Sort-Object $global:TMDBVoteSorting -Descending)[0]).iso_639_1
@@ -1808,12 +1818,12 @@ function GetTMDBTitleCard {
             }
             Else {
                 if ($global:WidthHeightFilter -eq 'true') {
-                    if ($global:TMDBVoteSorting -eq 'Primary') {
+                    if ($global:TMDBVoteSorting -eq 'primary') {
                         $filteredPosters = $response.stills | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight }
 
                         if ($filteredPosters) {
-                            $posterpath = (($filteredPosters | Sort-Object -Descending)[0]).file_path
-                            Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                            $posterpath = $filteredPosters[0].file_path
+                            Write-Entry -Subtext "Found a poster sized at - width: $($filteredPosters[0].width) | height: $($filteredPosters[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                         }
                         else {
                             Write-Entry -Subtext "No Titlecards found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
@@ -1832,8 +1842,8 @@ function GetTMDBTitleCard {
                     }
                 }
                 Else {
-                    if ($global:TMDBVoteSorting -eq 'Primary') {
-                        $posterpath = (($response.stills | Where-Object iso_639_1 -eq $null | Sort-Object -Descending)[0]).file_path
+                    if ($global:TMDBVoteSorting -eq 'primary') {
+                        $posterpath = (($response.stills | Where-Object iso_639_1 -eq $null)[0]).file_path
                     }
                     Else {
                         $posterpath = (($response.stills | Where-Object iso_639_1 -eq $null | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
@@ -3127,6 +3137,29 @@ function CheckJson {
             $config = @{}
         }
 
+        # Remove keys from config that are no longer in the default config
+        foreach ($existingKey in $config.PSObject.Properties.Name) {
+            if (-not $defaultConfig.PSObject.Properties.Name.Contains($existingKey)) {
+                Write-Entry -Message "Removing obsolete Main Attribute from your Config file: $existingKey." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                $config.PSObject.Properties.Remove($existingKey)
+                $AttributeChanged = $True
+            }
+        }
+
+        # Remove sub-attributes no longer in the default config
+        foreach ($partKey in $config.PSObject.Properties.Name) {
+            if ($defaultConfig.PSObject.Properties.Name.Contains($partKey)) {
+                # Check each sub-attribute in the part
+                foreach ($existingSubKey in $config.$partKey.PSObject.Properties.Name) {
+                    if (-not $defaultConfig.$partKey.PSObject.Properties.Name.Contains($existingSubKey)) {
+                        Write-Entry -Message "Removing obsolete Sub-Attribute from your Config file: $partKey.$existingSubKey." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                        $config.$partKey.PSObject.Properties.Remove($existingSubKey)
+                        $AttributeChanged = $True
+                    }
+                }
+            }
+        }
+
         # Check and add missing keys from the default configuration
         foreach ($partKey in $defaultConfig.PSObject.Properties.Name) {
             # Check if the part exists in the current configuration
@@ -3182,6 +3215,7 @@ function CheckJson {
                 }
             }
         }
+
         if ($AttributeChanged -eq 'true') {
             # Convert the updated configuration object back to JSON and save it
             $configJson = $config | ConvertTo-Json -Depth 10
@@ -3199,6 +3233,8 @@ function CheckJson {
         Exit
     }
 }
+
+
 function CheckJsonPaths {
     param (
         [string]$font,
@@ -3423,12 +3459,11 @@ function LogConfigSettings {
     Write-Entry -Subtext "| Text Box Width:               $MaxWidth" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Text Box Height:              $MaxHeight" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Text Box Offset:              $text_offset" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Line Spacing:                 $lineSpacing" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "OverLay Season Part" -Path $configLogging -Color Cyan -log Info
     Write-Entry -Subtext "| All Caps on Text:             $SeasonfontAllCaps" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Add Border to Image:          $AddSeasonBorder" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Add Text to Image:            $AddSeasonText" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Add Show Title to Image:      $AddShowTitletoSeason" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| New Lines for Season Title:   $SeasonTextNewLines" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Add Stroke to Text:           $AddSeasonTextStroke" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Stroke color:                 $Seasonstrokecolor" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Stroke width:                 $Seasonstrokewidth" -Path $configLogging -Color White -log Info
@@ -3441,6 +3476,21 @@ function LogConfigSettings {
     Write-Entry -Subtext "| Text Box Width:               $SeasonMaxWidth" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Text Box Height:              $SeasonMaxHeight" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Text Box Offset:              $Seasontext_offset" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Line Spacing:                 $SeasonlineSpacing" -Path $configLogging -Color White -log Info
+    if ($AddShowTitletoSeason -eq 'true') {
+        Write-Entry -Subtext "Show Text on Season Part" -Path $configLogging -Color Cyan -log Info
+        Write-Entry -Subtext "| All Caps on Text:             $ShowOnSeasonfontAllCaps" -Path $configLogging -Color White -log Info
+        Write-Entry -Subtext "| Add Stroke to Text:           $AddShowOnSeasonTextStroke" -Path $configLogging -Color White -log Info
+        Write-Entry -Subtext "| Stroke color:                 $ShowOnSeasonstrokecolor" -Path $configLogging -Color White -log Info
+        Write-Entry -Subtext "| Stroke width:                 $ShowOnSeasonstrokewidth" -Path $configLogging -Color White -log Info
+        Write-Entry -Subtext "| Font Color:                   $ShowOnSeasonfontcolor" -Path $configLogging -Color White -log Info
+        Write-Entry -Subtext "| Min Font Size:                $ShowOnSeasonminPointSize" -Path $configLogging -Color White -log Info
+        Write-Entry -Subtext "| Max Font Size:                $ShowOnSeasonmaxPointSize" -Path $configLogging -Color White -log Info
+        Write-Entry -Subtext "| Text Box Width:               $ShowOnSeasonMaxWidth" -Path $configLogging -Color White -log Info
+        Write-Entry -Subtext "| Text Box Height:              $ShowOnSeasonMaxHeight" -Path $configLogging -Color White -log Info
+        Write-Entry -Subtext "| Text Box Offset:              $ShowOnSeasontext_offset" -Path $configLogging -Color White -log Info
+        Write-Entry -Subtext "| Line Spacing:                 $ShowOnSeasonlineSpacing" -Path $configLogging -Color White -log Info
+    }
     Write-Entry -Subtext "OverLay Background Part" -Path $configLogging -Color Cyan -log Info
     Write-Entry -Subtext "| All Caps on Text:             $BackgroundfontAllCaps" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Add Border to Background:     $AddBackgroundBorder" -Path $configLogging -Color White -log Info
@@ -3457,6 +3507,7 @@ function LogConfigSettings {
     Write-Entry -Subtext "| Text Box Width:               $BackgroundMaxWidth" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Text Box Height:              $BackgroundMaxHeight" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Text Box Offset:              $Backgroundtext_offset" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Line Spacing:                 $BackgroundlineSpacing" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "OverLay TitleCard Part" -Path $configLogging -Color Cyan -log Info
     Write-Entry -Subtext "| Use Background as Title Card: $UseBackgroundAsTitleCard" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Add Border to Background:     $AddTitleCardBorder" -Path $configLogging -Color White -log Info
@@ -3475,6 +3526,7 @@ function LogConfigSettings {
     Write-Entry -Subtext "| Text Box Width:               $TitleCardEPTitleMaxWidth" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Text Box Height:              $TitleCardEPTitleMaxHeight" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Text Box Offset:              $TitleCardEPTitletext_offset" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Line Spacing:                 $TitleCardEPTitlelineSpacing" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "OverLay TitleCard EP Part" -Path $configLogging -Color Cyan -log Info
     Write-Entry -Subtext "| Season TC Text:               $SeasonTCText" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Episode TC Text:              $EpisodeTCText" -Path $configLogging -Color White -log Info
@@ -3489,6 +3541,7 @@ function LogConfigSettings {
     Write-Entry -Subtext "| Text Box Width:               $TitleCardEPMaxWidth" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Text Box Height:              $TitleCardEPMaxHeight" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Text Box Offset:              $TitleCardEPtext_offset" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Line Spacing:                 $TitleCardEPlineSpacing" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "___________________________________________" -Path $configLogging -Color DarkMagenta -log Info
 }
 function CheckPlexAccess {
@@ -3868,7 +3921,6 @@ function UploadOtherMediaServerArtwork {
         }
     }
 }
-
 function MassDownloadPlexArtwork {
     function GetPlexArtworkUrl {
         param(
@@ -5550,7 +5602,7 @@ function SyncPlexArtwork {
             # Compare the hashes
             if ($remoteImageHash -ne $existingImageHash) {
                 Write-Entry -Message "Push new Artwork to Jelly/Emby - $title" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                if ($imageType -eq 'Backdrop'){
+                if ($imageType -eq 'Backdrop') {
                     # Make the API request to delete the image
                     try {
                         $response = Invoke-RestMethod -Uri $DestUrl -Method Delete -ErrorAction Stop
@@ -5706,7 +5758,7 @@ $global:PosterMinHeight = $config.ApiPart.PosterMinHeight
 $global:BgTcMinWidth = $config.ApiPart.BgTcMinWidth
 $global:BgTcMinHeight = $config.ApiPart.BgTcMinHeight
 $global:FavProvider = $config.ApiPart.FavProvider.ToUpper()
-$global:TMDBVoteSorting = $config.ApiPart.tmdb_vote_sorting
+$global:TMDBVoteSorting = $config.ApiPart.tmdb_vote_sorting.tolower()
 
 if (!$global:TMDBVoteSorting) {
     Write-Entry -Message "TMDB Sorting option not set in config, setting it to 'vote_average' for you" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
@@ -5903,6 +5955,7 @@ $borderwidth = $config.PosterOverlayPart.borderwidth
 $MaxWidth = $config.PosterOverlayPart.MaxWidth
 $MaxHeight = $config.PosterOverlayPart.MaxHeight
 $text_offset = $config.PosterOverlayPart.text_offset
+$lineSpacing = $config.PosterOverlayPart.lineSpacing
 $borderwidthsecond = $borderwidth + 'x' + $borderwidth
 $boxsize = $MaxWidth + 'x' + $MaxHeight
 
@@ -5910,8 +5963,6 @@ $boxsize = $MaxWidth + 'x' + $MaxHeight
 $SeasonfontAllCaps = $config.SeasonPosterOverlayPart.fontAllCaps.tolower()
 $AddSeasonBorder = $config.SeasonPosterOverlayPart.AddBorder.tolower()
 $AddSeasonText = $config.SeasonPosterOverlayPart.AddText.tolower()
-$AddShowTitletoSeason = $config.SeasonPosterOverlayPart.AddShowTitletoSeason.tolower()
-$SeasonTextNewLines = $config.SeasonPosterOverlayPart.SeasonTextNewLines
 $AddSeasonTextStroke = $config.SeasonPosterOverlayPart.AddTextStroke.tolower()
 $Seasonstrokecolor = $config.SeasonPosterOverlayPart.strokecolor
 $Seasonstrokewidth = $config.SeasonPosterOverlayPart.strokewidth
@@ -5924,8 +5975,24 @@ $Seasonborderwidth = $config.SeasonPosterOverlayPart.borderwidth
 $SeasonMaxWidth = $config.SeasonPosterOverlayPart.MaxWidth
 $SeasonMaxHeight = $config.SeasonPosterOverlayPart.MaxHeight
 $Seasontext_offset = $config.SeasonPosterOverlayPart.text_offset
+$SeasonlineSpacing = $config.SeasonPosterOverlayPart.lineSpacing
 $Seasonborderwidthsecond = $borderwidth + 'x' + $borderwidth
 $Seasonboxsize = $SeasonMaxWidth + 'x' + $SeasonMaxHeight
+
+# Show Title on Season Poster Overlay Part
+$ShowOnSeasonfontAllCaps = $config.ShowTitleOnSeasonPosterPart.fontAllCaps.tolower()
+$AddShowTitletoSeason = $config.ShowTitleOnSeasonPosterPart.AddShowTitletoSeason.tolower()
+$AddShowOnSeasonTextStroke = $config.ShowTitleOnSeasonPosterPart.AddTextStroke.tolower()
+$ShowOnSeasonstrokecolor = $config.ShowTitleOnSeasonPosterPart.strokecolor
+$ShowOnSeasonstrokewidth = $config.ShowTitleOnSeasonPosterPart.strokewidth
+$ShowOnSeasonfontcolor = $config.ShowTitleOnSeasonPosterPart.fontcolor
+$ShowOnSeasonminPointSize = $config.ShowTitleOnSeasonPosterPart.minPointSize
+$ShowOnSeasonmaxPointSize = $config.ShowTitleOnSeasonPosterPart.maxPointSize
+$ShowOnSeasonMaxWidth = $config.ShowTitleOnSeasonPosterPart.MaxWidth
+$ShowOnSeasonMaxHeight = $config.ShowTitleOnSeasonPosterPart.MaxHeight
+$ShowOnSeasontext_offset = $config.ShowTitleOnSeasonPosterPart.text_offset
+$ShowOnSeasonboxsize = $ShowOnSeasonMaxWidth + 'x' + $ShowOnSeasonMaxHeight
+$ShowOnSeasonlineSpacing = $config.ShowTitleOnSeasonPosterPart.lineSpacing
 
 # Background Overlay Part
 $BackgroundfontAllCaps = $config.BackgroundOverlayPart.fontAllCaps.tolower()
@@ -5943,6 +6010,7 @@ $Backgroundborderwidth = $config.BackgroundOverlayPart.borderwidth
 $BackgroundMaxWidth = $config.BackgroundOverlayPart.MaxWidth
 $BackgroundMaxHeight = $config.BackgroundOverlayPart.MaxHeight
 $Backgroundtext_offset = $config.BackgroundOverlayPart.text_offset
+$BackgroundlineSpacing = $config.BackgroundOverlayPart.lineSpacing
 $Backgroundborderwidthsecond = $Backgroundborderwidth + 'x' + $Backgroundborderwidth
 $Backgroundboxsize = $BackgroundMaxWidth + 'x' + $BackgroundMaxHeight
 
@@ -5966,6 +6034,7 @@ $TitleCardEPTitlemaxPointSize = $config.TitleCardTitleTextPart.maxPointSize
 $TitleCardEPTitleMaxWidth = $config.TitleCardTitleTextPart.MaxWidth
 $TitleCardEPTitleMaxHeight = $config.TitleCardTitleTextPart.MaxHeight
 $TitleCardEPTitletext_offset = $config.TitleCardTitleTextPart.text_offset
+$TitleCardEPTitlelineSpacing = $config.TitleCardTitleTextPart.lineSpacing
 
 # Title Card EP Text Part
 $SeasonTCText = $config.TitleCardEPTextPart.SeasonTCText
@@ -5981,6 +6050,7 @@ $TitleCardEPmaxPointSize = $config.TitleCardEPTextPart.maxPointSize
 $TitleCardEPMaxWidth = $config.TitleCardEPTextPart.MaxWidth
 $TitleCardEPMaxHeight = $config.TitleCardEPTextPart.MaxHeight
 $TitleCardEPtext_offset = $config.TitleCardEPTextPart.text_offset
+$TitleCardEPlineSpacing = $config.TitleCardEPTextPart.lineSpacing
 
 $TitleCardborderwidthsecond = $TitleCardborderwidth + 'x' + $TitleCardborderwidth
 $TitleCardEPTitleboxsize = $TitleCardEPTitleMaxWidth + 'x' + $TitleCardEPTitleMaxHeight
@@ -6054,7 +6124,8 @@ if ($global:OSType -eq "Docker") {
     $Url = "https://pkgs.alpinelinux.org/package/edge/community/x86_64/imagemagick"
     $response = Invoke-WebRequest -Uri $url
     $htmlContent = $response.Content
-    $regexPattern = '<th class="header">Version<\/th>\s*<td>\s*<strong>\s*<a[^>]*>([^<]+)<\/a>\s*<\/strong>\s*<\/td>'
+    #$regexPattern = '<th class="header">Version<\/th>\s*<td>\s*<strong>\s*<a[^>]*>([^<]+)<\/a>\s*<\/strong>\s*<\/td>' # Old Pattern 20240929
+    $regexPattern = '<th class="header">Version<\/th>\s*<td>\s*<strong>([\d\.]+-r\d+)<\/strong>\s*<\/td>'
     $Versionmatching = [regex]::Matches($htmlContent, $regexPattern)
 
     if ($Versionmatching.Count -gt 0) {
@@ -6069,8 +6140,11 @@ Elseif ($global:OSType -eq "Win32NT") {
 Else {
     $LatestImagemagickversion = (Invoke-RestMethod -Uri "https://api.github.com/repos/ImageMagick/ImageMagick/releases/latest" -Method Get).tag_name
 }
-$LatestImagemagickversion = $LatestImagemagickversion.replace('-', '.')
-Write-Entry -Message "Latest Imagemagick Version: $LatestImagemagickversion" -Path $configLogging -Color Yellow -log Info
+if ($LatestImagemagickversion) {
+    $LatestImagemagickversion = $LatestImagemagickversion.replace('-', '.')
+    Write-Entry -Message "Latest Imagemagick Version: $LatestImagemagickversion" -Path $configLogging -Color Yellow -log Info
+}
+
 # Auto Update Magick
 if ($AutoUpdateIM -eq 'true' -and $global:OSType -ne "Docker" -and $LatestImagemagickversion -gt $CurrentImagemagickversion -and $global:OSarch -ne "Arm64") {
     if ($global:OSType -eq "Win32NT") {
@@ -6241,16 +6315,22 @@ if (!$SyncJelly -and !$SyncEmby) {
 Write-Entry -Message "Checking size of overlay files..." -Path $configLogging -Color White -log Info
 CheckOverlayDimensions -Posteroverlay "$Posteroverlay" -Backgroundoverlay "$Backgroundoverlay" -Titlecardoverlay "$titlecardoverlay" -PosterSize "$PosterSize" -BackgroundSize "$BackgroundSize" -Seasonoverlay "$Seasonoverlay"
 
+# Check if the FanartTvAPI module is installed
+$module = Get-Module -ListAvailable -Name FanartTvAPI
 
-# check if fanart Module is installed
-if (!(Get-InstalledModule -Name FanartTvAPI)) {
-    Write-Entry -Message "FanartTvAPI Module missing, installing it for you..." -Path $configLogging -Color Red -log Error
-    Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-    $errorCount++
-    Install-Module -Name FanartTvAPI -Force -Confirm -AllowClobber
-
-    Write-Entry -Subtext "FanartTvAPI Module installed, importing it now..." -Path $configLogging -Color Green -log Info
-    Import-Module -Name FanartTvAPI
+if (-not $module) {
+    # Try to install the module
+    try {
+        Install-Module -Name $moduleName -Force -SkipPublisherCheck -AllowPrerelease -Scope AllUsers
+        Write-Entry -Message "FanartTvAPI Module missing, installing it for you..." -Path $configLogging -Color Red -log Error
+        Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        $errorCount++
+        Write-Entry -Subtext "FanartTvAPI Module installed, importing it now..." -Path $configLogging -Color Green -log Info
+        Import-Module -Name FanartTvAPI
+    }
+    catch {
+        Write-Host "Failed to install $moduleName module. Error: $_"
+    }
 }
 # Add Fanart API
 Add-FanartTvAPIKey -Api_Key $FanartTvAPIKey
@@ -6330,12 +6410,18 @@ $extraPlexHeaders = @{
 #### MAIN SCRIPT START ####
 if ($Manual) {
     Write-Entry -Message "Manual Poster Creation Started" -Path $global:ScriptRoot\Logs\Manuallog.log -Color DarkMagenta -log Info
-    $PicturePath = Read-Host "Enter path to source picture"
+    $PicturePath = Read-Host "Enter local path or url to source picture"
     $FolderName = Read-Host "Enter Media Foldername (how plex sees it)"
     $Titletext = Read-Host "Enter Movie/Show Title"
     $CreateSeasonPoster = Read-Host "Create Season Poster? (y/n)"
 
-    $PicturePath = $PicturePath.replace('"', '')
+    if ($PicturePath -like 'http*'){
+        $isWebPic = 'true'
+        $PicturePath = $PicturePath.replace('"', '')
+    }
+    Else {
+        $PicturePath = $PicturePath.replace('"', '')
+    }
     $FolderName = $FolderName.replace('"', '')
     $Titletext = $Titletext.replace('"', '')
 
@@ -6389,7 +6475,13 @@ if ($Manual) {
                 $joinedTitle = $Titletext
             }
         }
-        Move-Item -LiteralPath $PicturePath -destination $PosterImage -Force -ErrorAction SilentlyContinue
+        if ($isWebPic -eq 'true'){
+            Write-Entry -Subtext "Downloading Image from: $PicturePath" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
+            Invoke-WebRequest -Uri $PicturePath -OutFile $PosterImage
+        }
+        Else{
+            Move-Item -LiteralPath $PicturePath -destination $PosterImage -Force -ErrorAction SilentlyContinue
+        }
         Write-Entry -Subtext "Processing Poster for: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
 
         $CommentArguments = "`"$PosterImage`" -set `"comment`" `"created with posterizarr`" `"$PosterImage`""
@@ -6430,15 +6522,15 @@ if ($Manual) {
                 }
 
                 $joinedTitlePointSize = $joinedTitle -replace '""', '""""'
-                $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
+                $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize -lineSpacing $lineSpacing
                 Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
 
                 # Add Stroke
                 if ($AddTextStroke -eq 'true') {
-                    $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -stroke `"$strokecolor`" -strokewidth `"$strokewidth`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
+                    $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -stroke `"$strokecolor`" -strokewidth `"$strokewidth`" -size `"$boxsize`" -background none -interline-spacing `"$lineSpacing`" caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
                 }
                 Else {
-                    $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
+                    $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none -interline-spacing `"$lineSpacing`" caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
                 }
 
                 Write-Entry -Subtext "    Applying Poster text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
@@ -6509,7 +6601,7 @@ Elseif ($Testing) {
     }
 
     # Season Posters
-    if ($AddText -eq 'true') {
+    if ($AddSeasonText -eq 'true') {
         $TestSeasonPosterShort = Join-Path -Path $global:ScriptRoot -ChildPath "test\SeasonPosterShortText.jpg"
         $TestSeasonPosterMedium = Join-Path -Path $global:ScriptRoot -ChildPath "test\SeasonPosterMediumText.jpg"
         $TestSeasonPosterLong = Join-Path -Path $global:ScriptRoot -ChildPath "test\SeasonPosterLongText.jpg"
@@ -6552,77 +6644,110 @@ Elseif ($Testing) {
     $TruncatedCount = 0
     # Optimal Poster Font Size
     if ($AddText -eq 'true') {
-        $optimalFontSizeShort = Get-OptimalPointSize -text $ShortText -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
+        $optimalFontSizeShort = Get-OptimalPointSize -text $ShortText -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize -lineSpacing $lineSpacing
         if ($global:IsTruncated) { $TruncatedCount++ }
-        $optimalFontSizeMedium = Get-OptimalPointSize -text $MediumText -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
+        $optimalFontSizeMedium = Get-OptimalPointSize -text $MediumText -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize -lineSpacing $lineSpacing
         if ($global:IsTruncated) { $TruncatedCount++ }
-        $optimalFontSizeLong = Get-OptimalPointSize -text $LongText -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
+        $optimalFontSizeLong = Get-OptimalPointSize -text $LongText -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize -lineSpacing $lineSpacing
         if ($global:IsTruncated) { $TruncatedCount++ }
 
-        $optimalFontSizeShortCAPS = Get-OptimalPointSize -text $ShortTextCAPS -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
+        $optimalFontSizeShortCAPS = Get-OptimalPointSize -text $ShortTextCAPS -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize -lineSpacing $lineSpacing
         if ($global:IsTruncated) { $TruncatedCount++ }
-        $optimalFontSizeMediumCAPS = Get-OptimalPointSize -text $MediumTextCAPS -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
+        $optimalFontSizeMediumCAPS = Get-OptimalPointSize -text $MediumTextCAPS -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize -lineSpacing $lineSpacing
         if ($global:IsTruncated) { $TruncatedCount++ }
-        $optimalFontSizeLongCAPS = Get-OptimalPointSize -text $LongTextCAPS -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
+        $optimalFontSizeLongCAPS = Get-OptimalPointSize -text $LongTextCAPS -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize -lineSpacing $lineSpacing
         if ($global:IsTruncated) { $TruncatedCount++ }
         Write-Entry -Subtext "Finished Optimal Font Sizes for posters..." -Path $global:ScriptRoot\Logs\Testinglog.log -Color Cyan -log Info
     }
     # Optimal Season Poster Font Size
     if ($AddSeasonText -eq 'true') {
-        $seasonoptimalFontSizeShort = Get-OptimalPointSize -text $ShortText -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize
-        if ($global:IsTruncated) { $TruncatedCount++ }
-        $seasonoptimalFontSizeMedium = Get-OptimalPointSize -text $MediumText -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize
-        if ($global:IsTruncated) { $TruncatedCount++ }
-        $seasonoptimalFontSizeLong = Get-OptimalPointSize -text $LongText -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize
-        if ($global:IsTruncated) { $TruncatedCount++ }
+        if ($AddShowTitletoSeason -eq 'true') {
+            # Title
+            $ShowoptimalFontSizeShort = Get-OptimalPointSize -text $ShortText -font $fontImagemagick -box_width $ShowOnSeasonMaxWidth  -box_height $ShowOnSeasonMaxHeight -min_pointsize $ShowOnSeasonminPointSize -max_pointsize $ShowOnSeasonmaxPointSize -lineSpacing $ShowOnSeasonlineSpacing
+            if ($global:IsTruncated) { $TruncatedCount++ }
+            $ShowoptimalFontSizeMedium = Get-OptimalPointSize -text $MediumText -font $fontImagemagick -box_width $ShowOnSeasonMaxWidth  -box_height $ShowOnSeasonMaxHeight -min_pointsize $ShowOnSeasonminPointSize -max_pointsize $ShowOnSeasonmaxPointSize -lineSpacing $ShowOnSeasonlineSpacing
+            if ($global:IsTruncated) { $TruncatedCount++ }
+            $ShowoptimalFontSizeLong = Get-OptimalPointSize -text $LongText -font $fontImagemagick -box_width $ShowOnSeasonMaxWidth  -box_height $ShowOnSeasonMaxHeight -min_pointsize $ShowOnSeasonminPointSize -max_pointsize $ShowOnSeasonmaxPointSize -lineSpacing $ShowOnSeasonlineSpacing
+            if ($global:IsTruncated) { $TruncatedCount++ }
 
-        $seasonoptimalFontSizeShortCAPS = Get-OptimalPointSize -text $ShortTextCAPS -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize
-        if ($global:IsTruncated) { $TruncatedCount++ }
-        $seasonoptimalFontSizeMediumCAPS = Get-OptimalPointSize -text $MediumTextCAPS -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize
-        if ($global:IsTruncated) { $TruncatedCount++ }
-        $seasonoptimalFontSizeLongCAPS = Get-OptimalPointSize -text $LongTextCAPS -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize
-        if ($global:IsTruncated) { $TruncatedCount++ }
+            $ShowoptimalFontSizeShortCAPS = Get-OptimalPointSize -text $ShortTextCAPS -font $fontImagemagick -box_width $ShowOnSeasonMaxWidth  -box_height $ShowOnSeasonMaxHeight -min_pointsize $ShowOnSeasonminPointSize -max_pointsize $ShowOnSeasonmaxPointSize -lineSpacing $ShowOnSeasonlineSpacing
+            if ($global:IsTruncated) { $TruncatedCount++ }
+            $ShowoptimalFontSizeMediumCAPS = Get-OptimalPointSize -text $MediumTextCAPS -font $fontImagemagick -box_width $ShowOnSeasonMaxWidth  -box_height $ShowOnSeasonMaxHeight -min_pointsize $ShowOnSeasonminPointSize -max_pointsize $ShowOnSeasonmaxPointSize -lineSpacing $ShowOnSeasonlineSpacing
+            if ($global:IsTruncated) { $TruncatedCount++ }
+            $ShowoptimalFontSizeLongCAPS = Get-OptimalPointSize -text $LongTextCAPS -font $fontImagemagick -box_width $ShowOnSeasonMaxWidth  -box_height $ShowOnSeasonMaxHeight -min_pointsize $ShowOnSeasonminPointSize -max_pointsize $ShowOnSeasonmaxPointSize -lineSpacing $ShowOnSeasonlineSpacing
+            if ($global:IsTruncated) { $TruncatedCount++ }
+
+            # Season
+            $seasonoptimalFontSizeShort = Get-OptimalPointSize -text $ShortText -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize -lineSpacing $SeasonlineSpacing
+            if ($global:IsTruncated) { $TruncatedCount++ }
+            $seasonoptimalFontSizeMedium = Get-OptimalPointSize -text $MediumText -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize -lineSpacing $SeasonlineSpacing
+            if ($global:IsTruncated) { $TruncatedCount++ }
+            $seasonoptimalFontSizeLong = Get-OptimalPointSize -text $LongText -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize -lineSpacing $SeasonlineSpacing
+            if ($global:IsTruncated) { $TruncatedCount++ }
+
+            $seasonoptimalFontSizeShortCAPS = Get-OptimalPointSize -text $ShortTextCAPS -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize -lineSpacing $SeasonlineSpacing
+            if ($global:IsTruncated) { $TruncatedCount++ }
+            $seasonoptimalFontSizeMediumCAPS = Get-OptimalPointSize -text $MediumTextCAPS -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize -lineSpacing $SeasonlineSpacing
+            if ($global:IsTruncated) { $TruncatedCount++ }
+            $seasonoptimalFontSizeLongCAPS = Get-OptimalPointSize -text $LongTextCAPS -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize -lineSpacing $SeasonlineSpacing
+            if ($global:IsTruncated) { $TruncatedCount++ }
+        }
+        Else {
+            $seasonoptimalFontSizeShort = Get-OptimalPointSize -text $ShortText -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize -lineSpacing $SeasonlineSpacing
+            if ($global:IsTruncated) { $TruncatedCount++ }
+            $seasonoptimalFontSizeMedium = Get-OptimalPointSize -text $MediumText -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize -lineSpacing $SeasonlineSpacing
+            if ($global:IsTruncated) { $TruncatedCount++ }
+            $seasonoptimalFontSizeLong = Get-OptimalPointSize -text $LongText -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize -lineSpacing $SeasonlineSpacing
+            if ($global:IsTruncated) { $TruncatedCount++ }
+
+            $seasonoptimalFontSizeShortCAPS = Get-OptimalPointSize -text $ShortTextCAPS -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize -lineSpacing $SeasonlineSpacing
+            if ($global:IsTruncated) { $TruncatedCount++ }
+            $seasonoptimalFontSizeMediumCAPS = Get-OptimalPointSize -text $MediumTextCAPS -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize -lineSpacing $SeasonlineSpacing
+            if ($global:IsTruncated) { $TruncatedCount++ }
+            $seasonoptimalFontSizeLongCAPS = Get-OptimalPointSize -text $LongTextCAPS -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize -lineSpacing $SeasonlineSpacing
+            if ($global:IsTruncated) { $TruncatedCount++ }
+        }
         Write-Entry -Subtext "Finished Optimal Font Sizes for season posters..." -Path $global:ScriptRoot\Logs\Testinglog.log -Color Cyan -log Info
     }
     # Optimal Background Font Size
     if ($AddBackgroundText -eq 'true') {
-        $backgroundoptimalFontSizeShort = Get-OptimalPointSize -text $ShortText -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
+        $backgroundoptimalFontSizeShort = Get-OptimalPointSize -text $ShortText -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize -lineSpacing $BackgroundlineSpacing
         if ($global:IsTruncated) { $TruncatedCount++ }
-        $backgroundoptimalFontSizeMedium = Get-OptimalPointSize -text $MediumText -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
+        $backgroundoptimalFontSizeMedium = Get-OptimalPointSize -text $MediumText -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize -lineSpacing $BackgroundlineSpacing
         if ($global:IsTruncated) { $TruncatedCount++ }
-        $backgroundoptimalFontSizeLong = Get-OptimalPointSize -text $LongText -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
+        $backgroundoptimalFontSizeLong = Get-OptimalPointSize -text $LongText -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize -lineSpacing $BackgroundlineSpacing
         if ($global:IsTruncated) { $TruncatedCount++ }
 
-        $backgroundoptimalFontSizeShortCAPS = Get-OptimalPointSize -text $ShortTextCAPS -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
+        $backgroundoptimalFontSizeShortCAPS = Get-OptimalPointSize -text $ShortTextCAPS -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize -lineSpacing $BackgroundlineSpacing
         if ($global:IsTruncated) { $TruncatedCount++ }
-        $backgroundoptimalFontSizeMediumCAPS = Get-OptimalPointSize -text $MediumTextCAPS -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
+        $backgroundoptimalFontSizeMediumCAPS = Get-OptimalPointSize -text $MediumTextCAPS -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize -lineSpacing $BackgroundlineSpacing
         if ($global:IsTruncated) { $TruncatedCount++ }
-        $backgroundoptimalFontSizeLongCAPS = Get-OptimalPointSize -text $LongTextCAPS -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
+        $backgroundoptimalFontSizeLongCAPS = Get-OptimalPointSize -text $LongTextCAPS -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize -lineSpacing $BackgroundlineSpacing
         if ($global:IsTruncated) { $TruncatedCount++ }
         Write-Entry -Subtext "Finished Optimal Font Sizes for backgrounds..." -Path $global:ScriptRoot\Logs\Testinglog.log -Color Cyan -log Info
     }
     # Optimal TitleCard Font Size
     if ($AddTitleCardEPTitleText -eq 'true') {
-        $TitleCardoptimalFontSizeShort = Get-OptimalPointSize -text $ShortText -font $titlecardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
+        $TitleCardoptimalFontSizeShort = Get-OptimalPointSize -text $ShortText -font $titlecardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize -lineSpacing $TitleCardEPTitlelineSpacing
         if ($global:IsTruncated) { $TruncatedCount++ }
-        $TitleCardoptimalFontSizeMedium = Get-OptimalPointSize -text $MediumText -font $titlecardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
+        $TitleCardoptimalFontSizeMedium = Get-OptimalPointSize -text $MediumText -font $titlecardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize -lineSpacing $TitleCardEPTitlelineSpacing
         if ($global:IsTruncated) { $TruncatedCount++ }
-        $TitleCardoptimalFontSizeLong = Get-OptimalPointSize -text $LongText -font $titlecardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
+        $TitleCardoptimalFontSizeLong = Get-OptimalPointSize -text $LongText -font $titlecardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize -lineSpacing $TitleCardEPTitlelineSpacing
         if ($global:IsTruncated) { $TruncatedCount++ }
-        $TitleCardoptimalFontSizeShortCAPS = Get-OptimalPointSize -text $ShortTextCAPS -font $titlecardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
+        $TitleCardoptimalFontSizeShortCAPS = Get-OptimalPointSize -text $ShortTextCAPS -font $titlecardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize -lineSpacing $TitleCardEPTitlelineSpacing
         if ($global:IsTruncated) { $TruncatedCount++ }
-        $TitleCardoptimalFontSizeMediumCAPS = Get-OptimalPointSize -text $MediumTextCAPS -font $titlecardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
+        $TitleCardoptimalFontSizeMediumCAPS = Get-OptimalPointSize -text $MediumTextCAPS -font $titlecardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize -lineSpacing $TitleCardEPTitlelineSpacing
         if ($global:IsTruncated) { $TruncatedCount++ }
-        $TitleCardoptimalFontSizeLongCAPS = Get-OptimalPointSize -text $LongTextCAPS -font $titlecardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
+        $TitleCardoptimalFontSizeLongCAPS = Get-OptimalPointSize -text $LongTextCAPS -font $titlecardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize -lineSpacing $TitleCardEPTitlelineSpacing
         if ($global:IsTruncated) { $TruncatedCount++ }
     }
     # Optimal TitleCard EP Font Size
     if ($AddTitleCardEPText -eq 'true') {
         $Episodetext = $Episodetext -replace '"', '""'
-        $TitleCardoptimalFontSizeEpisodetext = Get-OptimalPointSize -text $Episodetext -font $titlecardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize
+        $TitleCardoptimalFontSizeEpisodetext = Get-OptimalPointSize -text $Episodetext -font $titlecardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize -lineSpacing $TitleCardEPlineSpacing
         if ($global:IsTruncated) { $TruncatedCount++ }
         $EpisodetextCAPS = $EpisodetextCAPS -replace '"', '""'
-        $TitleCardoptimalFontSizeEpisodetextCAPS = Get-OptimalPointSize -text $EpisodetextCAPS -font $titlecardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize
+        $TitleCardoptimalFontSizeEpisodetextCAPS = Get-OptimalPointSize -text $EpisodetextCAPS -font $titlecardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize -lineSpacing $TitleCardEPlineSpacing
         if ($global:IsTruncated) { $TruncatedCount++ }
     }
     if ($AddText -eq 'true' -or $AddBackgroundText -eq 'true' -or $AddTitleCardEPTitleText -eq 'true' -or $AddTitleCardEPText -eq 'true') {
@@ -6733,20 +6858,20 @@ Elseif ($Testing) {
 
         # Add Stroke
         if ($AddTextStroke -eq 'true') {
-            $ArgumentsShort = "`"$TestPosterShort`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeShort`" -fill `"#0000FF`" -stroke `"$strokecolor`" -strokewidth `"$strokewidth`" -size `"$boxsize`" -background `"#ACD7E6`" caption:`"$ShortText`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -quality $global:outputQuality -composite `"$TestPosterShort`""
-            $ArgumentsMedium = "`"$TestPosterMedium`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeMedium`" -fill `"#0000FF`" -stroke `"$strokecolor`" -strokewidth `"$strokewidth`" -size `"$boxsize`" -background `"#ACD7E6`" caption:`"$MediumText`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -quality $global:outputQuality -composite `"$TestPosterMedium`""
-            $ArgumentsLong = "`"$TestPosterLong`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeLong`" -fill `"#0000FF`" -stroke `"$strokecolor`" -strokewidth `"$strokewidth`" -size `"$boxsize`" -background `"#ACD7E6`" caption:`"$LongText`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -quality $global:outputQuality -composite `"$TestPosterLong`""
-            $ArgumentsShortCAPS = "`"$TestPosterShortCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeShortCAPS`" -fill `"#0000FF`" -stroke `"$strokecolor`" -strokewidth `"$strokewidth`" -size `"$boxsize`" -background `"#ACD7E6`" caption:`"$ShortTextCAPS`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -quality $global:outputQuality -composite `"$TestPosterShortCAPS`""
-            $ArgumentsMediumCAPS = "`"$TestPosterMediumCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeMediumCAPS`" -fill `"#0000FF`" -stroke `"$strokecolor`" -strokewidth `"$strokewidth`" -size `"$boxsize`" -background `"#ACD7E6`" caption:`"$MediumTextCAPS`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -quality $global:outputQuality -composite `"$TestPosterMediumCAPS`""
-            $ArgumentsLongCAPS = "`"$TestPosterLongCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeLongCAPS`" -fill `"#0000FF`" -stroke `"$strokecolor`" -strokewidth `"$strokewidth`" -size `"$boxsize`" -background `"#ACD7E6`" caption:`"$LongTextCAPS`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -quality $global:outputQuality -composite `"$TestPosterLongCAPS`""
+            $ArgumentsShort = "`"$TestPosterShort`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeShort`" -fill `"#0000FF`" -stroke `"$strokecolor`" -strokewidth `"$strokewidth`" -size `"$boxsize`" -background `"#ACD7E6`" -interline-spacing `"$lineSpacing`" caption:`"$ShortText`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -quality $global:outputQuality -composite `"$TestPosterShort`""
+            $ArgumentsMedium = "`"$TestPosterMedium`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeMedium`" -fill `"#0000FF`" -stroke `"$strokecolor`" -strokewidth `"$strokewidth`" -size `"$boxsize`" -background `"#ACD7E6`" -interline-spacing `"$lineSpacing`" caption:`"$MediumText`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -quality $global:outputQuality -composite `"$TestPosterMedium`""
+            $ArgumentsLong = "`"$TestPosterLong`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeLong`" -fill `"#0000FF`" -stroke `"$strokecolor`" -strokewidth `"$strokewidth`" -size `"$boxsize`" -background `"#ACD7E6`" -interline-spacing `"$lineSpacing`" caption:`"$LongText`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -quality $global:outputQuality -composite `"$TestPosterLong`""
+            $ArgumentsShortCAPS = "`"$TestPosterShortCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeShortCAPS`" -fill `"#0000FF`" -stroke `"$strokecolor`" -strokewidth `"$strokewidth`" -size `"$boxsize`" -background `"#ACD7E6`" -interline-spacing `"$lineSpacing`" caption:`"$ShortTextCAPS`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -quality $global:outputQuality -composite `"$TestPosterShortCAPS`""
+            $ArgumentsMediumCAPS = "`"$TestPosterMediumCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeMediumCAPS`" -fill `"#0000FF`" -stroke `"$strokecolor`" -strokewidth `"$strokewidth`" -size `"$boxsize`" -background `"#ACD7E6`" -interline-spacing `"$lineSpacing`" caption:`"$MediumTextCAPS`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -quality $global:outputQuality -composite `"$TestPosterMediumCAPS`""
+            $ArgumentsLongCAPS = "`"$TestPosterLongCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeLongCAPS`" -fill `"#0000FF`" -stroke `"$strokecolor`" -strokewidth `"$strokewidth`" -size `"$boxsize`" -background `"#ACD7E6`" -interline-spacing `"$lineSpacing`" caption:`"$LongTextCAPS`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -quality $global:outputQuality -composite `"$TestPosterLongCAPS`""
         }
         Else {
-            $ArgumentsShort = "`"$TestPosterShort`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeShort`" -fill `"#0000FF`" -size `"$boxsize`" -background `"#ACD7E6`" caption:`"$ShortText`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -quality $global:outputQuality -composite `"$TestPosterShort`""
-            $ArgumentsMedium = "`"$TestPosterMedium`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeMedium`" -fill `"#0000FF`" -size `"$boxsize`" -background `"#ACD7E6`" caption:`"$MediumText`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -quality $global:outputQuality -composite `"$TestPosterMedium`""
-            $ArgumentsLong = "`"$TestPosterLong`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeLong`" -fill `"#0000FF`" -size `"$boxsize`" -background `"#ACD7E6`" caption:`"$LongText`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -quality $global:outputQuality -composite `"$TestPosterLong`""
-            $ArgumentsShortCAPS = "`"$TestPosterShortCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeShortCAPS`" -fill `"#0000FF`" -size `"$boxsize`" -background `"#ACD7E6`" caption:`"$ShortTextCAPS`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -quality $global:outputQuality -composite `"$TestPosterShortCAPS`""
-            $ArgumentsMediumCAPS = "`"$TestPosterMediumCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeMediumCAPS`" -fill `"#0000FF`" -size `"$boxsize`" -background `"#ACD7E6`" caption:`"$MediumTextCAPS`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -quality $global:outputQuality -composite `"$TestPosterMediumCAPS`""
-            $ArgumentsLongCAPS = "`"$TestPosterLongCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeLongCAPS`" -fill `"#0000FF`" -size `"$boxsize`" -background `"#ACD7E6`" caption:`"$LongTextCAPS`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -quality $global:outputQuality -composite `"$TestPosterLongCAPS`""
+            $ArgumentsShort = "`"$TestPosterShort`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeShort`" -fill `"#0000FF`" -size `"$boxsize`" -background `"#ACD7E6`" -interline-spacing `"$lineSpacing`" caption:`"$ShortText`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -quality $global:outputQuality -composite `"$TestPosterShort`""
+            $ArgumentsMedium = "`"$TestPosterMedium`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeMedium`" -fill `"#0000FF`" -size `"$boxsize`" -background `"#ACD7E6`" -interline-spacing `"$lineSpacing`" caption:`"$MediumText`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -quality $global:outputQuality -composite `"$TestPosterMedium`""
+            $ArgumentsLong = "`"$TestPosterLong`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeLong`" -fill `"#0000FF`" -size `"$boxsize`" -background `"#ACD7E6`" -interline-spacing `"$lineSpacing`" caption:`"$LongText`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -quality $global:outputQuality -composite `"$TestPosterLong`""
+            $ArgumentsShortCAPS = "`"$TestPosterShortCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeShortCAPS`" -fill `"#0000FF`" -size `"$boxsize`" -background `"#ACD7E6`" -interline-spacing `"$lineSpacing`" caption:`"$ShortTextCAPS`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -quality $global:outputQuality -composite `"$TestPosterShortCAPS`""
+            $ArgumentsMediumCAPS = "`"$TestPosterMediumCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeMediumCAPS`" -fill `"#0000FF`" -size `"$boxsize`" -background `"#ACD7E6`" -interline-spacing `"$lineSpacing`" caption:`"$MediumTextCAPS`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -quality $global:outputQuality -composite `"$TestPosterMediumCAPS`""
+            $ArgumentsLongCAPS = "`"$TestPosterLongCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$optimalFontSizeLongCAPS`" -fill `"#0000FF`" -size `"$boxsize`" -background `"#ACD7E6`" -interline-spacing `"$lineSpacing`" caption:`"$LongTextCAPS`" -trim -gravity south -extent `"$boxsize`" ) -gravity south -geometry +0+`"$text_offset`" -quality $global:outputQuality -composite `"$TestPosterLongCAPS`""
         }
 
         # Text Poster Logging
@@ -6806,7 +6931,7 @@ Elseif ($Testing) {
             $SeasonArgumentsLong = "`"$testimage`" `"$Seasonoverlay`" -gravity south -quality $global:outputQuality -composite `"$TestSeasonPosterLong`""
             $SeasonArgumentsShortCAPS = "`"$testimage`" `"$Seasonoverlay`" -gravity south -quality $global:outputQuality -composite `"$TestSeasonPosterShortCAPS`""
             $SeasonArgumentsMediumCAPS = "`"$testimage`" `"$Seasonoverlay`" -gravity south -quality $global:outputQuality -composite `"$TestSeasonPosterMediumCAPS`""
-            $SeasonArgumentsLongCAPS = "`"$testimage`" `"$PosterovSeasonoverlayerlay`" -gravity south -quality $global:outputQuality -composite `"$TestSeasonPosterLongCAPS`""
+            $SeasonArgumentsLongCAPS = "`"$testimage`" `"$Seasonoverlay`" -gravity south -quality $global:outputQuality -composite `"$TestSeasonPosterLongCAPS`""
             Write-Entry -Subtext "Adding Season Poster Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
         }
         if ($AddSeasonBorder -eq 'false' -and $AddSeasonOverlay -eq 'false') {
@@ -6882,20 +7007,20 @@ Elseif ($Testing) {
 
         # Add Stroke
         if ($AddSeasonTextStroke -eq 'true') {
-            $SeasonArgumentsShort = "`"$TestSeasonPosterShort`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$seasonoptimalFontSizeShort`" -fill `"#0000FF`" -stroke `"$Seasonstrokecolor`" -strokewidth `"$Seasonstrokewidth`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$ShortText`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterShort`""
-            $SeasonArgumentsMedium = "`"$TestSeasonPosterMedium`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$seasonoptimalFontSizeMedium`" -fill `"#0000FF`" -stroke `"$Seasonstrokecolor`" -strokewidth `"$Seasonstrokewidth`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$MediumText`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterMedium`""
-            $SeasonArgumentsLong = "`"$TestSeasonPosterLong`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$seasonoptimalFontSizeLong`" -fill `"#0000FF`" -stroke `"$Seasonstrokecolor`" -strokewidth `"$Seasonstrokewidth`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$LongText`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterLong`""
-            $SeasonArgumentsShortCAPS = "`"$TestSeasonPosterShortCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$seasonoptimalFontSizeShortCAPS`" -fill `"#0000FF`" -stroke `"$Seasonstrokecolor`" -strokewidth `"$Seasonstrokewidth`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$ShortTextCAPS`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterShortCAPS`""
-            $SeasonArgumentsMediumCAPS = "`"$TestSeasonPosterMediumCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$seasonoptimalFontSizeMediumCAPS`" -fill `"#0000FF`" -stroke `"$Seasonstrokecolor`" -strokewidth `"$Seasonstrokewidth`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$MediumTextCAPS`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterMediumCAPS`""
-            $SeasonArgumentsLongCAPS = "`"$TestSeasonPosterLongCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$seasonoptimalFontSizeLongCAPS`" -fill `"#0000FF`" -stroke `"$Seasonstrokecolor`" -strokewidth `"$Seasonstrokewidth`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$LongTextCAPS`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterLongCAPS`""
+            $SeasonArgumentsShort = "`"$TestSeasonPosterShort`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$seasonoptimalFontSizeShort`" -fill `"#0000FF`" -stroke `"$Seasonstrokecolor`" -strokewidth `"$Seasonstrokewidth`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" -interline-spacing `"$SeasonlineSpacing`" caption:`"$ShortText`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterShort`""
+            $SeasonArgumentsMedium = "`"$TestSeasonPosterMedium`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$seasonoptimalFontSizeMedium`" -fill `"#0000FF`" -stroke `"$Seasonstrokecolor`" -strokewidth `"$Seasonstrokewidth`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" -interline-spacing `"$SeasonlineSpacing`" caption:`"$MediumText`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterMedium`""
+            $SeasonArgumentsLong = "`"$TestSeasonPosterLong`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$seasonoptimalFontSizeLong`" -fill `"#0000FF`" -stroke `"$Seasonstrokecolor`" -strokewidth `"$Seasonstrokewidth`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" -interline-spacing `"$SeasonlineSpacing`" caption:`"$LongText`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterLong`""
+            $SeasonArgumentsShortCAPS = "`"$TestSeasonPosterShortCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$seasonoptimalFontSizeShortCAPS`" -fill `"#0000FF`" -stroke `"$Seasonstrokecolor`" -strokewidth `"$Seasonstrokewidth`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" -interline-spacing `"$SeasonlineSpacing`" caption:`"$ShortTextCAPS`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterShortCAPS`""
+            $SeasonArgumentsMediumCAPS = "`"$TestSeasonPosterMediumCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$seasonoptimalFontSizeMediumCAPS`" -fill `"#0000FF`" -stroke `"$Seasonstrokecolor`" -strokewidth `"$Seasonstrokewidth`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" -interline-spacing `"$SeasonlineSpacing`" caption:`"$MediumTextCAPS`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterMediumCAPS`""
+            $SeasonArgumentsLongCAPS = "`"$TestSeasonPosterLongCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$seasonoptimalFontSizeLongCAPS`" -fill `"#0000FF`" -stroke `"$Seasonstrokecolor`" -strokewidth `"$Seasonstrokewidth`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" -interline-spacing `"$SeasonlineSpacing`" caption:`"$LongTextCAPS`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterLongCAPS`""
         }
         Else {
-            $SeasonArgumentsShort = "`"$TestSeasonPosterShort`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$seasonoptimalFontSizeShort`" -fill `"#0000FF`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$ShortText`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterShort`""
-            $SeasonArgumentsMedium = "`"$TestSeasonPosterMedium`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$seasonoptimalFontSizeMedium`" -fill `"#0000FF`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$MediumText`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterMedium`""
-            $SeasonArgumentsLong = "`"$TestSeasonPosterLong`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$seasonoptimalFontSizeLong`" -fill `"#0000FF`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$LongText`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterLong`""
-            $SeasonArgumentsShortCAPS = "`"$TestSeasonPosterShortCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$seasonoptimalFontSizeShortCAPS`" -fill `"#0000FF`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$ShortTextCAPS`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterShortCAPS`""
-            $SeasonArgumentsMediumCAPS = "`"$TestSeasonPosterMediumCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$seasonoptimalFontSizeMediumCAPS`" -fill `"#0000FF`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$MediumTextCAPS`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterMediumCAPS`""
-            $SeasonArgumentsLongCAPS = "`"$TestSeasonPosterLongCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$seasonoptimalFontSizeLongCAPS`" -fill `"#0000FF`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" caption:`"$LongTextCAPS`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterLongCAPS`""
+            $SeasonArgumentsShort = "`"$TestSeasonPosterShort`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$seasonoptimalFontSizeShort`" -fill `"#0000FF`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" -interline-spacing `"$SeasonlineSpacing`" caption:`"$ShortText`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterShort`""
+            $SeasonArgumentsMedium = "`"$TestSeasonPosterMedium`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$seasonoptimalFontSizeMedium`" -fill `"#0000FF`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" -interline-spacing `"$SeasonlineSpacing`" caption:`"$MediumText`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterMedium`""
+            $SeasonArgumentsLong = "`"$TestSeasonPosterLong`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$seasonoptimalFontSizeLong`" -fill `"#0000FF`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" -interline-spacing `"$SeasonlineSpacing`" caption:`"$LongText`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterLong`""
+            $SeasonArgumentsShortCAPS = "`"$TestSeasonPosterShortCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$seasonoptimalFontSizeShortCAPS`" -fill `"#0000FF`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" -interline-spacing `"$SeasonlineSpacing`" caption:`"$ShortTextCAPS`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterShortCAPS`""
+            $SeasonArgumentsMediumCAPS = "`"$TestSeasonPosterMediumCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$seasonoptimalFontSizeMediumCAPS`" -fill `"#0000FF`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" -interline-spacing `"$SeasonlineSpacing`" caption:`"$MediumTextCAPS`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterMediumCAPS`""
+            $SeasonArgumentsLongCAPS = "`"$TestSeasonPosterLongCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$seasonoptimalFontSizeLongCAPS`" -fill `"#0000FF`" -size `"$Seasonboxsize`" -background `"#ACD7E6`" -interline-spacing `"$SeasonlineSpacing`" caption:`"$LongTextCAPS`" -trim -gravity south -extent `"$Seasonboxsize`" ) -gravity south -geometry +0+`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterLongCAPS`""
         }
         # Text Poster Logging
         $SeasonlogEntryShort = "`"$magick`" $SeasonArgumentsShort"
@@ -6924,6 +7049,63 @@ Elseif ($Testing) {
         Write-Entry -Subtext "    Applying textbox only to Season Poster..." -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
         $SeasonArgumentsNoText = "`"$TestSeasonPosterTextless`" -size `"$Seasonboxsize`" xc:`"#ACD7E6`" -gravity south -geometry +0+`"$Seasontext_offset`" -compose over -composite `"$TestSeasonPosterTextless`""
         InvokeMagickCommand -Command $magick -Arguments $SeasonArgumentsNoText
+    }
+    # Show Text on Season Poster Part
+    if ($AddShowTitletoSeason -eq 'true') {
+        # Logging Poster
+        Write-Entry -Subtext "Optimal font size for Short text is: '$ShowoptimalFontSizeShort'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "    Applying text: `"$ShortText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "Optimal font size for Medium text is: '$ShowoptimalFontSizeMedium'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "    Applying text: `"$MediumText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "Optimal font size for Long text is: '$ShowoptimalFontSizeLong'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "    Applying text: `"$LongText`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+
+        Write-Entry -Subtext "Optimal font size for Short CAPS text is: '$ShowoptimalFontSizeShortCAPS'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "    Applying CAPS text: `"$ShortTextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "Optimal font size for Medium CAPS text is: '$ShowoptimalFontSizeMediumCAPS'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "    Applying CAPS text: `"$MediumTextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "Optimal font size for Long CAPS text is: '$ShowoptimalFontSizeLongCAPS'" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+        Write-Entry -Subtext "    Applying CAPS text: `"$LongTextCAPS`"" -Path $global:ScriptRoot\Logs\Testinglog.log -Color White -log Info
+
+        # Add Stroke
+        if ($AddSeasonTextStroke -eq 'true') {
+            $ShowOnSeasonArgumentsShort = "`"$TestSeasonPosterShort`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$ShowoptimalFontSizeShort`" -fill `"#0000FF`" -stroke `"$ShowOnSeasonstrokecolor`" -strokewidth `"$ShowOnSeasonstrokewidth`" -size `"$ShowOnSeasonboxsize`" -background `"#ACD7E6`" -interline-spacing `"$ShowOnSeasonlineSpacing`" caption:`"$ShortText`" -trim -gravity south -extent `"$ShowOnSeasonboxsize`" ) -gravity south -geometry +0+`"$ShowOnSeasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterShort`""
+            $ShowOnSeasonArgumentsMedium = "`"$TestSeasonPosterMedium`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$ShowoptimalFontSizeMedium`" -fill `"#0000FF`" -stroke `"$ShowOnSeasonstrokecolor`" -strokewidth `"$ShowOnSeasonstrokewidth`" -size `"$ShowOnSeasonboxsize`" -background `"#ACD7E6`" -interline-spacing `"$ShowOnSeasonlineSpacing`" caption:`"$MediumText`" -trim -gravity south -extent `"$ShowOnSeasonboxsize`" ) -gravity south -geometry +0+`"$ShowOnSeasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterMedium`""
+            $ShowOnSeasonArgumentsLong = "`"$TestSeasonPosterLong`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$ShowoptimalFontSizeLong`" -fill `"#0000FF`" -stroke `"$ShowOnSeasonstrokecolor`" -strokewidth `"$ShowOnSeasonstrokewidth`" -size `"$ShowOnSeasonboxsize`" -background `"#ACD7E6`" -interline-spacing `"$ShowOnSeasonlineSpacing`" caption:`"$LongText`" -trim -gravity south -extent `"$ShowOnSeasonboxsize`" ) -gravity south -geometry +0+`"$ShowOnSeasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterLong`""
+            $ShowOnSeasonArgumentsShortCAPS = "`"$TestSeasonPosterShortCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$ShowoptimalFontSizeShortCAPS`" -fill `"#0000FF`" -stroke `"$ShowOnSeasonstrokecolor`" -strokewidth `"$ShowOnSeasonstrokewidth`" -size `"$ShowOnSeasonboxsize`" -background `"#ACD7E6`" -interline-spacing `"$ShowOnSeasonlineSpacing`" caption:`"$ShortTextCAPS`" -trim -gravity south -extent `"$ShowOnSeasonboxsize`" ) -gravity south -geometry +0+`"$ShowOnSeasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterShortCAPS`""
+            $ShowOnSeasonArgumentsMediumCAPS = "`"$TestSeasonPosterMediumCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$ShowoptimalFontSizeMediumCAPS`" -fill `"#0000FF`" -stroke `"$ShowOnSeasonstrokecolor`" -strokewidth `"$ShowOnSeasonstrokewidth`" -size `"$ShowOnSeasonboxsize`" -background `"#ACD7E6`" -interline-spacing `"$ShowOnSeasonlineSpacing`" caption:`"$MediumTextCAPS`" -trim -gravity south -extent `"$ShowOnSeasonboxsize`" ) -gravity south -geometry +0+`"$ShowOnSeasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterMediumCAPS`""
+            $ShowOnSeasonArgumentsLongCAPS = "`"$TestSeasonPosterLongCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$ShowoptimalFontSizeLongCAPS`" -fill `"#0000FF`" -stroke `"$ShowOnSeasonstrokecolor`" -strokewidth `"$ShowOnSeasonstrokewidth`" -size `"$ShowOnSeasonboxsize`" -background `"#ACD7E6`" -interline-spacing `"$ShowOnSeasonlineSpacing`" caption:`"$LongTextCAPS`" -trim -gravity south -extent `"$ShowOnSeasonboxsize`" ) -gravity south -geometry +0+`"$ShowOnSeasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterLongCAPS`""
+        }
+        Else {
+            $ShowOnSeasonArgumentsShort = "`"$TestSeasonPosterShort`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$ShowoptimalFontSizeShort`" -fill `"#0000FF`" -size `"$ShowOnSeasonboxsize`" -background `"#ACD7E6`" -interline-spacing `"$ShowOnSeasonlineSpacing`" caption:`"$ShortText`" -trim -gravity south -extent `"$ShowOnSeasonboxsize`" ) -gravity south -geometry +0+`"$ShowOnSeasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterShort`""
+            $ShowOnSeasonArgumentsMedium = "`"$TestSeasonPosterMedium`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$ShowoptimalFontSizeMedium`" -fill `"#0000FF`" -size `"$ShowOnSeasonboxsize`" -background `"#ACD7E6`" -interline-spacing `"$ShowOnSeasonlineSpacing`" caption:`"$MediumText`" -trim -gravity south -extent `"$ShowOnSeasonboxsize`" ) -gravity south -geometry +0+`"$ShowOnSeasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterMedium`""
+            $ShowOnSeasonArgumentsLong = "`"$TestSeasonPosterLong`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$ShowoptimalFontSizeLong`" -fill `"#0000FF`" -size `"$ShowOnSeasonboxsize`" -background `"#ACD7E6`" -interline-spacing `"$ShowOnSeasonlineSpacing`" caption:`"$LongText`" -trim -gravity south -extent `"$ShowOnSeasonboxsize`" ) -gravity south -geometry +0+`"$ShowOnSeasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterLong`""
+            $ShowOnSeasonArgumentsShortCAPS = "`"$TestSeasonPosterShortCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$ShowoptimalFontSizeShortCAPS`" -fill `"#0000FF`" -size `"$ShowOnSeasonboxsize`" -background `"#ACD7E6`" -interline-spacing `"$ShowOnSeasonlineSpacing`" caption:`"$ShortTextCAPS`" -trim -gravity south -extent `"$ShowOnSeasonboxsize`" ) -gravity south -geometry +0+`"$ShowOnSeasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterShortCAPS`""
+            $ShowOnSeasonArgumentsMediumCAPS = "`"$TestSeasonPosterMediumCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$ShowoptimalFontSizeMediumCAPS`" -fill `"#0000FF`" -size `"$ShowOnSeasonboxsize`" -background `"#ACD7E6`" -interline-spacing `"$ShowOnSeasonlineSpacing`" caption:`"$MediumTextCAPS`" -trim -gravity south -extent `"$ShowOnSeasonboxsize`" ) -gravity south -geometry +0+`"$ShowOnSeasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterMediumCAPS`""
+            $ShowOnSeasonArgumentsLongCAPS = "`"$TestSeasonPosterLongCAPS`" -gravity center -background none -layers Flatten ( -font `"$fontImagemagick`" -pointsize `"$ShowoptimalFontSizeLongCAPS`" -fill `"#0000FF`" -size `"$ShowOnSeasonboxsize`" -background `"#ACD7E6`" -interline-spacing `"$ShowOnSeasonlineSpacing`" caption:`"$LongTextCAPS`" -trim -gravity south -extent `"$ShowOnSeasonboxsize`" ) -gravity south -geometry +0+`"$ShowOnSeasontext_offset`" -quality $global:outputQuality -composite `"$TestSeasonPosterLongCAPS`""
+        }
+        # Text Poster Logging
+        $ShowOnSeasonlogEntryShort = "`"$magick`" $ShowOnSeasonArgumentsShort"
+        $ShowOnSeasonlogEntryMedium = "`"$magick`" $ShowOnSeasonArgumentsMedium"
+        $ShowOnSeasonlogEntryLong = "`"$magick`" $ShowOnSeasonArgumentsLong"
+        $ShowOnSeasonlogEntryShortCAPS = "`"$magick`" $ShowOnSeasonArgumentsShortCAPS"
+        $ShowOnSeasonlogEntryMediumCAPS = "`"$magick`" $ShowOnSeasonArgumentsMediumCAPS"
+        $ShowOnSeasonlogEntryLongCAPS = "`"$magick`" $ShowOnSeasonArgumentsLongCAPS"
+
+        $ShowOnSeasonlogEntryShort | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+        $ShowOnSeasonlogEntryShortCAPS | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+        $ShowOnSeasonlogEntryMedium | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+        $ShowOnSeasonlogEntryMediumCAPS | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+        $ShowOnSeasonlogEntryLong | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+        $ShowOnSeasonlogEntryLongCAPS | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+
+        # Text Poster overlaying
+        InvokeMagickCommand -Command $magick -Arguments $ShowOnSeasonArgumentsShort
+        InvokeMagickCommand -Command $magick -Arguments $ShowOnSeasonArgumentsMedium
+        InvokeMagickCommand -Command $magick -Arguments $ShowOnSeasonArgumentsLong
+        InvokeMagickCommand -Command $magick -Arguments $ShowOnSeasonArgumentsShortCAPS
+        InvokeMagickCommand -Command $magick -Arguments $ShowOnSeasonArgumentsMediumCAPS
+        InvokeMagickCommand -Command $magick -Arguments $ShowOnSeasonArgumentsLongCAPS
     }
 
     Write-Entry -Subtext "Background Part:" -Path $global:ScriptRoot\Logs\Testinglog.log -Color Green -log Info
@@ -7028,20 +7210,20 @@ Elseif ($Testing) {
 
         # Add Stroke
         if ($AddBackgroundTextStroke -eq 'true') {
-            $backgroundArgumentsShort = "`"$backgroundTestPosterShort`" -gravity center -background none -layers Flatten ( -font `"$backgroundfontImagemagick`" -pointsize `"$backgroundoptimalFontSizeShort`" -fill `"#0000FF`" -stroke `"$Backgroundstrokecolor`" -strokewidth `"$Backgroundstrokewidth`" -size `"$Backgroundboxsize`" -background `"#ACD7E6`" caption:`"$ShortText`" -trim -gravity south -extent `"$Backgroundboxsize`" ) -gravity south -geometry +0+`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundTestPosterShort`""
-            $backgroundArgumentsMedium = "`"$backgroundTestPosterMedium`" -gravity center -background none -layers Flatten ( -font `"$backgroundfontImagemagick`" -pointsize `"$backgroundoptimalFontSizeMedium`" -fill `"#0000FF`" -stroke `"$Backgroundstrokecolor`" -strokewidth `"$Backgroundstrokewidth`" -size `"$Backgroundboxsize`" -background `"#ACD7E6`" caption:`"$MediumText`" -trim -gravity south -extent `"$Backgroundboxsize`" ) -gravity south -geometry +0+`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundTestPosterMedium`""
-            $backgroundArgumentsLong = "`"$backgroundTestPosterLong`" -gravity center -background none -layers Flatten ( -font `"$backgroundfontImagemagick`" -pointsize `"$backgroundoptimalFontSizeLong`" -fill `"#0000FF`" -stroke `"$Backgroundstrokecolor`" -strokewidth `"$Backgroundstrokewidth`" -size `"$Backgroundboxsize`" -background `"#ACD7E6`" caption:`"$LongText`" -trim -gravity south -extent `"$Backgroundboxsize`" ) -gravity south -geometry +0+`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundTestPosterLong`""
-            $backgroundArgumentsShortCAPS = "`"$backgroundTestPosterShortCAPS`" -gravity center -background none -layers Flatten ( -font `"$backgroundfontImagemagick`" -pointsize `"$backgroundoptimalFontSizeShortCAPS`" -fill `"#0000FF`" -stroke `"$Backgroundstrokecolor`" -strokewidth `"$Backgroundstrokewidth`" -size `"$Backgroundboxsize`" -background `"#ACD7E6`" caption:`"$ShortTextCAPS`" -trim -gravity south -extent `"$Backgroundboxsize`" ) -gravity south -geometry +0+`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundTestPosterShortCAPS`""
-            $backgroundArgumentsMediumCAPS = "`"$backgroundTestPosterMediumCAPS`" -gravity center -background none -layers Flatten ( -font `"$backgroundfontImagemagick`" -pointsize `"$backgroundoptimalFontSizeMediumCAPS`" -fill `"#0000FF`" -stroke `"$Backgroundstrokecolor`" -strokewidth `"$Backgroundstrokewidth`" -size `"$Backgroundboxsize`" -background `"#ACD7E6`" caption:`"$MediumTextCAPS`" -trim -gravity south -extent `"$Backgroundboxsize`" ) -gravity south -geometry +0+`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundTestPosterMediumCAPS`""
-            $backgroundArgumentsLongCAPS = "`"$backgroundTestPosterLongCAPS`" -gravity center -background none -layers Flatten ( -font `"$backgroundfontImagemagick`" -pointsize `"$backgroundoptimalFontSizeLongCAPS`" -fill `"#0000FF`" -stroke `"$Backgroundstrokecolor`" -strokewidth `"$Backgroundstrokewidth`" -size `"$Backgroundboxsize`" -background `"#ACD7E6`" caption:`"$LongTextCAPS`" -trim -gravity south -extent `"$Backgroundboxsize`" ) -gravity south -geometry +0+`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundTestPosterLongCAPS`""
+            $backgroundArgumentsShort = "`"$backgroundTestPosterShort`" -gravity center -background none -layers Flatten ( -font `"$backgroundfontImagemagick`" -pointsize `"$backgroundoptimalFontSizeShort`" -fill `"#0000FF`" -stroke `"$Backgroundstrokecolor`" -strokewidth `"$Backgroundstrokewidth`" -size `"$Backgroundboxsize`" -background `"#ACD7E6`" -interline-spacing `"$BackgroundlineSpacing`" caption:`"$ShortText`" -trim -gravity south -extent `"$Backgroundboxsize`" ) -gravity south -geometry +0+`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundTestPosterShort`""
+            $backgroundArgumentsMedium = "`"$backgroundTestPosterMedium`" -gravity center -background none -layers Flatten ( -font `"$backgroundfontImagemagick`" -pointsize `"$backgroundoptimalFontSizeMedium`" -fill `"#0000FF`" -stroke `"$Backgroundstrokecolor`" -strokewidth `"$Backgroundstrokewidth`" -size `"$Backgroundboxsize`" -background `"#ACD7E6`" -interline-spacing `"$BackgroundlineSpacing`" caption:`"$MediumText`" -trim -gravity south -extent `"$Backgroundboxsize`" ) -gravity south -geometry +0+`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundTestPosterMedium`""
+            $backgroundArgumentsLong = "`"$backgroundTestPosterLong`" -gravity center -background none -layers Flatten ( -font `"$backgroundfontImagemagick`" -pointsize `"$backgroundoptimalFontSizeLong`" -fill `"#0000FF`" -stroke `"$Backgroundstrokecolor`" -strokewidth `"$Backgroundstrokewidth`" -size `"$Backgroundboxsize`" -background `"#ACD7E6`" -interline-spacing `"$BackgroundlineSpacing`" caption:`"$LongText`" -trim -gravity south -extent `"$Backgroundboxsize`" ) -gravity south -geometry +0+`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundTestPosterLong`""
+            $backgroundArgumentsShortCAPS = "`"$backgroundTestPosterShortCAPS`" -gravity center -background none -layers Flatten ( -font `"$backgroundfontImagemagick`" -pointsize `"$backgroundoptimalFontSizeShortCAPS`" -fill `"#0000FF`" -stroke `"$Backgroundstrokecolor`" -strokewidth `"$Backgroundstrokewidth`" -size `"$Backgroundboxsize`" -background `"#ACD7E6`" -interline-spacing `"$BackgroundlineSpacing`" caption:`"$ShortTextCAPS`" -trim -gravity south -extent `"$Backgroundboxsize`" ) -gravity south -geometry +0+`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundTestPosterShortCAPS`""
+            $backgroundArgumentsMediumCAPS = "`"$backgroundTestPosterMediumCAPS`" -gravity center -background none -layers Flatten ( -font `"$backgroundfontImagemagick`" -pointsize `"$backgroundoptimalFontSizeMediumCAPS`" -fill `"#0000FF`" -stroke `"$Backgroundstrokecolor`" -strokewidth `"$Backgroundstrokewidth`" -size `"$Backgroundboxsize`" -background `"#ACD7E6`" -interline-spacing `"$BackgroundlineSpacing`" caption:`"$MediumTextCAPS`" -trim -gravity south -extent `"$Backgroundboxsize`" ) -gravity south -geometry +0+`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundTestPosterMediumCAPS`""
+            $backgroundArgumentsLongCAPS = "`"$backgroundTestPosterLongCAPS`" -gravity center -background none -layers Flatten ( -font `"$backgroundfontImagemagick`" -pointsize `"$backgroundoptimalFontSizeLongCAPS`" -fill `"#0000FF`" -stroke `"$Backgroundstrokecolor`" -strokewidth `"$Backgroundstrokewidth`" -size `"$Backgroundboxsize`" -background `"#ACD7E6`" -interline-spacing `"$BackgroundlineSpacing`" caption:`"$LongTextCAPS`" -trim -gravity south -extent `"$Backgroundboxsize`" ) -gravity south -geometry +0+`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundTestPosterLongCAPS`""
         }
         Else {
-            $backgroundArgumentsShort = "`"$backgroundTestPosterShort`" -gravity center -background none -layers Flatten ( -font `"$backgroundfontImagemagick`" -pointsize `"$backgroundoptimalFontSizeShort`" -fill `"#0000FF`" -size `"$Backgroundboxsize`" -background `"#ACD7E6`" caption:`"$ShortText`" -trim -gravity south -extent `"$Backgroundboxsize`" ) -gravity south -geometry +0+`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundTestPosterShort`""
-            $backgroundArgumentsMedium = "`"$backgroundTestPosterMedium`" -gravity center -background none -layers Flatten ( -font `"$backgroundfontImagemagick`" -pointsize `"$backgroundoptimalFontSizeMedium`" -fill `"#0000FF`" -size `"$Backgroundboxsize`" -background `"#ACD7E6`" caption:`"$MediumText`" -trim -gravity south -extent `"$Backgroundboxsize`" ) -gravity south -geometry +0+`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundTestPosterMedium`""
-            $backgroundArgumentsLong = "`"$backgroundTestPosterLong`" -gravity center -background none -layers Flatten ( -font `"$backgroundfontImagemagick`" -pointsize `"$backgroundoptimalFontSizeLong`" -fill `"#0000FF`" -size `"$Backgroundboxsize`" -background `"#ACD7E6`" caption:`"$LongText`" -trim -gravity south -extent `"$Backgroundboxsize`" ) -gravity south -geometry +0+`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundTestPosterLong`""
-            $backgroundArgumentsShortCAPS = "`"$backgroundTestPosterShortCAPS`" -gravity center -background none -layers Flatten ( -font `"$backgroundfontImagemagick`" -pointsize `"$backgroundoptimalFontSizeShortCAPS`" -fill `"#0000FF`" -size `"$Backgroundboxsize`" -background `"#ACD7E6`" caption:`"$ShortTextCAPS`" -trim -gravity south -extent `"$Backgroundboxsize`" ) -gravity south -geometry +0+`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundTestPosterShortCAPS`""
-            $backgroundArgumentsMediumCAPS = "`"$backgroundTestPosterMediumCAPS`" -gravity center -background none -layers Flatten ( -font `"$backgroundfontImagemagick`" -pointsize `"$backgroundoptimalFontSizeMediumCAPS`" -fill `"#0000FF`" -size `"$Backgroundboxsize`" -background `"#ACD7E6`" caption:`"$MediumTextCAPS`" -trim -gravity south -extent `"$Backgroundboxsize`" ) -gravity south -geometry +0+`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundTestPosterMediumCAPS`""
-            $backgroundArgumentsLongCAPS = "`"$backgroundTestPosterLongCAPS`" -gravity center -background none -layers Flatten ( -font `"$backgroundfontImagemagick`" -pointsize `"$backgroundoptimalFontSizeLongCAPS`" -fill `"#0000FF`" -size `"$Backgroundboxsize`" -background `"#ACD7E6`" caption:`"$LongTextCAPS`" -trim -gravity south -extent `"$Backgroundboxsize`" ) -gravity south -geometry +0+`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundTestPosterLongCAPS`""
+            $backgroundArgumentsShort = "`"$backgroundTestPosterShort`" -gravity center -background none -layers Flatten ( -font `"$backgroundfontImagemagick`" -pointsize `"$backgroundoptimalFontSizeShort`" -fill `"#0000FF`" -size `"$Backgroundboxsize`" -background `"#ACD7E6`" -interline-spacing `"$BackgroundlineSpacing`" caption:`"$ShortText`" -trim -gravity south -extent `"$Backgroundboxsize`" ) -gravity south -geometry +0+`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundTestPosterShort`""
+            $backgroundArgumentsMedium = "`"$backgroundTestPosterMedium`" -gravity center -background none -layers Flatten ( -font `"$backgroundfontImagemagick`" -pointsize `"$backgroundoptimalFontSizeMedium`" -fill `"#0000FF`" -size `"$Backgroundboxsize`" -background `"#ACD7E6`" -interline-spacing `"$BackgroundlineSpacing`" caption:`"$MediumText`" -trim -gravity south -extent `"$Backgroundboxsize`" ) -gravity south -geometry +0+`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundTestPosterMedium`""
+            $backgroundArgumentsLong = "`"$backgroundTestPosterLong`" -gravity center -background none -layers Flatten ( -font `"$backgroundfontImagemagick`" -pointsize `"$backgroundoptimalFontSizeLong`" -fill `"#0000FF`" -size `"$Backgroundboxsize`" -background `"#ACD7E6`" -interline-spacing `"$BackgroundlineSpacing`" caption:`"$LongText`" -trim -gravity south -extent `"$Backgroundboxsize`" ) -gravity south -geometry +0+`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundTestPosterLong`""
+            $backgroundArgumentsShortCAPS = "`"$backgroundTestPosterShortCAPS`" -gravity center -background none -layers Flatten ( -font `"$backgroundfontImagemagick`" -pointsize `"$backgroundoptimalFontSizeShortCAPS`" -fill `"#0000FF`" -size `"$Backgroundboxsize`" -background `"#ACD7E6`" -interline-spacing `"$BackgroundlineSpacing`" caption:`"$ShortTextCAPS`" -trim -gravity south -extent `"$Backgroundboxsize`" ) -gravity south -geometry +0+`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundTestPosterShortCAPS`""
+            $backgroundArgumentsMediumCAPS = "`"$backgroundTestPosterMediumCAPS`" -gravity center -background none -layers Flatten ( -font `"$backgroundfontImagemagick`" -pointsize `"$backgroundoptimalFontSizeMediumCAPS`" -fill `"#0000FF`" -size `"$Backgroundboxsize`" -background `"#ACD7E6`" -interline-spacing `"$BackgroundlineSpacing`" caption:`"$MediumTextCAPS`" -trim -gravity south -extent `"$Backgroundboxsize`" ) -gravity south -geometry +0+`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundTestPosterMediumCAPS`""
+            $backgroundArgumentsLongCAPS = "`"$backgroundTestPosterLongCAPS`" -gravity center -background none -layers Flatten ( -font `"$backgroundfontImagemagick`" -pointsize `"$backgroundoptimalFontSizeLongCAPS`" -fill `"#0000FF`" -size `"$Backgroundboxsize`" -background `"#ACD7E6`" -interline-spacing `"$BackgroundlineSpacing`" caption:`"$LongTextCAPS`" -trim -gravity south -extent `"$Backgroundboxsize`" ) -gravity south -geometry +0+`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundTestPosterLongCAPS`""
         }
         # Text background Logging
         $backgroundlogEntryShort = "`"$magick`" $backgroundArgumentsShort"
@@ -7173,20 +7355,20 @@ Elseif ($Testing) {
 
         # Add Stroke
         if ($AddTitleCardEPTitleTextStroke -eq 'true') {
-            $TitleCardTitleArgumentsShort = "`"$titlecardtestPosterShort`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeShort`" -fill `"#0000FF`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background `"#ACD7E6`" caption:`"$ShortText`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterShort`""
-            $TitleCardTitleArgumentsMedium = "`"$titlecardtestPosterMedium`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeMedium`" -fill `"#0000FF`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background `"#ACD7E6`" caption:`"$MediumText`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterMedium`""
-            $TitleCardTitleArgumentsLong = "`"$titlecardtestPosterLong`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeLong`" -fill `"#0000FF`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background `"#ACD7E6`" caption:`"$LongText`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterLong`""
-            $TitleCardTitleArgumentsShortCAPS = "`"$titlecardtestPosterShortCAPS`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeShortCAPS`" -fill `"#0000FF`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background `"#ACD7E6`" caption:`"$ShortTextCAPS`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterShortCAPS`""
-            $TitleCardTitleArgumentsMediumCAPS = "`"$titlecardtestPosterMediumCAPS`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeMediumCAPS`" -fill `"#0000FF`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background `"#ACD7E6`" caption:`"$MediumTextCAPS`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterMediumCAPS`""
-            $TitleCardTitleArgumentsLongCAPS = "`"$titlecardtestPosterLongCAPS`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeLongCAPS`" -fill `"#0000FF`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background `"#ACD7E6`" caption:`"$LongTextCAPS`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterLongCAPS`""
+            $TitleCardTitleArgumentsShort = "`"$titlecardtestPosterShort`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeShort`" -fill `"#0000FF`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background `"#ACD7E6`" -interline-spacing `"$TitleCardEPTitlelineSpacing`" caption:`"$ShortText`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterShort`""
+            $TitleCardTitleArgumentsMedium = "`"$titlecardtestPosterMedium`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeMedium`" -fill `"#0000FF`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background `"#ACD7E6`" -interline-spacing `"$TitleCardEPTitlelineSpacing`" caption:`"$MediumText`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterMedium`""
+            $TitleCardTitleArgumentsLong = "`"$titlecardtestPosterLong`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeLong`" -fill `"#0000FF`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background `"#ACD7E6`" -interline-spacing `"$TitleCardEPTitlelineSpacing`" caption:`"$LongText`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterLong`""
+            $TitleCardTitleArgumentsShortCAPS = "`"$titlecardtestPosterShortCAPS`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeShortCAPS`" -fill `"#0000FF`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background `"#ACD7E6`" -interline-spacing `"$TitleCardEPTitlelineSpacing`" caption:`"$ShortTextCAPS`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterShortCAPS`""
+            $TitleCardTitleArgumentsMediumCAPS = "`"$titlecardtestPosterMediumCAPS`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeMediumCAPS`" -fill `"#0000FF`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background `"#ACD7E6`" -interline-spacing `"$TitleCardEPTitlelineSpacing`" caption:`"$MediumTextCAPS`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterMediumCAPS`""
+            $TitleCardTitleArgumentsLongCAPS = "`"$titlecardtestPosterLongCAPS`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeLongCAPS`" -fill `"#0000FF`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background `"#ACD7E6`" -interline-spacing `"$TitleCardEPTitlelineSpacing`" caption:`"$LongTextCAPS`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterLongCAPS`""
         }
         Else {
-            $TitleCardTitleArgumentsShort = "`"$titlecardtestPosterShort`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeShort`" -fill `"#0000FF`" -size `"$TitleCardEPTitleboxsize`" -background `"#ACD7E6`" caption:`"$ShortText`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterShort`""
-            $TitleCardTitleArgumentsMedium = "`"$titlecardtestPosterMedium`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeMedium`" -fill `"#0000FF`" -size `"$TitleCardEPTitleboxsize`" -background `"#ACD7E6`" caption:`"$MediumText`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterMedium`""
-            $TitleCardTitleArgumentsLong = "`"$titlecardtestPosterLong`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeLong`" -fill `"#0000FF`" -size `"$TitleCardEPTitleboxsize`" -background `"#ACD7E6`" caption:`"$LongText`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterLong`""
-            $TitleCardTitleArgumentsShortCAPS = "`"$titlecardtestPosterShortCAPS`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeShortCAPS`" -fill `"#0000FF`" -size `"$TitleCardEPTitleboxsize`" -background `"#ACD7E6`" caption:`"$ShortTextCAPS`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterShortCAPS`""
-            $TitleCardTitleArgumentsMediumCAPS = "`"$titlecardtestPosterMediumCAPS`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeMediumCAPS`" -fill `"#0000FF`" -size `"$TitleCardEPTitleboxsize`" -background `"#ACD7E6`" caption:`"$MediumTextCAPS`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterMediumCAPS`""
-            $TitleCardTitleArgumentsLongCAPS = "`"$titlecardtestPosterLongCAPS`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeLongCAPS`" -fill `"#0000FF`" -size `"$TitleCardEPTitleboxsize`" -background `"#ACD7E6`" caption:`"$LongTextCAPS`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterLongCAPS`""
+            $TitleCardTitleArgumentsShort = "`"$titlecardtestPosterShort`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeShort`" -fill `"#0000FF`" -size `"$TitleCardEPTitleboxsize`" -background `"#ACD7E6`" -interline-spacing `"$TitleCardEPTitlelineSpacing`" caption:`"$ShortText`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterShort`""
+            $TitleCardTitleArgumentsMedium = "`"$titlecardtestPosterMedium`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeMedium`" -fill `"#0000FF`" -size `"$TitleCardEPTitleboxsize`" -background `"#ACD7E6`" -interline-spacing `"$TitleCardEPTitlelineSpacing`" caption:`"$MediumText`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterMedium`""
+            $TitleCardTitleArgumentsLong = "`"$titlecardtestPosterLong`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeLong`" -fill `"#0000FF`" -size `"$TitleCardEPTitleboxsize`" -background `"#ACD7E6`" -interline-spacing `"$TitleCardEPTitlelineSpacing`" caption:`"$LongText`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterLong`""
+            $TitleCardTitleArgumentsShortCAPS = "`"$titlecardtestPosterShortCAPS`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeShortCAPS`" -fill `"#0000FF`" -size `"$TitleCardEPTitleboxsize`" -background `"#ACD7E6`" -interline-spacing `"$TitleCardEPTitlelineSpacing`" caption:`"$ShortTextCAPS`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterShortCAPS`""
+            $TitleCardTitleArgumentsMediumCAPS = "`"$titlecardtestPosterMediumCAPS`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeMediumCAPS`" -fill `"#0000FF`" -size `"$TitleCardEPTitleboxsize`" -background `"#ACD7E6`" -interline-spacing `"$TitleCardEPTitlelineSpacing`" caption:`"$MediumTextCAPS`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterMediumCAPS`""
+            $TitleCardTitleArgumentsLongCAPS = "`"$titlecardtestPosterLongCAPS`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeLongCAPS`" -fill `"#0000FF`" -size `"$TitleCardEPTitleboxsize`" -background `"#ACD7E6`" -interline-spacing `"$TitleCardEPTitlelineSpacing`" caption:`"$LongTextCAPS`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterLongCAPS`""
         }
         # Title Text Titlecard Logging
         $TitleCardTitlelogEntryShort = "`"$magick`" $TitleCardTitleArgumentsShort"
@@ -7258,20 +7440,20 @@ Elseif ($Testing) {
 
         # Add Stroke
         if ($AddTitleCardTextStroke -eq 'true') {
-            $TitleCardEPArgumentsShort = "`"$titlecardtestPosterShort`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeEpisodetext`" -fill `"#0000FF`" -stroke `"$TitleCardstrokecolor`" -strokewidth `"$TitleCardstrokewidth`" -size `"$TitleCardEPboxsize`" -background `"#ACD7E6`" caption:`"$Episodetext`" -trim -gravity south -extent `"$TitleCardEPboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterShort`""
-            $TitleCardEPArgumentsMedium = "`"$titlecardtestPosterMedium`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeEpisodetext`" -fill `"#0000FF`" -stroke `"$TitleCardstrokecolor`" -strokewidth `"$TitleCardstrokewidth`" -size `"$TitleCardEPboxsize`" -background `"#ACD7E6`" caption:`"$Episodetext`" -trim -gravity south -extent `"$TitleCardEPboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterMedium`""
-            $TitleCardEPArgumentsLong = "`"$titlecardtestPosterLong`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeEpisodetext`" -fill `"#0000FF`" -stroke `"$TitleCardstrokecolor`" -strokewidth `"$TitleCardstrokewidth`" -size `"$TitleCardEPboxsize`" -background `"#ACD7E6`" caption:`"$Episodetext`" -trim -gravity south -extent `"$TitleCardEPboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterLong`""
-            $TitleCardEPArgumentsShortCAPS = "`"$titlecardtestPosterShortCAPS`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeEpisodetextCAPS`" -fill `"#0000FF`" -stroke `"$TitleCardstrokecolor`" -strokewidth `"$TitleCardstrokewidth`" -size `"$TitleCardEPboxsize`" -background `"#ACD7E6`" caption:`"$EpisodetextCAPS`" -trim -gravity south -extent `"$TitleCardEPboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterShortCAPS`""
-            $TitleCardEPArgumentsMediumCAPS = "`"$titlecardtestPosterMediumCAPS`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeEpisodetextCAPS`" -fill `"#0000FF`" -stroke `"$TitleCardstrokecolor`" -strokewidth `"$TitleCardstrokewidth`" -size `"$TitleCardEPboxsize`" -background `"#ACD7E6`" caption:`"$EpisodetextCAPS`" -trim -gravity south -extent `"$TitleCardEPboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterMediumCAPS`""
-            $TitleCardEPArgumentsLongCAPS = "`"$titlecardtestPosterLongCAPS`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeEpisodetextCAPS`" -fill `"#0000FF`" -stroke `"$TitleCardstrokecolor`" -strokewidth `"$TitleCardstrokewidth`" -size `"$TitleCardEPboxsize`" -background `"#ACD7E6`" caption:`"$EpisodetextCAPS`" -trim -gravity south -extent `"$TitleCardEPboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterLongCAPS`""
+            $TitleCardEPArgumentsShort = "`"$titlecardtestPosterShort`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeEpisodetext`" -fill `"#0000FF`" -stroke `"$TitleCardstrokecolor`" -strokewidth `"$TitleCardstrokewidth`" -size `"$TitleCardEPboxsize`" -background `"#ACD7E6`" -interline-spacing `"$TitleCardEPlineSpacing`" caption:`"$Episodetext`" -trim -gravity south -extent `"$TitleCardEPboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterShort`""
+            $TitleCardEPArgumentsMedium = "`"$titlecardtestPosterMedium`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeEpisodetext`" -fill `"#0000FF`" -stroke `"$TitleCardstrokecolor`" -strokewidth `"$TitleCardstrokewidth`" -size `"$TitleCardEPboxsize`" -background `"#ACD7E6`" -interline-spacing `"$TitleCardEPlineSpacing`" caption:`"$Episodetext`" -trim -gravity south -extent `"$TitleCardEPboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterMedium`""
+            $TitleCardEPArgumentsLong = "`"$titlecardtestPosterLong`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeEpisodetext`" -fill `"#0000FF`" -stroke `"$TitleCardstrokecolor`" -strokewidth `"$TitleCardstrokewidth`" -size `"$TitleCardEPboxsize`" -background `"#ACD7E6`" -interline-spacing `"$TitleCardEPlineSpacing`" caption:`"$Episodetext`" -trim -gravity south -extent `"$TitleCardEPboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterLong`""
+            $TitleCardEPArgumentsShortCAPS = "`"$titlecardtestPosterShortCAPS`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeEpisodetextCAPS`" -fill `"#0000FF`" -stroke `"$TitleCardstrokecolor`" -strokewidth `"$TitleCardstrokewidth`" -size `"$TitleCardEPboxsize`" -background `"#ACD7E6`" -interline-spacing `"$TitleCardEPlineSpacing`" caption:`"$EpisodetextCAPS`" -trim -gravity south -extent `"$TitleCardEPboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterShortCAPS`""
+            $TitleCardEPArgumentsMediumCAPS = "`"$titlecardtestPosterMediumCAPS`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeEpisodetextCAPS`" -fill `"#0000FF`" -stroke `"$TitleCardstrokecolor`" -strokewidth `"$TitleCardstrokewidth`" -size `"$TitleCardEPboxsize`" -background `"#ACD7E6`" -interline-spacing `"$TitleCardEPlineSpacing`" caption:`"$EpisodetextCAPS`" -trim -gravity south -extent `"$TitleCardEPboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterMediumCAPS`""
+            $TitleCardEPArgumentsLongCAPS = "`"$titlecardtestPosterLongCAPS`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeEpisodetextCAPS`" -fill `"#0000FF`" -stroke `"$TitleCardstrokecolor`" -strokewidth `"$TitleCardstrokewidth`" -size `"$TitleCardEPboxsize`" -background `"#ACD7E6`" -interline-spacing `"$TitleCardEPlineSpacing`" caption:`"$EpisodetextCAPS`" -trim -gravity south -extent `"$TitleCardEPboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterLongCAPS`""
         }
         Else {
-            $TitleCardEPArgumentsShort = "`"$titlecardtestPosterShort`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeEpisodetext`" -fill `"#0000FF`" -size `"$TitleCardEPboxsize`" -background `"#ACD7E6`" caption:`"$Episodetext`" -trim -gravity south -extent `"$TitleCardEPboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterShort`""
-            $TitleCardEPArgumentsMedium = "`"$titlecardtestPosterMedium`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeEpisodetext`" -fill `"#0000FF`" -size `"$TitleCardEPboxsize`" -background `"#ACD7E6`" caption:`"$Episodetext`" -trim -gravity south -extent `"$TitleCardEPboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterMedium`""
-            $TitleCardEPArgumentsLong = "`"$titlecardtestPosterLong`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeEpisodetext`" -fill `"#0000FF`" -size `"$TitleCardEPboxsize`" -background `"#ACD7E6`" caption:`"$Episodetext`" -trim -gravity south -extent `"$TitleCardEPboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterLong`""
-            $TitleCardEPArgumentsShortCAPS = "`"$titlecardtestPosterShortCAPS`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeEpisodetextCAPS`" -fill `"#0000FF`" -size `"$TitleCardEPboxsize`" -background `"#ACD7E6`" caption:`"$EpisodetextCAPS`" -trim -gravity south -extent `"$TitleCardEPboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterShortCAPS`""
-            $TitleCardEPArgumentsMediumCAPS = "`"$titlecardtestPosterMediumCAPS`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeEpisodetextCAPS`" -fill `"#0000FF`" -size `"$TitleCardEPboxsize`" -background `"#ACD7E6`" caption:`"$EpisodetextCAPS`" -trim -gravity south -extent `"$TitleCardEPboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterMediumCAPS`""
-            $TitleCardEPArgumentsLongCAPS = "`"$titlecardtestPosterLongCAPS`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeEpisodetextCAPS`" -fill `"#0000FF`" -size `"$TitleCardEPboxsize`" -background `"#ACD7E6`" caption:`"$EpisodetextCAPS`" -trim -gravity south -extent `"$TitleCardEPboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterLongCAPS`""
+            $TitleCardEPArgumentsShort = "`"$titlecardtestPosterShort`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeEpisodetext`" -fill `"#0000FF`" -size `"$TitleCardEPboxsize`" -background `"#ACD7E6`" -interline-spacing `"$TitleCardEPlineSpacing`" caption:`"$Episodetext`" -trim -gravity south -extent `"$TitleCardEPboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterShort`""
+            $TitleCardEPArgumentsMedium = "`"$titlecardtestPosterMedium`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeEpisodetext`" -fill `"#0000FF`" -size `"$TitleCardEPboxsize`" -background `"#ACD7E6`" -interline-spacing `"$TitleCardEPlineSpacing`" caption:`"$Episodetext`" -trim -gravity south -extent `"$TitleCardEPboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterMedium`""
+            $TitleCardEPArgumentsLong = "`"$titlecardtestPosterLong`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeEpisodetext`" -fill `"#0000FF`" -size `"$TitleCardEPboxsize`" -background `"#ACD7E6`" -interline-spacing `"$TitleCardEPlineSpacing`" caption:`"$Episodetext`" -trim -gravity south -extent `"$TitleCardEPboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterLong`""
+            $TitleCardEPArgumentsShortCAPS = "`"$titlecardtestPosterShortCAPS`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeEpisodetextCAPS`" -fill `"#0000FF`" -size `"$TitleCardEPboxsize`" -background `"#ACD7E6`" -interline-spacing `"$TitleCardEPlineSpacing`" caption:`"$EpisodetextCAPS`" -trim -gravity south -extent `"$TitleCardEPboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterShortCAPS`""
+            $TitleCardEPArgumentsMediumCAPS = "`"$titlecardtestPosterMediumCAPS`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeEpisodetextCAPS`" -fill `"#0000FF`" -size `"$TitleCardEPboxsize`" -background `"#ACD7E6`" -interline-spacing `"$TitleCardEPlineSpacing`" caption:`"$EpisodetextCAPS`" -trim -gravity south -extent `"$TitleCardEPboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterMediumCAPS`""
+            $TitleCardEPArgumentsLongCAPS = "`"$titlecardtestPosterLongCAPS`" -gravity center -background none -layers Flatten ( -font `"$titlecardfontImagemagick`" -pointsize `"$TitleCardoptimalFontSizeEpisodetextCAPS`" -fill `"#0000FF`" -size `"$TitleCardEPboxsize`" -background `"#ACD7E6`" -interline-spacing `"$TitleCardEPlineSpacing`" caption:`"$EpisodetextCAPS`" -trim -gravity south -extent `"$TitleCardEPboxsize`" ) -gravity south -geometry +0+`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$titlecardtestPosterLongCAPS`""
         }
         # Episode Text Titlecard Logging
         $TitleCardEPlogEntryShort = "`"$magick`" $TitleCardEPArgumentsShort"
@@ -8050,16 +8232,16 @@ Elseif ($Tautulli) {
                                             }
                                         }
                                         $joinedTitlePointSize = $joinedTitle -replace '""', '""""'
-                                        $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
+                                        $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize -lineSpacing $lineSpacing
                                         if (!$global:IsTruncated) {
                                             Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
 
                                             # Add Stroke
                                             if ($AddTextStroke -eq 'true') {
-                                                $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -stroke `"$strokecolor`" -strokewidth `"$strokewidth`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
+                                                $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -stroke `"$strokecolor`" -strokewidth `"$strokewidth`" -size `"$boxsize`" -background none -interline-spacing `"$lineSpacing`" caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
                                             }
                                             Else {
-                                                $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
+                                                $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none -interline-spacing `"$lineSpacing`" caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
                                             }
 
                                             Write-Entry -Subtext "Applying Poster text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -8378,16 +8560,16 @@ Elseif ($Tautulli) {
                                             }
                                         }
                                         $joinedTitlePointSize = $joinedTitle -replace '""', '""""'
-                                        $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
+                                        $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize -lineSpacing $BackgroundlineSpacing
                                         if (!$global:IsTruncated) {
                                             Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
 
                                             # Add Stroke
                                             if ($AddBackgroundTextStroke -eq 'true') {
-                                                $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$backgroundfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -stroke `"$Backgroundstrokecolor`" -strokewidth `"$Backgroundstrokewidth`" -size `"$Backgroundboxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
+                                                $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$backgroundfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -stroke `"$Backgroundstrokecolor`" -strokewidth `"$Backgroundstrokewidth`" -size `"$Backgroundboxsize`" -background none -interline-spacing `"$BackgroundlineSpacing`" caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
                                             }
                                             Else {
-                                                $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$backgroundfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -size `"$Backgroundboxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
+                                                $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$backgroundfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -size `"$Backgroundboxsize`" -background none -interline-spacing `"$BackgroundlineSpacing`" caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
                                             }
 
                                             Write-Entry -Subtext "Applying Background text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -8782,16 +8964,16 @@ Elseif ($Tautulli) {
                                         }
                                     }
                                     $joinedTitlePointSize = $joinedTitle -replace '""', '""""'
-                                    $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
+                                    $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize -lineSpacing $SeasonlineSpacing
                                     if (!$global:IsTruncated) {
                                         Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
 
                                         # Add Stroke
                                         if ($AddTextStroke -eq 'true') {
-                                            $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -stroke `"$strokecolor`" -strokewidth `"$strokewidth`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
+                                            $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -stroke `"$strokecolor`" -strokewidth `"$strokewidth`" -size `"$boxsize`" -background none -interline-spacing `"$SeasonlineSpacing`" caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
                                         }
                                         Else {
-                                            $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
+                                            $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none -interline-spacing `"$SeasonlineSpacing`" caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
                                         }
 
                                         Write-Entry -Subtext "Applying Poster text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -9120,16 +9302,16 @@ Elseif ($Tautulli) {
                                         }
                                     }
                                     $joinedTitlePointSize = $joinedTitle -replace '""', '""""'
-                                    $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
+                                    $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize -lineSpacing $BackgroundlineSpacing
                                     if (!$global:IsTruncated) {
                                         Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
 
                                         # Add Stroke
                                         if ($AddBackgroundTextStroke -eq 'true') {
-                                            $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$backgroundfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -stroke `"$Backgroundstrokecolor`" -strokewidth `"$Backgroundstrokewidth`" -size `"$Backgroundboxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
+                                            $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$backgroundfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -stroke `"$Backgroundstrokecolor`" -strokewidth `"$Backgroundstrokewidth`" -size `"$Backgroundboxsize`" -background none -interline-spacing `"$BackgroundlineSpacing`" caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
                                         }
                                         Else {
-                                            $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$backgroundfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -size `"$Backgroundboxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
+                                            $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$backgroundfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -size `"$Backgroundboxsize`" -background none -interline-spacing `"$BackgroundlineSpacing`" caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
                                         }
 
                                         Write-Entry -Subtext "Applying Background text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -9487,41 +9669,76 @@ Elseif ($Tautulli) {
                                         InvokeMagickCommand -Command $magick -Arguments $Arguments
 
                                         if ($AddSeasonText -eq 'true') {
-                                            if ($AddShowTitletoSeason -eq 'true') {
-                                                if ($SeasonTextNewLines -eq '1') {
-                                                    $global:seasonTitle = $Titletext + "`n" + $global:seasonTitle
-                                                }
-                                                elseif ($SeasonTextNewLines -eq '2') {
-                                                    $global:seasonTitle = $Titletext + "`n" + "`n" + $global:seasonTitle
-                                                }
-                                                else {
-                                                    $global:seasonTitle = $Titletext + "`n" + $global:seasonTitle
-                                                }
-                                            }
                                             $global:seasonTitle = $global:seasonTitle -replace '"', '""'
-
+                                            if ($ShowOnSeasonfontAllCaps -eq 'true') {
+                                                $global:ShowTitleOnSeason = $titletext.ToUpper() -replace '"', '""'
+                                            }
+                                            Else {
+                                                $global:ShowTitleOnSeason = $titletext -replace '"', '""'
+                                            }
                                             # Loop through each symbol and replace it with a newline
                                             if ($NewLineOnSpecificSymbols -eq 'true') {
                                                 foreach ($symbol in $NewLineSymbols) {
                                                     $global:seasonTitle = $global:seasonTitle -replace [regex]::Escape($symbol), "`n"
+                                                    if ($AddShowTitletoSeason -eq 'true') {
+                                                        $global:ShowTitleOnSeason = $global:ShowTitleOnSeason -replace [regex]::Escape($symbol), "`n"
+                                                    }
                                                 }
                                             }
                                             $joinedTitlePointSize = $global:seasonTitle -replace '""', '""""'
-                                            $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize
-                                            if (!$global:IsTruncated) {
-                                                Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                                                # Add Stroke
-                                                if ($AddSeasonTextStroke -eq 'true') {
-                                                    $Arguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Seasonfontcolor`" -stroke `"$Seasonstrokecolor`" -strokewidth `"$Seasonstrokewidth`" -size `"$Seasonboxsize`" -background none caption:`"$global:seasonTitle`" -trim -gravity south -extent `"$Seasonboxsize`" `) -gravity south -geometry +0`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
-                                                }
-                                                Else {
-                                                    $Arguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Seasonfontcolor`" -size `"$Seasonboxsize`" -background none caption:`"$global:seasonTitle`" -trim -gravity south -extent `"$Seasonboxsize`" `) -gravity south -geometry +0`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
-                                                }
+                                            $joinedShowTitlePointSize = $global:ShowTitleOnSeason -replace '""', '""""'
+                                            if ($AddShowTitletoSeason -eq 'true') {
+                                                $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize -lineSpacing $SeasonlineSpacing
+                                                $ShowoptimalFontSize = Get-OptimalPointSize -text $joinedShowTitlePointSize -font $fontImagemagick -box_width $ShowOnSeasonMaxWidth  -box_height $ShowOnSeasonMaxHeight -min_pointsize $ShowOnSeasonminPointSize -max_pointsize $ShowOnSeasonmaxPointSize -lineSpacing $ShowOnSeasonlineSpacing
+                                                if (!$global:IsTruncated) {
+                                                    Write-Entry -Subtext "Optimal Season font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                    Write-Entry -Subtext "Optimal Show font size set to: '$ShowoptimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                    # Season Part
+                                                    # Add Stroke
+                                                    if ($AddSeasonTextStroke -eq 'true') {
+                                                        $SeasonArguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Seasonfontcolor`" -stroke `"$Seasonstrokecolor`" -strokewidth `"$Seasonstrokewidth`" -size `"$Seasonboxsize`" -background none -interline-spacing `"$SeasonlineSpacing`" caption:`"$global:seasonTitle`" -trim -gravity south -extent `"$Seasonboxsize`" `) -gravity south -geometry +0`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
+                                                    }
+                                                    Else {
+                                                        $SeasonArguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Seasonfontcolor`" -size `"$Seasonboxsize`" -background none -interline-spacing `"$SeasonlineSpacing`" caption:`"$global:seasonTitle`" -trim -gravity south -extent `"$Seasonboxsize`" `) -gravity south -geometry +0`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
+                                                    }
 
-                                                Write-Entry -Subtext "Applying seasonTitle text: `"$global:seasonTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                                                $logEntry = "`"$magick`" $Arguments"
-                                                $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
-                                                InvokeMagickCommand -Command $magick -Arguments $Arguments
+                                                    Write-Entry -Subtext "Applying seasonTitle text: `"$global:seasonTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                    $logEntry = "`"$magick`" $SeasonArguments"
+                                                    $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+                                                    InvokeMagickCommand -Command $magick -Arguments $SeasonArguments
+
+                                                    # Show Part
+                                                    # Add Stroke
+                                                    if ($AddShowOnSeasonTextStroke -eq 'true') {
+                                                        $ShowOnSeasonArguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$ShowoptimalFontSize`" -fill `"$ShowOnSeasonfontcolor`" -stroke `"$ShowOnSeasonstrokecolor`" -strokewidth `"$ShowOnSeasonstrokewidth`" -size `"$ShowOnSeasonboxsize`" -background none -interline-spacing `"$ShowOnSeasonlineSpacing`" caption:`"$global:ShowTitleOnSeason `" -trim -gravity south -extent `"$ShowOnSeasonboxsize`" `) -gravity south -geometry +0`"$ShowOnSeasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
+                                                    }
+                                                    Else {
+                                                        $ShowOnSeasonArguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$ShowoptimalFontSize`" -fill `"$ShowOnSeasonfontcolor`" -size `"$ShowOnSeasonboxsize`" -background none -interline-spacing `"$ShowOnSeasonlineSpacing`" caption:`"$global:ShowTitleOnSeason `" -trim -gravity south -extent `"$ShowOnSeasonboxsize`" `) -gravity south -geometry +0`"$ShowOnSeasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
+                                                    }
+
+                                                    Write-Entry -Subtext "Applying showTitle text: `"$global:ShowTitleOnSeason`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                    $logEntry = "`"$magick`" $ShowOnSeasonArguments"
+                                                    $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+                                                    InvokeMagickCommand -Command $magick -Arguments $ShowOnSeasonArguments
+                                                }
+                                            }
+                                            Else {
+                                                $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize -lineSpacing $SeasonlineSpacing
+                                                if (!$global:IsTruncated) {
+                                                    Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                    # Add Stroke
+                                                    if ($AddSeasonTextStroke -eq 'true') {
+                                                        $Arguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Seasonfontcolor`" -stroke `"$Seasonstrokecolor`" -strokewidth `"$Seasonstrokewidth`" -size `"$Seasonboxsize`" -background none -interline-spacing `"$SeasonlineSpacing`" caption:`"$global:seasonTitle`" -trim -gravity south -extent `"$Seasonboxsize`" `) -gravity south -geometry +0`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
+                                                    }
+                                                    Else {
+                                                        $Arguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Seasonfontcolor`" -size `"$Seasonboxsize`" -background none -interline-spacing `"$SeasonlineSpacing`" caption:`"$global:seasonTitle`" -trim -gravity south -extent `"$Seasonboxsize`" `) -gravity south -geometry +0`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
+                                                    }
+
+                                                    Write-Entry -Subtext "Applying seasonTitle text: `"$global:seasonTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                    $logEntry = "`"$magick`" $Arguments"
+                                                    $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+                                                    InvokeMagickCommand -Command $magick -Arguments $Arguments
+                                                }
                                             }
                                         }
                                     }
@@ -9720,41 +9937,76 @@ Elseif ($Tautulli) {
                                         InvokeMagickCommand -Command $magick -Arguments $Arguments
 
                                         if ($AddSeasonText -eq 'true') {
-                                            if ($AddShowTitletoSeason -eq 'true') {
-                                                if ($SeasonTextNewLines -eq '1') {
-                                                    $global:seasonTitle = $Titletext + "`n" + $global:seasonTitle
-                                                }
-                                                elseif ($SeasonTextNewLines -eq '2') {
-                                                    $global:seasonTitle = $Titletext + "`n" + "`n" + $global:seasonTitle
-                                                }
-                                                else {
-                                                    $global:seasonTitle = $Titletext + "`n" + $global:seasonTitle
-                                                }
-                                            }
                                             $global:seasonTitle = $global:seasonTitle -replace '"', '""'
-
+                                            if ($ShowOnSeasonfontAllCaps -eq 'true') {
+                                                $global:ShowTitleOnSeason = $titletext.ToUpper() -replace '"', '""'
+                                            }
+                                            Else {
+                                                $global:ShowTitleOnSeason = $titletext -replace '"', '""'
+                                            }
                                             # Loop through each symbol and replace it with a newline
                                             if ($NewLineOnSpecificSymbols -eq 'true') {
                                                 foreach ($symbol in $NewLineSymbols) {
                                                     $global:seasonTitle = $global:seasonTitle -replace [regex]::Escape($symbol), "`n"
+                                                    if ($AddShowTitletoSeason -eq 'true') {
+                                                        $global:ShowTitleOnSeason = $global:ShowTitleOnSeason -replace [regex]::Escape($symbol), "`n"
+                                                    }
                                                 }
                                             }
                                             $joinedTitlePointSize = $global:seasonTitle -replace '""', '""""'
-                                            $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize
-                                            if (!$global:IsTruncated) {
-                                                Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                                                # Add Stroke
-                                                if ($AddSeasonTextStroke -eq 'true') {
-                                                    $Arguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Seasonfontcolor`" -stroke `"$Seasonstrokecolor`" -strokewidth `"$Seasonstrokewidth`" -size `"$Seasonboxsize`" -background none caption:`"$global:seasonTitle`" -trim -gravity south -extent `"$Seasonboxsize`" `) -gravity south -geometry +0`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
-                                                }
-                                                Else {
-                                                    $Arguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Seasonfontcolor`" -size `"$Seasonboxsize`" -background none caption:`"$global:seasonTitle`" -trim -gravity south -extent `"$Seasonboxsize`" `) -gravity south -geometry +0`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
-                                                }
+                                            $joinedShowTitlePointSize = $global:ShowTitleOnSeason -replace '""', '""""'
+                                            if ($AddShowTitletoSeason -eq 'true') {
+                                                $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize -lineSpacing $SeasonlineSpacing
+                                                $ShowoptimalFontSize = Get-OptimalPointSize -text $joinedShowTitlePointSize -font $fontImagemagick -box_width $ShowOnSeasonMaxWidth  -box_height $ShowOnSeasonMaxHeight -min_pointsize $ShowOnSeasonminPointSize -max_pointsize $ShowOnSeasonmaxPointSize -lineSpacing $ShowOnSeasonlineSpacing
+                                                if (!$global:IsTruncated) {
+                                                    Write-Entry -Subtext "Optimal Season font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                    Write-Entry -Subtext "Optimal Show font size set to: '$ShowoptimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                    # Season Part
+                                                    # Add Stroke
+                                                    if ($AddSeasonTextStroke -eq 'true') {
+                                                        $SeasonArguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Seasonfontcolor`" -stroke `"$Seasonstrokecolor`" -strokewidth `"$Seasonstrokewidth`" -size `"$Seasonboxsize`" -background none -interline-spacing `"$SeasonlineSpacing`" caption:`"$global:seasonTitle`" -trim -gravity south -extent `"$Seasonboxsize`" `) -gravity south -geometry +0`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
+                                                    }
+                                                    Else {
+                                                        $SeasonArguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Seasonfontcolor`" -size `"$Seasonboxsize`" -background none -interline-spacing `"$SeasonlineSpacing`" caption:`"$global:seasonTitle`" -trim -gravity south -extent `"$Seasonboxsize`" `) -gravity south -geometry +0`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
+                                                    }
 
-                                                Write-Entry -Subtext "Applying seasonTitle text: `"$global:seasonTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                                                $logEntry = "`"$magick`" $Arguments"
-                                                $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
-                                                InvokeMagickCommand -Command $magick -Arguments $Arguments
+                                                    Write-Entry -Subtext "Applying seasonTitle text: `"$global:seasonTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                    $logEntry = "`"$magick`" $SeasonArguments"
+                                                    $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+                                                    InvokeMagickCommand -Command $magick -Arguments $SeasonArguments
+
+                                                    # Show Part
+                                                    # Add Stroke
+                                                    if ($AddShowOnSeasonTextStroke -eq 'true') {
+                                                        $ShowOnSeasonArguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$ShowoptimalFontSize`" -fill `"$ShowOnSeasonfontcolor`" -stroke `"$ShowOnSeasonstrokecolor`" -strokewidth `"$ShowOnSeasonstrokewidth`" -size `"$ShowOnSeasonboxsize`" -background none -interline-spacing `"$ShowOnSeasonlineSpacing`" caption:`"$global:ShowTitleOnSeason `" -trim -gravity south -extent `"$ShowOnSeasonboxsize`" `) -gravity south -geometry +0`"$ShowOnSeasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
+                                                    }
+                                                    Else {
+                                                        $ShowOnSeasonArguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$ShowoptimalFontSize`" -fill `"$ShowOnSeasonfontcolor`" -size `"$ShowOnSeasonboxsize`" -background none -interline-spacing `"$ShowOnSeasonlineSpacing`" caption:`"$global:ShowTitleOnSeason `" -trim -gravity south -extent `"$ShowOnSeasonboxsize`" `) -gravity south -geometry +0`"$ShowOnSeasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
+                                                    }
+
+                                                    Write-Entry -Subtext "Applying showTitle text: `"$global:ShowTitleOnSeason`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                    $logEntry = "`"$magick`" $ShowOnSeasonArguments"
+                                                    $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+                                                    InvokeMagickCommand -Command $magick -Arguments $ShowOnSeasonArguments
+                                                }
+                                            }
+                                            Else {
+                                                $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize -lineSpacing $SeasonlineSpacing
+                                                if (!$global:IsTruncated) {
+                                                    Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                    # Add Stroke
+                                                    if ($AddSeasonTextStroke -eq 'true') {
+                                                        $Arguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Seasonfontcolor`" -stroke `"$Seasonstrokecolor`" -strokewidth `"$Seasonstrokewidth`" -size `"$Seasonboxsize`" -background none -interline-spacing `"$SeasonlineSpacing`" caption:`"$global:seasonTitle`" -trim -gravity south -extent `"$Seasonboxsize`" `) -gravity south -geometry +0`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
+                                                    }
+                                                    Else {
+                                                        $Arguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Seasonfontcolor`" -size `"$Seasonboxsize`" -background none -interline-spacing `"$SeasonlineSpacing`" caption:`"$global:seasonTitle`" -trim -gravity south -extent `"$Seasonboxsize`" `) -gravity south -geometry +0`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
+                                                    }
+
+                                                    Write-Entry -Subtext "Applying seasonTitle text: `"$global:seasonTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                    $logEntry = "`"$magick`" $Arguments"
+                                                    $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+                                                    InvokeMagickCommand -Command $magick -Arguments $Arguments
+                                                }
                                             }
                                         }
                                     }
@@ -10198,15 +10450,15 @@ Elseif ($Tautulli) {
                                                                     }
                                                                 }
                                                                 $joinedTitlePointSize = $global:EPTitle -replace '""', '""""'
-                                                                $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
+                                                                $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize -lineSpacing $TitleCardEPTitlelineSpacing
                                                                 if (!$global:IsTruncated) {
                                                                     Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                                     # Add Stroke
                                                                     if ($AddTitleCardEPTitleTextStroke -eq 'true') {
-                                                                        $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                                        $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background none -interline-spacing `"$TitleCardEPTitlelineSpacing`" caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
                                                                     }
                                                                     Else {
-                                                                        $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                                        $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -size `"$TitleCardEPTitleboxsize`" -background none -interline-spacing `"$TitleCardEPTitlelineSpacing`" caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
                                                                     }
 
                                                                     Write-Entry -Subtext "Applying EPTitle text: `"$global:EPTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -10221,15 +10473,15 @@ Elseif ($Tautulli) {
                                                                 }
                                                                 $global:SeasonEPNumber = $global:SeasonEPNumber -replace '"', '""'
                                                                 $joinedTitlePointSize = $global:SeasonEPNumber -replace '""', '""""'
-                                                                $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize
+                                                                $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize -lineSpacing $TitleCardEPlineSpacing
                                                                 if (!$global:IsTruncated) {
                                                                     Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                                     # Add Stroke
                                                                     if ($AddTitleCardTextStroke -eq 'true') {
-                                                                        $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPfontcolor`" -stroke `"$TitleCardstrokecolor`" -strokewidth `"$TitleCardstrokewidth`" -size `"$TitleCardEPboxsize`" -background none caption:`"$global:SeasonEPNumber`" -trim -gravity south -extent `"$TitleCardEPboxsize`" `) -gravity south -geometry +0`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                                        $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPfontcolor`" -stroke `"$TitleCardstrokecolor`" -strokewidth `"$TitleCardstrokewidth`" -size `"$TitleCardEPboxsize`" -background none -interline-spacing `"$TitleCardEPlineSpacing`" caption:`"$global:SeasonEPNumber`" -trim -gravity south -extent `"$TitleCardEPboxsize`" `) -gravity south -geometry +0`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
                                                                     }
                                                                     Else {
-                                                                        $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPfontcolor`" -size `"$TitleCardEPboxsize`" -background none caption:`"$global:SeasonEPNumber`" -trim -gravity south -extent `"$TitleCardEPboxsize`" `) -gravity south -geometry +0`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                                        $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPfontcolor`" -size `"$TitleCardEPboxsize`" -background none -interline-spacing `"$TitleCardEPlineSpacing`" caption:`"$global:SeasonEPNumber`" -trim -gravity south -extent `"$TitleCardEPboxsize`" `) -gravity south -geometry +0`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
                                                                     }
 
                                                                     Write-Entry -Subtext "Applying SeasonEPNumber text: `"$global:SeasonEPNumber`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -10658,15 +10910,15 @@ Elseif ($Tautulli) {
                                                                 }
                                                             }
                                                             $joinedTitlePointSize = $global:EPTitle -replace '""', '""""'
-                                                            $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
+                                                            $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize -lineSpacing $TitleCardEPTitlelineSpacing
                                                             if (!$global:IsTruncated) {
                                                                 Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                                 # Add Stroke
                                                                 if ($AddTitleCardEPTitleTextStroke -eq 'true') {
-                                                                    $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                                    $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background none -interline-spacing `"$TitleCardEPTitlelineSpacing`" caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
                                                                 }
                                                                 Else {
-                                                                    $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                                    $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -size `"$TitleCardEPTitleboxsize`" -background none -interline-spacing `"$TitleCardEPTitlelineSpacing`" caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
                                                                 }
                                                                 Write-Entry -Subtext "Applying EPTitle text: `"$global:EPTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                                 $logEntry = "`"$magick`" $Arguments"
@@ -10680,15 +10932,15 @@ Elseif ($Tautulli) {
                                                             }
                                                             $global:SeasonEPNumber = $global:SeasonEPNumber -replace '"', '""'
                                                             $joinedTitlePointSize = $global:SeasonEPNumber -replace '""', '""""'
-                                                            $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize
+                                                            $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize -lineSpacing $TitleCardEPlineSpacing
                                                             if (!$global:IsTruncated) {
                                                                 Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                                 # Add Stroke
                                                                 if ($AddTitleCardTextStroke -eq 'true') {
-                                                                    $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPfontcolor`" -stroke `"$TitleCardstrokecolor`" -strokewidth `"$TitleCardstrokewidth`" -size `"$TitleCardEPboxsize`" -background none caption:`"$global:SeasonEPNumber`" -trim -gravity south -extent `"$TitleCardEPboxsize`" `) -gravity south -geometry +0`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                                    $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPfontcolor`" -stroke `"$TitleCardstrokecolor`" -strokewidth `"$TitleCardstrokewidth`" -size `"$TitleCardEPboxsize`" -background none -interline-spacing `"$TitleCardEPlineSpacing`" caption:`"$global:SeasonEPNumber`" -trim -gravity south -extent `"$TitleCardEPboxsize`" `) -gravity south -geometry +0`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
                                                                 }
                                                                 Else {
-                                                                    $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPfontcolor`" -size `"$TitleCardEPboxsize`" -background none caption:`"$global:SeasonEPNumber`" -trim -gravity south -extent `"$TitleCardEPboxsize`" `) -gravity south -geometry +0`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                                    $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPfontcolor`" -size `"$TitleCardEPboxsize`" -background none -interline-spacing `"$TitleCardEPlineSpacing`" caption:`"$global:SeasonEPNumber`" -trim -gravity south -extent `"$TitleCardEPboxsize`" `) -gravity south -geometry +0`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
                                                                 }
 
                                                                 Write-Entry -Subtext "Applying SeasonEPNumber text: `"$global:SeasonEPNumber`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -10911,7 +11163,7 @@ Elseif ($Tautulli) {
 Elseif ($Backup) {
     MassDownloadPlexArtwork
 }
-Elseif ($SyncJelly -or $SyncEmby){
+Elseif ($SyncJelly -or $SyncEmby) {
     # Initialize counter variable
     $posterCount = 0
     $SeasonCount = 0
@@ -11257,8 +11509,10 @@ Elseif ($SyncJelly -or $SyncEmby){
     Write-Entry -Message "Query all items from all Libs, this can take a while..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
     $PreferredMetadataLanguage = (Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/System/Configuration?api_key=$OtherMediaServerApiKey").PreferredMetadataLanguage
     $allShowsquery = "$OtherMediaServerUrl/Items?api_key=$OtherMediaServerApiKey&Recursive=true&Fields=ProviderIds,SeasonUserData,OriginalTitle,Path,Overview&IncludeItemTypes=Series"
+    $allEpisodesquery = "$OtherMediaServerUrl/Items?api_key=$OtherMediaServerApiKey&Recursive=true&Fields=ProviderIds,SeasonUserData,OriginalTitle,Path,Overview,Settings&IncludeItemTypes=Episode"
     $allMoviesquery = "$OtherMediaServerUrl/Items?api_key=$OtherMediaServerApiKey&Recursive=true&Fields=ProviderIds,OriginalTitle,Settings,Path,Overview&IncludeItemTypes=Movie"
     $OtherAllShows = Invoke-RestMethod -Method Get -Uri $allShowsquery
+    $OtherAllEpisodes = Invoke-RestMethod -Method Get -Uri $allEpisodesquery
     $OtherAllMovies = Invoke-RestMethod -Method Get -Uri $allMoviesquery
     $OtherLibraries = @()
     foreach ($Movie in $OtherAllMovies.Items) {
@@ -11431,74 +11685,83 @@ Elseif ($SyncJelly -or $SyncEmby){
     $OtherEpisodedata = @()
     $TempShowLibs = $OtherLibraries | Where-Object { $_."Library Type" -eq 'Series' }
     foreach ($show in $TempShowLibs) {
-        if ($SyncEmby) {
-            # extract seasons
-            $Seasonstemp = Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/shows/$($show.id)/Episodes?api_key=$OtherMediaServerApiKey"
-            $seasons = $Seasonstemp.Items | Where-Object { $_.Type -eq 'Episode' } | Select-Object ParentIndexNumber, SeasonId, ImageTags -Unique
-            foreach ($Season in $Seasons) {
-                $SeasonEpisodestemp = Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/shows/$($show.id)/Episodes?seasonid=$($Season.SeasonId)&api_key=$OtherMediaServerApiKey"
-                $SeasonEpisodes = $SeasonEpisodestemp.Items | Where-Object { $_.Type -eq 'Episode' } | Select-Object indexnumber, SeriesId, SeasonId, ImageTags, Id, Name -Unique
-                $tempseasondata = New-Object psobject
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Library Name" -Value $show."Library Name"
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Show Name" -Value $show.title
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Show Original Name" -Value $show.OriginalTitle
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Library Language" -Value $PreferredMetadataLanguage
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "ShowID" -Value $($SeasonEpisodes.SeriesId[0] -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "SeasonId" -Value $($SeasonEpisodes.SeasonId[0] -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "EpisodeIds" -Value $($SeasonEpisodes.id -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $show.tvdbid
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "imdbid" -Value $show.imdbid
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value $show.tmdbid
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "type" -Value 'Episode'
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Season Number" -Value $Season.ParentIndexNumber
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "SeasonName" -Value $($Season.SeasonName -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Episodes" -Value $($SeasonEpisodes.indexnumber -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Title" -Value $($SeasonEpisodes.Name -join ';')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "OtherMediaServerTitleCardTag" -Value $($SeasonEpisodes.ImageTags.Primary -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "OtherMediaServerSeasonTag" -Value $($Season.ImageTags.Primary -join ',')
-                $OtherEpisodedata += $tempseasondata
-                Write-Entry -Subtext "Found [$($tempseasondata.{Show Name})] of type $($tempseasondata.Type) for season $($tempseasondata.{Season Number})" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-            }
-        }
-        Else {
-            # extract seasons
-            $Seasonstemp = Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/shows/$($show.id)/Episodes?api_key=$OtherMediaServerApiKey"
-            $seasons = $Seasonstemp.Items | Where-Object { $_.LocationType -eq 'FileSystem' } | Select-Object ParentIndexNumber, SeasonId, ImageTags -Unique
+        # Iterate through all shows
+        $seasons = $OtherAllEpisodes.Items | Where-Object { $_.SeriesId -eq $show.id } | Group-Object -Property SeasonName | Sort-Object -Property Name
+        foreach ($Season in $Seasons) {
+            # Sort episodes within the season by IndexNumber
+            $SeasonEpisodes = $Season.Group | Sort-Object -Property indexnumber
 
-            foreach ($Season in $Seasons) {
-                $SeasonEpisodestemp = Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/shows/$($show.id)/Episodes?seasonid=$($Season.SeasonId)&api_key=$OtherMediaServerApiKey"
-                $SeasonEpisodes = $SeasonEpisodestemp.Items | Where-Object { $_.LocationType -eq 'FileSystem' } | Select-Object indexnumber, SeriesId, SeasonId, ImageTags, Id, Name -Unique
-                $tempseasondata = New-Object psobject
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Library Name" -Value $show."Library Name"
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Show Name" -Value $show.title
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Show Original Name" -Value $show.OriginalTitle
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Library Language" -Value $PreferredMetadataLanguage
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "ShowID" -Value $($SeasonEpisodes.SeriesId[0] -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "SeasonId" -Value $($SeasonEpisodes.SeasonId[0] -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "EpisodeIds" -Value $($SeasonEpisodes.id -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $show.tvdbid
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "imdbid" -Value $show.imdbid
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value $show.tmdbid
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "type" -Value 'Episode'
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Season Number" -Value $Season.ParentIndexNumber
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "SeasonName" -Value $($Season.SeasonName -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Episodes" -Value $($SeasonEpisodes.indexnumber -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Title" -Value $($SeasonEpisodes.Name -join ';')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "OtherMediaServerTitleCardTag" -Value $($SeasonEpisodes.ImageTags.Primary -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "OtherMediaServerSeasonTag" -Value $($Season.ImageTags.Primary -join ',')
-                $OtherEpisodedata += $tempseasondata
-                Write-Entry -Subtext "Found [$($tempseasondata.{Show Name})] of type $($tempseasondata.Type) for season $($tempseasondata.{Season Number})" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+            # Collect episode IDs, Titles, and PrimaryImageTags
+            $EpisodeIds = ($SeasonEpisodes.Id -join ',')
+            $EpisodeTitles = ($SeasonEpisodes.Name -join ';')
+            $Episodes = ($SeasonEpisodes.IndexNumber -join ',')
+            $Thumbs = ($SeasonEpisodes.ImageTags.Primary -join ',')
+
+            # Calculate the ShowID and SeasonId
+            $ShowID = if ($SeasonEpisodes.SeriesId) { $SeasonEpisodes.SeriesId[0] } else { $null }
+            $SeasonId = if ($SeasonEpisodes.SeasonId) { $SeasonEpisodes.SeasonId[0] } else { $null }
+
+            # Create an object for the current season
+            $seasonObject = [PSCustomObject]@{
+                "Library Name"                 = $show."Library Name"
+                "Show Name"                    = $show.title
+                "Show Original Name"           = $show.OriginalTitle
+                "Library Language"             = $PreferredMetadataLanguage
+                "ShowID"                       = $ShowID
+                "SeasonId"                     = $SeasonId
+                "EpisodeIds"                   = $EpisodeIds
+                "tvdbid"                       = $show.tvdbid
+                "imdbid"                       = $show.imdbid
+                "tmdbid"                       = $show.tmdbid
+                "type"                         = "Episode"
+                "Season Number"                = $SeasonEpisodes[0].ParentIndexNumber
+                "SeasonName"                   = $Season.Name
+                "Episodes"                     = $Episodes
+                "Title"                        = $EpisodeTitles
+                "OtherMediaServerTitleCardTag" = $Thumbs
+                "OtherMediaServerSeasonTag"    = $SeasonEpisodes[0].SeriesPrimaryImageTag
             }
+
+            # Add the season object to the array
+            $OtherEpisodedata += $seasonObject
         }
     }
-    if ($OtherEpisodedata) {
-        Write-Entry -Subtext "Found '$($OtherEpisodedata.Episodes.split(',').count)' Episodes..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+    if ($OtherAllEpisodes) {
+        Write-Entry -Subtext "Found '$($OtherAllEpisodes.items.count)' Episodes..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     }
 
     $OtherAllShows = $OtherLibraries | Where-Object { $_.'Library Type' -eq 'Series' }
     $OtherAllMovies = $OtherLibraries | Where-Object { $_.'Library Type' -eq 'Movie' }
 
-    $OtherEpisodedata | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\OtherEpisodedata.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
+    # Create an empty array to hold the custom objects
+    $FormattedData = @()
+
+    # Iterate over each item in $OtherEpisodedata
+    foreach ($data in $OtherEpisodedata) {
+        # Create a custom object for each episode using the variables
+        $FormattedData += [PSCustomObject]@{
+            'Library Name'                 = $data.'Library Name'
+            'Show Name'                    = $data.'Show Name'
+            'Show Original Name'           = $data.'Show Original Name'
+            'Library Language'             = $data.'Library Language'
+            'ShowID'                       = $data.'ShowID'
+            'SeasonId'                     = $data.'SeasonId'
+            'EpisodeIds'                   = $data.'EpisodeIds'
+            'tvdbid'                       = $data.'tvdbid'
+            'imdbid'                       = $data.'imdbid'
+            'tmdbid'                       = $data.'tmdbid'
+            'type'                         = $data.'type'
+            'Season Number'                = $data.'Season Number'
+            'SeasonName'                   = $data.'SeasonName'
+            'Episodes'                     = $data.'Episodes'
+            'Title'                        = $data.'Title'
+            'OtherMediaServerTitleCardTag' = $data.'OtherMediaServerTitleCardTag'
+            'OtherMediaServerSeasonTag'    = $data.'OtherMediaServerSeasonTag'
+        }
+    }
+
+    # Export the formatted data to CSV
+    $FormattedData | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\OtherEpisodedata.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
     $OtherLibraries | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\OtherLibraries.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
     $Episodedata | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\Episodedata.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
     $Libraries | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\Libraries.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
@@ -11527,7 +11790,7 @@ Elseif ($SyncJelly -or $SyncEmby){
                         $_.ImdbId -eq $entry.ImdbId
                     )
                 }
-                if ($matchingMovie){
+                if ($matchingMovie) {
                     $MovieTitle = $entry.Title
                     $imageType = "Primary"
                     $DestUrl = "$OtherMediaServerUrl/items/$($matchingMovie.id)/images/$imageType/?api_key=$OtherMediaServerApiKey"
@@ -11553,8 +11816,8 @@ Elseif ($SyncJelly -or $SyncEmby){
                         $_.ImdbId -eq $entry.ImdbId
                     )
                 }
-                if ($matchingMovie){
-                    $MovieTitle = $entry.Title+" | Background"
+                if ($matchingMovie) {
+                    $MovieTitle = $entry.Title + " | Background"
                     $imageType = "Backdrop"
                     $DestUrl = "$OtherMediaServerUrl/items/$($matchingMovie.id)/images/$imageType/?api_key=$OtherMediaServerApiKey"
                     SyncPlexArtwork -ArtUrl $Arturl -DestUrl $DestUrl -imagetype $imageType -title $MovieTitle -artworktype 'background'
@@ -11588,7 +11851,7 @@ Elseif ($SyncJelly -or $SyncEmby){
                         $_.TvdbId -eq $entry.TvdbId
                     )
                 }
-                if ($matchingShow){
+                if ($matchingShow) {
                     $ShowTitle = $entry.Title
                     $imageType = "Primary"
                     $DestUrl = "$OtherMediaServerUrl/items/$($matchingShow.id)/images/$imageType/?api_key=$OtherMediaServerApiKey"
@@ -11611,8 +11874,8 @@ Elseif ($SyncJelly -or $SyncEmby){
                         $_.TvdbId -eq $entry.TvdbId
                     )
                 }
-                if ($matchingMovie){
-                    $ShowTitle = $entry.Title+" | Background"
+                if ($matchingMovie) {
+                    $ShowTitle = $entry.Title + " | Background"
                     $imageType = "Backdrop"
                     $DestUrl = "$OtherMediaServerUrl/items/$($matchingMovie.id)/images/$imageType/?api_key=$OtherMediaServerApiKey"
                     SyncPlexArtwork -ArtUrl $Arturl -DestUrl $DestUrl -imagetype $imageType -title $ShowTitle -artworktype 'background'
@@ -11633,16 +11896,16 @@ Elseif ($SyncJelly -or $SyncEmby){
                         $Arturl = $plexurl + $global:PlexSeasonUrl
                     }
 
-                    $matchingSeason = $OtherEpisodedata| Where-Object {
-                        ($_.'Show Name'  -eq $entry.Title -or $_.'Show Name' -eq $entry.originalTitle -or $_."Show Original Name" -eq $entry.originalTitle -or $_."Show Original Name" -eq $entry.Title) -and
+                    $matchingSeason = $OtherEpisodedata | Where-Object {
+                        ($_.'Show Name' -eq $entry.Title -or $_.'Show Name' -eq $entry.originalTitle -or $_."Show Original Name" -eq $entry.originalTitle -or $_."Show Original Name" -eq $entry.Title) -and
                         $_."Library Name" -eq $entry."Library Name" -and
                         $_."Season Number" -eq $global:SeasonNumber -and (
                             $_.TmdbId -eq $entry.TmdbId -or
                             $_.TvdbId -eq $entry.TvdbId
                         )
                     }
-                    if ($matchingSeason){
-                        $ShowTitle = $entry.Title+" | Season $global:SeasonNumber"
+                    if ($matchingSeason) {
+                        $ShowTitle = $entry.Title + " | Season $global:SeasonNumber"
                         $imageType = "Primary"
                         $DestUrl = "$OtherMediaServerUrl/items/$($matchingSeason.SeasonId)/images/$imageType/?api_key=$OtherMediaServerApiKey"
                         SyncPlexArtwork -ArtUrl $Arturl -DestUrl $DestUrl -imagetype $imageType -title $ShowTitle -artworktype 'season'
@@ -11669,7 +11932,8 @@ Elseif ($SyncJelly -or $SyncEmby){
 
                             if ($PlexToken) {
                                 $Arturl = $plexurl + $global:PlexTitleCardUrl + "?X-Plex-Token=$PlexToken"
-                            } else {
+                            }
+                            else {
                                 $Arturl = $plexurl + $global:PlexTitleCardUrl
                             }
 
@@ -11815,9 +12079,11 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
     Write-Entry -Message "Query all items from all Libs, this can take a while..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
     $PreferredMetadataLanguage = (Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/System/Configuration?api_key=$OtherMediaServerApiKey").PreferredMetadataLanguage
     $allShowsquery = "$OtherMediaServerUrl/Items?api_key=$OtherMediaServerApiKey&Recursive=true&Fields=ProviderIds,SeasonUserData,OriginalTitle,Path,Overview&IncludeItemTypes=Series"
+    $allEpisodesquery = "$OtherMediaServerUrl/Items?api_key=$OtherMediaServerApiKey&Recursive=true&Fields=ProviderIds,SeasonUserData,OriginalTitle,Path,Overview,Settings&IncludeItemTypes=Episode"
     $allMoviesquery = "$OtherMediaServerUrl/Items?api_key=$OtherMediaServerApiKey&Recursive=true&Fields=ProviderIds,OriginalTitle,Settings,Path,Overview&IncludeItemTypes=Movie"
     $AllShows = Invoke-RestMethod -Method Get -Uri $allShowsquery
     $AllMovies = Invoke-RestMethod -Method Get -Uri $allMoviesquery
+    $AllEpisodes = Invoke-RestMethod -Method Get -Uri $allEpisodesquery
     $Libraries = @()
     foreach ($Movie in $AllMovies.Items) {
         if ($UseEmby -eq 'true') {
@@ -11988,70 +12254,82 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
     Write-Entry -Subtext "Found '$($Libraries.count)' Items..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     $Libraries | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\OtherMediaServerLibExport.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
     Write-Entry -Message "Export everything to a csv: $global:ScriptRoot\Logs\OtherMediaServerLibExport.csv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+
     $Episodedata = @()
     $TempShowLibs = $Libraries | Where-Object { $_."Library Type" -eq 'Series' }
     foreach ($show in $TempShowLibs) {
-        if ($UseEmby -eq 'true') {
-            # extract seasons
-            $Seasonstemp = Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/shows/$($show.id)/Episodes?api_key=$OtherMediaServerApiKey"
-            $seasons = $Seasonstemp.Items | Where-Object { $_.Type -eq 'Episode' } | Select-Object ParentIndexNumber, SeasonId, ImageTags -Unique
-            foreach ($Season in $Seasons) {
-                $SeasonEpisodestemp = Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/shows/$($show.id)/Episodes?seasonid=$($Season.SeasonId)&api_key=$OtherMediaServerApiKey"
-                $SeasonEpisodes = $SeasonEpisodestemp.Items | Where-Object { $_.Type -eq 'Episode' } | Select-Object indexnumber, SeriesId, SeasonId, ImageTags, Id, Name -Unique
-                $tempseasondata = New-Object psobject
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Show Name" -Value $show.title
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Show Original Name" -Value $show.OriginalTitle
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Library Language" -Value $PreferredMetadataLanguage
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "ShowID" -Value $($SeasonEpisodes.SeriesId[0] -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "SeasonId" -Value $($SeasonEpisodes.SeasonId[0] -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "EpisodeIds" -Value $($SeasonEpisodes.id -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $show.tvdbid
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "imdbid" -Value $show.imdbid
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value $show.tmdbid
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "type" -Value 'Episode'
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Season Number" -Value $Season.ParentIndexNumber
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "SeasonName" -Value $($Season.SeasonName -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Episodes" -Value $($SeasonEpisodes.indexnumber -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Title" -Value $($SeasonEpisodes.Name -join ';')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "OtherMediaServerTitleCardTag" -Value $($SeasonEpisodes.ImageTags.Primary -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "OtherMediaServerSeasonTag" -Value $($Season.ImageTags.Primary -join ',')
-                $Episodedata += $tempseasondata
-                Write-Entry -Subtext "Found [$($tempseasondata.{Show Name})] of type $($tempseasondata.Type) for season $($tempseasondata.{Season Number})" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-            }
-        }
-        Else {
-            # extract seasons
-            $Seasonstemp = Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/shows/$($show.id)/Episodes?api_key=$OtherMediaServerApiKey"
-            $seasons = $Seasonstemp.Items | Where-Object { $_.LocationType -eq 'FileSystem' } | Select-Object ParentIndexNumber, SeasonId, ImageTags -Unique
+        # Iterate through all shows
+        $seasons = $AllEpisodes.Items | Where-Object { $_.SeriesId -eq $show.id } | Group-Object -Property SeasonName | Sort-Object -Property Name
+        foreach ($Season in $Seasons) {
+            # Sort episodes within the season by IndexNumber
+            $SeasonEpisodes = $Season.Group | Sort-Object -Property indexnumber
 
-            foreach ($Season in $Seasons) {
-                $SeasonEpisodestemp = Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/shows/$($show.id)/Episodes?seasonid=$($Season.SeasonId)&api_key=$OtherMediaServerApiKey"
-                $SeasonEpisodes = $SeasonEpisodestemp.Items | Where-Object { $_.LocationType -eq 'FileSystem' } | Select-Object indexnumber, SeriesId, SeasonId, ImageTags, Id, Name -Unique
-                $tempseasondata = New-Object psobject
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Show Name" -Value $show.title
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Show Original Name" -Value $show.OriginalTitle
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Library Language" -Value $PreferredMetadataLanguage
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "ShowID" -Value $($SeasonEpisodes.SeriesId[0] -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "SeasonId" -Value $($SeasonEpisodes.SeasonId[0] -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "EpisodeIds" -Value $($SeasonEpisodes.id -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $show.tvdbid
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "imdbid" -Value $show.imdbid
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value $show.tmdbid
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "type" -Value 'Episode'
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Season Number" -Value $Season.ParentIndexNumber
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "SeasonName" -Value $($Season.SeasonName -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Episodes" -Value $($SeasonEpisodes.indexnumber -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "Title" -Value $($SeasonEpisodes.Name -join ';')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "OtherMediaServerTitleCardTag" -Value $($SeasonEpisodes.ImageTags.Primary -join ',')
-                $tempseasondata | Add-Member -MemberType NoteProperty -Name "OtherMediaServerSeasonTag" -Value $($Season.ImageTags.Primary -join ',')
-                $Episodedata += $tempseasondata
-                Write-Entry -Subtext "Found [$($tempseasondata.{Show Name})] of type $($tempseasondata.Type) for season $($tempseasondata.{Season Number})" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+            # Collect episode IDs, Titles, and PrimaryImageTags
+            $EpisodeIds = ($SeasonEpisodes.Id -join ',')
+            $EpisodeTitles = ($SeasonEpisodes.Name -join ';')
+            $Episodes = ($SeasonEpisodes.IndexNumber -join ',')
+            $Thumbs = ($SeasonEpisodes.ImageTags.Primary -join ',')
+
+            # Calculate the ShowID and SeasonId
+            $ShowID = if ($SeasonEpisodes.SeriesId) { $SeasonEpisodes.SeriesId[0] } else { $null }
+            $SeasonId = if ($SeasonEpisodes.SeasonId) { $SeasonEpisodes.SeasonId[0] } else { $null }
+
+            # Create an object for the current season
+            $seasonObject = [PSCustomObject]@{
+                "Library Name"                 = $show."Library Name"
+                "Show Name"                    = $show.title
+                "Show Original Name"           = $show.OriginalTitle
+                "Library Language"             = $PreferredMetadataLanguage
+                "ShowID"                       = $ShowID
+                "SeasonId"                     = $SeasonId
+                "EpisodeIds"                   = $EpisodeIds
+                "tvdbid"                       = $show.tvdbid
+                "imdbid"                       = $show.imdbid
+                "tmdbid"                       = $show.tmdbid
+                "type"                         = "Episode"
+                "Season Number"                = $SeasonEpisodes[0].ParentIndexNumber
+                "SeasonName"                   = $Season.Name
+                "Episodes"                     = $Episodes
+                "Title"                        = $EpisodeTitles
+                "OtherMediaServerTitleCardTag" = $Thumbs
+                "OtherMediaServerSeasonTag"    = $SeasonEpisodes[0].SeriesPrimaryImageTag
             }
+
+            # Add the season object to the array
+            $Episodedata += $seasonObject
         }
     }
-    $Episodedata | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\OtherMediaServerEpisodeExport.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
-    if ($Episodedata) {
-        Write-Entry -Subtext "Found '$($Episodedata.Episodes.split(',').count)' Episodes..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+    # Create an empty array to hold the custom objects
+    $FormattedData = @()
+
+    # Iterate over each item in $OtherEpisodedata
+    foreach ($data in $Episodedata) {
+        # Create a custom object for each episode using the variables
+        $FormattedData += [PSCustomObject]@{
+            'Library Name'                 = $data.'Library Name'
+            'Show Name'                    = $data.'Show Name'
+            'Show Original Name'           = $data.'Show Original Name'
+            'Library Language'             = $data.'Library Language'
+            'ShowID'                       = $data.'ShowID'
+            'SeasonId'                     = $data.'SeasonId'
+            'EpisodeIds'                   = $data.'EpisodeIds'
+            'tvdbid'                       = $data.'tvdbid'
+            'imdbid'                       = $data.'imdbid'
+            'tmdbid'                       = $data.'tmdbid'
+            'type'                         = $data.'type'
+            'Season Number'                = $data.'Season Number'
+            'SeasonName'                   = $data.'SeasonName'
+            'Episodes'                     = $data.'Episodes'
+            'Title'                        = $data.'Title'
+            'OtherMediaServerTitleCardTag' = $data.'OtherMediaServerTitleCardTag'
+            'OtherMediaServerSeasonTag'    = $data.'OtherMediaServerSeasonTag'
+        }
+    }
+
+    # Export the formatted data to CSV
+    $FormattedData | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\OtherMediaServerEpisodeExport.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
+    if ($AllEpisodes) {
+        Write-Entry -Subtext "Found '$($AllEpisodes.Items.count)' Episodes..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     }
 
     $AllShows = $Libraries | Where-Object { $_.'Library Type' -eq 'Series' }
@@ -12339,10 +12617,10 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                             }
                                         }
                                         $joinedTitlePointSize = $joinedTitle -replace '""', '""""'
-                                        $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
+                                        $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize -lineSpacing $lineSpacing
                                         if (!$global:IsTruncated) {
                                             Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                                            $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
+                                            $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none -interline-spacing `"$lineSpacing`" caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
                                             Write-Entry -Subtext "Applying Poster text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                             $logEntry = "`"$magick`" $Arguments"
                                             $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
@@ -12420,7 +12698,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                         }
                     }
                     else {
-                        if ($global:UploadExistingAssets -eq 'true'){
+                        if ($global:UploadExistingAssets -eq 'true') {
                             Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                             Write-Entry -Subtext "Searching for $Titletext Artwork on Media Server." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                             UploadOtherMediaServerArtwork -itemId $entry.id -imageType "Primary" -imagePath $PosterImageoriginal
@@ -12632,10 +12910,10 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                             }
                                         }
                                         $joinedTitlePointSize = $joinedTitle -replace '""', '""""'
-                                        $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
+                                        $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize -lineSpacing $BackgroundlineSpacing
                                         if (!$global:IsTruncated) {
                                             Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                                            $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -size `"$Backgroundboxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
+                                            $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -size `"$Backgroundboxsize`" -background none -interline-spacing `"$BackgroundlineSpacing`" caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
                                             Write-Entry -Subtext "Applying Background text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                             $logEntry = "`"$magick`" $Arguments"
                                             $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
@@ -12713,7 +12991,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                         }
                     }
                     else {
-                        if ($global:UploadExistingAssets -eq 'true'){
+                        if ($global:UploadExistingAssets -eq 'true') {
                             Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                             Write-Entry -Subtext "Searching for $Titletext Artwork on Media Server." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                             UploadOtherMediaServerArtwork -itemId $entry.id -imageType "Backdrop" -imagePath $backgroundImageoriginal
@@ -12989,10 +13267,10 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                         }
                                     }
                                     $joinedTitlePointSize = $joinedTitle -replace '""', '""""'
-                                    $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
+                                    $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize -lineSpacing $SeasonlineSpacing
                                     if (!$global:IsTruncated) {
                                         Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                                        $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
+                                        $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none -interline-spacing `"$SeasonlineSpacing`" caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
                                         Write-Entry -Subtext "Applying Poster text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                         $logEntry = "`"$magick`" $Arguments"
                                         $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
@@ -13069,7 +13347,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                     }
                 }
                 else {
-                    if ($global:UploadExistingAssets -eq 'true'){
+                    if ($global:UploadExistingAssets -eq 'true') {
                         Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                         Write-Entry -Subtext "Searching for $Titletext Artwork on Media Server." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                         UploadOtherMediaServerArtwork -itemId $entry.id -imageType "Primary" -imagePath $PosterImageoriginal
@@ -13290,10 +13568,10 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                         }
                                     }
                                     $joinedTitlePointSize = $joinedTitle -replace '""', '""""'
-                                    $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
+                                    $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize -lineSpacing $BackgroundlineSpacing
                                     if (!$global:IsTruncated) {
                                         Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                                        $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -size `"$Backgroundboxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
+                                        $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -size `"$Backgroundboxsize`" -background none -interline-spacing `"$BackgroundlineSpacing`" caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
                                         Write-Entry -Subtext "Applying Background text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                         $logEntry = "`"$magick`" $Arguments"
                                         $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
@@ -13372,7 +13650,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                     }
                 }
                 else {
-                    if ($global:UploadExistingAssets -eq 'true'){
+                    if ($global:UploadExistingAssets -eq 'true') {
                         Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                         Write-Entry -Subtext "Searching for $Titletext Artwork on Media Server." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                         UploadOtherMediaServerArtwork -itemId $entry.id -imageType "Backdrop" -imagePath $backgroundImageoriginal
@@ -13623,35 +13901,76 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                             InvokeMagickCommand -Command $magick -Arguments $Arguments
 
                                             if ($AddSeasonText -eq 'true') {
-                                                if ($AddShowTitletoSeason -eq 'true') {
-                                                    if ($SeasonTextNewLines -eq '1') {
-                                                        $global:seasonTitle = $Titletext + "`n" + $global:seasonTitle
-                                                    }
-                                                    elseif ($SeasonTextNewLines -eq '2') {
-                                                        $global:seasonTitle = $Titletext + "`n" + "`n" + $global:seasonTitle
-                                                    }
-                                                    else {
-                                                        $global:seasonTitle = $Titletext + "`n" + $global:seasonTitle
-                                                    }
-                                                }
                                                 $global:seasonTitle = $global:seasonTitle -replace '"', '""'
+                                                if ($ShowOnSeasonfontAllCaps -eq 'true') {
+                                                    $global:ShowTitleOnSeason = $titletext.ToUpper() -replace '"', '""'
+                                                }
+                                                Else {
+                                                    $global:ShowTitleOnSeason = $titletext -replace '"', '""'
+                                                }
                                                 # Loop through each symbol and replace it with a newline
                                                 if ($NewLineOnSpecificSymbols -eq 'true') {
                                                     foreach ($symbol in $NewLineSymbols) {
                                                         $global:seasonTitle = $global:seasonTitle -replace [regex]::Escape($symbol), "`n"
+                                                        if ($AddShowTitletoSeason -eq 'true') {
+                                                            $global:ShowTitleOnSeason = $global:ShowTitleOnSeason -replace [regex]::Escape($symbol), "`n"
+                                                        }
                                                     }
                                                 }
                                                 $joinedTitlePointSize = $global:seasonTitle -replace '""', '""""'
-                                                $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize
-                                                if (!$global:IsTruncated) {
-                                                    Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                $joinedShowTitlePointSize = $global:ShowTitleOnSeason -replace '""', '""""'
+                                                if ($AddShowTitletoSeason -eq 'true') {
+                                                    $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize -lineSpacing $SeasonlineSpacing
+                                                    $ShowoptimalFontSize = Get-OptimalPointSize -text $joinedShowTitlePointSize -font $fontImagemagick -box_width $ShowOnSeasonMaxWidth  -box_height $ShowOnSeasonMaxHeight -min_pointsize $ShowOnSeasonminPointSize -max_pointsize $ShowOnSeasonmaxPointSize -lineSpacing $ShowOnSeasonlineSpacing
+                                                    if (!$global:IsTruncated) {
+                                                        Write-Entry -Subtext "Optimal Season font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                        Write-Entry -Subtext "Optimal Show font size set to: '$ShowoptimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                        # Season Part
+                                                        # Add Stroke
+                                                        if ($AddSeasonTextStroke -eq 'true') {
+                                                            $SeasonArguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Seasonfontcolor`" -stroke `"$Seasonstrokecolor`" -strokewidth `"$Seasonstrokewidth`" -size `"$Seasonboxsize`" -background none -interline-spacing `"$SeasonlineSpacing`" caption:`"$global:seasonTitle`" -trim -gravity south -extent `"$Seasonboxsize`" `) -gravity south -geometry +0`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
+                                                        }
+                                                        Else {
+                                                            $SeasonArguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Seasonfontcolor`" -size `"$Seasonboxsize`" -background none -interline-spacing `"$SeasonlineSpacing`" caption:`"$global:seasonTitle`" -trim -gravity south -extent `"$Seasonboxsize`" `) -gravity south -geometry +0`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
+                                                        }
 
-                                                    $Arguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Seasonfontcolor`" -size `"$Seasonboxsize`" -background none caption:`"$global:seasonTitle`" -trim -gravity south -extent `"$Seasonboxsize`" `) -gravity south -geometry +0`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
+                                                        Write-Entry -Subtext "Applying seasonTitle text: `"$global:seasonTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                        $logEntry = "`"$magick`" $SeasonArguments"
+                                                        $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+                                                        InvokeMagickCommand -Command $magick -Arguments $SeasonArguments
 
-                                                    Write-Entry -Subtext "Applying seasonTitle text: `"$global:seasonTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                                                    $logEntry = "`"$magick`" $Arguments"
-                                                    $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
-                                                    InvokeMagickCommand -Command $magick -Arguments $Arguments
+                                                        # Show Part
+                                                        # Add Stroke
+                                                        if ($AddShowOnSeasonTextStroke -eq 'true') {
+                                                            $ShowOnSeasonArguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$ShowoptimalFontSize`" -fill `"$ShowOnSeasonfontcolor`" -stroke `"$ShowOnSeasonstrokecolor`" -strokewidth `"$ShowOnSeasonstrokewidth`" -size `"$ShowOnSeasonboxsize`" -background none -interline-spacing `"$ShowOnSeasonlineSpacing`" caption:`"$global:ShowTitleOnSeason `" -trim -gravity south -extent `"$ShowOnSeasonboxsize`" `) -gravity south -geometry +0`"$ShowOnSeasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
+                                                        }
+                                                        Else {
+                                                            $ShowOnSeasonArguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$ShowoptimalFontSize`" -fill `"$ShowOnSeasonfontcolor`" -size `"$ShowOnSeasonboxsize`" -background none -interline-spacing `"$ShowOnSeasonlineSpacing`" caption:`"$global:ShowTitleOnSeason `" -trim -gravity south -extent `"$ShowOnSeasonboxsize`" `) -gravity south -geometry +0`"$ShowOnSeasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
+                                                        }
+
+                                                        Write-Entry -Subtext "Applying showTitle text: `"$global:ShowTitleOnSeason`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                        $logEntry = "`"$magick`" $ShowOnSeasonArguments"
+                                                        $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+                                                        InvokeMagickCommand -Command $magick -Arguments $ShowOnSeasonArguments
+                                                    }
+                                                }
+                                                Else {
+                                                    $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize -lineSpacing $SeasonlineSpacing
+                                                    if (!$global:IsTruncated) {
+                                                        Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                        # Add Stroke
+                                                        if ($AddSeasonTextStroke -eq 'true') {
+                                                            $Arguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Seasonfontcolor`" -stroke `"$Seasonstrokecolor`" -strokewidth `"$Seasonstrokewidth`" -size `"$Seasonboxsize`" -background none -interline-spacing `"$SeasonlineSpacing`" caption:`"$global:seasonTitle`" -trim -gravity south -extent `"$Seasonboxsize`" `) -gravity south -geometry +0`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
+                                                        }
+                                                        Else {
+                                                            $Arguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Seasonfontcolor`" -size `"$Seasonboxsize`" -background none -interline-spacing `"$SeasonlineSpacing`" caption:`"$global:seasonTitle`" -trim -gravity south -extent `"$Seasonboxsize`" `) -gravity south -geometry +0`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
+                                                        }
+
+                                                        Write-Entry -Subtext "Applying seasonTitle text: `"$global:seasonTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                        $logEntry = "`"$magick`" $Arguments"
+                                                        $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+                                                        InvokeMagickCommand -Command $magick -Arguments $Arguments
+                                                    }
                                                 }
                                             }
                                         }
@@ -13729,7 +14048,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                             }
                         }
                         else {
-                            if ($global:UploadExistingAssets -eq 'true'){
+                            if ($global:UploadExistingAssets -eq 'true') {
                                 Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                                 Write-Entry -Subtext "Searching for $Titletext Artwork on Media Server." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                                 UploadOtherMediaServerArtwork -itemId $entry.id -imageType "Primary" -imagePath $SeasonImageoriginal
@@ -13999,11 +14318,11 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                                                     }
                                                                 }
                                                                 $joinedTitlePointSize = $global:EPTitle -replace '""', '""""'
-                                                                $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
+                                                                $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize -lineSpacing $TitleCardEPTitlelineSpacing
                                                                 if (!$global:IsTruncated) {
                                                                     Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
 
-                                                                    $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                                    $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -size `"$TitleCardEPTitleboxsize`" -background none -interline-spacing `"$TitleCardEPTitlelineSpacing`" caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
 
                                                                     Write-Entry -Subtext "Applying EPTitle text: `"$global:EPTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                                     $logEntry = "`"$magick`" $Arguments"
@@ -14017,11 +14336,11 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                                                 }
                                                                 $global:SeasonEPNumber = $global:SeasonEPNumber -replace '"', '""'
                                                                 $joinedTitlePointSize = $global:SeasonEPNumber -replace '""', '""""'
-                                                                $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize
+                                                                $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize -lineSpacing $TitleCardEPlineSpacing
                                                                 if (!$global:IsTruncated) {
                                                                     Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
 
-                                                                    $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPfontcolor`" -size `"$TitleCardEPboxsize`" -background none caption:`"$global:SeasonEPNumber`" -trim -gravity south -extent `"$TitleCardEPboxsize`" `) -gravity south -geometry +0`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                                    $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPfontcolor`" -size `"$TitleCardEPboxsize`" -background none -interline-spacing `"$TitleCardEPlineSpacing`" caption:`"$global:SeasonEPNumber`" -trim -gravity south -extent `"$TitleCardEPboxsize`" `) -gravity south -geometry +0`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
 
                                                                     Write-Entry -Subtext "Applying SeasonEPNumber text: `"$global:SeasonEPNumber`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                                     $logEntry = "`"$magick`" $Arguments"
@@ -14106,10 +14425,10 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
 
                                     }
                                     else {
-                                        if ($global:UploadExistingAssets -eq 'true'){
+                                        if ($global:UploadExistingAssets -eq 'true') {
                                             Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                                             Write-Entry -Subtext "Searching for $Titletext Artwork on Media Server." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
-                                            UploadOtherMediaServerArtwork -itemId $entry.id -imageType "Primary" -imagePath $EpisodeImageoriginal
+                                            UploadOtherMediaServerArtwork -itemId $global:episodeid -imageType "Primary" -imagePath $EpisodeImageoriginal
                                         }
                                         Else {
                                             if ($show_skipped -eq 'True' ) {
@@ -14370,11 +14689,11 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                                                 }
                                                             }
                                                             $joinedTitlePointSize = $global:EPTitle -replace '""', '""""'
-                                                            $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
+                                                            $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize -lineSpacing $TitleCardEPTitlelineSpacing
                                                             if (!$global:IsTruncated) {
                                                                 Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
 
-                                                                $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                                $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -size `"$TitleCardEPTitleboxsize`" -background none -interline-spacing `"$TitleCardEPTitlelineSpacing`" caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
 
                                                                 Write-Entry -Subtext "Applying EPTitle text: `"$global:EPTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                                 $logEntry = "`"$magick`" $Arguments"
@@ -14388,11 +14707,11 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                                             }
                                                             $global:SeasonEPNumber = $global:SeasonEPNumber -replace '"', '""'
                                                             $joinedTitlePointSize = $global:SeasonEPNumber -replace '""', '""""'
-                                                            $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize
+                                                            $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize -lineSpacing $TitleCardEPlineSpacing
                                                             if (!$global:IsTruncated) {
                                                                 Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
 
-                                                                $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPfontcolor`" -size `"$TitleCardEPboxsize`" -background none caption:`"$global:SeasonEPNumber`" -trim -gravity south -extent `"$TitleCardEPboxsize`" `) -gravity south -geometry +0`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                                $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPfontcolor`" -size `"$TitleCardEPboxsize`" -background none -interline-spacing `"$TitleCardEPlineSpacing`" caption:`"$global:SeasonEPNumber`" -trim -gravity south -extent `"$TitleCardEPboxsize`" `) -gravity south -geometry +0`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
 
                                                                 Write-Entry -Subtext "Applying SeasonEPNumber text: `"$global:SeasonEPNumber`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                                 $logEntry = "`"$magick`" $Arguments"
@@ -14476,10 +14795,10 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
 
                                     }
                                     else {
-                                        if ($global:UploadExistingAssets -eq 'true'){
+                                        if ($global:UploadExistingAssets -eq 'true') {
                                             Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                                             Write-Entry -Subtext "Searching for $Titletext Artwork on Media Server." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
-                                            UploadOtherMediaServerArtwork -itemId $entry.id -imageType "Primary" -imagePath $EpisodeImageoriginal
+                                            UploadOtherMediaServerArtwork -itemId $global:episodeid -imageType "Primary" -imagePath $EpisodeImageoriginal
                                         }
                                         Else {
                                             if ($show_skipped -eq 'True' ) {
@@ -15776,16 +16095,16 @@ else {
                                             }
                                         }
                                         $joinedTitlePointSize = $joinedTitle -replace '""', '""""'
-                                        $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
+                                        $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize -lineSpacing $lineSpacing
                                         if (!$global:IsTruncated) {
                                             Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
 
                                             # Add Stroke
                                             if ($AddTextStroke -eq 'true') {
-                                                $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -stroke `"$strokecolor`" -strokewidth `"$strokewidth`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
+                                                $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -stroke `"$strokecolor`" -strokewidth `"$strokewidth`" -size `"$boxsize`" -background none -interline-spacing `"$lineSpacing`" caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
                                             }
                                             Else {
-                                                $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
+                                                $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none -interline-spacing `"$lineSpacing`" caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
                                             }
 
                                             Write-Entry -Subtext "Applying Poster text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -15884,8 +16203,8 @@ else {
                         if ($global:UploadExistingAssets -eq 'true') {
                             Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                             try {
-                                GetPlexArtwork -Type " $Titletext | $global:FileNaming Artwork." -ArtUrl $Arturl -TempImage $EpisodeImage
-                                if ($global:PlexartworkDownloaded -eq 'true'){
+                                GetPlexArtwork -Type "$Titletext Artwork." -ArtUrl $Arturl -TempImage $PosterImage
+                                if ($global:PlexartworkDownloaded -eq 'true') {
                                     Write-Entry -Subtext "Uploading Existing Artwork for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                     $fileContent = [System.IO.File]::ReadAllBytes($PosterImageoriginal)
                                     if ($PlexToken) {
@@ -16135,16 +16454,16 @@ else {
                                             }
                                         }
                                         $joinedTitlePointSize = $joinedTitle -replace '""', '""""'
-                                        $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
+                                        $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize -lineSpacing $BackgroundlineSpacing
                                         if (!$global:IsTruncated) {
                                             Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
 
                                             # Add Stroke
                                             if ($AddBackgroundTextStroke -eq 'true') {
-                                                $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$backgroundfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -stroke `"$Backgroundstrokecolor`" -strokewidth `"$Backgroundstrokewidth`" -size `"$Backgroundboxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
+                                                $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$backgroundfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -stroke `"$Backgroundstrokecolor`" -strokewidth `"$Backgroundstrokewidth`" -size `"$Backgroundboxsize`" -background none -interline-spacing `"$BackgroundlineSpacing`" caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
                                             }
                                             Else {
-                                                $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$backgroundfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -size `"$Backgroundboxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
+                                                $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$backgroundfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -size `"$Backgroundboxsize`" -background none -interline-spacing `"$BackgroundlineSpacing`" caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
                                             }
 
                                             Write-Entry -Subtext "Applying Background text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -16243,8 +16562,8 @@ else {
                         if ($global:UploadExistingAssets -eq 'true') {
                             Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                             try {
-                                GetPlexArtwork -Type " $Titletext Artwork." -ArtUrl $Arturl -TempImage $backgroundImage
-                                if ($global:PlexartworkDownloaded -eq 'true'){
+                                GetPlexArtwork -Type " $Titletext | Backgound Artwork." -ArtUrl $Arturl -TempImage $backgroundImage
+                                if ($global:PlexartworkDownloaded -eq 'true') {
                                     Write-Entry -Subtext "Uploading Existing Artwork for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                     $fileContent = [System.IO.File]::ReadAllBytes($backgroundImageoriginal)
                                     if ($PlexToken) {
@@ -16574,16 +16893,16 @@ else {
                                         }
                                     }
                                     $joinedTitlePointSize = $joinedTitle -replace '""', '""""'
-                                    $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize
+                                    $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize -lineSpacing $lineSpacing
                                     if (!$global:IsTruncated) {
                                         Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
 
                                         # Add Stroke
                                         if ($AddTextStroke -eq 'true') {
-                                            $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -stroke `"$strokecolor`" -strokewidth `"$strokewidth`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
+                                            $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -stroke `"$strokecolor`" -strokewidth `"$strokewidth`" -size `"$boxsize`" -background none -interline-spacing `"$lineSpacing`" caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
                                         }
                                         Else {
-                                            $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
+                                            $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none -interline-spacing `"$lineSpacing`" caption:`"$joinedTitle`" -trim -gravity south -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
                                         }
 
                                         Write-Entry -Subtext "Applying Poster text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -16682,7 +17001,7 @@ else {
                         Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                         try {
                             GetPlexArtwork -Type " $Titletext Artwork." -ArtUrl $Arturl -TempImage $PosterImage
-                            if ($global:PlexartworkDownloaded -eq 'true'){
+                            if ($global:PlexartworkDownloaded -eq 'true') {
                                 Write-Entry -Subtext "Uploading Existing Artwork for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 $fileContent = [System.IO.File]::ReadAllBytes($PosterImageoriginal)
                                 if ($PlexToken) {
@@ -16942,16 +17261,16 @@ else {
                                         }
                                     }
                                     $joinedTitlePointSize = $joinedTitle -replace '""', '""""'
-                                    $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize
+                                    $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize -lineSpacing $BackgroundlineSpacing
                                     if (!$global:IsTruncated) {
                                         Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
 
                                         # Add Stroke
                                         if ($AddBackgroundTextStroke -eq 'true') {
-                                            $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$backgroundfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -stroke `"$Backgroundstrokecolor`" -strokewidth `"$Backgroundstrokewidth`" -size `"$Backgroundboxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
+                                            $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$backgroundfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -stroke `"$Backgroundstrokecolor`" -strokewidth `"$Backgroundstrokewidth`" -size `"$Backgroundboxsize`" -background none -interline-spacing `"$BackgroundlineSpacing`" caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
                                         }
                                         Else {
-                                            $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$backgroundfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -size `"$Backgroundboxsize`" -background none caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
+                                            $Arguments = "`"$backgroundImage`" -gravity center -background None -layers Flatten `( -font `"$backgroundfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -size `"$Backgroundboxsize`" -background none -interline-spacing `"$BackgroundlineSpacing`" caption:`"$joinedTitle`" -trim -gravity south -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$backgroundImage`""
                                         }
 
                                         Write-Entry -Subtext "Applying Background text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -17051,8 +17370,8 @@ else {
                     if ($global:UploadExistingAssets -eq 'true') {
                         Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                         try {
-                            GetPlexArtwork -Type " $Titletext Artwork." -ArtUrl $Arturl -TempImage $backgroundImage
-                            if ($global:PlexartworkDownloaded -eq 'true'){
+                            GetPlexArtwork -Type " $Titletext | Background Artwork." -ArtUrl $Arturl -TempImage $backgroundImage
+                            if ($global:PlexartworkDownloaded -eq 'true') {
                                 Write-Entry -Subtext "Uploading Existing Artwork for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 $fileContent = [System.IO.File]::ReadAllBytes($backgroundImageoriginal)
                                 if ($PlexToken) {
@@ -17340,41 +17659,76 @@ else {
                                         InvokeMagickCommand -Command $magick -Arguments $Arguments
 
                                         if ($AddSeasonText -eq 'true') {
-                                            if ($AddShowTitletoSeason -eq 'true') {
-                                                if ($SeasonTextNewLines -eq '1') {
-                                                    $global:seasonTitle = $Titletext + "`n" + $global:seasonTitle
-                                                }
-                                                elseif ($SeasonTextNewLines -eq '2') {
-                                                    $global:seasonTitle = $Titletext + "`n" + "`n" + $global:seasonTitle
-                                                }
-                                                else {
-                                                    $global:seasonTitle = $Titletext + "`n" + $global:seasonTitle
-                                                }
-                                            }
                                             $global:seasonTitle = $global:seasonTitle -replace '"', '""'
-
+                                            if ($ShowOnSeasonfontAllCaps -eq 'true') {
+                                                $global:ShowTitleOnSeason = $titletext.ToUpper() -replace '"', '""'
+                                            }
+                                            Else {
+                                                $global:ShowTitleOnSeason = $titletext -replace '"', '""'
+                                            }
                                             # Loop through each symbol and replace it with a newline
                                             if ($NewLineOnSpecificSymbols -eq 'true') {
                                                 foreach ($symbol in $NewLineSymbols) {
                                                     $global:seasonTitle = $global:seasonTitle -replace [regex]::Escape($symbol), "`n"
+                                                    if ($AddShowTitletoSeason -eq 'true') {
+                                                        $global:ShowTitleOnSeason = $global:ShowTitleOnSeason -replace [regex]::Escape($symbol), "`n"
+                                                    }
                                                 }
                                             }
                                             $joinedTitlePointSize = $global:seasonTitle -replace '""', '""""'
-                                            $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize
-                                            if (!$global:IsTruncated) {
-                                                Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                                                # Add Stroke
-                                                if ($AddSeasonTextStroke -eq 'true') {
-                                                    $Arguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Seasonfontcolor`" -stroke `"$Seasonstrokecolor`" -strokewidth `"$Seasonstrokewidth`" -size `"$Seasonboxsize`" -background none caption:`"$global:seasonTitle`" -trim -gravity south -extent `"$Seasonboxsize`" `) -gravity south -geometry +0`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
-                                                }
-                                                Else {
-                                                    $Arguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Seasonfontcolor`" -size `"$Seasonboxsize`" -background none caption:`"$global:seasonTitle`" -trim -gravity south -extent `"$Seasonboxsize`" `) -gravity south -geometry +0`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
-                                                }
+                                            $joinedShowTitlePointSize = $global:ShowTitleOnSeason -replace '""', '""""'
+                                            if ($AddShowTitletoSeason -eq 'true') {
+                                                $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize -lineSpacing $SeasonlineSpacing
+                                                $ShowoptimalFontSize = Get-OptimalPointSize -text $joinedShowTitlePointSize -font $fontImagemagick -box_width $ShowOnSeasonMaxWidth  -box_height $ShowOnSeasonMaxHeight -min_pointsize $ShowOnSeasonminPointSize -max_pointsize $ShowOnSeasonmaxPointSize -lineSpacing $ShowOnSeasonlineSpacing
+                                                if (!$global:IsTruncated) {
+                                                    Write-Entry -Subtext "Optimal Season font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                    Write-Entry -Subtext "Optimal Show font size set to: '$ShowoptimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                    # Season Part
+                                                    # Add Stroke
+                                                    if ($AddSeasonTextStroke -eq 'true') {
+                                                        $SeasonArguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Seasonfontcolor`" -stroke `"$Seasonstrokecolor`" -strokewidth `"$Seasonstrokewidth`" -size `"$Seasonboxsize`" -background none -interline-spacing `"$SeasonlineSpacing`" caption:`"$global:seasonTitle`" -trim -gravity south -extent `"$Seasonboxsize`" `) -gravity south -geometry +0`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
+                                                    }
+                                                    Else {
+                                                        $SeasonArguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Seasonfontcolor`" -size `"$Seasonboxsize`" -background none -interline-spacing `"$SeasonlineSpacing`" caption:`"$global:seasonTitle`" -trim -gravity south -extent `"$Seasonboxsize`" `) -gravity south -geometry +0`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
+                                                    }
 
-                                                Write-Entry -Subtext "Applying seasonTitle text: `"$global:seasonTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                                                $logEntry = "`"$magick`" $Arguments"
-                                                $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
-                                                InvokeMagickCommand -Command $magick -Arguments $Arguments
+                                                    Write-Entry -Subtext "Applying seasonTitle text: `"$global:seasonTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                    $logEntry = "`"$magick`" $SeasonArguments"
+                                                    $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+                                                    InvokeMagickCommand -Command $magick -Arguments $SeasonArguments
+
+                                                    # Show Part
+                                                    # Add Stroke
+                                                    if ($AddShowOnSeasonTextStroke -eq 'true') {
+                                                        $ShowOnSeasonArguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$ShowoptimalFontSize`" -fill `"$ShowOnSeasonfontcolor`" -stroke `"$ShowOnSeasonstrokecolor`" -strokewidth `"$ShowOnSeasonstrokewidth`" -size `"$ShowOnSeasonboxsize`" -background none -interline-spacing `"$ShowOnSeasonlineSpacing`" caption:`"$global:ShowTitleOnSeason `" -trim -gravity south -extent `"$ShowOnSeasonboxsize`" `) -gravity south -geometry +0`"$ShowOnSeasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
+                                                    }
+                                                    Else {
+                                                        $ShowOnSeasonArguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$ShowoptimalFontSize`" -fill `"$ShowOnSeasonfontcolor`" -size `"$ShowOnSeasonboxsize`" -background none -interline-spacing `"$ShowOnSeasonlineSpacing`" caption:`"$global:ShowTitleOnSeason `" -trim -gravity south -extent `"$ShowOnSeasonboxsize`" `) -gravity south -geometry +0`"$ShowOnSeasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
+                                                    }
+
+                                                    Write-Entry -Subtext "Applying showTitle text: `"$global:ShowTitleOnSeason`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                    $logEntry = "`"$magick`" $ShowOnSeasonArguments"
+                                                    $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+                                                    InvokeMagickCommand -Command $magick -Arguments $ShowOnSeasonArguments
+                                                }
+                                            }
+                                            Else {
+                                                $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize -lineSpacing $SeasonlineSpacing
+                                                if (!$global:IsTruncated) {
+                                                    Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                    # Add Stroke
+                                                    if ($AddSeasonTextStroke -eq 'true') {
+                                                        $Arguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Seasonfontcolor`" -stroke `"$Seasonstrokecolor`" -strokewidth `"$Seasonstrokewidth`" -size `"$Seasonboxsize`" -background none -interline-spacing `"$SeasonlineSpacing`" caption:`"$global:seasonTitle`" -trim -gravity south -extent `"$Seasonboxsize`" `) -gravity south -geometry +0`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
+                                                    }
+                                                    Else {
+                                                        $Arguments = "`"$SeasonImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Seasonfontcolor`" -size `"$Seasonboxsize`" -background none -interline-spacing `"$SeasonlineSpacing`" caption:`"$global:seasonTitle`" -trim -gravity south -extent `"$Seasonboxsize`" `) -gravity south -geometry +0`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$SeasonImage`""
+                                                    }
+
+                                                    Write-Entry -Subtext "Applying seasonTitle text: `"$global:seasonTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                                    $logEntry = "`"$magick`" $Arguments"
+                                                    $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+                                                    InvokeMagickCommand -Command $magick -Arguments $Arguments
+                                                }
                                             }
                                         }
                                     }
@@ -17519,7 +17873,7 @@ else {
                             Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                             try {
                                 GetPlexArtwork -Type " $Titletext | $global:season Artwork." -ArtUrl $Arturl -TempImage $SeasonImage
-                                if ($global:PlexartworkDownloaded -eq 'true'){
+                                if ($global:PlexartworkDownloaded -eq 'true') {
                                     Write-Entry -Subtext "Uploading Existing Artwork for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                     $fileContent = [System.IO.File]::ReadAllBytes($SeasonImageoriginal)
                                     if ($PlexToken) {
@@ -17849,15 +18203,15 @@ else {
                                                                     }
                                                                 }
                                                                 $joinedTitlePointSize = $global:EPTitle -replace '""', '""""'
-                                                                $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
+                                                                $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize -lineSpacing $TitleCardEPTitlelineSpacing
                                                                 if (!$global:IsTruncated) {
                                                                     Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                                     # Add Stroke
                                                                     if ($AddTitleCardEPTitleTextStroke -eq 'true') {
-                                                                        $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                                        $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background none -interline-spacing `"$TitleCardEPTitlelineSpacing`" caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
                                                                     }
                                                                     Else {
-                                                                        $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                                        $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -size `"$TitleCardEPTitleboxsize`" -background none -interline-spacing `"$TitleCardEPTitlelineSpacing`" caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
                                                                     }
                                                                     Write-Entry -Subtext "Applying EPTitle text: `"$global:EPTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                                     $logEntry = "`"$magick`" $Arguments"
@@ -17871,15 +18225,15 @@ else {
                                                                 }
                                                                 $global:SeasonEPNumber = $global:SeasonEPNumber -replace '"', '""'
                                                                 $joinedTitlePointSize = $global:SeasonEPNumber -replace '""', '""""'
-                                                                $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize
+                                                                $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize -lineSpacing $TitleCardEPlineSpacing
                                                                 if (!$global:IsTruncated) {
                                                                     Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                                     # Add Stroke
                                                                     if ($AddTitleCardTextStroke -eq 'true') {
-                                                                        $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPfontcolor`" -stroke `"$TitleCardstrokecolor`" -strokewidth `"$TitleCardstrokewidth`" -size `"$TitleCardEPboxsize`" -background none caption:`"$global:SeasonEPNumber`" -trim -gravity south -extent `"$TitleCardEPboxsize`" `) -gravity south -geometry +0`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                                        $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPfontcolor`" -stroke `"$TitleCardstrokecolor`" -strokewidth `"$TitleCardstrokewidth`" -size `"$TitleCardEPboxsize`" -background none -interline-spacing `"$TitleCardEPlineSpacing`" caption:`"$global:SeasonEPNumber`" -trim -gravity south -extent `"$TitleCardEPboxsize`" `) -gravity south -geometry +0`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
                                                                     }
                                                                     Else {
-                                                                        $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPfontcolor`" -size `"$TitleCardEPboxsize`" -background none caption:`"$global:SeasonEPNumber`" -trim -gravity south -extent `"$TitleCardEPboxsize`" `) -gravity south -geometry +0`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                                        $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPfontcolor`" -size `"$TitleCardEPboxsize`" -background none -interline-spacing `"$TitleCardEPlineSpacing`" caption:`"$global:SeasonEPNumber`" -trim -gravity south -extent `"$TitleCardEPboxsize`" `) -gravity south -geometry +0`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
                                                                     }
 
                                                                     Write-Entry -Subtext "Applying SeasonEPNumber text: `"$global:SeasonEPNumber`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -18016,7 +18370,7 @@ else {
                                             Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                                             try {
                                                 GetPlexArtwork -Type " $Titletext | $global:FileNaming Artwork." -ArtUrl $Arturl -TempImage $EpisodeImage
-                                                if ($global:PlexartworkDownloaded -eq 'true'){
+                                                if ($global:PlexartworkDownloaded -eq 'true') {
                                                     Write-Entry -Subtext "Uploading Existing Artwork for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                     $fileContent = [System.IO.File]::ReadAllBytes($EpisodeImageoriginal)
                                                     if ($PlexToken) {
@@ -18338,15 +18692,15 @@ else {
                                                                 }
                                                             }
                                                             $joinedTitlePointSize = $global:EPTitle -replace '""', '""""'
-                                                            $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize
+                                                            $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize -lineSpacing $TitleCardEPTitlelineSpacing
                                                             if (!$global:IsTruncated) {
                                                                 Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                                 # Add Stroke
                                                                 if ($AddTitleCardEPTitleTextStroke -eq 'true') {
-                                                                    $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                                    $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background none -interline-spacing `"$TitleCardEPTitlelineSpacing`" caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
                                                                 }
                                                                 Else {
-                                                                    $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -size `"$TitleCardEPTitleboxsize`" -background none caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                                    $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -size `"$TitleCardEPTitleboxsize`" -background none -interline-spacing `"$TitleCardEPTitlelineSpacing`" caption:`"$global:EPTitle`" -trim -gravity south -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
                                                                 }
 
                                                                 Write-Entry -Subtext "Applying EPTitle text: `"$global:EPTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -18361,15 +18715,15 @@ else {
                                                             }
                                                             $global:SeasonEPNumber = $global:SeasonEPNumber -replace '"', '""'
                                                             $joinedTitlePointSize = $global:SeasonEPNumber -replace '""', '""""'
-                                                            $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize
+                                                            $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize -lineSpacing $TitleCardEPlineSpacing
                                                             if (!$global:IsTruncated) {
                                                                 Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                                 # Add Stroke
                                                                 if ($AddTitleCardTextStroke -eq 'true') {
-                                                                    $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPfontcolor`" -stroke `"$TitleCardstrokecolor`" -strokewidth `"$TitleCardstrokewidth`" -size `"$TitleCardEPboxsize`" -background none caption:`"$global:SeasonEPNumber`" -trim -gravity south -extent `"$TitleCardEPboxsize`" `) -gravity south -geometry +0`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                                    $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPfontcolor`" -stroke `"$TitleCardstrokecolor`" -strokewidth `"$TitleCardstrokewidth`" -size `"$TitleCardEPboxsize`" -background none -interline-spacing `"$TitleCardEPlineSpacing`" caption:`"$global:SeasonEPNumber`" -trim -gravity south -extent `"$TitleCardEPboxsize`" `) -gravity south -geometry +0`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
                                                                 }
                                                                 Else {
-                                                                    $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPfontcolor`" -size `"$TitleCardEPboxsize`" -background none caption:`"$global:SeasonEPNumber`" -trim -gravity south -extent `"$TitleCardEPboxsize`" `) -gravity south -geometry +0`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
+                                                                    $Arguments = "`"$EpisodeImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPfontcolor`" -size `"$TitleCardEPboxsize`" -background none -interline-spacing `"$TitleCardEPlineSpacing`" caption:`"$global:SeasonEPNumber`" -trim -gravity south -extent `"$TitleCardEPboxsize`" `) -gravity south -geometry +0`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$EpisodeImage`""
                                                                 }
 
                                                                 Write-Entry -Subtext "Applying SeasonEPNumber text: `"$global:SeasonEPNumber`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -18506,7 +18860,7 @@ else {
                                             Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                                             try {
                                                 GetPlexArtwork -Type " $Titletext | $global:FileNaming Artwork." -ArtUrl $Arturl -TempImage $EpisodeImage
-                                                if ($global:PlexartworkDownloaded -eq 'true'){
+                                                if ($global:PlexartworkDownloaded -eq 'true') {
                                                     Write-Entry -Subtext "Uploading Existing Artwork for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                     $fileContent = [System.IO.File]::ReadAllBytes($EpisodeImageoriginal)
                                                     if ($PlexToken) {
