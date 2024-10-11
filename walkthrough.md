@@ -238,7 +238,7 @@
 In this example `posterizarr` is the container name
     
 ```sh
-docker exec -it posterizarr s6-setuidgid abc pwsh Posterizarr.ps1 -Testing
+docker exec -it posterizarr s6-setuidgid abc pwsh /config/Posterizarr.ps1 -Testing
 ```
         
 6. You can now fine tune all the `width, height, color` of `borders, text boxes and text` in config.json
@@ -247,7 +247,7 @@ docker exec -it posterizarr s6-setuidgid abc pwsh Posterizarr.ps1 -Testing
     - You can also trigger the poster creation on-demand, like this:
       
         ```sh
-        docker exec -it posterizarr s6-setuidgid abc pwsh Posterizarr.ps1
+        docker exec -it posterizarr s6-setuidgid abc pwsh /config/Posterizarr.ps1
         ```
 
 ## ARM Prerequisites
