@@ -602,24 +602,24 @@ Run the script with the `-SyncEmby` flag. In this mode, the script will sync eve
 
   **Automatic Mode:**
   ```sh
-  docker exec -it posterizarr pwsh /config/Posterizarr.ps1
+  docker exec -it posterizarr s6-setuidgid abc pwsh /config/Posterizarr.ps1
   ```
   **Testing Mode:**
   ```sh
-  docker exec -it posterizarr pwsh /config/Posterizarr.ps1 -Testing
+  docker exec -it posterizarr s6-setuidgid abc pwsh /config/Posterizarr.ps1 -Testing
   ```
   **Manual Mode:**
   ```sh
-  docker exec -it posterizarr pwsh /config/Posterizarr.ps1 -Manual
+  docker exec -it posterizarr s6-setuidgid abc pwsh /config/Posterizarr.ps1 -Manual
   ```
 > [!TIP]
 > If you did not used `pwsh` on docker exec you can do it this way.
 >
 > Inside your `Unraid` or `Bash` or `Sh` console:
 > ```sh
-> pwsh /config/Posterizarr.ps1
-> pwsh /config/Posterizarr.ps1 -Manual
-> pwsh /config/Posterizarr.ps1 -Testing
+> s6-setuidgid abc pwsh /config/Posterizarr.ps1
+> s6-setuidgid abc pwsh /config/Posterizarr.ps1 -Manual
+> s6-setuidgid abc pwsh /config/Posterizarr.ps1 -Testing
 > ```
 
 ### unRAID
