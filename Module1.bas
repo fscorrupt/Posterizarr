@@ -235,39 +235,52 @@ Sub CheckForUpdate(currentVersion As String)
     Dim url As String
     Dim onlineVersion As String
     Dim fileContent As String
-    
+    Dim lines() As String
+    Dim i As Integer
+
     ' Define the URL of the GitHub raw file
     url = "https://github.com/fscorrupt/Plex-Poster-Maker/raw/main/ReleaseModule.txt"
-    
+
     ' Create a new WinHttpRequest object
     Set http = CreateObject("WinHttp.WinHttpRequest.5.1")
-    
+
     ' Open a connection to the URL
     http.Open "GET", url, False
-    
+
     ' Send the request for the file content
     http.send
-    
+
     ' Check if the request was successful
     If http.Status = 200 Then
         ' Get the content of the file
         fileContent = http.responseText
-        
-        ' Extract the online version from the file content
-        ' (Assuming the file content contains only the version number)
-        onlineVersion = Trim(fileContent)
-        
+
+        ' Split the content by line breaks into an array
+        lines = Split(fileContent, vbCrLf)
+
+        ' Find the first non-empty, trimmed line
+        onlineVersion = ""
+        For i = LBound(lines) To UBound(lines)
+            If Trim(lines(i)) <> "" Then
+                onlineVersion = Trim(lines(i))
+                Exit For
+            End If
+        Next i
+
         ' Compare the current version with the online version
         If currentVersion <> onlineVersion Then
             ' Display a message box prompting the user to update
-            MsgBox "Module1.bas check" & vbCrLf & "Your version:(" & currentVersion & ")." & vbCrLf & "Version Available: (" & onlineVersion & ")." & vbCrLf & "Please update. Aborting now...", vbExclamation
+            MsgBox "Module1.bas check" & vbCrLf & _
+                   "Your version: (" & currentVersion & ")." & vbCrLf & _
+                   "Version Available: (" & onlineVersion & ")." & vbCrLf & _
+                   "Please update. Aborting now...", vbExclamation
             End
         End If
     Else
         ' Display a message box if the request fails
         MsgBox "Failed to check for updates. Please try again later.", vbExclamation
     End If
-    
+
     ' Clean up the HTTP object
     Set http = Nothing
 End Sub
