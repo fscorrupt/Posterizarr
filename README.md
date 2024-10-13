@@ -182,6 +182,9 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `AssetPath`: Path to store generated posters.
     - `BackupPath`: Path to store/download Plex posters when using the [backup switch](#backup-mode).
     - `PlexUpload`: If set to `true`, Posterizarr will directly upload the artwork to Plex (handy if you do not use Kometa).
+    - `ForceRunningDeletion`: If set to `true`, Posterizarr will automatically delete the Running File.
+      - **Warning:** This may result in multiple concurrent runs sharing the same temporary directory, potentially causing image artifacts or unexpected behavior during processing.
+    - `AutoUpdatePosterizarr`: If set to `true`, Posterizarr will update itself to latest version. (Only for non docker systems).
     - `show_skipped`: If set to `true`, verbose logging of already created assets will be displayed; otherwise, they will be silently skipped - On large libraries, this may appear as if the script is hanging.
     - `magickinstalllocation`: Path to ImageMagick installation location where `magick.exe` is located (Otherwise leave value as `"./magick"`)
       - The container handles this part on his own, you can leave it as it is in config.
@@ -602,24 +605,24 @@ Run the script with the `-SyncEmby` flag. In this mode, the script will sync eve
 
   **Automatic Mode:**
   ```sh
-  docker exec -it posterizarr pwsh /config/Posterizarr.ps1
+  docker exec -it posterizarr s6-setuidgid abc pwsh /config/Posterizarr.ps1
   ```
   **Testing Mode:**
   ```sh
-  docker exec -it posterizarr pwsh /config/Posterizarr.ps1 -Testing
+  docker exec -it posterizarr s6-setuidgid abc pwsh /config/Posterizarr.ps1 -Testing
   ```
   **Manual Mode:**
   ```sh
-  docker exec -it posterizarr pwsh /config/Posterizarr.ps1 -Manual
+  docker exec -it posterizarr s6-setuidgid abc pwsh /config/Posterizarr.ps1 -Manual
   ```
 > [!TIP]
 > If you did not used `pwsh` on docker exec you can do it this way.
 >
 > Inside your `Unraid` or `Bash` or `Sh` console:
 > ```sh
-> pwsh /config/Posterizarr.ps1
-> pwsh /config/Posterizarr.ps1 -Manual
-> pwsh /config/Posterizarr.ps1 -Testing
+> s6-setuidgid abc pwsh /config/Posterizarr.ps1
+> s6-setuidgid abc pwsh /config/Posterizarr.ps1 -Manual
+> s6-setuidgid abc pwsh /config/Posterizarr.ps1 -Testing
 > ```
 
 ### unRAID
