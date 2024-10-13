@@ -11,7 +11,7 @@ param (
     [switch]$SyncEmby
 )
 
-$CurrentScriptVersion = "1.8.19"
+$CurrentScriptVersion = "1.8.20"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -3130,6 +3130,10 @@ function CheckJson {
             }
             catch {
                 Write-Entry -Message "Failed to read the existing configuration file: $jsonFilePath. Please ensure it is valid JSON. Aborting..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                # Clear Running File
+                if (Test-Path $CurrentlyRunning) {
+                    Remove-Item -LiteralPath $CurrentlyRunning | out-null
+                }
                 Exit
             }
         }
@@ -3189,6 +3193,10 @@ function CheckJson {
                     # Inform user about the case issue
                     Write-Entry -Message "The Main Attribute '$partKey' in your configuration file has a different casing than the expected property." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                     Write-Entry -Subtext "Please correct the casing of the property in your configuration file to '$partKey'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                    # Clear Running File
+                    if (Test-Path $CurrentlyRunning) {
+                        Remove-Item -LiteralPath $CurrentlyRunning | out-null
+                    }
                     Exit  # Abort the script
                 }
             }
@@ -3209,6 +3217,10 @@ function CheckJson {
                             # Inform user about the case issue
                             Write-Entry -Message "The Sub-Attribute '$partKey.$propertyKey' in your configuration file has a different casing than the expected property." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                             Write-Entry -Subtext "Please correct the casing of the Sub-Attribute in your configuration file to '$partKey.$propertyKey'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                            # Clear Running File
+                            if (Test-Path $CurrentlyRunning) {
+                                Remove-Item -LiteralPath $CurrentlyRunning | out-null
+                            }
                             Exit  # Abort the script
                         }
                     }
@@ -3226,10 +3238,18 @@ function CheckJson {
     }
     catch [System.Net.WebException] {
         Write-Entry -Message "Failed to download the default configuration JSON file from the URL." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        # Clear Running File
+        if (Test-Path $CurrentlyRunning) {
+            Remove-Item -LiteralPath $CurrentlyRunning | out-null
+        }
         Exit
     }
     catch {
         Write-Entry -Message "An unexpected error occurred: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        # Clear Running File
+        if (Test-Path $CurrentlyRunning) {
+            Remove-Item -LiteralPath $CurrentlyRunning | out-null
+        }
         Exit
     }
 }
@@ -3260,6 +3280,10 @@ function CheckJsonPaths {
     }
 
     if ($errorCount -ge 1) {
+        # Clear Running File
+        if (Test-Path $CurrentlyRunning) {
+            Remove-Item -LiteralPath $CurrentlyRunning | out-null
+        }
         Exit
     }
 }
@@ -3330,6 +3354,10 @@ function CheckConfigFile {
         Invoke-WebRequest -Uri "https://github.com/fscorrupt/Posterizarr/raw/main/config.example.json" -OutFile "$ScriptRoot\config.json"
         Write-Entry -Subtext "Config File downloaded here: '$ScriptRoot\config.json'" -Path "$ScriptRoot\Logs\Scriptlog.log" -Color White -log Info
         Write-Entry -Subtext "Please configure the config file according to GitHub, Exit script now..." -Path "$ScriptRoot\Logs\Scriptlog.log" -Color Yellow -log Warning
+        # Clear Running File
+        if (Test-Path $CurrentlyRunning) {
+            Remove-Item -LiteralPath $CurrentlyRunning | out-null
+        }
         Exit
     }
 }
@@ -3563,6 +3591,10 @@ function CheckPlexAccess {
                 }
                 else {
                     Write-Entry -Subtext "No libs on Plex, abort script now..." -Path $configLogging -Color Red -log Error
+                    # Clear Running File
+                    if (Test-Path $CurrentlyRunning) {
+                        Remove-Item -LiteralPath $CurrentlyRunning | out-null
+                    }
                     Exit
                 }
             }
@@ -3571,12 +3603,20 @@ function CheckPlexAccess {
                 Write-Entry -Subtext "Please check token and access..." -Path $configLogging -Color Red -log Error
                 Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                 $errorCount++
+                # Clear Running File
+                if (Test-Path $CurrentlyRunning) {
+                    Remove-Item -LiteralPath $CurrentlyRunning | out-null
+                }
                 Exit
             }
         }
         catch {
             Write-Entry -Subtext "Could not access Plex with this URL: $(RedactPlexUrl -url "$PlexUrl/library/sections/?X-Plex-Token=$PlexToken")" -Path $configLogging -Color Red -Log Error
             Write-Entry -Subtext "Error occurred while accessing Plex server: $($_.Exception.Message)" -Path $configLogging -Color Red -log Error
+            # Clear Running File
+            if (Test-Path $CurrentlyRunning) {
+                Remove-Item -LiteralPath $CurrentlyRunning | out-null
+            }
             Exit
         }
     }
@@ -3603,6 +3643,10 @@ function CheckPlexAccess {
             Write-Entry -Subtext "Please check access and settings in Plex..." -Path $configLogging -Color Yellow -log Warning
             Write-Entry -Message "To be able to connect to Plex without authentication" -Path $configLogging -Color White -log Info
             Write-Entry -Message "You have to enter your IP range in 'Settings -> Network -> List of IP addresses and networks that are allowed without auth: '192.168.1.0/255.255.255.0''" -Path $configLogging -Color White -log Info
+            # Clear Running File
+            if (Test-Path $CurrentlyRunning) {
+                Remove-Item -LiteralPath $CurrentlyRunning | out-null
+            }
             Exit
         }
     }
@@ -3813,12 +3857,20 @@ function CheckJellyfinAccess {
                 Write-Entry -Subtext "Please check token and url..." -Path $configLogging -Color Red -log Error
                 Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                 $errorCount++
+                # Clear Running File
+                if (Test-Path $CurrentlyRunning) {
+                    Remove-Item -LiteralPath $CurrentlyRunning | out-null
+                }
                 Exit
             }
         }
         catch {
             Write-Entry -Subtext "Could not access Jellyfin" -Path $configLogging -Color Red -Log Error
             Write-Entry -Subtext "Error occurred while accessing Jellyfin server: $($_.Exception.Message)" -Path $configLogging -Color Red -log Error
+            # Clear Running File
+            if (Test-Path $CurrentlyRunning) {
+                Remove-Item -LiteralPath $CurrentlyRunning | out-null
+            }
             Exit
         }
     }
@@ -3841,12 +3893,20 @@ function CheckEmbyAccess {
                 Write-Entry -Subtext "Please check token and url..." -Path $configLogging -Color Red -log Error
                 Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                 $errorCount++
+                # Clear Running File
+                if (Test-Path $CurrentlyRunning) {
+                    Remove-Item -LiteralPath $CurrentlyRunning | out-null
+                }
                 Exit
             }
         }
         catch {
             Write-Entry -Subtext "Could not access Emby" -Path $configLogging -Color Red -Log Error
             Write-Entry -Subtext "Error occurred while accessing Emby server: $($_.Exception.Message)" -Path $configLogging -Color Red -log Error
+            # Clear Running File
+            if (Test-Path $CurrentlyRunning) {
+                Remove-Item -LiteralPath $CurrentlyRunning | out-null
+            }
             Exit
         }
     }
@@ -3895,7 +3955,11 @@ function UploadOtherMediaServerArtwork {
             ".bmp" { $contentType = "image/bmp" }
             ".tiff" { $contentType = "image/tiff" }
             default {
-                Write-Host "Unsupported image format."
+                Write-Entry -Subtext "Unsupported image format." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                # Clear Running File
+                if (Test-Path $CurrentlyRunning) {
+                    Remove-Item -LiteralPath $CurrentlyRunning | out-null
+                }
                 exit
             }
         }
@@ -3982,6 +4046,9 @@ function MassDownloadPlexArtwork {
     }
     if ($($Libsoverview.count) -lt 1) {
         Write-Entry -Subtext "0 libraries were found. Are you on the correct Plex server?" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        if (Test-Path $CurrentlyRunning) {
+            Remove-Item -LiteralPath $CurrentlyRunning | out-null
+        }
         Exit
     }
     Write-Entry -Subtext "Found '$($Libsoverview.count)' libs and '$($LibstoExclude.count)' are excluded..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
@@ -4366,6 +4433,9 @@ function MassDownloadPlexArtwork {
     }
     catch {
         Write-Entry -Subtext "Error during Hashtable creation, please check Asset dir is available..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        if (Test-Path $CurrentlyRunning) {
+            Remove-Item -LiteralPath $CurrentlyRunning | out-null
+        }
         Exit
     }
     if ($global:logLevel -eq '3') {
@@ -5680,6 +5750,25 @@ Else {
 }
 # load config file
 $config = Get-Content -Raw -Path $(Join-Path $global:ScriptRoot 'config.json') | ConvertFrom-Json
+
+# Replace Script with Latest
+if ($Platform -ne 'Docker' -and $config.PrerequisitePart.AutoUpdatePosterizarr.tolower() -eq 'true' -and $CurrentScriptVersion -ne $LatestScriptVersion){
+    Write-Entry -Subtext "Posterizarr version upgrade started..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+    $CurrentScriptPath = $MyInvocation.MyCommand.Path
+
+    # Backup the current script
+    Write-Entry -Subtext "Backup current Script to: $CurrentScriptPath.bak" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+    Copy-Item -Path $CurrentScriptPath -Destination "$CurrentScriptPath.bak" -Force
+    try {
+        Invoke-WebRequest -Uri "https://github.com/fscorrupt/Posterizarr/raw/main/Posterizarr.ps1" -OutFile $CurrentScriptPath -ErrorAction Stop
+        Write-Entry -Subtext "Posterizarr script updated to v$LatestScriptVersion, please restart script..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+    }
+    catch {
+        Write-Entry -Subtext "Failed to download the latest script, Error: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+    }
+    Exit
+}
+
 # Now is the earliest that you can set your logLevel other than 2
 # Read logLevel value from config.json
 $global:logLevel = [int]$config.PrerequisitePart.logLevel
@@ -5730,6 +5819,10 @@ if ($env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker*') {
         $global:NotifyUrl = $config.Notification.Discord
         if ($global:NotifyUrl -eq 'https://discordapp.com/api/webhooks/{WebhookID}/{WebhookToken}' -and $global:SendNotification -eq 'true') {
             Write-Entry -Message "Found default Notification Url, please update url in config..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            # Clear Running File
+            if (Test-Path $CurrentlyRunning) {
+                Remove-Item -LiteralPath $CurrentlyRunning | out-null
+            }
             Exit
         }
     }
@@ -5741,6 +5834,10 @@ Else {
     $global:NotifyUrl = $config.Notification.Discord
     if ($global:NotifyUrl -eq 'https://discordapp.com/api/webhooks/{WebhookID}/{WebhookToken}' -and $global:SendNotification -eq 'true') {
         Write-Entry -Message "Found default Notification Url, please update url in config..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        # Clear Running File
+        if (Test-Path $CurrentlyRunning) {
+            Remove-Item -LiteralPath $CurrentlyRunning | out-null
+        }
         Exit
     }
 }
@@ -5881,12 +5978,17 @@ if ($UsePlex -eq 'true') { $enabledServers++ }
 if ($enabledServers -gt 1) {
     Write-Entry -Message "You have enabled more than one media server - Please use only one." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
     Write-Entry -Subtext "Exiting Posterizarr now..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+    # Clear Running File
+    if (Test-Path $CurrentlyRunning) {
+        Remove-Item -LiteralPath $CurrentlyRunning | out-null
+    }
     Exit 0
 }
 
 # Prerequisites Part
 $AutoUpdateIM = $config.PrerequisitePart.AutoUpdateIM.tolower()
 $show_skipped = $config.PrerequisitePart.show_skipped.tolower()
+$ForceRunningDeletion = $config.PrerequisitePart.ForceRunningDeletion.tolower()
 $AssetPath = RemoveTrailingSlash $config.PrerequisitePart.AssetPath
 $BackupPath = RemoveTrailingSlash $config.PrerequisitePart.BackupPath
 $Upload2Plex = $config.PrerequisitePart.PlexUpload.tolower()
@@ -6105,6 +6207,10 @@ if ($global:OSarch -eq "Arm64") {
     }
     catch {
         Write-Entry -Message "Could not query installed Imagemagick" -Path $configLogging -Color Red -log Error
+        # Clear Running File
+        if (Test-Path $CurrentlyRunning) {
+            Remove-Item -LiteralPath $CurrentlyRunning | out-null
+        }
         Exit
     }
     $CurrentImagemagickversion = [regex]::Match($CurrentImagemagickversion, 'Version: ImageMagick (\d+(\.\d+){1,2}-\d+)')
@@ -6187,6 +6293,10 @@ foreach ($path in $LogsPath, $TempPath, $TestPath, $AssetPath) {
     if (!(Test-Path $path)) {
         if ($global:OSType -ne "Win32NT" -and $path -eq 'P:\assets') {
             Write-Entry -Message 'Please change default asset Path...' -Path $configLogging -Color Red -log Error
+            # Clear Running File
+            if (Test-Path $CurrentlyRunning) {
+                Remove-Item -LiteralPath $CurrentlyRunning | out-null
+            }
             Exit
         }
         New-Item -ItemType Directory -Path $path -Force | Out-Null
@@ -6198,6 +6308,12 @@ if (!(Test-Path $global:ScriptRoot\Cache)) {
 }
 # Check temp dir if there is a Currently running file present
 $CurrentlyRunning = Join-Path $TempPath 'Posterizarr.Running'
+
+if ($ForceRunningDeletion -eq 'true'){
+    if (Test-Path $CurrentlyRunning) {
+        Remove-Item -LiteralPath $CurrentlyRunning | out-null
+    }
+}
 
 if (Test-Path $CurrentlyRunning) {
     Write-Entry -Message "Another Posterizarr instance already running, exiting now..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
@@ -6215,6 +6331,15 @@ Else {
     }
     Elseif ($Manual) {
         Write-Entry -Message "Manual running file created..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+    }
+    Elseif ($SyncJelly) {
+        Write-Entry -Message "SyncJelly running file created..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+    }
+    Elseif ($SyncEmby) {
+        Write-Entry -Message "SyncEmby running file created..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+    }
+    Elseif ($Backup) {
+        Write-Entry -Message "Backup running file created..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
     }
     Else {
         Write-Entry -Message "Posterizarr running file created..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -6338,6 +6463,10 @@ Add-FanartTvAPIKey -Api_Key $FanartTvAPIKey
 # Check TMDB Token before building the Header.
 if ($global:tmdbtoken.Length -le '35') {
     Write-Entry -Message "TMDB Token is too short, you may have used the API key in your config file. Please use the 'API Read Access Token'." -Path $configLogging -Color Red -log Error
+    # Clear Running File
+    if (Test-Path $CurrentlyRunning) {
+        Remove-Item -LiteralPath $CurrentlyRunning | out-null
+    }
     Exit
 }
 
@@ -6383,6 +6512,10 @@ while (-not $success -and $retryCount -lt $maxRetries) {
                 Write-Entry -Subtext "Could not receive a TVDB Token - $($retryCount)/$($maxRetries) - you may have used an legacy API key in your config file. Please use an 'Project Api Key'" -Path $configLogging -Color Red -log Error
                 Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                 $errorCount++
+                # Clear Running File
+                if (Test-Path $CurrentlyRunning) {
+                    Remove-Item -LiteralPath $CurrentlyRunning | out-null
+                }
                 Exit
             }
             Else {
@@ -7968,6 +8101,10 @@ Elseif ($Tautulli) {
     }
     catch {
         Write-Entry -Subtext "Error during Hashtable creation, please check Asset dir is available..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        # Clear Running File
+        if (Test-Path $CurrentlyRunning) {
+            Remove-Item -LiteralPath $CurrentlyRunning | out-null
+        }
         Exit
     }
     if ($global:logLevel -eq '3') {
@@ -11208,6 +11345,10 @@ Elseif ($SyncJelly -or $SyncEmby) {
             if ($lib.title -notmatch "^[^\/:*?`"<>\|\\}]+$") {
                 Write-Entry -Message  "Lib: '$($lib.title)' contains invalid characters." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                 Write-Entry -Subtext "Please rename your lib and remove all chars that are listed here: '/, :, *, ?, `", <, >, |, \, or }'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                # Clear Running File
+                if (Test-Path $CurrentlyRunning) {
+                    Remove-Item -LiteralPath $CurrentlyRunning | out-null
+                }
                 Exit
             }
             $Libsoverview += $libtemp
@@ -11215,6 +11356,10 @@ Elseif ($SyncJelly -or $SyncEmby) {
     }
     if ($($Libsoverview.count) -lt 1) {
         Write-Entry -Subtext "0 libraries were found. Are you on the correct Plex server?" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        # Clear Running File
+        if (Test-Path $CurrentlyRunning) {
+            Remove-Item -LiteralPath $CurrentlyRunning | out-null
+        }
         Exit
     }
     Write-Entry -Subtext "Found '$($Libsoverview.count)' libs and '$($LibstoExclude.count)' are excluded..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
@@ -12375,6 +12520,10 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
     }
     catch {
         Write-Entry -Subtext "Error during Hashtable creation, please check Asset dir is available..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        # Clear Running File
+        if (Test-Path $CurrentlyRunning) {
+            Remove-Item -LiteralPath $CurrentlyRunning | out-null
+        }
         Exit
     }
     if ($global:logLevel -eq '3') {
@@ -15436,6 +15585,10 @@ else {
             if ($lib.title -notmatch "^[^\/:*?`"<>\|\\}]+$") {
                 Write-Entry -Message  "Lib: '$($lib.title)' contains invalid characters." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                 Write-Entry -Subtext "Please rename your lib and remove all chars that are listed here: '/, :, *, ?, `", <, >, |, \, or }'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                # Clear Running File
+                if (Test-Path $CurrentlyRunning) {
+                    Remove-Item -LiteralPath $CurrentlyRunning | out-null
+                }
                 Exit
             }
             $Libsoverview += $libtemp
@@ -15443,6 +15596,10 @@ else {
     }
     if ($($Libsoverview.count) -lt 1) {
         Write-Entry -Subtext "0 libraries were found. Are you on the correct Plex server?" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        # Clear Running File
+        if (Test-Path $CurrentlyRunning) {
+            Remove-Item -LiteralPath $CurrentlyRunning | out-null
+        }
         Exit
     }
     Write-Entry -Subtext "Found '$($Libsoverview.count)' libs and '$($LibstoExclude.count)' are excluded..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
@@ -15827,6 +15984,10 @@ else {
     }
     catch {
         Write-Entry -Subtext "Error during Hashtable creation, please check Asset dir is available..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        # Clear Running File
+        if (Test-Path $CurrentlyRunning) {
+            Remove-Item -LiteralPath $CurrentlyRunning | out-null
+        }
         Exit
     }
     if ($global:logLevel -eq '3') {

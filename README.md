@@ -182,6 +182,9 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `AssetPath`: Path to store generated posters.
     - `BackupPath`: Path to store/download Plex posters when using the [backup switch](#backup-mode).
     - `PlexUpload`: If set to `true`, Posterizarr will directly upload the artwork to Plex (handy if you do not use Kometa).
+    - `ForceRunningDeletion`: If set to `true`, Posterizarr will automatically delete the Running File.
+      - **Warning:** This may result in multiple concurrent runs sharing the same temporary directory, potentially causing image artifacts or unexpected behavior during processing.
+    - `AutoUpdatePosterizarr`: If set to `true`, Posterizarr will update itself to latest version. (Only for non docker systems).
     - `show_skipped`: If set to `true`, verbose logging of already created assets will be displayed; otherwise, they will be silently skipped - On large libraries, this may appear as if the script is hanging.
     - `magickinstalllocation`: Path to ImageMagick installation location where `magick.exe` is located (Otherwise leave value as `"./magick"`)
       - The container handles this part on his own, you can leave it as it is in config.
