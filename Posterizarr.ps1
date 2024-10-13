@@ -11,7 +11,7 @@ param (
     [switch]$SyncEmby
 )
 
-$CurrentScriptVersion = "1.8.20"
+$CurrentScriptVersion = "1.8.21"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -5728,7 +5728,7 @@ Set-OSTypeAndScriptRoot
 # Get platform
 $Platform = Get-Platform
 # Get Latest Script Version
-$LatestScriptVersion = Get-LatestScriptVersion
+$LatestScriptVersion = (Get-LatestScriptVersion -split "`r?`n" | Select-Object -First 1).Trim()
 ##### START #####
 $startTime = Get-Date
 # Rotate logs before doing anything!
