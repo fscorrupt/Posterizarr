@@ -6,7 +6,7 @@ Sub PromptUser()
     Dim currentVersion As String
     
     ' Specify the current version number
-    currentVersion = "1.0.5"
+    currentVersion = "1.0.6"
     
     ' Check for updates
     CheckForUpdate currentVersion
@@ -175,7 +175,7 @@ Sub ImportCSVs(folderPath)
     Set wsPlexEpisodeExport = ThisWorkbook.Worksheets.Add
     wsPlexEpisodeExport.Name = "PlexEpisodeExport"
     ThisWorkbook.Queries.Add Name:="PlexEpisodeExport", Formula:= _
-        "let" & Chr(13) & "" & Chr(10) & "    Source = Csv.Document(File.Contents(""" & Filename3 & """),[Delimiter="";"", Columns=9, Encoding=65001, QuoteStyle=QuoteStyle.None])," & Chr(13) & "" & Chr(10) & "    #""Promoted Headers"" = Table.PromoteHeaders(Source, [PromoteAllScalars=true])," & Chr(13) & "" & Chr(10) & "    #""Changed Type"" = Table.TransformColumnTypes(#""Promoted Headers"",{{""Show Name"", type text}, {""" & _
+        "let" & Chr(13) & "" & Chr(10) & "    Source = Csv.Document(File.Contents(""" & Filename3 & """),[Delimiter="";"", Columns=10, Encoding=65001, QuoteStyle=QuoteStyle.None])," & Chr(13) & "" & Chr(10) & "    #""Promoted Headers"" = Table.PromoteHeaders(Source, [PromoteAllScalars=true])," & Chr(13) & "" & Chr(10) & "    #""Changed Type"" = Table.TransformColumnTypes(#""Promoted Headers"",{{""Show Name"", type text}, {""" & _
         "Type"", type text}, {""tvdbid"", type text}, {""tmdbid"", type text}, {""Library Name"", type text}, {""Season Number"", type text}, {""Episodes"", type text}, {""Title"", type text}, {""PlexTitleCardUrls"", type text}})" & Chr(13) & "" & Chr(10) & "in" & Chr(13) & "" & Chr(10) & "    #""Changed Type"""
 
     With wsPlexEpisodeExport.ListObjects.Add(SourceType:=0, Source:= _
