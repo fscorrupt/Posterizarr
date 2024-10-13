@@ -2,22 +2,6 @@
 
 ## [1.8.20](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.20) - 2024-10-13 09:16:05
 
-## 🚇 Added
-
-- add ability to autoupdate posterizarr on non docker systems.
-- add ability to auto delete running file.
-	- **Warning:** This may result in multiple concurrent runs sharing the same temporary directory, potentially causing image artifacts or unexpected behavior during processing.
-
-## 🐛 Fixes
-- Running file deletion fixes on script exit´s.
-
-**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.8.19...1.8.20
-
-### Feature
-
-- general:
-  - Add Autoupdate & Running file Deletion logic ([679ba03](https://github.com/fscorrupt/Posterizarr/commit/679ba033958054fa16e1d9a17e2c97cd57eca135))
-
 ## [1.8.19](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.19) - 2024-10-08 06:00:26
 
 ## [1.8.18](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.18) - 2024-10-03 10:01:32
