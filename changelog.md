@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## [1.8.21](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.21) - 2024-10-13 16:54:55
+
+## 🐛 Fixes
+- Latest Script Version check could fail when new line is in release.txt
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.8.20...1.8.21
+
+### Bug Fixes
+
+- general:
+  - Latest script version check ([72e2864](https://github.com/fscorrupt/Posterizarr/commit/72e2864950bb43b17d66947c618bd276c28fb55d))
+
 ## [1.8.20](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.20) - 2024-10-13 09:16:05
 
 ## [1.8.19](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.19) - 2024-10-08 06:00:26
