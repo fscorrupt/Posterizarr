@@ -574,7 +574,7 @@ Run the script with the `-Backup` flag. In this mode, the script will download e
 
 ### Sync Modes
 > [!IMPORTANT]
-> The script calculates the hash of the artwork from both servers to determine if they differ, and only if they do it gets synced.
+> The script requires that library names in Plex and Emby/Jellyfin match exactly for the sync to work. It calculates the hash of the artwork from both servers to determine if there are differences, and only syncs the artwork if the hashes do not match.
 #### Jellyfin
 Run the script with the `-SyncJelly` flag. In this mode, the script will sync every artwork you have in plex to jellyfin.
 
