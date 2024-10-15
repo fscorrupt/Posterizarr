@@ -804,24 +804,24 @@ In order to view the `16:9` episode posters without getting cropped to `3:2`, yo
   - TMDB
   - FANART
   - TVDB
-  - PLEX
-  - IMDB (Movies only)
+  - PLEX (Not for Textless only `xx`)
+  - IMDB (Movies only/Not for Textless only `xx`)
 
   If `TVDB` is your fav Provider
 
   - TVDB
   - TMDB
   - FANART
-  - PLEX
-  - IMDB (Movies only)
+  - PLEX (Not for Textless only `xx`)
+  - IMDB (Movies only/Not for Textless only `xx`)
 
   If `FANART` is your fav Provider
 
   - FANART
   - TMDB
   - TVDB
-  - PLEX
-  - IMDB (Movies only)
+  - PLEX (Not for Textless only `xx`)
+  - IMDB (Movies only/Not for Textless only `xx`)
 </p>
 </details>
 
@@ -835,21 +835,21 @@ In order to view the `16:9` episode posters without getting cropped to `3:2`, yo
   - TMDB
   - FANART
   - TVDB
-  - PLEX
+  - PLEX (Not for Textless only `xx`)
 
   If `FANART` is your fav Provider
 
   - FANART
   - TMDB
   - TVDB
-  - PLEX
+  - PLEX (Not for Textless only `xx`)
 
   If `TVDB` is your fav Provider
 
   - TVDB
   - TMDB
   - FANART
-  - PLEX
+  - PLEX (Not for Textless only `xx`)
 </p>
 </details>
 
@@ -863,21 +863,21 @@ In order to view the `16:9` episode posters without getting cropped to `3:2`, yo
   - TMDB
   - FANART
   - TVDB
-  - PLEX
+  - PLEX (Not for Textless only `xx`)
 
   If `FANART` is your fav Provider
 
   - FANART
   - TMDB
   - TVDB
-  - PLEX
+  - PLEX (Not for Textless only `xx`)
 
   If `TVDB` is your fav Provider
 
   - TVDB
   - TMDB
   - FANART
-  - PLEX
+  - PLEX (Not for Textless only `xx`)
 </p>
 </details>
 
@@ -891,14 +891,14 @@ In order to view the `16:9` episode posters without getting cropped to `3:2`, yo
   - TMDB
   - TVDB
   - FANART
-  - PLEX
+  - PLEX (Not for Textless only `xx`)
 
   Else
 
   - TVDB
   - TMDB
   - FANART
-  - PLEX
+  - PLEX (Not for Textless only `xx`)
 </p>
 </details>
 <details close>
@@ -910,13 +910,13 @@ In order to view the `16:9` episode posters without getting cropped to `3:2`, yo
 
   - TMDB
   - TVDB
-  - PLEX
+  - PLEX (Not for Textless only `xx`)
 
   Else
 
   - TVDB
   - TMDB
-  - PLEX
+  - PLEX (Not for Textless only `xx`)
 </p>
 </details>
 
