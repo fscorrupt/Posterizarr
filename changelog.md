@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## [1.8.22](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.22) - 2024-10-16 15:12:45
+
+## 🐛 Fixes
+- Truncated Text inside Textbox
+	- add `+gravity` before `caption:`
+	- add `+repage` after `-trim`
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.8.21...1.8.22
+
+### Bug Fixes
+
+- general:
+  - Truncated Text inside Textbox ([cb2abae](https://github.com/fscorrupt/Posterizarr/commit/cb2abae514c178253ad70811fbb08af63e099fab))
+
 ## [1.8.21](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.21) - 2024-10-13 16:54:55
 
 ## [1.8.20](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.20) - 2024-10-13 09:16:05
