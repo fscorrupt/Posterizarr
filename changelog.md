@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## [1.8.25](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.25) - 2024-10-21 13:43:26
+
+## 🐛 Fixes
+- character `”` and replace with normal quotes.
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.8.24...1.8.25
+
+### Bug Fixes
+
+- general:
+  - character ” ([4225b11](https://github.com/fscorrupt/Posterizarr/commit/4225b11e518a53ff17d1302425a6d6d5f1621fee))
+
 ## [1.8.24](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.24) - 2024-10-16 15:31:29
 
 ## [1.8.22](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.22) - 2024-10-16 15:12:45
