@@ -11,7 +11,7 @@ param (
     [switch]$SyncEmby
 )
 
-$CurrentScriptVersion = "1.8.24"
+$CurrentScriptVersion = "1.8.25"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -6645,7 +6645,7 @@ if ($Manual) {
             InvokeMagickCommand -Command $magick -Arguments $Arguments
 
             if ($AddText -eq 'true') {
-                $joinedTitle = $joinedTitle -replace '"', '""'
+                $joinedTitle = $joinedTitle -replace '”', '"' -replace '“', '"' -replace '"', '""'
 
                 # Loop through each symbol and replace it with a newline
                 if ($NewLineOnSpecificSymbols -eq 'true') {
@@ -6876,10 +6876,10 @@ Elseif ($Testing) {
     }
     # Optimal TitleCard EP Font Size
     if ($AddTitleCardEPText -eq 'true') {
-        $Episodetext = $Episodetext -replace '"', '""'
+        $Episodetext = $Episodetext -replace '”', '"' -replace '“', '"' -replace '"', '""'
         $TitleCardoptimalFontSizeEpisodetext = Get-OptimalPointSize -text $Episodetext -font $titlecardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize -lineSpacing $TitleCardEPlineSpacing
         if ($global:IsTruncated) { $TruncatedCount++ }
-        $EpisodetextCAPS = $EpisodetextCAPS -replace '"', '""'
+        $EpisodetextCAPS = $EpisodetextCAPS -replace '”', '"' -replace '“', '"' -replace '"', '""'
         $TitleCardoptimalFontSizeEpisodetextCAPS = Get-OptimalPointSize -text $EpisodetextCAPS -font $titlecardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize -lineSpacing $TitleCardEPlineSpacing
         if ($global:IsTruncated) { $TruncatedCount++ }
     }
@@ -8360,7 +8360,7 @@ Elseif ($Tautulli) {
                                         if ($global:direction -eq "RTL") {
                                             $fontImagemagick = $RTLfontImagemagick
                                         }
-                                        $joinedTitle = $joinedTitle -replace '"', '""'
+                                        $joinedTitle = $joinedTitle -replace '”', '"' -replace '“', '"' -replace '"', '""'
 
                                         # Loop through each symbol and replace it with a newline
                                         if ($NewLineOnSpecificSymbols -eq 'true') {
@@ -8688,7 +8688,7 @@ Elseif ($Tautulli) {
                                         if ($global:direction -eq "RTL") {
                                             $backgroundfontImagemagick = $RTLfontImagemagick
                                         }
-                                        $joinedTitle = $joinedTitle -replace '"', '""'
+                                        $joinedTitle = $joinedTitle -replace '”', '"' -replace '“', '"' -replace '"', '""'
 
                                         # Loop through each symbol and replace it with a newline
                                         if ($NewLineOnSpecificSymbols -eq 'true') {
@@ -9092,7 +9092,7 @@ Elseif ($Tautulli) {
                                     if ($global:direction -eq "RTL") {
                                         $fontImagemagick = $RTLfontImagemagick
                                     }
-                                    $joinedTitle = $joinedTitle -replace '"', '""'
+                                    $joinedTitle = $joinedTitle -replace '”', '"' -replace '“', '"' -replace '"', '""'
 
                                     # Loop through each symbol and replace it with a newline
                                     if ($NewLineOnSpecificSymbols -eq 'true') {
@@ -9430,7 +9430,7 @@ Elseif ($Tautulli) {
                                     if ($global:direction -eq "RTL") {
                                         $backgroundfontImagemagick = $RTLfontImagemagick
                                     }
-                                    $joinedTitle = $joinedTitle -replace '"', '""'
+                                    $joinedTitle = $joinedTitle -replace '”', '"' -replace '“', '"' -replace '"', '""'
 
                                     # Loop through each symbol and replace it with a newline
                                     if ($NewLineOnSpecificSymbols -eq 'true') {
@@ -9806,12 +9806,12 @@ Elseif ($Tautulli) {
                                         InvokeMagickCommand -Command $magick -Arguments $Arguments
 
                                         if ($AddSeasonText -eq 'true') {
-                                            $global:seasonTitle = $global:seasonTitle -replace '"', '""'
+                                            $global:seasonTitle = $global:seasonTitle -replace '”', '"' -replace '“', '"' -replace '"', '""'
                                             if ($ShowOnSeasonfontAllCaps -eq 'true') {
-                                                $global:ShowTitleOnSeason = $titletext.ToUpper() -replace '"', '""'
+                                                $global:ShowTitleOnSeason = $titletext.ToUpper() -replace '”', '"' -replace '“', '"' -replace '"', '""'
                                             }
                                             Else {
-                                                $global:ShowTitleOnSeason = $titletext -replace '"', '""'
+                                                $global:ShowTitleOnSeason = $titletext -replace '”', '"' -replace '“', '"' -replace '"', '""'
                                             }
                                             # Loop through each symbol and replace it with a newline
                                             if ($NewLineOnSpecificSymbols -eq 'true') {
@@ -10074,12 +10074,12 @@ Elseif ($Tautulli) {
                                         InvokeMagickCommand -Command $magick -Arguments $Arguments
 
                                         if ($AddSeasonText -eq 'true') {
-                                            $global:seasonTitle = $global:seasonTitle -replace '"', '""'
+                                            $global:seasonTitle = $global:seasonTitle -replace '”', '"' -replace '“', '"' -replace '"', '""'
                                             if ($ShowOnSeasonfontAllCaps -eq 'true') {
-                                                $global:ShowTitleOnSeason = $titletext.ToUpper() -replace '"', '""'
+                                                $global:ShowTitleOnSeason = $titletext.ToUpper() -replace '”', '"' -replace '“', '"' -replace '"', '""'
                                             }
                                             Else {
-                                                $global:ShowTitleOnSeason = $titletext -replace '"', '""'
+                                                $global:ShowTitleOnSeason = $titletext -replace '”', '"' -replace '“', '"' -replace '"', '""'
                                             }
                                             # Loop through each symbol and replace it with a newline
                                             if ($NewLineOnSpecificSymbols -eq 'true') {
@@ -10575,7 +10575,7 @@ Elseif ($Tautulli) {
                                                                 if ($TitleCardEPTitlefontAllCaps -eq 'true') {
                                                                     $global:EPTitle = $global:EPTitle.ToUpper()
                                                                 }
-                                                                $global:EPTitle = $global:EPTitle -replace '"', '""'
+                                                                $global:EPTitle = $global:EPTitle -replace '”', '"' -replace '“', '"' -replace '"', '""'
 
                                                                 if ($global:direction -eq "RTL") {
                                                                     $TitleCardfontImagemagick = $RTLfontImagemagick
@@ -10608,7 +10608,7 @@ Elseif ($Tautulli) {
                                                                 if ($TitleCardEPfontAllCaps -eq 'true') {
                                                                     $global:SeasonEPNumber = $global:SeasonEPNumber.ToUpper()
                                                                 }
-                                                                $global:SeasonEPNumber = $global:SeasonEPNumber -replace '"', '""'
+                                                                $global:SeasonEPNumber = $global:SeasonEPNumber -replace '”', '"' -replace '“', '"' -replace '"', '""'
                                                                 $joinedTitlePointSize = $global:SeasonEPNumber -replace '""', '""""'
                                                                 $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize -lineSpacing $TitleCardEPlineSpacing
                                                                 if (!$global:IsTruncated) {
@@ -11035,7 +11035,7 @@ Elseif ($Tautulli) {
                                                             if ($TitleCardEPTitlefontAllCaps -eq 'true') {
                                                                 $global:EPTitle = $global:EPTitle.ToUpper()
                                                             }
-                                                            $global:EPTitle = $global:EPTitle -replace '"', '""'
+                                                            $global:EPTitle = $global:EPTitle -replace '”', '"' -replace '“', '"' -replace '"', '""'
 
                                                             if ($global:direction -eq "RTL") {
                                                                 $TitleCardfontImagemagick = $RTLfontImagemagick
@@ -11067,7 +11067,7 @@ Elseif ($Tautulli) {
                                                             if ($TitleCardEPfontAllCaps -eq 'true') {
                                                                 $global:SeasonEPNumber = $global:SeasonEPNumber.ToUpper()
                                                             }
-                                                            $global:SeasonEPNumber = $global:SeasonEPNumber -replace '"', '""'
+                                                            $global:SeasonEPNumber = $global:SeasonEPNumber -replace '”', '"' -replace '“', '"' -replace '"', '""'
                                                             $joinedTitlePointSize = $global:SeasonEPNumber -replace '""', '""""'
                                                             $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize -lineSpacing $TitleCardEPlineSpacing
                                                             if (!$global:IsTruncated) {
@@ -12758,7 +12758,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                         if ($global:direction -eq "RTL") {
                                             $fontImagemagick = $RTLfontImagemagick
                                         }
-                                        $joinedTitle = $joinedTitle -replace '"', '""'
+                                        $joinedTitle = $joinedTitle -replace '”', '"' -replace '“', '"' -replace '"', '""'
                                         # Loop through each symbol and replace it with a newline
                                         if ($NewLineOnSpecificSymbols -eq 'true') {
                                             foreach ($symbol in $NewLineSymbols) {
@@ -13051,7 +13051,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                         if ($global:direction -eq "RTL") {
                                             $fontImagemagick = $RTLfontImagemagick
                                         }
-                                        $joinedTitle = $joinedTitle -replace '"', '""'
+                                        $joinedTitle = $joinedTitle -replace '”', '"' -replace '“', '"' -replace '"', '""'
                                         # Loop through each symbol and replace it with a newline
                                         if ($NewLineOnSpecificSymbols -eq 'true') {
                                             foreach ($symbol in $NewLineSymbols) {
@@ -13408,7 +13408,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                     if ($global:direction -eq "RTL") {
                                         $fontImagemagick = $RTLfontImagemagick
                                     }
-                                    $joinedTitle = $joinedTitle -replace '"', '""'
+                                    $joinedTitle = $joinedTitle -replace '”', '"' -replace '“', '"' -replace '"', '""'
                                     # Loop through each symbol and replace it with a newline
                                     if ($NewLineOnSpecificSymbols -eq 'true') {
                                         foreach ($symbol in $NewLineSymbols) {
@@ -13709,7 +13709,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                     if ($global:direction -eq "RTL") {
                                         $fontImagemagick = $RTLfontImagemagick
                                     }
-                                    $joinedTitle = $joinedTitle -replace '"', '""'
+                                    $joinedTitle = $joinedTitle -replace '”', '"' -replace '“', '"' -replace '"', '""'
                                     # Loop through each symbol and replace it with a newline
                                     if ($NewLineOnSpecificSymbols -eq 'true') {
                                         foreach ($symbol in $NewLineSymbols) {
@@ -14050,12 +14050,12 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                             InvokeMagickCommand -Command $magick -Arguments $Arguments
 
                                             if ($AddSeasonText -eq 'true') {
-                                                $global:seasonTitle = $global:seasonTitle -replace '"', '""'
+                                                $global:seasonTitle = $global:seasonTitle -replace '”', '"' -replace '“', '"' -replace '"', '""'
                                                 if ($ShowOnSeasonfontAllCaps -eq 'true') {
-                                                    $global:ShowTitleOnSeason = $titletext.ToUpper() -replace '"', '""'
+                                                    $global:ShowTitleOnSeason = $titletext.ToUpper() -replace '”', '"' -replace '“', '"' -replace '"', '""'
                                                 }
                                                 Else {
-                                                    $global:ShowTitleOnSeason = $titletext -replace '"', '""'
+                                                    $global:ShowTitleOnSeason = $titletext -replace '”', '"' -replace '“', '"' -replace '"', '""'
                                                 }
                                                 # Loop through each symbol and replace it with a newline
                                                 if ($NewLineOnSpecificSymbols -eq 'true') {
@@ -14456,7 +14456,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                                                 if ($TitleCardEPTitlefontAllCaps -eq 'true') {
                                                                     $global:EPTitle = $global:EPTitle.ToUpper()
                                                                 }
-                                                                $global:EPTitle = $global:EPTitle -replace '"', '""'
+                                                                $global:EPTitle = $global:EPTitle -replace '”', '"' -replace '“', '"' -replace '"', '""'
                                                                 if ($global:direction -eq "RTL") {
                                                                     $TitleCardfontImagemagick = $RTLfontImagemagick
                                                                 }
@@ -14483,7 +14483,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                                                 if ($TitleCardEPfontAllCaps -eq 'true') {
                                                                     $global:SeasonEPNumber = $global:SeasonEPNumber.ToUpper()
                                                                 }
-                                                                $global:SeasonEPNumber = $global:SeasonEPNumber -replace '"', '""'
+                                                                $global:SeasonEPNumber = $global:SeasonEPNumber -replace '”', '"' -replace '“', '"' -replace '"', '""'
                                                                 $joinedTitlePointSize = $global:SeasonEPNumber -replace '""', '""""'
                                                                 $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize -lineSpacing $TitleCardEPlineSpacing
                                                                 if (!$global:IsTruncated) {
@@ -14827,7 +14827,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                                             if ($TitleCardEPTitlefontAllCaps -eq 'true') {
                                                                 $global:EPTitle = $global:EPTitle.ToUpper()
                                                             }
-                                                            $global:EPTitle = $global:EPTitle -replace '"', '""'
+                                                            $global:EPTitle = $global:EPTitle -replace '”', '"' -replace '“', '"' -replace '"', '""'
                                                             if ($global:direction -eq "RTL") {
                                                                 $TitleCardfontImagemagick = $RTLfontImagemagick
                                                             }
@@ -14854,7 +14854,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                                             if ($TitleCardEPfontAllCaps -eq 'true') {
                                                                 $global:SeasonEPNumber = $global:SeasonEPNumber.ToUpper()
                                                             }
-                                                            $global:SeasonEPNumber = $global:SeasonEPNumber -replace '"', '""'
+                                                            $global:SeasonEPNumber = $global:SeasonEPNumber -replace '”', '"' -replace '“', '"' -replace '"', '""'
                                                             $joinedTitlePointSize = $global:SeasonEPNumber -replace '""', '""""'
                                                             $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize -lineSpacing $TitleCardEPlineSpacing
                                                             if (!$global:IsTruncated) {
@@ -16247,7 +16247,7 @@ else {
                                         if ($global:direction -eq "RTL") {
                                             $fontImagemagick = $RTLfontImagemagick
                                         }
-                                        $joinedTitle = $joinedTitle -replace '"', '""'
+                                        $joinedTitle = $joinedTitle -replace '”', '"' -replace '“', '"' -replace '"', '""'
 
                                         # Loop through each symbol and replace it with a newline
                                         if ($NewLineOnSpecificSymbols -eq 'true') {
@@ -16606,7 +16606,7 @@ else {
                                         if ($global:direction -eq "RTL") {
                                             $backgroundfontImagemagick = $RTLfontImagemagick
                                         }
-                                        $joinedTitle = $joinedTitle -replace '"', '""'
+                                        $joinedTitle = $joinedTitle -replace '”', '"' -replace '“', '"' -replace '"', '""'
 
                                         # Loop through each symbol and replace it with a newline
                                         if ($NewLineOnSpecificSymbols -eq 'true') {
@@ -17045,7 +17045,7 @@ else {
                                     if ($global:direction -eq "RTL") {
                                         $fontImagemagick = $RTLfontImagemagick
                                     }
-                                    $joinedTitle = $joinedTitle -replace '"', '""'
+                                    $joinedTitle = $joinedTitle -replace '”', '"' -replace '“', '"' -replace '"', '""'
 
                                     # Loop through each symbol and replace it with a newline
                                     if ($NewLineOnSpecificSymbols -eq 'true') {
@@ -17413,7 +17413,7 @@ else {
                                     if ($global:direction -eq "RTL") {
                                         $backgroundfontImagemagick = $RTLfontImagemagick
                                     }
-                                    $joinedTitle = $joinedTitle -replace '"', '""'
+                                    $joinedTitle = $joinedTitle -replace '”', '"' -replace '“', '"' -replace '"', '""'
 
                                     # Loop through each symbol and replace it with a newline
                                     if ($NewLineOnSpecificSymbols -eq 'true') {
@@ -17820,12 +17820,12 @@ else {
                                         InvokeMagickCommand -Command $magick -Arguments $Arguments
 
                                         if ($AddSeasonText -eq 'true') {
-                                            $global:seasonTitle = $global:seasonTitle -replace '"', '""'
+                                            $global:seasonTitle = $global:seasonTitle -replace '”', '"' -replace '“', '"' -replace '"', '""'
                                             if ($ShowOnSeasonfontAllCaps -eq 'true') {
-                                                $global:ShowTitleOnSeason = $titletext.ToUpper() -replace '"', '""'
+                                                $global:ShowTitleOnSeason = $titletext.ToUpper() -replace '”', '"' -replace '“', '"' -replace '"', '""'
                                             }
                                             Else {
-                                                $global:ShowTitleOnSeason = $titletext -replace '"', '""'
+                                                $global:ShowTitleOnSeason = $titletext -replace '”', '"' -replace '“', '"' -replace '"', '""'
                                             }
                                             # Loop through each symbol and replace it with a newline
                                             if ($NewLineOnSpecificSymbols -eq 'true') {
@@ -18352,7 +18352,7 @@ else {
                                                                 if ($TitleCardEPTitlefontAllCaps -eq 'true') {
                                                                     $global:EPTitle = $global:EPTitle.ToUpper()
                                                                 }
-                                                                $global:EPTitle = $global:EPTitle -replace '"', '""'
+                                                                $global:EPTitle = $global:EPTitle -replace '”', '"' -replace '“', '"' -replace '"', '""'
 
                                                                 if ($global:direction -eq "RTL") {
                                                                     $TitleCardfontImagemagick = $RTLfontImagemagick
@@ -18384,7 +18384,7 @@ else {
                                                                 if ($TitleCardEPfontAllCaps -eq 'true') {
                                                                     $global:SeasonEPNumber = $global:SeasonEPNumber.ToUpper()
                                                                 }
-                                                                $global:SeasonEPNumber = $global:SeasonEPNumber -replace '"', '""'
+                                                                $global:SeasonEPNumber = $global:SeasonEPNumber -replace '”', '"' -replace '“', '"' -replace '"', '""'
                                                                 $joinedTitlePointSize = $global:SeasonEPNumber -replace '""', '""""'
                                                                 $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize -lineSpacing $TitleCardEPlineSpacing
                                                                 if (!$global:IsTruncated) {
@@ -18842,7 +18842,7 @@ else {
                                                             if ($TitleCardEPTitlefontAllCaps -eq 'true') {
                                                                 $global:EPTitle = $global:EPTitle.ToUpper()
                                                             }
-                                                            $global:EPTitle = $global:EPTitle -replace '"', '""'
+                                                            $global:EPTitle = $global:EPTitle -replace '”', '"' -replace '“', '"' -replace '"', '""'
                                                             if ($global:direction -eq "RTL") {
                                                                 $TitleCardfontImagemagick = $RTLfontImagemagick
                                                             }
@@ -18874,7 +18874,7 @@ else {
                                                             if ($TitleCardEPfontAllCaps -eq 'true') {
                                                                 $global:SeasonEPNumber = $global:SeasonEPNumber.ToUpper()
                                                             }
-                                                            $global:SeasonEPNumber = $global:SeasonEPNumber -replace '"', '""'
+                                                            $global:SeasonEPNumber = $global:SeasonEPNumber -replace '”', '"' -replace '“', '"' -replace '"', '""'
                                                             $joinedTitlePointSize = $global:SeasonEPNumber -replace '""', '""""'
                                                             $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize -lineSpacing $TitleCardEPlineSpacing
                                                             if (!$global:IsTruncated) {
