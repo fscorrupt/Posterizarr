@@ -11,7 +11,7 @@ param (
     [switch]$SyncEmby
 )
 
-$CurrentScriptVersion = "1.8.25"
+$CurrentScriptVersion = "1.8.26"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -3253,8 +3253,6 @@ function CheckJson {
         Exit
     }
 }
-
-
 function CheckJsonPaths {
     param (
         [string]$font,
@@ -11653,9 +11651,9 @@ Elseif ($SyncJelly -or $SyncEmby) {
     Write-Entry -Message "Query Jellyfin/Emby..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
     Write-Entry -Message "Query all items from all Libs, this can take a while..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
     $PreferredMetadataLanguage = (Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/System/Configuration?api_key=$OtherMediaServerApiKey").PreferredMetadataLanguage
-    $allShowsquery = "$OtherMediaServerUrl/Items?api_key=$OtherMediaServerApiKey&Recursive=true&Fields=ProviderIds,SeasonUserData,OriginalTitle,Path,Overview&IncludeItemTypes=Series"
+    $allShowsquery = "$OtherMediaServerUrl/Items?api_key=$OtherMediaServerApiKey&Recursive=true&Fields=ProviderIds,SeasonUserData,OriginalTitle,Path,Overview,ProductionYear&IncludeItemTypes=Series"
     $allEpisodesquery = "$OtherMediaServerUrl/Items?api_key=$OtherMediaServerApiKey&Recursive=true&Fields=ProviderIds,SeasonUserData,OriginalTitle,Path,Overview,Settings&IncludeItemTypes=Episode"
-    $allMoviesquery = "$OtherMediaServerUrl/Items?api_key=$OtherMediaServerApiKey&Recursive=true&Fields=ProviderIds,OriginalTitle,Settings,Path,Overview&IncludeItemTypes=Movie"
+    $allMoviesquery = "$OtherMediaServerUrl/Items?api_key=$OtherMediaServerApiKey&Recursive=true&Fields=ProviderIds,OriginalTitle,Settings,Path,Overview,ProductionYear&IncludeItemTypes=Movie"
     $OtherAllShows = Invoke-RestMethod -Method Get -Uri $allShowsquery
     $OtherAllEpisodes = Invoke-RestMethod -Method Get -Uri $allEpisodesquery
     $OtherAllMovies = Invoke-RestMethod -Method Get -Uri $allMoviesquery
@@ -11672,10 +11670,10 @@ Elseif ($SyncJelly -or $SyncEmby) {
             if ($lib.name -notin $LibstoExclude) {
                 foreach ($singlelibrary in $librariestemp) {
                     # Loop through each location in the library's Locations array
-                    foreach ($location in $singlelibrary.Locations) {
+                    foreach ($location in $singlelibrary) {
                         # Compare lib.Path with each location
-                        if ($Movie.Path -like "$location/*" -or $Movie.Path -like "$location\*") {
-                            $SingleLibName = $singlelibrary.Name
+                        if ($Movie.Path -like "$($location.Locations)/*" -or $Movie.Path -like "$($location.Locations)\*") {
+                            $SingleLibName = $location.Name
                             break # Exit loop after match
                         }
                     }
