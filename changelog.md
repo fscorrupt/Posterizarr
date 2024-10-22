@@ -2,17 +2,6 @@
 
 ## [1.8.26](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.26) - 2024-10-22 05:54:17
 
-## 🐛 Fixes
-- Emby Multi Location
-	- The query could not extract the root folder if there was more than one location in the library.
-
-**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.8.25...1.8.26
-
-### Bug Fixes
-
-- general:
-  - Emby Multi Location ([518e03b](https://github.com/fscorrupt/Posterizarr/commit/518e03bcd3c478ccc10c0f1b024cfea8138f25e5))
-
 ## [1.8.25](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.25) - 2024-10-21 13:43:26
 
 ## [1.8.24](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.24) - 2024-10-16 15:31:29
