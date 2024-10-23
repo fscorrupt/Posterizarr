@@ -2,16 +2,6 @@
 
 ## [1.8.28](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.28) - 2024-10-23 17:37:28
 
-## 🐛 Fixes
-- Show Title on Season got truncated
-
-**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.8.27...1.8.28
-
-### Bug Fixes
-
-- general:
-  - Show Title on Season got truncated ([f5b31d1](https://github.com/fscorrupt/Posterizarr/commit/f5b31d14c4af9ed77fd71cb56122103ae17314fd))
-
 ## [1.8.27](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.27) - 2024-10-23 07:00:50
 
 ## [1.8.26](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.26) - 2024-10-22 05:54:17
