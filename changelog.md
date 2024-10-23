@@ -2,17 +2,6 @@
 
 ## [1.8.27](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.27) - 2024-10-23 07:00:50
 
-## 🐛 Fixes
-- Change Imagemagick `-gravity` command order
-	- add `-gravity south` before `caption:` instead of after
-
-**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.8.26...1.8.27
-
-### Bug Fixes
-
-- general:
-  - Change Imagemagick `-gravity` command order ([a98c072](https://github.com/fscorrupt/Posterizarr/commit/a98c072cff7310749e2cede036efc838549ec88f))
-
 ## [1.8.26](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.26) - 2024-10-22 05:54:17
 
 ## [1.8.25](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.25) - 2024-10-21 13:43:26
