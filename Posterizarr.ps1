@@ -11,7 +11,7 @@ param (
     [switch]$SyncEmby
 )
 
-$CurrentScriptVersion = "1.8.28"
+$CurrentScriptVersion = "1.8.29"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -11651,12 +11651,27 @@ Elseif ($SyncJelly -or $SyncEmby) {
     Write-Entry -Message "Query Jellyfin/Emby..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
     Write-Entry -Message "Query all items from all Libs, this can take a while..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
     $PreferredMetadataLanguage = (Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/System/Configuration?api_key=$OtherMediaServerApiKey").PreferredMetadataLanguage
-    $allShowsquery = "$OtherMediaServerUrl/Items?api_key=$OtherMediaServerApiKey&Recursive=true&Fields=ProviderIds,SeasonUserData,OriginalTitle,Path,Overview,ProductionYear&IncludeItemTypes=Series"
-    $allEpisodesquery = "$OtherMediaServerUrl/Items?api_key=$OtherMediaServerApiKey&Recursive=true&Fields=ProviderIds,SeasonUserData,OriginalTitle,Path,Overview,Settings&IncludeItemTypes=Episode"
-    $allMoviesquery = "$OtherMediaServerUrl/Items?api_key=$OtherMediaServerApiKey&Recursive=true&Fields=ProviderIds,OriginalTitle,Settings,Path,Overview,ProductionYear&IncludeItemTypes=Movie"
-    $OtherAllShows = Invoke-RestMethod -Method Get -Uri $allShowsquery
-    $OtherAllEpisodes = Invoke-RestMethod -Method Get -Uri $allEpisodesquery
-    $OtherAllMovies = Invoke-RestMethod -Method Get -Uri $allMoviesquery
+    $allLibsquery = "$OtherMediaServerUrl/Library/VirtualFolders?api_key=$OtherMediaServerApiKey"
+    $OtherAllLibs = Invoke-RestMethod -Method Get -Uri $allLibsquery
+    $OtherAllEpisodes = $null
+    $OtherAllShows = $null
+    $OtherAllMovies = $null
+
+    foreach ($otherlib in $OtherAllLibs){
+        if ($otherlib.Name -notin $LibstoExclude) {
+            if ($otherlib.CollectionType -eq 'movies'){
+                $allMoviesquery = "$OtherMediaServerUrl/Items?ParentId=$($otherlib.ItemId)&api_key=$OtherMediaServerApiKey&Recursive=true&Fields=ProviderIds,OriginalTitle,Settings,Path,Overview,ProductionYear&IncludeItemTypes=Movie"
+                $OtherAllMovies += Invoke-RestMethod -Method Get -Uri $allMoviesquery
+            }
+            if ($otherlib.CollectionType -eq 'tvshows'){
+                $allShowsquery = "$OtherMediaServerUrl/Items?ParentId=$($otherlib.ItemId)&api_key=$OtherMediaServerApiKey&Recursive=true&Fields=ProviderIds,SeasonUserData,OriginalTitle,Path,Overview,ProductionYear&IncludeItemTypes=Series"
+                $allEpisodesquery = "$OtherMediaServerUrl/Items?ParentId=$($otherlib.ItemId)&api_key=$OtherMediaServerApiKey&Recursive=true&Fields=ProviderIds,SeasonUserData,OriginalTitle,Path,Overview,Settings&IncludeItemTypes=Episode"
+                $OtherAllShows += Invoke-RestMethod -Method Get -Uri $allShowsquery
+                $OtherAllEpisodes += Invoke-RestMethod -Method Get -Uri $allEpisodesquery
+            }
+        }
+    }
+
     $OtherLibraries = @()
     foreach ($Movie in $OtherAllMovies.Items) {
         if ($SyncEmby) {
@@ -11667,20 +11682,69 @@ Elseif ($SyncJelly -or $SyncEmby) {
             $librarytemp = Invoke-RestMethod -Method Get -Uri $libraryQuery
             $librariestemp = $librarytemp | Where-Object { $_.CollectionType -eq 'movies' } | Select-Object Name, Locations -Unique
 
-            if ($lib.name -notin $LibstoExclude) {
-                foreach ($singlelibrary in $librariestemp) {
-                    # Loop through each location in the library's Locations array
-                    foreach ($location in $singlelibrary) {
-                        # Compare lib.Path with each location
-                        if ($Movie.Path -like "$($location.Locations)/*" -or $Movie.Path -like "$($location.Locations)\*") {
-                            $SingleLibName = $location.Name
-                            break # Exit loop after match
-                        }
+            foreach ($singlelibrary in $librariestemp) {
+                foreach ($location in $singlelibrary.Locations) {
+                    # Compare lib.Path with each location
+                    if ($Movie.Path -like "$($location)/*" -or $Movie.Path -like "$($location)\*") {
+                        $SingleLibName = $singlelibrary.Name
+                        break # Exit loop after match
                     }
                 }
+            }
+            Write-Entry -Subtext "Location: $($Movie.Path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+            Write-Entry -Subtext "Libpath: $($lib.Path[1])" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+            $Matchedpath = AddTrailingSlash $($lib.Path[1])
+            $libpath = $Matchedpath
+            $extractedFolder = $Movie.Path.Substring($libpath.Length)
+            if ($extractedFolder -like '*\*') {
+                $extractedFolder = $extractedFolder.split('\')[0]
+            }
+            if ($extractedFolder -like '*/*') {
+                $extractedFolder = $extractedFolder.split('/')[0]
+            }
+            Write-Entry -Subtext "Matchedpath: $Matchedpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+            Write-Entry -Subtext "ExtractedFolder: $extractedFolder" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+            $temp = New-Object psobject
+            $temp | Add-Member -MemberType NoteProperty -Name "Library Name" -Value $SingleLibName
+            $temp | Add-Member -MemberType NoteProperty -Name "Library Type" -Value $Movie.Type
+            $temp | Add-Member -MemberType NoteProperty -Name "Library Language" -Value $PreferredMetadataLanguage
+            $temp | Add-Member -MemberType NoteProperty -Name "Id" -Value $Movie.Id
+            $temp | Add-Member -MemberType NoteProperty -Name "title" -Value $Movie.Name
+            $temp | Add-Member -MemberType NoteProperty -Name "originalTitle" -Value $Movie.OriginalTitle
+            $temp | Add-Member -MemberType NoteProperty -Name "year" -Value $Movie.ProductionYear
+            $temp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value $Movie.ProviderIds.Imdb
+            $temp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value $Movie.ProviderIds.Tmdb
+            $temp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $Movie.ProviderIds.Tvdb
+            $temp | Add-Member -MemberType NoteProperty -Name "Path" -Value $libpath
+            $temp | Add-Member -MemberType NoteProperty -Name "RootFoldername" -Value $extractedFolder
+            $temp | Add-Member -MemberType NoteProperty -Name "OtherMediaServerPosterUrl" -Value $Movie.ImageTags.Primary
+            $temp | Add-Member -MemberType NoteProperty -Name "OtherMediaServerBackgroundUrl" -Value $($Movie.BackdropImageTags -join ",")
+            $OtherLibraries += $temp
+            Write-Entry -Subtext "Found [$($temp.title)] of type $($temp.{Library Type}) in [$($temp.{Library Name})]" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+            Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+        }
+        Else {
+            $Libtemp = Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/Items/$($Movie.Id)/Ancestors?api_key=$OtherMediaServerApiKey"
+            $lib = $Libtemp | Where-Object { $_.Type -eq 'Folder' } | Select-Object Name, Path
+
+            $libraryQuery = "$OtherMediaServerUrl/Library/VirtualFolders?api_key=$OtherMediaServerApiKey"
+            $librarytemp = Invoke-RestMethod -Method Get -Uri $libraryQuery
+            $librariestemp = $librarytemp | Where-Object { $_.CollectionType -eq 'movies' } | Select-Object Name, Locations -Unique
+
+            foreach ($singlelibrary in $librariestemp) {
+                # Loop through each location in the library's Locations array
+                foreach ($location in $singlelibrary.Locations) {
+                    # Compare lib.Path with each location
+                    if ($Movie.Path -like "$location/*" -or $Movie.Path -like "$location\*") {
+                        $SingleLibName = $singlelibrary.Name
+                        break # Exit loop after match
+                    }
+                }
+            }
+            if ($SingleLibName -notin $LibstoExclude) {
                 Write-Entry -Subtext "Location: $($Movie.Path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                Write-Entry -Subtext "Libpath: $($lib.Path[1])" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                $Matchedpath = AddTrailingSlash $($lib.Path[1])
+                Write-Entry -Subtext "Libpath: $($lib.Path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                $Matchedpath = AddTrailingSlash $($lib.Path)
                 $libpath = $Matchedpath
                 $extractedFolder = $Movie.Path.Substring($libpath.Length)
                 if ($extractedFolder -like '*\*') {
@@ -11691,81 +11755,25 @@ Elseif ($SyncJelly -or $SyncEmby) {
                 }
                 Write-Entry -Subtext "Matchedpath: $Matchedpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                 Write-Entry -Subtext "ExtractedFolder: $extractedFolder" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                $temp = New-Object psobject
-                $temp | Add-Member -MemberType NoteProperty -Name "Library Name" -Value $SingleLibName
-                $temp | Add-Member -MemberType NoteProperty -Name "Library Type" -Value $Movie.Type
-                $temp | Add-Member -MemberType NoteProperty -Name "Library Language" -Value $PreferredMetadataLanguage
-                $temp | Add-Member -MemberType NoteProperty -Name "Id" -Value $Movie.Id
-                $temp | Add-Member -MemberType NoteProperty -Name "title" -Value $Movie.Name
-                $temp | Add-Member -MemberType NoteProperty -Name "originalTitle" -Value $Movie.OriginalTitle
-                $temp | Add-Member -MemberType NoteProperty -Name "year" -Value $Movie.ProductionYear
-                $temp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value $Movie.ProviderIds.Imdb
-                $temp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value $Movie.ProviderIds.Tmdb
-                $temp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $Movie.ProviderIds.Tvdb
-                $temp | Add-Member -MemberType NoteProperty -Name "Path" -Value $lib.Path[1]
-                $temp | Add-Member -MemberType NoteProperty -Name "RootFoldername" -Value $extractedFolder
-                $temp | Add-Member -MemberType NoteProperty -Name "OtherMediaServerPosterUrl" -Value $Movie.ImageTags.Primary
-                $temp | Add-Member -MemberType NoteProperty -Name "OtherMediaServerBackgroundUrl" -Value $($Movie.BackdropImageTags -join ",")
-                $OtherLibraries += $temp
-                Write-Entry -Subtext "Found [$($temp.title)] of type $($temp.{Library Type}) in [$($temp.{Library Name})]" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
             }
-        }
-        Else {
-            $Libtemp = Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/Items/$($Movie.Id)/Ancestors?api_key=$OtherMediaServerApiKey"
-            $lib = $Libtemp | Where-Object { $_.Type -eq 'Folder' } | Select-Object Name, Path
-
-            $libraryQuery = "$OtherMediaServerUrl/Library/VirtualFolders?api_key=$OtherMediaServerApiKey"
-            $librarytemp = Invoke-RestMethod -Method Get -Uri $libraryQuery
-            $librariestemp = $librarytemp | Where-Object { $_.CollectionType -eq 'movies' } | Select-Object Name, Locations -Unique
-
-            if ($Movie.Path -like "$($lib.Path)/*" -or $Movie.Path -like "$($lib.Path)\*") {
-                foreach ($singlelibrary in $librariestemp) {
-                    # Loop through each location in the library's Locations array
-                    foreach ($location in $singlelibrary.Locations) {
-                        # Compare lib.Path with each location
-                        if ($Movie.Path -like "$location/*" -or $Movie.Path -like "$location\*") {
-                            $SingleLibName = $singlelibrary.Name
-                            break # Exit loop after match
-                        }
-                    }
-                }
-                if ($SingleLibName -notin $LibstoExclude) {
-                    Write-Entry -Subtext "Location: $($Movie.Path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                    Write-Entry -Subtext "Libpath: $($lib.Path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                    $Matchedpath = AddTrailingSlash $($lib.Path)
-                    $libpath = $Matchedpath
-                    $extractedFolder = $Movie.Path.Substring($libpath.Length)
-                    if ($extractedFolder -like '*\*') {
-                        $extractedFolder = $extractedFolder.split('\')[0]
-                    }
-                    if ($extractedFolder -like '*/*') {
-                        $extractedFolder = $extractedFolder.split('/')[0]
-                    }
-                    Write-Entry -Subtext "Matchedpath: $Matchedpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                    Write-Entry -Subtext "ExtractedFolder: $extractedFolder" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                }
-            }
-            if ($SingleLibName -notin $LibstoExclude) {
-                $temp = New-Object psobject
-                $temp | Add-Member -MemberType NoteProperty -Name "Library Name" -Value $SingleLibName
-                $temp | Add-Member -MemberType NoteProperty -Name "Library Type" -Value $Movie.Type
-                $temp | Add-Member -MemberType NoteProperty -Name "Library Language" -Value $PreferredMetadataLanguage
-                $temp | Add-Member -MemberType NoteProperty -Name "Id" -Value $Movie.Id
-                $temp | Add-Member -MemberType NoteProperty -Name "title" -Value $Movie.Name
-                $temp | Add-Member -MemberType NoteProperty -Name "originalTitle" -Value $Movie.OriginalTitle
-                $temp | Add-Member -MemberType NoteProperty -Name "year" -Value $Movie.ProductionYear
-                $temp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value $Movie.ProviderIds.Imdb
-                $temp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value $Movie.ProviderIds.Tmdb
-                $temp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $Movie.ProviderIds.Tvdb
-                $temp | Add-Member -MemberType NoteProperty -Name "Path" -Value $lib.Path
-                $temp | Add-Member -MemberType NoteProperty -Name "RootFoldername" -Value $extractedFolder
-                $temp | Add-Member -MemberType NoteProperty -Name "OtherMediaServerPosterUrl" -Value $Movie.ImageTags.Primary
-                $temp | Add-Member -MemberType NoteProperty -Name "OtherMediaServerBackgroundUrl" -Value $($Movie.BackdropImageTags -join ",")
-                $OtherLibraries += $temp
-                Write-Entry -Subtext "Found [$($temp.title)] of type $($temp.{Library Type}) in [$($temp.{Library Name})]" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-            }
+            $temp = New-Object psobject
+            $temp | Add-Member -MemberType NoteProperty -Name "Library Name" -Value $SingleLibName
+            $temp | Add-Member -MemberType NoteProperty -Name "Library Type" -Value $Movie.Type
+            $temp | Add-Member -MemberType NoteProperty -Name "Library Language" -Value $PreferredMetadataLanguage
+            $temp | Add-Member -MemberType NoteProperty -Name "Id" -Value $Movie.Id
+            $temp | Add-Member -MemberType NoteProperty -Name "title" -Value $Movie.Name
+            $temp | Add-Member -MemberType NoteProperty -Name "originalTitle" -Value $Movie.OriginalTitle
+            $temp | Add-Member -MemberType NoteProperty -Name "year" -Value $Movie.ProductionYear
+            $temp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value $Movie.ProviderIds.Imdb
+            $temp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value $Movie.ProviderIds.Tmdb
+            $temp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $Movie.ProviderIds.Tvdb
+            $temp | Add-Member -MemberType NoteProperty -Name "Path" -Value $libpath
+            $temp | Add-Member -MemberType NoteProperty -Name "RootFoldername" -Value $extractedFolder
+            $temp | Add-Member -MemberType NoteProperty -Name "OtherMediaServerPosterUrl" -Value $Movie.ImageTags.Primary
+            $temp | Add-Member -MemberType NoteProperty -Name "OtherMediaServerBackgroundUrl" -Value $($Movie.BackdropImageTags -join ",")
+            $OtherLibraries += $temp
+            Write-Entry -Subtext "Found [$($temp.title)] of type $($temp.{Library Type}) in [$($temp.{Library Name})]" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+            Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
         }
     }
     foreach ($Show in $OtherAllShows.Items) {
@@ -11776,53 +11784,49 @@ Elseif ($SyncJelly -or $SyncEmby) {
         $librarytemp = Invoke-RestMethod -Method Get -Uri $libraryQuery
         $librariestemp = $librarytemp | Where-Object { $_.CollectionType -eq 'tvshows' } | Select-Object Name, Locations -Unique
 
-        if ($Show.Path -like "$($lib.Path)/*" -or $Show.Path -like "$($lib.Path)\*") {
-            foreach ($singlelibrary in $librariestemp) {
-                # Loop through each location in the library's Locations array
-                foreach ($location in $singlelibrary.Locations) {
-                    # Compare lib.Path with each location
-                    if ($Show.Path -like "$location/*" -or $Show.Path -like "$location\*") {
-                        $SingleLibName = $singlelibrary.Name
-                        break # Exit loop after match
-                    }
+        foreach ($singlelibrary in $librariestemp) {
+            # Loop through each location in the library's Locations array
+            foreach ($location in $singlelibrary.Locations) {
+                # Compare lib.Path with each location
+                if ($Show.Path -like "$location/*" -or $Show.Path -like "$location\*") {
+                    $SingleLibName = $singlelibrary.Name
+                    break # Exit loop after match
                 }
             }
-            if ($SingleLibName -notin $LibstoExclude) {
-                Write-Entry -Subtext "Location: $($Show.Path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                Write-Entry -Subtext "Libpath: $($lib.Path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                $Matchedpath = AddTrailingSlash $($lib.Path)
-                $libpath = $Matchedpath
-                $extractedFolder = $Show.Path.Substring($libpath.Length)
-                if ($extractedFolder -like '*\*') {
-                    $extractedFolder = $extractedFolder.split('\')[0]
-                }
-                if ($extractedFolder -like '*/*') {
-                    $extractedFolder = $extractedFolder.split('/')[0]
-                }
-                Write-Entry -Subtext "Matchedpath: $Matchedpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                Write-Entry -Subtext "ExtractedFolder: $extractedFolder" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-            }
         }
-        if ($SingleLibName -notin $LibstoExclude) {
-            $temp = New-Object psobject
-            $temp | Add-Member -MemberType NoteProperty -Name "Library Name" -Value $SingleLibName
-            $temp | Add-Member -MemberType NoteProperty -Name "Library Type" -Value $Show.Type
-            $temp | Add-Member -MemberType NoteProperty -Name "Library Language" -Value $PreferredMetadataLanguage
-            $temp | Add-Member -MemberType NoteProperty -Name "Id" -Value $Show.Id
-            $temp | Add-Member -MemberType NoteProperty -Name "title" -Value $Show.Name
-            $temp | Add-Member -MemberType NoteProperty -Name "originalTitle" -Value $Show.OriginalTitle
-            $temp | Add-Member -MemberType NoteProperty -Name "year" -Value $Show.ProductionYear
-            $temp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value $Show.ProviderIds.Imdb
-            $temp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value $Show.ProviderIds.Tmdb
-            $temp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $Show.ProviderIds.Tvdb
-            $temp | Add-Member -MemberType NoteProperty -Name "Path" -Value $lib.Path
-            $temp | Add-Member -MemberType NoteProperty -Name "RootFoldername" -Value $extractedFolder
-            $temp | Add-Member -MemberType NoteProperty -Name "OtherMediaServerPosterUrl" -Value $Show.ImageTags.Primary
-            $temp | Add-Member -MemberType NoteProperty -Name "OtherMediaServerBackgroundUrl" -Value $($Show.BackdropImageTags -join ",")
-            $OtherLibraries += $temp
-            Write-Entry -Subtext "Found [$($temp.title)] of type $($temp.{Library Type}) in [$($temp.{Library Name})]" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-            Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+
+        Write-Entry -Subtext "Location: $($Show.Path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+        Write-Entry -Subtext "Libpath: $($lib.Path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+        $Matchedpath = AddTrailingSlash $($lib.Path)
+        $libpath = $Matchedpath
+        $extractedFolder = $Show.Path.Substring($libpath.Length)
+        if ($extractedFolder -like '*\*') {
+            $extractedFolder = $extractedFolder.split('\')[0]
         }
+        if ($extractedFolder -like '*/*') {
+            $extractedFolder = $extractedFolder.split('/')[0]
+        }
+        Write-Entry -Subtext "Matchedpath: $Matchedpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+        Write-Entry -Subtext "ExtractedFolder: $extractedFolder" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+
+        $temp = New-Object psobject
+        $temp | Add-Member -MemberType NoteProperty -Name "Library Name" -Value $SingleLibName
+        $temp | Add-Member -MemberType NoteProperty -Name "Library Type" -Value $Show.Type
+        $temp | Add-Member -MemberType NoteProperty -Name "Library Language" -Value $PreferredMetadataLanguage
+        $temp | Add-Member -MemberType NoteProperty -Name "Id" -Value $Show.Id
+        $temp | Add-Member -MemberType NoteProperty -Name "title" -Value $Show.Name
+        $temp | Add-Member -MemberType NoteProperty -Name "originalTitle" -Value $Show.OriginalTitle
+        $temp | Add-Member -MemberType NoteProperty -Name "year" -Value $Show.ProductionYear
+        $temp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value $Show.ProviderIds.Imdb
+        $temp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value $Show.ProviderIds.Tmdb
+        $temp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $Show.ProviderIds.Tvdb
+        $temp | Add-Member -MemberType NoteProperty -Name "Path" -Value $libpath
+        $temp | Add-Member -MemberType NoteProperty -Name "RootFoldername" -Value $extractedFolder
+        $temp | Add-Member -MemberType NoteProperty -Name "OtherMediaServerPosterUrl" -Value $Show.ImageTags.Primary
+        $temp | Add-Member -MemberType NoteProperty -Name "OtherMediaServerBackgroundUrl" -Value $($Show.BackdropImageTags -join ",")
+        $OtherLibraries += $temp
+        Write-Entry -Subtext "Found [$($temp.title)] of type $($temp.{Library Type}) in [$($temp.{Library Name})]" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+        Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
     }
     Write-Entry -Subtext "Found '$($OtherLibraries.count)' Items..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     $OtherEpisodedata = @()
@@ -11975,6 +11979,7 @@ Elseif ($SyncJelly -or $SyncEmby) {
             $errorCount++
         }
     }
+
     Write-Entry -Message "Starting show artwork sync part..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
     foreach ($entry in $AllShows) {
         try {
@@ -12227,6 +12232,29 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
     $AllShows = Invoke-RestMethod -Method Get -Uri $allShowsquery
     $AllMovies = Invoke-RestMethod -Method Get -Uri $allMoviesquery
     $AllEpisodes = Invoke-RestMethod -Method Get -Uri $allEpisodesquery
+
+    $PreferredMetadataLanguage = (Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/System/Configuration?api_key=$OtherMediaServerApiKey").PreferredMetadataLanguage
+    $allLibsquery = "$OtherMediaServerUrl/Library/VirtualFolders?api_key=$OtherMediaServerApiKey"
+    $AllLibs = Invoke-RestMethod -Method Get -Uri $allLibsquery
+    $AllEpisodes = $null
+    $AllShows = $null
+    $AllMovies = $null
+
+    foreach ($slib in $AllLibs){
+        if ($slib.Name -notin $LibstoExclude) {
+            if ($slib.CollectionType -eq 'movies'){
+                $allMoviesquery = "$OtherMediaServerUrl/Items?ParentId=$($slib.ItemId)&api_key=$OtherMediaServerApiKey&Recursive=true&Fields=ProviderIds,OriginalTitle,Settings,Path,Overview,ProductionYear&IncludeItemTypes=Movie"
+                $AllMovies += Invoke-RestMethod -Method Get -Uri $allMoviesquery
+            }
+            if ($slib.CollectionType -eq 'tvshows'){
+                $allShowsquery = "$OtherMediaServerUrl/Items?ParentId=$($slib.ItemId)&api_key=$OtherMediaServerApiKey&Recursive=true&Fields=ProviderIds,SeasonUserData,OriginalTitle,Path,Overview,ProductionYear&IncludeItemTypes=Series"
+                $allEpisodesquery = "$OtherMediaServerUrl/Items?ParentId=$($slib.ItemId)&api_key=$OtherMediaServerApiKey&Recursive=true&Fields=ProviderIds,SeasonUserData,OriginalTitle,Path,Overview,Settings&IncludeItemTypes=Episode"
+                $AllShows += Invoke-RestMethod -Method Get -Uri $allShowsquery
+                $AllEpisodes += Invoke-RestMethod -Method Get -Uri $allEpisodesquery
+            }
+        }
+    }
+
     $Libraries = @()
     foreach ($Movie in $AllMovies.Items) {
         if ($UseEmby -eq 'true') {
@@ -12237,17 +12265,16 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
             $librarytemp = Invoke-RestMethod -Method Get -Uri $libraryQuery
             $librariestemp = $librarytemp | Where-Object { $_.CollectionType -eq 'movies' } | Select-Object Name, Locations -Unique
 
-            if ($lib.name -notin $LibstoExclude) {
-                foreach ($singlelibrary in $librariestemp) {
-                    # Loop through each location in the library's Locations array
-                    foreach ($location in $singlelibrary.Locations) {
-                        # Compare lib.Path with each location
-                        if ($Movie.Path -like "$location/*" -or $Movie.Path -like "$location\*") {
-                            $SingleLibName = $singlelibrary.Name
-                            break # Exit loop after match
-                        }
+            foreach ($singlelibrary in $librariestemp) {
+                foreach ($location in $singlelibrary.Locations) {
+                    # Compare lib.Path with each location
+                    if ($Movie.Path -like "$($location)/*" -or $Movie.Path -like "$($location)\*") {
+                        $SingleLibName = $singlelibrary.Name
+                        break # Exit loop after match
                     }
                 }
+            }
+            if ($SingleLibName -notin $LibstoExclude) {
                 Write-Entry -Subtext "Location: $($Movie.Path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                 Write-Entry -Subtext "Libpath: $($lib.Path[1])" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                 $Matchedpath = AddTrailingSlash $($lib.Path[1])
@@ -12272,7 +12299,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                 $temp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value $Movie.ProviderIds.Imdb
                 $temp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value $Movie.ProviderIds.Tmdb
                 $temp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $Movie.ProviderIds.Tvdb
-                $temp | Add-Member -MemberType NoteProperty -Name "Path" -Value $lib.Path[1]
+                $temp | Add-Member -MemberType NoteProperty -Name "Path" -Value $libpath
                 $temp | Add-Member -MemberType NoteProperty -Name "RootFoldername" -Value $extractedFolder
                 $temp | Add-Member -MemberType NoteProperty -Name "OtherMediaServerPosterUrl" -Value $Movie.ImageTags.Primary
                 $temp | Add-Member -MemberType NoteProperty -Name "OtherMediaServerBackgroundUrl" -Value $($Movie.BackdropImageTags -join ",")
@@ -12289,34 +12316,31 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
             $librarytemp = Invoke-RestMethod -Method Get -Uri $libraryQuery
             $librariestemp = $librarytemp | Where-Object { $_.CollectionType -eq 'movies' } | Select-Object Name, Locations -Unique
 
-            if ($Movie.Path -like "$($lib.Path)/*" -or $Movie.Path -like "$($lib.Path)\*") {
-                foreach ($singlelibrary in $librariestemp) {
-                    # Loop through each location in the library's Locations array
-                    foreach ($location in $singlelibrary.Locations) {
-                        # Compare lib.Path with each location
-                        if ($Movie.Path -like "$location/*" -or $Movie.Path -like "$location\*") {
-                            $SingleLibName = $singlelibrary.Name
-                            break # Exit loop after match
-                        }
+            foreach ($singlelibrary in $librariestemp) {
+                # Loop through each location in the library's Locations array
+                foreach ($location in $singlelibrary.Locations) {
+                    # Compare lib.Path with each location
+                    if ($Movie.Path -like "$location/*" -or $Movie.Path -like "$location\*") {
+                        $SingleLibName = $singlelibrary.Name
+                        break # Exit loop after match
                     }
-                }
-                if ($SingleLibName -notin $LibstoExclude) {
-                    Write-Entry -Subtext "Location: $($Movie.Path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                    Write-Entry -Subtext "Libpath: $($lib.Path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                    $Matchedpath = AddTrailingSlash $($lib.Path)
-                    $libpath = $Matchedpath
-                    $extractedFolder = $Movie.Path.Substring($libpath.Length)
-                    if ($extractedFolder -like '*\*') {
-                        $extractedFolder = $extractedFolder.split('\')[0]
-                    }
-                    if ($extractedFolder -like '*/*') {
-                        $extractedFolder = $extractedFolder.split('/')[0]
-                    }
-                    Write-Entry -Subtext "Matchedpath: $Matchedpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                    Write-Entry -Subtext "ExtractedFolder: $extractedFolder" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                 }
             }
             if ($SingleLibName -notin $LibstoExclude) {
+                Write-Entry -Subtext "Location: $($Movie.Path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                Write-Entry -Subtext "Libpath: $($lib.Path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                $Matchedpath = AddTrailingSlash $($lib.Path)
+                $libpath = $Matchedpath
+                $extractedFolder = $Movie.Path.Substring($libpath.Length)
+                if ($extractedFolder -like '*\*') {
+                    $extractedFolder = $extractedFolder.split('\')[0]
+                }
+                if ($extractedFolder -like '*/*') {
+                    $extractedFolder = $extractedFolder.split('/')[0]
+                }
+                Write-Entry -Subtext "Matchedpath: $Matchedpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                Write-Entry -Subtext "ExtractedFolder: $extractedFolder" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+
                 $temp = New-Object psobject
                 $temp | Add-Member -MemberType NoteProperty -Name "Library Name" -Value $SingleLibName
                 $temp | Add-Member -MemberType NoteProperty -Name "Library Type" -Value $Movie.Type
@@ -12346,34 +12370,31 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
         $librarytemp = Invoke-RestMethod -Method Get -Uri $libraryQuery
         $librariestemp = $librarytemp | Where-Object { $_.CollectionType -eq 'tvshows' } | Select-Object Name, Locations -Unique
 
-        if ($Show.Path -like "$($lib.Path)/*" -or $Show.Path -like "$($lib.Path)\*") {
-            foreach ($singlelibrary in $librariestemp) {
-                # Loop through each location in the library's Locations array
-                foreach ($location in $singlelibrary.Locations) {
-                    # Compare lib.Path with each location
-                    if ($Show.Path -like "$location/*" -or $Show.Path -like "$location\*") {
-                        $SingleLibName = $singlelibrary.Name
-                        break # Exit loop after match
-                    }
+        foreach ($singlelibrary in $librariestemp) {
+            # Loop through each location in the library's Locations array
+            foreach ($location in $singlelibrary.Locations) {
+                # Compare lib.Path with each location
+                if ($Show.Path -like "$location/*" -or $Show.Path -like "$location\*") {
+                    $SingleLibName = $singlelibrary.Name
+                    break # Exit loop after match
                 }
-            }
-            if ($SingleLibName -notin $LibstoExclude) {
-                Write-Entry -Subtext "Location: $($Show.Path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                Write-Entry -Subtext "Libpath: $($lib.Path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                $Matchedpath = AddTrailingSlash $($lib.Path)
-                $libpath = $Matchedpath
-                $extractedFolder = $Show.Path.Substring($libpath.Length)
-                if ($extractedFolder -like '*\*') {
-                    $extractedFolder = $extractedFolder.split('\')[0]
-                }
-                if ($extractedFolder -like '*/*') {
-                    $extractedFolder = $extractedFolder.split('/')[0]
-                }
-                Write-Entry -Subtext "Matchedpath: $Matchedpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                Write-Entry -Subtext "ExtractedFolder: $extractedFolder" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
             }
         }
         if ($SingleLibName -notin $LibstoExclude) {
+            Write-Entry -Subtext "Location: $($Show.Path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+            Write-Entry -Subtext "Libpath: $($lib.Path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+            $Matchedpath = AddTrailingSlash $($lib.Path)
+            $libpath = $Matchedpath
+            $extractedFolder = $Show.Path.Substring($libpath.Length)
+            if ($extractedFolder -like '*\*') {
+                $extractedFolder = $extractedFolder.split('\')[0]
+            }
+            if ($extractedFolder -like '*/*') {
+                $extractedFolder = $extractedFolder.split('/')[0]
+            }
+            Write-Entry -Subtext "Matchedpath: $Matchedpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+            Write-Entry -Subtext "ExtractedFolder: $extractedFolder" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+
             $temp = New-Object psobject
             $temp | Add-Member -MemberType NoteProperty -Name "Library Name" -Value $SingleLibName
             $temp | Add-Member -MemberType NoteProperty -Name "Library Type" -Value $Show.Type
@@ -12385,7 +12406,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
             $temp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value $Show.ProviderIds.Imdb
             $temp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value $Show.ProviderIds.Tmdb
             $temp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $Show.ProviderIds.Tvdb
-            $temp | Add-Member -MemberType NoteProperty -Name "Path" -Value $lib.Path
+            $temp | Add-Member -MemberType NoteProperty -Name "Path" -Value $libpath
             $temp | Add-Member -MemberType NoteProperty -Name "RootFoldername" -Value $extractedFolder
             $temp | Add-Member -MemberType NoteProperty -Name "OtherMediaServerPosterUrl" -Value $Show.ImageTags.Primary
             $temp | Add-Member -MemberType NoteProperty -Name "OtherMediaServerBackgroundUrl" -Value $($Show.BackdropImageTags -join ",")
