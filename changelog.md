@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## [1.8.29](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.29) - 2024-10-28 10:41:18
+
+## 🐛 Fixes
+- Jelly/Emby multi path Libs
+	- Sync now also works with multi lib paths
+	- Query now also works with multi lib paths
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.8.28...1.8.29
+
+### Bug Fixes
+
+- general:
+  - Jelly/Emby multi path Libs ([2f19996](https://github.com/fscorrupt/Posterizarr/commit/2f199962abd629344805d743345ff5de4231995e))
+
 ## [1.8.28](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.28) - 2024-10-23 17:37:28
 
 ## [1.8.27](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.27) - 2024-10-23 07:00:50
