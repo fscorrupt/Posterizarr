@@ -2,13 +2,6 @@
 
 ## [1.8.30](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.30) - 2024-10-29 07:42:42
 
-## 🚇 Added
-
-- add additional logic to Manual Mode
-	- now supports the show on season setting
-
-**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.8.29...1.8.30
-
 ## [1.8.29](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.29) - 2024-10-28 10:41:18
 
 ## [1.8.28](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.28) - 2024-10-23 17:37:28
