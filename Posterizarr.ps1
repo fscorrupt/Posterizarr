@@ -11,7 +11,7 @@ param (
     [switch]$SyncEmby
 )
 
-$CurrentScriptVersion = "1.8.29"
+$CurrentScriptVersion = "1.8.30"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -6591,11 +6591,28 @@ if ($Manual) {
     if ($global:ImageProcessing -eq 'true') {
         if ($CreateSeasonPoster -eq 'y') {
             $Posteroverlay = $Seasonoverlay
-            if ($fontAllCaps -eq 'true') {
-                $joinedTitle = $SeasonPosterName.ToUpper()
+            if ($AddShowTitletoSeason -eq 'true'){
+                if ($fontAllCaps -eq 'true') {
+                    $joinedTitle = $SeasonPosterName.ToUpper()
+                }
+                Else {
+                    $joinedTitle = $SeasonPosterName
+                }
+
+                if ($ShowOnSeasonfontAllCaps -eq 'true') {
+                    $ShowjoinedTitle = $titletext.ToUpper()
+                }
+                Else {
+                    $ShowjoinedTitle = $titletext
+                }
             }
             Else {
-                $joinedTitle = $SeasonPosterName
+                if ($fontAllCaps -eq 'true') {
+                    $joinedTitle = $SeasonPosterName.ToUpper()
+                }
+                Else {
+                    $joinedTitle = $SeasonPosterName
+                }
             }
         }
         Else {
@@ -6620,31 +6637,62 @@ if ($Manual) {
         $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
         InvokeMagickCommand -Command $magick -Arguments $CommentArguments
         if (!$global:ImageMagickError -eq 'true') {
-            # Resize Image to 2000x3000 and apply Border and overlay
-            if ($AddBorder -eq 'true' -and $AddOverlay -eq 'true') {
-                $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$PosterImage`""
-                Write-Entry -Subtext "Resizing it | Adding Borders | Adding Overlay" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
+            if ($CreateSeasonPoster -eq 'y') {
+                if ($AddSeasonBorder -eq 'true' -and $AddSeasonOverlay -eq 'true') {
+                    $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Seasonoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Seasonborderwidthsecond`"  -bordercolor `"$Seasonbordercolor`" -border `"$Seasonborderwidth`" `"$PosterImage`""
+                    Write-Entry -Subtext "Resizing it | Adding Borders | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                }
+                if ($AddSeasonBorder -eq 'true' -and $AddSeasonOverlay -eq 'false') {
+                    $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" -shave `"$Seasonborderwidthsecond`"  -bordercolor `"$Seasonbordercolor`" -border `"$Seasonborderwidth`" `"$PosterImage`""
+                    Write-Entry -Subtext "Resizing it | Adding Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                }
+                if ($AddSeasonBorder -eq 'false' -and $AddSeasonOverlay -eq 'true') {
+                    $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Seasonoverlay`" -gravity south -quality $global:outputQuality -composite `"$PosterImage`""
+                    Write-Entry -Subtext "Resizing it | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                }
+                if ($AddSeasonBorder -eq 'false' -and $AddSeasonOverlay -eq 'false') {
+                    $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$PosterImage`""
+                    Write-Entry -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                }
             }
-            if ($AddBorder -eq 'true' -and $AddOverlay -eq 'false') {
-                $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$PosterImage`""
-                Write-Entry -Subtext "Resizing it | Adding Borders" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
+            Else {
+                # Resize Image to 2000x3000 and apply Border and overlay
+                if ($AddBorder -eq 'true' -and $AddOverlay -eq 'true') {
+                    $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$PosterImage`""
+                    Write-Entry -Subtext "Resizing it | Adding Borders | Adding Overlay" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
+                }
+                if ($AddBorder -eq 'true' -and $AddOverlay -eq 'false') {
+                    $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$PosterImage`""
+                    Write-Entry -Subtext "Resizing it | Adding Borders" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
+                }
+                if ($AddBorder -eq 'false' -and $AddOverlay -eq 'true') {
+                    $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite `"$PosterImage`""
+                    Write-Entry -Subtext "Resizing it | Adding Overlay" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
+                }
+                if ($AddBorder -eq 'false' -and $AddOverlay -eq 'false') {
+                    $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$PosterImage`""
+                    Write-Entry -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
+                }
             }
-            if ($AddBorder -eq 'false' -and $AddOverlay -eq 'true') {
-                $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite `"$PosterImage`""
-                Write-Entry -Subtext "Resizing it | Adding Overlay" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
-            }
-            if ($AddBorder -eq 'false' -and $AddOverlay -eq 'false') {
-                $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$PosterImage`""
-                Write-Entry -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
-            }
-
             $logEntry = "`"$magick`" $Arguments"
             $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
             InvokeMagickCommand -Command $magick -Arguments $Arguments
 
             if ($AddText -eq 'true') {
                 $joinedTitle = $joinedTitle -replace '”', '"' -replace '“', '"' -replace '"', '""'
+                if ($AddShowTitletoSeason -eq 'true'){
+                    $ShowjoinedTitle = $ShowjoinedTitle -replace '”', '"' -replace '“', '"' -replace '"', '""'
+                    # Loop through each symbol and replace it with a newline
+                    if ($NewLineOnSpecificSymbols -eq 'true') {
+                        foreach ($symbol in $NewLineSymbols) {
+                            $ShowjoinedTitle = $ShowjoinedTitle -replace [regex]::Escape($symbol), "`n"
+                        }
+                    }
+                    $ShowjoinedTitlePointSize = $ShowjoinedTitle -replace '""', '""""'
+                    $showoptimalFontSize = Get-OptimalPointSize -text $ShowjoinedTitlePointSize -font $fontImagemagick -box_width $ShowOnSeasonMaxWidth  -box_height $ShowOnSeasonMaxHeight -min_pointsize $ShowOnSeasonminPointSize -max_pointsize $ShowOnSeasonmaxPointSize -lineSpacing $ShowOnSeasonlineSpacing
+                    Write-Entry -Subtext "Optimal show font size set to: '$showoptimalFontSize'" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
 
+                }
                 # Loop through each symbol and replace it with a newline
                 if ($NewLineOnSpecificSymbols -eq 'true') {
                     foreach ($symbol in $NewLineSymbols) {
@@ -6653,21 +6701,59 @@ if ($Manual) {
                 }
 
                 $joinedTitlePointSize = $joinedTitle -replace '""', '""""'
-                $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize -lineSpacing $lineSpacing
-                Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
-
-                # Add Stroke
-                if ($AddTextStroke -eq 'true') {
-                    $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -stroke `"$strokecolor`" -strokewidth `"$strokewidth`" -size `"$boxsize`" -background none -interline-spacing `"$lineSpacing`" -gravity south caption:`"$joinedTitle`" -trim +repage -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
+                if ($CreateSeasonPoster -eq 'y') {
+                    $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize -lineSpacing $SeasonlineSpacing
                 }
                 Else {
-                    $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none -interline-spacing `"$lineSpacing`" -gravity south caption:`"$joinedTitle`" -trim +repage -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
+                    $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize -lineSpacing $lineSpacing
                 }
-
-                Write-Entry -Subtext "    Applying Poster text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
-                $logEntry = "`"$magick`" $Arguments"
-                $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
-                InvokeMagickCommand -Command $magick -Arguments $Arguments
+                Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
+                if ($CreateSeasonPoster -eq 'y') {
+                    # Add Stroke
+                    if ($AddSeasonTextStroke -eq 'true') {
+                        $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Seasonfontcolor`" -stroke `"$Seasonstrokecolor`" -strokewidth `"$Seasonstrokewidth`" -size `"$Seasonboxsize`" -background none -interline-spacing `"$SeasonlineSpacing`" -gravity south caption:`"$joinedTitle`" -trim +repage -extent `"$Seasonboxsize`" `) -gravity south -geometry +0`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
+                    }
+                    Else {
+                        $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Seasonfontcolor`" -size `"$Seasonboxsize`" -background none -interline-spacing `"$SeasonlineSpacing`" -gravity south caption:`"$joinedTitle`" -trim +repage -extent `"$Seasonboxsize`" `) -gravity south -geometry +0`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
+                    }
+                    if ($AddShowTitletoSeason -eq 'true'){
+                        # Show Part
+                        # Add Stroke
+                        if ($AddShowOnSeasonTextStroke -eq 'true') {
+                            $ShowOnSeasonArguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$showoptimalFontSize`" -fill `"$ShowOnSeasonfontcolor`" -stroke `"$ShowOnSeasonstrokecolor`" -strokewidth `"$ShowOnSeasonstrokewidth`" -size `"$ShowOnSeasonboxsize`" -background none -interline-spacing `"$ShowOnSeasonlineSpacing`" -gravity south caption:`"$ShowjoinedTitle`" -trim +repage -extent `"$ShowOnSeasonboxsize`" `) -gravity south -geometry +0`"$ShowOnSeasontext_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
+                        }
+                        Else {
+                            $ShowOnSeasonArguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$showoptimalFontSize`" -fill `"$ShowOnSeasonfontcolor`" -size `"$ShowOnSeasonboxsize`" -background none -interline-spacing `"$ShowOnSeasonlineSpacing`" -gravity south caption:`"$ShowjoinedTitle`" -trim +repage -extent `"$ShowOnSeasonboxsize`" `) -gravity south -geometry +0`"$ShowOnSeasontext_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
+                        }
+                    }
+                }
+                Else {
+                    # Add Stroke
+                    if ($AddTextStroke -eq 'true') {
+                        $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -stroke `"$strokecolor`" -strokewidth `"$strokewidth`" -size `"$boxsize`" -background none -interline-spacing `"$lineSpacing`" -gravity south caption:`"$joinedTitle`" -trim +repage -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
+                    }
+                    Else {
+                        $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none -interline-spacing `"$lineSpacing`" -gravity south caption:`"$joinedTitle`" -trim +repage -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
+                    }
+                }
+                if ($CreateSeasonPoster -eq 'y') {
+                    Write-Entry -Subtext "    Applying Season Poster text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
+                    $logEntry = "`"$magick`" $Arguments"
+                    $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+                    InvokeMagickCommand -Command $magick -Arguments $Arguments
+                    if ($AddShowTitletoSeason -eq 'true'){
+                        Write-Entry -Subtext "    Applying showTitle text: `"$ShowjoinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                        $logEntry = "`"$magick`" $ShowOnSeasonArguments"
+                        $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+                        InvokeMagickCommand -Command $magick -Arguments $ShowOnSeasonArguments
+                    }
+                }
+                Else {
+                    Write-Entry -Subtext "    Applying Poster text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
+                    $logEntry = "`"$magick`" $Arguments"
+                    $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+                    InvokeMagickCommand -Command $magick -Arguments $Arguments
+                }
             }
         }
     }
