@@ -8330,7 +8330,15 @@ Elseif ($Tautulli) {
                             $Arturl = $plexurl + $entry.PlexPosterUrl
                         }
 
-                        if (Test-Path "$($Manualtestpath).*"){
+                        foreach ($ext in $allowedExtensions) {
+                            $filePath = "$ManualTestPath$ext"
+                            if (Test-Path -LiteralPath $filePath) {
+                                $posterext = $ext
+                                break
+                            }
+                        }
+
+                        if (Test-Path -LiteralPath "$($Manualtestpath)$posterext"){
                             Write-Entry -Message "Found Manual Poster for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             $TakeLocal = $true
                         }
@@ -8421,7 +8429,7 @@ Elseif ($Tautulli) {
                         }
                         if ($global:posterurl -or $global:PlexartworkDownloaded -or $TakeLocal) {
                             if ($TakeLocal){
-                                Get-ChildItem -LiteralPath $ManualTestPath+'.*' | ForEach-Object {
+                                Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                     Copy-Item -LiteralPath $_.FullName -Destination $PosterImage | Out-Null
                                 }
                                 Write-Entry -Subtext "Copy local asset to: $PosterImage" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
@@ -8688,7 +8696,15 @@ Elseif ($Tautulli) {
                             $Arturl = $plexurl + $entry.PlexBackgroundUrl
                         }
 
-                        if (Test-Path "$($Manualtestpath).*"){
+                        foreach ($ext in $allowedExtensions) {
+                            $filePath = "$ManualTestPath$ext"
+                            if (Test-Path -LiteralPath $filePath) {
+                                $posterext = $ext
+                                break
+                            }
+                        }
+
+                        if (Test-Path -LiteralPath "$($Manualtestpath)$posterext"){
                             Write-Entry -Message "Found Manual Background for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             $TakeLocal = $true
                         }
@@ -8772,7 +8788,7 @@ Elseif ($Tautulli) {
                         }
                         if ($global:posterurl -or $global:PlexartworkDownloaded -or $TakeLocal) {
                             if ($TakeLocal){
-                                Get-ChildItem -LiteralPath $ManualTestPath+'.*' | ForEach-Object {
+                                Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                     Copy-Item -LiteralPath $_.FullName -Destination $BackgroundImage | Out-Null
                                 }
                                 Write-Entry -Subtext "Copy local asset to: $BackgroundImage" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
@@ -9108,7 +9124,14 @@ Elseif ($Tautulli) {
             # Now we can start the Poster Part
             if ($global:Posters -eq 'true') {
                 if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
-                    if (Test-Path "$($Manualtestpath).*"){
+                    foreach ($ext in $allowedExtensions) {
+                        $filePath = "$ManualTestPath$ext"
+                        if (Test-Path -LiteralPath $filePath) {
+                            $posterext = $ext
+                            break
+                        }
+                    }
+                    if (Test-Path -LiteralPath "$($Manualtestpath)$posterext"){
                         Write-Entry -Message "Found Manual Poster for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                         $TakeLocal = $true
                     }
@@ -9196,7 +9219,7 @@ Elseif ($Tautulli) {
                     }
                     if ($global:posterurl -or $global:PlexartworkDownloaded -or $TakeLocal) {
                         if ($TakeLocal){
-                            Get-ChildItem -LiteralPath $ManualTestPath+'.*' | ForEach-Object {
+                            Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                 Copy-Item -LiteralPath $_.FullName -Destination $PosterImage | Out-Null
                             }
                             Write-Entry -Subtext "Copy local asset to: $PosterImage" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
@@ -9469,8 +9492,14 @@ Elseif ($Tautulli) {
                     Else {
                         $Arturl = $plexurl + $entry.PlexBackgroundUrl
                     }
-
-                    if (Test-Path "$($Manualtestpath).*"){
+                    foreach ($ext in $allowedExtensions) {
+                        $filePath = "$ManualTestPath$ext"
+                        if (Test-Path -LiteralPath $filePath) {
+                            $posterext = $ext
+                            break
+                        }
+                    }
+                    if (Test-Path -LiteralPath "$($Manualtestpath)$posterext"){
                         Write-Entry -Message "Found Manual Background for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                         $TakeLocal = $true
                     }
@@ -9557,7 +9586,7 @@ Elseif ($Tautulli) {
                     }
                     if ($global:posterurl -or $global:PlexartworkDownloaded -or $TakeLocal) {
                         if ($TakeLocal){
-                            Get-ChildItem -LiteralPath $ManualTestPath+'.*' | ForEach-Object {
+                            Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                 Copy-Item -LiteralPath $_.FullName -Destination $backgroundImage | Out-Null
                             }
                             Write-Entry -Subtext "Copy local asset to: $backgroundImage" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
@@ -9851,7 +9880,15 @@ Elseif ($Tautulli) {
                         Else {
                             $Arturl = $plexurl + $global:PlexSeasonUrl
                         }
-                        if (Test-Path "$($Manualtestpath).*"){
+                        foreach ($ext in $allowedExtensions) {
+                            $filePath = "$ManualTestPath$ext"
+                            if (Test-Path -LiteralPath $filePath) {
+                                $posterext = $ext
+                                break
+                            }
+                        }
+
+                        if (Test-Path -LiteralPath "$($Manualtestpath)$posterext"){
                             Write-Entry -Message "Found Manual Season Poster for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             $TakeLocal = $true
                         }
@@ -9954,7 +9991,7 @@ Elseif ($Tautulli) {
                         if ($global:posterurl -or $global:PlexartworkDownloaded -or $TakeLocal) {
                             if ($global:ImageProcessing -eq 'true') {
                                 if ($TakeLocal){
-                                    Get-ChildItem -LiteralPath $ManualTestPath+'.*' | ForEach-Object {
+                                    Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                         Copy-Item -LiteralPath $_.FullName -Destination $SeasonImage | Out-Null
                                     }
                                     Write-Entry -Subtext "Copy local asset to: $SeasonImage" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
@@ -10113,7 +10150,7 @@ Elseif ($Tautulli) {
                             }
                             Else {
                                 if ($TakeLocal){
-                                    Get-ChildItem -LiteralPath $ManualTestPath+'.*' | ForEach-Object {
+                                    Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                         Copy-Item -LiteralPath $_.FullName -Destination $SeasonImage | Out-Null
                                     }
                                     Write-Entry -Subtext "Copy local asset to: $SeasonImage" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
@@ -10381,7 +10418,15 @@ Elseif ($Tautulli) {
                                         Else {
                                             $Arturl = $plexurl + $global:PlexTitleCardUrl
                                         }
-                                        if (Test-Path "$($Manualtestpath).*"){
+                                        foreach ($ext in $allowedExtensions) {
+                                            $filePath = "$ManualTestPath$ext"
+                                            if (Test-Path -LiteralPath $filePath) {
+                                                $posterext = $ext
+                                                break
+                                            }
+                                        }
+
+                                        if (Test-Path -LiteralPath "$($Manualtestpath)$posterext"){
                                             if (!$Episodepostersearchtext) {
                                                 Write-Entry -Message "Found Manual Title Card for: $global:show_name - $global:SeasonEPNumber" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                 $TakeLocal = $true
@@ -10485,7 +10530,7 @@ Elseif ($Tautulli) {
                                         if ($global:posterurl -or $global:PlexartworkDownloaded -or $TakeLocal) {
                                             if ($global:ImageProcessing -eq 'true') {
                                                 if ($TakeLocal){
-                                                    Get-ChildItem -LiteralPath $ManualTestPath+'.*' | ForEach-Object {
+                                                    Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                                         Copy-Item -LiteralPath $_.FullName -Destination $EpisodeImage | Out-Null
                                                     }
                                                     if ($global:TempImagecopied -ne 'true'){
@@ -10631,7 +10676,7 @@ Elseif ($Tautulli) {
                                             }
                                             Else {
                                                 if ($TakeLocal){
-                                                    Get-ChildItem -LiteralPath $ManualTestPath+'.*' | ForEach-Object {
+                                                    Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                                         Copy-Item -LiteralPath $_.FullName -Destination $EpisodeImage
                                                     }
                                                     Write-Entry -Subtext "Copy local asset to: $EpisodeImage" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
@@ -10993,7 +11038,7 @@ Elseif ($Tautulli) {
                                         if ($global:posterurl -or $global:PlexartworkDownloaded -or $TakeLocal) {
                                             if ($global:ImageProcessing -eq 'true') {
                                                 if ($TakeLocal){
-                                                    Get-ChildItem -LiteralPath $ManualTestPath+'.*' | ForEach-Object {
+                                                    Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                                         Copy-Item -LiteralPath $_.FullName -Destination $EpisodeImage | Out-Null
                                                     }
                                                     Write-Entry -Subtext "Copy local asset to: $EpisodeImage" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
@@ -11119,7 +11164,7 @@ Elseif ($Tautulli) {
                                             }
                                             Else {
                                                 if ($TakeLocal){
-                                                    Get-ChildItem -LiteralPath $ManualTestPath+'.*' | ForEach-Object {
+                                                    Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                                         Copy-Item -LiteralPath $_.FullName -Destination $EpisodeImage
                                                     }
                                                     Write-Entry -Subtext "Copy local asset to: $EpisodeImage" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
@@ -12680,7 +12725,15 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                         $global:IsFallback = $null
                         $global:ImageMagickError = $null
                         $TakeLocal = $null
-                        if (Test-Path "$($Manualtestpath).*"){
+                        foreach ($ext in $allowedExtensions) {
+                            $filePath = "$ManualTestPath$ext"
+                            if (Test-Path -LiteralPath $filePath) {
+                                $posterext = $ext
+                                break
+                            }
+                        }
+
+                        if (Test-Path -LiteralPath "$($Manualtestpath)$posterext"){
                             Write-Entry -Message "Found Manual Poster for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             $TakeLocal = $true
                         }
@@ -12761,7 +12814,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                         }
                         if ($global:posterurl -or $TakeLocal) {
                             if ($TakeLocal){
-                                Get-ChildItem -LiteralPath $ManualTestPath+'.*' | ForEach-Object {
+                                Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                     Copy-Item -LiteralPath $_.FullName -Destination $PosterImage | Out-Null
                                 }
                                 Write-Entry -Subtext "Copy local asset to: $PosterImage" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
@@ -12998,7 +13051,15 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                         $global:ImageMagickError = $null
                         $global:TextlessPoster = $null
                         $TakeLocal = $null
-                        if (Test-Path "$($Manualtestpath).*"){
+                        foreach ($ext in $allowedExtensions) {
+                            $filePath = "$ManualTestPath$ext"
+                            if (Test-Path -LiteralPath $filePath) {
+                                $posterext = $ext
+                                break
+                            }
+                        }
+
+                        if (Test-Path -LiteralPath "$($Manualtestpath)$posterext"){
                             Write-Entry -Message "Found Manual Background for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             $TakeLocal = $true
                         }
@@ -13074,7 +13135,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                         }
                         if ($global:posterurl -or $TakeLocal) {
                             if ($TakeLocal){
-                                Get-ChildItem -LiteralPath $ManualTestPath+'.*' | ForEach-Object {
+                                Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                     Copy-Item -LiteralPath $_.FullName -Destination $backgroundImage | Out-Null
                                 }
                                 Write-Entry -Subtext "Copy local asset to: $backgroundImage" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
@@ -13378,7 +13439,15 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
             if ($global:Posters -eq 'true') {
                 $checkedItems += $hashtestpath
                 if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
-                    if (Test-Path "$($Manualtestpath).*"){
+                    foreach ($ext in $allowedExtensions) {
+                        $filePath = "$ManualTestPath$ext"
+                        if (Test-Path -LiteralPath $filePath) {
+                            $posterext = $ext
+                            break
+                        }
+                    }
+
+                    if (Test-Path -LiteralPath "$($Manualtestpath)$posterext"){
                         Write-Entry -Message "Found Manual Poster for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                         $TakeLocal = $true
                     }
@@ -13453,7 +13522,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                     }
                     if ($global:posterurl -or $TakeLocal) {
                         if ($TakeLocal){
-                            Get-ChildItem -LiteralPath $ManualTestPath+'.*' | ForEach-Object {
+                            Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                 Copy-Item -LiteralPath $_.FullName -Destination $PosterImage | Out-Null
                             }
                             Write-Entry -Subtext "Copy local asset to: $PosterImage" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
@@ -13696,7 +13765,15 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                     $global:TextlessPoster = $null
                     $global:ImageMagickError = $null
                     $TakeLocal = $null
-                    if (Test-Path "$($Manualtestpath).*"){
+                    foreach ($ext in $allowedExtensions) {
+                        $filePath = "$ManualTestPath$ext"
+                        if (Test-Path -LiteralPath $filePath) {
+                            $posterext = $ext
+                            break
+                        }
+                    }
+
+                    if (Test-Path -LiteralPath "$($Manualtestpath)$posterext"){
                         Write-Entry -Message "Found Manual Background for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                         $TakeLocal = $true
                     }
@@ -13775,7 +13852,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                     }
                     if ($global:posterurl -or $TakeLocal) {
                         if ($TakeLocal){
-                            Get-ChildItem -LiteralPath $ManualTestPath+'.*' | ForEach-Object {
+                            Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                 Copy-Item -LiteralPath $_.FullName -Destination $backgroundImage | Out-Null
                             }
                             Write-Entry -Subtext "Copy local asset to: $backgroundImage" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
@@ -14048,7 +14125,15 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                         $SeasonImage = $SeasonImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
                         $checkedItems += $hashtestpath
                         if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
-                            if (Test-Path "$($Manualtestpath).*"){
+                            foreach ($ext in $allowedExtensions) {
+                                $filePath = "$ManualTestPath$ext"
+                                if (Test-Path -LiteralPath $filePath) {
+                                    $posterext = $ext
+                                    break
+                                }
+                            }
+
+                            if (Test-Path -LiteralPath "$($Manualtestpath)$posterext"){
                                 if (!$Seasonpostersearchtext) {
                                     Write-Entry -Message "Found Manual Season Poster for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                     $TakeLocal = $true
@@ -14141,7 +14226,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                             }
                             if ($global:posterurl -or $TakeLocal) {
                                 if ($TakeLocal){
-                                    Get-ChildItem -LiteralPath $ManualTestPath+'.*' | ForEach-Object {
+                                    Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                         Copy-Item -LiteralPath $_.FullName -Destination $SeasonImage | Out-Null
                                     }
                                     Write-Entry -Subtext "Copy local asset to: $SeasonImage" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
@@ -14491,7 +14576,15 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                 Else {
                                     $checkedItems += $hashtestpath
                                     if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
-                                        if (Test-Path "$($Manualtestpath).*"){
+                                        foreach ($ext in $allowedExtensions) {
+                                            $filePath = "$ManualTestPath$ext"
+                                            if (Test-Path -LiteralPath $filePath) {
+                                                $posterext = $ext
+                                                break
+                                            }
+                                        }
+
+                                        if (Test-Path -LiteralPath "$($Manualtestpath)$posterext"){
                                             if (!$Episodepostersearchtext) {
                                                 Write-Entry -Message "Found Manual Title Card for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                 $TakeLocal = $true
@@ -14570,7 +14663,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                         }
                                         if ($global:posterurl -or $TakeLocal) {
                                             if ($TakeLocal){
-                                                Get-ChildItem -LiteralPath $ManualTestPath+'.*' | ForEach-Object {
+                                                Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                                     Copy-Item -LiteralPath $_.FullName -Destination $EpisodeImage | Out-Null
                                                 }
                                                 if ($global:TempImagecopied -ne 'true'){
@@ -14858,7 +14951,15 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                 Else {
                                     $checkedItems += $hashtestpath
                                     if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
-                                        if (Test-Path "$($Manualtestpath).*"){
+                                        foreach ($ext in $allowedExtensions) {
+                                            $filePath = "$ManualTestPath$ext"
+                                            if (Test-Path -LiteralPath $filePath) {
+                                                $posterext = $ext
+                                                break
+                                            }
+                                        }
+
+                                        if (Test-Path -LiteralPath "$($Manualtestpath)$posterext"){
                                             if (!$Episodepostersearchtext) {
                                                 Write-Entry -Message "Found Manual Title Card for: $global:show_name - $global:SeasonEPNumber" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                 $TakeLocal = $true
@@ -14981,7 +15082,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                         }
                                         if ($global:posterurl -or $TakeLocal) {
                                             if ($TakeLocal){
-                                                Get-ChildItem -LiteralPath $ManualTestPath+'.*' | ForEach-Object {
+                                                Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                                     Copy-Item -LiteralPath $_.FullName -Destination $EpisodeImage | Out-Null
                                                 }
                                                 Write-Entry -Subtext "Copy local asset to: $EpisodeImage" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
@@ -16314,7 +16415,16 @@ else {
                         Else {
                             $Arturl = $plexurl + $entry.PlexPosterUrl
                         }
-                        if (Test-Path "$($Manualtestpath).*"){
+
+                        foreach ($ext in $allowedExtensions) {
+                            $filePath = "$ManualTestPath$ext"
+                            if (Test-Path -LiteralPath $filePath) {
+                                $posterext = $ext
+                                break
+                            }
+                        }
+
+                        if (Test-Path -LiteralPath "$($Manualtestpath)$posterext"){
                             Write-Entry -Message "Found Manual Poster for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             $TakeLocal = $true
                         }
@@ -16405,7 +16515,7 @@ else {
                         }
                         if ($global:posterurl -or $global:PlexartworkDownloaded -or $TakeLocal) {
                             if ($TakeLocal){
-                                Get-ChildItem -LiteralPath $ManualTestPath+'.*' | ForEach-Object {
+                                Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                     Copy-Item -LiteralPath $_.FullName -Destination $PosterImage | Out-Null
                                 }
                                 Write-Entry -Subtext "Copy local asset to: $PosterImage" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
@@ -16701,7 +16811,16 @@ else {
                         Else {
                             $Arturl = $plexurl + $entry.PlexBackgroundUrl
                         }
-                        if (Test-Path "$($Manualtestpath).*"){
+
+                        foreach ($ext in $allowedExtensions) {
+                            $filePath = "$ManualTestPath$ext"
+                            if (Test-Path -LiteralPath $filePath) {
+                                $posterext = $ext
+                                break
+                            }
+                        }
+
+                        if (Test-Path -LiteralPath "$($Manualtestpath)$posterext"){
                             Write-Entry -Message "Found Manual Background for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             $TakeLocal = $true
                         }
@@ -16786,7 +16905,7 @@ else {
                         }
                         if ($global:posterurl -or $global:PlexartworkDownloaded -or $TakeLocal) {
                             if ($TakeLocal){
-                                Get-ChildItem -LiteralPath $ManualTestPath+'.*' | ForEach-Object {
+                                Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                     Copy-Item -LiteralPath $_.FullName -Destination $BackgroundImage | Out-Null
                                 }
                                 Write-Entry -Subtext "Copy local asset to: $BackgroundImage" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
@@ -17153,7 +17272,14 @@ else {
             if ($global:Posters -eq 'true') {
                 $checkedItems += $hashtestpath
                 if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
-                    if (Test-Path "$($Manualtestpath).*"){
+                    foreach ($ext in $allowedExtensions) {
+                        $filePath = "$ManualTestPath$ext"
+                        if (Test-Path -LiteralPath $filePath) {
+                            $posterext = $ext
+                            break
+                        }
+                    }
+                    if (Test-Path -LiteralPath "$($Manualtestpath)$posterext"){
                         Write-Entry -Message "Found Manual Poster for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                         $TakeLocal = $true
                     }
@@ -17246,7 +17372,7 @@ else {
                     }
                     if ($global:posterurl -or $global:PlexartworkDownloaded -or $TakeLocal) {
                         if ($TakeLocal){
-                            Get-ChildItem -LiteralPath $ManualTestPath+'.*' | ForEach-Object {
+                            Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                 Copy-Item -LiteralPath $_.FullName -Destination $PosterImage | Out-Null
                             }
                             Write-Entry -Subtext "Copy local asset to: $PosterImage" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
@@ -17549,7 +17675,14 @@ else {
                     Else {
                         $Arturl = $plexurl + $entry.PlexBackgroundUrl
                     }
-                    if (Test-Path "$($Manualtestpath).*"){
+                    foreach ($ext in $allowedExtensions) {
+                        $filePath = "$ManualTestPath$ext"
+                        if (Test-Path -LiteralPath $filePath) {
+                            $posterext = $ext
+                            break
+                        }
+                    }
+                    if (Test-Path -LiteralPath "$($Manualtestpath)$posterext"){
                         Write-Entry -Message "Found Manual Background for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                         $TakeLocal = $true
                     }
@@ -17635,7 +17768,7 @@ else {
                     }
                     if ($global:posterurl -or $global:PlexartworkDownloaded -or $TakeLocal) {
                         if ($TakeLocal){
-                            Get-ChildItem -LiteralPath $ManualTestPath+'.*' | ForEach-Object {
+                            Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                 Copy-Item -LiteralPath $_.FullName -Destination $BackgroundImage | Out-Null
                             }
                             Write-Entry -Subtext "Copy local asset to: $BackgroundImage" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
@@ -17959,7 +18092,14 @@ else {
                         Else {
                             $Arturl = $plexurl + $global:PlexSeasonUrl
                         }
-                        if (Test-Path "$($Manualtestpath).*"){
+                        foreach ($ext in $allowedExtensions) {
+                            $filePath = "$ManualTestPath$ext"
+                            if (Test-Path -LiteralPath $filePath) {
+                                $posterext = $ext
+                                break
+                            }
+                        }
+                        if (Test-Path -LiteralPath "$($Manualtestpath)$posterext"){
                             if (!$Seasonpostersearchtext) {
                                 Write-Entry -Message "Found Manual Season Poster for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 $TakeLocal = $true
@@ -18065,7 +18205,7 @@ else {
                         if ($global:posterurl -or $global:PlexartworkDownloaded -or $TakeLocal) {
                             if ($global:ImageProcessing -eq 'true') {
                                 if ($TakeLocal){
-                                    Get-ChildItem -LiteralPath $ManualTestPath+'.*' | ForEach-Object {
+                                    Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                         Copy-Item -LiteralPath $_.FullName -Destination $SeasonImage
                                     }
                                     Write-Entry -Subtext "Copy local asset to: $SeasonImage" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
@@ -18224,7 +18364,7 @@ else {
                             }
                             Else {
                                 if ($TakeLocal){
-                                    Get-ChildItem -LiteralPath $ManualTestPath+'.*' | ForEach-Object {
+                                    Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                         Copy-Item -LiteralPath $_.FullName -Destination $SeasonImage
                                     }
                                     Write-Entry -Subtext "Copy local asset to: $SeasonImage" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
@@ -18625,7 +18765,7 @@ else {
                                         if ($global:posterurl -or $global:PlexartworkDownloaded -or $TakeLocal) {
                                             if ($global:ImageProcessing -eq 'true') {
                                                 if ($TakeLocal){
-                                                    Get-ChildItem -LiteralPath $ManualTestPath+'.*' | ForEach-Object {
+                                                    Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                                         Copy-Item -LiteralPath $_.FullName -Destination $EpisodeImage | Out-Null
                                                     }
                                                     if ($global:TempImagecopied -ne 'true'){
@@ -18769,7 +18909,7 @@ else {
                                             }
                                             Else {
                                                 if ($TakeLocal){
-                                                    Get-ChildItem -LiteralPath $ManualTestPath+'.*' | ForEach-Object {
+                                                    Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                                         Copy-Item -LiteralPath $_.FullName -Destination $EpisodeImage
                                                     }
                                                     Write-Entry -Subtext "Copy local asset to: $EpisodeImage" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
@@ -19016,7 +19156,14 @@ else {
                                         $Arturl = $plexurl + $global:PlexTitleCardUrl
                                     }
                                     if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
-                                        if (Test-Path "$($Manualtestpath).*"){
+                                        foreach ($ext in $allowedExtensions) {
+                                            $filePath = "$ManualTestPath$ext"
+                                            if (Test-Path -LiteralPath $filePath) {
+                                                $posterext = $ext
+                                                break
+                                            }
+                                        }
+                                        if (Test-Path -LiteralPath "$($Manualtestpath)$posterext"){
                                             if (!$Episodepostersearchtext) {
                                                 Write-Entry -Message "Found Manual Title Card for: $global:show_name - $global:SeasonEPNumber" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                 $TakeLocal = $true
@@ -19164,7 +19311,7 @@ else {
                                         if ($global:posterurl -or $global:PlexartworkDownloaded -or $TakeLocal) {
                                             if ($global:ImageProcessing -eq 'true') {
                                                 if ($TakeLocal){
-                                                    Get-ChildItem -LiteralPath $ManualTestPath+'.*' | ForEach-Object {
+                                                    Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                                         Copy-Item -LiteralPath $_.FullName -Destination $EpisodeImage | Out-Null
                                                     }
                                                     Write-Entry -Subtext "Copy local asset to: $EpisodeImage" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
@@ -19290,7 +19437,7 @@ else {
                                             }
                                             Else {
                                                 if ($TakeLocal){
-                                                    Get-ChildItem -LiteralPath $ManualTestPath+'.*' | ForEach-Object {
+                                                    Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                                         Copy-Item -LiteralPath $_.FullName -Destination $EpisodeImage | Out-Null
                                                     }
                                                     Write-Entry -Subtext "Copy local asset to: $EpisodeImage" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
