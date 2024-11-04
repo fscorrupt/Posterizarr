@@ -67,6 +67,7 @@
     "ForceRunningDeletion": "false",
     "AutoUpdatePosterizarr": "false",
     "BackupPath": "P:\\assetsbackup",
+    "ManualAssetPath": "P:\\manualassets",
     "PlexUpload": "false",
     "show_skipped": "false",
     "magickinstalllocation": "C:\\PosterTemp\\ImageMagickPortable",
