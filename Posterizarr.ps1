@@ -12126,7 +12126,7 @@ Elseif ($SyncJelly -or $SyncEmby) {
     # START HERE
     Write-Entry -Message "Starting artwork sync now, this can take a while..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
     Write-Entry -Message "Starting movie artwork sync part..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
-    pause
+
     # Movie Part
     foreach ($entry in $AllMovies) {
         try {
