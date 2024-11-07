@@ -12,7 +12,7 @@ param (
     [switch]$SyncEmby
 )
 
-$CurrentScriptVersion = "1.9.1"
+$CurrentScriptVersion = "1.9.2"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -11814,9 +11814,6 @@ Elseif ($SyncJelly -or $SyncEmby) {
     $PreferredMetadataLanguage = (Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/System/Configuration?api_key=$OtherMediaServerApiKey").PreferredMetadataLanguage
     $allLibsquery = "$OtherMediaServerUrl/Library/VirtualFolders?api_key=$OtherMediaServerApiKey"
     $OtherAllLibs = Invoke-RestMethod -Method Get -Uri $allLibsquery
-    $OtherAllEpisodes = $null
-    $OtherAllShows = $null
-    $OtherAllMovies = $null
 
     write-Entry -Subtext "Found '$($OtherAllLibs.count)' libs and '$($LibstoExclude.count)' are excluded..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     $IncludedLibraryNames = ($OtherAllLibs | Where-Object {$_.Name -notin $LibstoExclude}).Name -join ', '
@@ -11832,19 +11829,26 @@ Elseif ($SyncJelly -or $SyncEmby) {
         Write-Entry -Subtext "--------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
     }
 
+    $OtherAllMovies = @()
+    $OtherAllShows = @()
+    $OtherAllEpisodes = @()
+
     foreach ($otherlib in $OtherAllLibs){
         if ($otherlib.Name -notin $LibstoExclude) {
             if ($otherlib.CollectionType -eq 'movies'){
                 Write-Entry -Subtext "Getting all Itmes from [$($otherlib.Name)] with item id [$($otherlib.ItemId)]" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                 $allMoviesquery = "$OtherMediaServerUrl/Items?ParentId=$($otherlib.ItemId)&api_key=$OtherMediaServerApiKey&Recursive=true&Fields=ProviderIds,OriginalTitle,Settings,Path,Overview,ProductionYear,Tags&IncludeItemTypes=Movie"
-                $OtherAllMovies += Invoke-RestMethod -Method Get -Uri $allMoviesquery
+                $Querytemp = Invoke-RestMethod -Method Get -Uri $allMoviesquery
+                $OtherAllMovies += $Querytemp
             }
             if ($otherlib.CollectionType -eq 'tvshows'){
                 Write-Entry -Subtext "Getting all Itmes from [$($otherlib.Name)] with item id [$($otherlib.ItemId)]" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                 $allShowsquery = "$OtherMediaServerUrl/Items?ParentId=$($otherlib.ItemId)&api_key=$OtherMediaServerApiKey&Recursive=true&Fields=ProviderIds,SeasonUserData,OriginalTitle,Path,Overview,ProductionYear,Tags&IncludeItemTypes=Series"
                 $allEpisodesquery = "$OtherMediaServerUrl/Items?ParentId=$($otherlib.ItemId)&api_key=$OtherMediaServerApiKey&Recursive=true&Fields=ProviderIds,SeasonUserData,OriginalTitle,Path,Overview,Settings,Tags&IncludeItemTypes=Episode"
-                $OtherAllShows += Invoke-RestMethod -Method Get -Uri $allShowsquery
-                $OtherAllEpisodes += Invoke-RestMethod -Method Get -Uri $allEpisodesquery
+                $Querytempshow = Invoke-RestMethod -Method Get -Uri $allShowsquery
+                $QuerytempEpisodes = Invoke-RestMethod -Method Get -Uri $allEpisodesquery
+                $OtherAllShows += $Querytempshow
+                $OtherAllEpisodes += $QuerytempEpisodes
             }
         }
     }
@@ -12122,6 +12126,7 @@ Elseif ($SyncJelly -or $SyncEmby) {
     # START HERE
     Write-Entry -Message "Starting artwork sync now, this can take a while..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
     Write-Entry -Message "Starting movie artwork sync part..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+    pause
     # Movie Part
     foreach ($entry in $AllMovies) {
         try {
@@ -12460,20 +12465,25 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
         Write-Entry -Subtext "  Lib locations: $($lib.Locations)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
         Write-Entry -Subtext "--------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
     }
-
+    $AllMovies = @()
+    $AllShows = @()
+    $AllEpisodes = @()
     foreach ($slib in $AllLibs){
         if ($slib.Name -notin $LibstoExclude) {
             if ($slib.CollectionType -eq 'movies'){
                 Write-Entry -Subtext "Getting all Itmes from [$($slib.Name)] with item id [$($slib.ItemId)]" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                 $allMoviesquery = "$OtherMediaServerUrl/Items?ParentId=$($slib.ItemId)&api_key=$OtherMediaServerApiKey&Recursive=true&Fields=ProviderIds,OriginalTitle,Settings,Path,Overview,ProductionYear,Tags&IncludeItemTypes=Movie"
-                $AllMovies += Invoke-RestMethod -Method Get -Uri $allMoviesquery
+                $Querytemp = Invoke-RestMethod -Method Get -Uri $allMoviesquery
+                $AllMovies += $Querytemp
             }
             if ($slib.CollectionType -eq 'tvshows'){
                 Write-Entry -Subtext "Getting all Itmes from [$($slib.Name)] with item id [$($slib.ItemId)]" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                 $allShowsquery = "$OtherMediaServerUrl/Items?ParentId=$($slib.ItemId)&api_key=$OtherMediaServerApiKey&Recursive=true&Fields=ProviderIds,SeasonUserData,OriginalTitle,Path,Overview,ProductionYear,Tags&IncludeItemTypes=Series"
                 $allEpisodesquery = "$OtherMediaServerUrl/Items?ParentId=$($slib.ItemId)&api_key=$OtherMediaServerApiKey&Recursive=true&Fields=ProviderIds,SeasonUserData,OriginalTitle,Path,Overview,Settings,Tags&IncludeItemTypes=Episode"
-                $AllShows += Invoke-RestMethod -Method Get -Uri $allShowsquery
-                $AllEpisodes += Invoke-RestMethod -Method Get -Uri $allEpisodesquery
+                $Querytempshow = Invoke-RestMethod -Method Get -Uri $allShowsquery
+                $QuerytempEpisodes = Invoke-RestMethod -Method Get -Uri $allEpisodesquery
+                $AllShows += $Querytempshow
+                $AllEpisodes += $QuerytempEpisodes
             }
         }
     }
