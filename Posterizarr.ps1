@@ -12,7 +12,7 @@ param (
     [switch]$SyncEmby
 )
 
-$CurrentScriptVersion = "1.9.3"
+$CurrentScriptVersion = "1.9.4"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -11103,10 +11103,17 @@ Elseif ($Tautulli) {
                                             Else {
                                                 $Arturl = $plexurl + $global:PlexTitleCardUrl
                                             }
-                                            if (!$Episodepostersearchtext) {
+                                            foreach ($ext in $allowedExtensions) {
+                                                $filePath = "$ManualTestPath$ext"
+                                                if (Test-Path -LiteralPath $filePath) {
+                                                    Write-Entry -Message "Local file exists: $filePath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                                    $posterext = $ext
+                                                    break
+                                                }
+                                            }
+                                            if (Test-Path -LiteralPath "$($Manualtestpath)$posterext"){
                                                 Write-Entry -Message "Found Manual Title Card for: $global:show_name - $global:SeasonEPNumber" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                 $TakeLocal = $true
-                                                $Episodepostersearchtext = $true
                                             }
                                             Else {
                                                 if (!$Episodepostersearchtext) {
@@ -19221,7 +19228,15 @@ else {
                                     Else {
                                         $checkedItems += $hashtestpath
                                         if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
-                                            if (!$Episodepostersearchtext) {
+                                            foreach ($ext in $allowedExtensions) {
+                                                $filePath = "$ManualTestPath$ext"
+                                                if (Test-Path -LiteralPath $filePath) {
+                                                    Write-Entry -Message "Local file exists: $filePath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                                    $posterext = $ext
+                                                    break
+                                                }
+                                            }
+                                            if (Test-Path -LiteralPath "$($Manualtestpath)$posterext"){
                                                 Write-Entry -Message "Found Manual Title Card for: $global:show_name - $global:SeasonEPNumber" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                 $TakeLocal = $true
                                                 $Episodepostersearchtext = $true
