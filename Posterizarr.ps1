@@ -7,11 +7,12 @@ param (
     [string]$grandparentratingkey,
     [string]$mediatype,
     [switch]$Backup,
+    [switch]$dev,
     [switch]$SyncJelly,
     [switch]$SyncEmby
 )
 
-$CurrentScriptVersion = "1.9.2"
+$CurrentScriptVersion = "1.9.0"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -290,7 +291,7 @@ function SendMessage {
                 $jsonPayload = @"
     {
         "username": "Posterizarr",
-        "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/dev/images/webhook.png",
+        "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
         "content": "",
         "embeds": [
         {
@@ -374,7 +375,7 @@ function SendMessage {
                 $jsonPayload = @"
     {
         "username": "Posterizarr",
-        "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/dev/images/webhook.png",
+        "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
         "content": "",
         "embeds": [
         {
@@ -465,7 +466,7 @@ function SendMessage {
             $jsonPayload = @"
     {
         "username": "Posterizarr",
-        "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/dev/images/webhook.png",
+        "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
         "content": "",
         "embeds": [
         {
@@ -549,7 +550,7 @@ function SendMessage {
             jsonPayload = @"
     {
         "username": "Posterizarr",
-        "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/dev/images/webhook.png",
+        "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
         "content": "",
         "embeds": [
         {
@@ -3175,7 +3176,7 @@ function CheckJson {
                         Write-Entry -Message "Missing Main Attribute in your Config file: $partKey." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                         Write-Entry -Subtext "I will copy all settings from 'PosterOverlayPart'..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                         Write-Entry -Subtext "Adding it for you... In GH Readme, look for $partKey - if you want to see what changed..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                        Write-Entry -Subtext "GH Readme -> https://github.com/fscorrupt/Posterizarr/blob/dev/README.md#configuration" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                        Write-Entry -Subtext "GH Readme -> https://github.com/fscorrupt/Posterizarr/blob/$($Branch)/README.md#configuration" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                         # Convert the updated configuration object back to JSON and save it, then reload it
                         $configJson = $config | ConvertTo-Json -Depth 10
                         $configJson | Set-Content -Path $jsonFilePath -Force
@@ -3184,7 +3185,7 @@ function CheckJson {
                     Else {
                         Write-Entry -Message "Missing Main Attribute in your Config file: $partKey." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                         Write-Entry -Subtext "Adding it for you... In GH Readme, look for $partKey - if you want to see what changed..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                        Write-Entry -Subtext "GH Readme -> https://github.com/fscorrupt/Posterizarr/blob/dev/README.md#configuration" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                        Write-Entry -Subtext "GH Readme -> https://github.com/fscorrupt/Posterizarr/blob/$($Branch)/README.md#configuration" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                         $config | Add-Member -MemberType NoteProperty -Name $partKey -Value $defaultConfig.$partKey
                         $AttributeChanged = $True
                     }
@@ -3208,7 +3209,7 @@ function CheckJson {
                         if (-not $config.$partKey.PSObject.Properties.Name.tolower().Contains($propertyKey.tolower())) {
                             Write-Entry -Message "Missing Sub-Attribute in your Config file: $partKey.$propertyKey" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                             Write-Entry -Subtext "Adding it for you... In GH Readme, look for $partKey.$propertyKey - if you want to see what changed..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                            Write-Entry -Subtext "GH Readme -> https://github.com/fscorrupt/Posterizarr/blob/dev/README.md#configuration" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                            Write-Entry -Subtext "GH Readme -> https://github.com/fscorrupt/Posterizarr/blob/$($Branch)/README.md#configuration" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             # Add the property using the expected casing
                             $config.$partKey | Add-Member -MemberType NoteProperty -Name $propertyKey -Value $defaultConfig.$partKey.$propertyKey -Force
                             $AttributeChanged = $True
@@ -3308,7 +3309,7 @@ function Get-Platform {
 }
 function Get-LatestScriptVersion {
     try {
-        return Invoke-RestMethod -Uri "https://github.com/fscorrupt/Posterizarr/raw/dev/Release.txt" -Method Get -ErrorAction Stop
+        return Invoke-RestMethod -Uri "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/Release.txt" -Method Get -ErrorAction Stop
     }
     catch {
         Write-Entry -Subtext "Could not query latest script version, Error: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
@@ -3349,7 +3350,7 @@ function CheckConfigFile {
 
     if (!(Test-Path (Join-Path $ScriptRoot 'config.json'))) {
         Write-Entry -Message "Config File missing, downloading it for you..." -Path "$ScriptRoot\Logs\Scriptlog.log" -Color White -log Info
-        Invoke-WebRequest -Uri "https://github.com/fscorrupt/Posterizarr/raw/dev/config.example.json" -OutFile "$ScriptRoot\config.json"
+        Invoke-WebRequest -Uri "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/config.example.json" -OutFile "$ScriptRoot\config.json"
         Write-Entry -Subtext "Config File downloaded here: '$ScriptRoot\config.json'" -Path "$ScriptRoot\Logs\Scriptlog.log" -Color White -log Info
         Write-Entry -Subtext "Please configure the config file according to GitHub, Exit script now..." -Path "$ScriptRoot\Logs\Scriptlog.log" -Color Yellow -log Warning
         # Clear Running File
@@ -5370,7 +5371,7 @@ function MassDownloadPlexArtwork {
                 $jsonPayload = @"
             {
                 "username": "Posterizarr",
-                "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/dev/images/webhook.png",
+                "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
                 "content": "",
                 "embeds": [
                 {
@@ -5429,7 +5430,7 @@ function MassDownloadPlexArtwork {
                     }
                     ],
                     "thumbnail": {
-                        "url": "https://github.com/fscorrupt/Posterizarr/raw/dev/images/webhook.png"
+                        "url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png"
                     },
                     "footer": {
                         "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $CurrentImagemagickversion | IM vNext: $LatestImagemagickversion"
@@ -5443,7 +5444,7 @@ function MassDownloadPlexArtwork {
                 $jsonPayload = @"
         {
             "username": "Posterizarr",
-            "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/dev/images/webhook.png",
+            "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
             "content": "",
             "embeds": [
             {
@@ -5482,7 +5483,7 @@ function MassDownloadPlexArtwork {
                 }
                 ],
                 "thumbnail": {
-                    "url": "https://github.com/fscorrupt/Posterizarr/raw/dev/images/webhook.png"
+                    "url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png"
                 },
                 "footer": {
                     "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $CurrentImagemagickversion | IM vNext: $LatestImagemagickversion"
@@ -5498,7 +5499,7 @@ function MassDownloadPlexArtwork {
                 $jsonPayload = @"
             {
                 "username": "Posterizarr",
-                "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/dev/images/webhook.png",
+                "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
                 "content": "",
                 "embeds": [
                 {
@@ -5557,7 +5558,7 @@ function MassDownloadPlexArtwork {
                     }
                     ],
                     "thumbnail": {
-                        "url": "https://github.com/fscorrupt/Posterizarr/raw/dev/images/webhook.png"
+                        "url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png"
                     },
                     "footer": {
                         "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $CurrentImagemagickversion | IM vNext: $LatestImagemagickversion"
@@ -5571,7 +5572,7 @@ function MassDownloadPlexArtwork {
                 $jsonPayload = @"
             {
                 "username": "Posterizarr",
-                "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/dev/images/webhook.png",
+                "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
                 "content": "",
                 "embeds": [
                 {
@@ -5610,7 +5611,7 @@ function MassDownloadPlexArtwork {
                     }
                     ],
                     "thumbnail": {
-                        "url": "https://github.com/fscorrupt/Posterizarr/raw/dev/images/webhook.png"
+                        "url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png"
                     },
                     "footer": {
                         "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $CurrentImagemagickversion | IM vNext: $LatestImagemagickversion"
@@ -5729,6 +5730,13 @@ function SyncPlexArtwork {
 #### FUNCTION END ####
 
 ##### PRE-START #####
+# Set Branch
+if ($dev){
+    $Branch = 'dev'
+}
+Else {
+    $Branch = 'main'
+}
 # Set some global vars
 Set-OSTypeAndScriptRoot
 # Get platform
@@ -5746,7 +5754,7 @@ Write-Entry -Message "Starting..." -Path $global:ScriptRoot\Logs\Scriptlog.log -
 # Check if Config file is present
 CheckConfigFile -ScriptRoot $global:ScriptRoot
 # Test Json if something is missing
-CheckJson -jsonExampleUrl "https://github.com/fscorrupt/Posterizarr/raw/dev/config.example.json" -jsonFilePath $(Join-Path $global:ScriptRoot 'config.json')
+CheckJson -jsonExampleUrl "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/config.example.json" -jsonFilePath $(Join-Path $global:ScriptRoot 'config.json')
 # Check if Script is Latest
 if ($CurrentScriptVersion -eq $LatestScriptVersion) {
     Write-Entry -Message "You are Running Version - v$CurrentScriptVersion" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
@@ -5766,7 +5774,7 @@ if ($Platform -ne 'Docker' -and $config.PrerequisitePart.AutoUpdatePosterizarr.t
     Write-Entry -Subtext "Backup current Script to: $CurrentScriptPath.bak" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
     Copy-Item -Path $CurrentScriptPath -Destination "$CurrentScriptPath.bak" -Force
     try {
-        Invoke-WebRequest -Uri "https://github.com/fscorrupt/Posterizarr/raw/dev/Posterizarr.ps1" -OutFile $CurrentScriptPath -ErrorAction Stop
+        Invoke-WebRequest -Uri "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/Posterizarr.ps1" -OutFile $CurrentScriptPath -ErrorAction Stop
         Write-Entry -Subtext "Posterizarr script updated to v$LatestScriptVersion, please restart script..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
     }
     catch {
@@ -6401,16 +6409,16 @@ if ($Testing) {
 
 # Test and download files if they don't exist
 if ($config.PrerequisitePart.overlayfile -eq 'overlay.png' -or $config.PrerequisitePart.seasonoverlayfile -eq 'overlay.png') {
-    Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/dev/overlay.png" -destination (Join-Path $global:ScriptRoot 'overlay.png')
+    Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/overlay.png" -destination (Join-Path $global:ScriptRoot 'overlay.png')
 }
 if ($config.PrerequisitePart.backgroundoverlayfile -eq 'backgroundoverlay.png' -or $config.PrerequisitePart.titlecardoverlayfile -eq 'backgroundoverlay.png') {
-    Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/dev/backgroundoverlay.png" -destination (Join-Path $global:ScriptRoot 'backgroundoverlay.png')
+    Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/backgroundoverlay.png" -destination (Join-Path $global:ScriptRoot 'backgroundoverlay.png')
 }
 if ($config.PrerequisitePart.font -eq 'Rocky.ttf' -or $config.PrerequisitePart.backgroundfont -eq 'Rocky.ttf' -or $config.PrerequisitePart.titlecardfont -eq 'Rocky.ttf' -or $config.PrerequisitePart.RTLFont -eq 'Rocky.ttf') {
-    Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/dev/Rocky.ttf" -destination (Join-Path $global:ScriptRoot 'Rocky.ttf')
+    Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/Rocky.ttf" -destination (Join-Path $global:ScriptRoot 'Rocky.ttf')
 }
 if ($config.PrerequisitePart.font -eq 'Colus-Regular.ttf' -or $config.PrerequisitePart.backgroundfont -eq 'Colus-Regular.ttf' -or $config.PrerequisitePart.titlecardfont -eq 'Colus-Regular.ttf' -or $config.PrerequisitePart.RTLFont -eq 'Colus-Regular.ttf') {
-    Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/dev/Colus-Regular.ttf" -destination (Join-Path $global:ScriptRoot 'Colus-Regular.ttf')
+    Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/Colus-Regular.ttf" -destination (Join-Path $global:ScriptRoot 'Colus-Regular.ttf')
 }
 
 # Write log message
@@ -7801,7 +7809,7 @@ Elseif ($Testing) {
         $jsonPayload = @"
         {
             "username": "Posterizarr",
-            "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/dev/images/webhook.png",
+            "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
             "content": "",
             "embeds": [
             {
@@ -7845,7 +7853,7 @@ Elseif ($Testing) {
                 }
                 ],
                 "thumbnail": {
-                    "url": "https://github.com/fscorrupt/Posterizarr/raw/dev/images/webhook.png"
+                    "url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png"
                 },
                 "footer": {
                     "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $CurrentImagemagickversion | IM vNext: $LatestImagemagickversion"
@@ -7864,7 +7872,7 @@ Elseif ($Testing) {
             $jsonPayload = @"
             {
                 "username": "Posterizarr",
-                "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/dev/images/webhook.png",
+                "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
                 "content": "",
                 "embeds": [
                 {
@@ -7908,7 +7916,7 @@ Elseif ($Testing) {
                     }
                     ],
                     "thumbnail": {
-                        "url": "https://github.com/fscorrupt/Posterizarr/raw/dev/images/webhook.png"
+                        "url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png"
                     },
                     "footer": {
                         "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $CurrentImagemagickversion | IM vNext: $LatestImagemagickversion"
@@ -11807,7 +11815,7 @@ Elseif ($SyncJelly -or $SyncEmby) {
     $OtherAllMovies = $null
 
     write-Entry -Subtext "Found '$($OtherAllLibs.count)' libs and '$($LibstoExclude.count)' are excluded..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
-    $IncludedLibraryNames = ($OtherAllLibs | Where-Object {$_.Name -notin $LibstoExclude}).Name -join ', ' 
+    $IncludedLibraryNames = ($OtherAllLibs | Where-Object {$_.Name -notin $LibstoExclude}).Name -join ', '
     Write-Entry -Subtext "Included Libraries: $IncludedLibraryNames" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
 
     # Debug Output all Libs
@@ -12315,7 +12323,7 @@ Elseif ($SyncJelly -or $SyncEmby) {
         $jsonPayload = @"
             {
                 "username": "Posterizarr",
-                "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/dev/images/webhook.png",
+                "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
                 "content": "",
                 "embeds": [
                 {
@@ -12364,7 +12372,7 @@ Elseif ($SyncJelly -or $SyncEmby) {
                     }
                     ],
                     "thumbnail": {
-                        "url": "https://github.com/fscorrupt/Posterizarr/raw/dev/images/webhook.png"
+                        "url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png"
                     },
                     "footer": {
                         "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $CurrentImagemagickversion | IM vNext: $LatestImagemagickversion"
@@ -12405,7 +12413,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
     $AllLibs = Invoke-RestMethod -Method Get -Uri $allLibsquery
 
     write-Entry -Subtext "Found '$($AllLibs.count)' libs and '$($LibstoExclude.count)' are excluded..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
-    $IncludedLibraryNames = ($AllLibs | Where-Object {$_.Name -notin $LibstoExclude}).Name -join ', ' 
+    $IncludedLibraryNames = ($AllLibs | Where-Object {$_.Name -notin $LibstoExclude}).Name -join ', '
     Write-Entry -Subtext "Included Libraries: $IncludedLibraryNames" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
 
     # Debug Output all Libs
@@ -15630,7 +15638,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                 $jsonPayload = @"
                     {
                         "username": "Posterizarr",
-                        "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/dev/images/webhook.png",
+                        "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
                         "content": "",
                         "embeds": [
                         {
@@ -15729,7 +15737,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                             }
                             ],
                             "thumbnail": {
-                                "url": "https://github.com/fscorrupt/Posterizarr/raw/dev/images/webhook.png"
+                                "url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png"
                             },
                             "footer": {
                                 "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $CurrentImagemagickversion | IM vNext: $LatestImagemagickversion"
@@ -15743,7 +15751,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                 $jsonPayload = @"
                 {
                     "username": "Posterizarr",
-                    "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/dev/images/webhook.png",
+                    "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
                     "content": "",
                     "embeds": [
                     {
@@ -15822,7 +15830,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                         }
                         ],
                         "thumbnail": {
-                            "url": "https://github.com/fscorrupt/Posterizarr/raw/dev/images/webhook.png"
+                            "url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png"
                         },
                         "footer": {
                             "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $CurrentImagemagickversion | IM vNext: $LatestImagemagickversion"
@@ -15838,7 +15846,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                 $jsonPayload = @"
                     {
                         "username": "Posterizarr",
-                        "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/dev/images/webhook.png",
+                        "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
                         "content": "",
                         "embeds": [
                         {
@@ -15927,7 +15935,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                             }
                             ],
                             "thumbnail": {
-                                "url": "https://github.com/fscorrupt/Posterizarr/raw/dev/images/webhook.png"
+                                "url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png"
                             },
                             "footer": {
                                 "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $CurrentImagemagickversion | IM vNext: $LatestImagemagickversion"
@@ -15941,7 +15949,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                 $jsonPayload = @"
                     {
                         "username": "Posterizarr",
-                        "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/dev/images/webhook.png",
+                        "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
                         "content": "",
                         "embeds": [
                         {
@@ -16010,7 +16018,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                             }
                             ],
                             "thumbnail": {
-                                "url": "https://github.com/fscorrupt/Posterizarr/raw/dev/images/webhook.png"
+                                "url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png"
                             },
                             "footer": {
                                 "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $CurrentImagemagickversion | IM vNext: $LatestImagemagickversion"
@@ -17249,7 +17257,7 @@ else {
                                             }
                                             # Export the array to a CSV file
                                             $moviebackgroundtemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
-                                        }   
+                                        }
                                     }
                                 }
                             }
@@ -18674,7 +18682,7 @@ else {
                                             }
                                             # Export the array to a CSV file
                                             $seasontemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
-                                        }   
+                                        }
                                     }
                                 }
                             }
@@ -18844,7 +18852,7 @@ else {
                                     Write-Entry -Message "Manual Test Path is: $ManualTestPath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                                     Write-Entry -Message "Resolved Manual Test Path is: $Manualtestpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                                     Write-Entry -Message "Resolved Manual Full Test Path is: $fullManualTestPath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                                    
+
                                     $EpisodeImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_$global:FileNaming.jpg"
                                     $EpisodeImage = $EpisodeImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
 
@@ -20002,7 +20010,7 @@ else {
                 $jsonPayload = @"
                 {
                     "username": "Posterizarr",
-                    "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/dev/images/webhook.png",
+                    "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
                     "content": "",
                     "embeds": [
                     {
@@ -20101,7 +20109,7 @@ else {
                         }
                         ],
                         "thumbnail": {
-                            "url": "https://github.com/fscorrupt/Posterizarr/raw/dev/images/webhook.png"
+                            "url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png"
                         },
                         "footer": {
                             "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $CurrentImagemagickversion | IM vNext: $LatestImagemagickversion"
@@ -20115,7 +20123,7 @@ else {
                 $jsonPayload = @"
             {
                 "username": "Posterizarr",
-                "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/dev/images/webhook.png",
+                "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
                 "content": "",
                 "embeds": [
                 {
@@ -20194,7 +20202,7 @@ else {
                     }
                     ],
                     "thumbnail": {
-                        "url": "https://github.com/fscorrupt/Posterizarr/raw/dev/images/webhook.png"
+                        "url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png"
                     },
                     "footer": {
                         "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $CurrentImagemagickversion | IM vNext: $LatestImagemagickversion"
@@ -20210,7 +20218,7 @@ else {
                 $jsonPayload = @"
                 {
                     "username": "Posterizarr",
-                    "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/dev/images/webhook.png",
+                    "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
                     "content": "",
                     "embeds": [
                     {
@@ -20299,7 +20307,7 @@ else {
                         }
                         ],
                         "thumbnail": {
-                            "url": "https://github.com/fscorrupt/Posterizarr/raw/dev/images/webhook.png"
+                            "url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png"
                         },
                         "footer": {
                             "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $CurrentImagemagickversion | IM vNext: $LatestImagemagickversion"
@@ -20313,7 +20321,7 @@ else {
                 $jsonPayload = @"
                 {
                     "username": "Posterizarr",
-                    "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/dev/images/webhook.png",
+                    "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
                     "content": "",
                     "embeds": [
                     {
@@ -20382,7 +20390,7 @@ else {
                         }
                         ],
                         "thumbnail": {
-                            "url": "https://github.com/fscorrupt/Posterizarr/raw/dev/images/webhook.png"
+                            "url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png"
                         },
                         "footer": {
                             "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $CurrentImagemagickversion | IM vNext: $LatestImagemagickversion"
