@@ -7,11 +7,6 @@
     "JellyfinAPIKey": "xxxxxxxxxxxxx",
     "EmbyAPIKey": "xxxxxxxxxxxxx",
     "FavProvider": "tmdb",
-    "WidthHeightFilter": "false",
-    "PosterMinWidth": "2000",
-    "PosterMinHeight": "3000",
-    "BgTcMinWidth": "3840",
-    "BgTcMinHeight": "2160",
     "PreferredLanguageOrder": [
       "xx",
       "en",
@@ -22,7 +17,12 @@
       "en",
       "de"
     ],
-    "tmdb_vote_sorting": "vote_average"
+    "tmdb_vote_sorting": "vote_average",
+    "WidthHeightFilter": "false",
+    "PosterMinWidth": "2000",
+    "PosterMinHeight": "3000",
+    "BgTcMinWidth": "3840",
+    "BgTcMinHeight": "2160"
   },
   "PlexPart": {
     "LibstoExclude": [
@@ -30,7 +30,9 @@
       "Audiobooks",
       "Kids Audiobooks",
       "Tech Trainings",
-      "Kids Music"
+      "Kids Music",
+      "Photos",
+      "PosterizarrTestMovies"
     ],
     "PlexUrl": "http://plex:32400",
     "UsePlex": "true",
@@ -42,7 +44,8 @@
       "Audiobooks",
       "KidsAudiobooks",
       "TechTrainings",
-      "KidsMusic"
+      "KidsMusic",
+      "Photos"
     ],
     "JellyfinUrl": "http://jellyfin:8096",
     "UseJellyfin": "false",
@@ -54,7 +57,8 @@
       "Audiobooks",
       "KidsAudiobooks",
       "TechTrainings",
-      "KidsMusic"
+      "Kids Music",
+      "Photos"
     ],
     "EmbyUrl": "http://emby:8096/emby",
     "UseEmby": "false",
@@ -62,18 +66,14 @@
   },
   "Notification": {
     "SendNotification": "True",
-    "AppriseUrl": "discord://xxxxxxxxxx/xxxxxxxxxxxxx",
+    "AppriseUrl": "discord://xxxxxxxxxxxxx/xxxxxxxxxxxxx",
     "Discord": ""
   },
   "PrerequisitePart": {
     "AssetPath": "/assets",
-    "PlexUpload": "false",
-    "ForeceRunningDeletion": "false",
-    "AutoUpdatePosterizarr": "false",
     "magickinstalllocation": "C:\\PosterTemp\\ImageMagickPortable",
     "maxLogs": "5",
     "font": "Colus-Regular.ttf",
-    "RTLFont": "Aharoni CLM Book.ttf",
     "backgroundfont": "Colus-Regular.ttf",
     "titlecardfont": "Colus-Regular.ttf",
     "overlayfile": "bottom-up-fade.png",
@@ -93,9 +93,16 @@
     "NewLineOnSpecificSymbols": "true",
     "NewLineSymbols": [
       " - ",
-      ":"
+      ": ",
+      " – "
     ],
-    "seasonoverlayfile": "bottom-up-fade.png"
+    "seasonoverlayfile": "bottom-up-fade.png",
+    "RTLFont": "Aharoni CLM Book.ttf",
+    "PlexUpload": "false",
+    "BackupPath": "/assetsbackup",
+    "ManualAssetPath": "/manualassets",
+    "ForceRunningDeletion": "false",
+    "AutoUpdatePosterizarr": "false"
   },
   "OverlayPart": {
     "ImageProcessing": "true",
@@ -116,7 +123,8 @@
     "borderwidth": "30",
     "MaxWidth": "1900",
     "MaxHeight": "500",
-    "text_offset": "+430"
+    "text_offset": "+430",
+    "lineSpacing": "0"
   },
   "BackgroundOverlayPart": {
     "fontAllCaps": "true",
@@ -133,7 +141,8 @@
     "borderwidth": "30",
     "MaxWidth": "3640",
     "MaxHeight": "500",
-    "text_offset": "+200"
+    "text_offset": "+200",
+    "lineSpacing": "0"
   },
   "TitleCardOverlayPart": {
     "UseBackgroundAsTitleCard": "false",
@@ -154,7 +163,8 @@
     "maxPointSize": "150",
     "MaxWidth": "3640",
     "MaxHeight": "280",
-    "text_offset": "+300"
+    "text_offset": "+300",
+    "lineSpacing": "0"
   },
   "TitleCardEPTextPart": {
     "fontAllCaps": "true",
@@ -169,13 +179,13 @@
     "MaxHeight": "120",
     "text_offset": "+150",
     "SeasonTCText": "Season",
-    "EpisodeTCText": "Episode"
+    "EpisodeTCText": "Episode",
+    "lineSpacing": "0"
   },
   "SeasonPosterOverlayPart": {
     "fontAllCaps": "true",
     "AddBorder": "true",
     "AddText": "true",
-    "SeasonTextNewLines": "1",
     "AddTextStroke": "false",
     "strokecolor": "black",
     "strokewidth": "6",
@@ -187,7 +197,8 @@
     "borderwidth": "30",
     "MaxWidth": "1900",
     "MaxHeight": "500",
-    "text_offset": "+400"
+    "text_offset": "+400",
+    "lineSpacing": "0"
   },
   "ShowTitleOnSeasonPosterPart": {
     "AddShowTitletoSeason": "false",
