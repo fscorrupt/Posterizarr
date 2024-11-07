@@ -12,7 +12,7 @@ param (
     [switch]$SyncEmby
 )
 
-$CurrentScriptVersion = "1.9.2"
+$CurrentScriptVersion = "1.9.3"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -4571,8 +4571,20 @@ function MassDownloadPlexArtwork {
                             }
                             # Move file back to original naming with Brackets.
                             if (Get-ChildItem -LiteralPath $PosterImage -ErrorAction SilentlyContinue) {
-                                Move-Item -LiteralPath $PosterImage $PosterImageoriginal -Force -ErrorAction SilentlyContinue
-                                Write-Entry -Subtext "Added: $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                                try {
+                                    # Attempt to move the item
+                                    Move-Item -LiteralPath $PosterImage -Destination $PosterImageoriginal -Force -ErrorAction Stop
+
+                                    # Log success if move was successful
+                                    Write-Entry -Subtext "Added: $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -Log Info
+                                }
+                                catch {
+                                    # Log the error if the move operation fails
+                                    Write-Entry -Subtext "Failed to move $PosterImage to $PosterImageoriginal." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                    Write-Entry -Subtext "Error: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                    Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                    $errorCount++
+                                }
                                 Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                 $posterCount++
                             }
@@ -4673,8 +4685,20 @@ function MassDownloadPlexArtwork {
 
                             # Move file back to original naming with Brackets.
                             if (Get-ChildItem -LiteralPath $backgroundImage -ErrorAction SilentlyContinue) {
-                                Move-Item -LiteralPath $backgroundImage $backgroundImageoriginal -Force -ErrorAction SilentlyContinue
-                                Write-Entry -Subtext "Added: $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                                try {
+                                    # Attempt to move the item
+                                    Move-Item -LiteralPath $backgroundImage -Destination $backgroundImageoriginal -Force -ErrorAction Stop
+
+                                    # Log success if move was successful
+                                    Write-Entry -Subtext "Added: $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -Log Info
+                                }
+                                catch {
+                                    # Log the error if the move operation fails
+                                    Write-Entry -Subtext "Failed to move $backgroundImage to $backgroundImageoriginal." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                    Write-Entry -Subtext "Error: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                    Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                    $errorCount++
+                                }
                                 Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                 $posterCount++
                                 $BackgroundCount++
@@ -4832,8 +4856,20 @@ function MassDownloadPlexArtwork {
                         }
                         if (Get-ChildItem -LiteralPath $PosterImage -ErrorAction SilentlyContinue) {
                             # Move file back to original naming with Brackets.
-                            Move-Item -LiteralPath $PosterImage $PosterImageoriginal -Force -ErrorAction SilentlyContinue
-                            Write-Entry -Subtext "Added: $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                            try {
+                                # Attempt to move the item
+                                Move-Item -LiteralPath $PosterImage -Destination $PosterImageoriginal -Force -ErrorAction Stop
+
+                                # Log success if move was successful
+                                Write-Entry -Subtext "Added: $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -Log Info
+                            }
+                            catch {
+                                # Log the error if the move operation fails
+                                Write-Entry -Subtext "Failed to move $PosterImage to $PosterImageoriginal." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                Write-Entry -Subtext "Error: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                $errorCount++
+                            }
                             Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                             $posterCount++
                         }
@@ -4942,11 +4978,22 @@ function MassDownloadPlexArtwork {
                         }
                         # Move file back to original naming with Brackets.
                         if (Get-ChildItem -LiteralPath $backgroundImage -ErrorAction SilentlyContinue) {
+                            try {
+                                # Attempt to move the item
+                                Move-Item -LiteralPath $backgroundImage -Destination $backgroundImageoriginal -Force -ErrorAction Stop
 
-                            Move-Item -LiteralPath $backgroundImage $backgroundImageoriginal -Force -ErrorAction SilentlyContinue
-                            $BackgroundCount++
-                            Write-Entry -Subtext "Added: $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                                # Log success if move was successful
+                                Write-Entry -Subtext "Added: $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -Log Info
+                            }
+                            catch {
+                                # Log the error if the move operation fails
+                                Write-Entry -Subtext "Failed to move $backgroundImage to $backgroundImageoriginal." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                Write-Entry -Subtext "Error: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                $errorCount++
+                            }
                             Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
+                            $BackgroundCount++
                             $posterCount++
                         }
                     }
@@ -5069,8 +5116,20 @@ function MassDownloadPlexArtwork {
                             }
                             if (Get-ChildItem -LiteralPath $SeasonImage -ErrorAction SilentlyContinue) {
                                 # Move file back to original naming with Brackets.
-                                Move-Item -LiteralPath $SeasonImage -destination $SeasonImageoriginal -Force -ErrorAction SilentlyContinue
-                                Write-Entry -Subtext "Added: $SeasonImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                                try {
+                                    # Attempt to move the item
+                                    Move-Item -LiteralPath $SeasonImage -Destination $SeasonImageoriginal -Force -ErrorAction Stop
+
+                                    # Log success if move was successful
+                                    Write-Entry -Subtext "Added: $SeasonImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -Log Info
+                                }
+                                catch {
+                                    # Log the error if the move operation fails
+                                    Write-Entry -Subtext "Failed to move $SeasonImage to $SeasonImageoriginal." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                    Write-Entry -Subtext "Error: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                    Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                    $errorCount++
+                                }
                                 Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                 $SeasonCount++
                                 $posterCount++
@@ -5209,8 +5268,20 @@ function MassDownloadPlexArtwork {
                                     }
                                     if (Get-ChildItem -LiteralPath $EpisodeImage -ErrorAction SilentlyContinue) {
                                         # Move file back to original naming with Brackets.
-                                        Move-Item -LiteralPath $EpisodeImage -destination $EpisodeImageoriginal -Force -ErrorAction SilentlyContinue
-                                        Write-Entry -Subtext "Added: $EpisodeImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                                        try {
+                                            # Attempt to move the item
+                                            Move-Item -LiteralPath $EpisodeImage -Destination $EpisodeImageoriginal -Force -ErrorAction Stop
+
+                                            # Log success if move was successful
+                                            Write-Entry -Subtext "Added: $EpisodeImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -Log Info
+                                        }
+                                        catch {
+                                            # Log the error if the move operation fails
+                                            Write-Entry -Subtext "Failed to move $EpisodeImage to $EpisodeImageoriginal." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                            Write-Entry -Subtext "Error: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                            $errorCount++
+                                        }
                                         Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                         $EpisodeCount++
                                         $posterCount++
@@ -8602,8 +8673,20 @@ Elseif ($Tautulli) {
                                                 Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                 $errorCount++
                                             }
-                                            Move-Item -LiteralPath $PosterImage $PosterImageoriginal -Force -ErrorAction SilentlyContinue
-                                            Write-Entry -Subtext "Added: $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                                            try {
+                                                # Attempt to move the item
+                                                Move-Item -LiteralPath $PosterImage -Destination $PosterImageoriginal -Force -ErrorAction Stop
+
+                                                # Log success if move was successful
+                                                Write-Entry -Subtext "Added: $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -Log Info
+                                            }
+                                            catch {
+                                                # Log the error if the move operation fails
+                                                Write-Entry -Subtext "Failed to move $PosterImage to $PosterImageoriginal." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                                Write-Entry -Subtext "Error: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                                $errorCount++
+                                            }
                                             Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                             $posterCount++
                                         }
@@ -8964,8 +9047,20 @@ Elseif ($Tautulli) {
                                                 Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                 $errorCount++
                                             }
-                                            Move-Item -LiteralPath $backgroundImage $backgroundImageoriginal -Force -ErrorAction SilentlyContinue
-                                            Write-Entry -Subtext "Added: $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                                            try {
+                                                # Attempt to move the item
+                                                Move-Item -LiteralPath $backgroundImage -Destination $backgroundImageoriginal -Force -ErrorAction Stop
+
+                                                # Log success if move was successful
+                                                Write-Entry -Subtext "Added: $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -Log Info
+                                            }
+                                            catch {
+                                                # Log the error if the move operation fails
+                                                Write-Entry -Subtext "Failed to move $backgroundImage to $backgroundImageoriginal." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                                Write-Entry -Subtext "Error: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                                $errorCount++
+                                            }
                                             Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                             $posterCount++
                                             $BackgroundCount++
@@ -9408,8 +9503,20 @@ Elseif ($Tautulli) {
                                             Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                             $errorCount++
                                         }
-                                        Move-Item -LiteralPath $PosterImage $PosterImageoriginal -Force -ErrorAction SilentlyContinue
-                                        Write-Entry -Subtext "Added: $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                                        try {
+                                            # Attempt to move the item
+                                            Move-Item -LiteralPath $PosterImage -Destination $PosterImageoriginal -Force -ErrorAction Stop
+
+                                            # Log success if move was successful
+                                            Write-Entry -Subtext "Added: $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -Log Info
+                                        }
+                                        catch {
+                                            # Log the error if the move operation fails
+                                            Write-Entry -Subtext "Failed to move $PosterImage to $PosterImageoriginal." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                            Write-Entry -Subtext "Error: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                            $errorCount++
+                                        }
                                         Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                         $posterCount++
                                     }
@@ -9780,9 +9887,21 @@ Elseif ($Tautulli) {
                                             Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                             $errorCount++
                                         }
-                                        Move-Item -LiteralPath $backgroundImage $backgroundImageoriginal -Force -ErrorAction SilentlyContinue
+                                        try {
+                                            # Attempt to move the item
+                                            Move-Item -LiteralPath $backgroundImage -Destination $backgroundImageoriginal -Force -ErrorAction Stop
+
+                                            # Log success if move was successful
+                                            Write-Entry -Subtext "Added: $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -Log Info
+                                        }
+                                        catch {
+                                            # Log the error if the move operation fails
+                                            Write-Entry -Subtext "Failed to move $backgroundImage to $backgroundImageoriginal." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                            Write-Entry -Subtext "Error: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                            $errorCount++
+                                        }
                                         $BackgroundCount++
-                                        Write-Entry -Subtext "Added: $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                                         Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                         $posterCount++
                                     }
@@ -10295,8 +10414,20 @@ Elseif ($Tautulli) {
                                                 Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                 $errorCount++
                                             }
-                                            Move-Item -LiteralPath $SeasonImage -destination $SeasonImageoriginal -Force -ErrorAction SilentlyContinue
-                                            Write-Entry -Subtext "Added: $SeasonImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                                            try {
+                                                # Attempt to move the item
+                                                Move-Item -LiteralPath $SeasonImage -Destination $SeasonImageoriginal -Force -ErrorAction Stop
+
+                                                # Log success if move was successful
+                                                Write-Entry -Subtext "Added: $SeasonImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -Log Info
+                                            }
+                                            catch {
+                                                # Log the error if the move operation fails
+                                                Write-Entry -Subtext "Failed to move $SeasonImage to $SeasonImageoriginal." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                                Write-Entry -Subtext "Error: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                                $errorCount++
+                                            }
                                             Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                             $SeasonCount++
                                             $posterCount++
@@ -10809,8 +10940,20 @@ Elseif ($Tautulli) {
                                                                 Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                                 $errorCount++
                                                             }
-                                                            Move-Item -LiteralPath $EpisodeImage -destination $EpisodeImageoriginal -Force -ErrorAction SilentlyContinue
-                                                            Write-Entry -Subtext "Added: $EpisodeImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                                                            try {
+                                                                # Attempt to move the item
+                                                                Move-Item -LiteralPath $EpisodeImage -Destination $EpisodeImageoriginal -Force -ErrorAction Stop
+
+                                                                # Log success if move was successful
+                                                                Write-Entry -Subtext "Added: $EpisodeImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -Log Info
+                                                            }
+                                                            catch {
+                                                                # Log the error if the move operation fails
+                                                                Write-Entry -Subtext "Failed to move $EpisodeImage to $EpisodeImageoriginal." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                                                Write-Entry -Subtext "Error: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                                                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                                                $errorCount++
+                                                            }
                                                             Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                                             $EpisodeCount++
                                                             $posterCount++
@@ -11299,8 +11442,20 @@ Elseif ($Tautulli) {
                                                                 Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                                 $errorCount++
                                                             }
-                                                            Move-Item -LiteralPath $EpisodeImage -destination $EpisodeImageoriginal -Force -ErrorAction SilentlyContinue
-                                                            Write-Entry -Subtext "Added: $EpisodeImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                                                            try {
+                                                                # Attempt to move the item
+                                                                Move-Item -LiteralPath $EpisodeImage -Destination $EpisodeImageoriginal -Force -ErrorAction Stop
+
+                                                                # Log success if move was successful
+                                                                Write-Entry -Subtext "Added: $EpisodeImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -Log Info
+                                                            }
+                                                            catch {
+                                                                # Log the error if the move operation fails
+                                                                Write-Entry -Subtext "Failed to move $EpisodeImage to $EpisodeImageoriginal." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                                                Write-Entry -Subtext "Error: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                                                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                                                $errorCount++
+                                                            }
                                                             Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                                             $EpisodeCount++
                                                             $posterCount++
@@ -13113,8 +13268,20 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                     if (Get-ChildItem -LiteralPath $PosterImage -ErrorAction SilentlyContinue) {
                                         if (!$global:IsTruncated) {
                                             UploadOtherMediaServerArtwork -itemId $entry.id -imageType "Primary" -imagePath $PosterImage
-                                            Move-Item -LiteralPath $PosterImage $PosterImageoriginal -Force -ErrorAction SilentlyContinue
-                                            Write-Entry -Subtext "Added: $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                                            try {
+                                                # Attempt to move the item
+                                                Move-Item -LiteralPath $PosterImage -Destination $PosterImageoriginal -Force -ErrorAction Stop
+
+                                                # Log success if move was successful
+                                                Write-Entry -Subtext "Added: $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -Log Info
+                                            }
+                                            catch {
+                                                # Log the error if the move operation fails
+                                                Write-Entry -Subtext "Failed to move $PosterImage to $PosterImageoriginal." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                                Write-Entry -Subtext "Error: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                                $errorCount++
+                                            }
                                             Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                             $posterCount++
                                         }
@@ -13437,8 +13604,20 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                     if (Get-ChildItem -LiteralPath $backgroundImage -ErrorAction SilentlyContinue) {
                                         if (!$global:IsTruncated) {
                                             UploadOtherMediaServerArtwork -itemId $entry.id -imageType "Backdrop" -imagePath $backgroundImage
-                                            Move-Item -LiteralPath $backgroundImage $backgroundImageoriginal -Force -ErrorAction SilentlyContinue
-                                            Write-Entry -Subtext "Added: $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                                            try {
+                                                # Attempt to move the item
+                                                Move-Item -LiteralPath $backgroundImage -Destination $backgroundImageoriginal -Force -ErrorAction Stop
+
+                                                # Log success if move was successful
+                                                Write-Entry -Subtext "Added: $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -Log Info
+                                            }
+                                            catch {
+                                                # Log the error if the move operation fails
+                                                Write-Entry -Subtext "Failed to move $backgroundImage to $backgroundImageoriginal." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                                Write-Entry -Subtext "Error: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                                $errorCount++
+                                            }
                                             Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                             $posterCount++
                                             $BackgroundCount++
@@ -13837,8 +14016,20 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                     # Move file back to original naming with Brackets.
                                     if (!$global:IsTruncated) {
                                         UploadOtherMediaServerArtwork -itemId $entry.Id -imageType "Primary" -imagePath $PosterImage
-                                        Move-Item -LiteralPath $PosterImage $PosterImageoriginal -Force -ErrorAction SilentlyContinue
-                                        Write-Entry -Subtext "Added: $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                                        try {
+                                            # Attempt to move the item
+                                            Move-Item -LiteralPath $PosterImage -Destination $PosterImageoriginal -Force -ErrorAction Stop
+
+                                            # Log success if move was successful
+                                            Write-Entry -Subtext "Added: $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -Log Info
+                                        }
+                                        catch {
+                                            # Log the error if the move operation fails
+                                            Write-Entry -Subtext "Failed to move $PosterImage to $PosterImageoriginal." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                            Write-Entry -Subtext "Error: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                            $errorCount++
+                                        }
                                         Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                         $posterCount++
                                     }
@@ -14172,9 +14363,21 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                 if (Get-ChildItem -LiteralPath $backgroundImage -ErrorAction SilentlyContinue) {
                                     if (!$global:IsTruncated) {
                                         UploadOtherMediaServerArtwork -itemId $entry.id -imageType "Backdrop" -imagePath $backgroundImage
-                                        Move-Item -LiteralPath $backgroundImage $backgroundImageoriginal -Force -ErrorAction SilentlyContinue
+                                        try {
+                                            # Attempt to move the item
+                                            Move-Item -LiteralPath $backgroundImage -Destination $backgroundImageoriginal -Force -ErrorAction Stop
+
+                                            # Log success if move was successful
+                                            Write-Entry -Subtext "Added: $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -Log Info
+                                        }
+                                        catch {
+                                            # Log the error if the move operation fails
+                                            Write-Entry -Subtext "Failed to move $backgroundImage to $backgroundImageoriginal." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                            Write-Entry -Subtext "Error: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                            $errorCount++
+                                        }
                                         $BackgroundCount++
-                                        Write-Entry -Subtext "Added: $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                                         Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                         $posterCount++
                                     }
@@ -14606,8 +14809,20 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                             # Move file back to original naming with Brackets.
                                             if (!$global:IsTruncated) {
                                                 UploadOtherMediaServerArtwork -itemId $global:seasonId -imageType "Primary" -imagePath $SeasonImage
-                                                Move-Item -LiteralPath $SeasonImage -destination $SeasonImageoriginal -Force -ErrorAction SilentlyContinue
-                                                Write-Entry -Subtext "Added: $SeasonImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                                                try {
+                                                    # Attempt to move the item
+                                                    Move-Item -LiteralPath $SeasonImage -Destination $SeasonImageoriginal -Force -ErrorAction Stop
+
+                                                    # Log success if move was successful
+                                                    Write-Entry -Subtext "Added: $SeasonImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -Log Info
+                                                }
+                                                catch {
+                                                    # Log the error if the move operation fails
+                                                    Write-Entry -Subtext "Failed to move $SeasonImage to $SeasonImageoriginal." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                                    Write-Entry -Subtext "Error: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                                    Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                                    $errorCount++
+                                                }
                                                 Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                                 $SeasonCount++
                                                 $posterCount++
@@ -15021,8 +15236,20 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                                         # Move file back to original naming with Brackets.
                                                         if (!$global:IsTruncated) {
                                                             UploadOtherMediaServerArtwork -itemId $global:episodeid -imageType "Primary" -imagePath $EpisodeImage
-                                                            Move-Item -LiteralPath $EpisodeImage -destination $EpisodeImageoriginal -Force -ErrorAction SilentlyContinue
-                                                            Write-Entry -Subtext "Added: $EpisodeImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                                                            try {
+                                                                # Attempt to move the item
+                                                                Move-Item -LiteralPath $EpisodeImage -Destination $EpisodeImageoriginal -Force -ErrorAction Stop
+
+                                                                # Log success if move was successful
+                                                                Write-Entry -Subtext "Added: $EpisodeImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -Log Info
+                                                            }
+                                                            catch {
+                                                                # Log the error if the move operation fails
+                                                                Write-Entry -Subtext "Failed to move $EpisodeImage to $EpisodeImageoriginal." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                                                Write-Entry -Subtext "Error: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                                                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                                                $errorCount++
+                                                            }
                                                             Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                                             $EpisodeCount++
                                                             $posterCount++
@@ -15422,8 +15649,20 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                                         # Move file back to original naming with Brackets.
                                                         if (!$global:IsTruncated) {
                                                             UploadOtherMediaServerArtwork -itemId $global:episodeid -imageType "Primary" -imagePath $EpisodeImage
-                                                            Move-Item -LiteralPath $EpisodeImage -destination $EpisodeImageoriginal -Force -ErrorAction SilentlyContinue
-                                                            Write-Entry -Subtext "Added: $EpisodeImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                                                            try {
+                                                                # Attempt to move the item
+                                                                Move-Item -LiteralPath $EpisodeImage -Destination $EpisodeImageoriginal -Force -ErrorAction Stop
+
+                                                                # Log success if move was successful
+                                                                Write-Entry -Subtext "Added: $EpisodeImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -Log Info
+                                                            }
+                                                            catch {
+                                                                # Log the error if the move operation fails
+                                                                Write-Entry -Subtext "Failed to move $EpisodeImage to $EpisodeImageoriginal." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                                                Write-Entry -Subtext "Error: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                                                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                                                $errorCount++
+                                                            }
                                                             Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                                             $EpisodeCount++
                                                             $posterCount++
@@ -16890,8 +17129,20 @@ else {
                                                     $errorCount++
                                                 }
                                             }
-                                            Move-Item -LiteralPath $PosterImage $PosterImageoriginal -Force -ErrorAction SilentlyContinue
-                                            Write-Entry -Subtext "Added: $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                                            try {
+                                                # Attempt to move the item
+                                                Move-Item -LiteralPath $PosterImage -Destination $PosterImageoriginal -Force -ErrorAction Stop
+
+                                                # Log success if move was successful
+                                                Write-Entry -Subtext "Added: $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -Log Info
+                                            }
+                                            catch {
+                                                # Log the error if the move operation fails
+                                                Write-Entry -Subtext "Failed to move $PosterImage to $PosterImageoriginal." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                                Write-Entry -Subtext "Error: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                                $errorCount++
+                                            }
                                             Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                             $posterCount++
                                         }
@@ -17283,8 +17534,20 @@ else {
                                                     $errorCount++
                                                 }
                                             }
-                                            Move-Item -LiteralPath $backgroundImage $backgroundImageoriginal -Force -ErrorAction SilentlyContinue
-                                            Write-Entry -Subtext "Added: $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                                            try {
+                                                # Attempt to move the item
+                                                Move-Item -LiteralPath $backgroundImage -Destination $backgroundImageoriginal -Force -ErrorAction Stop
+
+                                                # Log success if move was successful
+                                                Write-Entry -Subtext "Added: $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -Log Info
+                                            }
+                                            catch {
+                                                # Log the error if the move operation fails
+                                                Write-Entry -Subtext "Failed to move $backgroundImage to $backgroundImageoriginal." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                                Write-Entry -Subtext "Error: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                                $errorCount++
+                                            }
                                             Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                             $posterCount++
                                             $BackgroundCount++
@@ -17763,8 +18026,20 @@ else {
                                                 $errorCount++
                                             }
                                         }
-                                        Move-Item -LiteralPath $PosterImage $PosterImageoriginal -Force -ErrorAction SilentlyContinue
-                                        Write-Entry -Subtext "Added: $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                                        try {
+                                            # Attempt to move the item
+                                            Move-Item -LiteralPath $PosterImage -Destination $PosterImageoriginal -Force -ErrorAction Stop
+
+                                            # Log success if move was successful
+                                            Write-Entry -Subtext "Added: $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -Log Info
+                                        }
+                                        catch {
+                                            # Log the error if the move operation fails
+                                            Write-Entry -Subtext "Failed to move $PosterImage to $PosterImageoriginal." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                            Write-Entry -Subtext "Error: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                            $errorCount++
+                                        }
                                         Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                         $posterCount++
                                     }
@@ -18164,9 +18439,21 @@ else {
                                                 $errorCount++
                                             }
                                         }
-                                        Move-Item -LiteralPath $backgroundImage $backgroundImageoriginal -Force -ErrorAction SilentlyContinue
+                                        try {
+                                            # Attempt to move the item
+                                            Move-Item -LiteralPath $backgroundImage -Destination $backgroundImageoriginal -Force -ErrorAction Stop
+
+                                            # Log success if move was successful
+                                            Write-Entry -Subtext "Added: $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -Log Info
+                                        }
+                                        catch {
+                                            # Log the error if the move operation fails
+                                            Write-Entry -Subtext "Failed to move $backgroundImage to $backgroundImageoriginal." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                            Write-Entry -Subtext "Error: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                            $errorCount++
+                                        }
                                         $BackgroundCount++
-                                        Write-Entry -Subtext "Added: $backgroundImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                                         Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                         $posterCount++
                                     }
@@ -18708,8 +18995,20 @@ else {
                                                     $errorCount++
                                                 }
                                             }
-                                            Move-Item -LiteralPath $SeasonImage -destination $SeasonImageoriginal -Force -ErrorAction SilentlyContinue
-                                            Write-Entry -Subtext "Added: $SeasonImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                                            try {
+                                                # Attempt to move the item
+                                                Move-Item -LiteralPath $SeasonImage -Destination $SeasonImageoriginal -Force -ErrorAction Stop
+
+                                                # Log success if move was successful
+                                                Write-Entry -Subtext "Added: $SeasonImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -Log Info
+                                            }
+                                            catch {
+                                                # Log the error if the move operation fails
+                                                Write-Entry -Subtext "Failed to move $SeasonImage to $SeasonImageoriginal." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                                Write-Entry -Subtext "Error: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                                $errorCount++
+                                            }
                                             Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                             $SeasonCount++
                                             $posterCount++
@@ -19243,8 +19542,20 @@ else {
                                                                     $errorCount++
                                                                 }
                                                             }
-                                                            Move-Item -LiteralPath $EpisodeImage -destination $EpisodeImageoriginal -Force -ErrorAction SilentlyContinue
-                                                            Write-Entry -Subtext "Added: $EpisodeImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                                                            try {
+                                                                # Attempt to move the item
+                                                                Move-Item -LiteralPath $EpisodeImage -Destination $EpisodeImageoriginal -Force -ErrorAction Stop
+
+                                                                # Log success if move was successful
+                                                                Write-Entry -Subtext "Added: $EpisodeImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -Log Info
+                                                            }
+                                                            catch {
+                                                                # Log the error if the move operation fails
+                                                                Write-Entry -Subtext "Failed to move $EpisodeImage to $EpisodeImageoriginal." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                                                Write-Entry -Subtext "Error: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                                                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                                                $errorCount++
+                                                            }
                                                             Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                                             $EpisodeCount++
                                                             $posterCount++
@@ -19771,8 +20082,20 @@ else {
                                                                     $errorCount++
                                                                 }
                                                             }
-                                                            Move-Item -LiteralPath $EpisodeImage -destination $EpisodeImageoriginal -Force -ErrorAction SilentlyContinue
-                                                            Write-Entry -Subtext "Added: $EpisodeImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                                                            try {
+                                                                # Attempt to move the item
+                                                                Move-Item -LiteralPath $EpisodeImage -Destination $EpisodeImageoriginal -Force -ErrorAction Stop
+
+                                                                # Log success if move was successful
+                                                                Write-Entry -Subtext "Added: $EpisodeImageoriginal" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -Log Info
+                                                            }
+                                                            catch {
+                                                                # Log the error if the move operation fails
+                                                                Write-Entry -Subtext "Failed to move $EpisodeImage to $EpisodeImageoriginal." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                                                Write-Entry -Subtext "Error: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -Log Error
+                                                                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                                                $errorCount++
+                                                            }
                                                             Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                                             $EpisodeCount++
                                                             $posterCount++
