@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## [1.9.3](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.3) - 2024-11-07 13:04:18
+
+## 🚇 Added
+* Update Posterizarr.ps1 by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/157
+* add: proper error handling on item move by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/158
+
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.2...1.9.3
+
 ## [1.9.2](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.2) - 2024-11-07 08:08:04
 
 ## [1.9.1](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.1) - 2024-11-07 07:03:23
