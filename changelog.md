@@ -1,5 +1,29 @@
 # CHANGELOG
 
+## [1.9.0](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.0) - 2024-11-07 06:06:10
+
+## 🚇 Added
+- add: add ability to skip items inside libs
+	- closes #152 
+- add: logic to switch branch in script
+- add: manual mode 
+	- closes #151 
+
+## 🐛 Fixes
+- fix: Manual mode & add additional logging
+	- #151
+
+## What's Changed
+* add: lots of new fixes and features by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/153
+
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.8.30...1.9.0
+
+### Bug Fixes
+
+- general:
+  - Manual mode & add additional logging ([616541c](https://github.com/fscorrupt/Posterizarr/commit/616541c041f68f04ccc305f1ca8edb6c17a830d8)) ([#153](https://github.com/fscorrupt/Posterizarr/pull/153))
+
 ## [1.8.30](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.30) - 2024-10-29 07:42:42
 
 ## [1.8.29](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.29) - 2024-10-28 10:41:18
