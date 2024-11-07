@@ -1,5 +1,23 @@
 # CHANGELOG
 
+## [1.9.2](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.2) - 2024-11-07 08:08:04
+
+## 🐛 Fixes
+- fix: jelly/emby sync
+
+## What's Changed
+* sync main  by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/155
+* fix: jelly/emby sync by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/156
+
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.1...1.9.2
+
+### Bug Fixes
+
+- general:
+  - jelly/emby sync (#156) ([78fe15c](https://github.com/fscorrupt/Posterizarr/commit/78fe15c9237c0a5f3afdae04524a5e2044037d8c)) ([#156](https://github.com/fscorrupt/Posterizarr/pull/156))
+  - jelly/emby sync ([4348402](https://github.com/fscorrupt/Posterizarr/commit/4348402aa6ac730f7e07777c0350083e0db450b4)) ([#156](https://github.com/fscorrupt/Posterizarr/pull/156))
+
 ## [1.9.1](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.1) - 2024-11-07 07:03:23
 
 ## [1.9.0](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.0) - 2024-11-07 06:06:10
