@@ -84,6 +84,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - Send notification via apprise or discord [Click here for Example pictures.](#webhook).
 - **Cross-platform Compatibility**: Ensures seamless operation across Linux, Docker, and Windows Plex/Jellyfin/Emby servers, enhancing versatility.
 - **Poster/Background/TitleCard Creation**: It searches fanart/tmdb/tvdb/Plex for posters/backgrounds/titlecards and resizes the downloaded image to 3840x2160 (for titlecards and backgrounds) or 2000x3000 (for posters), fallback is grabbing artwork from imdb.
+- **Skip items inside libs**: "Add the `skip_posterizarr` label/tag to any item you want to skip."
 
 > [!NOTE]
 >Upon initial execution, the script may take some time to run as it compiles necessary data. Subsequent runs will look at whether a poster in the AssetPath is missing and only create missing posters, bypassing existing assets in the directory. If you are unhappy with the downloaded artwork, delete it in the AssetPath directory, rerun and the script will populate the missing artwork.
@@ -181,6 +182,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
 
     - `AssetPath`: Path to store generated posters.
     - `BackupPath`: Path to store/download Plex posters when using the [backup switch](#backup-mode).
+    - `ManualAssetPath`: If assets are placed in this directory with the correct naming convention, they will be preferred.
     - `PlexUpload`: If set to `true`, Posterizarr will directly upload the artwork to Plex (handy if you do not use Kometa).
     - `ForceRunningDeletion`: If set to `true`, Posterizarr will automatically delete the Running File.
       - **Warning:** This may result in multiple concurrent runs sharing the same temporary directory, potentially causing image artifacts or unexpected behavior during processing.

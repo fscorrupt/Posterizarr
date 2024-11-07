@@ -18,6 +18,8 @@ services:
     volumes:
       - "/opt/appdata/posterizarr:/config:rw"
       - "/opt/appdata/kometa/assets:/assets:rw"
+      - "/opt/appdata/posterizarr/assetsbackup:/assetsbackup:rw"
+      - "/opt/appdata/posterizarr/manualassets:/manualassets:rw"
 networks:
   proxy:
     driver: bridge
