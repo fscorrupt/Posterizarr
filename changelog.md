@@ -2,15 +2,6 @@
 
 ## [1.9.1](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.1) - 2024-11-07 07:03:23
 
-## 🚇 Added
-- add: additional logging
-
-## What's Changed
-* add: additional logging by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/154
-
-
-**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.0...1.9.1
-
 ## [1.9.0](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.0) - 2024-11-07 06:06:10
 
 ## [1.8.30](https://github.com/fscorrupt/Posterizarr/releases/tag/1.8.30) - 2024-10-29 07:42:42
