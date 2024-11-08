@@ -5779,7 +5779,7 @@ function MassDownloadPlexArtwork {
         Remove-Item -LiteralPath $CurrentlyRunning | out-null
     }
     if ($global:UptimeKumaUrl){
-        Send-UptimeKumaWebhook -status "up"
+        Send-UptimeKumaWebhook -status "up" -ping $executionTime.TotalMilliseconds
     }
 }
 function SyncPlexArtwork {
@@ -5870,13 +5870,14 @@ function SyncPlexArtwork {
 function Send-UptimeKumaWebhook {
     param (
         [string]$status,
-        [string]$msg = "OK"
+        [string]$msg = "OK",
+        [int]$ping = 0
     )
 
-    $uri = $global:UptimeKumaUrl+"?status=$status&msg=$msg&ping=0"
+    $uri = $global:UptimeKumaUrl+"?status=$status&msg=$msg&ping=$ping"
     try {
         Invoke-RestMethod -Uri $uri
-        Write-Entry -Message "Uptime Kuma webhook sent: Status=$status, Msg=$msg" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+        Write-Entry -Message "Uptime Kuma webhook sent: Status=$status, Msg=$msg, Ping=$ping" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
     }
     catch {
         Write-Entry -Message "Failed to send Uptime Kuma webhook: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
@@ -7023,7 +7024,7 @@ if ($Manual) {
         Remove-Item -LiteralPath $CurrentlyRunning | out-null
     }
     if ($global:UptimeKumaUrl){
-        Send-UptimeKumaWebhook -status "up"
+        Send-UptimeKumaWebhook -status "up" -ping $executionTime.TotalMilliseconds
     }
 }
 Elseif ($Testing) {
@@ -8146,7 +8147,7 @@ Elseif ($Testing) {
         Remove-Item -LiteralPath $CurrentlyRunning | out-null
     }
     if ($global:UptimeKumaUrl){
-        Send-UptimeKumaWebhook -status "up"
+        Send-UptimeKumaWebhook -status "up" -ping $executionTime.TotalMilliseconds
     }
 }
 Elseif ($Tautulli) {
@@ -11739,7 +11740,7 @@ Elseif ($Tautulli) {
         Remove-Item -LiteralPath $CurrentlyRunning | out-null
     }
     if ($global:UptimeKumaUrl){
-        Send-UptimeKumaWebhook -status "up"
+        Send-UptimeKumaWebhook -status "up" -ping $executionTime.TotalMilliseconds
     }
 }
 Elseif ($Backup) {
@@ -12740,7 +12741,7 @@ Elseif ($SyncJelly -or $SyncEmby) {
         Remove-Item -LiteralPath $CurrentlyRunning | out-null
     }
     if ($global:UptimeKumaUrl){
-        Send-UptimeKumaWebhook -status "up"
+        Send-UptimeKumaWebhook -status "up" -ping $executionTime.TotalMilliseconds
     }
 }
 Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaServer -eq 'true') {
@@ -16491,7 +16492,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
         Remove-Item -LiteralPath $CurrentlyRunning | out-null
     }
     if ($global:UptimeKumaUrl){
-        Send-UptimeKumaWebhook -status "up"
+        Send-UptimeKumaWebhook -status "up" -ping $executionTime.TotalMilliseconds
     }
 }
 else {
@@ -20967,6 +20968,6 @@ else {
         Remove-Item -LiteralPath $CurrentlyRunning | out-null
     }
     if ($global:UptimeKumaUrl){
-        Send-UptimeKumaWebhook -status "up"
+        Send-UptimeKumaWebhook -status "up" -ping $executionTime.TotalMilliseconds
     }
 }
