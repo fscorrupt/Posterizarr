@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## [1.9.4](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.4) - 2024-11-07 13:43:40
+
+## What's Changed
+* fix: tautulli always searched for local assets by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/159
+
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.3...1.9.4
+
+### Bug Fixes
+
+- general:
+  - tautulli always searched for local assets (#159) ([cdc7d0e](https://github.com/fscorrupt/Posterizarr/commit/cdc7d0edf31ae2b10031143d664105308adfab82)) ([#159](https://github.com/fscorrupt/Posterizarr/pull/159))
+  - tautulli always searched for local assets ([6c9697a](https://github.com/fscorrupt/Posterizarr/commit/6c9697a77f367f550ed58936c0f797cb785a9c99)) ([#159](https://github.com/fscorrupt/Posterizarr/pull/159))
+
 ## [1.9.3](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.3) - 2024-11-07 13:04:18
 
 ## [1.9.2](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.2) - 2024-11-07 08:08:04
