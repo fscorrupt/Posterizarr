@@ -62,29 +62,33 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
 >- **Please start the script as Admin on first run, otherwise the script is not able to install the prerequisites.**
 
 
-## Key Features
->[!TIP]
-> If you want to use the created assets with Kometa (formerly PMM) make sure to check out the [Assets doc](https://kometa.wiki/en/latest/kometa/guides/assets/)
->
-> You can find an example config for the Assets on my [Kometa-Configs repo](https://github.com/Kometa-Team/Community-Configs/blob/master/fscorrupt/config.yml)
-- **Upload to Plex**: If you do not have Kometa, posterizarr can directly Upload that Artwork to Plex.
-- **Upload to Jellyfin**: Posterizarr can directly upload the artwork to Jellyfin.
-- **Upload to Emby**: Posterizarr can directly upload the artwork to Emby.
-- **Backup**: Downloading every Artwork from Plex to a backupshare (With kometa folder structure)
-- **Resizing**: It automatically resizes every poster to 2000x3000.
-- **Overlays**: If you choose to, downloaded images will automatically have borders, text, and a gradient overlay applied.
-  - Here are some gradient overlays that you can use instead of the default one [gradient-zip](gradient_background_poster_overlays.zip)
-- **Automatic Library Search**: The script autonomously searches for libraries within your Plex/Jellyfin/Emby server, enhancing its usability.
-- **Handling Multiple Versions**: It adeptly manages multiple versions of a movie/show, ensuring comprehensive coverage.
-- **CSV Export**: Produces an impressive CSV file containing all queried movie/show information during the script's runtime in `$ScriptRoot\logs\PlexLibexport.csv` or `$ScriptRoot\logs\OtherMediaServerLibExport.csv`
-- **Logging Capabilities**: Records valuable information to a file in `$ScriptRoot\logs\Scriptlog.log`, facilitating troubleshooting and analysis.
+## Main Capabilities of Posterizarr
 
-    - It also generates a log with the output of every imagemagick command `$ScriptRoot\logs\ImageMagickCommands.log`.
-    - Additionally, an `ImageChoices.csv` file is generated to store all the selected download options and essential information.
-    - Send notification via apprise or discord [Click here for Example pictures.](#webhook).
-- **Cross-platform Compatibility**: Ensures seamless operation across Linux, Docker, and Windows Plex/Jellyfin/Emby servers, enhancing versatility.
-- **Poster/Background/TitleCard Creation**: It searches fanart/tmdb/tvdb/Plex for posters/backgrounds/titlecards and resizes the downloaded image to 3840x2160 (for titlecards and backgrounds) or 2000x3000 (for posters), fallback is grabbing artwork from imdb.
-- **Skip items inside libs**: "Add the `skip_posterizarr` label/tag to any item you want to skip."
+| **Feature**                      | **Description**                                                                                                                                                                                                                                                                                  |
+|----------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Kometa Integration**           | -**Tip:** For users of Kometa (formerly PMM), Posterizarr organizes assets using the Kometa-compatible folder structure required for seamless integration: **[Assets Documentation](https://kometa.wiki/en/latest/kometa/guides/assets/)**.<br>- **Example Config**: See **[Kometa-Configs repo](https://github.com/Kometa-Team/Community-Configs/blob/master/fscorrupt/config.yml)** for sample configuration to streamline asset management.                                                                      |
+| **Direct Upload to Media Servers** | - Posterizarr can directly upload artwork to media servers:<br> &nbsp; - **Plex**: Uploads artwork if Kometa isn’t used.<br> &nbsp; - **Jellyfin**: Directly uploads artwork.<br> &nbsp; - **Emby**: Similarly, uploads artwork directly.                    |
+| **Upload Existing Assets**               | - Configure whether to **upload pre-existing assets** to Plex, Jellyfin, or Emby, saving time by skipping redundant uploads for libraries with complete artwork.                                                                     |
+| **Backup Functionality**         | - Facilitates artwork **backup** by downloading all assets from **Plex** to a specified **backup share**.<br>- Supports the **Kometa folder structure** for organized storage.                                                                             |
+| **Manual Asset Path (Local Assets)** | - **Local Asset Preference**: Prioritizes assets from a **manual asset path** if present. Skips download if local assets are available.<br>- **Path Configuration**: Specify the folder structure in the configuration, saving time and bandwidth by using pre-existing images. |
+| **Resizing**                     | - Automatically resizes all **poster images** to **2000x3000** for optimized media server use.                                                                                                                                                                                                  |
+| **Preferred Language Selection**         | - Configure **language preferences** for media metadata, supporting multi-language ordering.<br> &nbsp; - **Season-specific language preferences** allow finer control over metadata for localized season information.                |
+| **Poster and Background Minimum Size**   | - Set minimum dimensions for **posters** (2000x3000) and **backgrounds/title cards** (3840x2160), ensuring only high-quality images are used.                                                                                        |
+| **Overlay Effects**              | - Applies optional **overlays** to downloaded images:<br> &nbsp; - **Borders**: Adds polished framing.<br> &nbsp; - **Text**: Customizable title text.<br> &nbsp; - **Gradient Overlay**: Stylish gradient effect (custom options via **[gradient pack](gradient_background_poster_overlays.zip)**).                  |
+| **Automatic Library Search**     | - Autonomously scans **Plex**, **Jellyfin**, or **Emby** server for libraries, simplifying setup.                                                                                                                                                                                                |
+| **Handling Multiple Versions**   | - Manages **multiple versions** of movies/shows (e.g., theatrical cuts, director’s cuts), ensuring complete coverage for all available versions.                                                                                                          |
+| **CSV Export**                   | - Generates a **CSV file** with queried movie/show data:<br> &nbsp; - **Plex**: `$ScriptRoot\logs\PlexLibexport.csv`<br> &nbsp; - **Other Media Servers (Jellyfin/Emby)**: `$ScriptRoot\logs\OtherMediaServerLibExport.csv`                                     |
+| **Logging Capabilities**         | - Creates logs for **troubleshooting** and **analysis**:<br> &nbsp; - General script log: `$ScriptRoot\logs\Scriptlog.log`<br> &nbsp; - ImageMagick commands log: `$ScriptRoot\logs\ImageMagickCommands.log`<br> &nbsp; - Choices log: `ImageChoices.csv`         |
+| **Notifications**                | - Sends notifications about script activity using **Apprise** or **Discord**.<br>- **Example Images**: View sample images **[here](#webhook)**.                                                                                                                  |
+| **Cross-Platform Compatibility** | - Runs on **Linux**, **Docker**, and **Windows** (Plex, Jellyfin, and Emby compatible), ensuring versatile usage in various environments.                                                                                                                |
+| **Poster/Background/TitleCard Creation** | - Searches for high-quality artwork from **Fanart**, **TMDb**, **TVDb**, **Plex** (fallback: **IMDb**).<br>- Resizes to:<br> &nbsp; - **3840x2160** for backgrounds and title cards.<br> &nbsp; - **2000x3000** for posters.                               |
+| **Library Exclusions**                   | - Specify libraries to **exclude from processing** on Plex, Jellyfin, and Emby servers, helping to avoid unnecessary processing for selected content categories (e.g., YouTube, Audiobooks).                                         |
+| **Skip Items in Libraries**      | - Exclude items from processing by adding the **"skip_posterizarr"** label/tag to any item, preventing downloads and uploads for those items.                                                                                                            |
+| **Auto-Update Options**                  | - Supports **auto-update settings** for both Posterizarr and ImageMagick, keeping tools up to date with minimal manual intervention. (Not on Docker)                                                                                                 |
+| **Asset Cleanup** | - Automatic asset cleanup removes Posterizarr-created assets when corresponding media is deleted from the media server, ensuring storage efficiency. |
+| **RTL (Right-to-Left) Font Support**     | - Supports **right-to-left (RTL) fonts** for media titles, making it more accessible for non-Latin-based languages such as Arabic or Hebrew.                                                                                         |
+| **New Line on Specific Symbols**         | - Automatically adds a **new line on specific symbols** (e.g., hyphen or colon) within text to enhance visual aesthetics on overlays.                                                                                                |
+| **Fallback Options for Title Cards**     | - Uses **background images as title cards** if title-specific artwork is unavailable.                                                                                         |
 
 > [!NOTE]
 >Upon initial execution, the script may take some time to run as it compiles necessary data. Subsequent runs will look at whether a poster in the AssetPath is missing and only create missing posters, bypassing existing assets in the directory. If you are unhappy with the downloaded artwork, delete it in the AssetPath directory, rerun and the script will populate the missing artwork.
@@ -102,6 +106,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
 >- **ImageMagick:**
     - **Version 7.x is required** - The script handles downloading and using a portable version of ImageMagick for all platforms. **(You may need to run the Script as Admin on first run)**. If you prefer to reference your own installation or prefer to download and install it yourself, goto: [Download ImageMagick](https://imagemagick.org/script/download.php)
 >- **Powershell Version:** 5.x or higher (Docker Image uses v7.4.2).
+>- **FanartTv Powershell Module:** This module is required (already integrated in container), goto: [Install Module](https://github.com/Celerium/FanartTV-PowerShellWrapper)
 
 # Configuration
 

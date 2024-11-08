@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## [1.9.4](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.4) - 2024-11-07 13:43:40
+
+## [1.9.3](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.3) - 2024-11-07 13:04:18
+
+## [1.9.2](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.2) - 2024-11-07 08:08:04
+
 ## [1.9.1](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.1) - 2024-11-07 07:03:23
 
 ## [1.9.0](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.0) - 2024-11-07 06:06:10
