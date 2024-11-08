@@ -6363,7 +6363,7 @@ if ($global:OSType -ne "Win32NT") {
     $global:OSarch = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture
     if ($global:OSType -eq "Docker" -or $global:OSarch -eq "Arm64") {
         $magick = 'magick'
-        if ($AssetPath -match './'){
+        if ($AssetPath -match '^./'){
             Write-Entry -Message "You have set your asset path to '$AssetPath', please change it to '/assets'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             Write-Entry -Subtext "Exiting Posterizarr now..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             # Clear Running File
@@ -6375,7 +6375,7 @@ if ($global:OSType -ne "Win32NT") {
             }
             Exit 0
         }
-        if ($BackupPath -match './'){
+        if ($BackupPath -match '^./'){
             Write-Entry -Message "You have set your backup path to '$BackupPath', please change it to '/backuppath'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             Write-Entry -Subtext "Exiting Posterizarr now..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             # Clear Running File
@@ -6387,7 +6387,7 @@ if ($global:OSType -ne "Win32NT") {
             }
             Exit 0
         }
-        if ($ManualAssetPath -match './'){
+        if ($ManualAssetPath -match '^./'){
             Write-Entry -Message "You have set your manualasset path to '$ManualAssetPath', please change it to '/manualassets'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             Write-Entry -Subtext "Exiting Posterizarr now..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             # Clear Running File
