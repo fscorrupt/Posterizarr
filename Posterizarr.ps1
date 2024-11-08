@@ -5876,7 +5876,7 @@ function Send-UptimeKumaWebhook {
     $uri = $global:UptimeKumaUrl+"?status=$status&msg=$msg&ping=0"
     try {
         Invoke-RestMethod -Uri $uri
-        Write-Entry -Message "Uptime Kuma webhook sent: Status=$status, Msg=$msg, Ping=$ping" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+        Write-Entry -Message "Uptime Kuma webhook sent: Status=$status, Msg=$msg" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
     }
     catch {
         Write-Entry -Message "Failed to send Uptime Kuma webhook: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
