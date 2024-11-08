@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## [1.9.5](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.5) - 2024-11-08 11:30:55
+
+## What's Changed
+* sync by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/161
+* add: UptimeKuma Webhook by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/162
+
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.4...1.9.5
+
+### Bug Fixes
+
+- general:
+  - log adjustment ([ba7ed62](https://github.com/fscorrupt/Posterizarr/commit/ba7ed62f3f5e5e251c3d2b971d02abf18a34a4ea)) ([#162](https://github.com/fscorrupt/Posterizarr/pull/162))
+
 ## [1.9.4](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.4) - 2024-11-07 13:43:40
 
 ## [1.9.3](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.3) - 2024-11-07 13:04:18
