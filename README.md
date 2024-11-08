@@ -79,6 +79,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
 | **Handling Multiple Versions**   | - Manages **multiple versions** of movies/shows (e.g., theatrical cuts, director’s cuts), ensuring complete coverage for all available versions.                                                                                                          |
 | **CSV Export**                   | - Generates a **CSV file** with queried movie/show data:<br> &nbsp; - **Plex**: `$ScriptRoot\logs\PlexLibexport.csv`<br> &nbsp; - **Other Media Servers (Jellyfin/Emby)**: `$ScriptRoot\logs\OtherMediaServerLibExport.csv`                                     |
 | **Logging Capabilities**         | - Creates logs for **troubleshooting** and **analysis**:<br> &nbsp; - General script log: `$ScriptRoot\logs\Scriptlog.log`<br> &nbsp; - ImageMagick commands log: `$ScriptRoot\logs\ImageMagickCommands.log`<br> &nbsp; - Choices log: `ImageChoices.csv`         |
+| **Uptime-Kuma**                | - Sends notifications to Uptime Kuma to monitor script activity for success and failure.                                                                                                                  |
 | **Notifications**                | - Sends notifications about script activity using **Apprise** or **Discord**.<br>- **Example Images**: View sample images **[here](#webhook)**.                                                                                                                  |
 | **Cross-Platform Compatibility** | - Runs on **Linux**, **Docker**, and **Windows** (Plex, Jellyfin, and Emby compatible), ensuring versatile usage in various environments.                                                                                                                |
 | **Poster/Background/TitleCard Creation** | - Searches for high-quality artwork from **Fanart**, **TMDb**, **TVDb**, **Plex** (fallback: **IMDb**).<br>- Resizes to:<br> &nbsp; - **3840x2160** for backgrounds and title cards.<br> &nbsp; - **2000x3000** for posters.                               |
@@ -180,6 +181,8 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `SendNotification`: Set to `true` if you want to send notifications via discord or apprise, else `false`.
     - `AppriseUrl`: **Only possible on Docker** -Url for apprise provider -> [See Docs](https://github.com/caronc/apprise/wiki).
     - `Discord`: Discord Webhook Url.
+    - `UptimeKumaUrl`: Uptime-Kuma Webhook Url.
+    - `UseUptimeKuma`: Set to `true` if you want to send webhook to Uptime-Kuma.
     </details>
     <details close>
     <summary>PrerequisitePart [click to unfold]</summary>
