@@ -66,8 +66,10 @@
   },
   "Notification": {
     "SendNotification": "True",
+    "UseUptimeKuma": "True",
     "AppriseUrl": "discord://xxxxxxxxxxxxx/xxxxxxxxxxxxx",
-    "Discord": ""
+    "Discord": "",
+    "UptimeKumaUrl": "https://uptime-kuma.domain.com/api/push/xxxxxxxxxxxxx"
   },
   "PrerequisitePart": {
     "AssetPath": "/assets",

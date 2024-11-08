@@ -12,7 +12,7 @@ param (
     [switch]$SyncEmby
 )
 
-$CurrentScriptVersion = "1.9.4"
+$CurrentScriptVersion = "1.9.5"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -3138,6 +3138,12 @@ function CheckJson {
                 if (Test-Path $CurrentlyRunning) {
                     Remove-Item -LiteralPath $CurrentlyRunning | out-null
                 }
+                if ($global:UptimeKumaUrl){
+                    Send-UptimeKumaWebhook -status "down" -msg "Failed to read the existing configuration file."
+                }
+                if ($global:UptimeKumaUrl){
+                    Send-UptimeKumaWebhook -status "down" -msg "Failed to read config"
+                }
                 Exit
             }
         }
@@ -3201,6 +3207,9 @@ function CheckJson {
                     if (Test-Path $CurrentlyRunning) {
                         Remove-Item -LiteralPath $CurrentlyRunning | out-null
                     }
+                    if ($global:UptimeKumaUrl){
+                        Send-UptimeKumaWebhook -status "down" -msg "Wrong Main Attribute casing in config file"
+                    }
                     Exit  # Abort the script
                 }
             }
@@ -3225,6 +3234,9 @@ function CheckJson {
                             if (Test-Path $CurrentlyRunning) {
                                 Remove-Item -LiteralPath $CurrentlyRunning | out-null
                             }
+                            if ($global:UptimeKumaUrl){
+                                Send-UptimeKumaWebhook -status "down" -msg "Wrong Sub Attribute casing in config file"
+                            }
                             Exit  # Abort the script
                         }
                     }
@@ -3246,6 +3258,9 @@ function CheckJson {
         if (Test-Path $CurrentlyRunning) {
             Remove-Item -LiteralPath $CurrentlyRunning | out-null
         }
+        if ($global:UptimeKumaUrl){
+            Send-UptimeKumaWebhook -status "down" -msg "Config.json download failed."
+        }
         Exit
     }
     catch {
@@ -3253,6 +3268,9 @@ function CheckJson {
         # Clear Running File
         if (Test-Path $CurrentlyRunning) {
             Remove-Item -LiteralPath $CurrentlyRunning | out-null
+        }
+        if ($global:UptimeKumaUrl){
+            Send-UptimeKumaWebhook -status "down" -msg "$($_.Exception.Message)"
         }
         Exit
     }
@@ -3285,6 +3303,9 @@ function CheckJsonPaths {
         # Clear Running File
         if (Test-Path $CurrentlyRunning) {
             Remove-Item -LiteralPath $CurrentlyRunning | out-null
+        }
+        if ($global:UptimeKumaUrl){
+            Send-UptimeKumaWebhook -status "down" -msg "File missing"
         }
         Exit
     }
@@ -3359,6 +3380,9 @@ function CheckConfigFile {
         # Clear Running File
         if (Test-Path $CurrentlyRunning) {
             Remove-Item -LiteralPath $CurrentlyRunning | out-null
+        }
+        if ($global:UptimeKumaUrl){
+            Send-UptimeKumaWebhook -status "down" -msg "Configure config file"
         }
         Exit
     }
@@ -3598,6 +3622,9 @@ function CheckPlexAccess {
                     if (Test-Path $CurrentlyRunning) {
                         Remove-Item -LiteralPath $CurrentlyRunning | out-null
                     }
+                    if ($global:UptimeKumaUrl){
+                        Send-UptimeKumaWebhook -status "down" -msg "No Plex Libs found"
+                    }
                     Exit
                 }
             }
@@ -3610,6 +3637,9 @@ function CheckPlexAccess {
                 if (Test-Path $CurrentlyRunning) {
                     Remove-Item -LiteralPath $CurrentlyRunning | out-null
                 }
+                if ($global:UptimeKumaUrl){
+                    Send-UptimeKumaWebhook -status "down" -msg "Could not access plex"
+                }
                 Exit
             }
         }
@@ -3619,6 +3649,9 @@ function CheckPlexAccess {
             # Clear Running File
             if (Test-Path $CurrentlyRunning) {
                 Remove-Item -LiteralPath $CurrentlyRunning | out-null
+            }
+            if ($global:UptimeKumaUrl){
+                Send-UptimeKumaWebhook -status "down" -msg "Could not access plex"
             }
             Exit
         }
@@ -3637,6 +3670,9 @@ function CheckPlexAccess {
                 }
                 else {
                     Write-Entry -Subtext "No libs on Plex, abort script now..." -Path $configLogging -Color Red -log Error
+                    if ($global:UptimeKumaUrl){
+                        Send-UptimeKumaWebhook -status "down" -msg "No libs on plex"
+                    }
                     Exit
                 }
             }
@@ -3649,6 +3685,9 @@ function CheckPlexAccess {
             # Clear Running File
             if (Test-Path $CurrentlyRunning) {
                 Remove-Item -LiteralPath $CurrentlyRunning | out-null
+            }
+            if ($global:UptimeKumaUrl){
+                Send-UptimeKumaWebhook -status "down" -msg "Could not access plex"
             }
             Exit
         }
@@ -3864,6 +3903,9 @@ function CheckJellyfinAccess {
                 if (Test-Path $CurrentlyRunning) {
                     Remove-Item -LiteralPath $CurrentlyRunning | out-null
                 }
+                if ($global:UptimeKumaUrl){
+                    Send-UptimeKumaWebhook -status "down" -msg "Clould not access jellyfin"
+                }
                 Exit
             }
         }
@@ -3873,6 +3915,9 @@ function CheckJellyfinAccess {
             # Clear Running File
             if (Test-Path $CurrentlyRunning) {
                 Remove-Item -LiteralPath $CurrentlyRunning | out-null
+            }
+            if ($global:UptimeKumaUrl){
+                Send-UptimeKumaWebhook -status "down" -msg "Clould not access jellyfin"
             }
             Exit
         }
@@ -3900,6 +3945,9 @@ function CheckEmbyAccess {
                 if (Test-Path $CurrentlyRunning) {
                     Remove-Item -LiteralPath $CurrentlyRunning | out-null
                 }
+                if ($global:UptimeKumaUrl){
+                    Send-UptimeKumaWebhook -status "down" -msg "Clould not access emby"
+                }
                 Exit
             }
         }
@@ -3909,6 +3957,9 @@ function CheckEmbyAccess {
             # Clear Running File
             if (Test-Path $CurrentlyRunning) {
                 Remove-Item -LiteralPath $CurrentlyRunning | out-null
+            }
+            if ($global:UptimeKumaUrl){
+                Send-UptimeKumaWebhook -status "down" -msg "Clould not access emby"
             }
             Exit
         }
@@ -3962,6 +4013,9 @@ function UploadOtherMediaServerArtwork {
                 # Clear Running File
                 if (Test-Path $CurrentlyRunning) {
                     Remove-Item -LiteralPath $CurrentlyRunning | out-null
+                }
+                if ($global:UptimeKumaUrl){
+                    Send-UptimeKumaWebhook -status "down" -msg "Unsupported image format"
                 }
                 exit
             }
@@ -4042,6 +4096,9 @@ function MassDownloadPlexArtwork {
             if ($lib.title -notmatch "^[^\/:*?`"<>\|\\}]+$") {
                 Write-Entry -Message  "Lib: '$($lib.title)' contains invalid characters." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                 Write-Entry -Subtext "Please rename your lib and remove all chars that are listed here: '/, :, *, ?, `", <, >, |, \, or }'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                if ($global:UptimeKumaUrl){
+                    Send-UptimeKumaWebhook -status "down" -msg "Invalid lib chars"
+                }
                 Exit
             }
             $Libsoverview += $libtemp
@@ -4051,6 +4108,9 @@ function MassDownloadPlexArtwork {
         Write-Entry -Subtext "0 libraries were found. Are you on the correct Plex server?" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
         if (Test-Path $CurrentlyRunning) {
             Remove-Item -LiteralPath $CurrentlyRunning | out-null
+        }
+        if ($global:UptimeKumaUrl){
+            Send-UptimeKumaWebhook -status "down" -msg "No libs found"
         }
         Exit
     }
@@ -4446,6 +4506,9 @@ function MassDownloadPlexArtwork {
         Write-Entry -Subtext "Error during Hashtable creation, please check Asset dir is available..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
         if (Test-Path $CurrentlyRunning) {
             Remove-Item -LiteralPath $CurrentlyRunning | out-null
+        }
+        if ($global:UptimeKumaUrl){
+            Send-UptimeKumaWebhook -status "down" -msg "Hashtable creation failed"
         }
         Exit
     }
@@ -5715,7 +5778,9 @@ function MassDownloadPlexArtwork {
     if (Test-Path $CurrentlyRunning) {
         Remove-Item -LiteralPath $CurrentlyRunning | out-null
     }
-
+    if ($global:UptimeKumaUrl){
+        Send-UptimeKumaWebhook -status "up"
+    }
 }
 function SyncPlexArtwork {
     param(
@@ -5802,6 +5867,21 @@ function SyncPlexArtwork {
         $errorCount++
     }
 }
+function Send-UptimeKumaWebhook {
+    param (
+        [string]$status,
+        [string]$msg = "OK"
+    )
+
+    $uri = $global:UptimeKumaUrl+"?status=$status&msg=$msg&ping=0"
+    try {
+        Invoke-RestMethod -Uri $uri
+        Write-Entry -Message "Uptime Kuma webhook sent: Status=$status, Msg=$msg, Ping=$ping" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+    }
+    catch {
+        Write-Entry -Message "Failed to send Uptime Kuma webhook: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+    }
+}
 #### FUNCTION END ####
 
 ##### PRE-START #####
@@ -5855,6 +5935,9 @@ if ($Platform -ne 'Docker' -and $config.PrerequisitePart.AutoUpdatePosterizarr.t
     catch {
         Write-Entry -Subtext "Failed to download the latest script, Error: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
     }
+    if ($global:UptimeKumaUrl){
+        Send-UptimeKumaWebhook -status "down" -msg "Script download failed"
+    }
     Exit
 }
 
@@ -5899,7 +5982,11 @@ foreach ($folder in (Get-ChildItem -Path $(Join-Path $global:ScriptRoot $global:
 
 # Access variables from the config file
 # Notification Part
-$global:SendNotification = $config.Notification.SendNotification
+$global:SendNotification = $config.Notification.SendNotification.tolower()
+$global:UseUptimeKuma = $config.Notification.UseUptimeKuma.tolower()
+if ($global:UseUptimeKuma -eq 'true'){
+    $global:UptimeKumaUrl = $config.Notification.UptimeKumaUrl
+}
 
 if ($env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker*') {
     $global:NotifyUrl = $config.Notification.AppriseUrl
@@ -5911,6 +5998,9 @@ if ($env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker*') {
             # Clear Running File
             if (Test-Path $CurrentlyRunning) {
                 Remove-Item -LiteralPath $CurrentlyRunning | out-null
+            }
+            if ($global:UptimeKumaUrl){
+                Send-UptimeKumaWebhook -status "down" -msg "Default notify url in config"
             }
             Exit
         }
@@ -5926,6 +6016,9 @@ Else {
         # Clear Running File
         if (Test-Path $CurrentlyRunning) {
             Remove-Item -LiteralPath $CurrentlyRunning | out-null
+        }
+        if ($global:UptimeKumaUrl){
+            Send-UptimeKumaWebhook -status "down" -msg "Default notify url in config"
         }
         Exit
     }
@@ -6070,6 +6163,9 @@ if ($enabledServers -gt 1) {
     # Clear Running File
     if (Test-Path $CurrentlyRunning) {
         Remove-Item -LiteralPath $CurrentlyRunning | out-null
+    }
+    if ($global:UptimeKumaUrl){
+        Send-UptimeKumaWebhook -status "down" -msg "Multiple media servers enabled"
     }
     Exit 0
 }
@@ -6273,6 +6369,9 @@ if ($global:OSType -ne "Win32NT") {
             if (Test-Path $CurrentlyRunning) {
                 Remove-Item -LiteralPath $CurrentlyRunning | out-null
             }
+            if ($global:UptimeKumaUrl){
+                Send-UptimeKumaWebhook -status "down" -msg "Wrong asset path"
+            }
             Exit 0
         }
         if ($BackupPath -match './'){
@@ -6282,6 +6381,9 @@ if ($global:OSType -ne "Win32NT") {
             if (Test-Path $CurrentlyRunning) {
                 Remove-Item -LiteralPath $CurrentlyRunning | out-null
             }
+            if ($global:UptimeKumaUrl){
+                Send-UptimeKumaWebhook -status "down" -msg "Wrong backup path"
+            }
             Exit 0
         }
         if ($ManualAssetPath -match './'){
@@ -6290,6 +6392,9 @@ if ($global:OSType -ne "Win32NT") {
             # Clear Running File
             if (Test-Path $CurrentlyRunning) {
                 Remove-Item -LiteralPath $CurrentlyRunning | out-null
+            }
+            if ($global:UptimeKumaUrl){
+                Send-UptimeKumaWebhook -status "down" -msg "Wrong manual asset path"
             }
             Exit 0
         }
@@ -6335,6 +6440,9 @@ if ($global:OSarch -eq "Arm64") {
         # Clear Running File
         if (Test-Path $CurrentlyRunning) {
             Remove-Item -LiteralPath $CurrentlyRunning | out-null
+        }
+        if ($global:UptimeKumaUrl){
+            Send-UptimeKumaWebhook -status "down" -msg "Imagemagick missing"
         }
         Exit
     }
@@ -6422,6 +6530,9 @@ foreach ($path in $LogsPath, $TempPath, $TestPath, $AssetPath) {
             if (Test-Path $CurrentlyRunning) {
                 Remove-Item -LiteralPath $CurrentlyRunning | out-null
             }
+            if ($global:UptimeKumaUrl){
+                Send-UptimeKumaWebhook -status "down" -msg "Default asset path"
+            }
             Exit
         }
         New-Item -ItemType Directory -Path $path -Force | Out-Null
@@ -6443,6 +6554,9 @@ if ($ForceRunningDeletion -eq 'true') {
 if (Test-Path $CurrentlyRunning) {
     Write-Entry -Message "Another Posterizarr instance already running, exiting now..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     Write-Entry -Subtext "If its a false positive message you can manually delete the 'Posterizarr.Running' file in temp dir..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Warning
+    if ($global:UptimeKumaUrl){
+        Send-UptimeKumaWebhook -status "down" -msg "Another instance running"
+    }
     Exit
 }
 Else {
@@ -6592,6 +6706,9 @@ if ($global:tmdbtoken.Length -le '35') {
     if (Test-Path $CurrentlyRunning) {
         Remove-Item -LiteralPath $CurrentlyRunning | out-null
     }
+    if ($global:UptimeKumaUrl){
+        Send-UptimeKumaWebhook -status "down" -msg "Wrong TMDB token"
+    }
     Exit
 }
 
@@ -6640,6 +6757,9 @@ while (-not $success -and $retryCount -lt $maxRetries) {
                 # Clear Running File
                 if (Test-Path $CurrentlyRunning) {
                     Remove-Item -LiteralPath $CurrentlyRunning | out-null
+                }
+                if ($global:UptimeKumaUrl){
+                    Send-UptimeKumaWebhook -status "down" -msg "Could not receive a TVDB Token"
                 }
                 Exit
             }
@@ -6901,6 +7021,9 @@ if ($Manual) {
     # Clear Running File
     if (Test-Path $CurrentlyRunning) {
         Remove-Item -LiteralPath $CurrentlyRunning | out-null
+    }
+    if ($global:UptimeKumaUrl){
+        Send-UptimeKumaWebhook -status "up"
     }
 }
 Elseif ($Testing) {
@@ -8022,6 +8145,9 @@ Elseif ($Testing) {
     if (Test-Path $CurrentlyRunning) {
         Remove-Item -LiteralPath $CurrentlyRunning | out-null
     }
+    if ($global:UptimeKumaUrl){
+        Send-UptimeKumaWebhook -status "up"
+    }
 }
 Elseif ($Tautulli) {
     # Get Plex data for this Show/Movie
@@ -8323,6 +8449,9 @@ Elseif ($Tautulli) {
         # Clear Running File
         if (Test-Path $CurrentlyRunning) {
             Remove-Item -LiteralPath $CurrentlyRunning | out-null
+        }
+        if ($global:UptimeKumaUrl){
+            Send-UptimeKumaWebhook -status "down" -msg "Hashtable creation failed"
         }
         Exit
     }
@@ -11609,6 +11738,9 @@ Elseif ($Tautulli) {
     if (Test-Path $CurrentlyRunning) {
         Remove-Item -LiteralPath $CurrentlyRunning | out-null
     }
+    if ($global:UptimeKumaUrl){
+        Send-UptimeKumaWebhook -status "up"
+    }
 }
 Elseif ($Backup) {
     MassDownloadPlexArtwork
@@ -11662,6 +11794,9 @@ Elseif ($SyncJelly -or $SyncEmby) {
                 if (Test-Path $CurrentlyRunning) {
                     Remove-Item -LiteralPath $CurrentlyRunning | out-null
                 }
+                if ($global:UptimeKumaUrl){
+                    Send-UptimeKumaWebhook -status "down" -msg "Lib contains invalid chars"
+                }
                 Exit
             }
             $Libsoverview += $libtemp
@@ -11672,6 +11807,9 @@ Elseif ($SyncJelly -or $SyncEmby) {
         # Clear Running File
         if (Test-Path $CurrentlyRunning) {
             Remove-Item -LiteralPath $CurrentlyRunning | out-null
+        }
+        if ($global:UptimeKumaUrl){
+            Send-UptimeKumaWebhook -status "down" -msg "No libs found"
         }
         Exit
     }
@@ -12601,6 +12739,9 @@ Elseif ($SyncJelly -or $SyncEmby) {
     if (Test-Path $CurrentlyRunning) {
         Remove-Item -LiteralPath $CurrentlyRunning | out-null
     }
+    if ($global:UptimeKumaUrl){
+        Send-UptimeKumaWebhook -status "up"
+    }
 }
 Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaServer -eq 'true') {
     $posterCount = 0
@@ -12970,6 +13111,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
         # Clear Running File
         if (Test-Path $CurrentlyRunning) {
             Remove-Item -LiteralPath $CurrentlyRunning | out-null
+        }
+        if ($global:UptimeKumaUrl){
+            Send-UptimeKumaWebhook -status "down" -msg "Hashtable creation failed"
         }
         Exit
     }
@@ -16346,6 +16490,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
     if (Test-Path $CurrentlyRunning) {
         Remove-Item -LiteralPath $CurrentlyRunning | out-null
     }
+    if ($global:UptimeKumaUrl){
+        Send-UptimeKumaWebhook -status "up"
+    }
 }
 else {
     Write-Entry -Message "Query plex libs..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -16373,6 +16520,9 @@ else {
                 if (Test-Path $CurrentlyRunning) {
                     Remove-Item -LiteralPath $CurrentlyRunning | out-null
                 }
+                if ($global:UptimeKumaUrl){
+                    Send-UptimeKumaWebhook -status "down" -msg "Invalid chars on lib"
+                }
                 Exit
             }
             $Libsoverview += $libtemp
@@ -16383,6 +16533,9 @@ else {
         # Clear Running File
         if (Test-Path $CurrentlyRunning) {
             Remove-Item -LiteralPath $CurrentlyRunning | out-null
+        }
+        if ($global:UptimeKumaUrl){
+            Send-UptimeKumaWebhook -status "down" -msg "No libs found"
         }
         Exit
     }
@@ -16779,6 +16932,9 @@ else {
         # Clear Running File
         if (Test-Path $CurrentlyRunning) {
             Remove-Item -LiteralPath $CurrentlyRunning | out-null
+        }
+        if ($global:UptimeKumaUrl){
+            Send-UptimeKumaWebhook -status "down" -msg "Hashtable creation failed"
         }
         Exit
     }
@@ -20809,5 +20965,8 @@ else {
     # Clear Running File
     if (Test-Path $CurrentlyRunning) {
         Remove-Item -LiteralPath $CurrentlyRunning | out-null
+    }
+    if ($global:UptimeKumaUrl){
+        Send-UptimeKumaWebhook -status "up"
     }
 }
