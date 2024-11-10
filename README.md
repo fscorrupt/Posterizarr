@@ -160,7 +160,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     <br>
 
     - `LibstoExclude`: Libraries, by local folder name, to exclude from processing.
-    - `JellyfinUrl`: Plex server URL (i.e. "http://192.168.1.1:8096" or "http://myplexserver.com:8096").
+    - `JellyfinUrl`: Jellyfin server URL (i.e. "http://192.168.1.1:8096" or "http://myplexserver.com:8096").
     - `UseJellyfin`: If set to `true`, you tell the script to use a Jellyfin Server (Default value is: `false`)
       - Also have a look at the hint: [Jellyfin CSS](#Jellyfin)
     - `UploadExistingAssets`: If set to `true`, the script will check local assets and upload them to Jellyfin, but only if Jellyfin does not already have EXIF data from Posterizarr, Kometa, or TCM for the artwork being uploaded.
@@ -170,7 +170,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     <br>
 
     - `LibstoExclude`: Libraries, by local folder name, to exclude from processing.
-    - `EmbyUrl`: Plex server URL (i.e. "http://192.168.1.1:8096/emby" or "http://myplexserver.com:8096/emby").
+    - `EmbyUrl`: Emby server URL (i.e. "http://192.168.1.1:8096/emby" or "http://myplexserver.com:8096/emby").
     - `UseEmby`: If set to `true`, you tell the script to use a Emby Server (Default value is: `false`)
     - `UploadExistingAssets`: If set to `true`, the script will check local assets and upload them to Emby, but only if Emby does not already have EXIF data from Posterizarr, Kometa, or TCM for the artwork being uploaded.
     </details>
