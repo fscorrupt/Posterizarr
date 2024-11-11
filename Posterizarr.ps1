@@ -12,7 +12,7 @@ param (
     [switch]$SyncEmby
 )
 
-$CurrentScriptVersion = "1.9.5"
+$CurrentScriptVersion = "1.9.6"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -9481,18 +9481,19 @@ Elseif ($Tautulli) {
                                     Write-Entry -Subtext "Could not find a poster on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                 }
                             }
-                            if ($fontAllCaps -eq 'true') {
-                                $joinedTitle = $Titletext.ToUpper()
-                            }
-                            Else {
-                                $joinedTitle = $Titletext
-                            }
+
                             if (!$global:TextlessPoster -eq 'true' -and $global:TMDBfallbackposterurl) {
                                 $global:posterurl = $global:TMDBfallbackposterurl
                             }
                             if (!$global:TextlessPoster -eq 'true' -and $global:fanartfallbackposterurl) {
                                 $global:posterurl = $global:fanartfallbackposterurl
                             }
+                        }
+                        if ($fontAllCaps -eq 'true') {
+                            $joinedTitle = $Titletext.ToUpper()
+                        }
+                        Else {
+                            $joinedTitle = $Titletext
                         }
                         if ($global:posterurl -or $global:PlexartworkDownloaded -or $TakeLocal) {
                             if ($TakeLocal){
@@ -18036,18 +18037,18 @@ else {
                                     Write-Entry -Subtext "Could not find a poster on any site" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                 }
                             }
-                            if ($fontAllCaps -eq 'true') {
-                                $joinedTitle = $Titletext.ToUpper()
-                            }
-                            Else {
-                                $joinedTitle = $Titletext
-                            }
                             if (!$global:TextlessPoster -eq 'true' -and $global:TMDBfallbackposterurl) {
                                 $global:posterurl = $global:TMDBfallbackposterurl
                             }
                             if (!$global:TextlessPoster -eq 'true' -and $global:fanartfallbackposterurl) {
                                 $global:posterurl = $global:fanartfallbackposterurl
                             }
+                        }
+                        if ($fontAllCaps -eq 'true') {
+                            $joinedTitle = $Titletext.ToUpper()
+                        }
+                        Else {
+                            $joinedTitle = $Titletext
                         }
                         if ($global:posterurl -or $global:PlexartworkDownloaded -or $TakeLocal) {
                             if ($TakeLocal){
