@@ -2,18 +2,6 @@
 
 ## [1.9.6](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.6) - 2024-11-11 06:26:07
 
-## What's Changed
-* fix: manual mode by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/164
-
-
-**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.5...1.9.6
-
-### Bug Fixes
-
-- general:
-  - manual mode (#164) ([9a844cb](https://github.com/fscorrupt/Posterizarr/commit/9a844cb08a154edad8b9bed6bb61afcb2ec737bf)) ([#164](https://github.com/fscorrupt/Posterizarr/pull/164))
-  - manual mode ([12df941](https://github.com/fscorrupt/Posterizarr/commit/12df94115cc5054b2dca5456dfa8ca652e176556)) ([#164](https://github.com/fscorrupt/Posterizarr/pull/164))
-
 ## [1.9.5](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.5) - 2024-11-08 11:30:55
 
 ## [1.9.4](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.4) - 2024-11-07 13:43:40
