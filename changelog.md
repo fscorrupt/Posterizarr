@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## [1.9.7](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.7) - 2024-11-13 13:40:52
+
+## What's Changed
+* fix: Latest imagemagick detection by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/166
+
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.6...1.9.7
+
+### Bug Fixes
+
+- general:
+  - Latest imagemagick detection (#166) ([ed8c8cb](https://github.com/fscorrupt/Posterizarr/commit/ed8c8cb0597896a6108d49b6bc3ef4db0a3a6dde)) ([#166](https://github.com/fscorrupt/Posterizarr/pull/166))
+  - Latest imagemagick detection ([6b7e03a](https://github.com/fscorrupt/Posterizarr/commit/6b7e03ae17749c490e7f6feb6a201c2490bffe19)) ([#166](https://github.com/fscorrupt/Posterizarr/pull/166))
+
 ## [1.9.6](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.6) - 2024-11-11 06:26:07
 
 ## [1.9.5](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.5) - 2024-11-08 11:30:55
