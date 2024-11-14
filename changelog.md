@@ -2,18 +2,6 @@
 
 ## [1.9.9](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.9) - 2024-11-14 16:49:04
 
-## What's Changed
-* fix: ShowFallback by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/170
-
-
-**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.8...1.9.9
-
-### Bug Fixes
-
-- general:
-  - ShowFallback (#170) ([441dc8d](https://github.com/fscorrupt/Posterizarr/commit/441dc8d9931153829138b8c425095c4126e3b345)) ([#170](https://github.com/fscorrupt/Posterizarr/pull/170))
-  - ShowFallback ([8172bc5](https://github.com/fscorrupt/Posterizarr/commit/8172bc591eb8a9f48c81c65be82297da88828d93)) ([#170](https://github.com/fscorrupt/Posterizarr/pull/170))
-
 ## [1.9.8](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.8) - 2024-11-14 15:13:09
 
 ## [1.9.7](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.7) - 2024-11-13 13:40:52
