@@ -12,7 +12,7 @@ param (
     [switch]$SyncEmby
 )
 
-$CurrentScriptVersion = "1.9.8"
+$CurrentScriptVersion = "1.9.9"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
