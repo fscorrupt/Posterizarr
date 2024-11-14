@@ -121,6 +121,7 @@
   },
   "SeasonPosterOverlayPart": {
     "fontAllCaps": "true",
+    "ShowFallback": "false",
     "AddBorder": "true",
     "AddText": "true",
     "AddTextStroke": "false",
