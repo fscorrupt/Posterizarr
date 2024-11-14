@@ -2,12 +2,6 @@
 
 ## [1.9.8](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.8) - 2024-11-14 15:13:09
 
-## What's Changed
-* add: season poster fallback to show poster by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/169
-
-
-**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.7...1.9.8
-
 ## [1.9.7](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.7) - 2024-11-13 13:40:52
 
 ## [1.9.6](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.6) - 2024-11-11 06:26:07
