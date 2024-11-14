@@ -6259,7 +6259,7 @@ $borderwidthsecond = $borderwidth + 'x' + $borderwidth
 $boxsize = $MaxWidth + 'x' + $MaxHeight
 
 # Season Poster Overlay Part
-$ShowFallback = $config.TitleCardOverlayPart.ShowFallback.tolower()
+$ShowFallback = $config.SeasonPosterOverlayPart.ShowFallback.tolower()
 $SeasonfontAllCaps = $config.SeasonPosterOverlayPart.fontAllCaps.tolower()
 $AddSeasonBorder = $config.SeasonPosterOverlayPart.AddBorder.tolower()
 $AddSeasonText = $config.SeasonPosterOverlayPart.AddText.tolower()
