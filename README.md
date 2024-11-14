@@ -264,6 +264,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     <summary>SeasonPosterOverlayPart [click to unfold]</summary>
     <br>
 
+    - `ShowFallback`: Set to `true` if you want to fallback to show poster if no season poster was found.
     - `fontAllCaps`: Set to `true` for all caps text, else `false`.
     - `AddBorder`: Set to `true` to add a border to the image.
     - `AddText`: Set to `true` to add text to the image.

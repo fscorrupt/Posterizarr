@@ -12,7 +12,7 @@ param (
     [switch]$SyncEmby
 )
 
-$CurrentScriptVersion = "1.9.7"
+$CurrentScriptVersion = "1.9.8"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -3516,6 +3516,7 @@ function LogConfigSettings {
     Write-Entry -Subtext "| Text Box Offset:              $text_offset" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Line Spacing:                 $lineSpacing" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "OverLay Season Part" -Path $configLogging -Color Cyan -log Info
+    Write-Entry -Subtext "| Fallback to Show:             $ShowFallback" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| All Caps on Text:             $SeasonfontAllCaps" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Add Border to Image:          $AddSeasonBorder" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Add Text to Image:            $AddSeasonText" -Path $configLogging -Color White -log Info
@@ -3565,6 +3566,7 @@ function LogConfigSettings {
     Write-Entry -Subtext "| Line Spacing:                 $BackgroundlineSpacing" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "OverLay TitleCard Part" -Path $configLogging -Color Cyan -log Info
     Write-Entry -Subtext "| Use Background as Title Card: $UseBackgroundAsTitleCard" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Fallback to Background:       $BackgroundFallback" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Add Border to Background:     $AddTitleCardBorder" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Border Color:                 $TitleCardbordercolor" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Add Overlay to Background:    $AddTitleCardOverlay" -Path $configLogging -Color White -log Info
@@ -6257,6 +6259,7 @@ $borderwidthsecond = $borderwidth + 'x' + $borderwidth
 $boxsize = $MaxWidth + 'x' + $MaxHeight
 
 # Season Poster Overlay Part
+$ShowFallback = $config.TitleCardOverlayPart.ShowFallback.tolower()
 $SeasonfontAllCaps = $config.SeasonPosterOverlayPart.fontAllCaps.tolower()
 $AddSeasonBorder = $config.SeasonPosterOverlayPart.AddBorder.tolower()
 $AddSeasonText = $config.SeasonPosterOverlayPart.AddText.tolower()
@@ -10310,6 +10313,34 @@ Elseif ($Tautulli) {
                                     $global:posterurl = $global:TVDBSeasonFallback
                                     Write-Entry -Subtext "Taking Season Poster with text as fallback from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                     $global:IsFallback = $true
+                                }
+                                if (!$global:posterurl -and $ShowFallback -eq 'true') {
+                                    # Lets just try to grab a show poster.
+                                    Write-Entry -Subtext "Fallback to Show Poster..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                    $global:posterurl = GetTMDBSeasonPoster
+                                    if ($global:posterurl) {
+                                        Write-Entry -Subtext "Using the Show Poster as Season Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                        $global:IsFallback = $true
+                                        $global:FallbackText = 'True-Show'
+                                    }
+                                    Else {
+                                        # Lets just try to grab a show poster.
+                                        $global:posterurl = GetTVDBSeasonPoster
+                                        if ($global:posterurl) {
+                                            Write-Entry -Subtext "Using the Show Poster as Season Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                            $global:IsFallback = $true
+                                            $global:FallbackText = 'True-Show'
+                                        }
+                                        Else {
+                                            # Lets just try to grab a show poster.
+                                            $global:posterurl = GetFanartShowPoster
+                                            if ($global:posterurl) {
+                                                Write-Entry -Subtext "Using the Show Poster as Season Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                                $global:IsFallback = $true
+                                                $global:FallbackText = 'True-Show'
+                                            }
+                                        }
+                                    }
                                 }
                             }
                             if ($global:posterurl -or $global:PlexartworkDownloaded -or $TakeLocal) {
@@ -14805,6 +14836,34 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                         Write-Entry -Subtext "Taking Season Poster with text as fallback from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                         $global:IsFallback = $true
                                     }
+                                    if (!$global:posterurl -and $ShowFallback -eq 'true') {
+                                        # Lets just try to grab a show poster.
+                                        Write-Entry -Subtext "Fallback to Show Poster..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                        $global:posterurl = GetTMDBSeasonPoster
+                                        if ($global:posterurl) {
+                                            Write-Entry -Subtext "Using the Show Poster as Season Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                            $global:IsFallback = $true
+                                            $global:FallbackText = 'True-Show'
+                                        }
+                                        Else {
+                                            # Lets just try to grab a show poster.
+                                            $global:posterurl = GetTVDBSeasonPoster
+                                            if ($global:posterurl) {
+                                                Write-Entry -Subtext "Using the Show Poster as Season Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                                $global:IsFallback = $true
+                                                $global:FallbackText = 'True-Show'
+                                            }
+                                            Else {
+                                                # Lets just try to grab a show poster.
+                                                $global:posterurl = GetFanartShowPoster
+                                                if ($global:posterurl) {
+                                                    Write-Entry -Subtext "Using the Show Poster as Season Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                                    $global:IsFallback = $true
+                                                    $global:FallbackText = 'True-Show'
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                                 if ($global:posterurl -or $TakeLocal) {
                                     if ($TakeLocal){
@@ -18923,6 +18982,34 @@ else {
                                     $global:posterurl = $global:TVDBSeasonFallback
                                     Write-Entry -Subtext "Taking Season Poster with text as fallback from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                     $global:IsFallback = $true
+                                }
+                                if (!$global:posterurl -and $ShowFallback -eq 'true') {
+                                    # Lets just try to grab a show poster.
+                                    Write-Entry -Subtext "Fallback to Show Poster..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                    $global:posterurl = GetTMDBSeasonPoster
+                                    if ($global:posterurl) {
+                                        Write-Entry -Subtext "Using the Show Poster as Season Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                        $global:IsFallback = $true
+                                        $global:FallbackText = 'True-Show'
+                                    }
+                                    Else {
+                                        # Lets just try to grab a show poster.
+                                        $global:posterurl = GetTVDBSeasonPoster
+                                        if ($global:posterurl) {
+                                            Write-Entry -Subtext "Using the Show Poster as Season Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                            $global:IsFallback = $true
+                                            $global:FallbackText = 'True-Show'
+                                        }
+                                        Else {
+                                            # Lets just try to grab a show poster.
+                                            $global:posterurl = GetFanartShowPoster
+                                            if ($global:posterurl) {
+                                                Write-Entry -Subtext "Using the Show Poster as Season Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                                $global:IsFallback = $true
+                                                $global:FallbackText = 'True-Show'
+                                            }
+                                        }
+                                    }
                                 }
                             }
                             if ($global:posterurl -or $global:PlexartworkDownloaded -or $TakeLocal) {
