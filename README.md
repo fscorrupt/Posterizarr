@@ -19,7 +19,7 @@
     <a href="https://discord.gg/fYyJQSGt54" target="_blank"><img src="https://assets-global.website-files.com/6257adef93867e50d84d30e2/636e0a6a49cf127bf92de1e2_icon_clyde_blurple_RGB.png" alt="Discord" height="35"></a>
 </p>
 <p align="center">
-<a href="https://discord.com/channels/822460010649878528/1219697354098344039" target="_blank"><img src="/images/posterizarr_banner.jpg" alt="Discord" height="10%"></a>
+<a href="https://discord.gg/fYyJQSGt54" target="_blank"><img src="/images/posterizarr_banner.jpg" alt="Discord" height="10%"></a>
 </p>
 <br>
 
