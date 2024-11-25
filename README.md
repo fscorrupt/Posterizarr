@@ -104,6 +104,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
 >- **Fanart Personal API Key:** [Obtain Fanart API Key](https://fanart.tv/get-an-api-key)
 >- **TVDB API Key:** [Obtain TVDB API Key](https://thetvdb.com/api-information/signup)
     - **Do not** use `"Legacy API Key"`, it only works with a Project Api Key.
+    - If you are a TVDB subscriber, you can append your PIN to the end of your API key in the format `YourApiKey#YourPin`. (It is important to include a `#` between the API key and the PIN.)
 >- **ImageMagick:**
     - **Version 7.x is required** - The script handles downloading and using a portable version of ImageMagick for all platforms. **(You may need to run the Script as Admin on first run)**. If you prefer to reference your own installation or prefer to download and install it yourself, goto: [Download ImageMagick](https://imagemagick.org/script/download.php)
 >- **Powershell Version:** 5.x or higher (Docker Image uses v7.4.2).

@@ -12,7 +12,7 @@ param (
     [switch]$SyncEmby
 )
 
-$CurrentScriptVersion = "1.9.9"
+$CurrentScriptVersion = "1.9.10"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -6029,6 +6029,10 @@ Else {
 
 # API Part
 $global:tvdbapi = $config.ApiPart.tvdbapi
+if ($global:tvdbapi -match '#'){
+    $global:tvdbpin = $global:tvdbapi.split('#')[1]
+    $global:tvdbapi = $global:tvdbapi.split('#')[0]
+}
 $global:tmdbtoken = $config.ApiPart.tmdbtoken
 $FanartTvAPIKey = $config.ApiPart.FanartTvAPIKey
 $PlexToken = $config.ApiPart.PlexToken
@@ -6736,10 +6740,17 @@ while (-not $success -and $retryCount -lt $maxRetries) {
     try {
         # tvdb token Header
         $global:apiUrl = "https://api4.thetvdb.com/v4/login"
-        $global:requestBody = @{
-            apikey = $global:tvdbapi
-        } | ConvertTo-Json
-
+        if ($global:tvdbpin){
+            $global:requestBody = @{
+                apikey = $global:tvdbapi
+                pin = $global:tvdbpin
+            } | ConvertTo-Json
+        }
+        Else {
+            $global:requestBody = @{
+                apikey = $global:tvdbapi
+            } | ConvertTo-Json
+        }
         # tvdb Header
         $global:tvdbtokenheader = @{
             'accept'       = 'application/json'
