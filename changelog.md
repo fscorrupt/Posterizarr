@@ -2,12 +2,6 @@
 
 ## [1.9.10](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.10) - 2024-11-25 18:12:46
 
-## What's Changed
-* Update config.example.json & Posters by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/171
-add: ability to specify tvdb pin - FR #172 
-
-**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.9...1.9.10
-
 ## [1.9.9](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.9) - 2024-11-14 16:49:04
 
 ## [1.9.8](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.8) - 2024-11-14 15:13:09
