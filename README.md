@@ -19,7 +19,7 @@
     <a href="https://discord.gg/fYyJQSGt54" target="_blank"><img src="https://assets-global.website-files.com/6257adef93867e50d84d30e2/636e0a6a49cf127bf92de1e2_icon_clyde_blurple_RGB.png" alt="Discord" height="35"></a>
 </p>
 <p align="center">
-<a href="https://discord.com/channels/822460010649878528/1219697354098344039" target="_blank"><img src="/images/posterizarr_banner.jpg" alt="Discord" height="10%"></a>
+<a href="https://discord.gg/fYyJQSGt54" target="_blank"><img src="/images/posterizarr_banner.jpg" alt="Discord" height="10%"></a>
 </p>
 <br>
 
@@ -119,6 +119,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     <br>
 
     - `tvdbapi`: Your TVDB Project API key.
+       - If you are a TVDB subscriber, you can append your PIN to the end of your API key in the format `YourApiKey#YourPin`. (It is important to include a `#` between the API key and the PIN.)
     - `tmdbtoken`: Your TMDB API Read Access Token.
     - `FanartTvAPIKey`: Your Fanart personal API key.
     - `PlexToken`: Your Plex token (Leave empty if not applicable).
@@ -938,7 +939,7 @@ Feel free to customize the script further to meet your specific preferences or a
 ## PR Rules
 
 > [!IMPORTANT]
-> - Adjust on each PR the version number in script on Line 14 `$CurrentScriptVersion = "1.8.6"`
+> - Adjust on each PR the version number in script on Line 15 `$CurrentScriptVersion = "1.9.7"`
 > - Adjust the version number in [Release.txt](Release.txt) to match the one in script.
 >   - this is required because the script checks against this file if a newer version is available.
 > - Do not include images on a PR.
