@@ -106,7 +106,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - **Do not** use `"Legacy API Key"`, it only works with a Project Api Key.
 >- **ImageMagick:**
     - **Version 7.x is required** - The script handles downloading and using a portable version of ImageMagick for all platforms. **(You may need to run the Script as Admin on first run)**. If you prefer to reference your own installation or prefer to download and install it yourself, goto: [Download ImageMagick](https://imagemagick.org/script/download.php)
->- **Powershell Version:** 5.x or higher (Docker Image uses v7.4.2).
+>- **Powershell Version:** 5.x or higher (Docker Image uses v7.4.6).
 >- **FanartTv Powershell Module:** This module is required (already integrated in container), goto: [Install Module](https://github.com/Celerium/FanartTV-PowerShellWrapper)
 
 # Configuration
