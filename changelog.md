@@ -2,17 +2,6 @@
 
 ## [1.9.11](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.11) - 2024-11-27 07:47:01
 
-## What's Changed
-* fix: optimal point size @fscorrupt in
-	* 	error on new line/or special chars in title, also json could get currupt for discord webhook in some cases.
-
-**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.9...1.9.10
-
-### Bug Fixes
-
-- general:
-  - optimal point size ([7347737](https://github.com/fscorrupt/Posterizarr/commit/73477371c4bb8ab4749d59c33862e3b7ad6c0102))
-
 ## [1.9.10](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.10) - 2024-11-25 18:12:46
 
 ## [1.9.9](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.9) - 2024-11-14 16:49:04
