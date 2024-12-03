@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## [1.9.12](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.12) - 2024-12-03 06:30:56
+
+## What's Changed
+* fix: Tautulli recent on show/Season @fscorrupt
+	* 	it would have not created an poster if someone only uses show poster.
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.11...1.9.12
+
+### Bug Fixes
+
+- general:
+  - Tautulli recent on show/Season ([909745c](https://github.com/fscorrupt/Posterizarr/commit/909745cba654aaa5f62fa4eca2049b55e1306486))
+
 ## [1.9.11](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.11) - 2024-11-27 07:47:01
 
 ## [1.9.10](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.10) - 2024-11-25 18:12:46
