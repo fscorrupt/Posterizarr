@@ -478,7 +478,7 @@ To use it we need to configure a script in Tautulli, please follow these instruc
 1. Next go to Arguments -> Unfold `Recently Added` Menu and paste the following Argument, after that you can save it.
     - **Please do not change the Argument otherwise the script could fail.**
     ```sh
-    <movie>RatingKey "{rating_key}" mediatype "{media_type}"</movie><show>grandparentratingkey "{grandparent_rating_key}" mediatype "{media_type}"</show><season>parentratingkey "{parent_rating_key}" grandparentratingkey "{grandparent_rating_key}" mediatype "{media_type}"</season><episode>RatingKey "{rating_key}" parentratingkey "{parent_rating_key}" grandparentratingkey "{grandparent_rating_key}" mediatype "{media_type}"</episode>
+    <movie>RatingKey "{rating_key}" mediatype "{media_type}"</movie><show>RatingKey "{rating_key}" mediatype "{media_type}"</show><season>parentratingkey "{parent_rating_key}" mediatype "{media_type}"</season><episode>RatingKey "{rating_key}" parentratingkey "{parent_rating_key}" grandparentratingkey "{grandparent_rating_key}" mediatype "{media_type}"</episode>
     ```
     <details close>
     <summary>🖼️Example [click to unfold]</summary>
@@ -536,7 +536,7 @@ In this mode we use Tautulli to trigger Posterizarr for an specific item in Plex
 1. Next go to Arguments -> Unfold `Recently Added` Menu and paste the following Argument, after that you can save it.
     - **Please do not change the Argument otherwise the script could fail.**
     ```sh
-    <movie>-Tautulli -RatingKey "{rating_key}" -mediatype "{media_type}"</movie><show>-Tautulli -grandparentratingkey "{grandparent_rating_key}" -mediatype "{media_type}"</show><season>-Tautulli -parentratingkey "{parent_rating_key}" -grandparentratingkey "{grandparent_rating_key}" -mediatype "{media_type}"</season><episode>-Tautulli -RatingKey "{rating_key}" -parentratingkey "{parent_rating_key}" -grandparentratingkey "{grandparent_rating_key}" -mediatype "{media_type}"</episode>
+    <movie>RatingKey "{rating_key}" mediatype "{media_type}"</movie><show>RatingKey "{rating_key}" mediatype "{media_type}"</show><season>parentratingkey "{parent_rating_key}" mediatype "{media_type}"</season><episode>RatingKey "{rating_key}" parentratingkey "{parent_rating_key}" grandparentratingkey "{grandparent_rating_key}" mediatype "{media_type}"</episode>
     ```
     <details close>
     <summary>🖼️Example [click to unfold]</summary>

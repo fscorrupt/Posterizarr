@@ -12,7 +12,7 @@ param (
     [switch]$SyncEmby
 )
 
-$CurrentScriptVersion = "1.9.11"
+$CurrentScriptVersion = "1.9.12"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -8186,6 +8186,14 @@ Elseif ($Tautulli) {
         if ($mediatype -eq 'movie') {
             $contentquery = "video"
             $queryKey = $RatingKey
+        }
+        Elseif ($mediatype -eq 'show') {
+            $contentquery = "Directory"
+            $queryKey = $RatingKey
+        }
+        Elseif ($mediatype -eq 'season') {
+            $contentquery = "Directory"
+            $queryKey = $parentratingkey
         }
         Else {
             $contentquery = "Directory"
