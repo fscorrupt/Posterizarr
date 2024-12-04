@@ -12,7 +12,7 @@ param (
     [switch]$SyncEmby
 )
 
-$CurrentScriptVersion = "1.9.12"
+$CurrentScriptVersion = "1.9.13"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -10336,7 +10336,7 @@ Elseif ($Tautulli) {
                                 if (!$global:posterurl -and $ShowFallback -eq 'true') {
                                     # Lets just try to grab a show poster.
                                     Write-Entry -Subtext "Fallback to Show Poster..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
-                                    $global:posterurl = GetTMDBSeasonPoster
+                                    $global:posterurl = GetTMDBShowPoster
                                     if ($global:posterurl) {
                                         Write-Entry -Subtext "Using the Show Poster as Season Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                         $global:IsFallback = $true
@@ -10344,7 +10344,7 @@ Elseif ($Tautulli) {
                                     }
                                     Else {
                                         # Lets just try to grab a show poster.
-                                        $global:posterurl = GetTVDBSeasonPoster
+                                        $global:posterurl = GetTVDBShowPoster
                                         if ($global:posterurl) {
                                             Write-Entry -Subtext "Using the Show Poster as Season Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                             $global:IsFallback = $true
@@ -14858,7 +14858,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                     if (!$global:posterurl -and $ShowFallback -eq 'true') {
                                         # Lets just try to grab a show poster.
                                         Write-Entry -Subtext "Fallback to Show Poster..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
-                                        $global:posterurl = GetTMDBSeasonPoster
+                                        $global:posterurl = GetTMDBShowPoster
                                         if ($global:posterurl) {
                                             Write-Entry -Subtext "Using the Show Poster as Season Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                             $global:IsFallback = $true
@@ -14866,7 +14866,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                         }
                                         Else {
                                             # Lets just try to grab a show poster.
-                                            $global:posterurl = GetTVDBSeasonPoster
+                                            $global:posterurl = GetTVDBShowPoster
                                             if ($global:posterurl) {
                                                 Write-Entry -Subtext "Using the Show Poster as Season Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                                 $global:IsFallback = $true
@@ -19005,7 +19005,7 @@ else {
                                 if (!$global:posterurl -and $ShowFallback -eq 'true') {
                                     # Lets just try to grab a show poster.
                                     Write-Entry -Subtext "Fallback to Show Poster..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
-                                    $global:posterurl = GetTMDBSeasonPoster
+                                    $global:posterurl = GetTMDBShowPoster
                                     if ($global:posterurl) {
                                         Write-Entry -Subtext "Using the Show Poster as Season Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                         $global:IsFallback = $true
@@ -19013,7 +19013,7 @@ else {
                                     }
                                     Else {
                                         # Lets just try to grab a show poster.
-                                        $global:posterurl = GetTVDBSeasonPoster
+                                        $global:posterurl = GetTVDBShowPoster
                                         if ($global:posterurl) {
                                             Write-Entry -Subtext "Using the Show Poster as Season Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                             $global:IsFallback = $true
