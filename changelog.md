@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## [1.9.13](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.13) - 2024-12-04 08:11:35
+
+## What's Changed
+* fix: show poster fallback on season @fscorrupt
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.12...1.9.13
+
+### Bug Fixes
+
+- general:
+  - show poster fallback for season ([7960944](https://github.com/fscorrupt/Posterizarr/commit/7960944bf25aa5652f57cbaf044951e273488d41))
+
 ## [1.9.12](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.12) - 2024-12-03 06:30:56
 
 ## [1.9.11](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.11) - 2024-11-27 07:47:01
