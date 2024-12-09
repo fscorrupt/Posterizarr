@@ -22,6 +22,9 @@
       "xx",
       "en",
       "de"
+    ],
+    "PreferredBackgroundLanguageOrder": [
+      "PleaseFillMe"
     ]
   },
   "PlexPart": {

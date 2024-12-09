@@ -12,7 +12,7 @@ param (
     [switch]$SyncEmby
 )
 
-$CurrentScriptVersion = "1.9.13"
+$CurrentScriptVersion = "1.9.14"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -886,9 +886,9 @@ function GetTMDBMovieBackground {
     if (!$global:tmdbid) {
         Write-Entry -Subtext "Cannot search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     }
-    if ($global:PreferTextless -eq $true) {
+    if ($global:BackgroundPreferTextless -eq $true) {
         try {
-            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($global:tmdbid)?append_to_response=images&language=xx&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
+            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($global:tmdbid)?append_to_response=images&language=xx&include_image_language=$($global:PreferredBackgroundLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
         }
         catch {
             Write-Entry -Subtext "Could not query TMDB url, error message: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
@@ -905,9 +905,9 @@ function GetTMDBMovieBackground {
                     $NoLangPoster = ($response.images.backdrops | Where-Object iso_639_1 -eq $null)
                 }
                 if (!$NoLangPoster) {
-                    Write-Entry -Subtext "PreferTextless Value: $global:PreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                    Write-Entry -Subtext "OnlyTextless Value: $global:OnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                    if ($global:OnlyTextless -eq $false) {
+                    Write-Entry -Subtext "PreferTextless Value: $global:BackgroundPreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                    Write-Entry -Subtext "OnlyTextless Value: $global:BackgroundOnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                    if ($global:BackgroundOnlyTextless -eq $false) {
                         if ($global:WidthHeightFilter -eq 'true') {
                             if ($global:TMDBVoteSorting -eq 'primary') {
                                 $filteredPosters = $response.images.backdrops | Where-Object { $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight }
@@ -1021,7 +1021,7 @@ function GetTMDBMovieBackground {
     }
     Else {
         try {
-            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($global:tmdbid)?append_to_response=images&language=$($PreferredLanguageOrder[0])&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
+            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($global:tmdbid)?append_to_response=images&language=$($PreferredBackgroundLanguageOrder[0])&include_image_language=$($global:PreferredBackgroundLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
         }
         catch {
             Write-Entry -Subtext "Could not query TMDB url, error message: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
@@ -1031,7 +1031,7 @@ function GetTMDBMovieBackground {
         }
         if ($response) {
             if ($response.images.backdrops) {
-                foreach ($lang in $global:PreferredLanguageOrderTMDB) {
+                foreach ($lang in $global:PreferredBackgroundLanguageOrderTMDB) {
                     if ($global:WidthHeightFilter -eq 'true') {
                         if ($lang -eq 'null') {
                             $FavPoster = ($response.images.backdrops | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight })
@@ -1548,9 +1548,9 @@ function GetTMDBShowBackground {
     if (!$global:tmdbid) {
         Write-Entry -Subtext "Cannot search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     }
-    if ($global:PreferTextless -eq $true) {
+    if ($global:BackgroundPreferTextless -eq $true) {
         try {
-            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=xx&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
+            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=xx&include_image_language=$($global:PreferredBackgroundLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
         }
         catch {
             Write-Entry -Subtext "Could not query TMDB url, error message: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
@@ -1567,9 +1567,9 @@ function GetTMDBShowBackground {
                     $NoLangPoster = ($response.images.backdrops | Where-Object iso_639_1 -eq $null)
                 }
                 if (!$NoLangPoster) {
-                    Write-Entry -Subtext "PreferTextless Value: $global:PreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                    Write-Entry -Subtext "OnlyTextless Value: $global:OnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                    if ($global:OnlyTextless -eq $false) {
+                    Write-Entry -Subtext "PreferTextless Value: $global:BackgroundPreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                    Write-Entry -Subtext "OnlyTextless Value: $global:BackgroundOnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                    if ($global:BackgroundOnlyTextless -eq $false) {
                         if ($global:WidthHeightFilter -eq 'true') {
                             if ($global:TMDBVoteSorting -eq 'primary') {
                                 $filteredPosters = $response.images.backdrops | Where-Object { $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
@@ -1684,7 +1684,7 @@ function GetTMDBShowBackground {
     }
     Else {
         try {
-            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=$($PreferredLanguageOrder[0])&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
+            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=$($PreferredBackgroundLanguageOrder[0])&include_image_language=$($global:PreferredBackgroundLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
         }
         catch {
             Write-Entry -Subtext "Could not query TMDB url, error message: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
@@ -1694,7 +1694,7 @@ function GetTMDBShowBackground {
         }
         if ($response) {
             if ($response.images.backdrops) {
-                foreach ($lang in $global:PreferredLanguageOrderTMDB) {
+                foreach ($lang in $global:PreferredBackgroundLanguageOrderTMDB) {
                     if ($global:WidthHeightFilter -eq 'true') {
                         if ($lang -eq 'null') {
                             $FavPoster = ($response.images.backdrops | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
@@ -1988,15 +1988,23 @@ function GetFanartMovieBackground {
             $entrytemp = Get-FanartTv -Type movies -id $id -ErrorAction SilentlyContinue
             if ($entrytemp -and $entrytemp.moviebackground) {
                 if (!($entrytemp.moviebackground | Where-Object lang -eq '')) {
-                    $global:posterurl = ($entrytemp.moviebackground)[0].url
-                    Write-Entry -Subtext "Found Background with text on Fanart.tv"  -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
-                    $global:PosterWithText = $true
-                    $global:FANARTAssetTextLang = ($entrytemp.moviebackground)[0].lang
-                    $global:FANARTAssetChangeUrl = "https://fanart.tv/movie/$id"
+                    Write-Entry -Subtext "PreferTextless Value: $global:BackgroundPreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                    Write-Entry -Subtext "OnlyTextless Value: $global:BackgroundOnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                    if ($global:BackgroundOnlyTextless -eq $false) {
+                        $global:posterurl = ($entrytemp.moviebackground)[0].url
+                        Write-Entry -Subtext "Found Background with text on Fanart.tv"  -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                        $global:PosterWithText = $true
+                        $global:FANARTAssetTextLang = ($entrytemp.moviebackground)[0].lang
+                        $global:FANARTAssetChangeUrl = "https://fanart.tv/movie/$id"
 
-                    if ($global:FavProvider -eq 'FANART') {
-                        $global:Fallback = "TMDB"
-                        $global:fanartfallbackposterurl = ($entrytemp.moviebackground)[0].url
+                        if ($global:FavProvider -eq 'FANART') {
+                            $global:Fallback = "TMDB"
+                            $global:fanartfallbackposterurl = ($entrytemp.moviebackground)[0].url
+                        }
+                    }
+                    Else {
+                        Write-Entry -Subtext "Found Background with text on FANART, skipping because you only want textless..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                        $global:FANARTAssetChangeUrl = "https://fanart.tv/movie/$id"
                     }
                     return $global:posterurl
                     continue
@@ -2131,15 +2139,23 @@ function GetFanartShowBackground {
         $entrytemp = Get-FanartTv -Type tv -id $id -ErrorAction SilentlyContinue
         if ($entrytemp -and $entrytemp.showbackground) {
             if (!($entrytemp.showbackground | Where-Object lang -eq '')) {
-                $global:posterurl = ($entrytemp.showbackground)[0].url
-                Write-Entry -Subtext "Found Background with text on Fanart.tv"  -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
-                $global:PosterWithText = $true
-                $global:FANARTAssetTextLang = ($entrytemp.showbackground)[0].lang
-                $global:FANARTAssetChangeUrl = "https://fanart.tv/series/$id"
+                Write-Entry -Subtext "PreferTextless Value: $global:BackgroundPreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                Write-Entry -Subtext "OnlyTextless Value: $global:BackgroundOnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                if ($global:BackgroundOnlyTextless -eq $false) {
+                    $global:posterurl = ($entrytemp.showbackground)[0].url
+                    Write-Entry -Subtext "Found Background with text on Fanart.tv"  -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                    $global:PosterWithText = $true
+                    $global:FANARTAssetTextLang = ($entrytemp.showbackground)[0].lang
+                    $global:FANARTAssetChangeUrl = "https://fanart.tv/series/$id"
 
-                if ($global:FavProvider -eq 'FANART') {
-                    $global:Fallback = "TMDB"
-                    $global:fanartfallbackposterurl = ($entrytemp.showbackground)[0].url
+                    if ($global:FavProvider -eq 'FANART') {
+                        $global:Fallback = "TMDB"
+                        $global:fanartfallbackposterurl = ($entrytemp.showbackground)[0].url
+                    }
+                }
+                Else {
+                    Write-Entry -Subtext "Found Background with text on FANART, skipping because you only want textless..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                    $global:FANARTAssetChangeUrl = "https://fanart.tv/movie/$id"
                 }
                 return $global:posterurl
                 continue
@@ -2472,7 +2488,7 @@ function GetTVDBMoviePoster {
 }
 function GetTVDBMovieBackground {
     if ($global:tvdbid) {
-        if ($global:PreferTextless -eq $true) {
+        if ($global:BackgroundPreferTextless -eq $true) {
             Write-Entry -Subtext "Searching on TVDB for a movie Background" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
             try {
                 $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/movies/$($global:tvdbid)/extended" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
@@ -2500,47 +2516,55 @@ function GetTVDBMovieBackground {
                         return $global:posterurl
                     }
                     Else {
-                        # Trying other languages
-                        foreach ($lang in $global:PreferredLanguageOrderTVDB) {
-                            if ($global:WidthHeightFilter -eq 'true') {
-                                if ($lang -eq 'null') {
-                                    $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "" -and $_.type -eq '15' -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight } | Sort-Object Score)
-                                }
-                                Else {
-                                    $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "$lang*" -and $_.type -eq '15' -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight } | Sort-Object Score)
-                                }
-                            }
-                            Else {
-                                if ($lang -eq 'null') {
-                                    $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "" -and $_.type -eq '15' } | Sort-Object Score)
-                                }
-                                Else {
-                                    $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "$lang*" -and $_.type -eq '15' } | Sort-Object Score)
-                                }
-                            }
-                            if ($LangArtwork) {
-                                $global:posterurl = $LangArtwork[0].image
+                        Write-Entry -Subtext "PreferTextless Value: $global:BackgroundPreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        Write-Entry -Subtext "OnlyTextless Value: $global:BackgroundOnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        if ($global:BackgroundOnlyTextless -eq $false) {
+                            # Trying other languages
+                            foreach ($lang in $global:PreferredBackgroundLanguageOrderTVDB) {
                                 if ($global:WidthHeightFilter -eq 'true') {
-                                    Write-Entry -Subtext "Found a poster sized at - width: $($LangArtwork[0].width) | height: $($LangArtwork[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                                }
-                                if ($lang -eq 'null') {
-                                    Write-Entry -Subtext "Found Background without Language on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                                    if ($lang -eq 'null') {
+                                        $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "" -and $_.type -eq '15' -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight } | Sort-Object Score)
+                                    }
+                                    Else {
+                                        $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "$lang*" -and $_.type -eq '15' -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight } | Sort-Object Score)
+                                    }
                                 }
                                 Else {
-                                    Write-Entry -Subtext "Found Background with Language '$lang' on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                                    if ($lang -eq 'null') {
+                                        $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "" -and $_.type -eq '15' } | Sort-Object Score)
+                                    }
+                                    Else {
+                                        $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "$lang*" -and $_.type -eq '15' } | Sort-Object Score)
+                                    }
                                 }
-                                if ($lang -ne 'null') {
-                                    $global:PosterWithText = $true
-                                    $global:TVDBAssetTextLang = $lang
+                                if ($LangArtwork) {
+                                    $global:posterurl = $LangArtwork[0].image
+                                    if ($global:WidthHeightFilter -eq 'true') {
+                                        Write-Entry -Subtext "Found a poster sized at - width: $($LangArtwork[0].width) | height: $($LangArtwork[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                    }
+                                    if ($lang -eq 'null') {
+                                        Write-Entry -Subtext "Found Background without Language on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                                    }
+                                    Else {
+                                        Write-Entry -Subtext "Found Background with Language '$lang' on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                                    }
+                                    if ($lang -ne 'null') {
+                                        $global:PosterWithText = $true
+                                        $global:TVDBAssetTextLang = $lang
+                                    }
+                                    $global:TVDBAssetChangeUrl = "https://thetvdb.com/movies/$($response.data.slug)#artwork"
+                                    return $global:posterurl
+                                    continue
                                 }
+                            }
+                            if (!$global:posterurl) {
+                                Write-Entry -Subtext "No background found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                 $global:TVDBAssetChangeUrl = "https://thetvdb.com/movies/$($response.data.slug)#artwork"
-                                return $global:posterurl
-                                continue
                             }
                         }
-                        if (!$global:posterurl) {
-                            Write-Entry -Subtext "No background found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-                            $global:TVDBAssetChangeUrl = "https://thetvdb.com/movies/$($response.data.slug)#artwork"
+                        Else {
+                            Write-Entry -Subtext "Found background with text on TVDB, skipping because you only want textless..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                            $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)/#artwork"
                         }
                     }
                 }
@@ -2566,7 +2590,7 @@ function GetTVDBMovieBackground {
             }
             if ($response) {
                 if ($response.data.artworks) {
-                    foreach ($lang in $global:PreferredLanguageOrderTVDB) {
+                    foreach ($lang in $global:PreferredBackgroundLanguageOrderTVDB) {
                         if ($global:WidthHeightFilter -eq 'true') {
                             if ($lang -eq 'null') {
                                 $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "" -and $_.type -eq '15' -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight } | Sort-Object Score)
@@ -2853,7 +2877,7 @@ function GetTVDBSeasonPoster {
 function GetTVDBShowBackground {
     if ($global:tvdbid) {
         Write-Entry -Subtext "Searching on TVDB for a background" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
-        if ($global:PreferTextless -eq $true) {
+        if ($global:BackgroundPreferTextless -eq $true) {
             try {
                 $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/series/$($global:tvdbid)/artworks" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
             }
@@ -2882,9 +2906,9 @@ function GetTVDBShowBackground {
                         $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)/#artwork"
                     }
                     Else {
-                        Write-Entry -Subtext "PreferTextless Value: $global:PreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                        Write-Entry -Subtext "OnlyTextless Value: $global:OnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                        if ($global:OnlyTextless -eq $false) {
+                        Write-Entry -Subtext "PreferTextless Value: $global:BackgroundPreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        Write-Entry -Subtext "OnlyTextless Value: $global:BackgroundOnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        if ($global:BackgroundOnlyTextless -eq $false) {
                             $global:posterurl = $defaultImageurl
                             Write-Entry -Subtext "Found background with text on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                             $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)/#artwork"
@@ -2917,7 +2941,7 @@ function GetTVDBShowBackground {
             }
             if ($response) {
                 if ($response.data) {
-                    foreach ($lang in $global:PreferredLanguageOrderTVDB) {
+                    foreach ($lang in $global:PreferredBackgroundLanguageOrderTVDB) {
                         if ($global:WidthHeightFilter -eq 'true') {
                             if ($lang -eq 'null') {
                                 $LangArtwork = ($response.data.artworks | Where-Object { $_.language -like "" -and $_.type -eq '3' -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight } | Sort-Object Score -Descending)
@@ -3431,174 +3455,175 @@ function LogConfigSettings {
     Write-Entry -Subtext "___________________________________________" -Path $configLogging -Color DarkMagenta -log Info
     # Plex Part
     Write-Entry -Subtext "API Part" -Path $configLogging -Color Cyan -log Info
-    Write-Entry -Subtext "| TVDB API Key:                 $($global:tvdbapi[0..7] -join '')****" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| TMDB API Read Access Token:   $($global:tmdbtoken[0..7] -join '')****" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Fanart API Key:               $($FanartTvAPIKey[0..7] -join '')****" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| TVDB API Key:                    $($global:tvdbapi[0..7] -join '')****" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| TMDB API Read Access Token:      $($global:tmdbtoken[0..7] -join '')****" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Fanart API Key:                  $($FanartTvAPIKey[0..7] -join '')****" -Path $configLogging -Color White -log Info
     if ($PlexToken) {
-        Write-Entry -Subtext "| Plex Token:                   $($PlexToken[0..7] -join '')****" -Path $configLogging -Color White -log Info
+        Write-Entry -Subtext "| Plex Token:                      $($PlexToken[0..7] -join '')****" -Path $configLogging -Color White -log Info
     }
     if ($JellyfinAPIKey) {
-        Write-Entry -Subtext "| Jellyfin API Key:             $($JellyfinAPIKey[0..7] -join '')****" -Path $configLogging -Color White -log Info
+        Write-Entry -Subtext "| Jellyfin API Key:                $($JellyfinAPIKey[0..7] -join '')****" -Path $configLogging -Color White -log Info
     }
     if ($EmbyAPIKey) {
-        Write-Entry -Subtext "| Emby API Key:                 $($EmbyAPIKey[0..7] -join '')****" -Path $configLogging -Color White -log Info
+        Write-Entry -Subtext "| Emby API Key:                    $($EmbyAPIKey[0..7] -join '')****" -Path $configLogging -Color White -log Info
     }
-    Write-Entry -Subtext "| Fav Provider:                 $global:FavProvider" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Width/Height Filtering:       $global:WidthHeightFilter" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Poster min width:             $global:PosterMinWidth" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Poster min height:            $global:PosterMinHeight" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Background/TC min width:      $global:BgTcMinWidth" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Background/TC min height:     $global:BgTcMinHeight" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| TMDB Vote Sorting:            $global:TMDBVoteSorting" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Preferred Lang Order:         $($global:PreferredLanguageOrder -join ',')" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Preferred Season Lang Order:  $($global:PreferredSeasonLanguageOrder -join ',')" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Fav Provider:                    $global:FavProvider" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Width/Height Filtering:          $global:WidthHeightFilter" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Poster min width:                $global:PosterMinWidth" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Poster min height:               $global:PosterMinHeight" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Background/TC min width:         $global:BgTcMinWidth" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Background/TC min height:        $global:BgTcMinHeight" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| TMDB Vote Sorting:               $global:TMDBVoteSorting" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Preferred Lang Order:            $($global:PreferredLanguageOrder -join ',')" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Preferred Season Lang Order:     $($global:PreferredSeasonLanguageOrder -join ',')" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Preferred Background Lang Order: $($global:PreferredBackgroundLanguageOrder -join ',')" -Path $configLogging -Color White -log Info
     if ($UsePlex -eq 'true') {
         Write-Entry -Subtext "Plex Part" -Path $configLogging -Color Cyan -log Info
-        Write-Entry -Subtext "| Excluded Libs:                $($LibstoExclude -join ',')" -Path $configLogging -Color White -log Info
-        Write-Entry -Subtext "| Plex Url:                     $($PlexUrl[0..10] -join '')****" -Path $configLogging -Color White -log Info
-        Write-Entry -Subtext "| Upload Existing Assets:       $global:UploadExistingAssets" -Path $configLogging -Color White -log Info
+        Write-Entry -Subtext "| Excluded Libs:                   $($LibstoExclude -join ',')" -Path $configLogging -Color White -log Info
+        Write-Entry -Subtext "| Plex Url:                        $($PlexUrl[0..10] -join '')****" -Path $configLogging -Color White -log Info
+        Write-Entry -Subtext "| Upload Existing Assets:          $global:UploadExistingAssets" -Path $configLogging -Color White -log Info
     }
     if ($UseJellyfin -eq 'true') {
         Write-Entry -Subtext "Jellyfin Part" -Path $configLogging -Color Cyan -log Info
-        Write-Entry -Subtext "| Excluded Libs:                $($LibstoExclude -join ',')" -Path $configLogging -Color White -log Info
-        Write-Entry -Subtext "| Jellyfin Url:                 $($JellyfinUrl[0..10] -join '')****" -Path $configLogging -Color White -log Info
-        Write-Entry -Subtext "| Upload Existing Assets:       $global:UploadExistingAssets" -Path $configLogging -Color White -log Info
+        Write-Entry -Subtext "| Excluded Libs:                   $($LibstoExclude -join ',')" -Path $configLogging -Color White -log Info
+        Write-Entry -Subtext "| Jellyfin Url:                    $($JellyfinUrl[0..10] -join '')****" -Path $configLogging -Color White -log Info
+        Write-Entry -Subtext "| Upload Existing Assets:          $global:UploadExistingAssets" -Path $configLogging -Color White -log Info
     }
     if ($UseEmby -eq 'true') {
         Write-Entry -Subtext "Emby Part" -Path $configLogging -Color Cyan -log Info
-        Write-Entry -Subtext "| Excluded Libs:                $($LibstoExclude -join ',')" -Path $configLogging -Color White -log Info
-        Write-Entry -Subtext "| Emby Url:                     $($EmbyUrl[0..10] -join '')****" -Path $configLogging -Color White -log Info
-        Write-Entry -Subtext "| Upload Existing Assets:       $global:UploadExistingAssets" -Path $configLogging -Color White -log Info
+        Write-Entry -Subtext "| Excluded Libs:                   $($LibstoExclude -join ',')" -Path $configLogging -Color White -log Info
+        Write-Entry -Subtext "| Emby Url:                        $($EmbyUrl[0..10] -join '')****" -Path $configLogging -Color White -log Info
+        Write-Entry -Subtext "| Upload Existing Assets:          $global:UploadExistingAssets" -Path $configLogging -Color White -log Info
     }
     Write-Entry -Subtext "Prerequisites Part" -Path $configLogging -Color Cyan -log Info
-    Write-Entry -Subtext "| Asset Path:                   $AssetPath" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Backup Path:                  $BackupPath" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Manual Asset Path:            $ManualAssetPath" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Upload to Plex:               $Upload2Plex" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Show skipped:                 $show_skipped" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Script Root:                  $global:ScriptRoot" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Magick Location:              $magickinstalllocation" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| # of Log Folders to retain:   $maxLogs" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Log Level:                    $logLevel" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Used Poster Font:             $font" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Used RTL Font:                $RTLfont" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Used Background Font:         $backgroundfont" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Used TitleCard Font:          $titlecardfont" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Used Poster Overlay File:     $Posteroverlay" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Used Season Overlay File:     $Seasonoverlay" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Used Background Overlay File: $Backgroundoverlay" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Used TitleCard Overlay File:  $titlecardoverlay" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Create Library Folders:       $LibraryFolders" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Create Season Posters:        $global:SeasonPosters" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Create Posters:               $global:Posters" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Create Background Posters:    $global:BackgroundPosters" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Create Title Cards:           $global:TitleCards" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Skip TC creation on TBA:      $SkipTBA" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Skip TC creation on Jap char: $SkipJapTitle" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Clear Asset:                  $AssetCleanup" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Asset Path:                      $AssetPath" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Backup Path:                     $BackupPath" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Manual Asset Path:               $ManualAssetPath" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Upload to Plex:                  $Upload2Plex" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Show skipped:                    $show_skipped" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Script Root:                     $global:ScriptRoot" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Magick Location:                 $magickinstalllocation" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| # of Log Folders to retain:      $maxLogs" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Log Level:                       $logLevel" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Used Poster Font:                $font" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Used RTL Font:                   $RTLfont" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Used Background Font:            $backgroundfont" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Used TitleCard Font:             $titlecardfont" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Used Poster Overlay File:        $Posteroverlay" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Used Season Overlay File:        $Seasonoverlay" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Used Background Overlay File:    $Backgroundoverlay" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Used TitleCard Overlay File:     $titlecardoverlay" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Create Library Folders:          $LibraryFolders" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Create Season Posters:           $global:SeasonPosters" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Create Posters:                  $global:Posters" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Create Background Posters:       $global:BackgroundPosters" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Create Title Cards:              $global:TitleCards" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Skip TC creation on TBA:         $SkipTBA" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Skip TC creation on Jap char:    $SkipJapTitle" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Clear Asset:                     $AssetCleanup" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "OverLay General Part" -Path $configLogging -Color Cyan -log Info
-    Write-Entry -Subtext "| Process Images:               $global:ImageProcessing" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Process Images:                  $global:ImageProcessing" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "OverLay Poster Part" -Path $configLogging -Color Cyan -log Info
-    Write-Entry -Subtext "| All Caps on Text:             $fontAllCaps" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Add Border to Image:          $AddBorder" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Add Text to Image:            $AddText" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Add Stroke to Text:           $AddTextStroke" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Stroke color:                 $strokecolor" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Stroke width:                 $strokewidth" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Add Overlay to Image:         $AddOverlay" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Font Color:                   $fontcolor" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Border Color:                 $bordercolor" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Min Font Size:                $minPointSize" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Max Font Size:                $maxPointSize" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Border Width:                 $borderwidth" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Text Box Width:               $MaxWidth" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Text Box Height:              $MaxHeight" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Text Box Offset:              $text_offset" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Line Spacing:                 $lineSpacing" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| All Caps on Text:                $fontAllCaps" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Add Border to Image:             $AddBorder" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Add Text to Image:               $AddText" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Add Stroke to Text:              $AddTextStroke" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Stroke color:                    $strokecolor" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Stroke width:                    $strokewidth" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Add Overlay to Image:            $AddOverlay" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Font Color:                      $fontcolor" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Border Color:                    $bordercolor" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Min Font Size:                   $minPointSize" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Max Font Size:                   $maxPointSize" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Border Width:                    $borderwidth" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Text Box Width:                  $MaxWidth" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Text Box Height:                 $MaxHeight" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Text Box Offset:                 $text_offset" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Line Spacing:                    $lineSpacing" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "OverLay Season Part" -Path $configLogging -Color Cyan -log Info
-    Write-Entry -Subtext "| Fallback to Show:             $ShowFallback" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| All Caps on Text:             $SeasonfontAllCaps" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Add Border to Image:          $AddSeasonBorder" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Add Text to Image:            $AddSeasonText" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Add Stroke to Text:           $AddSeasonTextStroke" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Stroke color:                 $Seasonstrokecolor" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Stroke width:                 $Seasonstrokewidth" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Add Overlay to Image:         $AddSeasonOverlay" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Font Color:                   $Seasonfontcolor" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Border Color:                 $Seasonbordercolor" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Min Font Size:                $SeasonminPointSize" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Max Font Size:                $SeasonmaxPointSize" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Border Width:                 $Seasonborderwidth" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Text Box Width:               $SeasonMaxWidth" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Text Box Height:              $SeasonMaxHeight" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Text Box Offset:              $Seasontext_offset" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Line Spacing:                 $SeasonlineSpacing" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Fallback to Show:                $ShowFallback" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| All Caps on Text:                $SeasonfontAllCaps" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Add Border to Image:             $AddSeasonBorder" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Add Text to Image:               $AddSeasonText" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Add Stroke to Text:              $AddSeasonTextStroke" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Stroke color:                    $Seasonstrokecolor" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Stroke width:                    $Seasonstrokewidth" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Add Overlay to Image:            $AddSeasonOverlay" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Font Color:                      $Seasonfontcolor" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Border Color:                    $Seasonbordercolor" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Min Font Size:                   $SeasonminPointSize" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Max Font Size:                   $SeasonmaxPointSize" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Border Width:                    $Seasonborderwidth" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Text Box Width:                  $SeasonMaxWidth" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Text Box Height:                 $SeasonMaxHeight" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Text Box Offset:                 $Seasontext_offset" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Line Spacing:                    $SeasonlineSpacing" -Path $configLogging -Color White -log Info
     if ($AddShowTitletoSeason -eq 'true') {
         Write-Entry -Subtext "Show Text on Season Part" -Path $configLogging -Color Cyan -log Info
-        Write-Entry -Subtext "| All Caps on Text:             $ShowOnSeasonfontAllCaps" -Path $configLogging -Color White -log Info
-        Write-Entry -Subtext "| Add Stroke to Text:           $AddShowOnSeasonTextStroke" -Path $configLogging -Color White -log Info
-        Write-Entry -Subtext "| Stroke color:                 $ShowOnSeasonstrokecolor" -Path $configLogging -Color White -log Info
-        Write-Entry -Subtext "| Stroke width:                 $ShowOnSeasonstrokewidth" -Path $configLogging -Color White -log Info
-        Write-Entry -Subtext "| Font Color:                   $ShowOnSeasonfontcolor" -Path $configLogging -Color White -log Info
-        Write-Entry -Subtext "| Min Font Size:                $ShowOnSeasonminPointSize" -Path $configLogging -Color White -log Info
-        Write-Entry -Subtext "| Max Font Size:                $ShowOnSeasonmaxPointSize" -Path $configLogging -Color White -log Info
-        Write-Entry -Subtext "| Text Box Width:               $ShowOnSeasonMaxWidth" -Path $configLogging -Color White -log Info
-        Write-Entry -Subtext "| Text Box Height:              $ShowOnSeasonMaxHeight" -Path $configLogging -Color White -log Info
-        Write-Entry -Subtext "| Text Box Offset:              $ShowOnSeasontext_offset" -Path $configLogging -Color White -log Info
-        Write-Entry -Subtext "| Line Spacing:                 $ShowOnSeasonlineSpacing" -Path $configLogging -Color White -log Info
+        Write-Entry -Subtext "| All Caps on Text:                $ShowOnSeasonfontAllCaps" -Path $configLogging -Color White -log Info
+        Write-Entry -Subtext "| Add Stroke to Text:              $AddShowOnSeasonTextStroke" -Path $configLogging -Color White -log Info
+        Write-Entry -Subtext "| Stroke color:                    $ShowOnSeasonstrokecolor" -Path $configLogging -Color White -log Info
+        Write-Entry -Subtext "| Stroke width:                    $ShowOnSeasonstrokewidth" -Path $configLogging -Color White -log Info
+        Write-Entry -Subtext "| Font Color:                      $ShowOnSeasonfontcolor" -Path $configLogging -Color White -log Info
+        Write-Entry -Subtext "| Min Font Size:                   $ShowOnSeasonminPointSize" -Path $configLogging -Color White -log Info
+        Write-Entry -Subtext "| Max Font Size:                   $ShowOnSeasonmaxPointSize" -Path $configLogging -Color White -log Info
+        Write-Entry -Subtext "| Text Box Width:                  $ShowOnSeasonMaxWidth" -Path $configLogging -Color White -log Info
+        Write-Entry -Subtext "| Text Box Height:                 $ShowOnSeasonMaxHeight" -Path $configLogging -Color White -log Info
+        Write-Entry -Subtext "| Text Box Offset:                 $ShowOnSeasontext_offset" -Path $configLogging -Color White -log Info
+        Write-Entry -Subtext "| Line Spacing:                    $ShowOnSeasonlineSpacing" -Path $configLogging -Color White -log Info
     }
     Write-Entry -Subtext "OverLay Background Part" -Path $configLogging -Color Cyan -log Info
-    Write-Entry -Subtext "| All Caps on Text:             $BackgroundfontAllCaps" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Add Border to Background:     $AddBackgroundBorder" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Add Text to Background:       $AddBackgroundText" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Add Stroke to Text:           $AddBackgroundTextStroke" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Stroke color:                 $Backgroundstrokecolor" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Stroke width:                 $Backgroundstrokewidth" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Add Overlay to Background:    $AddBackgroundOverlay" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Font Color:                   $Backgroundfontcolor" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Border Color:                 $Backgroundbordercolor" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Min Font Size:                $BackgroundminPointSize" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Max Font Size:                $BackgroundmaxPointSize" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Border Width:                 $Backgroundborderwidth" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Text Box Width:               $BackgroundMaxWidth" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Text Box Height:              $BackgroundMaxHeight" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Text Box Offset:              $Backgroundtext_offset" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Line Spacing:                 $BackgroundlineSpacing" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| All Caps on Text:                $BackgroundfontAllCaps" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Add Border to Background:        $AddBackgroundBorder" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Add Text to Background:          $AddBackgroundText" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Add Stroke to Text:              $AddBackgroundTextStroke" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Stroke color:                    $Backgroundstrokecolor" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Stroke width:                    $Backgroundstrokewidth" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Add Overlay to Background:       $AddBackgroundOverlay" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Font Color:                      $Backgroundfontcolor" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Border Color:                    $Backgroundbordercolor" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Min Font Size:                   $BackgroundminPointSize" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Max Font Size:                   $BackgroundmaxPointSize" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Border Width:                    $Backgroundborderwidth" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Text Box Width:                  $BackgroundMaxWidth" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Text Box Height:                 $BackgroundMaxHeight" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Text Box Offset:                 $Backgroundtext_offset" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Line Spacing:                    $BackgroundlineSpacing" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "OverLay TitleCard Part" -Path $configLogging -Color Cyan -log Info
-    Write-Entry -Subtext "| Use Background as Title Card: $UseBackgroundAsTitleCard" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Fallback to Background:       $BackgroundFallback" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Add Border to Background:     $AddTitleCardBorder" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Border Color:                 $TitleCardbordercolor" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Add Overlay to Background:    $AddTitleCardOverlay" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Border Width:                 $TitleCardborderwidth" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Use Background as Title Card:    $UseBackgroundAsTitleCard" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Fallback to Background:          $BackgroundFallback" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Add Border to Background:        $AddTitleCardBorder" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Border Color:                    $TitleCardbordercolor" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Add Overlay to Background:       $AddTitleCardOverlay" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Border Width:                    $TitleCardborderwidth" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "OverLay TitleCard Title Part" -Path $configLogging -Color Cyan -log Info
-    Write-Entry -Subtext "| All Caps on Text:             $TitleCardEPTitlefontAllCaps" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Add Title to TitleCard:       $AddTitleCardEPTitleText" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Add Stroke to Text:           $AddTitleCardEPTitleTextStroke" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Stroke color:                 $TitleCardEPTitlestrokecolor" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Stroke width:                 $TitleCardEPTitlestrokewidth" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Font Color:                   $TitleCardEPTitlefontcolor" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Min Font Size:                $TitleCardEPTitleminPointSize" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Max Font Size:                $TitleCardEPTitlemaxPointSize" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Text Box Width:               $TitleCardEPTitleMaxWidth" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Text Box Height:              $TitleCardEPTitleMaxHeight" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Text Box Offset:              $TitleCardEPTitletext_offset" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Line Spacing:                 $TitleCardEPTitlelineSpacing" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| All Caps on Text:                $TitleCardEPTitlefontAllCaps" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Add Title to TitleCard:          $AddTitleCardEPTitleText" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Add Stroke to Text:              $AddTitleCardEPTitleTextStroke" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Stroke color:                    $TitleCardEPTitlestrokecolor" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Stroke width:                    $TitleCardEPTitlestrokewidth" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Font Color:                      $TitleCardEPTitlefontcolor" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Min Font Size:                   $TitleCardEPTitleminPointSize" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Max Font Size:                   $TitleCardEPTitlemaxPointSize" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Text Box Width:                  $TitleCardEPTitleMaxWidth" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Text Box Height:                 $TitleCardEPTitleMaxHeight" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Text Box Offset:                 $TitleCardEPTitletext_offset" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Line Spacing:                    $TitleCardEPTitlelineSpacing" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "OverLay TitleCard EP Part" -Path $configLogging -Color Cyan -log Info
-    Write-Entry -Subtext "| Season TC Text:               $SeasonTCText" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Episode TC Text:              $EpisodeTCText" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| All Caps on Text:             $TitleCardEPfontAllCaps" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Add Episode to TitleCard:     $AddTitleCardEPText" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Add Stroke to Text:           $AddTitleCardTextStroke" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Stroke color:                 $TitleCardstrokecolor" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Stroke width:                 $TitleCardstrokewidth" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Font Color:                   $TitleCardEPfontcolor" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Min Font Size:                $TitleCardEPminPointSize" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Max Font Size:                $TitleCardEPmaxPointSize" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Text Box Width:               $TitleCardEPMaxWidth" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Text Box Height:              $TitleCardEPMaxHeight" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Text Box Offset:              $TitleCardEPtext_offset" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Line Spacing:                 $TitleCardEPlineSpacing" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Season TC Text:                  $SeasonTCText" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Episode TC Text:                 $EpisodeTCText" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| All Caps on Text:                $TitleCardEPfontAllCaps" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Add Episode to TitleCard:        $AddTitleCardEPText" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Add Stroke to Text:              $AddTitleCardTextStroke" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Stroke color:                    $TitleCardstrokecolor" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Stroke width:                    $TitleCardstrokewidth" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Font Color:                      $TitleCardEPfontcolor" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Min Font Size:                   $TitleCardEPminPointSize" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Max Font Size:                   $TitleCardEPmaxPointSize" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Text Box Width:                  $TitleCardEPMaxWidth" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Text Box Height:                 $TitleCardEPMaxHeight" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Text Box Offset:                 $TitleCardEPtext_offset" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Line Spacing:                    $TitleCardEPlineSpacing" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "___________________________________________" -Path $configLogging -Color DarkMagenta -log Info
 }
 function CheckPlexAccess {
@@ -6052,6 +6077,11 @@ if (!$global:TMDBVoteSorting) {
 }
 $global:PreferredLanguageOrder = $config.ApiPart.PreferredLanguageOrder
 $global:PreferredSeasonLanguageOrder = $config.ApiPart.PreferredSeasonLanguageOrder
+$global:PreferredBackgroundLanguageOrder = $config.ApiPart.PreferredBackgroundLanguageOrder
+
+if ($global:PreferredBackgroundLanguageOrder -eq 'PleaseFillMe'){
+    $global:PreferredBackgroundLanguageOrder = $global:PreferredLanguageOrder
+}
 
 # Poster Lang Settings
 if (!$global:PreferredLanguageOrder) {
@@ -6097,6 +6127,25 @@ Elseif ($global:PreferredSeasonLanguageOrder[0] -eq 'xx') {
 }
 Else {
     $global:SeasonPreferTextless = $false
+}
+
+# Background Lang Settings
+if (!$global:PreferredBackgroundLanguageOrder) {
+    Write-Entry -Message "Background Lang search Order not set in Config, setting it to 'xx,en,de' for you" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+    $global:PreferredBackgroundLanguageOrder = "xx", "en", "de"
+}
+$global:PreferredBackgroundLanguageOrderTMDB = $global:PreferredBackgroundLanguageOrder.Replace('xx', 'null')
+$global:PreferredBackgroundLanguageOrderFanart = $global:PreferredBackgroundLanguageOrder.Replace('xx', '00')
+$global:PreferredBackgroundLanguageOrderTVDB = $global:PreferredBackgroundLanguageOrder.Replace('xx', 'null')
+if ($global:PreferredBackgroundLanguageOrder.count -eq '1' -and $global:PreferredBackgroundLanguageOrder -eq 'xx') {
+    $global:BackgroundPreferTextless = $true
+    $global:BackgroundOnlyTextless = $true
+}
+Elseif ($global:PreferredBackgroundLanguageOrder[0] -eq 'xx') {
+    $global:BackgroundPreferTextless = $true
+}
+Else {
+    $global:BackgroundPreferTextless = $false
 }
 
 # default to TMDB if favprovider missing
@@ -9007,7 +9056,7 @@ Elseif ($Tautulli) {
                                     'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBMovieBackground } }
                                     'FANART' { $global:posterurl = GetFanartMovieBackground }
                                 }
-                                if ($global:PreferTextless -eq $true) {
+                                if ($global:BackgroundPreferTextless -eq $true) {
                                     if (!$global:TextlessPoster -and $global:fanartfallbackposterurl) {
                                         $global:posterurl = $global:fanartfallbackposterurl
                                         Write-Entry -Subtext "Took Fanart.tv Fallback background because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
@@ -9029,7 +9078,7 @@ Elseif ($Tautulli) {
                                         }
                                     }
                                 }
-                                if ($global:OnlyTextless -and !$global:posterurl) {
+                                if ($global:BackgroundOnlyTextless -and !$global:posterurl) {
                                     if ($global:FavProvider -eq 'TVDB') {
                                         if ($entry.tmdbid) {
                                             $global:posterurl = GetTMDBMovieBackground
@@ -9845,7 +9894,7 @@ Elseif ($Tautulli) {
                                 'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBShowBackground } }
                                 'FANART' { $global:posterurl = GetFanartShowBackground }
                             }
-                            if ($global:PreferTextless -eq $true) {
+                            if ($global:BackgroundPreferTextless -eq $true) {
                                 if (!$global:TextlessPoster -and $global:fanartfallbackposterurl) {
                                     $global:posterurl = $global:fanartfallbackposterurl
                                     Write-Entry -Subtext "Took Fanart.tv Fallback background because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
@@ -9869,7 +9918,7 @@ Elseif ($Tautulli) {
                                     }
                                 }
                             }
-                            if ($global:OnlyTextless -and !$global:posterurl) {
+                            if ($global:BackgroundOnlyTextless -and !$global:posterurl) {
                                 if ($global:FavProvider -eq 'TVDB') {
                                     if ($entry.tmdbid) {
                                         $global:posterurl = GetTMDBShowBackground
@@ -13651,7 +13700,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                     'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBMovieBackground } }
                                     'FANART' { $global:posterurl = GetFanartMovieBackground }
                                 }
-                                if ($global:PreferTextless -eq 'True') {
+                                if ($global:BackgroundPreferTextless -eq 'True') {
                                     if (!$global:TextlessPoster -and $global:fanartfallbackposterurl) {
                                         $global:posterurl = $global:fanartfallbackposterurl
                                         Write-Entry -Subtext "Took Fanart.tv Fallback background because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
@@ -13673,7 +13722,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                         }
                                     }
                                 }
-                                if ($global:OnlyTextless -and !$global:posterurl) {
+                                if ($global:BackgroundOnlyTextless -and !$global:posterurl) {
                                     if ($global:FavProvider -eq 'TVDB') {
                                         if ($entry.tmdbid) {
                                             $global:posterurl = GetTMDBMovieBackground
@@ -14407,7 +14456,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                 'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBShowBackground } }
                                 'FANART' { $global:posterurl = GetFanartShowBackground }
                             }
-                            if ($global:PreferTextless -eq 'True') {
+                            if ($global:BackgroundPreferTextless -eq 'True') {
                                 if (!$global:TextlessPoster -and $global:fanartfallbackposterurl) {
                                     $global:posterurl = $global:fanartfallbackposterurl
                                     Write-Entry -Subtext "Took Fanart.tv Fallback background because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
@@ -14431,7 +14480,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                     }
                                 }
                             }
-                            if ($global:OnlyTextless -and !$global:posterurl) {
+                            if ($global:BackgroundOnlyTextless -and !$global:posterurl) {
                                 if ($global:FavProvider -eq 'TVDB') {
                                     if ($entry.tmdbid) {
                                         $global:posterurl = GetTMDBShowBackground
@@ -17582,7 +17631,7 @@ else {
                                     'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBMovieBackground } }
                                     'FANART' { $global:posterurl = GetFanartMovieBackground }
                                 }
-                                if ($global:PreferTextless -eq $true) {
+                                if ($global:BackgroundPreferTextless -eq $true) {
                                     if (!$global:TextlessPoster -and $global:fanartfallbackposterurl) {
                                         $global:posterurl = $global:fanartfallbackposterurl
                                         Write-Entry -Subtext "Took Fanart.tv Fallback background because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
@@ -17604,7 +17653,7 @@ else {
                                         }
                                     }
                                 }
-                                if ($global:OnlyTextless -and !$global:posterurl) {
+                                if ($global:BackgroundOnlyTextless -and !$global:posterurl) {
                                     if ($global:FavProvider -eq 'TVDB') {
                                         if ($entry.tmdbid) {
                                             $global:posterurl = GetTMDBMovieBackground
@@ -18486,7 +18535,7 @@ else {
                                 'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBShowBackground } }
                                 'FANART' { $global:posterurl = GetFanartShowBackground }
                             }
-                            if ($global:PreferTextless -eq $true) {
+                            if ($global:BackgroundPreferTextless -eq $true) {
                                 if (!$global:TextlessPoster -and $global:fanartfallbackposterurl) {
                                     $global:posterurl = $global:fanartfallbackposterurl
                                     Write-Entry -Subtext "Took Fanart.tv Fallback background because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
@@ -18510,7 +18559,7 @@ else {
                                     }
                                 }
                             }
-                            if ($global:OnlyTextless -and !$global:posterurl) {
+                            if ($global:BackgroundOnlyTextless -and !$global:posterurl) {
                                 if ($global:FavProvider -eq 'TVDB') {
                                     if ($entry.tmdbid) {
                                         $global:posterurl = GetTMDBShowBackground
