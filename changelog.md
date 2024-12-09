@@ -2,19 +2,6 @@
 
 ## [1.9.14](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.14) - 2024-12-09 08:23:58
 
-## What's Changed
-* Sync by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/173
-* fix: optimal point size by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/176
-* add: Background lang order logic by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/177
-
-
-**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.13...1.9.14
-
-### Bug Fixes
-
-- general:
-  - optimal point size (#176) ([7dfddba](https://github.com/fscorrupt/Posterizarr/commit/7dfddba4d6ed5d7e77a7d9a48bce1000fada1879)) ([#176](https://github.com/fscorrupt/Posterizarr/pull/176))
-
 ## [1.9.13](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.13) - 2024-12-04 08:11:35
 
 ## [1.9.12](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.12) - 2024-12-03 06:30:56
