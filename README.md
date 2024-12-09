@@ -106,7 +106,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - **Do not** use `"Legacy API Key"`, it only works with a Project Api Key.
 >- **ImageMagick:**
     - **Version 7.x is required** - The script handles downloading and using a portable version of ImageMagick for all platforms. **(You may need to run the Script as Admin on first run)**. If you prefer to reference your own installation or prefer to download and install it yourself, goto: [Download ImageMagick](https://imagemagick.org/script/download.php)
->- **Powershell Version:** 5.x or higher (Docker Image uses v7.4.2).
+>- **Powershell Version:** 5.x or higher (Docker Image uses v7.4.6).
 >- **FanartTv Powershell Module:** This module is required (already integrated in container), goto: [Install Module](https://github.com/Celerium/FanartTV-PowerShellWrapper)
 
 # Configuration
@@ -478,7 +478,7 @@ To use it we need to configure a script in Tautulli, please follow these instruc
 1. Next go to Arguments -> Unfold `Recently Added` Menu and paste the following Argument, after that you can save it.
     - **Please do not change the Argument otherwise the script could fail.**
     ```sh
-    <movie>RatingKey "{rating_key}" mediatype "{media_type}"</movie><show>grandparentratingkey "{grandparent_rating_key}" mediatype "{media_type}"</show><season>parentratingkey "{parent_rating_key}" grandparentratingkey "{grandparent_rating_key}" mediatype "{media_type}"</season><episode>RatingKey "{rating_key}" parentratingkey "{parent_rating_key}" grandparentratingkey "{grandparent_rating_key}" mediatype "{media_type}"</episode>
+    <movie>RatingKey "{rating_key}" mediatype "{media_type}"</movie><show>RatingKey "{rating_key}" mediatype "{media_type}"</show><season>parentratingkey "{parent_rating_key}" mediatype "{media_type}"</season><episode>RatingKey "{rating_key}" parentratingkey "{parent_rating_key}" grandparentratingkey "{grandparent_rating_key}" mediatype "{media_type}"</episode>
     ```
     <details close>
     <summary>🖼️Example [click to unfold]</summary>
@@ -536,7 +536,7 @@ In this mode we use Tautulli to trigger Posterizarr for an specific item in Plex
 1. Next go to Arguments -> Unfold `Recently Added` Menu and paste the following Argument, after that you can save it.
     - **Please do not change the Argument otherwise the script could fail.**
     ```sh
-    <movie>-Tautulli -RatingKey "{rating_key}" -mediatype "{media_type}"</movie><show>-Tautulli -grandparentratingkey "{grandparent_rating_key}" -mediatype "{media_type}"</show><season>-Tautulli -parentratingkey "{parent_rating_key}" -grandparentratingkey "{grandparent_rating_key}" -mediatype "{media_type}"</season><episode>-Tautulli -RatingKey "{rating_key}" -parentratingkey "{parent_rating_key}" -grandparentratingkey "{grandparent_rating_key}" -mediatype "{media_type}"</episode>
+    <movie>RatingKey "{rating_key}" mediatype "{media_type}"</movie><show>RatingKey "{rating_key}" mediatype "{media_type}"</show><season>parentratingkey "{parent_rating_key}" mediatype "{media_type}"</season><episode>RatingKey "{rating_key}" parentratingkey "{parent_rating_key}" grandparentratingkey "{grandparent_rating_key}" mediatype "{media_type}"</episode>
     ```
     <details close>
     <summary>🖼️Example [click to unfold]</summary>
