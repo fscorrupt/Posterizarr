@@ -3081,7 +3081,7 @@ function GetPlexArtwork {
         [string]$TempImage
     )
 
-    Write-Entry -Subtext "Searching on Plex for$Type" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+    Write-Entry -Subtext "Searching on Plex for $Type" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
 
     try {
         Invoke-WebRequest -Uri $ArtUrl -OutFile $TempImage -Headers $extraPlexHeaders
