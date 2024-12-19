@@ -22,7 +22,12 @@
     "PosterMinWidth": "2000",
     "PosterMinHeight": "3000",
     "BgTcMinWidth": "3840",
-    "BgTcMinHeight": "2160"
+    "BgTcMinHeight": "2160",
+    "PreferredBackgroundLanguageOrder": [
+      "xx",
+      "en",
+      "de"
+    ]
   },
   "PlexPart": {
     "LibstoExclude": [
@@ -47,7 +52,7 @@
       "KidsMusic",
       "Photos"
     ],
-    "JellyfinUrl": "http://jellyfin:8096",
+    "JellyfinUrl": "http://192.168.1.93:8096",
     "UseJellyfin": "false",
     "UploadExistingAssets": "false"
   },
@@ -60,13 +65,13 @@
       "Kids Music",
       "Photos"
     ],
-    "EmbyUrl": "http://emby:8096/emby",
+    "EmbyUrl": "http://192.168.1.93:8096/emby",
     "UseEmby": "false",
     "UploadExistingAssets": "false"
   },
   "Notification": {
-    "SendNotification": "True",
-    "UseUptimeKuma": "True",
+    "SendNotification": "true",
+    "UseUptimeKuma": "true",
     "AppriseUrl": "discord://xxxxxxxxxxxxx/xxxxxxxxxxxxx",
     "Discord": "",
     "UptimeKumaUrl": "https://uptime-kuma.domain.com/api/push/xxxxxxxxxxxxx"
@@ -78,9 +83,9 @@
     "font": "Colus-Regular.ttf",
     "backgroundfont": "Colus-Regular.ttf",
     "titlecardfont": "Colus-Regular.ttf",
-    "overlayfile": "bottom-up-fade.png",
-    "backgroundoverlayfile": "bottom-up-fade-background.png",
-    "titlecardoverlayfile": "bottom-up-fade-background.png",
+    "overlayfile": "overlay-innerglow.png",
+    "backgroundoverlayfile": "backgroundoverlay-innerglow.png",
+    "titlecardoverlayfile": "backgroundoverlay-innerglow.png",
     "LibraryFolders": "true",
     "Posters": "true",
     "SeasonPosters": "true",
@@ -98,7 +103,7 @@
       ": ",
       " – "
     ],
-    "seasonoverlayfile": "bottom-up-fade.png",
+    "seasonoverlayfile": "overlay-innerglow.png",
     "RTLFont": "Aharoni CLM Book.ttf",
     "PlexUpload": "false",
     "BackupPath": "/assetsbackup",
@@ -185,8 +190,8 @@
     "lineSpacing": "0"
   },
   "SeasonPosterOverlayPart": {
-    "fontAllCaps": "true",
     "ShowFallback": "true",
+    "fontAllCaps": "true",
     "AddBorder": "true",
     "AddText": "true",
     "AddTextStroke": "false",

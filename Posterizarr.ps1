@@ -12,7 +12,7 @@ param (
     [switch]$SyncEmby
 )
 
-$CurrentScriptVersion = "1.9.14"
+$CurrentScriptVersion = "1.9.15"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -3081,7 +3081,7 @@ function GetPlexArtwork {
         [string]$TempImage
     )
 
-    Write-Entry -Subtext "Searching on Plex for$Type" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+    Write-Entry -Subtext "Searching on Plex for $Type" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
 
     try {
         Invoke-WebRequest -Uri $ArtUrl -OutFile $TempImage -Headers $extraPlexHeaders
@@ -4599,7 +4599,7 @@ function MassDownloadPlexArtwork {
                 else {
                     $fullTestPath = Resolve-Path -Path $TestPath -ErrorAction SilentlyContinue
                     if ($fullTestPath) {
-                        $hashtestpath = ($fullTestPath.Path + "\" + $Testfile).Replace('/', '\')
+                        $hashtestpath = ($fullTestPath.ProviderPath + "\" + $Testfile).Replace('/', '\')
                     }
                     Else {
                         $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
@@ -4717,7 +4717,7 @@ function MassDownloadPlexArtwork {
                     else {
                         $fullTestPath = Resolve-Path -Path $TestPath -ErrorAction SilentlyContinue
                         if ($fullTestPath) {
-                            $hashtestpath = ($fullTestPath.Path + "\" + $Testfile).Replace('/', '\')
+                            $hashtestpath = ($fullTestPath.ProviderPath + "\" + $Testfile).Replace('/', '\')
                         }
                         Else {
                             $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
@@ -4893,7 +4893,7 @@ function MassDownloadPlexArtwork {
             else {
                 $fullTestPath = Resolve-Path -Path $TestPath -ErrorAction SilentlyContinue
                 if ($fullTestPath) {
-                    $hashtestpath = ($fullTestPath.Path + "\" + $Testfile).Replace('/', '\')
+                    $hashtestpath = ($fullTestPath.ProviderPath + "\" + $Testfile).Replace('/', '\')
                 }
                 Else {
                     $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
@@ -5003,7 +5003,7 @@ function MassDownloadPlexArtwork {
                 else {
                     $fullTestPath = Resolve-Path -Path $TestPath -ErrorAction SilentlyContinue
                     if ($fullTestPath) {
-                        $hashtestpath = ($fullTestPath.Path + "\" + $Testfile).Replace('/', '\')
+                        $hashtestpath = ($fullTestPath.ProviderPath + "\" + $Testfile).Replace('/', '\')
                     }
                     Else {
                         $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
@@ -5165,7 +5165,7 @@ function MassDownloadPlexArtwork {
                     else {
                         $fullTestPath = Resolve-Path -Path $TestPath -ErrorAction SilentlyContinue
                         if ($fullTestPath) {
-                            $hashtestpath = ($fullTestPath.Path + "\" + $Testfile).Replace('/', '\')
+                            $hashtestpath = ($fullTestPath.ProviderPath + "\" + $Testfile).Replace('/', '\')
                         }
                         Else {
                             $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
@@ -5318,7 +5318,7 @@ function MassDownloadPlexArtwork {
                             else {
                                 $fullTestPath = Resolve-Path -Path $TestPath -ErrorAction SilentlyContinue
                                 if ($fullTestPath) {
-                                    $hashtestpath = ($fullTestPath.Path + "\" + $Testfile).Replace('/', '\')
+                                    $hashtestpath = ($fullTestPath.ProviderPath + "\" + $Testfile).Replace('/', '\')
                                 }
                                 Else {
                                     $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
@@ -8604,8 +8604,8 @@ Elseif ($Tautulli) {
                         $fullTestPath = Resolve-Path -Path $TestPath -ErrorAction SilentlyContinue
                         $fullManualTestPath = Resolve-Path -Path $ManualTestPath -ErrorAction SilentlyContinue
                         if ($fullTestPath) {
-                            $hashtestpath = ($fullTestPath.Path + "\" + $Testfile).Replace('/', '\')
-                            $Manualtestpath = ($fullManualTestPath.Path + "\" + $Testfile).Replace('/', '\')
+                            $hashtestpath = ($fullTestPath.ProviderPath + "\" + $Testfile).Replace('/', '\')
+                            $Manualtestpath = ($fullManualTestPath.ProviderPath + "\" + $Testfile).Replace('/', '\')
                         }
                         Else {
                             $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
@@ -8992,8 +8992,8 @@ Elseif ($Tautulli) {
                             $fullTestPath = Resolve-Path -Path $TestPath -ErrorAction SilentlyContinue
                             $fullManualTestPath = Resolve-Path -Path $ManualTestPath -ErrorAction SilentlyContinue
                             if ($fullTestPath) {
-                                $hashtestpath = ($fullTestPath.Path + "\" + $Testfile).Replace('/', '\')
-                                $Manualtestpath = ($fullManualTestPath.Path + "\" + $Testfile).Replace('/', '\')
+                                $hashtestpath = ($fullTestPath.ProviderPath + "\" + $Testfile).Replace('/', '\')
+                                $Manualtestpath = ($fullManualTestPath.ProviderPath + "\" + $Testfile).Replace('/', '\')
                             }
                             Else {
                                 $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
@@ -9454,8 +9454,8 @@ Elseif ($Tautulli) {
                     $fullTestPath = Resolve-Path -Path $TestPath -ErrorAction SilentlyContinue
                     $fullManualTestPath = Resolve-Path -Path $ManualTestPath -ErrorAction SilentlyContinue
                     if ($fullTestPath) {
-                        $hashtestpath = ($fullTestPath.Path + "\" + $Testfile).Replace('/', '\')
-                        $Manualtestpath = ($fullManualTestPath.Path + "\" + $Testfile).Replace('/', '\')
+                        $hashtestpath = ($fullTestPath.ProviderPath + "\" + $Testfile).Replace('/', '\')
+                        $Manualtestpath = ($fullManualTestPath.ProviderPath + "\" + $Testfile).Replace('/', '\')
                     }
                     Else {
                         $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
@@ -9822,8 +9822,8 @@ Elseif ($Tautulli) {
                         $fullTestPath = Resolve-Path -Path $TestPath -ErrorAction SilentlyContinue
                         $fullManualTestPath = Resolve-Path -Path $ManualTestPath -ErrorAction SilentlyContinue
                         if ($fullTestPath) {
-                            $hashtestpath = ($fullTestPath.Path + "\" + $Testfile).Replace('/', '\')
-                            $Manualtestpath = ($fullManualTestPath.Path + "\" + $Testfile).Replace('/', '\')
+                            $hashtestpath = ($fullTestPath.ProviderPath + "\" + $Testfile).Replace('/', '\')
+                            $Manualtestpath = ($fullManualTestPath.ProviderPath + "\" + $Testfile).Replace('/', '\')
                         }
                         Else {
                             $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
@@ -10248,8 +10248,8 @@ Elseif ($Tautulli) {
                             $fullTestPath = Resolve-Path -Path $TestPath -ErrorAction SilentlyContinue
                             $fullManualTestPath = Resolve-Path -Path $ManualTestPath -ErrorAction SilentlyContinue
                             if ($fullTestPath) {
-                                $hashtestpath = ($fullTestPath.Path + "\" + $Testfile).Replace('/', '\')
-                                $Manualtestpath = ($fullManualTestPath.Path + "\" + $Testfile).Replace('/', '\')
+                                $hashtestpath = ($fullTestPath.ProviderPath + "\" + $Testfile).Replace('/', '\')
+                                $Manualtestpath = ($fullManualTestPath.ProviderPath + "\" + $Testfile).Replace('/', '\')
                             }
                             Else {
                                 $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
@@ -10820,8 +10820,8 @@ Elseif ($Tautulli) {
                                         $fullTestPath = Resolve-Path -Path $TestPath -ErrorAction SilentlyContinue
                                         $fullManualTestPath = Resolve-Path -Path $ManualTestPath -ErrorAction SilentlyContinue
                                         if ($fullTestPath) {
-                                            $hashtestpath = ($fullTestPath.Path + "\" + $Testfile).Replace('/', '\')
-                                            $Manualtestpath = ($fullManualTestPath.Path + "\" + $Testfile).Replace('/', '\')
+                                            $hashtestpath = ($fullTestPath.ProviderPath + "\" + $Testfile).Replace('/', '\')
+                                            $Manualtestpath = ($fullManualTestPath.ProviderPath + "\" + $Testfile).Replace('/', '\')
                                         }
                                         Else {
                                             $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
@@ -11316,8 +11316,8 @@ Elseif ($Tautulli) {
                                         $fullTestPath = Resolve-Path -Path $TestPath -ErrorAction SilentlyContinue
                                         $fullManualTestPath = Resolve-Path -Path $ManualTestPath -ErrorAction SilentlyContinue
                                         if ($fullTestPath) {
-                                            $hashtestpath = ($fullTestPath.Path + "\" + $Testfile).Replace('/', '\')
-                                            $Manualtestpath = ($fullManualTestPath.Path + "\" + $Testfile).Replace('/', '\')
+                                            $hashtestpath = ($fullTestPath.ProviderPath + "\" + $Testfile).Replace('/', '\')
+                                            $Manualtestpath = ($fullManualTestPath.ProviderPath + "\" + $Testfile).Replace('/', '\')
                                         }
                                         Else {
                                             $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
@@ -13295,8 +13295,8 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                         $fullTestPath = Resolve-Path -Path $TestPath -ErrorAction SilentlyContinue
                         $fullManualTestPath = Resolve-Path -Path $ManualTestPath -ErrorAction SilentlyContinue
                         if ($fullTestPath) {
-                            $hashtestpath = ($fullTestPath.Path + "\" + $Testfile).Replace('/', '\')
-                            $Manualtestpath = ($fullManualTestPath.Path + "\" + $Testfile).Replace('/', '\')
+                            $hashtestpath = ($fullTestPath.ProviderPath + "\" + $Testfile).Replace('/', '\')
+                            $Manualtestpath = ($fullManualTestPath.ProviderPath + "\" + $Testfile).Replace('/', '\')
                         }
                         Else {
                             $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
@@ -13644,8 +13644,8 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                             $fullTestPath = Resolve-Path -Path $TestPath -ErrorAction SilentlyContinue
                             $fullManualTestPath = Resolve-Path -Path $ManualTestPath -ErrorAction SilentlyContinue
                             if ($fullTestPath) {
-                                $hashtestpath = ($fullTestPath.Path + "\" + $Testfile).Replace('/', '\')
-                                $Manualtestpath = ($fullManualTestPath.Path + "\" + $Testfile).Replace('/', '\')
+                                $hashtestpath = ($fullTestPath.ProviderPath + "\" + $Testfile).Replace('/', '\')
+                                $Manualtestpath = ($fullManualTestPath.ProviderPath + "\" + $Testfile).Replace('/', '\')
                             }
                             Else {
                                 $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
@@ -14064,8 +14064,8 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                     $fullTestPath = Resolve-Path -Path $TestPath -ErrorAction SilentlyContinue
                     $fullManualTestPath = Resolve-Path -Path $ManualTestPath -ErrorAction SilentlyContinue
                     if ($fullTestPath) {
-                        $hashtestpath = ($fullTestPath.Path + "\" + $Testfile).Replace('/', '\')
-                        $Manualtestpath = ($fullManualTestPath.Path + "\" + $Testfile).Replace('/', '\')
+                        $hashtestpath = ($fullTestPath.ProviderPath + "\" + $Testfile).Replace('/', '\')
+                        $Manualtestpath = ($fullManualTestPath.ProviderPath + "\" + $Testfile).Replace('/', '\')
                     }
                     Else {
                         $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
@@ -14391,8 +14391,8 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                         $fullTestPath = Resolve-Path -Path $TestPath -ErrorAction SilentlyContinue
                         $fullManualTestPath = Resolve-Path -Path $ManualTestPath -ErrorAction SilentlyContinue
                         if ($fullTestPath) {
-                            $hashtestpath = ($fullTestPath.Path + "\" + $Testfile).Replace('/', '\')
-                            $Manualtestpath = ($fullManualTestPath.Path + "\" + $Testfile).Replace('/', '\')
+                            $hashtestpath = ($fullTestPath.ProviderPath + "\" + $Testfile).Replace('/', '\')
+                            $Manualtestpath = ($fullManualTestPath.ProviderPath + "\" + $Testfile).Replace('/', '\')
                         }
                         Else {
                             $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
@@ -14787,8 +14787,8 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                 $fullTestPath = Resolve-Path -Path $TestPath -ErrorAction SilentlyContinue
                                 $fullManualTestPath = Resolve-Path -Path $ManualTestPath -ErrorAction SilentlyContinue
                                 if ($fullTestPath) {
-                                    $hashtestpath = ($fullTestPath.Path + "\" + $Testfile).Replace('/', '\')
-                                    $Manualtestpath = ($fullManualTestPath.Path + "\" + $Testfile).Replace('/', '\')
+                                    $hashtestpath = ($fullTestPath.ProviderPath + "\" + $Testfile).Replace('/', '\')
+                                    $Manualtestpath = ($fullManualTestPath.ProviderPath + "\" + $Testfile).Replace('/', '\')
                                 }
                                 Else {
                                     $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
@@ -15269,8 +15269,8 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                         $fullTestPath = Resolve-Path -Path $TestPath -ErrorAction SilentlyContinue
                                         $fullManualTestPath = Resolve-Path -Path $ManualTestPath -ErrorAction SilentlyContinue
                                         if ($fullTestPath) {
-                                            $hashtestpath = ($fullTestPath.Path + "\" + $Testfile).Replace('/', '\')
-                                            $Manualtestpath = ($fullManualTestPath.Path + "\" + $Testfile).Replace('/', '\')
+                                            $hashtestpath = ($fullTestPath.ProviderPath + "\" + $Testfile).Replace('/', '\')
+                                            $Manualtestpath = ($fullManualTestPath.ProviderPath + "\" + $Testfile).Replace('/', '\')
                                         }
                                         Else {
                                             $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
@@ -15666,8 +15666,8 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                         $fullTestPath = Resolve-Path -Path $TestPath -ErrorAction SilentlyContinue
                                         $fullManualTestPath = Resolve-Path -Path $ManualTestPath -ErrorAction SilentlyContinue
                                         if ($fullTestPath) {
-                                            $hashtestpath = ($fullTestPath.Path + "\" + $Testfile).Replace('/', '\')
-                                            $Manualtestpath = ($fullManualTestPath.Path + "\" + $Testfile).Replace('/', '\')
+                                            $hashtestpath = ($fullTestPath.ProviderPath + "\" + $Testfile).Replace('/', '\')
+                                            $Manualtestpath = ($fullManualTestPath.ProviderPath + "\" + $Testfile).Replace('/', '\')
                                         }
                                         Else {
                                             $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
@@ -17147,8 +17147,8 @@ else {
                         $fullTestPath = Resolve-Path -Path $TestPath -ErrorAction SilentlyContinue
                         $fullManualTestPath = Resolve-Path -Path $ManualTestPath -ErrorAction SilentlyContinue
                         if ($fullTestPath) {
-                            $hashtestpath = ($fullTestPath.Path + "\" + $Testfile).Replace('/', '\')
-                            $Manualtestpath = ($fullManualTestPath.Path + "\" + $Testfile).Replace('/', '\')
+                            $hashtestpath = ($fullTestPath.ProviderPath + "\" + $Testfile).Replace('/', '\')
+                            $Manualtestpath = ($fullManualTestPath.ProviderPath + "\" + $Testfile).Replace('/', '\')
                         }
                         Else {
                             $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
@@ -17567,8 +17567,8 @@ else {
                             $fullTestPath = Resolve-Path -Path $TestPath -ErrorAction SilentlyContinue
                             $fullManualTestPath = Resolve-Path -Path $ManualTestPath -ErrorAction SilentlyContinue
                             if ($fullTestPath) {
-                                $hashtestpath = ($fullTestPath.Path + "\" + $Testfile).Replace('/', '\')
-                                $Manualtestpath = ($fullManualTestPath.Path + "\" + $Testfile).Replace('/', '\')
+                                $hashtestpath = ($fullTestPath.ProviderPath + "\" + $Testfile).Replace('/', '\')
+                                $Manualtestpath = ($fullManualTestPath.ProviderPath + "\" + $Testfile).Replace('/', '\')
                             }
                             Else {
                                 $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
@@ -18060,8 +18060,8 @@ else {
                     $fullTestPath = Resolve-Path -Path $TestPath -ErrorAction SilentlyContinue
                     $fullManualTestPath = Resolve-Path -Path $ManualTestPath -ErrorAction SilentlyContinue
                     if ($fullTestPath) {
-                        $hashtestpath = ($fullTestPath.Path + "\" + $Testfile).Replace('/', '\')
-                        $Manualtestpath = ($fullManualTestPath.Path + "\" + $Testfile).Replace('/', '\')
+                        $hashtestpath = ($fullTestPath.ProviderPath + "\" + $Testfile).Replace('/', '\')
+                        $Manualtestpath = ($fullManualTestPath.ProviderPath + "\" + $Testfile).Replace('/', '\')
                     }
                     Else {
                         $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
@@ -18463,8 +18463,8 @@ else {
                         $fullTestPath = Resolve-Path -Path $TestPath -ErrorAction SilentlyContinue
                         $fullManualTestPath = Resolve-Path -Path $ManualTestPath -ErrorAction SilentlyContinue
                         if ($fullTestPath) {
-                            $hashtestpath = ($fullTestPath.Path + "\" + $Testfile).Replace('/', '\')
-                            $Manualtestpath = ($fullManualTestPath.Path + "\" + $Testfile).Replace('/', '\')
+                            $hashtestpath = ($fullTestPath.ProviderPath + "\" + $Testfile).Replace('/', '\')
+                            $Manualtestpath = ($fullManualTestPath.ProviderPath + "\" + $Testfile).Replace('/', '\')
                         }
                         Else {
                             $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
@@ -18917,8 +18917,8 @@ else {
                             $fullTestPath = Resolve-Path -Path $TestPath -ErrorAction SilentlyContinue
                             $fullManualTestPath = Resolve-Path -Path $ManualTestPath -ErrorAction SilentlyContinue
                             if ($fullTestPath) {
-                                $hashtestpath = ($fullTestPath.Path + "\" + $Testfile).Replace('/', '\')
-                                $Manualtestpath = ($fullManualTestPath.Path + "\" + $Testfile).Replace('/', '\')
+                                $hashtestpath = ($fullTestPath.ProviderPath + "\" + $Testfile).Replace('/', '\')
+                                $Manualtestpath = ($fullManualTestPath.ProviderPath + "\" + $Testfile).Replace('/', '\')
                             }
                             Else {
                                 $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
@@ -19519,8 +19519,8 @@ else {
                                         $fullTestPath = Resolve-Path -Path $TestPath -ErrorAction SilentlyContinue
                                         $fullManualTestPath = Resolve-Path -Path $ManualTestPath -ErrorAction SilentlyContinue
                                         if ($fullTestPath) {
-                                            $hashtestpath = ($fullTestPath.Path + "\" + $Testfile).Replace('/', '\')
-                                            $Manualtestpath = ($fullManualTestPath.Path + "\" + $Testfile).Replace('/', '\')
+                                            $hashtestpath = ($fullTestPath.ProviderPath + "\" + $Testfile).Replace('/', '\')
+                                            $Manualtestpath = ($fullManualTestPath.ProviderPath + "\" + $Testfile).Replace('/', '\')
                                         }
                                         Else {
                                             $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
@@ -20044,8 +20044,8 @@ else {
                                         $fullTestPath = Resolve-Path -Path $TestPath -ErrorAction SilentlyContinue
                                         $fullManualTestPath = Resolve-Path -Path $ManualTestPath -ErrorAction SilentlyContinue
                                         if ($fullTestPath) {
-                                            $hashtestpath = ($fullTestPath.Path + "\" + $Testfile).Replace('/', '\')
-                                            $Manualtestpath = ($fullManualTestPath.Path + "\" + $Testfile).Replace('/', '\')
+                                            $hashtestpath = ($fullTestPath.ProviderPath + "\" + $Testfile).Replace('/', '\')
+                                            $Manualtestpath = ($fullManualTestPath.ProviderPath + "\" + $Testfile).Replace('/', '\')
                                         }
                                         Else {
                                             $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
