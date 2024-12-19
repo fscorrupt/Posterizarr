@@ -1,5 +1,21 @@
 # CHANGELOG
 
+## [1.9.15](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.15) - 2024-12-19 09:58:19
+
+## What's Changed
+* Update Posterizarr.ps1 by @gareth-c in https://github.com/fscorrupt/Posterizarr/pull/178
+* fix: network path resolve on Windows
+	- If a network share was used in the configuration (e.g., \\...\...), the returned path appeared as `Microsoft.PowerShell.Core\FileSystem::\\...\....` This caused Posterizarr to fail to detect images that were already present, resulting in their recreation.
+## New Contributors
+* @gareth-c made their first contribution in https://github.com/fscorrupt/Posterizarr/pull/178
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.14...1.9.15
+
+### Bug Fixes
+
+- general:
+  - network path resolve on Windows ([4d71221](https://github.com/fscorrupt/Posterizarr/commit/4d71221f2c950dfbd1e4a5c1891834eecb1d6b12))
+
 ## [1.9.14](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.14) - 2024-12-09 08:23:58
 
 ## [1.9.13](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.13) - 2024-12-04 08:11:35
