@@ -12,7 +12,7 @@ param (
     [switch]$SyncEmby
 )
 
-$CurrentScriptVersion = "1.9.15"
+$CurrentScriptVersion = "1.9.16"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -4280,12 +4280,16 @@ function MassDownloadPlexArtwork {
                             Write-Entry -Subtext "Libpath: $libpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                             $Matchedpath = AddTrailingSlash $libpath
                             $libpath = $Matchedpath
-                            $extractedFolder = $location.Substring($libpath.Length)
-                            if ($extractedFolder -like '*\*') {
-                                $extractedFolder = $extractedFolder.split('\')[0]
-                            }
-                            if ($extractedFolder -like '*/*') {
-                                $extractedFolder = $extractedFolder.split('/')[0]
+                            $relativePath = $location.Substring($libpath.Length)
+                            $pathSegments = $relativePath -split '[\\/]'
+
+                            # Determine the extracted folder and the root folder path
+                            if ($pathSegments.Count -gt 1) {
+                                $extractedFolder = $pathSegments[-2]  # Second-to-last segment is the folder containing the file
+                                $extraFolder = $pathSegments[0]  # All segments up to the extracted folder
+                            } else {
+                                $extractedFolder = $pathSegments[0]  # Only one segment, it's the folder
+                                $extraFolder = $null  # No parent structure
                             }
                             Write-Entry -Subtext "Matchedpath: $Matchedpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                             Write-Entry -Subtext "ExtractedFolder: $extractedFolder" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
@@ -4326,12 +4330,16 @@ function MassDownloadPlexArtwork {
                             Write-Entry -Subtext "Libpath: $libpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                             $Matchedpath = AddTrailingSlash $libpath
                             $libpath = $Matchedpath
-                            $extractedFolder = $location.Substring($libpath.Length)
-                            if ($extractedFolder -like '*\*') {
-                                $extractedFolder = $extractedFolder.split('\')[0]
-                            }
-                            if ($extractedFolder -like '*/*') {
-                                $extractedFolder = $extractedFolder.split('/')[0]
+                            $relativePath = $location.Substring($libpath.Length)
+                            $pathSegments = $relativePath -split '[\\/]'
+
+                            # Determine the extracted folder and the root folder path
+                            if ($pathSegments.Count -gt 1) {
+                                $extractedFolder = $pathSegments[-2]  # Second-to-last segment is the folder containing the file
+                                $extraFolder = $pathSegments[0]  # All segments up to the extracted folder
+                            } else {
+                                $extractedFolder = $pathSegments[0]  # Only one segment, it's the folder
+                                $extraFolder = $null  # No parent structure
                             }
                             Write-Entry -Subtext "Matchedpath: $Matchedpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                             Write-Entry -Subtext "ExtractedFolder: $extractedFolder" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
@@ -4381,6 +4389,7 @@ function MassDownloadPlexArtwork {
                 $temp | Add-Member -MemberType NoteProperty -Name "ratingKey" -Value $item.ratingKey
                 $temp | Add-Member -MemberType NoteProperty -Name "Path" -Value $Matchedpath
                 $temp | Add-Member -MemberType NoteProperty -Name "RootFoldername" -Value $extractedFolder
+                $temp | Add-Member -MemberType NoteProperty -Name "extraFolder" -Value $extraFolder
                 $temp | Add-Member -MemberType NoteProperty -Name "MultipleVersions" -Value $MultipleVersions
                 $temp | Add-Member -MemberType NoteProperty -Name "PlexPosterUrl" -Value $Metadata.MediaContainer.$contentquery.thumb
                 $temp | Add-Member -MemberType NoteProperty -Name "PlexBackgroundUrl" -Value $Metadata.MediaContainer.$contentquery.art
@@ -8292,12 +8301,16 @@ Elseif ($Tautulli) {
                     Write-Entry -Subtext "Libpath: $libpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                     $Matchedpath = AddTrailingSlash $libpath
                     $libpath = $Matchedpath
-                    $extractedFolder = $location.Substring($libpath.Length)
-                    if ($extractedFolder -like '*\*') {
-                        $extractedFolder = $extractedFolder.split('\')[0]
-                    }
-                    if ($extractedFolder -like '*/*') {
-                        $extractedFolder = $extractedFolder.split('/')[0]
+                    $relativePath = $location.Substring($libpath.Length)
+                    $pathSegments = $relativePath -split '[\\/]'
+
+                    # Determine the extracted folder and the root folder path
+                    if ($pathSegments.Count -gt 1) {
+                        $extractedFolder = $pathSegments[-2]  # Second-to-last segment is the folder containing the file
+                        $extraFolder = $pathSegments[0]  # All segments up to the extracted folder
+                    } else {
+                        $extractedFolder = $pathSegments[0]  # Only one segment, it's the folder
+                        $extraFolder = $null  # No parent structure
                     }
                     Write-Entry -Subtext "Matchedpath: $Matchedpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                     Write-Entry -Subtext "ExtractedFolder: $extractedFolder" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
@@ -8336,12 +8349,16 @@ Elseif ($Tautulli) {
                     Write-Entry -Subtext "Libpath: $libpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                     $Matchedpath = AddTrailingSlash $libpath
                     $libpath = $Matchedpath
-                    $extractedFolder = $location.Substring($libpath.Length)
-                    if ($extractedFolder -like '*\*') {
-                        $extractedFolder = $extractedFolder.split('\')[0]
-                    }
-                    if ($extractedFolder -like '*/*') {
-                        $extractedFolder = $extractedFolder.split('/')[0]
+                    $relativePath = $location.Substring($libpath.Length)
+                    $pathSegments = $relativePath -split '[\\/]'
+
+                    # Determine the extracted folder and the root folder path
+                    if ($pathSegments.Count -gt 1) {
+                        $extractedFolder = $pathSegments[-2]  # Second-to-last segment is the folder containing the file
+                        $extraFolder = $pathSegments[0]  # All segments up to the extracted folder
+                    } else {
+                        $extractedFolder = $pathSegments[0]  # Only one segment, it's the folder
+                        $extraFolder = $null  # No parent structure
                     }
                     Write-Entry -Subtext "Matchedpath: $Matchedpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                     Write-Entry -Subtext "ExtractedFolder: $extractedFolder" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
@@ -8391,6 +8408,7 @@ Elseif ($Tautulli) {
         $temp | Add-Member -MemberType NoteProperty -Name "ratingKey" -Value $Metadata.MediaContainer.$contentquery.ratingKey
         $temp | Add-Member -MemberType NoteProperty -Name "Path" -Value $Matchedpath
         $temp | Add-Member -MemberType NoteProperty -Name "RootFoldername" -Value $extractedFolder
+        $temp | Add-Member -MemberType NoteProperty -Name "extraFolder" -Value $extraFolder
         $temp | Add-Member -MemberType NoteProperty -Name "MultipleVersions" -Value $MultipleVersions
         $temp | Add-Member -MemberType NoteProperty -Name "PlexPosterUrl" -Value $Metadata.MediaContainer.$contentquery.thumb
         $temp | Add-Member -MemberType NoteProperty -Name "PlexBackgroundUrl" -Value $Metadata.MediaContainer.$contentquery.art
@@ -8579,8 +8597,14 @@ Elseif ($Tautulli) {
 
                     if ($LibraryFolders -eq 'true') {
                         $LibraryName = $entry.'Library Name'
-                        $EntryDir = "$AssetPath\$LibraryName\$($entry.RootFoldername)"
-                        $ManualEntryDir = "$ManualAssetPath\$LibraryName\$($entry.RootFoldername)"
+                        if ($entry.extraFolder){
+                            $EntryDir = "$AssetPath\$LibraryName\$($entry.extraFolder)\$($entry.RootFoldername)"
+                            $ManualEntryDir = "$ManualAssetPath\$LibraryName\$($entry.extraFolder)\$($entry.RootFoldername)"
+                        }
+                        Else {
+                            $EntryDir = "$AssetPath\$LibraryName\$($entry.RootFoldername)"
+                            $ManualEntryDir = "$ManualAssetPath\$LibraryName\$($entry.RootFoldername)"
+                        }
                         $PosterImageoriginal = "$EntryDir\poster.jpg"
                         $TestPath = $EntryDir
                         $ManualTestPath = $ManualEntryDir
@@ -8591,7 +8615,12 @@ Elseif ($Tautulli) {
                         }
                     }
                     Else {
-                        $PosterImageoriginal = "$AssetPath\$($entry.RootFoldername).jpg"
+                        if ($entry.extraFolder){
+                            $PosterImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername).jpg"
+                        }
+                        Else {
+                            $PosterImageoriginal = "$AssetPath\$($entry.RootFoldername).jpg"
+                        }
                         $TestPath = $AssetPath
                         $ManualTestPath = $ManualPath
                         $Testfile = $($entry.RootFoldername)
@@ -8966,8 +8995,14 @@ Elseif ($Tautulli) {
                     if ($global:BackgroundPosters -eq 'true') {
                         if ($LibraryFolders -eq 'true') {
                             $LibraryName = $entry.'Library Name'
-                            $EntryDir = "$AssetPath\$LibraryName\$($entry.RootFoldername)"
-                            $ManualEntryDir = "$ManualAssetPath\$LibraryName\$($entry.RootFoldername)"
+                            if ($entry.extraFolder){
+                                $EntryDir = "$AssetPath\$LibraryName\$($entry.extraFolder)\$($entry.RootFoldername)"
+                                $ManualEntryDir = "$ManualAssetPath\$LibraryName\$($entry.extraFolder)\$($entry.RootFoldername)"
+                            }
+                            Else {
+                                $EntryDir = "$AssetPath\$LibraryName\$($entry.RootFoldername)"
+                                $ManualEntryDir = "$ManualAssetPath\$LibraryName\$($entry.RootFoldername)"
+                            }
                             $backgroundImageoriginal = "$EntryDir\background.jpg"
                             $TestPath = $EntryDir
                             $ManualTestPath = $ManualEntryDir
@@ -8978,7 +9013,12 @@ Elseif ($Tautulli) {
                             }
                         }
                         Else {
-                            $backgroundImageoriginal = "$AssetPath\$($entry.RootFoldername)_background.jpg"
+                            if ($entry.extraFolder){
+                                $backgroundImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername)_background.jpg"
+                            }
+                            Else {
+                                $backgroundImageoriginal = "$AssetPath\$($entry.RootFoldername)_background.jpg"
+                            }
                             $TestPath = $AssetPath
                             $ManualTestPath = $ManualPath
                             $Testfile = "$($entry.RootFoldername)_background"
@@ -9428,8 +9468,14 @@ Elseif ($Tautulli) {
 
                 if ($LibraryFolders -eq 'true') {
                     $LibraryName = $entry.'Library Name'
-                    $EntryDir = "$AssetPath\$LibraryName\$($entry.RootFoldername)"
-                    $ManualEntryDir = "$ManualAssetPath\$LibraryName\$($entry.RootFoldername)"
+                    if ($entry.extraFolder){
+                        $EntryDir = "$AssetPath\$LibraryName\$($entry.extraFolder)\$($entry.RootFoldername)"
+                        $ManualEntryDir = "$ManualAssetPath\$LibraryName\$($entry.extraFolder)\$($entry.RootFoldername)"
+                    }
+                    Else {
+                        $EntryDir = "$AssetPath\$LibraryName\$($entry.RootFoldername)"
+                        $ManualEntryDir = "$ManualAssetPath\$LibraryName\$($entry.RootFoldername)"
+                    }
                     $PosterImageoriginal = "$EntryDir\poster.jpg"
                     $TestPath = $EntryDir
                     $ManualTestPath = $ManualEntryDir
@@ -9440,7 +9486,12 @@ Elseif ($Tautulli) {
                     }
                 }
                 Else {
-                    $PosterImageoriginal = "$AssetPath\$($entry.RootFoldername).jpg"
+                    if ($entry.extraFolder){
+                        $PosterImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername).jpg"
+                    }
+                    Else {
+                        $PosterImageoriginal = "$AssetPath\$($entry.RootFoldername).jpg"
+                    }
                     $TestPath = $AssetPath
                     $ManualTestPath = $ManualPath
                     $Testfile = $($entry.RootFoldername)
@@ -9796,8 +9847,14 @@ Elseif ($Tautulli) {
                 if ($global:BackgroundPosters -eq 'true') {
                     if ($LibraryFolders -eq 'true') {
                         $LibraryName = $entry.'Library Name'
-                        $EntryDir = "$AssetPath\$LibraryName\$($entry.RootFoldername)"
-                        $ManualEntryDir = "$ManualAssetPath\$LibraryName\$($entry.RootFoldername)"
+                        if ($entry.extraFolder){
+                            $EntryDir = "$AssetPath\$LibraryName\$($entry.extraFolder)\$($entry.RootFoldername)"
+                            $ManualEntryDir = "$ManualAssetPath\$LibraryName\$($entry.extraFolder)\$($entry.RootFoldername)"
+                        }
+                        Else {
+                            $EntryDir = "$AssetPath\$LibraryName\$($entry.RootFoldername)"
+                            $ManualEntryDir = "$ManualAssetPath\$LibraryName\$($entry.RootFoldername)"
+                        }
                         $backgroundImageoriginal = "$EntryDir\background.jpg"
                         $TestPath = $EntryDir
                         $ManualTestPath = $ManualEntryDir
@@ -9808,7 +9865,12 @@ Elseif ($Tautulli) {
                         }
                     }
                     Else {
-                        $backgroundImageoriginal = "$AssetPath\$($entry.RootFoldername)_background.jpg"
+                        if ($entry.extraFolder){
+                            $backgroundImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername)_background.jpg"
+                        }
+                        Else {
+                            $backgroundImageoriginal = "$AssetPath\$($entry.RootFoldername)_background.jpg"
+                        }
                         $TestPath = $AssetPath
                         $ManualTestPath = $ManualPath
                         $Testfile = "$($entry.RootFoldername)_background"
@@ -10234,7 +10296,12 @@ Elseif ($Tautulli) {
                             $Testfile = "$global:season"
                         }
                         Else {
-                            $SeasonImageoriginal = "$AssetPath\$($entry.RootFoldername)_$global:season.jpg"
+                            if ($entry.extraFolder){
+                                $SeasonImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername)_$global:season.jpg"
+                            }
+                            Else {
+                                $SeasonImageoriginal = "$AssetPath\$($entry.RootFoldername)_$global:season.jpg"
+                            }
                             $TestPath = $AssetPath
                             $ManualTestPath = $ManualPath
                             $Testfile = "$($entry.RootFoldername)_$global:season"
@@ -10806,7 +10873,12 @@ Elseif ($Tautulli) {
                                         $Testfile = "$global:FileNaming"
                                     }
                                     Else {
-                                        $EpisodeImageoriginal = "$AssetPath\$($entry.RootFoldername)_$global:FileNaming.jpg"
+                                        if ($entry.extraFolder){
+                                            $SeasonImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername)_$global:FileNaming.jpg"
+                                        }
+                                        Else {
+                                            $EpisodeImageoriginal = "$AssetPath\$($entry.RootFoldername)_$global:FileNaming.jpg"
+                                        }
                                         $TestPath = $AssetPath
                                         $ManualTestPath = $ManualPath
                                         $Testfile = "$($entry.RootFoldername)_$global:FileNaming"
@@ -11302,7 +11374,12 @@ Elseif ($Tautulli) {
                                         $Testfile = "$global:FileNaming"
                                     }
                                     Else {
-                                        $EpisodeImageoriginal = "$AssetPath\$($entry.RootFoldername)_$global:FileNaming.jpg"
+                                        if ($entry.extraFolder){
+                                            $SeasonImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername)_$global:FileNaming.jpg"
+                                        }
+                                        Else {
+                                            $EpisodeImageoriginal = "$AssetPath\$($entry.RootFoldername)_$global:FileNaming.jpg"
+                                        }
                                         $TestPath = $AssetPath
                                         $ManualTestPath = $ManualPath
                                         $Testfile = "$($entry.RootFoldername)_$global:FileNaming"
@@ -12064,12 +12141,16 @@ Elseif ($SyncJelly -or $SyncEmby) {
                             Write-Entry -Subtext "Libpath: $libpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                             $Matchedpath = AddTrailingSlash $libpath
                             $libpath = $Matchedpath
-                            $extractedFolder = $location.Substring($libpath.Length)
-                            if ($extractedFolder -like '*\*') {
-                                $extractedFolder = $extractedFolder.split('\')[0]
-                            }
-                            if ($extractedFolder -like '*/*') {
-                                $extractedFolder = $extractedFolder.split('/')[0]
+                            $relativePath = $location.Substring($libpath.Length)
+                            $pathSegments = $relativePath -split '[\\/]'
+
+                            # Determine the extracted folder and the root folder path
+                            if ($pathSegments.Count -gt 1) {
+                                $extractedFolder = $pathSegments[-2]  # Second-to-last segment is the folder containing the file
+                                $extraFolder = $pathSegments[0]  # All segments up to the extracted folder
+                            } else {
+                                $extractedFolder = $pathSegments[0]  # Only one segment, it's the folder
+                                $extraFolder = $null  # No parent structure
                             }
                             Write-Entry -Subtext "Matchedpath: $Matchedpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                             Write-Entry -Subtext "ExtractedFolder: $extractedFolder" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
@@ -12110,12 +12191,16 @@ Elseif ($SyncJelly -or $SyncEmby) {
                             Write-Entry -Subtext "Libpath: $libpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                             $Matchedpath = AddTrailingSlash $libpath
                             $libpath = $Matchedpath
-                            $extractedFolder = $location.Substring($libpath.Length)
-                            if ($extractedFolder -like '*\*') {
-                                $extractedFolder = $extractedFolder.split('\')[0]
-                            }
-                            if ($extractedFolder -like '*/*') {
-                                $extractedFolder = $extractedFolder.split('/')[0]
+                            $relativePath = $location.Substring($libpath.Length)
+                            $pathSegments = $relativePath -split '[\\/]'
+
+                            # Determine the extracted folder and the root folder path
+                            if ($pathSegments.Count -gt 1) {
+                                $extractedFolder = $pathSegments[-2]  # Second-to-last segment is the folder containing the file
+                                $extraFolder = $pathSegments[0]  # All segments up to the extracted folder
+                            } else {
+                                $extractedFolder = $pathSegments[0]  # Only one segment, it's the folder
+                                $extraFolder = $null  # No parent structure
                             }
                             Write-Entry -Subtext "Matchedpath: $Matchedpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                             Write-Entry -Subtext "ExtractedFolder: $extractedFolder" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
@@ -12165,6 +12250,7 @@ Elseif ($SyncJelly -or $SyncEmby) {
                 $temp | Add-Member -MemberType NoteProperty -Name "ratingKey" -Value $item.ratingKey
                 $temp | Add-Member -MemberType NoteProperty -Name "Path" -Value $Matchedpath
                 $temp | Add-Member -MemberType NoteProperty -Name "RootFoldername" -Value $extractedFolder
+                $temp | Add-Member -MemberType NoteProperty -Name "extraFolder" -Value $extraFolder
                 $temp | Add-Member -MemberType NoteProperty -Name "MultipleVersions" -Value $MultipleVersions
                 $temp | Add-Member -MemberType NoteProperty -Name "PlexPosterUrl" -Value $Metadata.MediaContainer.$contentquery.thumb
                 $temp | Add-Member -MemberType NoteProperty -Name "PlexBackgroundUrl" -Value $Metadata.MediaContainer.$contentquery.art
@@ -12290,12 +12376,16 @@ Elseif ($SyncJelly -or $SyncEmby) {
             Write-Entry -Subtext "Libpath: $($lib.Path[1])" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
             $Matchedpath = AddTrailingSlash $($lib.Path[1])
             $libpath = $Matchedpath
-            $extractedFolder = $Movie.Path.Substring($libpath.Length)
-            if ($extractedFolder -like '*\*') {
-                $extractedFolder = $extractedFolder.split('\')[0]
-            }
-            if ($extractedFolder -like '*/*') {
-                $extractedFolder = $extractedFolder.split('/')[0]
+            $relativePath = $Movie.Path.Substring($libpath.Length)
+            $pathSegments = $relativePath -split '[\\/]'
+
+            # Determine the extracted folder and the root folder path
+            if ($pathSegments.Count -gt 1) {
+                $extractedFolder = $pathSegments[-2]  # Second-to-last segment is the folder containing the file
+                $extraFolder = $pathSegments[0]  # All segments up to the extracted folder
+            } else {
+                $extractedFolder = $pathSegments[0]  # Only one segment, it's the folder
+                $extraFolder = $null  # No parent structure
             }
             if ($Movie.Tags){
                 $Labels = $($Movie.Tags -join ',')
@@ -12318,6 +12408,7 @@ Elseif ($SyncJelly -or $SyncEmby) {
             $temp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $Movie.ProviderIds.Tvdb
             $temp | Add-Member -MemberType NoteProperty -Name "Path" -Value $libpath
             $temp | Add-Member -MemberType NoteProperty -Name "RootFoldername" -Value $extractedFolder
+            $temp | Add-Member -MemberType NoteProperty -Name "extraFolder" -Value $extraFolder
             $temp | Add-Member -MemberType NoteProperty -Name "OtherMediaServerPosterUrl" -Value $Movie.ImageTags.Primary
             $temp | Add-Member -MemberType NoteProperty -Name "OtherMediaServerBackgroundUrl" -Value $($Movie.BackdropImageTags -join ",")
             $temp | Add-Member -MemberType NoteProperty -Name "Labels" -Value $Labels
@@ -12351,12 +12442,16 @@ Elseif ($SyncJelly -or $SyncEmby) {
                 Write-Entry -Subtext "Libpath: $($lib.Path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                 $Matchedpath = AddTrailingSlash $($lib.Path)
                 $libpath = $Matchedpath
-                $extractedFolder = $Movie.Path.Substring($libpath.Length)
-                if ($extractedFolder -like '*\*') {
-                    $extractedFolder = $extractedFolder.split('\')[0]
-                }
-                if ($extractedFolder -like '*/*') {
-                    $extractedFolder = $extractedFolder.split('/')[0]
+                $relativePath = $Movie.Path.Substring($libpath.Length)
+                $pathSegments = $relativePath -split '[\\/]'
+
+                # Determine the extracted folder and the root folder path
+                if ($pathSegments.Count -gt 1) {
+                    $extractedFolder = $pathSegments[-2]  # Second-to-last segment is the folder containing the file
+                    $extraFolder = $pathSegments[0]  # All segments up to the extracted folder
+                } else {
+                    $extractedFolder = $pathSegments[0]  # Only one segment, it's the folder
+                    $extraFolder = $null  # No parent structure
                 }
                 Write-Entry -Subtext "Matchedpath: $Matchedpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                 Write-Entry -Subtext "ExtractedFolder: $extractedFolder" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
@@ -12380,6 +12475,7 @@ Elseif ($SyncJelly -or $SyncEmby) {
             $temp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $Movie.ProviderIds.Tvdb
             $temp | Add-Member -MemberType NoteProperty -Name "Path" -Value $libpath
             $temp | Add-Member -MemberType NoteProperty -Name "RootFoldername" -Value $extractedFolder
+            $temp | Add-Member -MemberType NoteProperty -Name "extraFolder" -Value $extraFolder
             $temp | Add-Member -MemberType NoteProperty -Name "OtherMediaServerPosterUrl" -Value $Movie.ImageTags.Primary
             $temp | Add-Member -MemberType NoteProperty -Name "OtherMediaServerBackgroundUrl" -Value $($Movie.BackdropImageTags -join ",")
             $temp | Add-Member -MemberType NoteProperty -Name "Labels" -Value $Labels
@@ -12413,12 +12509,16 @@ Elseif ($SyncJelly -or $SyncEmby) {
         Write-Entry -Subtext "Libpath: $($lib.Path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
         $Matchedpath = AddTrailingSlash $($lib.Path)
         $libpath = $Matchedpath
-        $extractedFolder = $Show.Path.Substring($libpath.Length)
-        if ($extractedFolder -like '*\*') {
-            $extractedFolder = $extractedFolder.split('\')[0]
-        }
-        if ($extractedFolder -like '*/*') {
-            $extractedFolder = $extractedFolder.split('/')[0]
+        $relativePath = $Show.Path.Substring($libpath.Length)
+        $pathSegments = $relativePath -split '[\\/]'
+
+        # Determine the extracted folder and the root folder path
+        if ($pathSegments.Count -gt 1) {
+            $extractedFolder = $pathSegments[-2]  # Second-to-last segment is the folder containing the file
+            $extraFolder = $pathSegments[0]  # All segments up to the extracted folder
+        } else {
+            $extractedFolder = $pathSegments[0]  # Only one segment, it's the folder
+            $extraFolder = $null  # No parent structure
         }
         Write-Entry -Subtext "Matchedpath: $Matchedpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
         Write-Entry -Subtext "ExtractedFolder: $extractedFolder" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
@@ -12443,6 +12543,7 @@ Elseif ($SyncJelly -or $SyncEmby) {
         $temp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $Show.ProviderIds.Tvdb
         $temp | Add-Member -MemberType NoteProperty -Name "Path" -Value $libpath
         $temp | Add-Member -MemberType NoteProperty -Name "RootFoldername" -Value $extractedFolder
+        $temp | Add-Member -MemberType NoteProperty -Name "extraFolder" -Value $extraFolder
         $temp | Add-Member -MemberType NoteProperty -Name "OtherMediaServerPosterUrl" -Value $Show.ImageTags.Primary
         $temp | Add-Member -MemberType NoteProperty -Name "OtherMediaServerBackgroundUrl" -Value $($Show.BackdropImageTags -join ",")
         $temp | Add-Member -MemberType NoteProperty -Name "Labels" -Value $Labels
@@ -12929,12 +13030,16 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                 Write-Entry -Subtext "Libpath: $($lib.Path[1])" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                 $Matchedpath = AddTrailingSlash $($lib.Path[1])
                 $libpath = $Matchedpath
-                $extractedFolder = $Movie.Path.Substring($libpath.Length)
-                if ($extractedFolder -like '*\*') {
-                    $extractedFolder = $extractedFolder.split('\')[0]
-                }
-                if ($extractedFolder -like '*/*') {
-                    $extractedFolder = $extractedFolder.split('/')[0]
+                $relativePath = $Movie.Path.Substring($libpath.Length)
+                $pathSegments = $relativePath -split '[\\/]'
+
+                # Determine the extracted folder and the root folder path
+                if ($pathSegments.Count -gt 1) {
+                    $extractedFolder = $pathSegments[-2]  # Second-to-last segment is the folder containing the file
+                    $extraFolder = $pathSegments[0]  # All segments up to the extracted folder
+                } else {
+                    $extractedFolder = $pathSegments[0]  # Only one segment, it's the folder
+                    $extraFolder = $null  # No parent structure
                 }
 
                 if ($Movie.Tags){
@@ -12959,6 +13064,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                 $temp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $Movie.ProviderIds.Tvdb
                 $temp | Add-Member -MemberType NoteProperty -Name "Path" -Value $libpath
                 $temp | Add-Member -MemberType NoteProperty -Name "RootFoldername" -Value $extractedFolder
+                $temp | Add-Member -MemberType NoteProperty -Name "extraFolder" -Value $extraFolder
                 $temp | Add-Member -MemberType NoteProperty -Name "OtherMediaServerPosterUrl" -Value $Movie.ImageTags.Primary
                 $temp | Add-Member -MemberType NoteProperty -Name "OtherMediaServerBackgroundUrl" -Value $($Movie.BackdropImageTags -join ",")
                 $temp | Add-Member -MemberType NoteProperty -Name "Labels" -Value $Labels
@@ -12992,12 +13098,16 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                 Write-Entry -Subtext "Libpath: $($lib.Path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                 $Matchedpath = AddTrailingSlash $($lib.Path)
                 $libpath = $Matchedpath
-                $extractedFolder = $Movie.Path.Substring($libpath.Length)
-                if ($extractedFolder -like '*\*') {
-                    $extractedFolder = $extractedFolder.split('\')[0]
-                }
-                if ($extractedFolder -like '*/*') {
-                    $extractedFolder = $extractedFolder.split('/')[0]
+                $relativePath = $Movie.Path.Substring($libpath.Length)
+                $pathSegments = $relativePath -split '[\\/]'
+
+                # Determine the extracted folder and the root folder path
+                if ($pathSegments.Count -gt 1) {
+                    $extractedFolder = $pathSegments[-2]  # Second-to-last segment is the folder containing the file
+                    $extraFolder = $pathSegments[0]  # All segments up to the extracted folder
+                } else {
+                    $extractedFolder = $pathSegments[0]  # Only one segment, it's the folder
+                    $extraFolder = $null  # No parent structure
                 }
 
                 if ($Movie.Tags){
@@ -13023,6 +13133,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                 $temp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $Movie.ProviderIds.Tvdb
                 $temp | Add-Member -MemberType NoteProperty -Name "Path" -Value $lib.Path
                 $temp | Add-Member -MemberType NoteProperty -Name "RootFoldername" -Value $extractedFolder
+                $temp | Add-Member -MemberType NoteProperty -Name "extraFolder" -Value $extraFolder
                 $temp | Add-Member -MemberType NoteProperty -Name "OtherMediaServerPosterUrl" -Value $Movie.ImageTags.Primary
                 $temp | Add-Member -MemberType NoteProperty -Name "OtherMediaServerBackgroundUrl" -Value $($Movie.BackdropImageTags -join ",")
                 $temp | Add-Member -MemberType NoteProperty -Name "Labels" -Value $Labels
@@ -13057,12 +13168,16 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
             Write-Entry -Subtext "Libpath: $($lib.Path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
             $Matchedpath = AddTrailingSlash $($lib.Path)
             $libpath = $Matchedpath
-            $extractedFolder = $Show.Path.Substring($libpath.Length)
-            if ($extractedFolder -like '*\*') {
-                $extractedFolder = $extractedFolder.split('\')[0]
-            }
-            if ($extractedFolder -like '*/*') {
-                $extractedFolder = $extractedFolder.split('/')[0]
+            $relativePath = $Show.Path.Substring($libpath.Length)
+            $pathSegments = $relativePath -split '[\\/]'
+
+            # Determine the extracted folder and the root folder path
+            if ($pathSegments.Count -gt 1) {
+                $extractedFolder = $pathSegments[-2]  # Second-to-last segment is the folder containing the file
+                $extraFolder = $pathSegments[0]  # All segments up to the extracted folder
+            } else {
+                $extractedFolder = $pathSegments[0]  # Only one segment, it's the folder
+                $extraFolder = $null  # No parent structure
             }
 
             if ($Show.Tags){
@@ -13088,6 +13203,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
             $temp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $Show.ProviderIds.Tvdb
             $temp | Add-Member -MemberType NoteProperty -Name "Path" -Value $libpath
             $temp | Add-Member -MemberType NoteProperty -Name "RootFoldername" -Value $extractedFolder
+            $temp | Add-Member -MemberType NoteProperty -Name "extraFolder" -Value $extraFolder
             $temp | Add-Member -MemberType NoteProperty -Name "OtherMediaServerPosterUrl" -Value $Show.ImageTags.Primary
             $temp | Add-Member -MemberType NoteProperty -Name "OtherMediaServerBackgroundUrl" -Value $($Show.BackdropImageTags -join ",")
             $temp | Add-Member -MemberType NoteProperty -Name "Labels" -Value $Labels
@@ -13269,8 +13385,14 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
 
                     if ($LibraryFolders -eq 'true') {
                         $LibraryName = $entry.'Library Name'
-                        $EntryDir = "$AssetPath\$LibraryName\$($entry.RootFoldername)"
-                        $ManualEntryDir = "$ManualAssetPath\$LibraryName\$($entry.RootFoldername)"
+                        if ($entry.extraFolder){
+                            $EntryDir = "$AssetPath\$LibraryName\$($entry.extraFolder)\$($entry.RootFoldername)"
+                            $ManualEntryDir = "$ManualAssetPath\$LibraryName\$($entry.extraFolder)\$($entry.RootFoldername)"
+                        }
+                        Else {
+                            $EntryDir = "$AssetPath\$LibraryName\$($entry.RootFoldername)"
+                            $ManualEntryDir = "$ManualAssetPath\$LibraryName\$($entry.RootFoldername)"
+                        }
                         $PosterImageoriginal = "$EntryDir\poster.jpg"
                         $TestPath = $EntryDir
                         $ManualTestPath = $ManualEntryDir
@@ -13281,7 +13403,12 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                         }
                     }
                     Else {
-                        $PosterImageoriginal = "$AssetPath\$($entry.RootFoldername).jpg"
+                        if ($entry.extraFolder){
+                            $PosterImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername).jpg"
+                        }
+                        Else {
+                            $PosterImageoriginal = "$AssetPath\$($entry.RootFoldername).jpg"
+                        }
                         $TestPath = $AssetPath
                         $ManualTestPath = $ManualPath
                         $Testfile = $($entry.RootFoldername)
@@ -13618,8 +13745,14 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                     if ($global:BackgroundPosters -eq 'true') {
                         if ($LibraryFolders -eq 'true') {
                             $LibraryName = $entry.'Library Name'
-                            $EntryDir = "$AssetPath\$LibraryName\$($entry.RootFoldername)"
-                            $ManualEntryDir = "$ManualAssetPath\$LibraryName\$($entry.RootFoldername)"
+                            if ($entry.extraFolder){
+                                $EntryDir = "$AssetPath\$LibraryName\$($entry.extraFolder)\$($entry.RootFoldername)"
+                                $ManualEntryDir = "$ManualAssetPath\$LibraryName\$($entry.extraFolder)\$($entry.RootFoldername)"
+                            }
+                            Else {
+                                $EntryDir = "$AssetPath\$LibraryName\$($entry.RootFoldername)"
+                                $ManualEntryDir = "$ManualAssetPath\$LibraryName\$($entry.RootFoldername)"
+                            }
                             $backgroundImageoriginal = "$EntryDir\background.jpg"
                             $TestPath = $EntryDir
                             $ManualTestPath = $ManualEntryDir
@@ -13630,7 +13763,12 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                             }
                         }
                         Else {
-                            $backgroundImageoriginal = "$AssetPath\$($entry.RootFoldername)_background.jpg"
+                            if ($entry.extraFolder){
+                                $backgroundImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername)_background.jpg"
+                            }
+                            Else {
+                                $backgroundImageoriginal = "$AssetPath\$($entry.RootFoldername)_background.jpg"
+                            }
                             $TestPath = $AssetPath
                             $ManualTestPath = $ManualPath
                             $Testfile = "$($entry.RootFoldername)_background"
@@ -14038,8 +14176,14 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
 
                 if ($LibraryFolders -eq 'true') {
                     $LibraryName = $entry.'Library Name'
-                    $EntryDir = "$AssetPath\$LibraryName\$($entry.RootFoldername)"
-                    $ManualEntryDir = "$ManualAssetPath\$LibraryName\$($entry.RootFoldername)"
+                    if ($entry.extraFolder){
+                        $EntryDir = "$AssetPath\$LibraryName\$($entry.extraFolder)\$($entry.RootFoldername)"
+                        $ManualEntryDir = "$ManualAssetPath\$LibraryName\$($entry.extraFolder)\$($entry.RootFoldername)"
+                    }
+                    Else {
+                        $EntryDir = "$AssetPath\$LibraryName\$($entry.RootFoldername)"
+                        $ManualEntryDir = "$ManualAssetPath\$LibraryName\$($entry.RootFoldername)"
+                    }
                     $PosterImageoriginal = "$EntryDir\poster.jpg"
                     $TestPath = $EntryDir
                     $ManualTestPath = $ManualEntryDir
@@ -14050,7 +14194,12 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                     }
                 }
                 Else {
-                    $PosterImageoriginal = "$AssetPath\$($entry.RootFoldername).jpg"
+                    if ($entry.extraFolder){
+                        $PosterImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername).jpg"
+                    }
+                    Else {
+                        $PosterImageoriginal = "$AssetPath\$($entry.RootFoldername).jpg"
+                    }
                     $TestPath = $AssetPath
                     $ManualTestPath = $ManualPath
                     $Testfile = $($entry.RootFoldername)
@@ -14365,8 +14514,14 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                 if ($global:BackgroundPosters -eq 'true') {
                     if ($LibraryFolders -eq 'true') {
                         $LibraryName = $entry.'Library Name'
-                        $EntryDir = "$AssetPath\$LibraryName\$($entry.RootFoldername)"
-                        $ManualEntryDir = "$ManualAssetPath\$LibraryName\$($entry.RootFoldername)"
+                        if ($entry.extraFolder){
+                            $EntryDir = "$AssetPath\$LibraryName\$($entry.extraFolder)\$($entry.RootFoldername)"
+                            $ManualEntryDir = "$ManualAssetPath\$LibraryName\$($entry.extraFolder)\$($entry.RootFoldername)"
+                        }
+                        Else {
+                            $EntryDir = "$AssetPath\$LibraryName\$($entry.RootFoldername)"
+                            $ManualEntryDir = "$ManualAssetPath\$LibraryName\$($entry.RootFoldername)"
+                        }
                         $backgroundImageoriginal = "$EntryDir\background.jpg"
                         $TestPath = $EntryDir
                         $ManualTestPath = $ManualEntryDir
@@ -14377,7 +14532,12 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                         }
                     }
                     Else {
-                        $backgroundImageoriginal = "$AssetPath\$($entry.RootFoldername)_background.jpg"
+                        if ($entry.extraFolder){
+                            $backgroundImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername)_background.jpg"
+                        }
+                        Else {
+                            $backgroundImageoriginal = "$AssetPath\$($entry.RootFoldername)_background.jpg"
+                        }
                         $TestPath = $AssetPath
                         $ManualTestPath = $ManualPath
                         $Testfile = "$($entry.RootFoldername)_background"
@@ -14773,7 +14933,12 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                 $Testfile = "$global:season"
                             }
                             Else {
-                                $SeasonImageoriginal = "$AssetPath\$($entry.RootFoldername)_$global:season.jpg"
+                                if ($entry.extraFolder){
+                                    $SeasonImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername)_$global:season.jpg"
+                                }
+                                Else {
+                                    $SeasonImageoriginal = "$AssetPath\$($entry.RootFoldername)_$global:season.jpg"
+                                }
                                 $TestPath = $AssetPath
                                 $ManualTestPath = $ManualPath
                                 $Testfile = "$($entry.RootFoldername)_$global:season"
@@ -15255,7 +15420,12 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                         $Testfile = "$global:FileNaming"
                                     }
                                     Else {
-                                        $EpisodeImageoriginal = "$AssetPath\$($entry.RootFoldername)_$global:FileNaming.jpg"
+                                        if ($entry.extraFolder){
+                                            $SeasonImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername)_$global:FileNaming.jpg"
+                                        }
+                                        Else {
+                                            $EpisodeImageoriginal = "$AssetPath\$($entry.RootFoldername)_$global:FileNaming.jpg"
+                                        }
                                         $TestPath = $AssetPath
                                         $ManualTestPath = $ManualPath
                                         $Testfile = "$($entry.RootFoldername)_$global:FileNaming"
@@ -15652,7 +15822,12 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                         $Testfile = "$global:FileNaming"
                                     }
                                     Else {
-                                        $EpisodeImageoriginal = "$AssetPath\$($entry.RootFoldername)_$global:FileNaming.jpg"
+                                        if ($entry.extraFolder){
+                                            $SeasonImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername)_$global:FileNaming.jpg"
+                                        }
+                                        Else {
+                                            $EpisodeImageoriginal = "$AssetPath\$($entry.RootFoldername)_$global:FileNaming.jpg"
+                                        }
                                         $TestPath = $AssetPath
                                         $ManualTestPath = $ManualPath
                                         $Testfile = "$($entry.RootFoldername)_$global:FileNaming"
@@ -16818,12 +16993,16 @@ else {
                             Write-Entry -Subtext "Libpath: $libpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                             $Matchedpath = AddTrailingSlash $libpath
                             $libpath = $Matchedpath
-                            $extractedFolder = $location.Substring($libpath.Length)
-                            if ($extractedFolder -like '*\*') {
-                                $extractedFolder = $extractedFolder.split('\')[0]
-                            }
-                            if ($extractedFolder -like '*/*') {
-                                $extractedFolder = $extractedFolder.split('/')[0]
+                            $relativePath = $location.Substring($libpath.Length)
+                            $pathSegments = $relativePath -split '[\\/]'
+
+                            # Determine the extracted folder and the root folder path
+                            if ($pathSegments.Count -gt 1) {
+                                $extractedFolder = $pathSegments[-2]  # Second-to-last segment is the folder containing the file
+                                $extraFolder = $pathSegments[0]  # All segments up to the extracted folder
+                            } else {
+                                $extractedFolder = $pathSegments[0]  # Only one segment, it's the folder
+                                $extraFolder = $null  # No parent structure
                             }
                             Write-Entry -Subtext "Matchedpath: $Matchedpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                             Write-Entry -Subtext "ExtractedFolder: $extractedFolder" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
@@ -16864,12 +17043,16 @@ else {
                             Write-Entry -Subtext "Libpath: $libpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                             $Matchedpath = AddTrailingSlash $libpath
                             $libpath = $Matchedpath
-                            $extractedFolder = $location.Substring($libpath.Length)
-                            if ($extractedFolder -like '*\*') {
-                                $extractedFolder = $extractedFolder.split('\')[0]
-                            }
-                            if ($extractedFolder -like '*/*') {
-                                $extractedFolder = $extractedFolder.split('/')[0]
+                            $relativePath = $location.Substring($libpath.Length)
+                            $pathSegments = $relativePath -split '[\\/]'
+
+                            # Determine the extracted folder and the root folder path
+                            if ($pathSegments.Count -gt 1) {
+                                $extractedFolder = $pathSegments[-2]  # Second-to-last segment is the folder containing the file
+                                $extraFolder = $pathSegments[0]  # All segments up to the extracted folder
+                            } else {
+                                $extractedFolder = $pathSegments[0]  # Only one segment, it's the folder
+                                $extraFolder = $null  # No parent structure
                             }
                             Write-Entry -Subtext "Matchedpath: $Matchedpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                             Write-Entry -Subtext "ExtractedFolder: $extractedFolder" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
@@ -16919,6 +17102,7 @@ else {
                 $temp | Add-Member -MemberType NoteProperty -Name "ratingKey" -Value $item.ratingKey
                 $temp | Add-Member -MemberType NoteProperty -Name "Path" -Value $Matchedpath
                 $temp | Add-Member -MemberType NoteProperty -Name "RootFoldername" -Value $extractedFolder
+                $temp | Add-Member -MemberType NoteProperty -Name "extraFolder" -Value $extraFolder
                 $temp | Add-Member -MemberType NoteProperty -Name "MultipleVersions" -Value $MultipleVersions
                 $temp | Add-Member -MemberType NoteProperty -Name "PlexPosterUrl" -Value $Metadata.MediaContainer.$contentquery.thumb
                 $temp | Add-Member -MemberType NoteProperty -Name "PlexBackgroundUrl" -Value $Metadata.MediaContainer.$contentquery.art
@@ -17121,8 +17305,14 @@ else {
 
                     if ($LibraryFolders -eq 'true') {
                         $LibraryName = $entry.'Library Name'
-                        $EntryDir = "$AssetPath\$LibraryName\$($entry.RootFoldername)"
-                        $ManualEntryDir = "$ManualAssetPath\$LibraryName\$($entry.RootFoldername)"
+                        if ($entry.extraFolder){
+                            $EntryDir = "$AssetPath\$LibraryName\$($entry.extraFolder)\$($entry.RootFoldername)"
+                            $ManualEntryDir = "$ManualAssetPath\$LibraryName\$($entry.extraFolder)\$($entry.RootFoldername)"
+                        }
+                        Else {
+                            $EntryDir = "$AssetPath\$LibraryName\$($entry.RootFoldername)"
+                            $ManualEntryDir = "$ManualAssetPath\$LibraryName\$($entry.RootFoldername)"
+                        }
                         $PosterImageoriginal = "$EntryDir\poster.jpg"
                         $TestPath = $EntryDir
                         $ManualTestPath = $ManualEntryDir
@@ -17133,7 +17323,12 @@ else {
                         }
                     }
                     Else {
-                        $PosterImageoriginal = "$AssetPath\$($entry.RootFoldername).jpg"
+                        if ($entry.extraFolder){
+                            $PosterImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername).jpg"
+                        }
+                        Else {
+                            $PosterImageoriginal = "$AssetPath\$($entry.RootFoldername).jpg"
+                        }
                         $TestPath = $AssetPath
                         $ManualTestPath = $ManualPath
                         $Testfile = $($entry.RootFoldername)
@@ -17541,8 +17736,14 @@ else {
                     if ($global:BackgroundPosters -eq 'true') {
                         if ($LibraryFolders -eq 'true') {
                             $LibraryName = $entry.'Library Name'
-                            $EntryDir = "$AssetPath\$LibraryName\$($entry.RootFoldername)"
-                            $ManualEntryDir = "$ManualAssetPath\$LibraryName\$($entry.RootFoldername)"
+                            if ($entry.extraFolder){
+                                $EntryDir = "$AssetPath\$LibraryName\$($entry.extraFolder)\$($entry.RootFoldername)"
+                                $ManualEntryDir = "$ManualAssetPath\$LibraryName\$($entry.extraFolder)\$($entry.RootFoldername)"
+                            }
+                            Else {
+                                $EntryDir = "$AssetPath\$LibraryName\$($entry.RootFoldername)"
+                                $ManualEntryDir = "$ManualAssetPath\$LibraryName\$($entry.RootFoldername)"
+                            }
                             $backgroundImageoriginal = "$EntryDir\background.jpg"
                             $TestPath = $EntryDir
                             $ManualTestPath = $ManualEntryDir
@@ -17553,7 +17754,12 @@ else {
                             }
                         }
                         Else {
-                            $backgroundImageoriginal = "$AssetPath\$($entry.RootFoldername)_background.jpg"
+                            if ($entry.extraFolder){
+                                $backgroundImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername)_background.jpg"
+                            }
+                            Else {
+                                $backgroundImageoriginal = "$AssetPath\$($entry.RootFoldername)_background.jpg"
+                            }
                             $TestPath = $AssetPath
                             $ManualTestPath = $ManualPath
                             $Testfile = "$($entry.RootFoldername)_background"
@@ -18034,8 +18240,14 @@ else {
 
                 if ($LibraryFolders -eq 'true') {
                     $LibraryName = $entry.'Library Name'
-                    $EntryDir = "$AssetPath\$LibraryName\$($entry.RootFoldername)"
-                    $ManualEntryDir = "$ManualAssetPath\$LibraryName\$($entry.RootFoldername)"
+                    if ($entry.extraFolder){
+                        $EntryDir = "$AssetPath\$LibraryName\$($entry.extraFolder)\$($entry.RootFoldername)"
+                        $ManualEntryDir = "$ManualAssetPath\$LibraryName\$($entry.extraFolder)\$($entry.RootFoldername)"
+                    }
+                    Else {
+                        $EntryDir = "$AssetPath\$LibraryName\$($entry.RootFoldername)"
+                        $ManualEntryDir = "$ManualAssetPath\$LibraryName\$($entry.RootFoldername)"
+                    }
                     $PosterImageoriginal = "$EntryDir\poster.jpg"
                     $TestPath = $EntryDir
                     $ManualTestPath = $ManualEntryDir
@@ -18046,7 +18258,12 @@ else {
                     }
                 }
                 Else {
-                    $PosterImageoriginal = "$AssetPath\$($entry.RootFoldername).jpg"
+                    if ($entry.extraFolder){
+                        $PosterImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername).jpg"
+                    }
+                    Else {
+                        $PosterImageoriginal = "$AssetPath\$($entry.RootFoldername).jpg"
+                    }
                     $TestPath = $AssetPath
                     $ManualTestPath = $ManualPath
                     $Testfile = $($entry.RootFoldername)
@@ -18437,8 +18654,14 @@ else {
                 if ($global:BackgroundPosters -eq 'true') {
                     if ($LibraryFolders -eq 'true') {
                         $LibraryName = $entry.'Library Name'
-                        $EntryDir = "$AssetPath\$LibraryName\$($entry.RootFoldername)"
-                        $ManualEntryDir = "$ManualAssetPath\$LibraryName\$($entry.RootFoldername)"
+                        if ($entry.extraFolder){
+                            $EntryDir = "$AssetPath\$LibraryName\$($entry.extraFolder)\$($entry.RootFoldername)"
+                            $ManualEntryDir = "$ManualAssetPath\$LibraryName\$($entry.extraFolder)\$($entry.RootFoldername)"
+                        }
+                        Else {
+                            $EntryDir = "$AssetPath\$LibraryName\$($entry.RootFoldername)"
+                            $ManualEntryDir = "$ManualAssetPath\$LibraryName\$($entry.RootFoldername)"
+                        }
                         $backgroundImageoriginal = "$EntryDir\background.jpg"
                         $TestPath = $EntryDir
                         $ManualTestPath = $ManualEntryDir
@@ -18449,7 +18672,12 @@ else {
                         }
                     }
                     Else {
-                        $backgroundImageoriginal = "$AssetPath\$($entry.RootFoldername)_background.jpg"
+                        if ($entry.extraFolder){
+                            $backgroundImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername)_background.jpg"
+                        }
+                        Else {
+                            $backgroundImageoriginal = "$AssetPath\$($entry.RootFoldername)_background.jpg"
+                        }
                         $TestPath = $AssetPath
                         $ManualTestPath = $ManualPath
                         $Testfile = "$($entry.RootFoldername)_background"
@@ -18903,7 +19131,12 @@ else {
                             $Testfile = "$global:season"
                         }
                         Else {
-                            $SeasonImageoriginal = "$AssetPath\$($entry.RootFoldername)_$global:season.jpg"
+                            if ($entry.extraFolder){
+                                $SeasonImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername)_$global:season.jpg"
+                            }
+                            Else {
+                                $SeasonImageoriginal = "$AssetPath\$($entry.RootFoldername)_$global:season.jpg"
+                            }
                             $TestPath = $AssetPath
                             $ManualTestPath = $ManualPath
                             $Testfile = "$($entry.RootFoldername)_$global:season"
@@ -19505,7 +19738,12 @@ else {
                                         $Testfile = "$global:FileNaming"
                                     }
                                     Else {
-                                        $EpisodeImageoriginal = "$AssetPath\$($entry.RootFoldername)_$global:FileNaming.jpg"
+                                        if ($entry.extraFolder){
+                                            $SeasonImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername)_$global:FileNaming.jpg"
+                                        }
+                                        Else {
+                                            $EpisodeImageoriginal = "$AssetPath\$($entry.RootFoldername)_$global:FileNaming.jpg"
+                                        }
                                         $TestPath = $AssetPath
                                         $ManualTestPath = $ManualPath
                                         $Testfile = "$($entry.RootFoldername)_$global:FileNaming"
@@ -20030,7 +20268,12 @@ else {
                                         $Testfile = "$global:FileNaming"
                                     }
                                     Else {
-                                        $EpisodeImageoriginal = "$AssetPath\$($entry.RootFoldername)_$global:FileNaming.jpg"
+                                        if ($entry.extraFolder){
+                                            $SeasonImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername)_$global:FileNaming.jpg"
+                                        }
+                                        Else {
+                                            $EpisodeImageoriginal = "$AssetPath\$($entry.RootFoldername)_$global:FileNaming.jpg"
+                                        }
                                         $TestPath = $AssetPath
                                         $ManualTestPath = $ManualPath
                                         $Testfile = "$($entry.RootFoldername)_$global:FileNaming"
