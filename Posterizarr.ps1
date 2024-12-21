@@ -4284,7 +4284,7 @@ function MassDownloadPlexArtwork {
                             $pathSegments = $relativePath -split '[\\/]'
 
                             # Determine the extracted folder and the root folder path
-                            if ($pathSegments.Count -gt 1) {
+                            if ($pathSegments.Count -gt 2) {
                                 $extractedFolder = $pathSegments[-2]  # Second-to-last segment is the folder containing the file
                                 $extraFolder = $pathSegments[0]  # All segments up to the extracted folder
                             } else {
@@ -4334,7 +4334,7 @@ function MassDownloadPlexArtwork {
                             $pathSegments = $relativePath -split '[\\/]'
 
                             # Determine the extracted folder and the root folder path
-                            if ($pathSegments.Count -gt 1) {
+                            if ($pathSegments.Count -gt 2) {
                                 $extractedFolder = $pathSegments[-2]  # Second-to-last segment is the folder containing the file
                                 $extraFolder = $pathSegments[0]  # All segments up to the extracted folder
                             } else {
@@ -8305,7 +8305,7 @@ Elseif ($Tautulli) {
                     $pathSegments = $relativePath -split '[\\/]'
 
                     # Determine the extracted folder and the root folder path
-                    if ($pathSegments.Count -gt 1) {
+                    if ($pathSegments.Count -gt 2) {
                         $extractedFolder = $pathSegments[-2]  # Second-to-last segment is the folder containing the file
                         $extraFolder = $pathSegments[0]  # All segments up to the extracted folder
                     } else {
@@ -8353,7 +8353,7 @@ Elseif ($Tautulli) {
                     $pathSegments = $relativePath -split '[\\/]'
 
                     # Determine the extracted folder and the root folder path
-                    if ($pathSegments.Count -gt 1) {
+                    if ($pathSegments.Count -gt 2) {
                         $extractedFolder = $pathSegments[-2]  # Second-to-last segment is the folder containing the file
                         $extraFolder = $pathSegments[0]  # All segments up to the extracted folder
                     } else {
@@ -12145,7 +12145,7 @@ Elseif ($SyncJelly -or $SyncEmby) {
                             $pathSegments = $relativePath -split '[\\/]'
 
                             # Determine the extracted folder and the root folder path
-                            if ($pathSegments.Count -gt 1) {
+                            if ($pathSegments.Count -gt 2) {
                                 $extractedFolder = $pathSegments[-2]  # Second-to-last segment is the folder containing the file
                                 $extraFolder = $pathSegments[0]  # All segments up to the extracted folder
                             } else {
@@ -12195,7 +12195,7 @@ Elseif ($SyncJelly -or $SyncEmby) {
                             $pathSegments = $relativePath -split '[\\/]'
 
                             # Determine the extracted folder and the root folder path
-                            if ($pathSegments.Count -gt 1) {
+                            if ($pathSegments.Count -gt 2) {
                                 $extractedFolder = $pathSegments[-2]  # Second-to-last segment is the folder containing the file
                                 $extraFolder = $pathSegments[0]  # All segments up to the extracted folder
                             } else {
@@ -12380,7 +12380,7 @@ Elseif ($SyncJelly -or $SyncEmby) {
             $pathSegments = $relativePath -split '[\\/]'
 
             # Determine the extracted folder and the root folder path
-            if ($pathSegments.Count -gt 1) {
+            if ($pathSegments.Count -gt 2) {
                 $extractedFolder = $pathSegments[-2]  # Second-to-last segment is the folder containing the file
                 $extraFolder = $pathSegments[0]  # All segments up to the extracted folder
             } else {
@@ -12446,7 +12446,7 @@ Elseif ($SyncJelly -or $SyncEmby) {
                 $pathSegments = $relativePath -split '[\\/]'
 
                 # Determine the extracted folder and the root folder path
-                if ($pathSegments.Count -gt 1) {
+                if ($pathSegments.Count -gt 2) {
                     $extractedFolder = $pathSegments[-2]  # Second-to-last segment is the folder containing the file
                     $extraFolder = $pathSegments[0]  # All segments up to the extracted folder
                 } else {
@@ -12513,7 +12513,7 @@ Elseif ($SyncJelly -or $SyncEmby) {
         $pathSegments = $relativePath -split '[\\/]'
 
         # Determine the extracted folder and the root folder path
-        if ($pathSegments.Count -gt 1) {
+        if ($pathSegments.Count -gt 2) {
             $extractedFolder = $pathSegments[-2]  # Second-to-last segment is the folder containing the file
             $extraFolder = $pathSegments[0]  # All segments up to the extracted folder
         } else {
@@ -13034,7 +13034,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                 $pathSegments = $relativePath -split '[\\/]'
 
                 # Determine the extracted folder and the root folder path
-                if ($pathSegments.Count -gt 1) {
+                if ($pathSegments.Count -gt 2) {
                     $extractedFolder = $pathSegments[-2]  # Second-to-last segment is the folder containing the file
                     $extraFolder = $pathSegments[0]  # All segments up to the extracted folder
                 } else {
@@ -13102,7 +13102,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                 $pathSegments = $relativePath -split '[\\/]'
 
                 # Determine the extracted folder and the root folder path
-                if ($pathSegments.Count -gt 1) {
+                if ($pathSegments.Count -gt 2) {
                     $extractedFolder = $pathSegments[-2]  # Second-to-last segment is the folder containing the file
                     $extraFolder = $pathSegments[0]  # All segments up to the extracted folder
                 } else {
@@ -13172,7 +13172,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
             $pathSegments = $relativePath -split '[\\/]'
 
             # Determine the extracted folder and the root folder path
-            if ($pathSegments.Count -gt 1) {
+            if ($pathSegments.Count -gt 2) {
                 $extractedFolder = $pathSegments[-2]  # Second-to-last segment is the folder containing the file
                 $extraFolder = $pathSegments[0]  # All segments up to the extracted folder
             } else {
@@ -16997,7 +16997,7 @@ else {
                             $pathSegments = $relativePath -split '[\\/]'
 
                             # Determine the extracted folder and the root folder path
-                            if ($pathSegments.Count -gt 1) {
+                            if ($pathSegments.Count -gt 2) {
                                 $extractedFolder = $pathSegments[-2]  # Second-to-last segment is the folder containing the file
                                 $extraFolder = $pathSegments[0]  # All segments up to the extracted folder
                             } else {
@@ -17047,7 +17047,7 @@ else {
                             $pathSegments = $relativePath -split '[\\/]'
 
                             # Determine the extracted folder and the root folder path
-                            if ($pathSegments.Count -gt 1) {
+                            if ($pathSegments.Count -gt 2) {
                                 $extractedFolder = $pathSegments[-2]  # Second-to-last segment is the folder containing the file
                                 $extraFolder = $pathSegments[0]  # All segments up to the extracted folder
                             } else {
