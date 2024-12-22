@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## [1.9.17](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.17) - 2024-12-22 17:57:55
+
+## What's Changed
+* fix: Plex artwork upload by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/184
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.16...1.9.17
+
+### Bug Fixes
+
+- general:
+  - Plex artwork upload (#184) ([cb00f98](https://github.com/fscorrupt/Posterizarr/commit/cb00f98e3550dbf7a47259be29771005f6237fe3)) ([#184](https://github.com/fscorrupt/Posterizarr/pull/184))
+  - Plex artwork upload ([cce63a1](https://github.com/fscorrupt/Posterizarr/commit/cce63a1f4082406a5b9c5772317accd92e04e8c9)) ([#184](https://github.com/fscorrupt/Posterizarr/pull/184))
+
 ## [1.9.16](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.16) - 2024-12-21 18:51:05
 
 ## [1.9.15](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.15) - 2024-12-19 09:58:19
