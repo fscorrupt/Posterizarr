@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [1.9.19](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.19) - 2025-01-07 09:59:07
+
+## What's Changed
+* Add: Skip AddText on Poster with Text by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/189
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.18...1.9.19
+
 ## [1.9.18](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.18) - 2025-01-07 06:56:38
 
 ## [1.9.17](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.17) - 2024-12-22 17:57:55
