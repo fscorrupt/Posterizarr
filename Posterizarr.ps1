@@ -8891,6 +8891,7 @@ Elseif ($Tautulli) {
                                         InvokeMagickCommand -Command $magick -Arguments $Arguments
                                         if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
                                             $SkipingText = $true
+                                            Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                         }
                                         if ($AddText -eq 'true' -and $SkipingText -eq 'false') {
                                             if ($global:direction -eq "RTL") {
@@ -9283,6 +9284,7 @@ Elseif ($Tautulli) {
                                         InvokeMagickCommand -Command $magick -Arguments $Arguments
                                         if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
                                             $SkipingText = $true
+                                            Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                         }
                                         if ($AddBackgroundText -eq 'true' -and $SkipingText -eq 'false') {
                                             if ($global:direction -eq "RTL") {
@@ -9760,6 +9762,7 @@ Elseif ($Tautulli) {
                                     InvokeMagickCommand -Command $magick -Arguments $Arguments
                                     if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
                                         $SkipingText = $true
+                                        Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                     }
                                     if ($AddText -eq 'true' -and $SkipingText -eq 'false') {
                                         if ($global:direction -eq "RTL") {
@@ -10163,6 +10166,7 @@ Elseif ($Tautulli) {
                                     InvokeMagickCommand -Command $magick -Arguments $Arguments
                                     if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
                                         $SkipingText = $true
+                                        Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                     }
                                     if ($AddBackgroundText -eq 'true' -and $SkipingText -eq 'false') {
                                         if ($global:direction -eq "RTL") {
@@ -10625,6 +10629,7 @@ Elseif ($Tautulli) {
                                             InvokeMagickCommand -Command $magick -Arguments $Arguments
                                             if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
                                                 $SkipingText = $true
+                                                Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                             }
                                             if ($AddSeasonText -eq 'true' -and $SkipingText -eq 'false') {
                                                 $global:seasonTitle = $global:seasonTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
@@ -11191,6 +11196,7 @@ Elseif ($Tautulli) {
                                                                 InvokeMagickCommand -Command $magick -Arguments $Arguments
                                                                 if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
                                                                     $SkipingText = $true
+                                                                    Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                                 }
                                                                 if ($AddTitleCardEPTitleText -eq 'true' -and $SkipingText -eq 'false') {
                                                                     if ($TitleCardEPTitlefontAllCaps -eq 'true') {
@@ -11227,6 +11233,7 @@ Elseif ($Tautulli) {
                                                                 }
                                                                 if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
                                                                     $SkipingText = $true
+                                                                    Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                                 }
                                                                 if ($AddTitleCardEPText -eq 'true' -and $SkipingText -eq 'false') {
                                                                     if ($TitleCardEPfontAllCaps -eq 'true') {
@@ -11713,6 +11720,7 @@ Elseif ($Tautulli) {
                                                             InvokeMagickCommand -Command $magick -Arguments $Arguments
                                                             if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
                                                                 $SkipingText = $true
+                                                                Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                             }
                                                             if ($AddTitleCardEPTitleText -eq 'true' -and $SkipingText -eq 'false') {
                                                                 if ($TitleCardEPTitlefontAllCaps -eq 'true') {
@@ -11748,6 +11756,7 @@ Elseif ($Tautulli) {
                                                             }
                                                             if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
                                                                 $SkipingText = $true
+                                                                Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                             }
                                                             if ($AddTitleCardEPText -eq 'true' -and $SkipingText -eq 'false') {
                                                                 if ($TitleCardEPfontAllCaps -eq 'true') {
@@ -13729,6 +13738,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                         InvokeMagickCommand -Command $magick -Arguments $Arguments
                                         if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
                                             $SkipingText = $true
+                                            Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                         }
                                         if ($AddText -eq 'true' -and $SkipingText -eq 'false') {
                                             if ($global:direction -eq "RTL") {
@@ -14085,6 +14095,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                         InvokeMagickCommand -Command $magick -Arguments $Arguments
                                         if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
                                             $SkipingText = $true
+                                            Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                         }
                                         if ($AddBackgroundText -eq 'true' -and $SkipingText -eq 'false') {
                                             if ($global:direction -eq "RTL") {
@@ -14517,6 +14528,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                     InvokeMagickCommand -Command $magick -Arguments $Arguments
                                     if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
                                         $SkipingText = $true
+                                        Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                     }
                                     if ($AddText -eq 'true' -and $SkipingText -eq 'false') {
                                         if ($global:direction -eq "RTL") {
@@ -14884,6 +14896,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                     InvokeMagickCommand -Command $magick -Arguments $Arguments
                                     if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
                                         $SkipingText = $true
+                                        Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                     }
                                     if ($AddBackgroundText -eq 'true' -and $SkipingText -eq 'false') {
                                         if ($global:direction -eq "RTL") {
@@ -15311,6 +15324,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                                 InvokeMagickCommand -Command $magick -Arguments $Arguments
                                                 if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
                                                     $SkipingText = $true
+                                                    Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                 }
                                                 if ($AddSeasonText -eq 'true' -and $SkipingText -eq 'false') {
                                                     $global:seasonTitle = $global:seasonTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
@@ -15773,6 +15787,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                                                 InvokeMagickCommand -Command $magick -Arguments $Arguments
                                                                 if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
                                                                     $SkipingText = $true
+                                                                    Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                                 }
                                                                 if ($AddTitleCardEPTitleText -eq 'true' -and $SkipingText -eq 'false') {
                                                                     if ($TitleCardEPTitlefontAllCaps -eq 'true') {
@@ -15803,6 +15818,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                                                 }
                                                                 if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
                                                                     $SkipingText = $true
+                                                                    Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                                 }
                                                                 if ($AddTitleCardEPText -eq 'true' -and $SkipingText -eq 'false') {
                                                                     if ($TitleCardEPfontAllCaps -eq 'true') {
@@ -16199,6 +16215,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                                             InvokeMagickCommand -Command $magick -Arguments $Arguments
                                                             if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
                                                                 $SkipingText = $true
+                                                                Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                             }
                                                             if ($AddTitleCardEPTitleText -eq 'true' -and $SkipingText -eq 'false') {
                                                                 if ($TitleCardEPTitlefontAllCaps -eq 'true') {
@@ -16229,6 +16246,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                                             }
                                                             if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
                                                                 $SkipingText = $true
+                                                                Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                             }
                                                             if ($AddTitleCardEPText -eq 'true' -and $SkipingText -eq 'false') {
                                                                 if ($TitleCardEPfontAllCaps -eq 'true') {
@@ -17741,6 +17759,7 @@ else {
                                         InvokeMagickCommand -Command $magick -Arguments $Arguments
                                         if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
                                             $SkipingText = $true
+                                            Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                         }
                                         if ($AddText -eq 'true' -and $SkipingText -eq 'false') {
                                             if ($global:direction -eq "RTL") {
@@ -18166,6 +18185,7 @@ else {
                                         InvokeMagickCommand -Command $magick -Arguments $Arguments
                                         if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
                                             $SkipingText = $true
+                                            Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                         }
                                         if ($AddBackgroundText -eq 'true' -and $SkipingText -eq 'false') {
                                             if ($global:direction -eq "RTL") {
@@ -18678,6 +18698,7 @@ else {
                                     InvokeMagickCommand -Command $magick -Arguments $Arguments
                                     if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
                                         $SkipingText = $true
+                                        Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                     }
                                     if ($AddText -eq 'true' -and $SkipingText -eq 'false') {
                                         if ($global:direction -eq "RTL") {
@@ -19111,6 +19132,7 @@ else {
                                     InvokeMagickCommand -Command $magick -Arguments $Arguments
                                     if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
                                         $SkipingText = $true
+                                        Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                     }
                                     if ($AddBackgroundText -eq 'true' -and $SkipingText -eq 'false') {
                                         if ($global:direction -eq "RTL") {
@@ -19602,6 +19624,7 @@ else {
                                             InvokeMagickCommand -Command $magick -Arguments $Arguments
                                             if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
                                                 $SkipingText = $true
+                                                Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                             }
                                             if ($AddSeasonText -eq 'true' -and $SkipingText -eq 'false') {
                                                 $global:seasonTitle = $global:seasonTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
@@ -20198,6 +20221,7 @@ else {
                                                                 InvokeMagickCommand -Command $magick -Arguments $Arguments
                                                                 if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
                                                                     $SkipingText = $true
+                                                                    Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                                 }
                                                                 if ($AddTitleCardEPTitleText -eq 'true' -and $SkipingText -eq 'false') {
                                                                     if ($TitleCardEPTitlefontAllCaps -eq 'true') {
@@ -20233,6 +20257,7 @@ else {
                                                                 }
                                                                 if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
                                                                     $SkipingText = $true
+                                                                    Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                                 }
                                                                 if ($AddTitleCardEPText -eq 'true' -and $SkipingText -eq 'false') {
                                                                     if ($TitleCardEPfontAllCaps -eq 'true') {
@@ -20750,6 +20775,7 @@ else {
                                                             InvokeMagickCommand -Command $magick -Arguments $Arguments
                                                             if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
                                                                 $SkipingText = $true
+                                                                Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                             }
                                                             if ($AddTitleCardEPTitleText -eq 'true' -and $SkipingText -eq 'false') {
                                                                 if ($TitleCardEPTitlefontAllCaps -eq 'true') {
@@ -20785,6 +20811,7 @@ else {
                                                             }
                                                             if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
                                                                 $SkipingText = $true
+                                                                Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                             }
                                                             if ($AddTitleCardEPText -eq 'true' -and $SkipingText -eq 'false') {
                                                                 if ($TitleCardEPfontAllCaps -eq 'true') {
