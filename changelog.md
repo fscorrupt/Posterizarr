@@ -2,17 +2,6 @@
 
 ## [1.9.18](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.18) - 2025-01-07 06:56:38
 
-## What's Changed
-* fix: Search order on Textless Only
-	* If Fanart is prefered provider it now searches also tmdb for movie posters. by @fscorrupt in https://github.com/fscorrupt/Posterizarr/commit/1abfe29a28a1f48f2e152bbef21230755a456f62
-
-**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.17...1.9.18
-
-### Bug Fixes
-
-- general:
-  - Search order on Textless Only ([1abfe29](https://github.com/fscorrupt/Posterizarr/commit/1abfe29a28a1f48f2e152bbef21230755a456f62))
-
 ## [1.9.17](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.17) - 2024-12-22 17:57:55
 
 ## [1.9.16](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.16) - 2024-12-21 18:51:05
