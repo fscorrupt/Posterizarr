@@ -3498,6 +3498,7 @@ function LogConfigSettings {
     Write-Entry -Subtext "Prerequisites Part" -Path $configLogging -Color Cyan -log Info
     Write-Entry -Subtext "| Asset Path:                      $AssetPath" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Backup Path:                     $BackupPath" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Skip adding Text:                $SkipAddText" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Manual Asset Path:               $ManualAssetPath" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Upload to Plex:                  $Upload2Plex" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Show skipped:                    $show_skipped" -Path $configLogging -Color White -log Info
