@@ -12,7 +12,7 @@ param (
     [switch]$SyncEmby
 )
 
-$CurrentScriptVersion = "1.9.18"
+$CurrentScriptVersion = "1.9.19"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -3162,10 +3162,10 @@ function CheckJson {
                 if (Test-Path $CurrentlyRunning) {
                     Remove-Item -LiteralPath $CurrentlyRunning | out-null
                 }
-                if ($global:UptimeKumaUrl){
+                if ($global:UptimeKumaUrl) {
                     Send-UptimeKumaWebhook -status "down" -msg "Failed to read the existing configuration file."
                 }
-                if ($global:UptimeKumaUrl){
+                if ($global:UptimeKumaUrl) {
                     Send-UptimeKumaWebhook -status "down" -msg "Failed to read config"
                 }
                 Exit
@@ -3231,7 +3231,7 @@ function CheckJson {
                     if (Test-Path $CurrentlyRunning) {
                         Remove-Item -LiteralPath $CurrentlyRunning | out-null
                     }
-                    if ($global:UptimeKumaUrl){
+                    if ($global:UptimeKumaUrl) {
                         Send-UptimeKumaWebhook -status "down" -msg "Wrong Main Attribute casing in config file"
                     }
                     Exit  # Abort the script
@@ -3258,7 +3258,7 @@ function CheckJson {
                             if (Test-Path $CurrentlyRunning) {
                                 Remove-Item -LiteralPath $CurrentlyRunning | out-null
                             }
-                            if ($global:UptimeKumaUrl){
+                            if ($global:UptimeKumaUrl) {
                                 Send-UptimeKumaWebhook -status "down" -msg "Wrong Sub Attribute casing in config file"
                             }
                             Exit  # Abort the script
@@ -3282,7 +3282,7 @@ function CheckJson {
         if (Test-Path $CurrentlyRunning) {
             Remove-Item -LiteralPath $CurrentlyRunning | out-null
         }
-        if ($global:UptimeKumaUrl){
+        if ($global:UptimeKumaUrl) {
             Send-UptimeKumaWebhook -status "down" -msg "Config.json download failed."
         }
         Exit
@@ -3293,7 +3293,7 @@ function CheckJson {
         if (Test-Path $CurrentlyRunning) {
             Remove-Item -LiteralPath $CurrentlyRunning | out-null
         }
-        if ($global:UptimeKumaUrl){
+        if ($global:UptimeKumaUrl) {
             Send-UptimeKumaWebhook -status "down" -msg "$($_.Exception.Message)"
         }
         Exit
@@ -3328,7 +3328,7 @@ function CheckJsonPaths {
         if (Test-Path $CurrentlyRunning) {
             Remove-Item -LiteralPath $CurrentlyRunning | out-null
         }
-        if ($global:UptimeKumaUrl){
+        if ($global:UptimeKumaUrl) {
             Send-UptimeKumaWebhook -status "down" -msg "File missing"
         }
         Exit
@@ -3405,7 +3405,7 @@ function CheckConfigFile {
         if (Test-Path $CurrentlyRunning) {
             Remove-Item -LiteralPath $CurrentlyRunning | out-null
         }
-        if ($global:UptimeKumaUrl){
+        if ($global:UptimeKumaUrl) {
             Send-UptimeKumaWebhook -status "down" -msg "Configure config file"
         }
         Exit
@@ -3498,6 +3498,7 @@ function LogConfigSettings {
     Write-Entry -Subtext "Prerequisites Part" -Path $configLogging -Color Cyan -log Info
     Write-Entry -Subtext "| Asset Path:                      $AssetPath" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Backup Path:                     $BackupPath" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Skip adding Text:                $SkipAddText" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Manual Asset Path:               $ManualAssetPath" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Upload to Plex:                  $Upload2Plex" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Show skipped:                    $show_skipped" -Path $configLogging -Color White -log Info
@@ -3649,7 +3650,7 @@ function CheckPlexAccess {
                     if (Test-Path $CurrentlyRunning) {
                         Remove-Item -LiteralPath $CurrentlyRunning | out-null
                     }
-                    if ($global:UptimeKumaUrl){
+                    if ($global:UptimeKumaUrl) {
                         Send-UptimeKumaWebhook -status "down" -msg "No Plex Libs found"
                     }
                     Exit
@@ -3664,7 +3665,7 @@ function CheckPlexAccess {
                 if (Test-Path $CurrentlyRunning) {
                     Remove-Item -LiteralPath $CurrentlyRunning | out-null
                 }
-                if ($global:UptimeKumaUrl){
+                if ($global:UptimeKumaUrl) {
                     Send-UptimeKumaWebhook -status "down" -msg "Could not access plex"
                 }
                 Exit
@@ -3677,7 +3678,7 @@ function CheckPlexAccess {
             if (Test-Path $CurrentlyRunning) {
                 Remove-Item -LiteralPath $CurrentlyRunning | out-null
             }
-            if ($global:UptimeKumaUrl){
+            if ($global:UptimeKumaUrl) {
                 Send-UptimeKumaWebhook -status "down" -msg "Could not access plex"
             }
             Exit
@@ -3697,7 +3698,7 @@ function CheckPlexAccess {
                 }
                 else {
                     Write-Entry -Subtext "No libs on Plex, abort script now..." -Path $configLogging -Color Red -log Error
-                    if ($global:UptimeKumaUrl){
+                    if ($global:UptimeKumaUrl) {
                         Send-UptimeKumaWebhook -status "down" -msg "No libs on plex"
                     }
                     Exit
@@ -3713,7 +3714,7 @@ function CheckPlexAccess {
             if (Test-Path $CurrentlyRunning) {
                 Remove-Item -LiteralPath $CurrentlyRunning | out-null
             }
-            if ($global:UptimeKumaUrl){
+            if ($global:UptimeKumaUrl) {
                 Send-UptimeKumaWebhook -status "down" -msg "Could not access plex"
             }
             Exit
@@ -3930,7 +3931,7 @@ function CheckJellyfinAccess {
                 if (Test-Path $CurrentlyRunning) {
                     Remove-Item -LiteralPath $CurrentlyRunning | out-null
                 }
-                if ($global:UptimeKumaUrl){
+                if ($global:UptimeKumaUrl) {
                     Send-UptimeKumaWebhook -status "down" -msg "Clould not access jellyfin"
                 }
                 Exit
@@ -3943,7 +3944,7 @@ function CheckJellyfinAccess {
             if (Test-Path $CurrentlyRunning) {
                 Remove-Item -LiteralPath $CurrentlyRunning | out-null
             }
-            if ($global:UptimeKumaUrl){
+            if ($global:UptimeKumaUrl) {
                 Send-UptimeKumaWebhook -status "down" -msg "Clould not access jellyfin"
             }
             Exit
@@ -3972,7 +3973,7 @@ function CheckEmbyAccess {
                 if (Test-Path $CurrentlyRunning) {
                     Remove-Item -LiteralPath $CurrentlyRunning | out-null
                 }
-                if ($global:UptimeKumaUrl){
+                if ($global:UptimeKumaUrl) {
                     Send-UptimeKumaWebhook -status "down" -msg "Clould not access emby"
                 }
                 Exit
@@ -3985,7 +3986,7 @@ function CheckEmbyAccess {
             if (Test-Path $CurrentlyRunning) {
                 Remove-Item -LiteralPath $CurrentlyRunning | out-null
             }
-            if ($global:UptimeKumaUrl){
+            if ($global:UptimeKumaUrl) {
                 Send-UptimeKumaWebhook -status "down" -msg "Clould not access emby"
             }
             Exit
@@ -4041,7 +4042,7 @@ function UploadOtherMediaServerArtwork {
                 if (Test-Path $CurrentlyRunning) {
                     Remove-Item -LiteralPath $CurrentlyRunning | out-null
                 }
-                if ($global:UptimeKumaUrl){
+                if ($global:UptimeKumaUrl) {
                     Send-UptimeKumaWebhook -status "down" -msg "Unsupported image format"
                 }
                 exit
@@ -4123,7 +4124,7 @@ function MassDownloadPlexArtwork {
             if ($lib.title -notmatch "^[^\/:*?`"<>\|\\}]+$") {
                 Write-Entry -Message  "Lib: '$($lib.title)' contains invalid characters." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                 Write-Entry -Subtext "Please rename your lib and remove all chars that are listed here: '/, :, *, ?, `", <, >, |, \, or }'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-                if ($global:UptimeKumaUrl){
+                if ($global:UptimeKumaUrl) {
                     Send-UptimeKumaWebhook -status "down" -msg "Invalid lib chars"
                 }
                 Exit
@@ -4136,7 +4137,7 @@ function MassDownloadPlexArtwork {
         if (Test-Path $CurrentlyRunning) {
             Remove-Item -LiteralPath $CurrentlyRunning | out-null
         }
-        if ($global:UptimeKumaUrl){
+        if ($global:UptimeKumaUrl) {
             Send-UptimeKumaWebhook -status "down" -msg "No libs found"
         }
         Exit
@@ -4287,7 +4288,8 @@ function MassDownloadPlexArtwork {
                             if ($pathSegments.Count -gt 2) {
                                 $extractedFolder = $pathSegments[-2]  # Second-to-last segment is the folder containing the file
                                 $extraFolder = $pathSegments[0]  # All segments up to the extracted folder
-                            } else {
+                            }
+                            else {
                                 $extractedFolder = $pathSegments[0]  # Only one segment, it's the folder
                                 $extraFolder = $null  # No parent structure
                             }
@@ -4337,7 +4339,8 @@ function MassDownloadPlexArtwork {
                             if ($pathSegments.Count -gt 2) {
                                 $extractedFolder = $pathSegments[-2]  # Second-to-last segment is the folder containing the file
                                 $extraFolder = $pathSegments[0]  # All segments up to the extracted folder
-                            } else {
+                            }
+                            else {
                                 $extractedFolder = $pathSegments[0]  # Only one segment, it's the folder
                                 $extraFolder = $null  # No parent structure
                             }
@@ -4366,7 +4369,7 @@ function MassDownloadPlexArtwork {
                 if ($tmdbid.count -gt '1') { $tmdbid = $tmdbid[0] }
                 if ($imdbid.count -gt '1') { $imdbid = $imdbid[0] }
 
-                if ($Metadata.MediaContainer.$contentquery.Label.tag){
+                if ($Metadata.MediaContainer.$contentquery.Label.tag) {
                     $Labels = $($Metadata.MediaContainer.$contentquery.Label.tag -join ',')
                 }
                 Else {
@@ -4543,7 +4546,7 @@ function MassDownloadPlexArtwork {
         if (Test-Path $CurrentlyRunning) {
             Remove-Item -LiteralPath $CurrentlyRunning | out-null
         }
-        if ($global:UptimeKumaUrl){
+        if ($global:UptimeKumaUrl) {
             Send-UptimeKumaWebhook -status "down" -msg "Hashtable creation failed"
         }
         Exit
@@ -4563,6 +4566,7 @@ function MassDownloadPlexArtwork {
     foreach ($entry in $AllMovies) {
         try {
             if ($($entry.RootFoldername)) {
+                $SkipingText = 'false'
                 $global:posterurl = $null
                 $global:ImageMagickError = $null
                 $global:TMDBfallbackposterurl = $null
@@ -4631,6 +4635,7 @@ function MassDownloadPlexArtwork {
                     }
                     if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
                         # Define Global Variables
+                        $SkipingText = 'false'
                         $global:tmdbid = $entry.tmdbid
                         $global:tvdbid = $entry.tvdbid
                         $global:imdbid = $entry.imdbid
@@ -4745,6 +4750,7 @@ function MassDownloadPlexArtwork {
                     }
                     if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
                         # Define Global Variables
+                        $SkipingText = 'false'
                         $global:tmdbid = $entry.tmdbid
                         $global:tvdbid = $entry.tvdbid
                         $global:imdbid = $entry.imdbid
@@ -4840,6 +4846,7 @@ function MassDownloadPlexArtwork {
     foreach ($entry in $AllShows) {
         if ($($entry.RootFoldername)) {
             # Define Global Variables
+            $SkipingText = 'false'
             $global:tmdbid = $entry.tmdbid
             $global:tvdbid = $entry.tvdbid
             $global:imdbid = $entry.imdbid
@@ -5037,6 +5044,7 @@ function MassDownloadPlexArtwork {
                 }
                 if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
                     # Define Global Variables
+                    $SkipingText = 'false'
                     $global:tmdbid = $entry.tmdbid
                     $global:tvdbid = $entry.tvdbid
                     $global:imdbid = $entry.imdbid
@@ -5130,6 +5138,7 @@ function MassDownloadPlexArtwork {
                 $global:seasonNumbers = $entry.seasonNumbers -split ','
                 $global:PlexSeasonUrls = $entry.PlexSeasonUrls -split ','
                 for ($i = 0; $i -lt $global:seasonNames.Count; $i++) {
+                    $SkipingText = 'false'
                     $global:posterurl = $null
                     $global:IsFallback = $null
                     $global:FallbackText = $null
@@ -5253,6 +5262,7 @@ function MassDownloadPlexArtwork {
             if ($global:TitleCards -eq 'true') {
                 # Loop through each episode
                 foreach ($episode in $Episodedata) {
+                    $SkipingText = 'false'
                     $global:AssetTextLang = $null
                     $global:TMDBAssetTextLang = $null
                     $global:FANARTAssetTextLang = $null
@@ -5286,6 +5296,7 @@ function MassDownloadPlexArtwork {
                         $global:PlexTitleCardUrls = $episode."PlexTitleCardUrls".Split(",")
                         $global:ImageMagickError = $null
                         for ($i = 0; $i -lt $global:episode_numbers.Count; $i++) {
+                            $SkipingText = 'false'
                             $global:AssetTextLang = $null
                             $global:TMDBAssetTextLang = $null
                             $global:FANARTAssetTextLang = $null
@@ -5815,7 +5826,7 @@ function MassDownloadPlexArtwork {
     if (Test-Path $CurrentlyRunning) {
         Remove-Item -LiteralPath $CurrentlyRunning | out-null
     }
-    if ($global:UptimeKumaUrl){
+    if ($global:UptimeKumaUrl) {
         Send-UptimeKumaWebhook -status "up" -ping $executionTime.TotalMilliseconds
     }
 }
@@ -5911,7 +5922,7 @@ function Send-UptimeKumaWebhook {
         [int]$ping = 0
     )
 
-    $uri = $global:UptimeKumaUrl+"?status=$status&msg=$msg&ping=$ping"
+    $uri = $global:UptimeKumaUrl + "?status=$status&msg=$msg&ping=$ping"
     try {
         $null = Invoke-RestMethod -Uri $uri
         Write-Entry -Message "Uptime Kuma webhook sent: Status=$status, Msg=$msg, Ping=$ping" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -5924,7 +5935,7 @@ function Send-UptimeKumaWebhook {
 
 ##### PRE-START #####
 # Set Branch
-if ($dev){
+if ($dev) {
     $Branch = 'dev'
 }
 Else {
@@ -5973,7 +5984,7 @@ if ($Platform -ne 'Docker' -and $config.PrerequisitePart.AutoUpdatePosterizarr.t
     catch {
         Write-Entry -Subtext "Failed to download the latest script, Error: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
     }
-    if ($global:UptimeKumaUrl){
+    if ($global:UptimeKumaUrl) {
         Send-UptimeKumaWebhook -status "down" -msg "Script download failed"
     }
     Exit
@@ -6022,7 +6033,7 @@ foreach ($folder in (Get-ChildItem -Path $(Join-Path $global:ScriptRoot $global:
 # Notification Part
 $global:SendNotification = $config.Notification.SendNotification.tolower()
 $global:UseUptimeKuma = $config.Notification.UseUptimeKuma.tolower()
-if ($global:UseUptimeKuma -eq 'true'){
+if ($global:UseUptimeKuma -eq 'true') {
     $global:UptimeKumaUrl = $config.Notification.UptimeKumaUrl
 }
 
@@ -6037,7 +6048,7 @@ if ($env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker*') {
             if (Test-Path $CurrentlyRunning) {
                 Remove-Item -LiteralPath $CurrentlyRunning | out-null
             }
-            if ($global:UptimeKumaUrl){
+            if ($global:UptimeKumaUrl) {
                 Send-UptimeKumaWebhook -status "down" -msg "Default notify url in config"
             }
             Exit
@@ -6055,7 +6066,7 @@ Else {
         if (Test-Path $CurrentlyRunning) {
             Remove-Item -LiteralPath $CurrentlyRunning | out-null
         }
-        if ($global:UptimeKumaUrl){
+        if ($global:UptimeKumaUrl) {
             Send-UptimeKumaWebhook -status "down" -msg "Default notify url in config"
         }
         Exit
@@ -6064,7 +6075,7 @@ Else {
 
 # API Part
 $global:tvdbapi = $config.ApiPart.tvdbapi
-if ($global:tvdbapi -match '#'){
+if ($global:tvdbapi -match '#') {
     $global:tvdbpin = $global:tvdbapi.split('#')[1]
     $global:tvdbapi = $global:tvdbapi.split('#')[0]
 }
@@ -6089,7 +6100,7 @@ $global:PreferredLanguageOrder = $config.ApiPart.PreferredLanguageOrder
 $global:PreferredSeasonLanguageOrder = $config.ApiPart.PreferredSeasonLanguageOrder
 $global:PreferredBackgroundLanguageOrder = $config.ApiPart.PreferredBackgroundLanguageOrder
 
-if ($global:PreferredBackgroundLanguageOrder -eq 'PleaseFillMe'){
+if ($global:PreferredBackgroundLanguageOrder -eq 'PleaseFillMe') {
     $global:PreferredBackgroundLanguageOrder = $global:PreferredLanguageOrder
 }
 
@@ -6230,7 +6241,7 @@ if ($enabledServers -gt 1) {
     if (Test-Path $CurrentlyRunning) {
         Remove-Item -LiteralPath $CurrentlyRunning | out-null
     }
-    if ($global:UptimeKumaUrl){
+    if ($global:UptimeKumaUrl) {
         Send-UptimeKumaWebhook -status "down" -msg "Multiple media servers enabled"
     }
     Exit 0
@@ -6244,6 +6255,7 @@ $AssetPath = RemoveTrailingSlash $config.PrerequisitePart.AssetPath
 $BackupPath = RemoveTrailingSlash $config.PrerequisitePart.BackupPath
 $ManualAssetPath = RemoveTrailingSlash $config.PrerequisitePart.ManualAssetPath
 $Upload2Plex = $config.PrerequisitePart.PlexUpload.tolower()
+$SkipAddText = $config.PrerequisitePart.SkipAddText.tolower()
 
 # Check if its a Network Share
 if ($AssetPath.StartsWith("\")) {
@@ -6429,38 +6441,38 @@ if ($global:OSType -ne "Win32NT") {
     $global:OSarch = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture
     if ($global:OSType -eq "Docker" -or $global:OSarch -eq "Arm64") {
         $magick = 'magick'
-        if ($AssetPath -match '^./'){
+        if ($AssetPath -match '^./') {
             Write-Entry -Message "You have set your asset path to '$AssetPath', please change it to '/assets'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             Write-Entry -Subtext "Exiting Posterizarr now..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             # Clear Running File
             if (Test-Path $CurrentlyRunning) {
                 Remove-Item -LiteralPath $CurrentlyRunning | out-null
             }
-            if ($global:UptimeKumaUrl){
+            if ($global:UptimeKumaUrl) {
                 Send-UptimeKumaWebhook -status "down" -msg "Wrong asset path"
             }
             Exit 0
         }
-        if ($BackupPath -match '^./'){
+        if ($BackupPath -match '^./') {
             Write-Entry -Message "You have set your backup path to '$BackupPath', please change it to '/backuppath'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             Write-Entry -Subtext "Exiting Posterizarr now..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             # Clear Running File
             if (Test-Path $CurrentlyRunning) {
                 Remove-Item -LiteralPath $CurrentlyRunning | out-null
             }
-            if ($global:UptimeKumaUrl){
+            if ($global:UptimeKumaUrl) {
                 Send-UptimeKumaWebhook -status "down" -msg "Wrong backup path"
             }
             Exit 0
         }
-        if ($ManualAssetPath -match '^./'){
+        if ($ManualAssetPath -match '^./') {
             Write-Entry -Message "You have set your manualasset path to '$ManualAssetPath', please change it to '/manualassets'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             Write-Entry -Subtext "Exiting Posterizarr now..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             # Clear Running File
             if (Test-Path $CurrentlyRunning) {
                 Remove-Item -LiteralPath $CurrentlyRunning | out-null
             }
-            if ($global:UptimeKumaUrl){
+            if ($global:UptimeKumaUrl) {
                 Send-UptimeKumaWebhook -status "down" -msg "Wrong manual asset path"
             }
             Exit 0
@@ -6508,7 +6520,7 @@ if ($global:OSarch -eq "Arm64") {
         if (Test-Path $CurrentlyRunning) {
             Remove-Item -LiteralPath $CurrentlyRunning | out-null
         }
-        if ($global:UptimeKumaUrl){
+        if ($global:UptimeKumaUrl) {
             Send-UptimeKumaWebhook -status "down" -msg "Imagemagick missing"
         }
         Exit
@@ -6608,7 +6620,7 @@ foreach ($path in $LogsPath, $TempPath, $TestPath, $AssetPath) {
             if (Test-Path $CurrentlyRunning) {
                 Remove-Item -LiteralPath $CurrentlyRunning | out-null
             }
-            if ($global:UptimeKumaUrl){
+            if ($global:UptimeKumaUrl) {
                 Send-UptimeKumaWebhook -status "down" -msg "Default asset path"
             }
             Exit
@@ -6632,7 +6644,7 @@ if ($ForceRunningDeletion -eq 'true') {
 if (Test-Path $CurrentlyRunning) {
     Write-Entry -Message "Another Posterizarr instance already running, exiting now..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     Write-Entry -Subtext "If its a false positive message you can manually delete the 'Posterizarr.Running' file in temp dir..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Warning
-    if ($global:UptimeKumaUrl){
+    if ($global:UptimeKumaUrl) {
         Send-UptimeKumaWebhook -status "down" -msg "Another instance running"
     }
     Exit
@@ -6784,7 +6796,7 @@ if ($global:tmdbtoken.Length -le '35') {
     if (Test-Path $CurrentlyRunning) {
         Remove-Item -LiteralPath $CurrentlyRunning | out-null
     }
-    if ($global:UptimeKumaUrl){
+    if ($global:UptimeKumaUrl) {
         Send-UptimeKumaWebhook -status "down" -msg "Wrong TMDB token"
     }
     Exit
@@ -6799,10 +6811,10 @@ while (-not $success -and $retryCount -lt $maxRetries) {
     try {
         # tvdb token Header
         $global:apiUrl = "https://api4.thetvdb.com/v4/login"
-        if ($global:tvdbpin){
+        if ($global:tvdbpin) {
             $global:requestBody = @{
                 apikey = $global:tvdbapi
-                pin = $global:tvdbpin
+                pin    = $global:tvdbpin
             } | ConvertTo-Json
         }
         Else {
@@ -6843,7 +6855,7 @@ while (-not $success -and $retryCount -lt $maxRetries) {
                 if (Test-Path $CurrentlyRunning) {
                     Remove-Item -LiteralPath $CurrentlyRunning | out-null
                 }
-                if ($global:UptimeKumaUrl){
+                if ($global:UptimeKumaUrl) {
                     Send-UptimeKumaWebhook -status "down" -msg "Could not receive a TVDB Token"
                 }
                 Exit
@@ -6923,7 +6935,7 @@ if ($Manual) {
     if ($global:ImageProcessing -eq 'true') {
         if ($CreateSeasonPoster -eq 'y') {
             $Posteroverlay = $Seasonoverlay
-            if ($AddShowTitletoSeason -eq 'true'){
+            if ($AddShowTitletoSeason -eq 'true') {
                 if ($fontAllCaps -eq 'true') {
                     $joinedTitle = $SeasonPosterName.ToUpper()
                 }
@@ -7011,9 +7023,9 @@ if ($Manual) {
             InvokeMagickCommand -Command $magick -Arguments $Arguments
 
             if ($AddText -eq 'true') {
-                $joinedTitle = $joinedTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`',''
-                if ($AddShowTitletoSeason -eq 'true'){
-                    $ShowjoinedTitle = $ShowjoinedTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`',''
+                $joinedTitle = $joinedTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
+                if ($AddShowTitletoSeason -eq 'true') {
+                    $ShowjoinedTitle = $ShowjoinedTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
                     # Loop through each symbol and replace it with a newline
                     if ($NewLineOnSpecificSymbols -eq 'true') {
                         foreach ($symbol in $NewLineSymbols) {
@@ -7048,7 +7060,7 @@ if ($Manual) {
                     Else {
                         $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Seasonfontcolor`" -size `"$Seasonboxsize`" -background none -interline-spacing `"$SeasonlineSpacing`" -gravity south caption:`"$joinedTitle`" -trim +repage -extent `"$Seasonboxsize`" `) -gravity south -geometry +0`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
                     }
-                    if ($AddShowTitletoSeason -eq 'true'){
+                    if ($AddShowTitletoSeason -eq 'true') {
                         # Show Part
                         # Add Stroke
                         if ($AddShowOnSeasonTextStroke -eq 'true') {
@@ -7073,7 +7085,7 @@ if ($Manual) {
                     $logEntry = "`"$magick`" $Arguments"
                     $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                     InvokeMagickCommand -Command $magick -Arguments $Arguments
-                    if ($AddShowTitletoSeason -eq 'true'){
+                    if ($AddShowTitletoSeason -eq 'true') {
                         Write-Entry -Subtext "    Applying showTitle text: `"$ShowjoinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                         $logEntry = "`"$magick`" $ShowOnSeasonArguments"
                         $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
@@ -7107,7 +7119,7 @@ if ($Manual) {
     if (Test-Path $CurrentlyRunning) {
         Remove-Item -LiteralPath $CurrentlyRunning | out-null
     }
-    if ($global:UptimeKumaUrl){
+    if ($global:UptimeKumaUrl) {
         Send-UptimeKumaWebhook -status "up" -ping $executionTime.TotalMilliseconds
     }
 }
@@ -7295,10 +7307,10 @@ Elseif ($Testing) {
     }
     # Optimal TitleCard EP Font Size
     if ($AddTitleCardEPText -eq 'true') {
-        $Episodetext = $Episodetext -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`',''
+        $Episodetext = $Episodetext -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
         $TitleCardoptimalFontSizeEpisodetext = Get-OptimalPointSize -text $Episodetext -font $titlecardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize -lineSpacing $TitleCardEPlineSpacing
         if ($global:IsTruncated) { $TruncatedCount++ }
-        $EpisodetextCAPS = $EpisodetextCAPS -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`',''
+        $EpisodetextCAPS = $EpisodetextCAPS -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
         $TitleCardoptimalFontSizeEpisodetextCAPS = Get-OptimalPointSize -text $EpisodetextCAPS -font $titlecardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize -lineSpacing $TitleCardEPlineSpacing
         if ($global:IsTruncated) { $TruncatedCount++ }
     }
@@ -8230,7 +8242,7 @@ Elseif ($Testing) {
     if (Test-Path $CurrentlyRunning) {
         Remove-Item -LiteralPath $CurrentlyRunning | out-null
     }
-    if ($global:UptimeKumaUrl){
+    if ($global:UptimeKumaUrl) {
         Send-UptimeKumaWebhook -status "up" -ping $executionTime.TotalMilliseconds
     }
 }
@@ -8309,7 +8321,8 @@ Elseif ($Tautulli) {
                     if ($pathSegments.Count -gt 2) {
                         $extractedFolder = $pathSegments[-2]  # Second-to-last segment is the folder containing the file
                         $extraFolder = $pathSegments[0]  # All segments up to the extracted folder
-                    } else {
+                    }
+                    else {
                         $extractedFolder = $pathSegments[0]  # Only one segment, it's the folder
                         $extraFolder = $null  # No parent structure
                     }
@@ -8357,7 +8370,8 @@ Elseif ($Tautulli) {
                     if ($pathSegments.Count -gt 2) {
                         $extractedFolder = $pathSegments[-2]  # Second-to-last segment is the folder containing the file
                         $extraFolder = $pathSegments[0]  # All segments up to the extracted folder
-                    } else {
+                    }
+                    else {
                         $extractedFolder = $pathSegments[0]  # Only one segment, it's the folder
                         $extraFolder = $null  # No parent structure
                     }
@@ -8386,7 +8400,7 @@ Elseif ($Tautulli) {
         if ($tmdbid.count -gt '1') { $tmdbid = $tmdbid[0] }
         if ($imdbid.count -gt '1') { $imdbid = $imdbid[0] }
 
-        if ($Metadata.MediaContainer.$contentquery.Label.tag){
+        if ($Metadata.MediaContainer.$contentquery.Label.tag) {
             $Labels = $($Metadata.MediaContainer.$contentquery.Label.tag -join ',')
         }
         Else {
@@ -8552,7 +8566,7 @@ Elseif ($Tautulli) {
         if (Test-Path $CurrentlyRunning) {
             Remove-Item -LiteralPath $CurrentlyRunning | out-null
         }
-        if ($global:UptimeKumaUrl){
+        if ($global:UptimeKumaUrl) {
             Send-UptimeKumaWebhook -status "down" -msg "Hashtable creation failed"
         }
         Exit
@@ -8569,10 +8583,11 @@ Elseif ($Tautulli) {
         try {
             if ($($entry.RootFoldername)) {
                 # check if item has skip label
-                if ($entry.labels -match 'skip_posterizarr'){
+                if ($entry.labels -match 'skip_posterizarr') {
                     Write-Entry -Message "Skipping '$($entry.title)' because it has a skip label..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                 }
                 Else {
+                    $SkipingText = 'false'
                     $global:posterurl = $null
                     $global:ImageMagickError = $null
                     $global:TextlessPoster = $null
@@ -8598,7 +8613,7 @@ Elseif ($Tautulli) {
 
                     if ($LibraryFolders -eq 'true') {
                         $LibraryName = $entry.'Library Name'
-                        if ($entry.extraFolder){
+                        if ($entry.extraFolder) {
                             $EntryDir = "$AssetPath\$LibraryName\$($entry.extraFolder)\$($entry.RootFoldername)"
                             $ManualEntryDir = "$ManualAssetPath\$LibraryName\$($entry.extraFolder)\$($entry.RootFoldername)"
                         }
@@ -8616,7 +8631,7 @@ Elseif ($Tautulli) {
                         }
                     }
                     Else {
-                        if ($entry.extraFolder){
+                        if ($entry.extraFolder) {
                             $PosterImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername).jpg"
                         }
                         Else {
@@ -8661,6 +8676,7 @@ Elseif ($Tautulli) {
                         }
                         if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
                             # Define Global Variables
+                            $SkipingText = 'false'
                             $global:tmdbid = $entry.tmdbid
                             $global:tvdbid = $entry.tvdbid
                             $global:imdbid = $entry.imdbid
@@ -8687,7 +8703,7 @@ Elseif ($Tautulli) {
                                 }
                             }
 
-                            if (Test-Path -LiteralPath "$($Manualtestpath)$posterext"){
+                            if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
                                 Write-Entry -Message "Found Manual Poster for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 $TakeLocal = $true
                             }
@@ -8791,7 +8807,7 @@ Elseif ($Tautulli) {
                                 $joinedTitle = $Titletext
                             }
                             if ($global:posterurl -or $global:PlexartworkDownloaded -or $TakeLocal) {
-                                if ($TakeLocal){
+                                if ($TakeLocal) {
                                     Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                         Copy-Item -LiteralPath $_.FullName -Destination $PosterImage | Out-Null
                                     }
@@ -8831,8 +8847,14 @@ Elseif ($Tautulli) {
                                         }
                                     }
                                     elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
-                                        Write-Entry -Subtext "Downloading Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
-                                        $global:AssetTextLang = $global:TVDBAssetTextLang
+                                        if ($global:PosterWithText) {
+                                            Write-Entry -Subtext "Downloading Poster with Text from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                            $global:AssetTextLang = $global:TVDBAssetTextLang
+                                        }
+                                        Else {
+                                            Write-Entry -Subtext "Downloading Textless Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                            $global:AssetTextLang = $global:TVDBAssetTextLang
+                                        }
                                     }
                                     elseif ($global:posterurl -like "$PlexUrl*") {
                                         Write-Entry -Subtext "Downloading Poster from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
@@ -8868,12 +8890,15 @@ Elseif ($Tautulli) {
                                         $logEntry = "`"$magick`" $Arguments"
                                         $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                         InvokeMagickCommand -Command $magick -Arguments $Arguments
-
-                                        if ($AddText -eq 'true') {
+                                        if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
+                                            $SkipingText = 'true'
+                                            Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                                        }
+                                        if ($AddText -eq 'true' -and $SkipingText -eq 'false') {
                                             if ($global:direction -eq "RTL") {
                                                 $fontImagemagick = $RTLfontImagemagick
                                             }
-                                            $joinedTitle = $joinedTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`',''
+                                            $joinedTitle = $joinedTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
 
                                             # Loop through each symbol and replace it with a newline
                                             if ($NewLineOnSpecificSymbols -eq 'true') {
@@ -8948,7 +8973,7 @@ Elseif ($Tautulli) {
                                         Else {
                                             Write-Entry -Subtext "Skipping asset move because text is truncated..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                         }
-                                        if (!$TakeLocal){
+                                        if (!$TakeLocal) {
                                             $movietemp = New-Object psobject
                                             $movietemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
                                             $movietemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie'
@@ -9009,7 +9034,7 @@ Elseif ($Tautulli) {
                     if ($global:BackgroundPosters -eq 'true') {
                         if ($LibraryFolders -eq 'true') {
                             $LibraryName = $entry.'Library Name'
-                            if ($entry.extraFolder){
+                            if ($entry.extraFolder) {
                                 $EntryDir = "$AssetPath\$LibraryName\$($entry.extraFolder)\$($entry.RootFoldername)"
                                 $ManualEntryDir = "$ManualAssetPath\$LibraryName\$($entry.extraFolder)\$($entry.RootFoldername)"
                             }
@@ -9027,7 +9052,7 @@ Elseif ($Tautulli) {
                             }
                         }
                         Else {
-                            if ($entry.extraFolder){
+                            if ($entry.extraFolder) {
                                 $backgroundImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername)_background.jpg"
                             }
                             Else {
@@ -9065,6 +9090,7 @@ Elseif ($Tautulli) {
                         }
                         if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
                             # Define Global Variables
+                            $SkipingText = 'false'
                             $global:tmdbid = $entry.tmdbid
                             $global:tvdbid = $entry.tvdbid
                             $global:imdbid = $entry.imdbid
@@ -9091,7 +9117,7 @@ Elseif ($Tautulli) {
                                 }
                             }
 
-                            if (Test-Path -LiteralPath "$($Manualtestpath)$posterext"){
+                            if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
                                 Write-Entry -Message "Found Manual Background for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 $TakeLocal = $true
                             }
@@ -9174,7 +9200,7 @@ Elseif ($Tautulli) {
                                 $joinedTitle = $Titletext
                             }
                             if ($global:posterurl -or $global:PlexartworkDownloaded -or $TakeLocal) {
-                                if ($TakeLocal){
+                                if ($TakeLocal) {
                                     Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                         Copy-Item -LiteralPath $_.FullName -Destination $BackgroundImage | Out-Null
                                     }
@@ -9214,8 +9240,14 @@ Elseif ($Tautulli) {
                                         }
                                     }
                                     elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
-                                        Write-Entry -Subtext "Downloading background from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
-                                        $global:AssetTextLang = $global:TVDBAssetTextLang
+                                        if ($global:PosterWithText) {
+                                            Write-Entry -Subtext "Downloading background with Text from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                            $global:AssetTextLang = $global:TVDBAssetTextLang
+                                        }
+                                        Else {
+                                            Write-Entry -Subtext "Downloading Textless background from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                            $global:AssetTextLang = $global:TVDBAssetTextLang
+                                        }
                                     }
                                     elseif ($global:posterurl -like "$PlexUrl*") {
                                         Write-Entry -Subtext "Downloading Background from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
@@ -9251,12 +9283,15 @@ Elseif ($Tautulli) {
                                         $logEntry = "`"$magick`" $Arguments"
                                         $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                         InvokeMagickCommand -Command $magick -Arguments $Arguments
-
-                                        if ($AddBackgroundText -eq 'true') {
+                                        if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
+                                            $SkipingText = 'true'
+                                            Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                                        }
+                                        if ($AddBackgroundText -eq 'true' -and $SkipingText -eq 'false') {
                                             if ($global:direction -eq "RTL") {
                                                 $backgroundfontImagemagick = $RTLfontImagemagick
                                             }
-                                            $joinedTitle = $joinedTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`',''
+                                            $joinedTitle = $joinedTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
 
                                             # Loop through each symbol and replace it with a newline
                                             if ($NewLineOnSpecificSymbols -eq 'true') {
@@ -9332,7 +9367,7 @@ Elseif ($Tautulli) {
                                         Else {
                                             Write-Entry -Subtext "Skipping asset move because text is truncated..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                         }
-                                        if (!$TakeLocal){
+                                        if (!$TakeLocal) {
                                             $moviebackgroundtemp = New-Object psobject
                                             $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
                                             $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie Background'
@@ -9433,11 +9468,12 @@ Elseif ($Tautulli) {
     foreach ($entry in $AllShows) {
         if ($($entry.RootFoldername)) {
             # check if item has skip label
-            if ($entry.labels -match 'skip_posterizarr'){
+            if ($entry.labels -match 'skip_posterizarr') {
                 Write-Entry -Message "Skipping '$($entry.title)' because it has a skip label..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
             }
             Else {
                 # Define Global Variables
+                $SkipingText = 'false'
                 $global:tmdbid = $entry.tmdbid
                 $global:tvdbid = $entry.tvdbid
                 $global:imdbid = $entry.imdbid
@@ -9480,7 +9516,7 @@ Elseif ($Tautulli) {
 
                 if ($LibraryFolders -eq 'true') {
                     $LibraryName = $entry.'Library Name'
-                    if ($entry.extraFolder){
+                    if ($entry.extraFolder) {
                         $EntryDir = "$AssetPath\$LibraryName\$($entry.extraFolder)\$($entry.RootFoldername)"
                         $ManualEntryDir = "$ManualAssetPath\$LibraryName\$($entry.extraFolder)\$($entry.RootFoldername)"
                     }
@@ -9498,7 +9534,7 @@ Elseif ($Tautulli) {
                     }
                 }
                 Else {
-                    if ($entry.extraFolder){
+                    if ($entry.extraFolder) {
                         $PosterImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername).jpg"
                     }
                     Else {
@@ -9553,7 +9589,7 @@ Elseif ($Tautulli) {
                                 break
                             }
                         }
-                        if (Test-Path -LiteralPath "$($Manualtestpath)$posterext"){
+                        if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
                             Write-Entry -Message "Found Manual Poster for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             $TakeLocal = $true
                         }
@@ -9641,7 +9677,7 @@ Elseif ($Tautulli) {
                             $joinedTitle = $Titletext
                         }
                         if ($global:posterurl -or $global:PlexartworkDownloaded -or $TakeLocal) {
-                            if ($TakeLocal){
+                            if ($TakeLocal) {
                                 Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                     Copy-Item -LiteralPath $_.FullName -Destination $PosterImage | Out-Null
                                 }
@@ -9681,8 +9717,14 @@ Elseif ($Tautulli) {
                                     }
                                 }
                                 elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
-                                    Write-Entry -Subtext "Downloading Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
-                                    $global:AssetTextLang = $global:TVDBAssetTextLang
+                                    if ($global:PosterWithText) {
+                                        Write-Entry -Subtext "Downloading Poster with Text from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                        $global:AssetTextLang = $global:TVDBAssetTextLang
+                                    }
+                                    Else {
+                                        Write-Entry -Subtext "Downloading Textless Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                        $global:AssetTextLang = $global:TVDBAssetTextLang
+                                    }
                                 }
                                 elseif ($global:posterurl -like "$PlexUrl*") {
                                     Write-Entry -Subtext "Downloading Poster from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
@@ -9719,12 +9761,15 @@ Elseif ($Tautulli) {
                                     $logEntry = "`"$magick`" $Arguments"
                                     $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                     InvokeMagickCommand -Command $magick -Arguments $Arguments
-
-                                    if ($AddText -eq 'true') {
+                                    if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
+                                        $SkipingText = 'true'
+                                        Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                                    }
+                                    if ($AddText -eq 'true' -and $SkipingText -eq 'false') {
                                         if ($global:direction -eq "RTL") {
                                             $fontImagemagick = $RTLfontImagemagick
                                         }
-                                        $joinedTitle = $joinedTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`',''
+                                        $joinedTitle = $joinedTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
 
                                         # Loop through each symbol and replace it with a newline
                                         if ($NewLineOnSpecificSymbols -eq 'true') {
@@ -9799,7 +9844,7 @@ Elseif ($Tautulli) {
                                     Else {
                                         Write-Entry -Subtext "Skipping asset move because text is truncated..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                     }
-                                    if (!$TakeLocal){
+                                    if (!$TakeLocal) {
                                         $showtemp = New-Object psobject
                                         $showtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
                                         $showtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Show'
@@ -9859,7 +9904,7 @@ Elseif ($Tautulli) {
                 if ($global:BackgroundPosters -eq 'true') {
                     if ($LibraryFolders -eq 'true') {
                         $LibraryName = $entry.'Library Name'
-                        if ($entry.extraFolder){
+                        if ($entry.extraFolder) {
                             $EntryDir = "$AssetPath\$LibraryName\$($entry.extraFolder)\$($entry.RootFoldername)"
                             $ManualEntryDir = "$ManualAssetPath\$LibraryName\$($entry.extraFolder)\$($entry.RootFoldername)"
                         }
@@ -9877,7 +9922,7 @@ Elseif ($Tautulli) {
                         }
                     }
                     Else {
-                        if ($entry.extraFolder){
+                        if ($entry.extraFolder) {
                             $backgroundImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername)_background.jpg"
                         }
                         Else {
@@ -9923,6 +9968,7 @@ Elseif ($Tautulli) {
                     }
                     if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
                         # Define Global Variables
+                        $SkipingText = 'false'
                         $global:tmdbid = $entry.tmdbid
                         $global:tvdbid = $entry.tvdbid
                         $global:imdbid = $entry.imdbid
@@ -9950,7 +9996,7 @@ Elseif ($Tautulli) {
                                 break
                             }
                         }
-                        if (Test-Path -LiteralPath "$($Manualtestpath)$posterext"){
+                        if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
                             Write-Entry -Message "Found Manual Background for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             $TakeLocal = $true
                         }
@@ -10036,7 +10082,7 @@ Elseif ($Tautulli) {
                             }
                         }
                         if ($global:posterurl -or $global:PlexartworkDownloaded -or $TakeLocal) {
-                            if ($TakeLocal){
+                            if ($TakeLocal) {
                                 Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                     Copy-Item -LiteralPath $_.FullName -Destination $backgroundImage | Out-Null
                                 }
@@ -10076,8 +10122,14 @@ Elseif ($Tautulli) {
                                     }
                                 }
                                 elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
-                                    Write-Entry -Subtext "Downloading background from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
-                                    $global:AssetTextLang = $global:TVDBAssetTextLang
+                                    if ($global:PosterWithText) {
+                                        Write-Entry -Subtext "Downloading background with Text from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                        $global:AssetTextLang = $global:TVDBAssetTextLang
+                                    }
+                                    Else {
+                                        Write-Entry -Subtext "Downloading Textless background from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                        $global:AssetTextLang = $global:TVDBAssetTextLang
+                                    }
                                 }
                                 elseif ($global:posterurl -like "$PlexUrl*") {
                                     Write-Entry -Subtext "Downloading Background from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
@@ -10113,12 +10165,15 @@ Elseif ($Tautulli) {
                                     $logEntry = "`"$magick`" $Arguments"
                                     $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                     InvokeMagickCommand -Command $magick -Arguments $Arguments
-
-                                    if ($AddBackgroundText -eq 'true') {
+                                    if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
+                                        $SkipingText = 'true'
+                                        Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                                    }
+                                    if ($AddBackgroundText -eq 'true' -and $SkipingText -eq 'false') {
                                         if ($global:direction -eq "RTL") {
                                             $backgroundfontImagemagick = $RTLfontImagemagick
                                         }
-                                        $joinedTitle = $joinedTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`',''
+                                        $joinedTitle = $joinedTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
 
                                         # Loop through each symbol and replace it with a newline
                                         if ($NewLineOnSpecificSymbols -eq 'true') {
@@ -10194,7 +10249,7 @@ Elseif ($Tautulli) {
                                     Else {
                                         Write-Entry -Subtext "Skipping asset move because text is truncated..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                     }
-                                    if (!$TakeLocal){
+                                    if (!$TakeLocal) {
                                         $showbackgroundtemp = New-Object psobject
                                         $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
                                         $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Show Background'
@@ -10270,6 +10325,7 @@ Elseif ($Tautulli) {
                     $global:seasonNumbers = $entry.seasonNumbers -split ','
                     $global:PlexSeasonUrls = $entry.PlexSeasonUrls -split ','
                     for ($i = 0; $i -lt $global:seasonNames.Count; $i++) {
+                        $SkipingText = 'false'
                         $global:posterurl = $null
                         $global:IsFallback = $null
                         $global:FallbackText = $null
@@ -10307,7 +10363,7 @@ Elseif ($Tautulli) {
                             $Testfile = "$global:season"
                         }
                         Else {
-                            if ($entry.extraFolder){
+                            if ($entry.extraFolder) {
                                 $SeasonImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername)_$global:season.jpg"
                             }
                             Else {
@@ -10361,7 +10417,7 @@ Elseif ($Tautulli) {
                                 }
                             }
 
-                            if (Test-Path -LiteralPath "$($Manualtestpath)$posterext"){
+                            if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
                                 Write-Entry -Message "Found Manual Season Poster for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 $TakeLocal = $true
                             }
@@ -10491,7 +10547,7 @@ Elseif ($Tautulli) {
                             }
                             if ($global:posterurl -or $global:PlexartworkDownloaded -or $TakeLocal) {
                                 if ($global:ImageProcessing -eq 'true') {
-                                    if ($TakeLocal){
+                                    if ($TakeLocal) {
                                         Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                             Copy-Item -LiteralPath $_.FullName -Destination $SeasonImage | Out-Null
                                         }
@@ -10572,14 +10628,17 @@ Elseif ($Tautulli) {
                                             $logEntry = "`"$magick`" $Arguments"
                                             $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                             InvokeMagickCommand -Command $magick -Arguments $Arguments
-
-                                            if ($AddSeasonText -eq 'true') {
-                                                $global:seasonTitle = $global:seasonTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`',''
+                                            if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
+                                                $SkipingText = 'true'
+                                                Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                                            }
+                                            if ($AddSeasonText -eq 'true' -and $SkipingText -eq 'false') {
+                                                $global:seasonTitle = $global:seasonTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
                                                 if ($ShowOnSeasonfontAllCaps -eq 'true') {
-                                                    $global:ShowTitleOnSeason = $titletext.ToUpper() -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`',''
+                                                    $global:ShowTitleOnSeason = $titletext.ToUpper() -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
                                                 }
                                                 Else {
-                                                    $global:ShowTitleOnSeason = $titletext -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`',''
+                                                    $global:ShowTitleOnSeason = $titletext -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
                                                 }
                                                 # Loop through each symbol and replace it with a newline
                                                 if ($NewLineOnSpecificSymbols -eq 'true') {
@@ -10650,7 +10709,7 @@ Elseif ($Tautulli) {
                                     }
                                 }
                                 Else {
-                                    if ($TakeLocal){
+                                    if ($TakeLocal) {
                                         Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                             Copy-Item -LiteralPath $_.FullName -Destination $SeasonImage | Out-Null
                                         }
@@ -10754,7 +10813,7 @@ Elseif ($Tautulli) {
                                         Else {
                                             Write-Entry -Subtext "Skipping asset move because text is truncated..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                         }
-                                        if (!$TakeLocal){
+                                        if (!$TakeLocal) {
                                             $seasontemp = New-Object psobject
                                             $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Titletext + " | " + $global:season)
                                             $seasontemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Season'
@@ -10815,6 +10874,7 @@ Elseif ($Tautulli) {
                 if ($global:TitleCards -eq 'true') {
                     # Loop through each episode
                     foreach ($episode in $Episodedata) {
+                        $SkipingText = 'false'
                         $global:AssetTextLang = $null
                         $global:TMDBAssetTextLang = $null
                         $global:FANARTAssetTextLang = $null
@@ -10851,6 +10911,7 @@ Elseif ($Tautulli) {
                             if ($UseBackgroundAsTitleCard -eq 'true') {
                                 $global:ImageMagickError = $null
                                 for ($i = 0; $i -lt $global:episode_numbers.Count; $i++) {
+                                    $SkipingText = 'false'
                                     $global:AssetTextLang = $null
                                     $global:TMDBAssetTextLang = $null
                                     $global:FANARTAssetTextLang = $null
@@ -10884,7 +10945,7 @@ Elseif ($Tautulli) {
                                         $Testfile = "$global:FileNaming"
                                     }
                                     Else {
-                                        if ($entry.extraFolder){
+                                        if ($entry.extraFolder) {
                                             $SeasonImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername)_$global:FileNaming.jpg"
                                         }
                                         Else {
@@ -10935,11 +10996,11 @@ Elseif ($Tautulli) {
                                     }
                                     Else {
                                         if ($PlexToken) {
-                                                $Arturl = $plexurl + $global:PlexTitleCardUrl + "?X-Plex-Token=$PlexToken"
-                                            }
-                                            Else {
-                                                $Arturl = $plexurl + $global:PlexTitleCardUrl
-                                            }
+                                            $Arturl = $plexurl + $global:PlexTitleCardUrl + "?X-Plex-Token=$PlexToken"
+                                        }
+                                        Else {
+                                            $Arturl = $plexurl + $global:PlexTitleCardUrl
+                                        }
                                         if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
                                             foreach ($ext in $allowedExtensions) {
                                                 $filePath = "$ManualTestPath$ext"
@@ -10950,7 +11011,7 @@ Elseif ($Tautulli) {
                                                 }
                                             }
 
-                                            if (Test-Path -LiteralPath "$($Manualtestpath)$posterext"){
+                                            if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
                                                 Write-Entry -Message "Found Manual Title Card for: $global:show_name - $global:SeasonEPNumber" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                 $TakeLocal = $true
                                             }
@@ -11050,11 +11111,11 @@ Elseif ($Tautulli) {
                                             }
                                             if ($global:posterurl -or $global:PlexartworkDownloaded -or $TakeLocal) {
                                                 if ($global:ImageProcessing -eq 'true') {
-                                                    if ($TakeLocal){
+                                                    if ($TakeLocal) {
                                                         Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                                             Copy-Item -LiteralPath $_.FullName -Destination $EpisodeImage | Out-Null
                                                         }
-                                                        if ($global:TempImagecopied -ne 'true'){
+                                                        if ($global:TempImagecopied -ne 'true') {
                                                             Copy-Item -LiteralPath $EpisodeImage -destination $EpisodeTempImage | Out-Null
                                                         }
                                                         Write-Entry -Subtext "Copy local asset to: $EpisodeImage" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
@@ -11134,12 +11195,15 @@ Elseif ($Tautulli) {
                                                                 $logEntry = "`"$magick`" $Arguments"
                                                                 $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                                                 InvokeMagickCommand -Command $magick -Arguments $Arguments
-
-                                                                if ($AddTitleCardEPTitleText -eq 'true') {
+                                                                if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
+                                                                    $SkipingText = 'true'
+                                                                    Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                                                                }
+                                                                if ($AddTitleCardEPTitleText -eq 'true' -and $SkipingText -eq 'false') {
                                                                     if ($TitleCardEPTitlefontAllCaps -eq 'true') {
                                                                         $global:EPTitle = $global:EPTitle.ToUpper()
                                                                     }
-                                                                    $global:EPTitle = $global:EPTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`',''
+                                                                    $global:EPTitle = $global:EPTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
 
                                                                     if ($global:direction -eq "RTL") {
                                                                         $TitleCardfontImagemagick = $RTLfontImagemagick
@@ -11168,11 +11232,15 @@ Elseif ($Tautulli) {
                                                                         InvokeMagickCommand -Command $magick -Arguments $Arguments
                                                                     }
                                                                 }
-                                                                if ($AddTitleCardEPText -eq 'true') {
+                                                                if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
+                                                                    $SkipingText = 'true'
+                                                                    Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                                                                }
+                                                                if ($AddTitleCardEPText -eq 'true' -and $SkipingText -eq 'false') {
                                                                     if ($TitleCardEPfontAllCaps -eq 'true') {
                                                                         $global:SeasonEPNumber = $global:SeasonEPNumber.ToUpper()
                                                                     }
-                                                                    $global:SeasonEPNumber = $global:SeasonEPNumber -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`',''
+                                                                    $global:SeasonEPNumber = $global:SeasonEPNumber -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
                                                                     $joinedTitlePointSize = $global:SeasonEPNumber -replace '""', '""""'
                                                                     $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize -lineSpacing $TitleCardEPlineSpacing
                                                                     if (!$global:IsTruncated) {
@@ -11196,7 +11264,7 @@ Elseif ($Tautulli) {
                                                     }
                                                 }
                                                 Else {
-                                                    if ($TakeLocal){
+                                                    if ($TakeLocal) {
                                                         Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                                             Copy-Item -LiteralPath $_.FullName -Destination $EpisodeImage
                                                         }
@@ -11285,7 +11353,7 @@ Elseif ($Tautulli) {
                                                         Else {
                                                             Write-Entry -Subtext "Skipping asset move because text is truncated..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                                         }
-                                                        if (!$TakeLocal){
+                                                        if (!$TakeLocal) {
                                                             $episodetemp = New-Object psobject
                                                             $episodetemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($global:FileNaming + " | " + $global:EPTitle)
                                                             $episodetemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Episode'
@@ -11349,6 +11417,7 @@ Elseif ($Tautulli) {
                             }
                             Else {
                                 for ($i = 0; $i -lt $global:episode_numbers.Count; $i++) {
+                                    $SkipingText = 'false'
                                     $global:AssetTextLang = $null
                                     $global:TMDBAssetTextLang = $null
                                     $global:FANARTAssetTextLang = $null
@@ -11385,7 +11454,7 @@ Elseif ($Tautulli) {
                                         $Testfile = "$global:FileNaming"
                                     }
                                     Else {
-                                        if ($entry.extraFolder){
+                                        if ($entry.extraFolder) {
                                             $SeasonImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername)_$global:FileNaming.jpg"
                                         }
                                         Else {
@@ -11440,7 +11509,7 @@ Elseif ($Tautulli) {
                                                     break
                                                 }
                                             }
-                                            if (Test-Path -LiteralPath "$($Manualtestpath)$posterext"){
+                                            if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
                                                 Write-Entry -Message "Found Manual Title Card for: $global:show_name - $global:SeasonEPNumber" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                 $TakeLocal = $true
                                             }
@@ -11584,7 +11653,7 @@ Elseif ($Tautulli) {
                                             }
                                             if ($global:posterurl -or $global:PlexartworkDownloaded -or $TakeLocal) {
                                                 if ($global:ImageProcessing -eq 'true') {
-                                                    if ($TakeLocal){
+                                                    if ($TakeLocal) {
                                                         Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                                             Copy-Item -LiteralPath $_.FullName -Destination $EpisodeImage | Out-Null
                                                         }
@@ -11650,12 +11719,15 @@ Elseif ($Tautulli) {
                                                             $logEntry = "`"$magick`" $Arguments"
                                                             $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                                             InvokeMagickCommand -Command $magick -Arguments $Arguments
-
-                                                            if ($AddTitleCardEPTitleText -eq 'true') {
+                                                            if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
+                                                                $SkipingText = 'true'
+                                                                Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                                                            }
+                                                            if ($AddTitleCardEPTitleText -eq 'true' -and $SkipingText -eq 'false') {
                                                                 if ($TitleCardEPTitlefontAllCaps -eq 'true') {
                                                                     $global:EPTitle = $global:EPTitle.ToUpper()
                                                                 }
-                                                                $global:EPTitle = $global:EPTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`',''
+                                                                $global:EPTitle = $global:EPTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
 
                                                                 if ($global:direction -eq "RTL") {
                                                                     $TitleCardfontImagemagick = $RTLfontImagemagick
@@ -11683,11 +11755,15 @@ Elseif ($Tautulli) {
                                                                     InvokeMagickCommand -Command $magick -Arguments $Arguments
                                                                 }
                                                             }
-                                                            if ($AddTitleCardEPText -eq 'true') {
+                                                            if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
+                                                                $SkipingText = 'true'
+                                                                Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                                                            }
+                                                            if ($AddTitleCardEPText -eq 'true' -and $SkipingText -eq 'false') {
                                                                 if ($TitleCardEPfontAllCaps -eq 'true') {
                                                                     $global:SeasonEPNumber = $global:SeasonEPNumber.ToUpper()
                                                                 }
-                                                                $global:SeasonEPNumber = $global:SeasonEPNumber -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`',''
+                                                                $global:SeasonEPNumber = $global:SeasonEPNumber -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
                                                                 $joinedTitlePointSize = $global:SeasonEPNumber -replace '""', '""""'
                                                                 $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize -lineSpacing $TitleCardEPlineSpacing
                                                                 if (!$global:IsTruncated) {
@@ -11710,7 +11786,7 @@ Elseif ($Tautulli) {
                                                     }
                                                 }
                                                 Else {
-                                                    if ($TakeLocal){
+                                                    if ($TakeLocal) {
                                                         Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                                             Copy-Item -LiteralPath $_.FullName -Destination $EpisodeImage
                                                         }
@@ -11799,7 +11875,7 @@ Elseif ($Tautulli) {
                                                         Else {
                                                             Write-Entry -Subtext "Skipping asset move because text is truncated..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                                         }
-                                                        if (!$TakeLocal){
+                                                        if (!$TakeLocal) {
                                                             $episodetemp = New-Object psobject
                                                             $episodetemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($global:FileNaming + " | " + $global:EPTitle)
                                                             $episodetemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Episode'
@@ -11938,7 +12014,7 @@ Elseif ($Tautulli) {
     if (Test-Path $CurrentlyRunning) {
         Remove-Item -LiteralPath $CurrentlyRunning | out-null
     }
-    if ($global:UptimeKumaUrl){
+    if ($global:UptimeKumaUrl) {
         Send-UptimeKumaWebhook -status "up" -ping $executionTime.TotalMilliseconds
     }
 }
@@ -11994,7 +12070,7 @@ Elseif ($SyncJelly -or $SyncEmby) {
                 if (Test-Path $CurrentlyRunning) {
                     Remove-Item -LiteralPath $CurrentlyRunning | out-null
                 }
-                if ($global:UptimeKumaUrl){
+                if ($global:UptimeKumaUrl) {
                     Send-UptimeKumaWebhook -status "down" -msg "Lib contains invalid chars"
                 }
                 Exit
@@ -12008,7 +12084,7 @@ Elseif ($SyncJelly -or $SyncEmby) {
         if (Test-Path $CurrentlyRunning) {
             Remove-Item -LiteralPath $CurrentlyRunning | out-null
         }
-        if ($global:UptimeKumaUrl){
+        if ($global:UptimeKumaUrl) {
             Send-UptimeKumaWebhook -status "down" -msg "No libs found"
         }
         Exit
@@ -12159,7 +12235,8 @@ Elseif ($SyncJelly -or $SyncEmby) {
                             if ($pathSegments.Count -gt 2) {
                                 $extractedFolder = $pathSegments[-2]  # Second-to-last segment is the folder containing the file
                                 $extraFolder = $pathSegments[0]  # All segments up to the extracted folder
-                            } else {
+                            }
+                            else {
                                 $extractedFolder = $pathSegments[0]  # Only one segment, it's the folder
                                 $extraFolder = $null  # No parent structure
                             }
@@ -12209,7 +12286,8 @@ Elseif ($SyncJelly -or $SyncEmby) {
                             if ($pathSegments.Count -gt 2) {
                                 $extractedFolder = $pathSegments[-2]  # Second-to-last segment is the folder containing the file
                                 $extraFolder = $pathSegments[0]  # All segments up to the extracted folder
-                            } else {
+                            }
+                            else {
                                 $extractedFolder = $pathSegments[0]  # Only one segment, it's the folder
                                 $extraFolder = $null  # No parent structure
                             }
@@ -12238,7 +12316,7 @@ Elseif ($SyncJelly -or $SyncEmby) {
                 if ($tmdbid.count -gt '1') { $tmdbid = $tmdbid[0] }
                 if ($imdbid.count -gt '1') { $imdbid = $imdbid[0] }
 
-                if ($Metadata.MediaContainer.$contentquery.Label.tag){
+                if ($Metadata.MediaContainer.$contentquery.Label.tag) {
                     $Labels = $($Metadata.MediaContainer.$contentquery.Label.tag -join ',')
                 }
                 Else {
@@ -12325,12 +12403,12 @@ Elseif ($SyncJelly -or $SyncEmby) {
     $OtherAllLibs = Invoke-RestMethod -Method Get -Uri $allLibsquery
 
     write-Entry -Subtext "Found '$($OtherAllLibs.count)' libs and '$($LibstoExclude.count)' are excluded..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
-    $IncludedLibraryNames = ($OtherAllLibs | Where-Object {$_.Name -notin $LibstoExclude}).Name -join ', '
+    $IncludedLibraryNames = ($OtherAllLibs | Where-Object { $_.Name -notin $LibstoExclude }).Name -join ', '
     Write-Entry -Subtext "Included Libraries: $IncludedLibraryNames" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
 
     # Debug Output all Libs
     Write-Entry -Subtext "Media Server Lib overview..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-    Foreach ($lib in $OtherAllLibs){
+    Foreach ($lib in $OtherAllLibs) {
         Write-Entry -Subtext "--------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
         Write-Entry -Subtext "  Lib name: $($lib.name)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
         Write-Entry -Subtext "  Lib Type: $($lib.CollectionType)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
@@ -12342,15 +12420,15 @@ Elseif ($SyncJelly -or $SyncEmby) {
     $OtherAllShows = @()
     $OtherAllEpisodes = @()
 
-    foreach ($otherlib in $OtherAllLibs){
+    foreach ($otherlib in $OtherAllLibs) {
         if ($otherlib.Name -notin $LibstoExclude) {
-            if ($otherlib.CollectionType -eq 'movies'){
+            if ($otherlib.CollectionType -eq 'movies') {
                 Write-Entry -Subtext "Getting all Itmes from [$($otherlib.Name)] with item id [$($otherlib.ItemId)]" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                 $allMoviesquery = "$OtherMediaServerUrl/Items?ParentId=$($otherlib.ItemId)&api_key=$OtherMediaServerApiKey&Recursive=true&Fields=ProviderIds,OriginalTitle,Settings,Path,Overview,ProductionYear,Tags&IncludeItemTypes=Movie"
                 $Querytemp = Invoke-RestMethod -Method Get -Uri $allMoviesquery
                 $OtherAllMovies += $Querytemp
             }
-            if ($otherlib.CollectionType -eq 'tvshows'){
+            if ($otherlib.CollectionType -eq 'tvshows') {
                 Write-Entry -Subtext "Getting all Itmes from [$($otherlib.Name)] with item id [$($otherlib.ItemId)]" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                 $allShowsquery = "$OtherMediaServerUrl/Items?ParentId=$($otherlib.ItemId)&api_key=$OtherMediaServerApiKey&Recursive=true&Fields=ProviderIds,SeasonUserData,OriginalTitle,Path,Overview,ProductionYear,Tags&IncludeItemTypes=Series"
                 $allEpisodesquery = "$OtherMediaServerUrl/Items?ParentId=$($otherlib.ItemId)&api_key=$OtherMediaServerApiKey&Recursive=true&Fields=ProviderIds,SeasonUserData,OriginalTitle,Path,Overview,Settings,Tags&IncludeItemTypes=Episode"
@@ -12394,11 +12472,12 @@ Elseif ($SyncJelly -or $SyncEmby) {
             if ($pathSegments.Count -gt 2) {
                 $extractedFolder = $pathSegments[-2]  # Second-to-last segment is the folder containing the file
                 $extraFolder = $pathSegments[0]  # All segments up to the extracted folder
-            } else {
+            }
+            else {
                 $extractedFolder = $pathSegments[0]  # Only one segment, it's the folder
                 $extraFolder = $null  # No parent structure
             }
-            if ($Movie.Tags){
+            if ($Movie.Tags) {
                 $Labels = $($Movie.Tags -join ',')
             }
             Else {
@@ -12460,14 +12539,15 @@ Elseif ($SyncJelly -or $SyncEmby) {
                 if ($pathSegments.Count -gt 2) {
                     $extractedFolder = $pathSegments[-2]  # Second-to-last segment is the folder containing the file
                     $extraFolder = $pathSegments[0]  # All segments up to the extracted folder
-                } else {
+                }
+                else {
                     $extractedFolder = $pathSegments[0]  # Only one segment, it's the folder
                     $extraFolder = $null  # No parent structure
                 }
                 Write-Entry -Subtext "Matchedpath: $Matchedpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                 Write-Entry -Subtext "ExtractedFolder: $extractedFolder" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
             }
-            if ($Movie.Tags){
+            if ($Movie.Tags) {
                 $Labels = $($Movie.Tags -join ',')
             }
             Else {
@@ -12527,14 +12607,15 @@ Elseif ($SyncJelly -or $SyncEmby) {
         if ($pathSegments.Count -gt 2) {
             $extractedFolder = $pathSegments[-2]  # Second-to-last segment is the folder containing the file
             $extraFolder = $pathSegments[0]  # All segments up to the extracted folder
-        } else {
+        }
+        else {
             $extractedFolder = $pathSegments[0]  # Only one segment, it's the folder
             $extraFolder = $null  # No parent structure
         }
         Write-Entry -Subtext "Matchedpath: $Matchedpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
         Write-Entry -Subtext "ExtractedFolder: $extractedFolder" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
 
-        if ($Show.Tags){
+        if ($Show.Tags) {
             $Labels = $($Show.Tags -join ',')
         }
         Else {
@@ -12655,7 +12736,7 @@ Elseif ($SyncJelly -or $SyncEmby) {
     foreach ($entry in $AllMovies) {
         try {
             # check if item has skip label
-            if ($entry.labels -match 'skip_posterizarr'){
+            if ($entry.labels -match 'skip_posterizarr') {
                 Write-Entry -Message "Skipping '$($entry.title)' because it has a skip label..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
             }
             Else {
@@ -12725,7 +12806,7 @@ Elseif ($SyncJelly -or $SyncEmby) {
     foreach ($entry in $AllShows) {
         try {
             # check if item has skip label
-            if ($entry.labels -match 'skip_posterizarr'){
+            if ($entry.labels -match 'skip_posterizarr') {
                 Write-Entry -Message "Skipping '$($entry.title)' because it has a skip label..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
             }
             Else {
@@ -12963,7 +13044,7 @@ Elseif ($SyncJelly -or $SyncEmby) {
     if (Test-Path $CurrentlyRunning) {
         Remove-Item -LiteralPath $CurrentlyRunning | out-null
     }
-    if ($global:UptimeKumaUrl){
+    if ($global:UptimeKumaUrl) {
         Send-UptimeKumaWebhook -status "up" -ping $executionTime.TotalMilliseconds
     }
 }
@@ -12980,12 +13061,12 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
     $AllLibs = Invoke-RestMethod -Method Get -Uri $allLibsquery
 
     write-Entry -Subtext "Found '$($AllLibs.count)' libs and '$($LibstoExclude.count)' are excluded..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
-    $IncludedLibraryNames = ($AllLibs | Where-Object {$_.Name -notin $LibstoExclude}).Name -join ', '
+    $IncludedLibraryNames = ($AllLibs | Where-Object { $_.Name -notin $LibstoExclude }).Name -join ', '
     Write-Entry -Subtext "Included Libraries: $IncludedLibraryNames" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
 
     # Debug Output all Libs
     Write-Entry -Subtext "Media Server Lib overview..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-    Foreach ($lib in $AllLibs){
+    Foreach ($lib in $AllLibs) {
         Write-Entry -Subtext "--------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
         Write-Entry -Subtext "  Lib name: $($lib.name)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
         Write-Entry -Subtext "  Lib Type: $($lib.CollectionType)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
@@ -12995,15 +13076,15 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
     $AllMovies = @()
     $AllShows = @()
     $AllEpisodes = @()
-    foreach ($slib in $AllLibs){
+    foreach ($slib in $AllLibs) {
         if ($slib.Name -notin $LibstoExclude) {
-            if ($slib.CollectionType -eq 'movies'){
+            if ($slib.CollectionType -eq 'movies') {
                 Write-Entry -Subtext "Getting all Itmes from [$($slib.Name)] with item id [$($slib.ItemId)]" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                 $allMoviesquery = "$OtherMediaServerUrl/Items?ParentId=$($slib.ItemId)&api_key=$OtherMediaServerApiKey&Recursive=true&Fields=ProviderIds,OriginalTitle,Settings,Path,Overview,ProductionYear,Tags&IncludeItemTypes=Movie"
                 $Querytemp = Invoke-RestMethod -Method Get -Uri $allMoviesquery
                 $AllMovies += $Querytemp
             }
-            if ($slib.CollectionType -eq 'tvshows'){
+            if ($slib.CollectionType -eq 'tvshows') {
                 Write-Entry -Subtext "Getting all Itmes from [$($slib.Name)] with item id [$($slib.ItemId)]" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                 $allShowsquery = "$OtherMediaServerUrl/Items?ParentId=$($slib.ItemId)&api_key=$OtherMediaServerApiKey&Recursive=true&Fields=ProviderIds,SeasonUserData,OriginalTitle,Path,Overview,ProductionYear,Tags&IncludeItemTypes=Series"
                 $allEpisodesquery = "$OtherMediaServerUrl/Items?ParentId=$($slib.ItemId)&api_key=$OtherMediaServerApiKey&Recursive=true&Fields=ProviderIds,SeasonUserData,OriginalTitle,Path,Overview,Settings,Tags&IncludeItemTypes=Episode"
@@ -13048,12 +13129,13 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                 if ($pathSegments.Count -gt 2) {
                     $extractedFolder = $pathSegments[-2]  # Second-to-last segment is the folder containing the file
                     $extraFolder = $pathSegments[0]  # All segments up to the extracted folder
-                } else {
+                }
+                else {
                     $extractedFolder = $pathSegments[0]  # Only one segment, it's the folder
                     $extraFolder = $null  # No parent structure
                 }
 
-                if ($Movie.Tags){
+                if ($Movie.Tags) {
                     $Labels = $($Movie.Tags -join ',')
                 }
                 Else {
@@ -13116,12 +13198,13 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                 if ($pathSegments.Count -gt 2) {
                     $extractedFolder = $pathSegments[-2]  # Second-to-last segment is the folder containing the file
                     $extraFolder = $pathSegments[0]  # All segments up to the extracted folder
-                } else {
+                }
+                else {
                     $extractedFolder = $pathSegments[0]  # Only one segment, it's the folder
                     $extraFolder = $null  # No parent structure
                 }
 
-                if ($Movie.Tags){
+                if ($Movie.Tags) {
                     $Labels = $($Movie.Tags -join ',')
                 }
                 Else {
@@ -13186,12 +13269,13 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
             if ($pathSegments.Count -gt 2) {
                 $extractedFolder = $pathSegments[-2]  # Second-to-last segment is the folder containing the file
                 $extraFolder = $pathSegments[0]  # All segments up to the extracted folder
-            } else {
+            }
+            else {
                 $extractedFolder = $pathSegments[0]  # Only one segment, it's the folder
                 $extraFolder = $null  # No parent structure
             }
 
-            if ($Show.Tags){
+            if ($Show.Tags) {
                 $Labels = $($Show.Tags -join ',')
             }
             Else {
@@ -13351,7 +13435,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
         if (Test-Path $CurrentlyRunning) {
             Remove-Item -LiteralPath $CurrentlyRunning | out-null
         }
-        if ($global:UptimeKumaUrl){
+        if ($global:UptimeKumaUrl) {
             Send-UptimeKumaWebhook -status "down" -msg "Hashtable creation failed"
         }
         Exit
@@ -13369,7 +13453,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
         try {
             if ($($entry.RootFoldername)) {
                 # check if item has skip label
-                if ($entry.labels -match 'skip_posterizarr'){
+                if ($entry.labels -match 'skip_posterizarr') {
                     Write-Entry -Message "Skipping '$($entry.title)' because it has a skip label..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                 }
                 Else {
@@ -13396,7 +13480,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
 
                     if ($LibraryFolders -eq 'true') {
                         $LibraryName = $entry.'Library Name'
-                        if ($entry.extraFolder){
+                        if ($entry.extraFolder) {
                             $EntryDir = "$AssetPath\$LibraryName\$($entry.extraFolder)\$($entry.RootFoldername)"
                             $ManualEntryDir = "$ManualAssetPath\$LibraryName\$($entry.extraFolder)\$($entry.RootFoldername)"
                         }
@@ -13414,7 +13498,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                         }
                     }
                     Else {
-                        if ($entry.extraFolder){
+                        if ($entry.extraFolder) {
                             $PosterImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername).jpg"
                         }
                         Else {
@@ -13455,6 +13539,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                         $checkedItems += $hashtestpath
                         if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
                             # Define Global Variables
+                            $SkipingText = 'false'
                             $global:tmdbid = $entry.tmdbid
                             $global:tvdbid = $entry.tvdbid
                             $global:imdbid = $entry.imdbid
@@ -13481,7 +13566,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                 }
                             }
 
-                            if (Test-Path -LiteralPath "$($Manualtestpath)$posterext"){
+                            if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
                                 Write-Entry -Message "Found Manual Poster for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 $TakeLocal = $true
                             }
@@ -13575,7 +13660,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                 $joinedTitle = $Titletext
                             }
                             if ($global:posterurl -or $TakeLocal) {
-                                if ($TakeLocal){
+                                if ($TakeLocal) {
                                     Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                         Copy-Item -LiteralPath $_.FullName -Destination $PosterImage | Out-Null
                                     }
@@ -13603,8 +13688,14 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                         }
                                     }
                                     elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
-                                        Write-Entry -Subtext "Downloading Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
-                                        $global:AssetTextLang = $global:TVDBAssetTextLang
+                                        if ($global:PosterWithText) {
+                                            Write-Entry -Subtext "Downloading Poster with Text from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                            $global:AssetTextLang = $global:TVDBAssetTextLang
+                                        }
+                                        Else {
+                                            Write-Entry -Subtext "Downloading Textless Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                            $global:AssetTextLang = $global:TVDBAssetTextLang
+                                        }
                                     }
                                     Else {
                                         Write-Entry -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
@@ -13646,12 +13737,15 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                         $logEntry = "`"$magick`" $Arguments"
                                         $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                         InvokeMagickCommand -Command $magick -Arguments $Arguments
-
-                                        if ($AddText -eq 'true') {
+                                        if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
+                                            $SkipingText = 'true'
+                                            Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                                        }
+                                        if ($AddText -eq 'true' -and $SkipingText -eq 'false') {
                                             if ($global:direction -eq "RTL") {
                                                 $fontImagemagick = $RTLfontImagemagick
                                             }
-                                            $joinedTitle = $joinedTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`',''
+                                            $joinedTitle = $joinedTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
                                             # Loop through each symbol and replace it with a newline
                                             if ($NewLineOnSpecificSymbols -eq 'true') {
                                                 foreach ($symbol in $NewLineSymbols) {
@@ -13703,7 +13797,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                         Else {
                                             Write-Entry -Subtext "Skipping asset move because text is truncated..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                         }
-                                        if (!$TakeLocal){
+                                        if (!$TakeLocal) {
                                             $movietemp = New-Object psobject
                                             $movietemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
                                             $movietemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie'
@@ -13770,7 +13864,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                     if ($global:BackgroundPosters -eq 'true') {
                         if ($LibraryFolders -eq 'true') {
                             $LibraryName = $entry.'Library Name'
-                            if ($entry.extraFolder){
+                            if ($entry.extraFolder) {
                                 $EntryDir = "$AssetPath\$LibraryName\$($entry.extraFolder)\$($entry.RootFoldername)"
                                 $ManualEntryDir = "$ManualAssetPath\$LibraryName\$($entry.extraFolder)\$($entry.RootFoldername)"
                             }
@@ -13788,7 +13882,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                             }
                         }
                         Else {
-                            if ($entry.extraFolder){
+                            if ($entry.extraFolder) {
                                 $backgroundImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername)_background.jpg"
                             }
                             Else {
@@ -13821,6 +13915,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                         $checkedItems += $hashtestpath
                         if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
                             # Define Global Variables
+                            $SkipingText = 'false'
                             $global:tmdbid = $entry.tmdbid
                             $global:tvdbid = $entry.tvdbid
                             $global:imdbid = $entry.imdbid
@@ -13847,7 +13942,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                 }
                             }
 
-                            if (Test-Path -LiteralPath "$($Manualtestpath)$posterext"){
+                            if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
                                 Write-Entry -Message "Found Manual Background for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 $TakeLocal = $true
                             }
@@ -13922,7 +14017,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                 $joinedTitle = $Titletext
                             }
                             if ($global:posterurl -or $TakeLocal) {
-                                if ($TakeLocal){
+                                if ($TakeLocal) {
                                     Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                         Copy-Item -LiteralPath $_.FullName -Destination $backgroundImage | Out-Null
                                     }
@@ -13950,8 +14045,14 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                         }
                                     }
                                     elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
-                                        Write-Entry -Subtext "Downloading background from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
-                                        $global:AssetTextLang = $global:TVDBAssetTextLang
+                                        if ($global:PosterWithText) {
+                                            Write-Entry -Subtext "Downloading background with Text from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                            $global:AssetTextLang = $global:TVDBAssetTextLang
+                                        }
+                                        Else {
+                                            Write-Entry -Subtext "Downloading Textless background from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                            $global:AssetTextLang = $global:TVDBAssetTextLang
+                                        }
                                     }
                                     Else {
                                         Write-Entry -Subtext "Downloading background from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
@@ -13993,12 +14094,15 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                         $logEntry = "`"$magick`" $Arguments"
                                         $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                         InvokeMagickCommand -Command $magick -Arguments $Arguments
-
-                                        if ($AddBackgroundText -eq 'true') {
+                                        if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
+                                            $SkipingText = 'true'
+                                            Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                                        }
+                                        if ($AddBackgroundText -eq 'true' -and $SkipingText -eq 'false') {
                                             if ($global:direction -eq "RTL") {
                                                 $fontImagemagick = $RTLfontImagemagick
                                             }
-                                            $joinedTitle = $joinedTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`',''
+                                            $joinedTitle = $joinedTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
                                             # Loop through each symbol and replace it with a newline
                                             if ($NewLineOnSpecificSymbols -eq 'true') {
                                                 foreach ($symbol in $NewLineSymbols) {
@@ -14051,7 +14155,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                         Else {
                                             Write-Entry -Subtext "Skipping asset move because text is truncated..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                         }
-                                        if (!$TakeLocal){
+                                        if (!$TakeLocal) {
                                             $moviebackgroundtemp = New-Object psobject
                                             $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
                                             $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie Background'
@@ -14156,11 +14260,12 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
     foreach ($entry in $AllShows) {
         if ($($entry.RootFoldername)) {
             # check if item has skip label
-            if ($entry.labels -match 'skip_posterizarr'){
+            if ($entry.labels -match 'skip_posterizarr') {
                 Write-Entry -Message "Skipping '$($entry.title)' because it has a skip label..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
             }
             Else {
                 # Define Global Variables
+                $SkipingText = 'false'
                 $global:tmdbid = $entry.tmdbid
                 $global:tvdbid = $entry.tvdbid
                 $global:imdbid = $entry.imdbid
@@ -14201,7 +14306,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
 
                 if ($LibraryFolders -eq 'true') {
                     $LibraryName = $entry.'Library Name'
-                    if ($entry.extraFolder){
+                    if ($entry.extraFolder) {
                         $EntryDir = "$AssetPath\$LibraryName\$($entry.extraFolder)\$($entry.RootFoldername)"
                         $ManualEntryDir = "$ManualAssetPath\$LibraryName\$($entry.extraFolder)\$($entry.RootFoldername)"
                     }
@@ -14219,7 +14324,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                     }
                 }
                 Else {
-                    if ($entry.extraFolder){
+                    if ($entry.extraFolder) {
                         $PosterImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername).jpg"
                     }
                     Else {
@@ -14270,7 +14375,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                             }
                         }
 
-                        if (Test-Path -LiteralPath "$($Manualtestpath)$posterext"){
+                        if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
                             Write-Entry -Message "Found Manual Poster for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             $TakeLocal = $true
                         }
@@ -14335,7 +14440,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                         Else {
                             $joinedTitle = $Titletext
                         }
-                        if (!$TakeLocal){
+                        if (!$TakeLocal) {
                             if (!$global:TextlessPoster -eq 'True' -and $global:TMDBfallbackposterurl) {
                                 $global:posterurl = $global:TMDBfallbackposterurl
                             }
@@ -14344,7 +14449,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                             }
                         }
                         if ($global:posterurl -or $TakeLocal) {
-                            if ($TakeLocal){
+                            if ($TakeLocal) {
                                 Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                     Copy-Item -LiteralPath $_.FullName -Destination $PosterImage | Out-Null
                                 }
@@ -14372,8 +14477,14 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                     }
                                 }
                                 elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
-                                    Write-Entry -Subtext "Downloading Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
-                                    $global:AssetTextLang = $global:TVDBAssetTextLang
+                                    if ($global:PosterWithText) {
+                                        Write-Entry -Subtext "Downloading Poster with Text from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                        $global:AssetTextLang = $global:TVDBAssetTextLang
+                                    }
+                                    Else {
+                                        Write-Entry -Subtext "Downloading Textless Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                        $global:AssetTextLang = $global:TVDBAssetTextLang
+                                    }
                                 }
                                 Else {
                                     Write-Entry -Subtext "Downloading Poster from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
@@ -14416,12 +14527,15 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                     $logEntry = "`"$magick`" $Arguments"
                                     $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                     InvokeMagickCommand -Command $magick -Arguments $Arguments
-
-                                    if ($AddText -eq 'true') {
+                                    if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
+                                        $SkipingText = 'true'
+                                        Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                                    }
+                                    if ($AddText -eq 'true' -and $SkipingText -eq 'false') {
                                         if ($global:direction -eq "RTL") {
                                             $fontImagemagick = $RTLfontImagemagick
                                         }
-                                        $joinedTitle = $joinedTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`',''
+                                        $joinedTitle = $joinedTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
                                         # Loop through each symbol and replace it with a newline
                                         if ($NewLineOnSpecificSymbols -eq 'true') {
                                             foreach ($symbol in $NewLineSymbols) {
@@ -14473,7 +14587,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                     Else {
                                         Write-Entry -Subtext "Skipping asset move because text is truncated..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                     }
-                                    if (!$TakeLocal){
+                                    if (!$TakeLocal) {
                                         $showtemp = New-Object psobject
                                         $showtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
                                         $showtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Show'
@@ -14539,7 +14653,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                 if ($global:BackgroundPosters -eq 'true') {
                     if ($LibraryFolders -eq 'true') {
                         $LibraryName = $entry.'Library Name'
-                        if ($entry.extraFolder){
+                        if ($entry.extraFolder) {
                             $EntryDir = "$AssetPath\$LibraryName\$($entry.extraFolder)\$($entry.RootFoldername)"
                             $ManualEntryDir = "$ManualAssetPath\$LibraryName\$($entry.extraFolder)\$($entry.RootFoldername)"
                         }
@@ -14557,7 +14671,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                         }
                     }
                     Else {
-                        if ($entry.extraFolder){
+                        if ($entry.extraFolder) {
                             $backgroundImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername)_background.jpg"
                         }
                         Else {
@@ -14598,6 +14712,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                     $checkedItems += $hashtestpath
                     if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
                         # Define Global Variables
+                        $SkipingText = 'false'
                         $global:tmdbid = $entry.tmdbid
                         $global:tvdbid = $entry.tvdbid
                         $global:imdbid = $entry.imdbid
@@ -14625,7 +14740,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                             }
                         }
 
-                        if (Test-Path -LiteralPath "$($Manualtestpath)$posterext"){
+                        if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
                             Write-Entry -Message "Found Manual Background for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             $TakeLocal = $true
                         }
@@ -14703,7 +14818,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                             $joinedTitle = $Titletext
                         }
                         if ($global:posterurl -or $TakeLocal) {
-                            if ($TakeLocal){
+                            if ($TakeLocal) {
                                 Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                     Copy-Item -LiteralPath $_.FullName -Destination $backgroundImage | Out-Null
                                 }
@@ -14731,8 +14846,14 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                     }
                                 }
                                 elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
-                                    Write-Entry -Subtext "Downloading background from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
-                                    $global:AssetTextLang = $global:TVDBAssetTextLang
+                                    if ($global:PosterWithText) {
+                                        Write-Entry -Subtext "Downloading background with Text from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                        $global:AssetTextLang = $global:TVDBAssetTextLang
+                                    }
+                                    Else {
+                                        Write-Entry -Subtext "Downloading Textless background from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                        $global:AssetTextLang = $global:TVDBAssetTextLang
+                                    }
                                 }
                                 Else {
                                     Write-Entry -Subtext "Downloading background from 'IMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
@@ -14774,12 +14895,15 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                     $logEntry = "`"$magick`" $Arguments"
                                     $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                     InvokeMagickCommand -Command $magick -Arguments $Arguments
-
-                                    if ($AddBackgroundText -eq 'true') {
+                                    if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
+                                        $SkipingText = 'true'
+                                        Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                                    }
+                                    if ($AddBackgroundText -eq 'true' -and $SkipingText -eq 'false') {
                                         if ($global:direction -eq "RTL") {
                                             $fontImagemagick = $RTLfontImagemagick
                                         }
-                                        $joinedTitle = $joinedTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`',''
+                                        $joinedTitle = $joinedTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
                                         # Loop through each symbol and replace it with a newline
                                         if ($NewLineOnSpecificSymbols -eq 'true') {
                                             foreach ($symbol in $NewLineSymbols) {
@@ -14832,7 +14956,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                     Else {
                                         Write-Entry -Subtext "Skipping asset move because text is truncated..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                     }
-                                    if (!$TakeLocal){
+                                    if (!$TakeLocal) {
                                         $showbackgroundtemp = New-Object psobject
                                         $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
                                         $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Show Background'
@@ -14898,6 +15022,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                 if ($global:SeasonPosters -eq 'true') {
                     # Loop through each Season
                     foreach ($season in $Episodedata) {
+                        $SkipingText = 'false'
                         $global:IsFallback = $null
                         $global:FallbackText = $null
                         $global:AssetTextLang = $null
@@ -14958,7 +15083,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                 $Testfile = "$global:season"
                             }
                             Else {
-                                if ($entry.extraFolder){
+                                if ($entry.extraFolder) {
                                     $SeasonImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername)_$global:season.jpg"
                                 }
                                 Else {
@@ -15007,7 +15132,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                     }
                                 }
 
-                                if (Test-Path -LiteralPath "$($Manualtestpath)$posterext"){
+                                if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
                                     Write-Entry -Message "Found Manual Season Poster for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                     $TakeLocal = $true
                                 }
@@ -15124,7 +15249,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                     }
                                 }
                                 if ($global:posterurl -or $TakeLocal) {
-                                    if ($TakeLocal){
+                                    if ($TakeLocal) {
                                         Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                             Copy-Item -LiteralPath $_.FullName -Destination $SeasonImage | Out-Null
                                         }
@@ -15198,14 +15323,17 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                                 $logEntry = "`"$magick`" $Arguments"
                                                 $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                                 InvokeMagickCommand -Command $magick -Arguments $Arguments
-
-                                                if ($AddSeasonText -eq 'true') {
-                                                    $global:seasonTitle = $global:seasonTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`',''
+                                                if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
+                                                    $SkipingText = 'true'
+                                                    Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                                                }
+                                                if ($AddSeasonText -eq 'true' -and $SkipingText -eq 'false') {
+                                                    $global:seasonTitle = $global:seasonTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
                                                     if ($ShowOnSeasonfontAllCaps -eq 'true') {
-                                                        $global:ShowTitleOnSeason = $titletext.ToUpper() -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`',''
+                                                        $global:ShowTitleOnSeason = $titletext.ToUpper() -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
                                                     }
                                                     Else {
-                                                        $global:ShowTitleOnSeason = $titletext -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`',''
+                                                        $global:ShowTitleOnSeason = $titletext -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
                                                     }
                                                     # Loop through each symbol and replace it with a newline
                                                     if ($NewLineOnSpecificSymbols -eq 'true') {
@@ -15311,7 +15439,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                             Else {
                                                 Write-Entry -Subtext "Skipping asset move because text is truncated..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                             }
-                                            if (!$TakeLocal){
+                                            if (!$TakeLocal) {
                                                 $seasontemp = New-Object psobject
                                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Titletext + " | " + $global:season)
                                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Season'
@@ -15379,6 +15507,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                 if ($global:TitleCards -eq 'true') {
                     # Loop through each episode
                     foreach ($episode in $Episodedata) {
+                        $SkipingText = 'false'
                         $global:AssetTextLang = $null
                         $global:TMDBAssetTextLang = $null
                         $global:FANARTAssetTextLang = $null
@@ -15414,6 +15543,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                             if ($UseBackgroundAsTitleCard -eq 'True') {
                                 $global:ImageMagickError = $null
                                 for ($i = 0; $i -lt $global:episode_numbers.Count; $i++) {
+                                    $SkipingText = 'false'
                                     $global:AssetTextLang = $null
                                     $global:TMDBAssetTextLang = $null
                                     $global:FANARTAssetTextLang = $null
@@ -15445,7 +15575,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                         $Testfile = "$global:FileNaming"
                                     }
                                     Else {
-                                        if ($entry.extraFolder){
+                                        if ($entry.extraFolder) {
                                             $SeasonImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername)_$global:FileNaming.jpg"
                                         }
                                         Else {
@@ -15506,7 +15636,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                                 }
                                             }
 
-                                            if (Test-Path -LiteralPath "$($Manualtestpath)$posterext"){
+                                            if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
                                                 Write-Entry -Message "Found Manual Title Card for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                 $TakeLocal = $true
                                             }
@@ -15581,11 +15711,11 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                                 }
                                             }
                                             if ($global:posterurl -or $TakeLocal) {
-                                                if ($TakeLocal){
+                                                if ($TakeLocal) {
                                                     Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                                         Copy-Item -LiteralPath $_.FullName -Destination $EpisodeImage | Out-Null
                                                     }
-                                                    if ($global:TempImagecopied -ne 'true'){
+                                                    if ($global:TempImagecopied -ne 'true') {
                                                         Copy-Item -LiteralPath $EpisodeImage -destination $EpisodeTempImage | Out-Null
                                                     }
                                                     Write-Entry -Subtext "Copy local asset to: $EpisodeImage" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
@@ -15656,12 +15786,15 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                                                 $logEntry = "`"$magick`" $Arguments"
                                                                 $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                                                 InvokeMagickCommand -Command $magick -Arguments $Arguments
-
-                                                                if ($AddTitleCardEPTitleText -eq 'true') {
+                                                                if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
+                                                                    $SkipingText = 'true'
+                                                                    Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                                                                }
+                                                                if ($AddTitleCardEPTitleText -eq 'true' -and $SkipingText -eq 'false') {
                                                                     if ($TitleCardEPTitlefontAllCaps -eq 'true') {
                                                                         $global:EPTitle = $global:EPTitle.ToUpper()
                                                                     }
-                                                                    $global:EPTitle = $global:EPTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`',''
+                                                                    $global:EPTitle = $global:EPTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
                                                                     if ($global:direction -eq "RTL") {
                                                                         $TitleCardfontImagemagick = $RTLfontImagemagick
                                                                     }
@@ -15684,11 +15817,15 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                                                         InvokeMagickCommand -Command $magick -Arguments $Arguments
                                                                     }
                                                                 }
-                                                                if ($AddTitleCardEPText -eq 'true') {
+                                                                if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
+                                                                    $SkipingText = 'true'
+                                                                    Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                                                                }
+                                                                if ($AddTitleCardEPText -eq 'true' -and $SkipingText -eq 'false') {
                                                                     if ($TitleCardEPfontAllCaps -eq 'true') {
                                                                         $global:SeasonEPNumber = $global:SeasonEPNumber.ToUpper()
                                                                     }
-                                                                    $global:SeasonEPNumber = $global:SeasonEPNumber -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`',''
+                                                                    $global:SeasonEPNumber = $global:SeasonEPNumber -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
                                                                     $joinedTitlePointSize = $global:SeasonEPNumber -replace '""', '""""'
                                                                     $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize -lineSpacing $TitleCardEPlineSpacing
                                                                     if (!$global:IsTruncated) {
@@ -15743,7 +15880,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                                         Else {
                                                             Write-Entry -Subtext "Skipping asset move because text is truncated..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                                         }
-                                                        if (!$TakeLocal){
+                                                        if (!$TakeLocal) {
                                                             $episodetemp = New-Object psobject
                                                             $episodetemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($global:FileNaming + " | " + $global:EPTitle)
                                                             $episodetemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Episode'
@@ -15813,6 +15950,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                             }
                             Else {
                                 for ($i = 0; $i -lt $global:episode_numbers.Count; $i++) {
+                                    $SkipingText = 'false'
                                     $global:AssetTextLang = $null
                                     $global:TMDBAssetTextLang = $null
                                     $global:FANARTAssetTextLang = $null
@@ -15847,7 +15985,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                         $Testfile = "$global:FileNaming"
                                     }
                                     Else {
-                                        if ($entry.extraFolder){
+                                        if ($entry.extraFolder) {
                                             $SeasonImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername)_$global:FileNaming.jpg"
                                         }
                                         Else {
@@ -15898,7 +16036,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                                 }
                                             }
 
-                                            if (Test-Path -LiteralPath "$($Manualtestpath)$posterext"){
+                                            if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
                                                 Write-Entry -Message "Found Manual Title Card for: $global:show_name - $global:SeasonEPNumber" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                 $TakeLocal = $true
                                             }
@@ -16017,7 +16155,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                                 }
                                             }
                                             if ($global:posterurl -or $TakeLocal) {
-                                                if ($TakeLocal){
+                                                if ($TakeLocal) {
                                                     Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                                         Copy-Item -LiteralPath $_.FullName -Destination $EpisodeImage | Out-Null
                                                     }
@@ -16076,12 +16214,15 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                                             $logEntry = "`"$magick`" $Arguments"
                                                             $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                                             InvokeMagickCommand -Command $magick -Arguments $Arguments
-
-                                                            if ($AddTitleCardEPTitleText -eq 'true') {
+                                                            if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
+                                                                $SkipingText = 'true'
+                                                                Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                                                            }
+                                                            if ($AddTitleCardEPTitleText -eq 'true' -and $SkipingText -eq 'false') {
                                                                 if ($TitleCardEPTitlefontAllCaps -eq 'true') {
                                                                     $global:EPTitle = $global:EPTitle.ToUpper()
                                                                 }
-                                                                $global:EPTitle = $global:EPTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`',''
+                                                                $global:EPTitle = $global:EPTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
                                                                 if ($global:direction -eq "RTL") {
                                                                     $TitleCardfontImagemagick = $RTLfontImagemagick
                                                                 }
@@ -16104,11 +16245,15 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                                                     InvokeMagickCommand -Command $magick -Arguments $Arguments
                                                                 }
                                                             }
-                                                            if ($AddTitleCardEPText -eq 'true') {
+                                                            if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
+                                                                $SkipingText = 'true'
+                                                                Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                                                            }
+                                                            if ($AddTitleCardEPText -eq 'true' -and $SkipingText -eq 'false') {
                                                                 if ($TitleCardEPfontAllCaps -eq 'true') {
                                                                     $global:SeasonEPNumber = $global:SeasonEPNumber.ToUpper()
                                                                 }
-                                                                $global:SeasonEPNumber = $global:SeasonEPNumber -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`',''
+                                                                $global:SeasonEPNumber = $global:SeasonEPNumber -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
                                                                 $joinedTitlePointSize = $global:SeasonEPNumber -replace '""', '""""'
                                                                 $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize -lineSpacing $TitleCardEPlineSpacing
                                                                 if (!$global:IsTruncated) {
@@ -16161,7 +16306,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                                         Else {
                                                             Write-Entry -Subtext "Skipping asset move because text is truncated..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                                         }
-                                                        if (!$TakeLocal){
+                                                        if (!$TakeLocal) {
                                                             $episodetemp = New-Object psobject
                                                             $episodetemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($global:FileNaming + " | " + $global:EPTitle)
                                                             $episodetemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Episode'
@@ -16830,7 +16975,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
     if (Test-Path $CurrentlyRunning) {
         Remove-Item -LiteralPath $CurrentlyRunning | out-null
     }
-    if ($global:UptimeKumaUrl){
+    if ($global:UptimeKumaUrl) {
         Send-UptimeKumaWebhook -status "up" -ping $executionTime.TotalMilliseconds
     }
 }
@@ -16860,7 +17005,7 @@ else {
                 if (Test-Path $CurrentlyRunning) {
                     Remove-Item -LiteralPath $CurrentlyRunning | out-null
                 }
-                if ($global:UptimeKumaUrl){
+                if ($global:UptimeKumaUrl) {
                     Send-UptimeKumaWebhook -status "down" -msg "Invalid chars on lib"
                 }
                 Exit
@@ -16874,7 +17019,7 @@ else {
         if (Test-Path $CurrentlyRunning) {
             Remove-Item -LiteralPath $CurrentlyRunning | out-null
         }
-        if ($global:UptimeKumaUrl){
+        if ($global:UptimeKumaUrl) {
             Send-UptimeKumaWebhook -status "down" -msg "No libs found"
         }
         Exit
@@ -17025,7 +17170,8 @@ else {
                             if ($pathSegments.Count -gt 2) {
                                 $extractedFolder = $pathSegments[-2]  # Second-to-last segment is the folder containing the file
                                 $extraFolder = $pathSegments[0]  # All segments up to the extracted folder
-                            } else {
+                            }
+                            else {
                                 $extractedFolder = $pathSegments[0]  # Only one segment, it's the folder
                                 $extraFolder = $null  # No parent structure
                             }
@@ -17075,7 +17221,8 @@ else {
                             if ($pathSegments.Count -gt 2) {
                                 $extractedFolder = $pathSegments[-2]  # Second-to-last segment is the folder containing the file
                                 $extraFolder = $pathSegments[0]  # All segments up to the extracted folder
-                            } else {
+                            }
+                            else {
                                 $extractedFolder = $pathSegments[0]  # Only one segment, it's the folder
                                 $extraFolder = $null  # No parent structure
                             }
@@ -17104,7 +17251,7 @@ else {
                 if ($tmdbid.count -gt '1') { $tmdbid = $tmdbid[0] }
                 if ($imdbid.count -gt '1') { $imdbid = $imdbid[0] }
 
-                if ($Metadata.MediaContainer.$contentquery.Label.tag){
+                if ($Metadata.MediaContainer.$contentquery.Label.tag) {
                     $Labels = $($Metadata.MediaContainer.$contentquery.Label.tag -join ',')
                 }
                 Else {
@@ -17282,7 +17429,7 @@ else {
         if (Test-Path $CurrentlyRunning) {
             Remove-Item -LiteralPath $CurrentlyRunning | out-null
         }
-        if ($global:UptimeKumaUrl){
+        if ($global:UptimeKumaUrl) {
             Send-UptimeKumaWebhook -status "down" -msg "Hashtable creation failed"
         }
         Exit
@@ -17302,10 +17449,11 @@ else {
         try {
             if ($($entry.RootFoldername)) {
                 # check if item has skip label
-                if ($entry.labels -match 'skip_posterizarr'){
+                if ($entry.labels -match 'skip_posterizarr') {
                     Write-Entry -Message "Skipping '$($entry.title)' because it has a skip label..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                 }
                 Else {
+                    $SkipingText = 'false'
                     $global:posterurl = $null
                     $global:ImageMagickError = $null
                     $global:TMDBfallbackposterurl = $null
@@ -17330,7 +17478,7 @@ else {
 
                     if ($LibraryFolders -eq 'true') {
                         $LibraryName = $entry.'Library Name'
-                        if ($entry.extraFolder){
+                        if ($entry.extraFolder) {
                             $EntryDir = "$AssetPath\$LibraryName\$($entry.extraFolder)\$($entry.RootFoldername)"
                             $ManualEntryDir = "$ManualAssetPath\$LibraryName\$($entry.extraFolder)\$($entry.RootFoldername)"
                         }
@@ -17348,7 +17496,7 @@ else {
                         }
                     }
                     Else {
-                        if ($entry.extraFolder){
+                        if ($entry.extraFolder) {
                             $PosterImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername).jpg"
                         }
                         Else {
@@ -17395,6 +17543,7 @@ else {
                         $checkedItems += $hashtestpath
                         if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
                             # Define Global Variables
+                            $SkipingText = 'false'
                             $global:tmdbid = $entry.tmdbid
                             $global:tvdbid = $entry.tvdbid
                             $global:imdbid = $entry.imdbid
@@ -17422,7 +17571,7 @@ else {
                                 }
                             }
 
-                            if (Test-Path -LiteralPath "$($Manualtestpath)$posterext"){
+                            if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
                                 Write-Entry -Message "Found Manual Poster for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 $TakeLocal = $true
                             }
@@ -17526,7 +17675,7 @@ else {
                                 $joinedTitle = $Titletext
                             }
                             if ($global:posterurl -or $global:PlexartworkDownloaded -or $TakeLocal) {
-                                if ($TakeLocal){
+                                if ($TakeLocal) {
                                     Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                         Copy-Item -LiteralPath $_.FullName -Destination $PosterImage | Out-Null
                                     }
@@ -17566,8 +17715,14 @@ else {
                                         }
                                     }
                                     elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
-                                        Write-Entry -Subtext "Downloading Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
-                                        $global:AssetTextLang = $global:TVDBAssetTextLang
+                                        if ($global:PosterWithText) {
+                                            Write-Entry -Subtext "Downloading Poster with Text from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                            $global:AssetTextLang = $global:TVDBAssetTextLang
+                                        }
+                                        Else {
+                                            Write-Entry -Subtext "Downloading Textless Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                            $global:AssetTextLang = $global:TVDBAssetTextLang
+                                        }
                                     }
                                     elseif ($global:posterurl -like "$PlexUrl*") {
                                         Write-Entry -Subtext "Downloading Poster from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
@@ -17603,12 +17758,15 @@ else {
                                         $logEntry = "`"$magick`" $Arguments"
                                         $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                         InvokeMagickCommand -Command $magick -Arguments $Arguments
-
-                                        if ($AddText -eq 'true') {
+                                        if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
+                                            $SkipingText = 'true'
+                                            Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                                        }
+                                        if ($AddText -eq 'true' -and $SkipingText -eq 'false') {
                                             if ($global:direction -eq "RTL") {
                                                 $fontImagemagick = $RTLfontImagemagick
                                             }
-                                            $joinedTitle = $joinedTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`',''
+                                            $joinedTitle = $joinedTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
 
                                             # Loop through each symbol and replace it with a newline
                                             if ($NewLineOnSpecificSymbols -eq 'true') {
@@ -17685,7 +17843,7 @@ else {
                                         Else {
                                             Write-Entry -Subtext "Skipping asset move because text is truncated..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                         }
-                                        if (!$TakeLocal){
+                                        if (!$TakeLocal) {
                                             $movietemp = New-Object psobject
                                             $movietemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
                                             $movietemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie'
@@ -17774,7 +17932,7 @@ else {
                     if ($global:BackgroundPosters -eq 'true') {
                         if ($LibraryFolders -eq 'true') {
                             $LibraryName = $entry.'Library Name'
-                            if ($entry.extraFolder){
+                            if ($entry.extraFolder) {
                                 $EntryDir = "$AssetPath\$LibraryName\$($entry.extraFolder)\$($entry.RootFoldername)"
                                 $ManualEntryDir = "$ManualAssetPath\$LibraryName\$($entry.extraFolder)\$($entry.RootFoldername)"
                             }
@@ -17792,7 +17950,7 @@ else {
                             }
                         }
                         Else {
-                            if ($entry.extraFolder){
+                            if ($entry.extraFolder) {
                                 $backgroundImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername)_background.jpg"
                             }
                             Else {
@@ -17831,6 +17989,7 @@ else {
                         }
                         if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
                             # Define Global Variables
+                            $SkipingText = 'false'
                             $global:tmdbid = $entry.tmdbid
                             $global:tvdbid = $entry.tvdbid
                             $global:imdbid = $entry.imdbid
@@ -17858,7 +18017,7 @@ else {
                                 }
                             }
 
-                            if (Test-Path -LiteralPath "$($Manualtestpath)$posterext"){
+                            if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
                                 Write-Entry -Message "Found Manual Background for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 $TakeLocal = $true
                             }
@@ -17942,7 +18101,7 @@ else {
                                 }
                             }
                             if ($global:posterurl -or $global:PlexartworkDownloaded -or $TakeLocal) {
-                                if ($TakeLocal){
+                                if ($TakeLocal) {
                                     Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                         Copy-Item -LiteralPath $_.FullName -Destination $BackgroundImage | Out-Null
                                     }
@@ -17982,8 +18141,14 @@ else {
                                         }
                                     }
                                     elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
-                                        Write-Entry -Subtext "Downloading background from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
-                                        $global:AssetTextLang = $global:TVDBAssetTextLang
+                                        if ($global:PosterWithText) {
+                                            Write-Entry -Subtext "Downloading background with Text from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                            $global:AssetTextLang = $global:TVDBAssetTextLang
+                                        }
+                                        Else {
+                                            Write-Entry -Subtext "Downloading Textless background from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                            $global:AssetTextLang = $global:TVDBAssetTextLang
+                                        }
                                     }
                                     elseif ($global:posterurl -like "$PlexUrl*") {
                                         Write-Entry -Subtext "Downloading Background from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
@@ -18019,12 +18184,15 @@ else {
                                         $logEntry = "`"$magick`" $Arguments"
                                         $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                         InvokeMagickCommand -Command $magick -Arguments $Arguments
-
-                                        if ($AddBackgroundText -eq 'true') {
+                                        if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
+                                            $SkipingText = 'true'
+                                            Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                                        }
+                                        if ($AddBackgroundText -eq 'true' -and $SkipingText -eq 'false') {
                                             if ($global:direction -eq "RTL") {
                                                 $backgroundfontImagemagick = $RTLfontImagemagick
                                             }
-                                            $joinedTitle = $joinedTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`',''
+                                            $joinedTitle = $joinedTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
 
                                             # Loop through each symbol and replace it with a newline
                                             if ($NewLineOnSpecificSymbols -eq 'true') {
@@ -18102,7 +18270,7 @@ else {
                                         Else {
                                             Write-Entry -Subtext "Skipping asset move because text is truncated..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                         }
-                                        if (!$TakeLocal){
+                                        if (!$TakeLocal) {
                                             $moviebackgroundtemp = New-Object psobject
                                             $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
                                             $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie Background'
@@ -18229,11 +18397,12 @@ else {
     foreach ($entry in $AllShows) {
         if ($($entry.RootFoldername)) {
             # check if item has skip label
-            if ($entry.labels -match 'skip_posterizarr'){
+            if ($entry.labels -match 'skip_posterizarr') {
                 Write-Entry -Message "Skipping '$($entry.title)' because it has a skip label..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
             }
             Else {
                 # Define Global Variables
+                $SkipingText = 'false'
                 $global:tmdbid = $entry.tmdbid
                 $global:tvdbid = $entry.tvdbid
                 $global:imdbid = $entry.imdbid
@@ -18278,7 +18447,7 @@ else {
 
                 if ($LibraryFolders -eq 'true') {
                     $LibraryName = $entry.'Library Name'
-                    if ($entry.extraFolder){
+                    if ($entry.extraFolder) {
                         $EntryDir = "$AssetPath\$LibraryName\$($entry.extraFolder)\$($entry.RootFoldername)"
                         $ManualEntryDir = "$ManualAssetPath\$LibraryName\$($entry.extraFolder)\$($entry.RootFoldername)"
                     }
@@ -18296,7 +18465,7 @@ else {
                     }
                 }
                 Else {
-                    if ($entry.extraFolder){
+                    if ($entry.extraFolder) {
                         $PosterImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername).jpg"
                     }
                     Else {
@@ -18352,7 +18521,7 @@ else {
                                 break
                             }
                         }
-                        if (Test-Path -LiteralPath "$($Manualtestpath)$posterext"){
+                        if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
                             Write-Entry -Message "Found Manual Poster for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             $TakeLocal = $true
                         }
@@ -18444,7 +18613,7 @@ else {
                             $joinedTitle = $Titletext
                         }
                         if ($global:posterurl -or $global:PlexartworkDownloaded -or $TakeLocal) {
-                            if ($TakeLocal){
+                            if ($TakeLocal) {
                                 Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                     Copy-Item -LiteralPath $_.FullName -Destination $PosterImage | Out-Null
                                 }
@@ -18484,8 +18653,14 @@ else {
                                     }
                                 }
                                 elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
-                                    Write-Entry -Subtext "Downloading Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
-                                    $global:AssetTextLang = $global:TVDBAssetTextLang
+                                    if ($global:PosterWithText) {
+                                        Write-Entry -Subtext "Downloading Poster with Text from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                        $global:AssetTextLang = $global:TVDBAssetTextLang
+                                    }
+                                    Else {
+                                        Write-Entry -Subtext "Downloading Textless Poster from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                        $global:AssetTextLang = $global:TVDBAssetTextLang
+                                    }
                                 }
                                 elseif ($global:posterurl -like "$PlexUrl*") {
                                     Write-Entry -Subtext "Downloading Poster from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
@@ -18522,12 +18697,15 @@ else {
                                     $logEntry = "`"$magick`" $Arguments"
                                     $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                     InvokeMagickCommand -Command $magick -Arguments $Arguments
-
-                                    if ($AddText -eq 'true') {
+                                    if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
+                                        $SkipingText = 'true'
+                                        Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                                    }
+                                    if ($AddText -eq 'true' -and $SkipingText -eq 'false') {
                                         if ($global:direction -eq "RTL") {
                                             $fontImagemagick = $RTLfontImagemagick
                                         }
-                                        $joinedTitle = $joinedTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`',''
+                                        $joinedTitle = $joinedTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
 
                                         # Loop through each symbol and replace it with a newline
                                         if ($NewLineOnSpecificSymbols -eq 'true') {
@@ -18604,7 +18782,7 @@ else {
                                     Else {
                                         Write-Entry -Subtext "Skipping asset move because text is truncated..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                     }
-                                    if (!$TakeLocal){
+                                    if (!$TakeLocal) {
                                         $showtemp = New-Object psobject
                                         $showtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
                                         $showtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Show'
@@ -18692,7 +18870,7 @@ else {
                 if ($global:BackgroundPosters -eq 'true') {
                     if ($LibraryFolders -eq 'true') {
                         $LibraryName = $entry.'Library Name'
-                        if ($entry.extraFolder){
+                        if ($entry.extraFolder) {
                             $EntryDir = "$AssetPath\$LibraryName\$($entry.extraFolder)\$($entry.RootFoldername)"
                             $ManualEntryDir = "$ManualAssetPath\$LibraryName\$($entry.extraFolder)\$($entry.RootFoldername)"
                         }
@@ -18710,7 +18888,7 @@ else {
                         }
                     }
                     Else {
-                        if ($entry.extraFolder){
+                        if ($entry.extraFolder) {
                             $backgroundImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername)_background.jpg"
                         }
                         Else {
@@ -18757,6 +18935,7 @@ else {
                     }
                     if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
                         # Define Global Variables
+                        $SkipingText = 'false'
                         $global:tmdbid = $entry.tmdbid
                         $global:tvdbid = $entry.tvdbid
                         $global:imdbid = $entry.imdbid
@@ -18784,7 +18963,7 @@ else {
                                 break
                             }
                         }
-                        if (Test-Path -LiteralPath "$($Manualtestpath)$posterext"){
+                        if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
                             Write-Entry -Message "Found Manual Background for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             $TakeLocal = $true
                         }
@@ -18869,7 +19048,7 @@ else {
                             $joinedTitle = $Titletext
                         }
                         if ($global:posterurl -or $global:PlexartworkDownloaded -or $TakeLocal) {
-                            if ($TakeLocal){
+                            if ($TakeLocal) {
                                 Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                     Copy-Item -LiteralPath $_.FullName -Destination $BackgroundImage | Out-Null
                                 }
@@ -18909,8 +19088,14 @@ else {
                                     }
                                 }
                                 elseif ($global:posterurl -like 'https://artworks.thetvdb.com*') {
-                                    Write-Entry -Subtext "Downloading background from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
-                                    $global:AssetTextLang = $global:TVDBAssetTextLang
+                                    if ($global:PosterWithText) {
+                                        Write-Entry -Subtext "Downloading background with Text from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                        $global:AssetTextLang = $global:TVDBAssetTextLang
+                                    }
+                                    Else {
+                                        Write-Entry -Subtext "Downloading Textless background from 'TVDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
+                                        $global:AssetTextLang = $global:TVDBAssetTextLang
+                                    }
                                 }
                                 elseif ($global:posterurl -like "$PlexUrl*") {
                                     Write-Entry -Subtext "Downloading Background from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
@@ -18946,12 +19131,15 @@ else {
                                     $logEntry = "`"$magick`" $Arguments"
                                     $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                     InvokeMagickCommand -Command $magick -Arguments $Arguments
-
-                                    if ($AddBackgroundText -eq 'true') {
+                                    if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
+                                        $SkipingText = 'true'
+                                        Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                                    }
+                                    if ($AddBackgroundText -eq 'true' -and $SkipingText -eq 'false') {
                                         if ($global:direction -eq "RTL") {
                                             $backgroundfontImagemagick = $RTLfontImagemagick
                                         }
-                                        $joinedTitle = $joinedTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`',''
+                                        $joinedTitle = $joinedTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
 
                                         # Loop through each symbol and replace it with a newline
                                         if ($NewLineOnSpecificSymbols -eq 'true') {
@@ -19029,7 +19217,7 @@ else {
                                     Else {
                                         Write-Entry -Subtext "Skipping asset move because text is truncated..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                     }
-                                    if (!$TakeLocal){
+                                    if (!$TakeLocal) {
                                         $showbackgroundtemp = New-Object psobject
                                         $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
                                         $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Show Background'
@@ -19133,6 +19321,7 @@ else {
                     $global:seasonNumbers = $entry.seasonNumbers -split ','
                     $global:PlexSeasonUrls = $entry.PlexSeasonUrls -split ','
                     for ($i = 0; $i -lt $global:seasonNames.Count; $i++) {
+                        $SkipingText = 'false'
                         $global:posterurl = $null
                         $global:IsFallback = $null
                         $global:FallbackText = $null
@@ -19169,7 +19358,7 @@ else {
                             $Testfile = "$global:season"
                         }
                         Else {
-                            if ($entry.extraFolder){
+                            if ($entry.extraFolder) {
                                 $SeasonImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername)_$global:season.jpg"
                             }
                             Else {
@@ -19209,11 +19398,11 @@ else {
                         $SeasonImage = $SeasonImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
                         $checkedItems += $hashtestpath
                         if ($PlexToken) {
-                                $Arturl = $plexurl + $global:PlexSeasonUrl + "?X-Plex-Token=$PlexToken"
-                            }
-                            Else {
-                                $Arturl = $plexurl + $global:PlexSeasonUrl
-                            }
+                            $Arturl = $plexurl + $global:PlexSeasonUrl + "?X-Plex-Token=$PlexToken"
+                        }
+                        Else {
+                            $Arturl = $plexurl + $global:PlexSeasonUrl
+                        }
                         if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
                             foreach ($ext in $allowedExtensions) {
                                 $filePath = "$ManualTestPath$ext"
@@ -19223,7 +19412,7 @@ else {
                                     break
                                 }
                             }
-                            if (Test-Path -LiteralPath "$($Manualtestpath)$posterext"){
+                            if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
                                 Write-Entry -Message "Found Manual Season Poster for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 $TakeLocal = $true
                             }
@@ -19353,7 +19542,7 @@ else {
                             }
                             if ($global:posterurl -or $global:PlexartworkDownloaded -or $TakeLocal) {
                                 if ($global:ImageProcessing -eq 'true') {
-                                    if ($TakeLocal){
+                                    if ($TakeLocal) {
                                         Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                             Copy-Item -LiteralPath $_.FullName -Destination $SeasonImage
                                         }
@@ -19434,14 +19623,17 @@ else {
                                             $logEntry = "`"$magick`" $Arguments"
                                             $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                             InvokeMagickCommand -Command $magick -Arguments $Arguments
-
-                                            if ($AddSeasonText -eq 'true') {
-                                                $global:seasonTitle = $global:seasonTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`',''
+                                            if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
+                                                $SkipingText = 'true'
+                                                Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                                            }
+                                            if ($AddSeasonText -eq 'true' -and $SkipingText -eq 'false') {
+                                                $global:seasonTitle = $global:seasonTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
                                                 if ($ShowOnSeasonfontAllCaps -eq 'true') {
-                                                    $global:ShowTitleOnSeason = $titletext.ToUpper() -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`',''
+                                                    $global:ShowTitleOnSeason = $titletext.ToUpper() -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
                                                 }
                                                 Else {
-                                                    $global:ShowTitleOnSeason = $titletext -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`',''
+                                                    $global:ShowTitleOnSeason = $titletext -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
                                                 }
                                                 # Loop through each symbol and replace it with a newline
                                                 if ($NewLineOnSpecificSymbols -eq 'true') {
@@ -19512,7 +19704,7 @@ else {
                                     }
                                 }
                                 Else {
-                                    if ($TakeLocal){
+                                    if ($TakeLocal) {
                                         Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                             Copy-Item -LiteralPath $_.FullName -Destination $SeasonImage
                                         }
@@ -19618,7 +19810,7 @@ else {
                                         Else {
                                             Write-Entry -Subtext "Skipping asset move because text is truncated..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                         }
-                                        if (!$TakeLocal){
+                                        if (!$TakeLocal) {
                                             $seasontemp = New-Object psobject
                                             $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Titletext + " | " + $global:season)
                                             $seasontemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Season'
@@ -19707,6 +19899,7 @@ else {
                 if ($global:TitleCards -eq 'true') {
                     # Loop through each episode
                     foreach ($episode in $Episodedata) {
+                        $SkipingText = 'false'
                         $global:AssetTextLang = $null
                         $global:TMDBAssetTextLang = $null
                         $global:FANARTAssetTextLang = $null
@@ -19743,6 +19936,7 @@ else {
                             if ($UseBackgroundAsTitleCard -eq 'true') {
                                 $global:ImageMagickError = $null
                                 for ($i = 0; $i -lt $global:episode_numbers.Count; $i++) {
+                                    $SkipingText = 'false'
                                     $global:AssetTextLang = $null
                                     $global:TMDBAssetTextLang = $null
                                     $global:FANARTAssetTextLang = $null
@@ -19776,7 +19970,7 @@ else {
                                         $Testfile = "$global:FileNaming"
                                     }
                                     Else {
-                                        if ($entry.extraFolder){
+                                        if ($entry.extraFolder) {
                                             $SeasonImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername)_$global:FileNaming.jpg"
                                         }
                                         Else {
@@ -19842,7 +20036,7 @@ else {
                                                     break
                                                 }
                                             }
-                                            if (Test-Path -LiteralPath "$($Manualtestpath)$posterext"){
+                                            if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
                                                 Write-Entry -Message "Found Manual Title Card for: $global:show_name - $global:SeasonEPNumber" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                 $TakeLocal = $true
                                                 $Episodepostersearchtext = $true
@@ -19943,11 +20137,11 @@ else {
                                             }
                                             if ($global:posterurl -or $global:PlexartworkDownloaded -or $TakeLocal) {
                                                 if ($global:ImageProcessing -eq 'true') {
-                                                    if ($TakeLocal){
+                                                    if ($TakeLocal) {
                                                         Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                                             Copy-Item -LiteralPath $_.FullName -Destination $EpisodeImage | Out-Null
                                                         }
-                                                        if ($global:TempImagecopied -ne 'true'){
+                                                        if ($global:TempImagecopied -ne 'true') {
                                                             Copy-Item -LiteralPath $EpisodeImage -destination $EpisodeTempImage | Out-Null
                                                         }
                                                         Write-Entry -Subtext "Copy local asset to: $EpisodeImage" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
@@ -20026,12 +20220,15 @@ else {
                                                                 $logEntry = "`"$magick`" $Arguments"
                                                                 $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                                                 InvokeMagickCommand -Command $magick -Arguments $Arguments
-
-                                                                if ($AddTitleCardEPTitleText -eq 'true') {
+                                                                if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
+                                                                    $SkipingText = 'true'
+                                                                    Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                                                                }
+                                                                if ($AddTitleCardEPTitleText -eq 'true' -and $SkipingText -eq 'false') {
                                                                     if ($TitleCardEPTitlefontAllCaps -eq 'true') {
                                                                         $global:EPTitle = $global:EPTitle.ToUpper()
                                                                     }
-                                                                    $global:EPTitle = $global:EPTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`',''
+                                                                    $global:EPTitle = $global:EPTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
 
                                                                     if ($global:direction -eq "RTL") {
                                                                         $TitleCardfontImagemagick = $RTLfontImagemagick
@@ -20059,11 +20256,15 @@ else {
                                                                         InvokeMagickCommand -Command $magick -Arguments $Arguments
                                                                     }
                                                                 }
-                                                                if ($AddTitleCardEPText -eq 'true') {
+                                                                if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
+                                                                    $SkipingText = 'true'
+                                                                    Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                                                                }
+                                                                if ($AddTitleCardEPText -eq 'true' -and $SkipingText -eq 'false') {
                                                                     if ($TitleCardEPfontAllCaps -eq 'true') {
                                                                         $global:SeasonEPNumber = $global:SeasonEPNumber.ToUpper()
                                                                     }
-                                                                    $global:SeasonEPNumber = $global:SeasonEPNumber -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`',''
+                                                                    $global:SeasonEPNumber = $global:SeasonEPNumber -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
                                                                     $joinedTitlePointSize = $global:SeasonEPNumber -replace '""', '""""'
                                                                     $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize -lineSpacing $TitleCardEPlineSpacing
                                                                     if (!$global:IsTruncated) {
@@ -20087,7 +20288,7 @@ else {
                                                     }
                                                 }
                                                 Else {
-                                                    if ($TakeLocal){
+                                                    if ($TakeLocal) {
                                                         Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                                             Copy-Item -LiteralPath $_.FullName -Destination $EpisodeImage
                                                         }
@@ -20178,7 +20379,7 @@ else {
                                                         Else {
                                                             Write-Entry -Subtext "Skipping asset move because text is truncated..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                                         }
-                                                        if (!$TakeLocal){
+                                                        if (!$TakeLocal) {
                                                             $episodetemp = New-Object psobject
                                                             $episodetemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($global:FileNaming + " | " + $global:EPTitle)
                                                             $episodetemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Episode'
@@ -20270,6 +20471,7 @@ else {
                             }
                             Else {
                                 for ($i = 0; $i -lt $global:episode_numbers.Count; $i++) {
+                                    $SkipingText = 'false'
                                     $global:AssetTextLang = $null
                                     $global:TMDBAssetTextLang = $null
                                     $global:FANARTAssetTextLang = $null
@@ -20306,7 +20508,7 @@ else {
                                         $Testfile = "$global:FileNaming"
                                     }
                                     Else {
-                                        if ($entry.extraFolder){
+                                        if ($entry.extraFolder) {
                                             $SeasonImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername)_$global:FileNaming.jpg"
                                         }
                                         Else {
@@ -20362,7 +20564,7 @@ else {
                                                     break
                                                 }
                                             }
-                                            if (Test-Path -LiteralPath "$($Manualtestpath)$posterext"){
+                                            if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
                                                 Write-Entry -Message "Found Manual Title Card for: $global:show_name - $global:SeasonEPNumber" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                 $TakeLocal = $true
                                             }
@@ -20506,7 +20708,7 @@ else {
                                             }
                                             if ($global:posterurl -or $global:PlexartworkDownloaded -or $TakeLocal) {
                                                 if ($global:ImageProcessing -eq 'true') {
-                                                    if ($TakeLocal){
+                                                    if ($TakeLocal) {
                                                         Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                                             Copy-Item -LiteralPath $_.FullName -Destination $EpisodeImage | Out-Null
                                                         }
@@ -20572,12 +20774,15 @@ else {
                                                             $logEntry = "`"$magick`" $Arguments"
                                                             $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                                             InvokeMagickCommand -Command $magick -Arguments $Arguments
-
-                                                            if ($AddTitleCardEPTitleText -eq 'true') {
+                                                            if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
+                                                                $SkipingText = 'true'
+                                                                Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                                                            }
+                                                            if ($AddTitleCardEPTitleText -eq 'true' -and $SkipingText -eq 'false') {
                                                                 if ($TitleCardEPTitlefontAllCaps -eq 'true') {
                                                                     $global:EPTitle = $global:EPTitle.ToUpper()
                                                                 }
-                                                                $global:EPTitle = $global:EPTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`',''
+                                                                $global:EPTitle = $global:EPTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
                                                                 if ($global:direction -eq "RTL") {
                                                                     $TitleCardfontImagemagick = $RTLfontImagemagick
                                                                 }
@@ -20587,7 +20792,7 @@ else {
                                                                         $global:EPTitle = $global:EPTitle -replace [regex]::Escape($symbol), "`n"
                                                                     }
                                                                 }
-                                                                $joinedTitlePointSize = $global:EPTitle -replace '""', '""""' -replace '`',''
+                                                                $joinedTitlePointSize = $global:EPTitle -replace '""', '""""' -replace '`', ''
                                                                 $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize -lineSpacing $TitleCardEPTitlelineSpacing
                                                                 if (!$global:IsTruncated) {
                                                                     Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -20605,11 +20810,15 @@ else {
                                                                     InvokeMagickCommand -Command $magick -Arguments $Arguments
                                                                 }
                                                             }
-                                                            if ($AddTitleCardEPText -eq 'true') {
+                                                            if ($SkipAddText -eq 'true' -and $global:PosterWithText) {
+                                                                $SkipingText = 'true'
+                                                                Write-Entry -Subtext "Skipping 'AddText' because poster alreaedy has text." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                                                            }
+                                                            if ($AddTitleCardEPText -eq 'true' -and $SkipingText -eq 'false') {
                                                                 if ($TitleCardEPfontAllCaps -eq 'true') {
                                                                     $global:SeasonEPNumber = $global:SeasonEPNumber.ToUpper()
                                                                 }
-                                                                $global:SeasonEPNumber = $global:SeasonEPNumber -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`',''
+                                                                $global:SeasonEPNumber = $global:SeasonEPNumber -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
                                                                 $joinedTitlePointSize = $global:SeasonEPNumber -replace '""', '""""'
                                                                 $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize -lineSpacing $TitleCardEPlineSpacing
                                                                 if (!$global:IsTruncated) {
@@ -20632,7 +20841,7 @@ else {
                                                     }
                                                 }
                                                 Else {
-                                                    if ($TakeLocal){
+                                                    if ($TakeLocal) {
                                                         Get-ChildItem -LiteralPath "$($ManualTestPath)$posterext" | ForEach-Object {
                                                             Copy-Item -LiteralPath $_.FullName -Destination $EpisodeImage | Out-Null
                                                         }
@@ -20723,7 +20932,7 @@ else {
                                                         Else {
                                                             Write-Entry -Subtext "Skipping asset move because text is truncated..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                                         }
-                                                        if (!$TakeLocal){
+                                                        if (!$TakeLocal) {
                                                             $episodetemp = New-Object psobject
                                                             $episodetemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($global:FileNaming + " | " + $global:EPTitle)
                                                             $episodetemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Episode'
@@ -21415,7 +21624,7 @@ else {
     if (Test-Path $CurrentlyRunning) {
         Remove-Item -LiteralPath $CurrentlyRunning | out-null
     }
-    if ($global:UptimeKumaUrl){
+    if ($global:UptimeKumaUrl) {
         Send-UptimeKumaWebhook -status "up" -ping $executionTime.TotalMilliseconds
     }
 }
