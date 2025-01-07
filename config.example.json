@@ -69,6 +69,7 @@
   },
   "PrerequisitePart": {
     "AssetPath": "P:\\assets",
+    "SkipAddText": "false",
     "ForceRunningDeletion": "false",
     "AutoUpdatePosterizarr": "false",
     "BackupPath": "P:\\assetsbackup",
