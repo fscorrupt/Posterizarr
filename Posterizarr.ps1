@@ -12,7 +12,7 @@ param (
     [switch]$SyncEmby
 )
 
-$CurrentScriptVersion = "1.9.17"
+$CurrentScriptVersion = "1.9.18"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -4761,7 +4761,7 @@ function MassDownloadPlexArtwork {
                         $global:TVDBAssetChangeUrl = $null
                         $global:ImageMagickError = $null
                         $global:TextlessPoster = $null
-                        
+
                         Write-Entry -Message "Searching on Plex for $Titletext - Background" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
 
                         if ($BackgroundfontAllCaps -eq 'true') {
@@ -8738,16 +8738,30 @@ Elseif ($Tautulli) {
                                             $global:IsFallback = $true
                                         }
                                     }
+                                    Elseif ($global:FavProvider -eq 'FANART') {
+                                        if ($entry.tmdbid) {
+                                            $global:posterurl = GetTMDBMoviePoster
+                                            $global:IsFallback = $true
+                                        }
+                                        if (!$global:posterurl) {
+                                            $global:posterurl = GetTVDBMoviePoster
+                                            $global:IsFallback = $true
+                                        }
+                                    }
                                     Else {
                                         $global:posterurl = GetFanartMoviePoster
                                         if (!$global:FavProvider -eq 'FANART') {
+                                            $global:IsFallback = $true
+                                        }
+                                        if (!$global:posterurl) {
+                                            $global:posterurl = GetTVDBMoviePoster
                                             $global:IsFallback = $true
                                         }
                                     }
                                 }
 
                                 if (!$global:posterurl) {
-                                    if ($global:FavProvider -ne 'TVDB') {
+                                    if ($global:FavProvider -ne 'TVDB' -and !$global:OnlyTextless -and !$global:PreferTextless) {
                                         $global:posterurl = GetTVDBMoviePoster
                                         $global:IsFallback = $true
                                     }
@@ -9927,7 +9941,7 @@ Elseif ($Tautulli) {
                         $global:TextlessPoster = $null
                         $global:ImageMagickError = $null
                         $TakeLocal = $null
-                        
+
                         foreach ($ext in $allowedExtensions) {
                             $filePath = "$ManualTestPath$ext"
                             if (Test-Path -LiteralPath $filePath) {
@@ -13517,16 +13531,30 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                             $global:IsFallback = $true
                                         }
                                     }
+                                    Elseif ($global:FavProvider -eq 'FANART') {
+                                        if ($entry.tmdbid) {
+                                            $global:posterurl = GetTMDBMoviePoster
+                                            $global:IsFallback = $true
+                                        }
+                                        if (!$global:posterurl) {
+                                            $global:posterurl = GetTVDBMoviePoster
+                                            $global:IsFallback = $true
+                                        }
+                                    }
                                     Else {
                                         $global:posterurl = GetFanartMoviePoster
                                         if (!$global:FavProvider -eq 'FANART') {
+                                            $global:IsFallback = $true
+                                        }
+                                        if (!$global:posterurl) {
+                                            $global:posterurl = GetTVDBMoviePoster
                                             $global:IsFallback = $true
                                         }
                                     }
                                 }
 
                                 if (!$global:posterurl) {
-                                    if ($global:FavProvider -ne 'TVDB') {
+                                    if ($global:FavProvider -ne 'TVDB' -and !$global:OnlyTextless -and !$global:PreferTextless) {
                                         $global:posterurl = GetTVDBMoviePoster
                                         $global:IsFallback = $true
                                     }
@@ -17445,16 +17473,30 @@ else {
                                             $global:IsFallback = $true
                                         }
                                     }
+                                    Elseif ($global:FavProvider -eq 'FANART') {
+                                        if ($entry.tmdbid) {
+                                            $global:posterurl = GetTMDBMoviePoster
+                                            $global:IsFallback = $true
+                                        }
+                                        if (!$global:posterurl) {
+                                            $global:posterurl = GetTVDBMoviePoster
+                                            $global:IsFallback = $true
+                                        }
+                                    }
                                     Else {
                                         $global:posterurl = GetFanartMoviePoster
                                         if (!$global:FavProvider -eq 'FANART') {
+                                            $global:IsFallback = $true
+                                        }
+                                        if (!$global:posterurl) {
+                                            $global:posterurl = GetTVDBMoviePoster
                                             $global:IsFallback = $true
                                         }
                                     }
                                 }
 
                                 if (!$global:posterurl) {
-                                    if ($global:FavProvider -ne 'TVDB') {
+                                    if ($global:FavProvider -ne 'TVDB' -and !$global:OnlyTextless -and !$global:PreferTextless) {
                                         $global:posterurl = GetTVDBMoviePoster
                                         $global:IsFallback = $true
                                     }
@@ -17806,7 +17848,7 @@ else {
                             $global:ImageMagickError = $null
                             $global:TextlessPoster = $null
                             $TakeLocal = $null
-                            
+
                             foreach ($ext in $allowedExtensions) {
                                 $filePath = "$ManualTestPath$ext"
                                 if (Test-Path -LiteralPath $filePath) {
@@ -18733,7 +18775,7 @@ else {
                         $global:TextlessPoster = $null
                         $global:ImageMagickError = $null
                         $TakeLocal = $null
-                        
+
                         foreach ($ext in $allowedExtensions) {
                             $filePath = "$ManualTestPath$ext"
                             if (Test-Path -LiteralPath $filePath) {
