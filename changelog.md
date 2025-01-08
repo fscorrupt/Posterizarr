@@ -2,18 +2,6 @@
 
 ## [1.9.20](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.20) - 2025-01-08 07:15:09
 
-## What's Changed
-* Sync by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/190
-* fix: Apprise & Imagemagick by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/191
-
-**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.19...1.9.20
-
-### Bug Fixes
-
-- general:
-  - Apprise & Imagemagick (#191) ([946f453](https://github.com/fscorrupt/Posterizarr/commit/946f4535f328413d20e7ac99198eae351d38f469)) ([#191](https://github.com/fscorrupt/Posterizarr/pull/191))
-  - Apprise & Imagemagick ([3f7c481](https://github.com/fscorrupt/Posterizarr/commit/3f7c48150533871346abaf89318c6f831faad560)) ([#191](https://github.com/fscorrupt/Posterizarr/pull/191))
-
 ## [1.9.19](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.19) - 2025-01-07 09:59:07
 
 ## [1.9.18](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.18) - 2025-01-07 06:56:38
