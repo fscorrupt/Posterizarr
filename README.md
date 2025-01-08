@@ -164,7 +164,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `LibstoExclude`: Libraries, by local folder name, to exclude from processing.
     - `JellyfinUrl`: Jellyfin server URL (i.e. "http://192.168.1.1:8096" or "http://myplexserver.com:8096").
     - `UseJellyfin`: If set to `true`, you tell the script to use a Jellyfin Server (Default value is: `false`)
-      - Also have a look at the hint: [Jellyfin CSS](#Jellyfin)
+      - Also have a look at the hint: [Jellyfin CSS](#jellyfin-1)
     - `UploadExistingAssets`: If set to `true`, the script will check local assets and upload them to Jellyfin, but only if Jellyfin does not already have EXIF data from Posterizarr, Kometa, or TCM for the artwork being uploaded.
     </details>
     <details close>
