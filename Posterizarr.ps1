@@ -12,7 +12,7 @@ param (
     [switch]$SyncEmby
 )
 
-$CurrentScriptVersion = "1.9.19"
+$CurrentScriptVersion = "1.9.20"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -456,7 +456,7 @@ function SendMessage {
         Else {
             if ($global:SendNotification -eq 'true') {
                 if ($errorCount -ge '1') {
-                    apprise --notification-type="error" --title="Posterizarr" --body="Run took: $FormattedTimespawn`nIt Created '$posterCount' Images`n`nDuring execution '$errorCount' Errors occurred, please check log for detailed description." "$global:NotifyUrl"
+                    apprise --notification-type="failure" --title="Posterizarr" --body="Run took: $FormattedTimespawn`nIt Created '$posterCount' Images`n`nDuring execution '$errorCount' Errors occurred, please check log for detailed description." "$global:NotifyUrl"
                 }
                 Else {
                     apprise --notification-type="success" --title="Posterizarr" --body="Run took: $FormattedTimespawn`nIt Created '$posterCount' Images" "$global:NotifyUrl"
@@ -4008,13 +4008,26 @@ function UploadOtherMediaServerArtwork {
     }
     # Set the API endpoint URL for magick exif check
     if (($imageinfotemp.Height) -and ($imageinfotemp.width)) {
-        $ImageUrl = "$OtherMediaServerUrl/items/$itemId/images/$imageType/?api_key=$OtherMediaServerApiKey&width=$($imageinfotemp.width)&height=$($imageinfotemp.Height)"
-        $magickcommand = "& `"$magick`" identify -verbose `"$ImageUrl`""
-        $magickcommand | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
-
-        # Execute command and get exif data
-        $value = (Invoke-Expression $magickcommand | Select-String -Pattern 'overlay|titlecard|created with ppm|created with posterizarr')
+        try {
+            $ImageUrl = "$OtherMediaServerUrl/items/$itemId/images/$imageType/?api_key=$OtherMediaServerApiKey&width=$($imageinfotemp.width)&height=$($imageinfotemp.Height)"
+            $tempFile = Join-Path -Path $global:ScriptRoot -ChildPath "temp\hashcompare.jpg"
+            $response = Invoke-WebRequest -Uri $ImageUrl -OutFile $tempFile -ErrorAction Stop
+            $magickcommand = "& `"$magick`" identify -verbose `"$tempFile`""
+            $magickcommand | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+            $value = Invoke-Expression $magickcommand | Select-String -Pattern 'overlay|titlecard|created with ppm|created with posterizarr'
+            Remove-Item $tempFile -Force -ErrorAction SilentlyContinue | out-null
+        }
+        catch {
+            Write-Entry -Subtext "An error occurred during exif check: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            $errorCount++
+            continue
+            if (Test-Path $tempFile) {
+                Remove-Item $tempFile -Force -ErrorAction SilentlyContinue | out-null
+            }
+        }
     }
+
     if ($value) {
         $ExifFound = $True
         Write-Entry -Subtext "Artwork has exif data from posterizarr/kometa/tcm, skip upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
@@ -5814,7 +5827,7 @@ function MassDownloadPlexArtwork {
     Else {
         if ($global:NotifyUrl -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker*' -and $global:SendNotification -eq 'true') {
             if ($errorCount -ge '1') {
-                apprise --notification-type="error" --title="Posterizarr" --body="Run took: $FormattedTimespawn`nIt Downloaded '$posterCount' Images`n`nDuring execution '$errorCount' Errors occurred, please check log for detailed description." "$global:NotifyUrl"
+                apprise --notification-type="failure" --title="Posterizarr" --body="Run took: $FormattedTimespawn`nIt Downloaded '$posterCount' Images`n`nDuring execution '$errorCount' Errors occurred, please check log for detailed description." "$global:NotifyUrl"
             }
             Else {
                 apprise --notification-type="success" --title="Posterizarr" --body="Run took: $FormattedTimespawn`nIt Downloaded '$posterCount' Images" "$global:NotifyUrl"
@@ -8229,7 +8242,7 @@ Elseif ($Testing) {
         Else {
             if ($global:SendNotification -eq 'true') {
                 if ($TruncatedCount -ge '1') {
-                    apprise --notification-type="error" --title="Posterizarr" --body="Test run took: $FormattedTimespawn`nDuring execution '$TruncatedCount' times the text got truncated, please check log for detailed description." "$global:NotifyUrl"
+                    apprise --notification-type="failure" --title="Posterizarr" --body="Test run took: $FormattedTimespawn`nDuring execution '$TruncatedCount' times the text got truncated, please check log for detailed description." "$global:NotifyUrl"
                 }
                 Else {
                     apprise --notification-type="success" --title="Posterizarr" --body="Test run took: $FormattedTimespawn" "$global:NotifyUrl"
@@ -13032,7 +13045,7 @@ Elseif ($SyncJelly -or $SyncEmby) {
     Else {
         if ($global:NotifyUrl -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker*' -and $global:SendNotification -eq 'true') {
             if ($errorCount -ge '1') {
-                apprise --notification-type="error" --title="Posterizarr" --body="Run took: $FormattedTimespawn`nIt Created '$posterCount' Images`n`nDuring execution '$errorCount' Errors occurred, please check log for detailed description." "$global:NotifyUrl"
+                apprise --notification-type="failure" --title="Posterizarr" --body="Run took: $FormattedTimespawn`nIt Created '$posterCount' Images`n`nDuring execution '$errorCount' Errors occurred, please check log for detailed description." "$global:NotifyUrl"
             }
             Else {
                 apprise --notification-type="success" --title="Posterizarr" --body="Run took: $FormattedTimespawn`nIt Created '$posterCount' Images" "$global:NotifyUrl"
@@ -13310,6 +13323,8 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
     Write-Entry -Subtext "Found '$($Libraries.count)' Items..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     $Libraries | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\OtherMediaServerLibExport.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
     Write-Entry -Message "Export everything to a csv: $global:ScriptRoot\Logs\OtherMediaServerLibExport.csv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+
+    Write-Entry -Message "Starting episode data query now - This can take a while..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -Log Info
 
     $Episodedata = @()
     $TempShowLibs = $Libraries | Where-Object { $_."Library Type" -eq 'Series' }
@@ -16963,7 +16978,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
     Else {
         if ($global:NotifyUrl -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker*' -and $global:SendNotification -eq 'true') {
             if ($errorCount -ge '1') {
-                apprise --notification-type="error" --title="Posterizarr" --body="Run took: $FormattedTimespawn`nIt Created '$posterCount' Images`n`nDuring execution '$errorCount' Errors occurred, please check log for detailed description." "$global:NotifyUrl"
+                apprise --notification-type="failure" --title="Posterizarr" --body="Run took: $FormattedTimespawn`nIt Created '$posterCount' Images`n`nDuring execution '$errorCount' Errors occurred, please check log for detailed description." "$global:NotifyUrl"
             }
             Else {
                 apprise --notification-type="success" --title="Posterizarr" --body="Run took: $FormattedTimespawn`nIt Created '$posterCount' Images" "$global:NotifyUrl"
@@ -21612,7 +21627,7 @@ else {
     Else {
         if ($global:NotifyUrl -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker*' -and $global:SendNotification -eq 'true') {
             if ($errorCount -ge '1') {
-                apprise --notification-type="error" --title="Posterizarr" --body="Run took: $FormattedTimespawn`nIt Created '$posterCount' Images`n`nDuring execution '$errorCount' Errors occurred, please check log for detailed description." "$global:NotifyUrl"
+                apprise --notification-type="failure" --title="Posterizarr" --body="Run took: $FormattedTimespawn`nIt Created '$posterCount' Images`n`nDuring execution '$errorCount' Errors occurred, please check log for detailed description." "$global:NotifyUrl"
             }
             Else {
                 apprise --notification-type="success" --title="Posterizarr" --body="Run took: $FormattedTimespawn`nIt Created '$posterCount' Images" "$global:NotifyUrl"
