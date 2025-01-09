@@ -12,7 +12,7 @@ param (
     [switch]$SyncEmby
 )
 
-$CurrentScriptVersion = "1.9.20"
+$CurrentScriptVersion = "1.9.21"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -1073,17 +1073,21 @@ function GetTMDBMovieBackground {
                 }
                 if (!$global:posterurl -and $global:WidthHeightFilter -eq 'false') {
                     Write-Entry -Subtext "No Background found on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-                    $global:Fallback = "fanart"
+                    if ($global:FavProvider -ne 'fanart') {
+                        $global:Fallback = "fanart"
+                    }
                 }
                 if (!$global:posterurl -and $global:WidthHeightFilter -eq 'true') {
                     Write-Entry -Subtext "No Background found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-                    $global:Fallback = "fanart"
+                    if ($global:FavProvider -ne 'fanart') {
+                        $global:Fallback = "fanart"
+                    }
                 }
             }
             Else {
                 Write-Entry -Subtext "No Background found on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                 $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/movie/$($global:tmdbid)/images/backdrops"
-                if ($global:FavProvider -eq 'TMDB') {
+                if ($global:FavProvider -ne 'fanart') {
                     $global:Fallback = "fanart"
                 }
             }
@@ -1098,36 +1102,92 @@ function GetTMDBShowPoster {
     Write-Entry -Subtext "Searching on TMDB for a show poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     if (!$global:tmdbid) {
         Write-Entry -Subtext "Cannot search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+        $global:tmdbsearched = $true
     }
-    if ($global:PreferTextless -eq $true) {
-        try {
-            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=xx&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
-        }
-        catch {
-            Write-Entry -Subtext "Could not query TMDB url, error message: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-            $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/images/posters"
-            $errorCount++
-        }
-        if ($response) {
-            if ($response.images.posters) {
-                if ($global:WidthHeightFilter -eq 'true') {
-                    $NoLangPoster = ($response.images.posters | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
-                }
-                Else {
-                    $NoLangPoster = ($response.images.posters | Where-Object iso_639_1 -eq $null)
-                }
-                if (!$NoLangPoster) {
-                    Write-Entry -Subtext "PreferTextless Value: $global:PreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                    Write-Entry -Subtext "OnlyTextless Value: $global:OnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                    if ($global:OnlyTextless -eq $false) {
+    Else {
+        if ($global:PreferTextless -eq $true) {
+            try {
+                $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=xx&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
+            }
+            catch {
+                Write-Entry -Subtext "Could not query TMDB url, error message: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/images/posters"
+                $errorCount++
+            }
+            if ($response) {
+                if ($response.images.posters) {
+                    if ($global:WidthHeightFilter -eq 'true') {
+                        $NoLangPoster = ($response.images.posters | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
+                    }
+                    Else {
+                        $NoLangPoster = ($response.images.posters | Where-Object iso_639_1 -eq $null)
+                    }
+                    if (!$NoLangPoster) {
+                        Write-Entry -Subtext "PreferTextless Value: $global:PreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        Write-Entry -Subtext "OnlyTextless Value: $global:OnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        if ($global:OnlyTextless -eq $false) {
+                            if ($global:WidthHeightFilter -eq 'true') {
+                                if ($global:TMDBVoteSorting -eq 'primary') {
+                                    $filteredPosters = $response.images.posters | Where-Object { $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
+
+                                    if ($filteredPosters) {
+                                        $posterpath = $filteredPosters[0].file_path
+                                        $global:TMDBAssetTextLang = $filteredPosters[0].iso_639_1
+                                        Write-Entry -Subtext "Found a poster sized at - width: $($filteredPosters[0].width) | height: $($filteredPosters[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                    }
+                                    else {
+                                        Write-Entry -Subtext "No posters found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                    }
+                                }
+                                Else {
+                                    $filteredPosters = $response.images.posters | Where-Object { $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
+
+                                    if ($filteredPosters) {
+                                        $posterpath = (($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                                        $global:TMDBAssetTextLang = (($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).iso_639_1
+                                        Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                    }
+                                    else {
+                                        Write-Entry -Subtext "No posters found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                    }
+                                }
+                            }
+                            Else {
+                                if ($global:TMDBVoteSorting -eq 'primary') {
+                                    $posterpath = $response.images.posters[0].file_path
+                                    $global:TMDBAssetTextLang = $response.images.posters[0].iso_639_1
+                                }
+                                Else {
+                                    $posterpath = (($response.images.posters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                                    $global:TMDBAssetTextLang = (($response.images.posters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).iso_639_1
+                                }
+                            }
+                            if ($posterpath) {
+                                $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
+                                if ($global:FavProvider -ne 'fanart') {
+                                    $global:Fallback = "fanart"
+                                    $global:tmdbfallbackposterurl = $global:posterurl
+                                }
+                                Write-Entry -Subtext "Found Poster with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                                $global:PosterWithText = $true
+
+                                $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/images/posters"
+                                return $global:posterurl
+                            }
+                        }
+                        Else {
+                            Write-Entry -Subtext "Found Poster with text on TMDB, skipping because you only want textless..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                            $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/images/posters"
+                        }
+                    }
+                    Else {
                         if ($global:WidthHeightFilter -eq 'true') {
                             if ($global:TMDBVoteSorting -eq 'primary') {
-                                $filteredPosters = $response.images.posters | Where-Object { $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
+                                $filteredPosters = $response.images.posters | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
 
                                 if ($filteredPosters) {
                                     $posterpath = $filteredPosters[0].file_path
-                                    $global:TMDBAssetTextLang = $filteredPosters[0].iso_639_1
                                     Write-Entry -Subtext "Found a poster sized at - width: $($filteredPosters[0].width) | height: $($filteredPosters[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 }
                                 else {
@@ -1135,11 +1195,10 @@ function GetTMDBShowPoster {
                                 }
                             }
                             Else {
-                                $filteredPosters = $response.images.posters | Where-Object { $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
+                                $filteredPosters = $response.images.posters | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
 
                                 if ($filteredPosters) {
                                     $posterpath = (($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
-                                    $global:TMDBAssetTextLang = (($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).iso_639_1
                                     Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 }
                                 else {
@@ -1149,138 +1208,96 @@ function GetTMDBShowPoster {
                         }
                         Else {
                             if ($global:TMDBVoteSorting -eq 'primary') {
-                                $posterpath = $response.images.posters[0].file_path
-                                $global:TMDBAssetTextLang = $response.images.posters[0].iso_639_1
+                                $posterpath = ($response.images.posters | Where-Object iso_639_1 -eq $null)
+                                if ($posterpath) {
+                                    $posterpath = $posterpath[0].file_path
+                                }
                             }
                             Else {
-                                $posterpath = (($response.images.posters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
-                                $global:TMDBAssetTextLang = (($response.images.posters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).iso_639_1
+                                $posterpath = ($response.images.posters | Where-Object iso_639_1 -eq $null | Sort-Object $global:TMDBVoteSorting -Descending)
+                                if ($posterpath) {
+                                    $posterpath = $posterpath[0].file_path
+                                }
                             }
                         }
                         if ($posterpath) {
                             $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
-                            if ($global:FavProvider -eq 'TMDB') {
-                                $global:Fallback = "fanart"
-                                $global:tmdbfallbackposterurl = $global:posterurl
-                            }
-                            Write-Entry -Subtext "Found Poster with text on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
-                            $global:PosterWithText = $true
-
+                            Write-Entry -Subtext "Found Textless Poster on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                            $global:TextlessPoster = $true
+                            $global:PosterWithText = $null
                             $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/images/posters"
                             return $global:posterurl
                         }
                     }
-                    Else {
-                        Write-Entry -Subtext "Found Poster with text on TMDB, skipping because you only want textless..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
-                        $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/images/posters"
-                    }
+                    $global:tmdbsearched = $true
                 }
-                Else {
-                    if ($global:WidthHeightFilter -eq 'true') {
-                        if ($global:TMDBVoteSorting -eq 'primary') {
-                            $filteredPosters = $response.images.posters | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
-
-                            if ($filteredPosters) {
-                                $posterpath = $filteredPosters[0].file_path
-                                Write-Entry -Subtext "Found a poster sized at - width: $($filteredPosters[0].width) | height: $($filteredPosters[0].height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                            }
-                            else {
-                                Write-Entry -Subtext "No posters found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-                            }
-                        }
-                        Else {
-                            $filteredPosters = $response.images.posters | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
-
-                            if ($filteredPosters) {
-                                $posterpath = (($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
-                                Write-Entry -Subtext "Found a poster sized at - width: $((($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).width) | height: $((($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).height)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                            }
-                            else {
-                                Write-Entry -Subtext "No posters found on TMDB with the specified dimensions." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-                            }
-                        }
-                    }
-                    Else {
-                        if ($global:TMDBVoteSorting -eq 'primary') {
-                            $posterpath = (($response.images.posters | Where-Object iso_639_1 -eq $null)[0]).file_path
-                        }
-                        Else {
-                            $posterpath = (($response.images.posters | Where-Object iso_639_1 -eq $null | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
-                        }
-                    }
-                    if ($posterpath) {
-                        $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
-                        Write-Entry -Subtext "Found Textless Poster on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
-                        $global:TextlessPoster = $true
-                        $global:PosterWithText = $null
-                        $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/images/posters"
-                        return $global:posterurl
-                    }
-                }
+            }
+            Else {
+                Write-Entry -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/images/posters"
+                $global:tmdbsearched = $true
             }
         }
         Else {
-            Write-Entry -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-            $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/images/posters"
-        }
-    }
-    Else {
-        try {
-            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=$($PreferredLanguageOrder[0])&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
-        }
-        catch {
-            Write-Entry -Subtext "Could not query TMDB url, error message: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-            $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/images/posters"
-            $errorCount++
-        }
-        if ($response) {
-            if ($response.images.posters) {
-                foreach ($lang in $global:PreferredLanguageOrderTMDB) {
-                    if ($global:WidthHeightFilter -eq 'true') {
-                        if ($lang -eq 'null') {
-                            $FavPoster = ($response.images.posters | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
+            try {
+                $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=$($PreferredLanguageOrder[0])&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
+            }
+            catch {
+                Write-Entry -Subtext "Could not query TMDB url, error message: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/images/posters"
+                $errorCount++
+            }
+            if ($response) {
+                if ($response.images.posters) {
+                    foreach ($lang in $global:PreferredLanguageOrderTMDB) {
+                        if ($global:WidthHeightFilter -eq 'true') {
+                            if ($lang -eq 'null') {
+                                $FavPoster = ($response.images.posters | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
+                            }
+                            Else {
+                                $FavPoster = ($response.images.posters | Where-Object { $_.iso_639_1 -eq $lang -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
+                            }
                         }
                         Else {
-                            $FavPoster = ($response.images.posters | Where-Object { $_.iso_639_1 -eq $lang -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
+                            if ($lang -eq 'null') {
+                                $FavPoster = ($response.images.posters | Where-Object iso_639_1 -eq $null)
+                            }
+                            Else {
+                                $FavPoster = ($response.images.posters | Where-Object iso_639_1 -eq $lang)
+                            }
                         }
-                    }
-                    Else {
-                        if ($lang -eq 'null') {
-                            $FavPoster = ($response.images.posters | Where-Object iso_639_1 -eq $null)
+                        if ($FavPoster) {
+                            if ($global:TMDBVoteSorting -eq 'primary') {
+                                $posterpath = $FavPoster[0].file_path
+                            }
+                            Else {
+                                $posterpath = (($FavPoster | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                            }
+                            $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
+                            if ($lang -eq 'null') {
+                                Write-Entry -Subtext "Found Poster without Language on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                            }
+                            Else {
+                                Write-Entry -Subtext "Found Poster with Language '$lang' on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
+                            }
+                            if ($lang -ne 'null') {
+                                $global:PosterWithText = $true
+                                $global:TMDBAssetTextLang = $lang
+                                $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/images/posters"
+                            }
+                            return $global:posterurl
+                            continue
                         }
-                        Else {
-                            $FavPoster = ($response.images.posters | Where-Object iso_639_1 -eq $lang)
-                        }
-                    }
-                    if ($FavPoster) {
-                        if ($global:TMDBVoteSorting -eq 'primary') {
-                            $posterpath = $FavPoster[0].file_path
-                        }
-                        Else {
-                            $posterpath = (($FavPoster | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
-                        }
-                        $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
-                        if ($lang -eq 'null') {
-                            Write-Entry -Subtext "Found Poster without Language on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
-                        }
-                        Else {
-                            Write-Entry -Subtext "Found Poster with Language '$lang' on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
-                        }
-                        if ($lang -ne 'null') {
-                            $global:PosterWithText = $true
-                            $global:TMDBAssetTextLang = $lang
-                            $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/images/posters"
-                        }
-                        return $global:posterurl
-                        continue
+                        $global:tmdbsearched = $true
                     }
                 }
             }
-        }
-        Else {
-            Write-Entry -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-            $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/images/posters"
+            Else {
+                Write-Entry -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/images/posters"
+                $global:tmdbsearched = $true
+            }
         }
     }
 }
@@ -1608,7 +1625,8 @@ function GetTMDBShowBackground {
                         }
                         if ($posterpath) {
                             $global:posterurl = "https://image.tmdb.org/t/p/original$posterpath"
-                            if ($global:FavProvider -eq 'TMDB') {
+                            if ($global:FavProvider -ne 'fanart') {
+
                                 $global:Fallback = "fanart"
                                 $global:tmdbfallbackposterurl = $global:posterurl
                             }
@@ -1666,13 +1684,15 @@ function GetTMDBShowBackground {
                 }
                 if (!$global:posterurl) {
                     Write-Entry -Subtext "No Background found on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-                    $global:Fallback = "fanart"
+                    if ($global:FavProvider -ne 'fanart') {
+                        $global:Fallback = "fanart"
+                    }
                 }
             }
             Else {
                 Write-Entry -Subtext "No Background found on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                 $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/images/backdrops"
-                if ($global:FavProvider -eq 'TMDB') {
+                if ($global:FavProvider -ne 'fanart') {
                     $global:Fallback = "fanart"
                 }
             }
@@ -1737,13 +1757,15 @@ function GetTMDBShowBackground {
                 if (!$global:posterurl) {
                     Write-Entry -Subtext "No Background found on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                     $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/images/backdrops"
-                    $global:Fallback = "fanart"
+                    if ($global:FavProvider -ne 'fanart') {
+                        $global:Fallback = "fanart"
+                    }
                 }
             }
             Else {
                 Write-Entry -Subtext "No Background found on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                 $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/images/backdrops"
-                if ($global:FavProvider -eq 'TMDB') {
+                if ($global:FavProvider -ne 'fanart') {
                     $global:Fallback = "fanart"
                 }
             }
@@ -1868,7 +1890,9 @@ function GetTMDBTitleCard {
         Else {
             Write-Entry -Subtext "No Title Card found on TMDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/season/$global:season_number/episode/$global:episodenumber/images/backdrops"
-            $global:Fallback = "TVDB"
+            if ($global:FavProvider -ne 'TVDB') {
+                $global:Fallback = "TVDB"
+            }
             Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             $errorCount++
         }
@@ -1876,7 +1900,9 @@ function GetTMDBTitleCard {
     Else {
         Write-Entry -Subtext "TMDB API response is null" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
         $global:TMDBAssetChangeUrl = "https://www.themoviedb.org/tv/$($global:tmdbid)/season/$global:season_number/episode/$global:episodenumber/images/backdrops"
-        $global:Fallback = "TVDB"
+        if ($global:FavProvider -ne 'TVDB') {
+            $global:Fallback = "TVDB"
+        }
         Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
         $errorCount++
     }
@@ -1931,7 +1957,6 @@ function GetFanartMoviePoster {
         }
         if (!$global:posterurl) {
             Write-Entry -Subtext "No movie match or poster found on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-            $global:Fallback = "TMDB"
         }
         Else {
             return $global:posterurl
@@ -1970,7 +1995,6 @@ function GetFanartMoviePoster {
         }
         if (!$global:posterurl) {
             Write-Entry -Subtext "No movie match or poster found on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-            $global:Fallback = "TMDB"
         }
         Else {
             return $global:posterurl
@@ -2026,7 +2050,6 @@ function GetFanartMovieBackground {
     }
     if (!$global:posterurl) {
         Write-Entry -Subtext "No movie match or background found on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-        $global:Fallback = "TMDB"
     }
     Else {
         return $global:posterurl
@@ -2060,6 +2083,9 @@ function GetFanartShowPoster {
                     }
                     Else {
                         Write-Entry -Subtext "Found Poster with text on FANART, skipping because you only want textless..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                        if ($global:FavProvider -eq 'FANART') {
+                            $global:Fallback = "TMDB"
+                        }
                         $global:FANARTAssetChangeUrl = "https://fanart.tv/series/$id"
                     }
                     return $global:posterurl
@@ -2078,12 +2104,15 @@ function GetFanartShowPoster {
         }
         Else {
             Write-Entry -Subtext "Cannot search on FANART, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+            if ($global:FavProvider -eq 'FANART') {
+                $global:Fallback = "TMDB"
+            }
         }
         if (!$global:posterurl) {
-
             Write-Entry -Subtext "No show match or poster found on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-
-            $global:Fallback = "TMDB"
+            if ($global:FavProvider -eq 'FANART') {
+                $global:Fallback = "TMDB"
+            }
         }
         Else {
             return $global:posterurl
@@ -2119,10 +2148,10 @@ function GetFanartShowPoster {
             Write-Entry -Subtext "Cannot search on FANART, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
         }
         if (!$global:posterurl) {
-
             Write-Entry -Subtext "No show match or poster found on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-
-            $global:Fallback = "TMDB"
+            if ($global:FavProvider -eq 'FANART') {
+                $global:Fallback = "TMDB"
+            }
         }
         Else {
             return $global:posterurl
@@ -2176,7 +2205,6 @@ function GetFanartShowBackground {
     }
     if (!$global:posterurl) {
         Write-Entry -Subtext "No show match or background found on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-        $global:Fallback = "TMDB"
     }
     Else {
         return $global:posterurl
@@ -2685,8 +2713,10 @@ function GetTVDBShowPoster {
                             $global:posterurl = $defaultImageurl
                             Write-Entry -Subtext "Found Poster with text on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                             $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)#artwork"
-                            if ($global:FavProvider -eq 'TVDB') {
-                                $global:Fallback = "TMDB"
+                            if ($global:FavProvider -ne 'TVDB') {
+                                if (!$global:tmdbsearched){
+                                    $global:Fallback = "TMDB"
+                                }
                                 $global:TVDBfallbackposterurl = $global:posterurl
                             }
                         }
@@ -9139,7 +9169,7 @@ Elseif ($Tautulli) {
                                 switch -Wildcard ($global:FavProvider) {
                                     'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBMovieBackground }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartMovieBackground } }
                                     'FANART' { $global:posterurl = GetFanartMovieBackground }
-                                    'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBMovieBackground }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartMovieBackground } }
+                                    'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBMovieBackground }Else { Write-Entry -Subtext "Can't search on TVDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartMovieBackground } }
                                     'PLEX' { if ($ArtUrl) { GetPlexArtwork -Type ' a Movie Background' -ArtUrl $Arturl -TempImage $backgroundImage } }
                                     Default { $global:posterurl = GetFanartMovieBackground }
                                 }
@@ -9487,6 +9517,7 @@ Elseif ($Tautulli) {
             Else {
                 # Define Global Variables
                 $SkipingText = 'false'
+                $global:tmdbsearched = $null
                 $global:tmdbid = $entry.tmdbid
                 $global:tvdbid = $entry.tvdbid
                 $global:imdbid = $entry.imdbid
@@ -10018,7 +10049,7 @@ Elseif ($Tautulli) {
                             switch -Wildcard ($global:FavProvider) {
                                 'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBShowBackground }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartShowBackground } }
                                 'FANART' { $global:posterurl = GetFanartShowBackground }
-                                'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBShowBackground }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartShowBackground } }
+                                'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBShowBackground }Else { Write-Entry -Subtext "Can't search on TVDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartShowBackground } }
                                 'PLEX' { if ($ArtUrl) { GetPlexArtwork -Type ' a Show Background' -ArtUrl $Arturl -TempImage $backgroundImage } }
                                 Default { $global:posterurl = GetFanartShowBackground }
                             }
@@ -10339,6 +10370,7 @@ Elseif ($Tautulli) {
                     $global:PlexSeasonUrls = $entry.PlexSeasonUrls -split ','
                     for ($i = 0; $i -lt $global:seasonNames.Count; $i++) {
                         $SkipingText = 'false'
+                        $global:tmdbsearched = $null
                         $global:posterurl = $null
                         $global:IsFallback = $null
                         $global:FallbackText = $null
@@ -10442,7 +10474,7 @@ Elseif ($Tautulli) {
                                 switch -Wildcard ($global:FavProvider) {
                                     'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBSeasonPoster }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning } }
                                     'FANART' { $global:posterurl = GetFanartSeasonPoster }
-                                    'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBSeasonPoster }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning } }
+                                    'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBSeasonPoster }Else { Write-Entry -Subtext "Can't search on TVDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning } }
                                     'PLEX' { if ($ArtUrl) { GetPlexArtwork -Type ' a Season Poster' -ArtUrl $Arturl -TempImage $SeasonImage } }
                                     Default { $global:posterurl = GetFanartSeasonPoster }
                                 }
@@ -13590,7 +13622,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                 switch -Wildcard ($global:FavProvider) {
                                     'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBMoviePoster }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartMoviePoster } }
                                     'FANART' { $global:posterurl = GetFanartMoviePoster }
-                                    'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBMoviePoster }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartMoviePoster } }
+                                    'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBMoviePoster }Else { Write-Entry -Subtext "Can't search on TVDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartMoviePoster } }
                                     Default { $global:posterurl = GetFanartMoviePoster }
                                 }
                                 switch -Wildcard ($global:Fallback) {
@@ -13966,7 +13998,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                 switch -Wildcard ($global:FavProvider) {
                                     'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBMovieBackground }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartMovieBackground } }
                                     'FANART' { $global:posterurl = GetFanartMovieBackground }
-                                    'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBMovieBackground }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartMovieBackground } }
+                                    'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBMovieBackground }Else { Write-Entry -Subtext "Can't search on TVDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartMovieBackground } }
                                     Default { $global:posterurl = GetFanartMovieBackground }
                                 }
                                 switch -Wildcard ($global:Fallback) {
@@ -14281,6 +14313,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
             Else {
                 # Define Global Variables
                 $SkipingText = 'false'
+                $global:tmdbsearched = $null
                 $global:tmdbid = $entry.tmdbid
                 $global:tvdbid = $entry.tvdbid
                 $global:imdbid = $entry.imdbid
@@ -14764,7 +14797,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                             switch -Wildcard ($global:FavProvider) {
                                 'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBShowBackground }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartShowBackground } }
                                 'FANART' { $global:posterurl = GetFanartShowBackground }
-                                'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBShowBackground }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartShowBackground } }
+                                'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBShowBackground }Else { Write-Entry -Subtext "Can't search on TVDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartShowBackground } }
                                 Default { $global:posterurl = GetFanartShowBackground }
                             }
                             switch -Wildcard ($global:Fallback) {
@@ -15038,6 +15071,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                     # Loop through each Season
                     foreach ($season in $Episodedata) {
                         $SkipingText = 'false'
+                        $global:tmdbsearched = $null
                         $global:IsFallback = $null
                         $global:FallbackText = $null
                         $global:AssetTextLang = $null
@@ -15159,7 +15193,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                     switch -Wildcard ($global:FavProvider) {
                                         'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBSeasonPoster }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning } }
                                         'FANART' { $global:posterurl = GetFanartSeasonPoster }
-                                        'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBSeasonPoster }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning } }
+                                        'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBSeasonPoster }Else { Write-Entry -Subtext "Can't search on TVDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning } }
                                         Default { $global:posterurl = GetFanartSeasonPoster }
                                     }
                                     # do a specific order
@@ -17595,7 +17629,7 @@ else {
                                 switch -Wildcard ($global:FavProvider) {
                                     'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBMoviePoster }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartMoviePoster } }
                                     'FANART' { $global:posterurl = GetFanartMoviePoster }
-                                    'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBMoviePoster }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartMoviePoster } }
+                                    'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBMoviePoster }Else { Write-Entry -Subtext "Can't search on TVDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartMoviePoster } }
                                     'PLEX' { if ($ArtUrl) { GetPlexArtwork -Type ' a Movie Poster' -ArtUrl $Arturl -TempImage $PosterImage } }
                                     Default { $global:posterurl = GetFanartMoviePoster }
                                 }
@@ -18041,7 +18075,7 @@ else {
                                 switch -Wildcard ($global:FavProvider) {
                                     'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBMovieBackground }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartMovieBackground } }
                                     'FANART' { $global:posterurl = GetFanartMovieBackground }
-                                    'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBMovieBackground }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartMovieBackground } }
+                                    'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBMovieBackground }Else { Write-Entry -Subtext "Can't search on TVDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartMovieBackground } }
                                     'PLEX' { if ($ArtUrl) { GetPlexArtwork -Type ' a Movie Background' -ArtUrl $Arturl -TempImage $backgroundImage } }
                                     Default { $global:posterurl = GetFanartMovieBackground }
                                 }
@@ -18418,6 +18452,7 @@ else {
             Else {
                 # Define Global Variables
                 $SkipingText = 'false'
+                $global:tmdbsearched = $null
                 $global:tmdbid = $entry.tmdbid
                 $global:tvdbid = $entry.tvdbid
                 $global:imdbid = $entry.imdbid
@@ -18549,8 +18584,11 @@ else {
                                 'PLEX' { if ($ArtUrl) { GetPlexArtwork -Type ' a Show Poster' -ArtUrl $Arturl -TempImage $PosterImage } }
                                 Default { $global:posterurl = GetFanartShowPoster }
                             }
+                            if (!$global:posterurl) {
+                                Write-Entry -Subtext "Could not find a poster on: $global:FavProvider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                            }
                             switch -Wildcard ($global:Fallback) {
-                                'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBShowPoster } }
+                                'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBShowPoster } Else{Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning}}
                                 'FANART' { $global:posterurl = GetFanartShowPoster }
                             }
                             if ($global:PreferTextless -eq $true) {
@@ -18987,7 +19025,7 @@ else {
                             switch -Wildcard ($global:FavProvider) {
                                 'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBShowBackground }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartShowBackground } }
                                 'FANART' { $global:posterurl = GetFanartShowBackground }
-                                'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBShowBackground }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartShowBackground } }
+                                'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBShowBackground }Else { Write-Entry -Subtext "Can't search on TVDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartShowBackground } }
                                 'PLEX' { if ($ArtUrl) { GetPlexArtwork -Type ' a Show Background' -ArtUrl $Arturl -TempImage $backgroundImage } }
                                 Default { $global:posterurl = GetFanartShowBackground }
                             }
@@ -19337,6 +19375,7 @@ else {
                     $global:PlexSeasonUrls = $entry.PlexSeasonUrls -split ','
                     for ($i = 0; $i -lt $global:seasonNames.Count; $i++) {
                         $SkipingText = 'false'
+                        $global:tmdbsearched = $null
                         $global:posterurl = $null
                         $global:IsFallback = $null
                         $global:FallbackText = $null
@@ -19439,13 +19478,19 @@ else {
                                 switch -Wildcard ($global:FavProvider) {
                                     'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBSeasonPoster }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning } }
                                     'FANART' { $global:posterurl = GetFanartSeasonPoster }
-                                    'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBSeasonPoster }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning } }
+                                    'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBSeasonPoster }Else { Write-Entry -Subtext "Can't search on TVDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning } }
                                     'PLEX' { if ($ArtUrl) { GetPlexArtwork -Type ' a Season Poster' -ArtUrl $Arturl -TempImage $SeasonImage } }
                                     Default { $global:posterurl = GetFanartSeasonPoster }
                                 }
                                 # do a specific order
                                 if ($global:SeasonPreferTextless -eq $true) {
                                     if (!$global:posterurl -or !$global:TextlessPoster) {
+                                        if (!$entry.tmdbid -and $global:FavProvider -ne 'TMDB') {
+                                            Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                        }
+                                        if (!$entry.tvdbid -and $global:FavProvider -ne 'TVDB') {
+                                            Write-Entry -Subtext "Can't search on TVDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                        }
                                         if ($global:FavProvider -ne 'TMDB' -and $entry.tmdbid) {
                                             $global:posterurl = GetTMDBSeasonPoster
                                             $global:IsFallback = $true
@@ -19529,22 +19574,36 @@ else {
                                 if (!$global:posterurl -and $ShowFallback -eq 'true') {
                                     # Lets just try to grab a show poster.
                                     Write-Entry -Subtext "Fallback to Show Poster..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
-                                    $global:posterurl = GetTMDBShowPoster
+                                    switch -Wildcard ($global:FavProvider) {
+                                        'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBShowPoster }Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartShowPoster } }
+                                        'FANART' { $global:posterurl = GetFanartShowPoster }
+                                        'TVDB' { if ($entry.tvdbid) { $global:posterurl = GetTVDBShowPoster }Else { Write-Entry -Subtext "Can't search on TVDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning; $global:posterurl = GetFanartShowPoster } }
+                                        'PLEX' { if ($ArtUrl) { GetPlexArtwork -Type ' a Show Poster' -ArtUrl $Arturl -TempImage $PosterImage } }
+                                        Default { $global:posterurl = GetFanartShowPoster }
+                                    }
                                     if ($global:posterurl) {
                                         Write-Entry -Subtext "Using the Show Poster as Season Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                         $global:IsFallback = $true
                                         $global:FallbackText = 'True-Show'
                                     }
                                     Else {
-                                        # Lets just try to grab a show poster.
-                                        $global:posterurl = GetTVDBShowPoster
-                                        if ($global:posterurl) {
-                                            Write-Entry -Subtext "Using the Show Poster as Season Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-                                            $global:IsFallback = $true
-                                            $global:FallbackText = 'True-Show'
+                                        if ($global:FavProvider -ne 'TMDB') {
+                                            $global:posterurl = GetTMDBShowPoster
+                                            if ($global:posterurl) {
+                                                Write-Entry -Subtext "Using the Show Poster as Season Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                                $global:IsFallback = $true
+                                                $global:FallbackText = 'True-Show'
+                                            }
                                         }
-                                        Else {
-                                            # Lets just try to grab a show poster.
+                                        if ($global:FavProvider -ne 'TVDB' -and !$global:posterurl) {
+                                            $global:posterurl = GetTVDBShowPoster
+                                            if ($global:posterurl) {
+                                                Write-Entry -Subtext "Using the Show Poster as Season Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                                $global:IsFallback = $true
+                                                $global:FallbackText = 'True-Show'
+                                            }
+                                        }
+                                        if ($global:FavProvider -ne 'FANART' -and !$global:posterurl) {
                                             $global:posterurl = GetFanartShowPoster
                                             if ($global:posterurl) {
                                                 Write-Entry -Subtext "Using the Show Poster as Season Fallback..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
