@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## [1.9.21](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.21) - 2025-01-09 11:04:22
+
+## What's Changed
+* fix: Fallback orders by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/192
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.20...1.9.21
+
+### Bug Fixes
+
+- general:
+  - Fallback orders (#192) ([a3f26e2](https://github.com/fscorrupt/Posterizarr/commit/a3f26e29b91edf8f5b17bb2755d0b06b66adc77c)) ([#192](https://github.com/fscorrupt/Posterizarr/pull/192))
+  - Fallback orders ([ed2e664](https://github.com/fscorrupt/Posterizarr/commit/ed2e664a33df498d26582fa4044059190c387528)) ([#192](https://github.com/fscorrupt/Posterizarr/pull/192))
+
 ## [1.9.20](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.20) - 2025-01-08 07:15:09
 
 ## [1.9.19](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.19) - 2025-01-07 09:59:07
