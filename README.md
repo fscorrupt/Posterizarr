@@ -712,6 +712,17 @@ In order to view the `16:9` episode posters without getting cropped to `3:2`, yo
 
 ## Showcase
 
+### Brief Overview of Key Settings
+<details close>
+<summary>🖼️Layout and Styling Definitions [click to unfold]</summary>
+<br>
+<p>
+  <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
+    <img alt="layoutstyling" height="100%" src="/images/poster_description.png">
+  </a>
+</p>
+</details>
+
 ### Images from Testing Mode
 
 <details close>
