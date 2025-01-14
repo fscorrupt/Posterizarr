@@ -192,7 +192,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
 
     - `AssetPath`: Path to store generated posters.
     - `BackupPath`: Path to store/download Plex posters when using the [backup switch](#backup-mode).
-    - `ManualAssetPath`: If assets are placed in this directory with the correct naming convention, they will be preferred. (it has to follow the same naming convention as you have in `/assets`)
+    - `ManualAssetPath`: If assets are placed in this directory with the **exact** naming convention (`poster.jpg` & `Season01.jpg`), they will be preferred. (it has to follow the same naming convention as you have in `/assets`)
     - `SkipAddText`: If set to `true`, Posterizarr will skip adding text to the poster if it is flagged as a `Poster with text` by the provider.
     - `PlexUpload`: If set to `true`, Posterizarr will directly upload the artwork to Plex (handy if you do not use Kometa).
     - `ForceRunningDeletion`: If set to `true`, Posterizarr will automatically delete the Running File.
