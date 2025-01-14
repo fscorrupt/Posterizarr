@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## [1.9.22](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.22) - 2025-01-14 06:21:26
+
+## What's Changed
+* fix: season poster fallback to show by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/194
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.21...1.9.22
+
+### Bug Fixes
+
+- general:
+  - season poster fallback to show (#194) ([cf192e9](https://github.com/fscorrupt/Posterizarr/commit/cf192e9c1833613270b818fc264f363911f8b4d6)) ([#194](https://github.com/fscorrupt/Posterizarr/pull/194))
+  - season poster fallback to show ([449fc0c](https://github.com/fscorrupt/Posterizarr/commit/449fc0c2efac9def033fcc7f02fc3df153a0adbf)) ([#194](https://github.com/fscorrupt/Posterizarr/pull/194))
+
 ## [1.9.21](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.21) - 2025-01-09 11:04:22
 
 ## [1.9.20](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.20) - 2025-01-08 07:15:09
