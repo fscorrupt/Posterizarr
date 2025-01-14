@@ -2,17 +2,6 @@
 
 ## [1.9.23](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.23) - 2025-01-14 09:42:14
 
-## What's Changed
-* fix: season/show fallback by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/195
-
-**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.22...1.9.23
-
-### Bug Fixes
-
-- general:
-  - season/show fallback (#195) ([9a2495a](https://github.com/fscorrupt/Posterizarr/commit/9a2495a6d30ef4ca1b77ced22e3be5f386ada72d)) ([#195](https://github.com/fscorrupt/Posterizarr/pull/195))
-  - season/show fallback ([9dfe39a](https://github.com/fscorrupt/Posterizarr/commit/9dfe39a6318171cbdae42c0c87914d0e81fbe521)) ([#195](https://github.com/fscorrupt/Posterizarr/pull/195))
-
 ## [1.9.22](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.22) - 2025-01-14 06:21:26
 
 ## [1.9.21](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.21) - 2025-01-09 11:04:22
