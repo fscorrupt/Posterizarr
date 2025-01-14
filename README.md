@@ -396,6 +396,11 @@ Run the script without any parameters:
 .\Posterizarr.ps1
 ```
 
+On [docker](#docker) this way:
+```sh
+  docker exec -it posterizarr s6-setuidgid abc pwsh /config/Posterizarr.ps1
+```
+
 This will generate posters for your entire Plex library based on the configured settings.
 
 The posters are all placed in `AssetPath\...`. This can then be mounted in Kometa to use as the assets folder.
@@ -561,6 +566,11 @@ Run the script with the `-Testing` flag. In this mode, the script will create pi
 .\Posterizarr.ps1 -Testing
 ```
 
+On [docker](#docker) this way:
+```sh
+  docker exec -it posterizarr s6-setuidgid abc pwsh /config/Posterizarr.ps1 -Testing
+```
+
 ### Manual Mode
 
 > [!IMPORTANT]
@@ -573,6 +583,12 @@ Run the script with the `-Manual` switch:
 ```powershell
 .\Posterizarr.ps1 -Manual
 ```
+
+On [docker](#docker) this way:
+```sh
+  docker exec -it posterizarr s6-setuidgid abc pwsh /config/Posterizarr.ps1 -Manual
+```
+
 Follow the prompts to enter the source picture path (Container needs Access to it), media folder name, and movie/show title to manually create a custom poster.
 
 ### Backup Mode
@@ -586,6 +602,11 @@ Run the script with the `-Backup` flag. In this mode, the script will download e
 .\Posterizarr.ps1 -Backup
 ```
 
+On [docker](#docker) this way:
+```sh
+  docker exec -it posterizarr s6-setuidgid abc pwsh /config/Posterizarr.ps1 -Backup
+```
+
 ### Sync Modes
 > [!IMPORTANT]
 > The script requires that library names in Plex and Emby/Jellyfin match exactly for the sync to work. It calculates the hash of the artwork from both servers to determine if there are differences, and only syncs the artwork if the hashes do not match.
@@ -595,12 +616,24 @@ Run the script with the `-SyncJelly` flag. In this mode, the script will sync ev
 ```powershell
 .\Posterizarr.ps1 -SyncJelly
 ```
+
+On [docker](#docker) this way:
+```sh
+  docker exec -it posterizarr s6-setuidgid abc pwsh /config/Posterizarr.ps1 -SyncJelly
+```
+
 #### Emby
 Run the script with the `-SyncEmby` flag. In this mode, the script will sync every artwork you have in plex to emby.
 
 ```powershell
 .\Posterizarr.ps1 -SyncEmby
 ```
+
+On [docker](#docker) this way:
+```sh
+  docker exec -it posterizarr s6-setuidgid abc pwsh /config/Posterizarr.ps1 -SyncEmby
+```
+
 > [!TIP]
 >This is handy if you want to run the sync after a kometa run, then you have kometa ovlerayed images in jelly/emby
 
@@ -629,6 +662,18 @@ Run the script with the `-SyncEmby` flag. In this mode, the script will sync eve
   ```sh
   docker exec -it posterizarr s6-setuidgid abc pwsh /config/Posterizarr.ps1 -Manual
   ```
+  **Backup Mode:**
+  ```sh
+  docker exec -it posterizarr s6-setuidgid abc pwsh /config/Posterizarr.ps1 -Backup
+  ```
+  **SyncJelly Mode:**
+  ```sh
+  docker exec -it posterizarr s6-setuidgid abc pwsh /config/Posterizarr.ps1 -SyncJelly
+  ```
+  **SyncEmby Mode:**
+  ```sh
+  docker exec -it posterizarr s6-setuidgid abc pwsh /config/Posterizarr.ps1 -SyncEmby
+  ```
 > [!TIP]
 > If you did not used `pwsh` on docker exec you can do it this way.
 >
@@ -637,6 +682,9 @@ Run the script with the `-SyncEmby` flag. In this mode, the script will sync eve
 > s6-setuidgid abc pwsh /config/Posterizarr.ps1
 > s6-setuidgid abc pwsh /config/Posterizarr.ps1 -Manual
 > s6-setuidgid abc pwsh /config/Posterizarr.ps1 -Testing
+> s6-setuidgid abc pwsh /config/Posterizarr.ps1 -Backup
+> s6-setuidgid abc pwsh /config/Posterizarr.ps1 -SyncEmby
+> s6-setuidgid abc pwsh /config/Posterizarr.ps1 -SyncJelly
 > ```
 
 ### unRAID
