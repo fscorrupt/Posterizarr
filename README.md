@@ -748,7 +748,7 @@ In order to view the `16:9` episode posters without getting cropped to `3:2`, yo
 }
 ```
 <details close>
-<summary>CSS How-To [click to unfold]</summary>
+<summary>CSS Client side How-To [click to unfold]</summary>
 <br>
 <p>
   <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
@@ -758,6 +758,16 @@ In order to view the `16:9` episode posters without getting cropped to `3:2`, yo
 
 </details>
 
+<details close>
+<summary>CSS Server wide How-To [click to unfold]</summary>
+<br>
+<p>
+  <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
+    <img alt="excel" height="100%" src="/images/jellyfin-css-server.png">
+  </a>
+</p>
+
+</details>
 ## Showcase
 
 ### Brief Overview of Key Settings
