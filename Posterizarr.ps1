@@ -12,7 +12,7 @@ param (
     [switch]$SyncEmby
 )
 
-$CurrentScriptVersion = "1.9.23"
+$CurrentScriptVersion = "1.9.24"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -3528,6 +3528,7 @@ function LogConfigSettings {
     Write-Entry -Subtext "Prerequisites Part" -Path $configLogging -Color Cyan -log Info
     Write-Entry -Subtext "| Asset Path:                      $AssetPath" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Backup Path:                     $BackupPath" -Path $configLogging -Color White -log Info
+    Write-Entry -Subtext "| Follow Symlink:                  $FollowSymlink" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Skip adding Text:                $SkipAddText" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Manual Asset Path:               $ManualAssetPath" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Upload to Plex:                  $Upload2Plex" -Path $configLogging -Color White -log Info
@@ -4552,18 +4553,35 @@ function MassDownloadPlexArtwork {
         $directoryHashtable = @{}
         $allowedExtensions = @(".jpg", ".jpeg", ".png", ".bmp")
 
-        Get-ChildItem -Path $BackupPath -Recurse | ForEach-Object {
-            if ($allowedExtensions -contains $_.Extension.ToLower()) {
-                $directory = $_.Directory
-                $basename = $_.BaseName
-                if ($Platform -eq "Docker" -or $Platform -eq "Linux" -or $Platform -eq 'macOS') {
-                    $directoryHashtable["$directory/$basename"] = $true
+        if ($FollowSymlink){
+            Get-ChildItem -Path $BackupPath -Recurse -FollowSymlink | ForEach-Object {
+                if ($allowedExtensions -contains $_.Extension.ToLower()) {
+                    $directory = $_.Directory
+                    $basename = $_.BaseName
+                    if ($Platform -eq "Docker" -or $Platform -eq "Linux" -or $Platform -eq 'macOS') {
+                        $directoryHashtable["$directory/$basename"] = $true
+                    }
+                    Else {
+                        $directoryHashtable["$directory\$basename"] = $true
+                    }
                 }
-                Else {
-                    $directoryHashtable["$directory\$basename"] = $true
-                }
+                $totalSize += $_.Length
             }
-            $totalSize += $_.Length
+        }
+        Else {
+            Get-ChildItem -Path $BackupPath -Recurse | ForEach-Object {
+                if ($allowedExtensions -contains $_.Extension.ToLower()) {
+                    $directory = $_.Directory
+                    $basename = $_.BaseName
+                    if ($Platform -eq "Docker" -or $Platform -eq "Linux" -or $Platform -eq 'macOS') {
+                        $directoryHashtable["$directory/$basename"] = $true
+                    }
+                    Else {
+                        $directoryHashtable["$directory\$basename"] = $true
+                    }
+                }
+                $totalSize += $_.Length
+            }
         }
 
         # Convert bytes to kilobytes, megabytes, or gigabytes as needed
@@ -6293,6 +6311,7 @@ if ($enabledServers -gt 1) {
 # Prerequisites Part
 $AutoUpdateIM = $config.PrerequisitePart.AutoUpdateIM.tolower()
 $show_skipped = $config.PrerequisitePart.show_skipped.tolower()
+$FollowSymlink = $config.PrerequisitePart.FollowSymlink.tolower()
 $ForceRunningDeletion = $config.PrerequisitePart.ForceRunningDeletion.tolower()
 $AssetPath = RemoveTrailingSlash $config.PrerequisitePart.AssetPath
 $BackupPath = RemoveTrailingSlash $config.PrerequisitePart.BackupPath
@@ -8571,18 +8590,35 @@ Elseif ($Tautulli) {
         $allowedExtensions = @(".jpg", ".jpeg", ".png", ".bmp")
         $totalSize = 0
 
-        Get-ChildItem -Path $AssetPath -Recurse | ForEach-Object {
-            if ($allowedExtensions -contains $_.Extension.ToLower()) {
-                $directory = $_.Directory
-                $basename = $_.BaseName
-                if ($Platform -eq "Docker" -or $Platform -eq "Linux" -or $Platform -eq 'macOS') {
-                    $directoryHashtable["$directory/$basename"] = $true
+        if ($FollowSymlink){
+            Get-ChildItem -Path $AssetPath -Recurse -FollowSymlink | ForEach-Object {
+                if ($allowedExtensions -contains $_.Extension.ToLower()) {
+                    $directory = $_.Directory
+                    $basename = $_.BaseName
+                    if ($Platform -eq "Docker" -or $Platform -eq "Linux" -or $Platform -eq 'macOS') {
+                        $directoryHashtable["$directory/$basename"] = $true
+                    }
+                    Else {
+                        $directoryHashtable["$directory\$basename"] = $true
+                    }
                 }
-                Else {
-                    $directoryHashtable["$directory\$basename"] = $true
-                }
+                $totalSize += $_.Length
             }
-            $totalSize += $_.Length
+        }
+        Else {
+            Get-ChildItem -Path $AssetPath -Recurse | ForEach-Object {
+                if ($allowedExtensions -contains $_.Extension.ToLower()) {
+                    $directory = $_.Directory
+                    $basename = $_.BaseName
+                    if ($Platform -eq "Docker" -or $Platform -eq "Linux" -or $Platform -eq 'macOS') {
+                        $directoryHashtable["$directory/$basename"] = $true
+                    }
+                    Else {
+                        $directoryHashtable["$directory\$basename"] = $true
+                    }
+                }
+                $totalSize += $_.Length
+            }
         }
 
         # Convert bytes to kilobytes, megabytes, or gigabytes as needed
@@ -13501,18 +13537,35 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
         $directoryHashtable = @{}
         $allowedExtensions = @(".jpg", ".jpeg", ".png", ".bmp")
 
-        Get-ChildItem -Path $AssetPath -Recurse | ForEach-Object {
-            if ($allowedExtensions -contains $_.Extension.ToLower()) {
-                $directory = $_.Directory
-                $basename = $_.BaseName
-                if ($Platform -eq "Docker" -or $Platform -eq "Linux" -or $Platform -eq 'macOS') {
-                    $directoryHashtable["$directory/$basename"] = $true
+        if ($FollowSymlink){
+            Get-ChildItem -Path $AssetPath -Recurse -FollowSymlink | ForEach-Object {
+                if ($allowedExtensions -contains $_.Extension.ToLower()) {
+                    $directory = $_.Directory
+                    $basename = $_.BaseName
+                    if ($Platform -eq "Docker" -or $Platform -eq "Linux" -or $Platform -eq 'macOS') {
+                        $directoryHashtable["$directory/$basename"] = $true
+                    }
+                    Else {
+                        $directoryHashtable["$directory\$basename"] = $true
+                    }
                 }
-                Else {
-                    $directoryHashtable["$directory\$basename"] = $true
-                }
+                $totalSize += $_.Length
             }
-            $totalSize += $_.Length
+        }
+        Else {
+            Get-ChildItem -Path $AssetPath -Recurse | ForEach-Object {
+                if ($allowedExtensions -contains $_.Extension.ToLower()) {
+                    $directory = $_.Directory
+                    $basename = $_.BaseName
+                    if ($Platform -eq "Docker" -or $Platform -eq "Linux" -or $Platform -eq 'macOS') {
+                        $directoryHashtable["$directory/$basename"] = $true
+                    }
+                    Else {
+                        $directoryHashtable["$directory\$basename"] = $true
+                    }
+                }
+                $totalSize += $_.Length
+            }
         }
 
         # Convert bytes to kilobytes, megabytes, or gigabytes as needed
@@ -17553,21 +17606,36 @@ else {
     try {
         $directoryHashtable = @{}
         $allowedExtensions = @(".jpg", ".jpeg", ".png", ".bmp")
-
-        Get-ChildItem -Path $AssetPath -Recurse | ForEach-Object {
-            if ($allowedExtensions -contains $_.Extension.ToLower()) {
-                $directory = $_.Directory
-                $basename = $_.BaseName
-                if ($Platform -eq "Docker" -or $Platform -eq "Linux" -or $Platform -eq 'macOS') {
-                    $directoryHashtable["$directory/$basename"] = $true
+        if ($FollowSymlink){
+            Get-ChildItem -Path $AssetPath -Recurse -FollowSymlink | ForEach-Object {
+                if ($allowedExtensions -contains $_.Extension.ToLower()) {
+                    $directory = $_.Directory
+                    $basename = $_.BaseName
+                    if ($Platform -eq "Docker" -or $Platform -eq "Linux" -or $Platform -eq 'macOS') {
+                        $directoryHashtable["$directory/$basename"] = $true
+                    }
+                    Else {
+                        $directoryHashtable["$directory\$basename"] = $true
+                    }
                 }
-                Else {
-                    $directoryHashtable["$directory\$basename"] = $true
-                }
+                $totalSize += $_.Length
             }
-            $totalSize += $_.Length
         }
-
+        Else {
+            Get-ChildItem -Path $AssetPath -Recurse | ForEach-Object {
+                if ($allowedExtensions -contains $_.Extension.ToLower()) {
+                    $directory = $_.Directory
+                    $basename = $_.BaseName
+                    if ($Platform -eq "Docker" -or $Platform -eq "Linux" -or $Platform -eq 'macOS') {
+                        $directoryHashtable["$directory/$basename"] = $true
+                    }
+                    Else {
+                        $directoryHashtable["$directory\$basename"] = $true
+                    }
+                }
+                $totalSize += $_.Length
+            }
+        }
         # Convert bytes to kilobytes, megabytes, or gigabytes as needed
         if ($totalSize -gt 1GB) {
             $totalSizeString = "{0:N2} GB" -f ($totalSize / 1GB)
