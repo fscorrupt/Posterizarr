@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## [1.9.24](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.24) - 2025-01-16 08:58:53
+
+## What's Changed
+* fix: hashtable empty if using symlinks by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/196
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.23...1.9.24
+
+### Bug Fixes
+
+- general:
+  - hashtable empty if using symlinks (#196) ([ca6fdda](https://github.com/fscorrupt/Posterizarr/commit/ca6fddac30c28cfd681e65c27faf65665369b01e)) ([#196](https://github.com/fscorrupt/Posterizarr/pull/196))
+  - hashtable empty if using symlinks ([d2ad45e](https://github.com/fscorrupt/Posterizarr/commit/d2ad45ed8dbfe3795b9382a81b0e4fff96539ac3)) ([#196](https://github.com/fscorrupt/Posterizarr/pull/196))
+
 ## [1.9.23](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.23) - 2025-01-14 09:42:14
 
 ## [1.9.22](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.22) - 2025-01-14 06:21:26
