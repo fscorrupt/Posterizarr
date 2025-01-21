@@ -2,17 +2,6 @@
 
 ## [1.9.25](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.25) - 2025-01-21 11:56:45
 
-## What's Changed
-* fix: show correct statuscode on http download error by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/197
-
-**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.24...1.9.25
-
-### Bug Fixes
-
-- general:
-  - show correct statuscode on http download error (#197) ([15311d8](https://github.com/fscorrupt/Posterizarr/commit/15311d8900e2690c83b1cf22180e7700f9c804f1)) ([#197](https://github.com/fscorrupt/Posterizarr/pull/197))
-  - show correct statuscode on http download error ([b75f0a3](https://github.com/fscorrupt/Posterizarr/commit/b75f0a3d51e10578da62fa6500d15c4ad4d0f1c3)) ([#197](https://github.com/fscorrupt/Posterizarr/pull/197))
-
 ## [1.9.24](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.24) - 2025-01-16 08:58:53
 
 ## [1.9.23](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.23) - 2025-01-14 09:42:14
