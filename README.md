@@ -211,6 +211,10 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `seasonoverlayfile`: Season overlay file name.
     - `backgroundoverlayfile`: Background overlay file name.
     - `titlecardoverlayfile` : Title Card overlay file name.
+    - `poster4k`: 4K Poster overlay file name. (overlay has to match the Poster dimensions 2000x3000)
+    - `Poster1080p` : 1080p Poster overlay file name. (overlay has to match the Poster dimensions 2000x3000)
+    - `UsePosterResolutionOverlays`: Set to `true` to apply specific overlay with resolution for 4k/1080p posters [Example Pic](https://github.com/fscorrupt/Posterizarr/blob/main/images/poster-4k.png).
+      - if you only want 4k just add your default overlay file also for `Poster1080p`.
     - `LibraryFolders`: Set to `false` for asset structure in one flat folder or `true` to split into library media folders like [Kometa](https://kometa.wiki/en/latest/kometa/guides/assets/#image-asset-directory-guide) needs it.
     - `Posters`: Set to `true` to create movie/show posters.
     - `NewLineOnSpecificSymbols`: Set to `true` to enable automatic insertion of a newline character at each occurrence of specific symbols in `NewLineSymbols` within the title text.
