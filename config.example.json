@@ -62,6 +62,7 @@
   },
   "Notification": {
     "SendNotification": "false",
+    "DiscordUserName": "Posterizarr",
     "UseUptimeKuma": "false",
     "AppriseUrl": "discord://{WebhookID}/{WebhookToken}/",
     "Discord": "https://discordapp.com/api/webhooks/{WebhookID}/{WebhookToken}",
