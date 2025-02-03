@@ -36,7 +36,7 @@
 This PowerShell script automates the process of generating images for your Plex/Jellyfin/Emby media library. Leveraging information from your Plex/Jellyfin/Emby library, such as movie or show titles, season and episode data, it fetches relevant artwork from Fanart.tv, TMDB, TVDB, Plex and IMDB. The script is able to focus on artwork with specific languages to grab. By default, textless artwork `xx` is retrieved and will fall back to `en` if textless is not found. This is a setting a user can decide on, either to focus on textless or on text posters. It also offers both automatic and manual modes for generating posters. The manual mode can accommodate custom creations that cannot be bulk retrieved.
 
 > [!NOTE]
-Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Docker (Ubuntu 22.04 Base Image) does not work on ARM](#docker), [unRAID](#unraid) and on Windows operating systems.
+Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Docker (Ubuntu 22.04 Base Image) does not work on ARM/MAC](#docker), [unRAID](#unraid) and on Windows operating systems.
 >
 > **Supported Poster Types:**
 >- Movie/Show Posters
@@ -397,6 +397,11 @@ Run the script without any parameters:
 .\Posterizarr.ps1
 ```
 
+On [docker](#docker) this way:
+```sh
+  docker exec -it posterizarr s6-setuidgid abc pwsh /config/Posterizarr.ps1
+```
+
 This will generate posters for your entire Plex library based on the configured settings.
 
 The posters are all placed in `AssetPath\...`. This can then be mounted in Kometa to use as the assets folder.
@@ -562,6 +567,11 @@ Run the script with the `-Testing` flag. In this mode, the script will create pi
 .\Posterizarr.ps1 -Testing
 ```
 
+On [docker](#docker) this way:
+```sh
+  docker exec -it posterizarr s6-setuidgid abc pwsh /config/Posterizarr.ps1 -Testing
+```
+
 ### Manual Mode
 
 > [!IMPORTANT]
@@ -574,6 +584,12 @@ Run the script with the `-Manual` switch:
 ```powershell
 .\Posterizarr.ps1 -Manual
 ```
+
+On [docker](#docker) this way:
+```sh
+  docker exec -it posterizarr s6-setuidgid abc pwsh /config/Posterizarr.ps1 -Manual
+```
+
 Follow the prompts to enter the source picture path (Container needs Access to it), media folder name, and movie/show title to manually create a custom poster.
 
 ### Backup Mode
@@ -587,6 +603,11 @@ Run the script with the `-Backup` flag. In this mode, the script will download e
 .\Posterizarr.ps1 -Backup
 ```
 
+On [docker](#docker) this way:
+```sh
+  docker exec -it posterizarr s6-setuidgid abc pwsh /config/Posterizarr.ps1 -Backup
+```
+
 ### Sync Modes
 > [!IMPORTANT]
 > The script requires that library names in Plex and Emby/Jellyfin match exactly for the sync to work. It calculates the hash of the artwork from both servers to determine if there are differences, and only syncs the artwork if the hashes do not match.
@@ -596,12 +617,24 @@ Run the script with the `-SyncJelly` flag. In this mode, the script will sync ev
 ```powershell
 .\Posterizarr.ps1 -SyncJelly
 ```
+
+On [docker](#docker) this way:
+```sh
+  docker exec -it posterizarr s6-setuidgid abc pwsh /config/Posterizarr.ps1 -SyncJelly
+```
+
 #### Emby
 Run the script with the `-SyncEmby` flag. In this mode, the script will sync every artwork you have in plex to emby.
 
 ```powershell
 .\Posterizarr.ps1 -SyncEmby
 ```
+
+On [docker](#docker) this way:
+```sh
+  docker exec -it posterizarr s6-setuidgid abc pwsh /config/Posterizarr.ps1 -SyncEmby
+```
+
 > [!TIP]
 >This is handy if you want to run the sync after a kometa run, then you have kometa ovlerayed images in jelly/emby
 
@@ -630,6 +663,18 @@ Run the script with the `-SyncEmby` flag. In this mode, the script will sync eve
   ```sh
   docker exec -it posterizarr s6-setuidgid abc pwsh /config/Posterizarr.ps1 -Manual
   ```
+  **Backup Mode:**
+  ```sh
+  docker exec -it posterizarr s6-setuidgid abc pwsh /config/Posterizarr.ps1 -Backup
+  ```
+  **SyncJelly Mode:**
+  ```sh
+  docker exec -it posterizarr s6-setuidgid abc pwsh /config/Posterizarr.ps1 -SyncJelly
+  ```
+  **SyncEmby Mode:**
+  ```sh
+  docker exec -it posterizarr s6-setuidgid abc pwsh /config/Posterizarr.ps1 -SyncEmby
+  ```
 > [!TIP]
 > If you did not used `pwsh` on docker exec you can do it this way.
 >
@@ -638,6 +683,9 @@ Run the script with the `-SyncEmby` flag. In this mode, the script will sync eve
 > s6-setuidgid abc pwsh /config/Posterizarr.ps1
 > s6-setuidgid abc pwsh /config/Posterizarr.ps1 -Manual
 > s6-setuidgid abc pwsh /config/Posterizarr.ps1 -Testing
+> s6-setuidgid abc pwsh /config/Posterizarr.ps1 -Backup
+> s6-setuidgid abc pwsh /config/Posterizarr.ps1 -SyncEmby
+> s6-setuidgid abc pwsh /config/Posterizarr.ps1 -SyncJelly
 > ```
 
 ### unRAID
@@ -701,7 +749,7 @@ In order to view the `16:9` episode posters without getting cropped to `3:2`, yo
 }
 ```
 <details close>
-<summary>CSS How-To [click to unfold]</summary>
+<summary>CSS Client side How-To [click to unfold]</summary>
 <br>
 <p>
   <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
@@ -711,7 +759,28 @@ In order to view the `16:9` episode posters without getting cropped to `3:2`, yo
 
 </details>
 
+<details close>
+<summary>CSS Server wide How-To [click to unfold]</summary>
+<br>
+<p>
+  <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
+    <img alt="excel" height="100%" src="/images/jellyfin-css-server.png">
+  </a>
+</p>
+
+</details>
 ## Showcase
+
+### Brief Overview of Key Settings
+<details close>
+<summary>🖼️Layout and Styling Definitions [click to unfold]</summary>
+<br>
+<p>
+  <a href="https://github.com/fscorrupt/Posterizarr" width="100%">
+    <img alt="layoutstyling" height="100%" src="/images/poster_description.png">
+  </a>
+</p>
+</details>
 
 ### Images from Testing Mode
 
