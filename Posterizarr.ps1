@@ -3361,7 +3361,7 @@ function CheckJsonPaths {
     $paths = @($font, $RTLfont, $backgroundfont, $titlecardfont, $Posteroverlay, $Backgroundoverlay, $titlecardoverlay, $Seasonoverlay, $Posteroverlay4k, $Posteroverlay1080p)
     $errorCount = 0
     foreach ($path in $paths) {
-        if (-not (Test-Path $path)) {
+        if (-not (Test-Path -LiteralPath $path.TrimEnd())) {
             Write-Entry -Message "Could not find file in: $path" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             Write-Entry -Subtext "Check config for typos and make sure that the file is present in scriptroot." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
             Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
@@ -6884,6 +6884,7 @@ foreach ($file in $files) {
 # Call the function with your variables
 
 CheckJsonPaths -font "$font" -RTLfont "$RTLfont" -backgroundfont "$backgroundfont "-titlecardfont "$titlecardfont" -Posteroverlay "$Posteroverlay" -Backgroundoverlay "$Backgroundoverlay" -titlecardoverlay "$titlecardoverlay" -Seasonoverlay "$Seasonoverlay" -Posteroverlay4k "$4kposter" -Posteroverlay1080p "$1080pPoster"
+
 # Check Plex now:
 if (!$SyncJelly -and !$SyncEmby) {
     if ($UsePlex -eq 'true') {
