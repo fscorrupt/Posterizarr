@@ -71,6 +71,7 @@
     },
     "Notification": {
         "SendNotification": "true",
+        "DiscordUserName": "Posterizarr",
         "UseUptimeKuma": "true",
         "AppriseUrl": "discord://xxxxxxxxxxxxx/xxxxxxxxxxxxx-xxxxxxxxxxxxx",
         "Discord": "",

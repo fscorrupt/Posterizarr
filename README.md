@@ -183,6 +183,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `SendNotification`: Set to `true` if you want to send notifications via discord or apprise, else `false`.
     - `AppriseUrl`: **Only possible on Docker** -Url for apprise provider -> [See Docs](https://github.com/caronc/apprise/wiki).
     - `Discord`: Discord Webhook Url.
+    - `DiscordUserName`: Username for the discord webhook, default is `Posterizarr`
     - `UptimeKumaUrl`: Uptime-Kuma Webhook Url.
     - `UseUptimeKuma`: Set to `true` if you want to send webhook to Uptime-Kuma.
     </details>
