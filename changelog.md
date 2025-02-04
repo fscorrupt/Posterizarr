@@ -2,13 +2,6 @@
 
 ## [1.9.26](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.26) - 2025-02-04 10:22:04
 
-## What's Changed
-* sync by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/200
-* Add files via upload by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/203
-* add: Overlay based on media resolution & Discord Username by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/204
-
-**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.25...1.9.26
-
 ## [1.9.25](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.25) - 2025-01-21 11:56:45
 
 ## [1.9.24](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.24) - 2025-01-16 08:58:53
