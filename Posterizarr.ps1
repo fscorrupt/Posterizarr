@@ -12,7 +12,7 @@ param (
     [switch]$SyncEmby
 )
 
-$CurrentScriptVersion = "1.9.26"
+$CurrentScriptVersion = "1.9.27"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -690,7 +690,7 @@ function Get-OptimalPointSize {
     return $current_pointsize
 }
 function GetTMDBMoviePoster {
-    Write-Entry -Subtext "Searching on TMDB for a movie poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+    Write-Entry -Subtext "Searching on TMDB for a movie poster - TMDBID: $global:tmdbid" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     if (!$global:tmdbid) {
         Write-Entry -Subtext "Cannot search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     }
@@ -897,7 +897,7 @@ function GetTMDBMoviePoster {
     }
 }
 function GetTMDBMovieBackground {
-    Write-Entry -Subtext "Searching on TMDB for a movie background" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+    Write-Entry -Subtext "Searching on TMDB for a movie background - TMDBID: $global:tmdbid" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     if (!$global:tmdbid) {
         Write-Entry -Subtext "Cannot search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     }
@@ -1114,7 +1114,7 @@ function GetTMDBMovieBackground {
     }
 }
 function GetTMDBShowPoster {
-    Write-Entry -Subtext "Searching on TMDB for a show poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+    Write-Entry -Subtext "Searching on TMDB for a show poster - TMDBID: $global:tmdbid" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     if (!$global:tmdbid) {
         Write-Entry -Subtext "Cannot search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
         $global:tmdbsearched = $true
@@ -1317,7 +1317,7 @@ function GetTMDBShowPoster {
     }
 }
 function GetTMDBSeasonPoster {
-    Write-Entry -Subtext "Searching on TMDB for Season '$global:SeasonNumber' poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+    Write-Entry -Subtext "Searching on TMDB for Season '$global:SeasonNumber' poster - TMDBID: $global:tmdbid" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     if (!$global:tmdbid) {
         Write-Entry -Subtext "Cannot search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     }
@@ -1576,7 +1576,7 @@ function GetTMDBSeasonPoster {
     }
 }
 function GetTMDBShowBackground {
-    Write-Entry -Subtext "Searching on TMDB for a show background" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+    Write-Entry -Subtext "Searching on TMDB for a show background - TMDBID: $global:tmdbid" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     if (!$global:tmdbid) {
         Write-Entry -Subtext "Cannot search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     }
@@ -1792,7 +1792,7 @@ function GetTMDBShowBackground {
     }
 }
 function GetTMDBTitleCard {
-    Write-Entry -Subtext "Searching on TMDB for: $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+    Write-Entry -Subtext "Searching on TMDB for: $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card - TMDBID: $global:tmdbid" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     if (!$global:tmdbid) {
         Write-Entry -Subtext "Cannot search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     }
@@ -2380,7 +2380,7 @@ function GetFanartSeasonPoster {
 function GetTVDBMoviePoster {
     if ($global:tvdbid) {
         if ($global:PreferTextless -eq $true) {
-            Write-Entry -Subtext "Searching on TVDB for a movie poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+            Write-Entry -Subtext "Searching on TVDB for a movie poster - TVDBID: $global:tvdbid" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
             try {
                 $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/movies/$($global:tvdbid)/extended" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
             }
@@ -2532,7 +2532,7 @@ function GetTVDBMoviePoster {
 function GetTVDBMovieBackground {
     if ($global:tvdbid) {
         if ($global:BackgroundPreferTextless -eq $true) {
-            Write-Entry -Subtext "Searching on TVDB for a movie Background" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+            Write-Entry -Subtext "Searching on TVDB for a movie Background - TVDBID: $global:tvdbid" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
             try {
                 $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/movies/$($global:tvdbid)/extended" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
             }
@@ -2692,7 +2692,7 @@ function GetTVDBMovieBackground {
 }
 function GetTVDBShowPoster {
     if ($global:tvdbid) {
-        Write-Entry -Subtext "Searching on TVDB for a poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+        Write-Entry -Subtext "Searching on TVDB for a poster - TVDBID: $global:tvdbid" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
         if ($global:PreferTextless -eq $true) {
             try {
                 $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/series/$($global:tvdbid)/artworks" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
@@ -2818,7 +2818,7 @@ function GetTVDBShowPoster {
 }
 function GetTVDBSeasonPoster {
     if ($global:tvdbid) {
-        Write-Entry -Subtext "Searching on TVDB for a Season poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+        Write-Entry -Subtext "Searching on TVDB for a Season poster - TVDBID: $global:tvdbid" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
         try {
             $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/series/$($global:tvdbid)/extended" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
         }
@@ -2921,7 +2921,7 @@ function GetTVDBSeasonPoster {
 }
 function GetTVDBShowBackground {
     if ($global:tvdbid) {
-        Write-Entry -Subtext "Searching on TVDB for a background" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+        Write-Entry -Subtext "Searching on TVDB for a background - TVDBID: $global:tvdbid" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
         if ($global:BackgroundPreferTextless -eq $true) {
             try {
                 $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/series/$($global:tvdbid)/artworks" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
@@ -3046,7 +3046,7 @@ function GetTVDBShowBackground {
 }
 function GetTVDBTitleCard {
     if ($global:tvdbid) {
-        Write-Entry -Subtext "Searching on TVDB for: $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+        Write-Entry -Subtext "Searching on TVDB for: $global:show_name 'Season $global:season_number - Episode $global:episodenumber' Title Card - TVDBID: $global:tvdbid" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
         $allEpisodes = @()
         $page = 0
 
@@ -3883,10 +3883,10 @@ function CheckOverlayDimensions {
 
     # Check 1080p Poster Overlay Size
     if ($1080pPosteroverlaydimensions -eq $PosterSize) {
-        Write-Entry -Subtext "4K Poster overlay is correctly sized at: $Postersize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+        Write-Entry -Subtext "1080p Poster overlay is correctly sized at: $Postersize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     }
     else {
-        Write-Entry -Subtext "4K Poster overlay is NOT correctly sized at: $Postersize. Actual dimensions: $1080pPosteroverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+        Write-Entry -Subtext "1080p Poster overlay is NOT correctly sized at: $Postersize. Actual dimensions: $1080pPosteroverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     }
 }
 function InvokeMagickCommand {
@@ -10616,7 +10616,7 @@ Elseif ($Tautulli) {
                             }
                             Else {
                                 if (!$Seasonpostersearchtext) {
-                                    Write-Entry -Message "Start Season Poster Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                    Write-Entry -Message "Start Season Poster Search for: $Titletext | $global:seasonTitle" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                     $Seasonpostersearchtext = $true
                                 }
                                 switch -Wildcard ($global:FavProvider) {
@@ -15483,7 +15483,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                 }
                                 Else {
                                     if (!$Seasonpostersearchtext) {
-                                        Write-Entry -Message "Start Season Poster Search for: $global:seasonTitle" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                        Write-Entry -Message "Start Season Poster Search for: $Titletext | $global:seasonTitle" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                         $Seasonpostersearchtext = $true
                                     }
                                     switch -Wildcard ($global:FavProvider) {
@@ -19880,7 +19880,7 @@ else {
                             }
                             Else {
                                 if (!$Seasonpostersearchtext) {
-                                    Write-Entry -Message "Start Season Poster Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                                    Write-Entry -Message "Start Season Poster Search for: $Titletext | $global:seasonTitle" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                     $Seasonpostersearchtext = $true
                                 }
                                 switch -Wildcard ($global:FavProvider) {
