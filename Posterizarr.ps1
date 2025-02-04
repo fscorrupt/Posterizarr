@@ -308,7 +308,7 @@ function SendMessage {
             if ($SkipTBA -eq 'true' -or $SkipJapTitle -eq 'true') {
                 $jsonPayload = @"
     {
-        "username": "$global:DiscordUserName"
+        "username": "$global:DiscordUserName",
         "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
         "content": "",
         "embeds": [
@@ -392,7 +392,7 @@ function SendMessage {
             Else {
                 $jsonPayload = @"
     {
-        "username": "$global:DiscordUserName"
+        "username": "$global:DiscordUserName",
         "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
         "content": "",
         "embeds": [
@@ -483,7 +483,7 @@ function SendMessage {
         if ($SkipTBA -eq 'true' -or $SkipJapTitle -eq 'true') {
             $jsonPayload = @"
     {
-        "username": "$global:DiscordUserName"
+        "username": "$global:DiscordUserName",
         "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
         "content": "",
         "embeds": [
@@ -567,7 +567,7 @@ function SendMessage {
         Else {
             jsonPayload = @"
     {
-        "username": "$global:DiscordUserName"
+        "username": "$global:DiscordUserName",
         "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
         "content": "",
         "embeds": [
@@ -5683,7 +5683,7 @@ function MassDownloadPlexArtwork {
             if ($AssetCleanup -eq 'true') {
                 $jsonPayload = @"
             {
-                "username": "$global:DiscordUserName"
+                "username": "$global:DiscordUserName",
                 "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
                 "content": "",
                 "embeds": [
@@ -5756,7 +5756,7 @@ function MassDownloadPlexArtwork {
             Else {
                 $jsonPayload = @"
         {
-            "username": "$global:DiscordUserName"
+            "username": "$global:DiscordUserName",
             "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
             "content": "",
             "embeds": [
@@ -5811,7 +5811,7 @@ function MassDownloadPlexArtwork {
             if ($AssetCleanup -eq 'true') {
                 $jsonPayload = @"
             {
-                "username": "$global:DiscordUserName"
+                "username": "$global:DiscordUserName",
                 "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
                 "content": "",
                 "embeds": [
@@ -5884,7 +5884,7 @@ function MassDownloadPlexArtwork {
             Else {
                 $jsonPayload = @"
             {
-                "username": "$global:DiscordUserName"
+                "username": "$global:DiscordUserName",
                 "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
                 "content": "",
                 "embeds": [
@@ -6884,7 +6884,6 @@ foreach ($file in $files) {
 # Call the function with your variables
 
 CheckJsonPaths -font "$font" -RTLfont "$RTLfont" -backgroundfont "$backgroundfont "-titlecardfont "$titlecardfont" -Posteroverlay "$Posteroverlay" -Backgroundoverlay "$Backgroundoverlay" -titlecardoverlay "$titlecardoverlay" -Seasonoverlay "$Seasonoverlay" -Posteroverlay4k "$4kposter" -Posteroverlay1080p "$1080pPoster"
-
 # Check Plex now:
 if (!$SyncJelly -and !$SyncEmby) {
     if ($UsePlex -eq 'true') {
@@ -8238,7 +8237,7 @@ Elseif ($Testing) {
     if ($global:NotifyUrl -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -notlike 'PSDocker*') {
         $jsonPayload = @"
         {
-            "username": "$global:DiscordUserName"
+            "username": "$global:DiscordUserName",
             "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
             "content": "",
             "embeds": [
@@ -8301,7 +8300,7 @@ Elseif ($Testing) {
         if ($global:NotifyUrl -like '*discord*') {
             $jsonPayload = @"
             {
-                "username": "$global:DiscordUserName"
+                "username": "$global:DiscordUserName",
                 "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
                 "content": "",
                 "embeds": [
@@ -13244,7 +13243,7 @@ Elseif ($SyncJelly -or $SyncEmby) {
     if ($global:NotifyUrl -like '*discord*' -and $global:SendNotification -eq 'true') {
         $jsonPayload = @"
             {
-                "username": "$global:DiscordUserName"
+                "username": "$global:DiscordUserName",
                 "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
                 "content": "",
                 "embeds": [
@@ -16968,7 +16967,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
             if ($AssetCleanup -eq 'true') {
                 $jsonPayload = @"
                     {
-                        "username": "$global:DiscordUserName"
+                        "username": "$global:DiscordUserName",
                         "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
                         "content": "",
                         "embeds": [
@@ -17081,7 +17080,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
             Else {
                 $jsonPayload = @"
                 {
-                    "username": "$global:DiscordUserName"
+                    "username": "$global:DiscordUserName",
                     "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
                     "content": "",
                     "embeds": [
@@ -17176,7 +17175,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
             if ($AssetCleanup -eq 'true') {
                 $jsonPayload = @"
                     {
-                        "username": "$global:DiscordUserName"
+                        "username": "$global:DiscordUserName",
                         "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
                         "content": "",
                         "embeds": [
@@ -17279,7 +17278,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
             Else {
                 $jsonPayload = @"
                     {
-                        "username": "$global:DiscordUserName"
+                        "username": "$global:DiscordUserName",
                         "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
                         "content": "",
                         "embeds": [
@@ -21740,7 +21739,7 @@ else {
             if ($AssetCleanup -eq 'true') {
                 $jsonPayload = @"
                 {
-                    "username": "$global:DiscordUserName"
+                    "username": "$global:DiscordUserName",
                     "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
                     "content": "",
                     "embeds": [
@@ -21853,7 +21852,7 @@ else {
             Else {
                 $jsonPayload = @"
             {
-                "username": "$global:DiscordUserName"
+                "username": "$global:DiscordUserName",
                 "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
                 "content": "",
                 "embeds": [
@@ -21948,7 +21947,7 @@ else {
             if ($AssetCleanup -eq 'true') {
                 $jsonPayload = @"
                 {
-                    "username": "$global:DiscordUserName"
+                    "username": "$global:DiscordUserName",
                     "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
                     "content": "",
                     "embeds": [
@@ -22051,7 +22050,7 @@ else {
             Else {
                 $jsonPayload = @"
                 {
-                    "username": "$global:DiscordUserName"
+                    "username": "$global:DiscordUserName",
                     "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
                     "content": "",
                     "embeds": [
