@@ -2,25 +2,6 @@
 
 ## [1.9.27](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.27) - 2025-02-04 12:20:39
 
-## What's Changed
-* fix: config check by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/205
-* fix: test-path on overlay files by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/206
-* fix: discord json by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/207
-* fix: add additional logging & fix Resolution logging by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/208
-
-**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.26...1.9.27
-
-### Bug Fixes
-
-- general:
-  - add additional logging & fix Resolution logging (#208) ([35c0de0](https://github.com/fscorrupt/Posterizarr/commit/35c0de0e96cbae92d6197787b0a86121f834a507)) ([#208](https://github.com/fscorrupt/Posterizarr/pull/208))
-  - add additional logging & fix Resolution logging ([9aab842](https://github.com/fscorrupt/Posterizarr/commit/9aab842781e961c685ed7898ecb0b709abb9098e)) ([#208](https://github.com/fscorrupt/Posterizarr/pull/208))
-  - discord json (#207) ([2bada3b](https://github.com/fscorrupt/Posterizarr/commit/2bada3b57103e9597669337db0adb5053f278abe)) ([#207](https://github.com/fscorrupt/Posterizarr/pull/207))
-  - discord json ([e46bcfa](https://github.com/fscorrupt/Posterizarr/commit/e46bcfa07479831919706dd46da3d8048d39339e)) ([#207](https://github.com/fscorrupt/Posterizarr/pull/207))
-  - test-path on overlay files (#206) ([1733b3b](https://github.com/fscorrupt/Posterizarr/commit/1733b3b29721b7de04d43b07309101b5c714439f)) ([#206](https://github.com/fscorrupt/Posterizarr/pull/206))
-  - config check (#205) ([d43fe27](https://github.com/fscorrupt/Posterizarr/commit/d43fe27cfa826c419ffd780ec62a7fbe559c63f4)) ([#205](https://github.com/fscorrupt/Posterizarr/pull/205))
-  - config check ([df6ec47](https://github.com/fscorrupt/Posterizarr/commit/df6ec47f33e9a16f5649032218ae5397e2f9aa6e)) ([#205](https://github.com/fscorrupt/Posterizarr/pull/205))
-
 ## [1.9.26](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.26) - 2025-02-04 10:22:04
 
 ## [1.9.25](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.25) - 2025-01-21 11:56:45
