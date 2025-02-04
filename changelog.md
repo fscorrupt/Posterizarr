@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [1.9.28](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.28) - 2025-02-04 12:48:42
+
+## What's Changed
+* add: additional error handeling on poster upload by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/209
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.27...1.9.28
+
 ## [1.9.27](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.27) - 2025-02-04 12:20:39
 
 ## [1.9.26](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.26) - 2025-02-04 10:22:04
