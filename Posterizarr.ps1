@@ -12,7 +12,7 @@ param (
     [switch]$SyncEmby
 )
 
-$CurrentScriptVersion = "1.9.27"
+$CurrentScriptVersion = "1.9.28"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -4143,9 +4143,13 @@ function UploadOtherMediaServerArtwork {
             $UploadCount++
         }
         catch {
-            # Enhanced error handling
-            if ($_.Exception.Response -is [System.Net.Http.HttpResponseMessage]) {
-                $response = $_.Exception.Response.Content.ReadAsStringAsync().Result
+            if ($_.Exception.Response -is [System.Net.Http.HttpResponseMessage] -and $_.Exception.Response.Content) {
+                try {
+                    $response = $_.Exception.Response.Content.ReadAsStringAsync().Result
+                }
+                catch {
+                    $response = "Unable to read server response (content may be disposed)."
+                }
                 Write-Entry -Subtext "Failed to upload image. Server response: $response" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             }
             else {
