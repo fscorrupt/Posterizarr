@@ -6083,9 +6083,9 @@ $global:logLevel = 2
 RotateLogs -ScriptRoot $global:ScriptRoot
 Write-Entry -Message "Starting..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
 # Check if Config file is present
-#CheckConfigFile -ScriptRoot $global:ScriptRoot
+CheckConfigFile -ScriptRoot $global:ScriptRoot
 # Test Json if something is missing
-#CheckJson -jsonExampleUrl "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/config.example.json" -jsonFilePath $(Join-Path $global:ScriptRoot 'config.json')
+CheckJson -jsonExampleUrl "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/config.example.json" -jsonFilePath $(Join-Path $global:ScriptRoot 'config.json')
 # Check if Script is Latest
 if ($CurrentScriptVersion -eq $LatestScriptVersion) {
     Write-Entry -Message "You are Running Version - v$CurrentScriptVersion" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
