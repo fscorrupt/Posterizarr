@@ -30,13 +30,12 @@
 [![Linux](https://img.shields.io/static/v1?style=for-the-badge&logo=linux&logoColor=FFFFFF&message=Linux&color=0D597F&label=)](walkthrough.md)
 [![Windows](https://img.shields.io/static/v1?style=for-the-badge&logo=windows&logoColor=FFFFFF&message=windows&color=097CD7&label=)](walkthrough.md)
 [![MacOS](https://img.shields.io/static/v1?style=for-the-badge&logo=apple&logoColor=FFFFFF&message=macOS&color=515151&label=)](walkthrough.md)
-[![ARM](https://img.shields.io/static/v1?style=for-the-badge&logo=raspberrypi&logoColor=FFFFFF&message=ARM&color=A22846&label=)](walkthrough.md#arm-prerequisites)
 
 ## Introduction
 This PowerShell script automates the process of generating images for your Plex/Jellyfin/Emby media library. Leveraging information from your Plex/Jellyfin/Emby library, such as movie or show titles, season and episode data, it fetches relevant artwork from Fanart.tv, TMDB, TVDB, Plex and IMDB. The script is able to focus on artwork with specific languages to grab. By default, textless artwork `xx` is retrieved and will fall back to `en` if textless is not found. This is a setting a user can decide on, either to focus on textless or on text posters. It also offers both automatic and manual modes for generating posters. The manual mode can accommodate custom creations that cannot be bulk retrieved.
 
 > [!NOTE]
-Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Docker (Ubuntu 22.04 Base Image) does not work on ARM/MAC](#docker), [unRAID](#unraid) and on Windows operating systems.
+Posterizarr is cross-platform ready, meaning it can run on Linux (also arm, but it could break at any time - no official support.), [Docker (Ubuntu 22.04 Base Image) does not work on ARM/MAC](#docker), [unRAID](#unraid) and on Windows operating systems.
 >
 > **Supported Poster Types:**
 >- Movie/Show Posters
@@ -183,6 +182,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `SendNotification`: Set to `true` if you want to send notifications via discord or apprise, else `false`.
     - `AppriseUrl`: **Only possible on Docker** -Url for apprise provider -> [See Docs](https://github.com/caronc/apprise/wiki).
     - `Discord`: Discord Webhook Url.
+    - `DiscordUserName`: Username for the discord webhook, default is `Posterizarr`
     - `UptimeKumaUrl`: Uptime-Kuma Webhook Url.
     - `UseUptimeKuma`: Set to `true` if you want to send webhook to Uptime-Kuma.
     </details>
@@ -211,6 +211,10 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm), [Do
     - `seasonoverlayfile`: Season overlay file name.
     - `backgroundoverlayfile`: Background overlay file name.
     - `titlecardoverlayfile` : Title Card overlay file name.
+    - `poster4k`: 4K Poster overlay file name. (overlay has to match the Poster dimensions 2000x3000)
+    - `Poster1080p` : 1080p Poster overlay file name. (overlay has to match the Poster dimensions 2000x3000)
+    - `UsePosterResolutionOverlays`: Set to `true` to apply specific overlay with resolution for 4k/1080p posters [Example Pic](https://github.com/fscorrupt/Posterizarr/blob/main/images/poster-4k.png).
+      - if you only want 4k just add your default overlay file also for `Poster1080p`.
     - `LibraryFolders`: Set to `false` for asset structure in one flat folder or `true` to split into library media folders like [Kometa](https://kometa.wiki/en/latest/kometa/guides/assets/#image-asset-directory-guide) needs it.
     - `Posters`: Set to `true` to create movie/show posters.
     - `NewLineOnSpecificSymbols`: Set to `true` to enable automatic insertion of a newline character at each occurrence of specific symbols in `NewLineSymbols` within the title text.

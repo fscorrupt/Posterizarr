@@ -12,7 +12,7 @@ param (
     [switch]$SyncEmby
 )
 
-$CurrentScriptVersion = "1.9.25"
+$CurrentScriptVersion = "1.9.26"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -27,6 +27,21 @@ $ProgressPreference = 'SilentlyContinue'
 #####################################################################################################################
 
 #### FUNCTION START ####
+function Get-Resolution {
+    param ($Width)
+    switch ($true) {
+        ($Width -ge 7680) { return "8K" }
+        ($Width -ge 5120) { return "5K" }
+        ($Width -ge 3840) { return "4K" }
+        ($Width -ge 2560) { return "1440p" }
+        ($Width -ge 1920) { return "1080p" }
+        ($Width -ge 1280)  { return "720p" }
+        ($Width -ge 854)   { return "480p" }
+        ($Width -ge 640)   { return "360p" }
+        ($Width -ge 426)   { return "240p" }
+        default { return "unknown" }
+    }
+}
 function Get-CPUModel {
     if ($Platform -eq 'Docker') {
         $cpuInfo = cat /proc/cpuinfo | Out-String
@@ -293,7 +308,7 @@ function SendMessage {
             if ($SkipTBA -eq 'true' -or $SkipJapTitle -eq 'true') {
                 $jsonPayload = @"
     {
-        "username": "Posterizarr",
+        "username": "$global:DiscordUserName"
         "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
         "content": "",
         "embeds": [
@@ -377,7 +392,7 @@ function SendMessage {
             Else {
                 $jsonPayload = @"
     {
-        "username": "Posterizarr",
+        "username": "$global:DiscordUserName"
         "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
         "content": "",
         "embeds": [
@@ -468,7 +483,7 @@ function SendMessage {
         if ($SkipTBA -eq 'true' -or $SkipJapTitle -eq 'true') {
             $jsonPayload = @"
     {
-        "username": "Posterizarr",
+        "username": "$global:DiscordUserName"
         "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
         "content": "",
         "embeds": [
@@ -552,7 +567,7 @@ function SendMessage {
         Else {
             jsonPayload = @"
     {
-        "username": "Posterizarr",
+        "username": "$global:DiscordUserName"
         "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
         "content": "",
         "embeds": [
@@ -3336,13 +3351,14 @@ function CheckJsonPaths {
         [string]$backgroundfont,
         [string]$titlecardfont,
         [string]$Posteroverlay,
+        [string]$titlecardoverlay,
         [string]$Seasonoverlay,
         [string]$Backgroundoverlay,
-        [string]$titlecardoverlay
+        [string]$Posteroverlay4k,
+        [string]$Posteroverlay1080p
     )
 
-    $paths = @($font, $RTLfont, $backgroundfont, $titlecardfont, $Posteroverlay, $Backgroundoverlay, $titlecardoverlay, $Seasonoverlay)
-
+    $paths = @($font, $RTLfont, $backgroundfont, $titlecardfont, $Posteroverlay, $Backgroundoverlay, $titlecardoverlay, $Seasonoverlay, $Posteroverlay4k, $Posteroverlay1080p)
     $errorCount = 0
     foreach ($path in $paths) {
         if (-not (Test-Path $path)) {
@@ -3545,6 +3561,10 @@ function LogConfigSettings {
     Write-Entry -Subtext "| Used Season Overlay File:        $Seasonoverlay" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Used Background Overlay File:    $Backgroundoverlay" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Used TitleCard Overlay File:     $titlecardoverlay" -Path $configLogging -Color White -log Info
+    if ($UsePosterResolutionOverlays -eq 'true') {
+        Write-Entry -Subtext "| Used 4K Overlay File:            $4kposter" -Path $configLogging -Color White -log Info
+        Write-Entry -Subtext "| Used 1080P Overlay File:         $1080pPoster" -Path $configLogging -Color White -log Info
+    }
     Write-Entry -Subtext "| Create Library Folders:          $LibraryFolders" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Create Season Posters:           $global:SeasonPosters" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Create Posters:                  $global:Posters" -Path $configLogging -Color White -log Info
@@ -3808,6 +3828,8 @@ function CheckOverlayDimensions {
         [string]$Seasonoverlay,
         [string]$Backgroundoverlay,
         [string]$Titlecardoverlay,
+        [string]$Posteroverlay4k,
+        [string]$Posteroverlay1080p,
         [string]$PosterSize,
         [string]$BackgroundSize
     )
@@ -3817,6 +3839,8 @@ function CheckOverlayDimensions {
     $Seasonoverlaydimensions = & $magick $Seasonoverlay -format "%wx%h" info:
     $Backgroundoverlaydimensions = & $magick $Backgroundoverlay -format "%wx%h" info:
     $Titlecardoverlaydimensions = & $magick $Titlecardoverlay -format "%wx%h" info:
+    $4kPosteroverlaydimensions = & $magick $Posteroverlay4k -format "%wx%h" info:
+    $1080pPosteroverlaydimensions = & $magick $Posteroverlay1080p -format "%wx%h" info:
 
     # Check Poster Overlay Size
     if ($Posteroverlaydimensions -eq $PosterSize) {
@@ -3847,6 +3871,22 @@ function CheckOverlayDimensions {
     }
     else {
         Write-Entry -Subtext "TitleCard overlay is NOT correctly sized at: $BackgroundSize. Actual dimensions: $Titlecardoverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+    }
+
+    # Check 4K Poster Overlay Size
+    if ($4kPosteroverlaydimensions -eq $PosterSize) {
+        Write-Entry -Subtext "4K Poster overlay is correctly sized at: $Postersize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+    }
+    else {
+        Write-Entry -Subtext "4K Poster overlay is NOT correctly sized at: $Postersize. Actual dimensions: $4kPosteroverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+    }
+
+    # Check 1080p Poster Overlay Size
+    if ($1080pPosteroverlaydimensions -eq $PosterSize) {
+        Write-Entry -Subtext "4K Poster overlay is correctly sized at: $Postersize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+    }
+    else {
+        Write-Entry -Subtext "4K Poster overlay is NOT correctly sized at: $Postersize. Actual dimensions: $1080pPosteroverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     }
 }
 function InvokeMagickCommand {
@@ -4419,12 +4459,24 @@ function MassDownloadPlexArtwork {
                 Else {
                     $Labels = ""
                 }
-
+                $FileMetadata = $Metadata.MediaContainer.$contentquery.media.part.stream
+                $Resolution = $null
+                # Get Resolution
+                if ($FileMetadata){
+                    $FileMetadata | ForEach-Object {
+                        if ($_.streamType -eq '1') {
+                            $Resolution = $_.displayTitle
+                        }
+                    }
+                }
                 $temp = New-Object psobject
                 $temp | Add-Member -MemberType NoteProperty -Name "Library Name" -Value $Library.Name
                 $temp | Add-Member -MemberType NoteProperty -Name "Library Type" -Value $Metadata.MediaContainer.$contentquery.type
                 $temp | Add-Member -MemberType NoteProperty -Name "Library Language" -Value $($Library.language.split("-")[0])
                 $temp | Add-Member -MemberType NoteProperty -Name "title" -Value $($item.title)
+                if ($FileMetadata) {
+                    $temp | Add-Member -MemberType NoteProperty -Name "Resolution" -Value $Resolution
+                }
                 $temp | Add-Member -MemberType NoteProperty -Name "originalTitle" -Value $($item.originalTitle)
                 $temp | Add-Member -MemberType NoteProperty -Name "SeasonNames" -Value $SeasonNames
                 $temp | Add-Member -MemberType NoteProperty -Name "SeasonNumbers" -Value $SeasonNumbers
@@ -4482,6 +4534,17 @@ function MassDownloadPlexArtwork {
                         [xml]$Seasondata = (Invoke-WebRequest $PlexUrl/library/metadata/$key/children? -Headers $extraPlexHeaders).content
                     }
                 }
+                $FileMetadata = $Seasondata.MediaContainer.video.media
+                $Resolution = $null
+                # Get Resolution
+                if ($FileMetadata){
+                    $ResolutionList = @()
+                    $FileMetadata | ForEach-Object {
+                        $Resolution = $_.videoResolution
+                        $ResolutionList += $Resolution
+                    }
+                    $Resolution = $ResolutionList -join ","
+                }
                 $tempseasondata = New-Object psobject
                 $tempseasondata | Add-Member -MemberType NoteProperty -Name "Show Name" -Value $Seasondata.MediaContainer.grandparentTitle
                 $tempseasondata | Add-Member -MemberType NoteProperty -Name "Type" -Value $Seasondata.MediaContainer.viewGroup
@@ -4493,6 +4556,9 @@ function MassDownloadPlexArtwork {
                 $tempseasondata | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Seasondata.MediaContainer.video.title -join ';')
                 $tempseasondata | Add-Member -MemberType NoteProperty -Name "RatingKeys" -Value $($Seasondata.MediaContainer.video.ratingKey -join ',')
                 $tempseasondata | Add-Member -MemberType NoteProperty -Name "PlexTitleCardUrls" -Value $($Seasondata.MediaContainer.video.thumb -join ',')
+                if ($FileMetadata) {
+                    $tempseasondata | Add-Member -MemberType NoteProperty -Name "Resolutions" -Value $Resolution
+                }
                 $Episodedata += $tempseasondata
                 Write-Entry -Subtext "Found [$($tempseasondata.{Show Name})] of type $($tempseasondata.Type) for season $($tempseasondata.{Season Number})" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
             }
@@ -5617,7 +5683,7 @@ function MassDownloadPlexArtwork {
             if ($AssetCleanup -eq 'true') {
                 $jsonPayload = @"
             {
-                "username": "Posterizarr",
+                "username": "$global:DiscordUserName"
                 "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
                 "content": "",
                 "embeds": [
@@ -5690,7 +5756,7 @@ function MassDownloadPlexArtwork {
             Else {
                 $jsonPayload = @"
         {
-            "username": "Posterizarr",
+            "username": "$global:DiscordUserName"
             "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
             "content": "",
             "embeds": [
@@ -5745,7 +5811,7 @@ function MassDownloadPlexArtwork {
             if ($AssetCleanup -eq 'true') {
                 $jsonPayload = @"
             {
-                "username": "Posterizarr",
+                "username": "$global:DiscordUserName"
                 "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
                 "content": "",
                 "embeds": [
@@ -5818,7 +5884,7 @@ function MassDownloadPlexArtwork {
             Else {
                 $jsonPayload = @"
             {
-                "username": "Posterizarr",
+                "username": "$global:DiscordUserName"
                 "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
                 "content": "",
                 "embeds": [
@@ -6017,9 +6083,9 @@ $global:logLevel = 2
 RotateLogs -ScriptRoot $global:ScriptRoot
 Write-Entry -Message "Starting..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
 # Check if Config file is present
-CheckConfigFile -ScriptRoot $global:ScriptRoot
+#CheckConfigFile -ScriptRoot $global:ScriptRoot
 # Test Json if something is missing
-CheckJson -jsonExampleUrl "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/config.example.json" -jsonFilePath $(Join-Path $global:ScriptRoot 'config.json')
+#CheckJson -jsonExampleUrl "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/config.example.json" -jsonFilePath $(Join-Path $global:ScriptRoot 'config.json')
 # Check if Script is Latest
 if ($CurrentScriptVersion -eq $LatestScriptVersion) {
     Write-Entry -Message "You are Running Version - v$CurrentScriptVersion" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
@@ -6094,6 +6160,7 @@ foreach ($folder in (Get-ChildItem -Path $(Join-Path $global:ScriptRoot $global:
 # Notification Part
 $global:SendNotification = $config.Notification.SendNotification.tolower()
 $global:UseUptimeKuma = $config.Notification.UseUptimeKuma.tolower()
+$global:DiscordUserName = $config.Notification.DiscordUserName
 if ($global:UseUptimeKuma -eq 'true') {
     $global:UptimeKumaUrl = $config.Notification.UptimeKumaUrl
 }
@@ -6371,6 +6438,11 @@ $AssetCleanup = $config.PrerequisitePart.AssetCleanup.tolower()
 $NewLineOnSpecificSymbols = $config.PrerequisitePart.NewLineOnSpecificSymbols.tolower()
 $NewLineSymbols = $config.PrerequisitePart.NewLineSymbols
 
+# Resolution Part
+$UsePosterResolutionOverlays = $config.PrerequisitePart.UsePosterResolutionOverlays.tolower()
+
+$4kposter = Join-Path -Path $global:ScriptRoot -ChildPath ('temp', $config.PrerequisitePart.poster4k -join $($joinsymbol))
+$1080pPoster = Join-Path -Path $global:ScriptRoot -ChildPath ('temp', $config.PrerequisitePart.Poster1080p -join $($joinsymbol))
 # Poster Overlay Part
 $global:ImageProcessing = $config.OverlayPart.ImageProcessing.tolower()
 $global:outputQuality = $config.OverlayPart.outputQuality
@@ -6810,8 +6882,8 @@ foreach ($file in $files) {
 }
 
 # Call the function with your variables
-CheckJsonPaths -font $font -RTLfont $RTLfont -backgroundfont $backgroundfont -titlecardfont $titlecardfont -Posteroverlay $Posteroverlay -Backgroundoverlay $Backgroundoverlay -titlecardoverlay $titlecardoverlay -Seasonoverlay $Seasonoverlay
 
+CheckJsonPaths -font "$font" -RTLfont "$RTLfont" -backgroundfont "$backgroundfont "-titlecardfont "$titlecardfont" -Posteroverlay "$Posteroverlay" -Backgroundoverlay "$Backgroundoverlay" -titlecardoverlay "$titlecardoverlay" -Seasonoverlay "$Seasonoverlay" -Posteroverlay4k "$4kposter" -Posteroverlay1080p "$1080pPoster"
 # Check Plex now:
 if (!$SyncJelly -and !$SyncEmby) {
     if ($UsePlex -eq 'true') {
@@ -6829,7 +6901,7 @@ if (!$SyncJelly -and !$SyncEmby) {
 }
 # Check overlay artwork for poster, background, and titlecard dimensions
 Write-Entry -Message "Checking size of overlay files..." -Path $configLogging -Color White -log Info
-CheckOverlayDimensions -Posteroverlay "$Posteroverlay" -Backgroundoverlay "$Backgroundoverlay" -Titlecardoverlay "$titlecardoverlay" -PosterSize "$PosterSize" -BackgroundSize "$BackgroundSize" -Seasonoverlay "$Seasonoverlay"
+CheckOverlayDimensions -Posteroverlay "$Posteroverlay" -Backgroundoverlay "$Backgroundoverlay" -Titlecardoverlay "$titlecardoverlay" -PosterSize "$PosterSize" -BackgroundSize "$BackgroundSize" -Seasonoverlay "$Seasonoverlay" -Posteroverlay4k "$4kposter" -Posteroverlay1080p "$1080pPoster"
 
 # Check if the FanartTvAPI module is installed
 $module = Get-Module -ListAvailable -Name FanartTvAPI
@@ -8165,7 +8237,7 @@ Elseif ($Testing) {
     if ($global:NotifyUrl -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -notlike 'PSDocker*') {
         $jsonPayload = @"
         {
-            "username": "Posterizarr",
+            "username": "$global:DiscordUserName"
             "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
             "content": "",
             "embeds": [
@@ -8228,7 +8300,7 @@ Elseif ($Testing) {
         if ($global:NotifyUrl -like '*discord*') {
             $jsonPayload = @"
             {
-                "username": "Posterizarr",
+                "username": "$global:DiscordUserName"
                 "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
                 "content": "",
                 "embeds": [
@@ -8468,12 +8540,24 @@ Elseif ($Tautulli) {
         Else {
             $Labels = ""
         }
-
+        $FileMetadata = $Metadata.MediaContainer.$contentquery.media.part.stream
+        $Resolution = $null
+        # Get Resolution
+        if ($FileMetadata){
+            $FileMetadata | ForEach-Object {
+                if ($_.streamType -eq '1') {
+                    $Resolution = $_.displayTitle
+                }
+            }
+        }
         $temp = New-Object psobject
         $temp | Add-Member -MemberType NoteProperty -Name "Library Name" -Value $Library.title
         $temp | Add-Member -MemberType NoteProperty -Name "Library Type" -Value $Metadata.MediaContainer.$contentquery.type
         $temp | Add-Member -MemberType NoteProperty -Name "Library Language" -Value $($Library.language.split("-")[0])
         $temp | Add-Member -MemberType NoteProperty -Name "title" -Value $Metadata.MediaContainer.$contentquery.title
+        if ($FileMetadata) {
+            $temp | Add-Member -MemberType NoteProperty -Name "Resolution" -Value $Resolution
+        }
         $temp | Add-Member -MemberType NoteProperty -Name "originalTitle" -Value $Metadata.MediaContainer.$contentquery.originalTitle
         $temp | Add-Member -MemberType NoteProperty -Name "SeasonNames" -Value $SeasonNames
         $temp | Add-Member -MemberType NoteProperty -Name "SeasonNumbers" -Value $SeasonNumbers
@@ -8517,6 +8601,17 @@ Elseif ($Tautulli) {
                         [xml]$Seasondata = (Invoke-WebRequest $PlexUrl/library/metadata/$key/children? -Headers $extraPlexHeaders).content
                     }
                 }
+                $FileMetadata = $Seasondata.MediaContainer.video.media
+                $Resolution = $null
+                # Get Resolution
+                if ($FileMetadata){
+                    $ResolutionList = @()
+                    $FileMetadata | ForEach-Object {
+                        $Resolution = $_.videoResolution
+                        $ResolutionList += $Resolution
+                    }
+                    $Resolution = $ResolutionList -join ","
+                }
                 $tempseasondata = New-Object psobject
                 $tempseasondata | Add-Member -MemberType NoteProperty -Name "Show Name" -Value $Seasondata.MediaContainer.grandparentTitle
                 $tempseasondata | Add-Member -MemberType NoteProperty -Name "Type" -Value $Seasondata.MediaContainer.viewGroup
@@ -8528,6 +8623,9 @@ Elseif ($Tautulli) {
                 $tempseasondata | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Seasondata.MediaContainer.video.title -join ';')
                 $tempseasondata | Add-Member -MemberType NoteProperty -Name "RatingKeys" -Value $($Seasondata.MediaContainer.video.ratingKey -join ',')
                 $tempseasondata | Add-Member -MemberType NoteProperty -Name "PlexTitleCardUrls" -Value $($Seasondata.MediaContainer.video.thumb -join ',')
+                if ($FileMetadata) {
+                    $tempseasondata | Add-Member -MemberType NoteProperty -Name "Resolutions" -Value $Resolution
+                }
                 $Episodedata += $tempseasondata
                 Write-Entry -Subtext "Found [$($tempseasondata.{Show Name})] of type $($tempseasondata.Type) for season $($tempseasondata.{Season Number})" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
             }
@@ -8949,6 +9047,13 @@ Elseif ($Tautulli) {
                                     $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                     InvokeMagickCommand -Command $magick -Arguments $CommentArguments
                                     if (!$global:ImageMagickError -eq 'true') {
+                                        if ($UsePosterResolutionOverlays -eq 'true'){
+                                            switch ($entry.Resolution) {
+                                                '4K' { $Posteroverlay = $4kposter }
+                                                '1080p' { $Posteroverlay = $1080pPoster }
+                                                Default { $Posteroverlay = $Posteroverlay }
+                                            }
+                                        }
                                         # Calculate the height to maintain the aspect ratio with a width of 1000 pixels
                                         if ($AddBorder -eq 'true' -and $AddOverlay -eq 'true') {
                                             $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$PosterImage`""
@@ -9821,6 +9926,13 @@ Elseif ($Tautulli) {
                                 $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                 InvokeMagickCommand -Command $magick -Arguments $CommentArguments
                                 if (!$global:ImageMagickError -eq 'true') {
+                                    if ($UsePosterResolutionOverlays -eq 'true'){
+                                        switch ($entry.Resolution) {
+                                            '4K' { $Posteroverlay = $4kposter }
+                                            '1080p' { $Posteroverlay = $1080pPoster }
+                                            Default { $Posteroverlay = $Posteroverlay }
+                                        }
+                                    }
                                     # Calculate the height to maintain the aspect ratio with a width of 1000 pixels
                                     if ($AddBorder -eq 'true' -and $AddOverlay -eq 'true') {
                                         $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$PosterImage`""
@@ -12460,12 +12572,24 @@ Elseif ($SyncJelly -or $SyncEmby) {
                 Else {
                     $Labels = ""
                 }
-
+                $FileMetadata = $Metadata.MediaContainer.$contentquery.media.part.stream
+                $Resolution = $null
+                # Get Resolution
+                if ($FileMetadata){
+                    $FileMetadata | ForEach-Object {
+                        if ($_.streamType -eq '1') {
+                            $Resolution = $_.displayTitle
+                        }
+                    }
+                }
                 $temp = New-Object psobject
                 $temp | Add-Member -MemberType NoteProperty -Name "Library Name" -Value $Library.Name
                 $temp | Add-Member -MemberType NoteProperty -Name "Library Type" -Value $Metadata.MediaContainer.$contentquery.type
                 $temp | Add-Member -MemberType NoteProperty -Name "Library Language" -Value $($Library.language.split("-")[0])
                 $temp | Add-Member -MemberType NoteProperty -Name "title" -Value $($item.title)
+                if ($FileMetadata) {
+                    $temp | Add-Member -MemberType NoteProperty -Name "Resolution" -Value $Resolution
+                }
                 $temp | Add-Member -MemberType NoteProperty -Name "originalTitle" -Value $($item.originalTitle)
                 $temp | Add-Member -MemberType NoteProperty -Name "SeasonNames" -Value $SeasonNames
                 $temp | Add-Member -MemberType NoteProperty -Name "SeasonNumbers" -Value $SeasonNumbers
@@ -12513,6 +12637,17 @@ Elseif ($SyncJelly -or $SyncEmby) {
                         [xml]$Seasondata = (Invoke-WebRequest $PlexUrl/library/metadata/$key/children? -Headers $extraPlexHeaders).content
                     }
                 }
+                $FileMetadata = $Seasondata.MediaContainer.video.media
+                $Resolution = $null
+                # Get Resolution
+                if ($FileMetadata){
+                    $ResolutionList = @()
+                    $FileMetadata | ForEach-Object {
+                        $Resolution = $_.videoResolution
+                        $ResolutionList += $Resolution
+                    }
+                    $Resolution = $ResolutionList -join ","
+                }
                 $tempseasondata = New-Object psobject
                 $tempseasondata | Add-Member -MemberType NoteProperty -Name "Show Name" -Value $Seasondata.MediaContainer.grandparentTitle
                 $tempseasondata | Add-Member -MemberType NoteProperty -Name "Type" -Value $Seasondata.MediaContainer.viewGroup
@@ -12524,6 +12659,9 @@ Elseif ($SyncJelly -or $SyncEmby) {
                 $tempseasondata | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Seasondata.MediaContainer.video.title -join ';')
                 $tempseasondata | Add-Member -MemberType NoteProperty -Name "RatingKeys" -Value $($Seasondata.MediaContainer.video.ratingKey -join ',')
                 $tempseasondata | Add-Member -MemberType NoteProperty -Name "PlexTitleCardUrls" -Value $($Seasondata.MediaContainer.video.thumb -join ',')
+                if ($FileMetadata) {
+                    $tempseasondata | Add-Member -MemberType NoteProperty -Name "Resolutions" -Value $Resolution
+                }
                 $Episodedata += $tempseasondata
                 Write-Entry -Subtext "Found [$($tempseasondata.{Show Name})] of type $($tempseasondata.Type) for season $($tempseasondata.{Season Number})" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
             }
@@ -13105,7 +13243,7 @@ Elseif ($SyncJelly -or $SyncEmby) {
     if ($global:NotifyUrl -like '*discord*' -and $global:SendNotification -eq 'true') {
         $jsonPayload = @"
             {
-                "username": "Posterizarr",
+                "username": "$global:DiscordUserName"
                 "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
                 "content": "",
                 "embeds": [
@@ -13218,14 +13356,14 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
         if ($slib.Name -notin $LibstoExclude) {
             if ($slib.CollectionType -eq 'movies') {
                 Write-Entry -Subtext "Getting all Itmes from [$($slib.Name)] with item id [$($slib.ItemId)]" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                $allMoviesquery = "$OtherMediaServerUrl/Items?ParentId=$($slib.ItemId)&api_key=$OtherMediaServerApiKey&Recursive=true&Fields=ProviderIds,OriginalTitle,Settings,Path,Overview,ProductionYear,Tags&IncludeItemTypes=Movie"
+                $allMoviesquery = "$OtherMediaServerUrl/Items?ParentId=$($slib.ItemId)&api_key=$OtherMediaServerApiKey&Recursive=true&Fields=ProviderIds,OriginalTitle,Settings,Path,Overview,ProductionYear,Tags,Width,Height&IncludeItemTypes=Movie"
                 $Querytemp = Invoke-RestMethod -Method Get -Uri $allMoviesquery
                 $AllMovies += $Querytemp
             }
             if ($slib.CollectionType -eq 'tvshows') {
                 Write-Entry -Subtext "Getting all Itmes from [$($slib.Name)] with item id [$($slib.ItemId)]" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                $allShowsquery = "$OtherMediaServerUrl/Items?ParentId=$($slib.ItemId)&api_key=$OtherMediaServerApiKey&Recursive=true&Fields=ProviderIds,SeasonUserData,OriginalTitle,Path,Overview,ProductionYear,Tags&IncludeItemTypes=Series"
-                $allEpisodesquery = "$OtherMediaServerUrl/Items?ParentId=$($slib.ItemId)&api_key=$OtherMediaServerApiKey&Recursive=true&Fields=ProviderIds,SeasonUserData,OriginalTitle,Path,Overview,Settings,Tags&IncludeItemTypes=Episode"
+                $allShowsquery = "$OtherMediaServerUrl/Items?ParentId=$($slib.ItemId)&api_key=$OtherMediaServerApiKey&Recursive=true&Fields=ProviderIds,SeasonUserData,OriginalTitle,Path,Overview,ProductionYear,Tags,Width,Height&IncludeItemTypes=Series"
+                $allEpisodesquery = "$OtherMediaServerUrl/Items?ParentId=$($slib.ItemId)&api_key=$OtherMediaServerApiKey&Recursive=true&Fields=ProviderIds,SeasonUserData,OriginalTitle,Path,Overview,Settings,Tags,Width,Height&IncludeItemTypes=Episode"
                 $Querytempshow = Invoke-RestMethod -Method Get -Uri $allShowsquery
                 $QuerytempEpisodes = Invoke-RestMethod -Method Get -Uri $allEpisodesquery
                 $AllShows += $Querytempshow
@@ -13236,6 +13374,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
 
     $Libraries = @()
     foreach ($Movie in $AllMovies.Items) {
+        $Resolution = $null
         if ($UseEmby -eq 'true') {
             $Libtemp = Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/Items/$($Movie.Id)/Ancestors?api_key=$OtherMediaServerApiKey"
             $lib = $Libtemp | Where-Object { $_.Type -eq 'Folder' } | Select-Object Name, Path
@@ -13279,6 +13418,10 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                 Else {
                     $Labels = ""
                 }
+                # Determine resolution category
+                if ($movie.Width -and $movie.Height) {
+                    $Resolution = Get-Resolution -Width $movie.Width
+                }
 
                 Write-Entry -Subtext "Matchedpath: $Matchedpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                 Write-Entry -Subtext "ExtractedFolder: $extractedFolder" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
@@ -13290,6 +13433,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                 $temp | Add-Member -MemberType NoteProperty -Name "title" -Value $Movie.Name
                 $temp | Add-Member -MemberType NoteProperty -Name "originalTitle" -Value $Movie.OriginalTitle
                 $temp | Add-Member -MemberType NoteProperty -Name "year" -Value $Movie.ProductionYear
+                if ($Resolution) {
+                    $temp | Add-Member -MemberType NoteProperty -Name "Resolution" -Value $Resolution
+                }
                 $temp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value $Movie.ProviderIds.Imdb
                 $temp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value $Movie.ProviderIds.Tmdb
                 $temp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $Movie.ProviderIds.Tvdb
@@ -13327,7 +13473,12 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
             if ($SingleLibName -notin $LibstoExclude) {
                 Write-Entry -Subtext "Location: $($Movie.Path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                 Write-Entry -Subtext "Libpath: $($lib.Path)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                $Matchedpath = AddTrailingSlash $($lib.Path)
+                if ($lib.Path.count -gt '1') {
+                    $Matchedpath = AddTrailingSlash $($lib.Path[0])
+                }
+                else {
+                    $Matchedpath = AddTrailingSlash $($lib.Path)
+                }
                 $libpath = $Matchedpath
                 $relativePath = $Movie.Path.Substring($libpath.Length)
                 $pathSegments = $relativePath -split '[\\/]'
@@ -13348,7 +13499,10 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                 Else {
                     $Labels = ""
                 }
-
+                # Determine resolution category
+                if ($movie.Width -and $movie.Height) {
+                    $Resolution = Get-Resolution -Width $movie.Width
+                }
                 Write-Entry -Subtext "Matchedpath: $Matchedpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                 Write-Entry -Subtext "ExtractedFolder: $extractedFolder" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
 
@@ -13360,10 +13514,13 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                 $temp | Add-Member -MemberType NoteProperty -Name "title" -Value $Movie.Name
                 $temp | Add-Member -MemberType NoteProperty -Name "originalTitle" -Value $Movie.OriginalTitle
                 $temp | Add-Member -MemberType NoteProperty -Name "year" -Value $Movie.ProductionYear
+                if ($Resolution) {
+                    $temp | Add-Member -MemberType NoteProperty -Name "Resolution" -Value $Resolution
+                }
                 $temp | Add-Member -MemberType NoteProperty -Name "imdbid" -Value $Movie.ProviderIds.Imdb
                 $temp | Add-Member -MemberType NoteProperty -Name "tmdbid" -Value $Movie.ProviderIds.Tmdb
                 $temp | Add-Member -MemberType NoteProperty -Name "tvdbid" -Value $Movie.ProviderIds.Tvdb
-                $temp | Add-Member -MemberType NoteProperty -Name "Path" -Value $lib.Path
+                $temp | Add-Member -MemberType NoteProperty -Name "Path" -Value $libpath
                 $temp | Add-Member -MemberType NoteProperty -Name "RootFoldername" -Value $extractedFolder
                 $temp | Add-Member -MemberType NoteProperty -Name "extraFolder" -Value $extraFolder
                 $temp | Add-Member -MemberType NoteProperty -Name "OtherMediaServerPosterUrl" -Value $Movie.ImageTags.Primary
@@ -13462,6 +13619,8 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
 
             # Collect episode IDs, Titles, and PrimaryImageTags
             $EpisodeIds = ($SeasonEpisodes.Id -join ',')
+            $EpisodeWidths = ($SeasonEpisodes.Width -join ',')
+            $EpisodeHeights = ($SeasonEpisodes.Height -join ',')
             $EpisodeTitles = ($SeasonEpisodes.Name -join ';')
             $Episodes = ($SeasonEpisodes.IndexNumber -join ',')
             $Thumbs = ($SeasonEpisodes.ImageTags.Primary -join ',')
@@ -13479,6 +13638,8 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                 "ShowID"                       = $ShowID
                 "SeasonId"                     = $SeasonId
                 "EpisodeIds"                   = $EpisodeIds
+                "EpisodeWidths"                = $EpisodeWidths
+                "EpisodeHeights"               = $EpisodeHeights
                 "tvdbid"                       = $show.tvdbid
                 "imdbid"                       = $show.imdbid
                 "tmdbid"                       = $show.tmdbid
@@ -13500,6 +13661,16 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
 
     # Iterate over each item in $OtherEpisodedata
     foreach ($data in $Episodedata) {
+        $EpisodeWidths = $data.EpisodeWidths -split ","
+        $EpisodeHeights = $data.EpisodeHeights -split ","
+        # Initialize an empty array for resolutions
+        $Resolution = @()
+
+        # Loop through each episode and determine resolution
+        for ($i = 0; $i -lt $EpisodeWidths.Count; $i++) {
+            $Width = [int]$EpisodeWidths[$i]
+            $Resolution += Get-Resolution -Width $Width
+        }
         # Create a custom object for each episode using the variables
         $FormattedData += [PSCustomObject]@{
             'Library Name'                 = $data.'Library Name'
@@ -13509,6 +13680,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
             'ShowID'                       = $data.'ShowID'
             'SeasonId'                     = $data.'SeasonId'
             'EpisodeIds'                   = $data.'EpisodeIds'
+            'Resolutions'                  = $Resolution -join ","
             'tvdbid'                       = $data.'tvdbid'
             'imdbid'                       = $data.'imdbid'
             'tmdbid'                       = $data.'tmdbid'
@@ -13874,6 +14046,13 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                     $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                     InvokeMagickCommand -Command $magick -Arguments $CommentArguments
                                     if (!$global:ImageMagickError -eq 'True') {
+                                        if ($UsePosterResolutionOverlays -eq 'true'){
+                                            switch ($entry.Resolution) {
+                                                '4K' { $Posteroverlay = $4kposter }
+                                                '1080p' { $Posteroverlay = $1080pPoster }
+                                                Default { $Posteroverlay = $Posteroverlay }
+                                            }
+                                        }
                                         # Calculate the height to maintain the aspect ratio with a width of 1000 pixels
                                         if ($AddBorder -eq 'true' -and $AddOverlay -eq 'true') {
                                             $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$PosterImage`""
@@ -14665,6 +14844,13 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                 $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                 InvokeMagickCommand -Command $magick -Arguments $CommentArguments
                                 if (!$global:ImageMagickError -eq 'True') {
+                                    if ($UsePosterResolutionOverlays -eq 'true'){
+                                        switch ($entry.Resolution) {
+                                            '4K' { $Posteroverlay = $4kposter }
+                                            '1080p' { $Posteroverlay = $1080pPoster }
+                                            Default { $Posteroverlay = $Posteroverlay }
+                                        }
+                                    }
                                     # Calculate the height to maintain the aspect ratio with a width of 1000 pixels
                                     if ($AddBorder -eq 'true' -and $AddOverlay -eq 'true') {
                                         $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$PosterImage`""
@@ -16781,7 +16967,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
             if ($AssetCleanup -eq 'true') {
                 $jsonPayload = @"
                     {
-                        "username": "Posterizarr",
+                        "username": "$global:DiscordUserName"
                         "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
                         "content": "",
                         "embeds": [
@@ -16894,7 +17080,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
             Else {
                 $jsonPayload = @"
                 {
-                    "username": "Posterizarr",
+                    "username": "$global:DiscordUserName"
                     "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
                     "content": "",
                     "embeds": [
@@ -16989,7 +17175,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
             if ($AssetCleanup -eq 'true') {
                 $jsonPayload = @"
                     {
-                        "username": "Posterizarr",
+                        "username": "$global:DiscordUserName"
                         "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
                         "content": "",
                         "embeds": [
@@ -17092,7 +17278,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
             Else {
                 $jsonPayload = @"
                     {
-                        "username": "Posterizarr",
+                        "username": "$global:DiscordUserName"
                         "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
                         "content": "",
                         "embeds": [
@@ -17473,12 +17659,24 @@ else {
                 Else {
                     $Labels = ""
                 }
-
+                $FileMetadata = $Metadata.MediaContainer.$contentquery.media.part.stream
+                $Resolution = $null
+                # Get Resolution
+                if ($FileMetadata){
+                    $FileMetadata | ForEach-Object {
+                        if ($_.streamType -eq '1') {
+                            $Resolution = $_.displayTitle
+                        }
+                    }
+                }
                 $temp = New-Object psobject
                 $temp | Add-Member -MemberType NoteProperty -Name "Library Name" -Value $Library.Name
                 $temp | Add-Member -MemberType NoteProperty -Name "Library Type" -Value $Metadata.MediaContainer.$contentquery.type
                 $temp | Add-Member -MemberType NoteProperty -Name "Library Language" -Value $($Library.language.split("-")[0])
                 $temp | Add-Member -MemberType NoteProperty -Name "title" -Value $($item.title)
+                if ($FileMetadata) {
+                    $temp | Add-Member -MemberType NoteProperty -Name "Resolution" -Value $Resolution
+                }
                 $temp | Add-Member -MemberType NoteProperty -Name "originalTitle" -Value $($item.originalTitle)
                 $temp | Add-Member -MemberType NoteProperty -Name "SeasonNames" -Value $SeasonNames
                 $temp | Add-Member -MemberType NoteProperty -Name "SeasonNumbers" -Value $SeasonNumbers
@@ -17536,6 +17734,17 @@ else {
                         [xml]$Seasondata = (Invoke-WebRequest $PlexUrl/library/metadata/$key/children? -Headers $extraPlexHeaders).content
                     }
                 }
+                $FileMetadata = $Seasondata.MediaContainer.video.media
+                $Resolution = $null
+                # Get Resolution
+                if ($FileMetadata){
+                    $ResolutionList = @()
+                    $FileMetadata | ForEach-Object {
+                        $Resolution = $_.videoResolution
+                        $ResolutionList += $Resolution
+                    }
+                    $Resolution = $ResolutionList -join ","
+                }
                 $tempseasondata = New-Object psobject
                 $tempseasondata | Add-Member -MemberType NoteProperty -Name "Show Name" -Value $Seasondata.MediaContainer.grandparentTitle
                 $tempseasondata | Add-Member -MemberType NoteProperty -Name "Type" -Value $Seasondata.MediaContainer.viewGroup
@@ -17547,6 +17756,9 @@ else {
                 $tempseasondata | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Seasondata.MediaContainer.video.title -join ';')
                 $tempseasondata | Add-Member -MemberType NoteProperty -Name "RatingKeys" -Value $($Seasondata.MediaContainer.video.ratingKey -join ',')
                 $tempseasondata | Add-Member -MemberType NoteProperty -Name "PlexTitleCardUrls" -Value $($Seasondata.MediaContainer.video.thumb -join ',')
+                if ($FileMetadata) {
+                    $tempseasondata | Add-Member -MemberType NoteProperty -Name "Resolutions" -Value $Resolution
+                }
                 $Episodedata += $tempseasondata
                 Write-Entry -Subtext "Found [$($tempseasondata.{Show Name})] of type $($tempseasondata.Type) for season $($tempseasondata.{Season Number})" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
             }
@@ -17969,6 +18181,13 @@ else {
                                     $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                     InvokeMagickCommand -Command $magick -Arguments $CommentArguments
                                     if (!$global:ImageMagickError -eq 'true') {
+                                        if ($UsePosterResolutionOverlays -eq 'true'){
+                                            switch ($entry.Resolution) {
+                                                '4K' { $Posteroverlay = $4kposter }
+                                                '1080p' { $Posteroverlay = $1080pPoster }
+                                                Default { $Posteroverlay = $Posteroverlay }
+                                            }
+                                        }
                                         # Calculate the height to maintain the aspect ratio with a width of 1000 pixels
                                         if ($AddBorder -eq 'true' -and $AddOverlay -eq 'true') {
                                             $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$PosterImage`""
@@ -18912,6 +19131,13 @@ else {
                                 $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                 InvokeMagickCommand -Command $magick -Arguments $CommentArguments
                                 if (!$global:ImageMagickError -eq 'true') {
+                                    if ($UsePosterResolutionOverlays -eq 'true'){
+                                        switch ($entry.Resolution) {
+                                            '4K' { $Posteroverlay = $4kposter }
+                                            '1080p' { $Posteroverlay = $1080pPoster }
+                                            Default { $Posteroverlay = $Posteroverlay }
+                                        }
+                                    }
                                     # Calculate the height to maintain the aspect ratio with a width of 1000 pixels
                                     if ($AddBorder -eq 'true' -and $AddOverlay -eq 'true') {
                                         $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Posteroverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$borderwidthsecond`"  -bordercolor `"$bordercolor`" -border `"$borderwidth`" `"$PosterImage`""
@@ -21513,7 +21739,7 @@ else {
             if ($AssetCleanup -eq 'true') {
                 $jsonPayload = @"
                 {
-                    "username": "Posterizarr",
+                    "username": "$global:DiscordUserName"
                     "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
                     "content": "",
                     "embeds": [
@@ -21626,7 +21852,7 @@ else {
             Else {
                 $jsonPayload = @"
             {
-                "username": "Posterizarr",
+                "username": "$global:DiscordUserName"
                 "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
                 "content": "",
                 "embeds": [
@@ -21721,7 +21947,7 @@ else {
             if ($AssetCleanup -eq 'true') {
                 $jsonPayload = @"
                 {
-                    "username": "Posterizarr",
+                    "username": "$global:DiscordUserName"
                     "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
                     "content": "",
                     "embeds": [
@@ -21824,7 +22050,7 @@ else {
             Else {
                 $jsonPayload = @"
                 {
-                    "username": "Posterizarr",
+                    "username": "$global:DiscordUserName"
                     "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
                     "content": "",
                     "embeds": [
