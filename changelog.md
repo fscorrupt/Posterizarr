@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## [1.9.29](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.29) - 2025-02-05 21:22:05
+
+## What's Changed
+* Sync by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/211
+* fix: Textstroke apply by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/212
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.28...1.9.29
+
+### Bug Fixes
+
+- general:
+  - Textstroke apply (#212) ([6275aec](https://github.com/fscorrupt/Posterizarr/commit/6275aeca6afa4342dc3f0702d8a3ed8e172005a2)) ([#212](https://github.com/fscorrupt/Posterizarr/pull/212))
+  - Textstroke apply ([4b4fddd](https://github.com/fscorrupt/Posterizarr/commit/4b4fddd16a9071631fe45f9a99fbd118ec981565)) ([#212](https://github.com/fscorrupt/Posterizarr/pull/212))
+
 ## [1.9.28](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.28) - 2025-02-04 12:48:42
 
 ## [1.9.27](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.27) - 2025-02-04 12:20:39
