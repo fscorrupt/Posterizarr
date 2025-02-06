@@ -93,6 +93,8 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm, but 
 > [!NOTE]
 >Upon initial execution, the script may take some time to run as it compiles necessary data. Subsequent runs will look at whether a poster in the AssetPath is missing and only create missing posters, bypassing existing assets in the directory. If you are unhappy with the downloaded artwork, delete it in the AssetPath directory, rerun and the script will populate the missing artwork.
 
+# Prerequisites
+
 > [!IMPORTANT]
 >**Requirements:**
 >
