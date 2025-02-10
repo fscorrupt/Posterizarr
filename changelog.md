@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## [1.9.30](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.30) - 2025-02-10 08:58:20
+
+## What's Changed
+* fix: minor bug fixes by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/213
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.29...1.9.30
+
+### Bug Fixes
+
+- general:
+  - minor bug fixes (#213) ([c4b30e4](https://github.com/fscorrupt/Posterizarr/commit/c4b30e48f14bfd922210b2f10b7b5c4cc48966b7)) ([#213](https://github.com/fscorrupt/Posterizarr/pull/213))
+  - minor bug fixes ([f1623b7](https://github.com/fscorrupt/Posterizarr/commit/f1623b792d00a34bd12e3c8c7aa6f98702a0cc0b)) ([#213](https://github.com/fscorrupt/Posterizarr/pull/213))
+
 ## [1.9.29](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.29) - 2025-02-05 21:22:05
 
 ## [1.9.28](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.28) - 2025-02-04 12:48:42
