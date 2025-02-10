@@ -5976,12 +5976,17 @@ function SyncPlexArtwork {
         [string]$title,
         [string]$artworktype
     )
+    $startmessage = $null
 
     if ($show_skipped -eq 'true'){
         Write-Entry -Message "Starting SyncPlexArtwork for: $title" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+        $startmessage = $true
     }
     Else {
         Write-Entry -Message "Starting SyncPlexArtwork for: $title" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Debug
+        if ($global:logLevel -eq '3'){
+            $startmessage = $true
+        }
     }
 
     try {
@@ -5995,9 +6000,14 @@ function SyncPlexArtwork {
         if ($errorResponse) {
             $errorTitle = $errorResponse.title
             $errorStatus = $errorResponse.status
-
+            if (-not $startmessage){
+                Write-Entry -Message "Starting SyncPlexArtwork for: $title" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+            }
             Write-Entry -Subtext "Failed to retrieve source image: Status: $errorStatus, Title: $errorTitle" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
         } else {
+            if (-not $startmessage){
+                Write-Entry -Message "Starting SyncPlexArtwork for: $title" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+            }
             Write-Entry -Subtext "Failed to retrieve source image: Unknown error" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
         }
 
@@ -6006,12 +6016,18 @@ function SyncPlexArtwork {
 
 
     if ($imageResponse.StatusCode -ne 200) {
+        if (-not $startmessage){
+            Write-Entry -Message "Starting SyncPlexArtwork for: $title" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+        }
         Write-Entry -Subtext "Unexpected response from source ($(RedactMediaServerUrl -url $ArtUrl)): $($imageResponse.StatusCode)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
         return
     }
 
     $remoteImageBytes = $imageResponse.Content
     if (-not $remoteImageBytes) {
+        if (-not $startmessage){
+            Write-Entry -Message "Starting SyncPlexArtwork for: $title" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+        }
         Write-Entry -Subtext "Source image content is empty!" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
         return
     }
@@ -6035,9 +6051,14 @@ function SyncPlexArtwork {
         if ($errorResponse) {
             $errorTitle = $errorResponse.title
             $errorStatus = $errorResponse.status
-
+            if (-not $startmessage){
+                Write-Entry -Message "Starting SyncPlexArtwork for: $title" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+            }
             Write-Entry -Subtext "Failed to retrieve destination image: Status: $errorStatus, Title: $errorTitle" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
         } else {
+            if (-not $startmessage){
+                Write-Entry -Message "Starting SyncPlexArtwork for: $title" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+            }
             Write-Entry -Subtext "Failed to retrieve destination image: Unknown error" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
         }
 
@@ -6046,6 +6067,9 @@ function SyncPlexArtwork {
 
 
     if ($existingImageResponse.StatusCode -ne 200) {
+        if (-not $startmessage){
+            Write-Entry -Message "Starting SyncPlexArtwork for: $title" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+        }
         Write-Entry -Subtext "Unexpected response from destination ($(RedactMediaServerUrl -url $DestUrl)): $($existingImageResponse.StatusCode)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
         return
     }
@@ -13114,15 +13138,15 @@ Elseif ($SyncJelly -or $SyncEmby) {
                         $MovieTitle = $entry.Title
                         $imageType = "Primary"
                         $DestUrl = "$OtherMediaServerUrl/items/$($matchingMovie.id)/images/$imageType/?api_key=$OtherMediaServerApiKey"
-                        Write-Entry -Subtext "Movie Title: $MovieTitle" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                        Write-Entry -Subtext "Type: $imageType" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                        Write-Entry -Subtext "Movie ID: $($matchingMovie.id)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                         if ($matchingMovie.id){
                             SyncPlexArtwork -ArtUrl $Arturl -DestUrl $DestUrl -imagetype $imageType -title $MovieTitle -artworktype 'poster'
                         }
                         Else {
-                            Write-Entry -Subtext "Could not find Movie ID for '$MovieTitle' in $($entry.'Library Name')" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            Write-Entry -Message "Could not find Movie ID for '$MovieTitle' in $($entry.'Library Name')" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                         }
+                        Write-Entry -Subtext "Movie Title: $MovieTitle" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        Write-Entry -Subtext "Type: $imageType" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        Write-Entry -Subtext "Movie ID: $($matchingMovie.id)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                     }
                 }
                 # Now we can start the Background Poster Part
@@ -13148,15 +13172,15 @@ Elseif ($SyncJelly -or $SyncEmby) {
                         $MovieTitle = $entry.Title + " | Background"
                         $imageType = "Backdrop"
                         $DestUrl = "$OtherMediaServerUrl/items/$($matchingMovie.id)/images/$imageType/?api_key=$OtherMediaServerApiKey"
-                        Write-Entry -Subtext "Movie Title: $MovieTitle" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                        Write-Entry -Subtext "Type: $imageType" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                        Write-Entry -Subtext "Movie ID: $($matchingMovie.id)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                         if ($matchingMovie.id){
                             SyncPlexArtwork -ArtUrl $Arturl -DestUrl $DestUrl -imagetype $imageType -title $MovieTitle -artworktype 'background'
                         }
                         Else {
-                            Write-Entry -Subtext "Could not find Movie ID for '$MovieTitle' in $($entry.'Library Name')" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            Write-Entry -Message "Could not find Movie ID for '$MovieTitle' in $($entry.'Library Name')" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                         }
+                        Write-Entry -Subtext "Movie Title: $MovieTitle" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        Write-Entry -Subtext "Type: $imageType" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        Write-Entry -Subtext "Movie ID: $($matchingMovie.id)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                     }
                 }
             }
@@ -13198,15 +13222,15 @@ Elseif ($SyncJelly -or $SyncEmby) {
                         $ShowTitle = $entry.Title
                         $imageType = "Primary"
                         $DestUrl = "$OtherMediaServerUrl/items/$($matchingShow.id)/images/$imageType/?api_key=$OtherMediaServerApiKey"
-                        Write-Entry -Subtext "Show Title: $ShowTitle" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                        Write-Entry -Subtext "Type: $imageType" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                        Write-Entry -Subtext "Show ID: $($matchingShow.id)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                         if ($matchingShow.id){
                             SyncPlexArtwork -ArtUrl $Arturl -DestUrl $DestUrl -imagetype $imageType -title $ShowTitle -artworktype 'poster'
                         }
                         Else {
-                            Write-Entry -Subtext "Could not find Show ID for '$ShowTitle' in $($entry.'Library Name')" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            Write-Entry -Message "Could not find Show ID for '$ShowTitle' in $($entry.'Library Name')" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                         }
+                        Write-Entry -Subtext "Show Title: $ShowTitle" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        Write-Entry -Subtext "Type: $imageType" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        Write-Entry -Subtext "Show ID: $($matchingShow.id)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
 
                     }
                 }
@@ -13230,15 +13254,15 @@ Elseif ($SyncJelly -or $SyncEmby) {
                         $ShowTitle = $entry.Title + " | Background"
                         $imageType = "Backdrop"
                         $DestUrl = "$OtherMediaServerUrl/items/$($matchingShow.id)/images/$imageType/?api_key=$OtherMediaServerApiKey"
-                        Write-Entry -Subtext "Show Title: $ShowTitle" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                        Write-Entry -Subtext "Type: $imageType" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                        Write-Entry -Subtext "Show ID: $($matchingShow.id)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                         if ($matchingShow.id){
                             SyncPlexArtwork -ArtUrl $Arturl -DestUrl $DestUrl -imagetype $imageType -title $ShowTitle -artworktype 'background'
                         }
                         Else {
-                            Write-Entry -Subtext "Could not find Show ID for '$ShowTitle' in $($entry.'Library Name')" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            Write-Entry -Message "Could not find Show ID for '$ShowTitle' in $($entry.'Library Name')" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                         }
+                        Write-Entry -Subtext "Show Title: $ShowTitle" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        Write-Entry -Subtext "Type: $imageType" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        Write-Entry -Subtext "Show ID: $($matchingShow.id)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                     }
                 }
                 # Now we can start the Season Poster Part
@@ -13268,15 +13292,15 @@ Elseif ($SyncJelly -or $SyncEmby) {
                             $ShowTitle = $entry.Title + " | Season $global:SeasonNumber"
                             $imageType = "Primary"
                             $DestUrl = "$OtherMediaServerUrl/items/$($matchingSeason.SeasonId)/images/$imageType/?api_key=$OtherMediaServerApiKey"
-                            Write-Entry -Subtext "Show Title: $ShowTitle" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                            Write-Entry -Subtext "Type: $imageType" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                            Write-Entry -Subtext "Season ID: $($matchingSeason.SeasonId)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                             if ($matchingSeason.SeasonId){
                                 SyncPlexArtwork -ArtUrl $Arturl -DestUrl $DestUrl -imagetype $imageType -title $ShowTitle -artworktype 'season'
                             }
                             Else {
-                                Write-Entry -Subtext "Could not find Season ID for '$ShowTitle' in $($entry.'Library Name')" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                Write-Entry -Message "Could not find Season ID for '$ShowTitle' in $($entry.'Library Name')" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                             }
+                            Write-Entry -Subtext "Show Title: $ShowTitle" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-Entry -Subtext "Type: $imageType" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-Entry -Subtext "Season ID: $($matchingSeason.SeasonId)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                         }
                     }
                 }
@@ -13323,17 +13347,16 @@ Elseif ($SyncJelly -or $SyncEmby) {
                                     # Define the image type and destination URL
                                     $imageType = "Primary"
                                     $DestUrl = "$OtherMediaServerUrl/items/$($global:episodeid)/images/$imageType/?api_key=$OtherMediaServerApiKey"
-                                    Write-Entry -Subtext "Show Title: $ShowTitle" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                                    Write-Entry -Subtext "Type: $imageType" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                                    Write-Entry -Subtext "Episode ID: $global:episodeid" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                                     # Call the SyncPlexArtwork function to sync the artwork
                                     if ($matchingShow.id){
                                         SyncPlexArtwork -ArtUrl $Arturl -DestUrl $DestUrl -imagetype $imageType -title $ShowTitle -artworktype 'tc'
                                     }
                                     Else {
-                                        Write-Entry -Subtext "Could not find Episode ID for '$ShowTitle' in $($entry.'Library Name')" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                        Write-Entry -Message "Could not find Episode ID for '$ShowTitle' in $($entry.'Library Name')" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                     }
-
+                                    Write-Entry -Subtext "Show Title: $ShowTitle" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                    Write-Entry -Subtext "Type: $imageType" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                    Write-Entry -Subtext "Episode ID: $global:episodeid" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                                 }
                             }
                         }
