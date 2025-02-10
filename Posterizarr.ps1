@@ -5977,16 +5977,33 @@ function SyncPlexArtwork {
         [string]$artworktype
     )
 
-    Write-Entry -Message "Starting SyncPlexArtwork for: $title" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+    if ($show_skipped -eq 'true'){
+        Write-Entry -Message "Starting SyncPlexArtwork for: $title" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+    }
+    Else {
+        Write-Entry -Message "Starting SyncPlexArtwork for: $title" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Debug
+    }
 
     try {
         Write-Entry -Subtext "Fetching image from source: $(RedactMediaServerUrl -url $ArtUrl)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
         $imageResponse = Invoke-WebRequest -Uri $ArtUrl -Headers $extraPlexHeaders -UseBasicParsing -ErrorAction Stop
     }
     catch {
-        Write-Entry -Subtext "Failed to retrieve source image: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        # Attempt to parse JSON error response
+        $errorResponse = $_.ErrorDetails.Message | ConvertFrom-Json -ErrorAction SilentlyContinue
+
+        if ($errorResponse) {
+            $errorTitle = $errorResponse.title
+            $errorStatus = $errorResponse.status
+
+            Write-Entry -Subtext "Failed to retrieve source image: Status: $errorStatus, Title: $errorTitle" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        } else {
+            Write-Entry -Subtext "Failed to retrieve source image: Unknown error" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        }
+
         return
     }
+
 
     if ($imageResponse.StatusCode -ne 200) {
         Write-Entry -Subtext "Unexpected response from source ($(RedactMediaServerUrl -url $ArtUrl)): $($imageResponse.StatusCode)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
@@ -6012,9 +6029,21 @@ function SyncPlexArtwork {
         $existingImageResponse = Invoke-WebRequest -Uri $DestUrl -UseBasicParsing -ErrorAction Stop
     }
     catch {
-        Write-Entry -Subtext "Failed to retrieve destination image: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        # Attempt to parse JSON error response
+        $errorResponse = $_.ErrorDetails.Message | ConvertFrom-Json -ErrorAction SilentlyContinue
+
+        if ($errorResponse) {
+            $errorTitle = $errorResponse.title
+            $errorStatus = $errorResponse.status
+
+            Write-Entry -Subtext "Failed to retrieve destination image: Status: $errorStatus, Title: $errorTitle" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        } else {
+            Write-Entry -Subtext "Failed to retrieve destination image: Unknown error" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        }
+
         return
     }
+
 
     if ($existingImageResponse.StatusCode -ne 200) {
         Write-Entry -Subtext "Unexpected response from destination ($(RedactMediaServerUrl -url $DestUrl)): $($existingImageResponse.StatusCode)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
@@ -6028,7 +6057,12 @@ function SyncPlexArtwork {
 
     $existingImageHash = GetHash -imageBytes $existingImageBytes
     if ($remoteImageHash -eq $existingImageHash) {
-        Write-Entry -Subtext "Image hashes match, skipping upload for $title" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+        if ($show_skipped -eq 'true'){
+            Write-Entry -Subtext "Image hashes match, skipping upload for $title" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+        }
+        Else {
+            Write-Entry -Subtext "Image hashes match, skipping upload for $title" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Debug
+        }
         return
     }
 
@@ -6041,8 +6075,19 @@ function SyncPlexArtwork {
             Write-Entry -Subtext "Successfully deleted old artwork." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
         }
         catch {
-            Write-Entry -Subtext "Error deleting image: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            # Attempt to parse JSON error response
+            $errorResponse = $_.ErrorDetails.Message | ConvertFrom-Json -ErrorAction SilentlyContinue
+
+            if ($errorResponse) {
+                $errorTitle = $errorResponse.title
+                $errorStatus = $errorResponse.status
+
+                Write-Entry -Subtext "Error deleting image: Status: $errorStatus, Title: $errorTitle" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            } else {
+                Write-Entry -Subtext "Error deleting image: Unknown error" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            }
         }
+
     }
 
     try {
@@ -6059,8 +6104,19 @@ function SyncPlexArtwork {
         $UploadCount++
     }
     catch {
-        Write-Entry -Subtext "Error uploading image: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        # Attempt to parse JSON error response
+        $errorResponse = $_.ErrorDetails.Message | ConvertFrom-Json -ErrorAction SilentlyContinue
+
+        if ($errorResponse) {
+            $errorTitle = $errorResponse.title
+            $errorStatus = $errorResponse.status
+
+            Write-Entry -Subtext "Error uploading image: Status: $errorStatus, Title: $errorTitle" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        } else {
+            Write-Entry -Subtext "Error uploading image: Unknown error" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        }
     }
+
 }
 function Send-UptimeKumaWebhook {
     param (
