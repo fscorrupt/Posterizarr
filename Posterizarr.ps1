@@ -12,7 +12,7 @@ param (
     [switch]$SyncEmby
 )
 
-$CurrentScriptVersion = "1.9.29"
+$CurrentScriptVersion = "1.9.30"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -3467,35 +3467,42 @@ function Test-And-Download {
         Invoke-WebRequest -Uri $url -OutFile $destination
     }
 }
-function RedactPlexUrl {
+function RedactMediaServerUrl {
     param(
         [string]$url
     )
 
-    $urlMatch = $url -match "(https?://)([^:/]+)(:\d+)?(/[^?]+)(\?X-Plex-Token=)([^&]+)(.*)"
-    if ($urlMatch) {
+    # Match Plex URLs containing X-Plex-Token
+    $plexMatch = $url -match "(https?://)([^:/]+)(:\d+)?(/[^?]+)(\?X-Plex-Token=)([^&]+)(.*)"
+
+    # Match Jellyfin/Emby URLs containing api_key
+    $otherMatch = $url -match "(https?://)([^:/]+)(:\d+)?(/[^?]+)(\?api_key=)([^&]+)(.*)"
+
+    if ($plexMatch -or $otherMatch) {
         $protocol = $Matches[1]
         $hostname = $Matches[2]
         $port = $Matches[3]
         $path = $Matches[4]
-        $prefix = $Matches[5]
+        $prefix = $Matches[5]   # Either "?X-Plex-Token=" or "?api_key="
         $token = $Matches[6]
         $suffix = $Matches[7]
 
         # Redact IP address or hostname
         $redactedHostname = $hostname -replace "(?<=.{3}).", "*"
-        $redactedUrl = $protocol + $redactedHostname + $port + $path
 
-        # Redact token
+        # Redact API Token
         $redactedToken = $($token[0..7] -join '') + "*******"
-        $redactedUrl += $prefix + $redactedToken + $suffix
+
+        # Construct the redacted URL
+        $redactedUrl = $protocol + $redactedHostname + $port + $path + $prefix + $redactedToken + $suffix
 
         return $redactedUrl
     }
     else {
-        return $url
+        return $url  # Return original if no match found
     }
 }
+
 function LogConfigSettings {
     Write-Entry -Message "Current Config.json Settings" -Path $configLogging -Color Cyan -log Info
     Write-Entry -Subtext "___________________________________________" -Path $configLogging -Color DarkMagenta -log Info
@@ -3708,7 +3715,7 @@ function CheckPlexAccess {
                 }
             }
             else {
-                Write-Entry -Message "Could not access Plex with this URL: $(RedactPlexUrl -url "$PlexUrl/library/sections/?X-Plex-Token=$PlexToken")" -Path $configLogging -Color Red -Log Error
+                Write-Entry -Message "Could not access Plex with this URL: $(RedactMediaServerUrl -url "$PlexUrl/library/sections/?X-Plex-Token=$PlexToken")" -Path $configLogging -Color Red -Log Error
                 Write-Entry -Subtext "Please check token and access..." -Path $configLogging -Color Red -log Error
                 Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                 $errorCount++
@@ -3723,7 +3730,7 @@ function CheckPlexAccess {
             }
         }
         catch {
-            Write-Entry -Subtext "Could not access Plex with this URL: $(RedactPlexUrl -url "$PlexUrl/library/sections/?X-Plex-Token=$PlexToken")" -Path $configLogging -Color Red -Log Error
+            Write-Entry -Subtext "Could not access Plex with this URL: $(RedactMediaServerUrl -url "$PlexUrl/library/sections/?X-Plex-Token=$PlexToken")" -Path $configLogging -Color Red -Log Error
             Write-Entry -Subtext "Error occurred while accessing Plex server: $($_.Exception.Message)" -Path $configLogging -Color Red -log Error
             # Clear Running File
             if (Test-Path $CurrentlyRunning) {
@@ -4795,7 +4802,7 @@ function MassDownloadPlexArtwork {
                         GetPlexArtworkUrl -ArtUrl $Arturl -TempImage $PosterImage
                         if ($global:posterurl) {
                             try {
-                                Write-Entry -Subtext "Poster url: $(RedactPlexUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
+                                Write-Entry -Subtext "Poster url: $(RedactMediaServerUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
                                 Write-Entry -Subtext "Downloading Poster from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                 $response = Invoke-WebRequest -Uri $global:posterurl -OutFile $PosterImage -ErrorAction Stop
                             }
@@ -4910,7 +4917,7 @@ function MassDownloadPlexArtwork {
                         GetPlexArtworkUrl -ArtUrl $Arturl -TempImage $BackgroundImage
                         if ($global:posterurl) {
                             try {
-                                Write-Entry -Subtext "Poster url: $(RedactPlexUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
+                                Write-Entry -Subtext "Poster url: $(RedactMediaServerUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
                                 Write-Entry -Subtext "Downloading Poster from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                 $response = Invoke-WebRequest -Uri $global:posterurl -OutFile $BackgroundImage -ErrorAction Stop
                             }
@@ -5083,7 +5090,7 @@ function MassDownloadPlexArtwork {
                     }
                     if ($global:posterurl) {
                         try {
-                            Write-Entry -Subtext "Poster url: $(RedactPlexUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
+                            Write-Entry -Subtext "Poster url: $(RedactMediaServerUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
                             Write-Entry -Subtext "Downloading Poster from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                             $response = Invoke-WebRequest -Uri $global:posterurl -OutFile $PosterImage -ErrorAction Stop
                         }
@@ -5205,7 +5212,7 @@ function MassDownloadPlexArtwork {
                     }
                     if ($global:posterurl) {
                         try {
-                            Write-Entry -Subtext "Poster url: $(RedactPlexUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
+                            Write-Entry -Subtext "Poster url: $(RedactMediaServerUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
                             Write-Entry -Subtext "Downloading Poster from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                             $response = Invoke-WebRequest -Uri $global:posterurl -OutFile $BackgroundImage -ErrorAction Stop
                         }
@@ -5344,7 +5351,7 @@ function MassDownloadPlexArtwork {
                         GetPlexArtworkUrl -ArtUrl $Arturl -TempImage $SeasonImage
                         if ($global:posterurl) {
                             try {
-                                Write-Entry -Subtext "Poster url: $(RedactPlexUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
+                                Write-Entry -Subtext "Poster url: $(RedactMediaServerUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
                                 Write-Entry -Subtext "Downloading Poster from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                 $response = Invoke-WebRequest -Uri $global:posterurl -OutFile $SeasonImage -ErrorAction Stop
                             }
@@ -5498,7 +5505,7 @@ function MassDownloadPlexArtwork {
                                 GetPlexArtworkUrl -ArtUrl $ArtUrl -TempImage $EpisodeImage
                                 if ($global:posterurl) {
                                     try {
-                                        Write-Entry -Subtext "Poster url: $(RedactPlexUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
+                                        Write-Entry -Subtext "Poster url: $(RedactMediaServerUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
                                         Write-Entry -Subtext "Downloading Titlecard from 'Plex'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                         $response = Invoke-WebRequest -Uri $global:posterurl -OutFile $EpisodeImage -ErrorAction Stop
                                     }
@@ -5969,81 +5976,90 @@ function SyncPlexArtwork {
         [string]$title,
         [string]$artworktype
     )
-    # Get the remote image and calculate its hash
-    $imageResponse = Invoke-WebRequest -Uri $ArtUrl -Headers $extraPlexHeaders -UseBasicParsing
-    if ($imageResponse.StatusCode -eq 200) {
-        Write-Entry -Message "Getting hash for: $title" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-        # Read the image content as bytes directly from the response
-        $remoteImageBytes = $imageResponse.Content
-        $remoteImageContentType = $imageResponse.headers.'Content-Type'
 
-        # If content type is an array, select the first element
-        if ($remoteImageContentType -is [System.Array]) {
-            $remoteImageContentType = $remoteImageContentType[0]
+    Write-Entry -Message "Starting SyncPlexArtwork for: $title" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+
+    try {
+        Write-Entry -Message "Fetching image from source: $(RedactMediaServerUrl -url $ArtUrl)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+        $imageResponse = Invoke-WebRequest -Uri $ArtUrl -Headers $extraPlexHeaders -UseBasicParsing -ErrorAction Stop
+    }
+    catch {
+        Write-Entry -Subtext "Failed to retrieve source image: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        return
+    }
+
+    if ($imageResponse.StatusCode -ne 200) {
+        Write-Entry -Subtext "Unexpected response from source ($(RedactMediaServerUrl -url $ArtUrl)): $($imageResponse.StatusCode)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        return
+    }
+
+    $remoteImageBytes = $imageResponse.Content
+    if (-not $remoteImageBytes) {
+        Write-Entry -Subtext "Source image content is empty!" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        return
+    }
+
+    $remoteImageContentType = $imageResponse.Headers.'Content-Type'
+    if ($remoteImageContentType -is [System.Array]) {
+        $remoteImageContentType = $remoteImageContentType[0]
+    }
+
+    Write-Entry -Message "Calculating hash for remote image..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+    $remoteImageHash = GetHash -imageBytes $remoteImageBytes
+
+    try {
+        Write-Entry -Message "Fetching existing image from destination: $(RedactMediaServerUrl -url $DestUrl)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+        $existingImageResponse = Invoke-WebRequest -Uri $DestUrl -UseBasicParsing -ErrorAction Stop
+    }
+    catch {
+        Write-Entry -Subtext "Failed to retrieve destination image: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        return
+    }
+
+    if ($existingImageResponse.StatusCode -ne 200) {
+        Write-Entry -Subtext "Unexpected response from destination ($(RedactMediaServerUrl -url $DestUrl)): $($existingImageResponse.StatusCode)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        return
+    }
+
+    $existingImageBytes = $existingImageResponse.Content
+    if (-not $existingImageBytes) {
+        Write-Entry -Subtext "Existing image content is empty!" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+    }
+
+    $existingImageHash = GetHash -imageBytes $existingImageBytes
+    if ($remoteImageHash -eq $existingImageHash) {
+        Write-Entry -Subtext "Image hashes match, skipping upload for $title" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+        return
+    }
+
+    Write-Entry -Message "Uploading new artwork to Jelly/Emby for: $title" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+
+    if ($imageType -eq 'Backdrop') {
+        try {
+            Write-Entry -Subtext "Deleting old artwork before upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+            Invoke-RestMethod -Uri $DestUrl -Method Delete -ErrorAction Stop
+            Write-Entry -Subtext "Successfully deleted old artwork." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
         }
-
-        # Calculate the hash of the remote image
-        $remoteImageHash = GetHash -imageBytes $remoteImageBytes
-
-        # Get the current image from Emby/Jellyfin (if available) and calculate its hash
-        $existingImageResponse = Invoke-WebRequest -Uri $DestUrl -UseBasicParsing
-
-        if ($existingImageResponse.StatusCode -eq 200) {
-            # Read the existing image as bytes
-            $existingImageBytes = $existingImageResponse.Content
-
-            # Calculate the hash of the existing image
-            $existingImageHash = GetHash -imageBytes $existingImageBytes
-
-            # Compare the hashes
-            if ($remoteImageHash -ne $existingImageHash) {
-                Write-Entry -Message "Push new Artwork to Jelly/Emby - $title" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                if ($imageType -eq 'Backdrop') {
-                    # Make the API request to delete the image
-                    try {
-                        $response = Invoke-RestMethod -Uri $DestUrl -Method Delete -ErrorAction Stop
-                    }
-                    catch {
-                        Write-Entry -Subtext "Error deleting image: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                        Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                        $errorCount++
-                    }
-                }
-                # Convert the remote image bytes to base64
-                $imageBase64 = [Convert]::ToBase64String($remoteImageBytes)
-
-                # Make the API request to upload the image
-                try {
-                    $response = Invoke-RestMethod -Uri $DestUrl -Method Post -Body $imageBase64 -ContentType $remoteImageContentType -ErrorAction Stop
-                    Write-Entry -Subtext "Image uploaded successfully." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
-                    switch ($artworktype) {
-                        'poster' { $postercount++ }
-                        'tc' { $EpisodeCount++ }
-                        'background' { $BackgroundCount++ }
-                        'season' { $SeasonCount++ }
-                    }
-                    $UploadCount++
-                }
-                catch {
-                    Write-Entry -Subtext "Error uploading image: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                    Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                    $errorCount++
-                }
-            }
-            Else {
-                Write-Entry -Subtext "Hash matches, no need for upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-            }
-        }
-        else {
-            Write-Entry -Subtext "Error retrieving the existing image from the media server for - $title." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-            $errorCount++
+        catch {
+            Write-Entry -Subtext "Error deleting image: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
         }
     }
-    else {
-        Write-Entry -Subtext "Error retrieving the image from the URL for - $title." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-        Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-        $errorCount++
+
+    try {
+        $imageBase64 = [Convert]::ToBase64String($remoteImageBytes)
+        $response = Invoke-RestMethod -Uri $DestUrl -Method Post -Body $imageBase64 -ContentType $remoteImageContentType -ErrorAction Stop
+        Write-Entry -Subtext "Image uploaded successfully." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+
+        switch ($artworktype) {
+            'poster' { $postercount++ }
+            'tc' { $EpisodeCount++ }
+            'background' { $BackgroundCount++ }
+            'season' { $SeasonCount++ }
+        }
+        $UploadCount++
+    }
+    catch {
+        Write-Entry -Subtext "Error uploading image: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
     }
 }
 function Send-UptimeKumaWebhook {
@@ -9006,7 +9022,7 @@ Elseif ($Tautulli) {
                                         Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                         $errorCount++
                                     }
-                                    Write-Entry -Subtext "Poster url: $(RedactPlexUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
+                                    Write-Entry -Subtext "Poster url: $(RedactMediaServerUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
                                     if ($global:posterurl -like 'https://image.tmdb.org*') {
                                         if ($global:PosterWithText) {
                                             Write-Entry -Subtext "Downloading Poster with Text from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
@@ -9406,7 +9422,7 @@ Elseif ($Tautulli) {
                                         Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                         $errorCount++
                                     }
-                                    Write-Entry -Subtext "Poster url: $(RedactPlexUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
+                                    Write-Entry -Subtext "Poster url: $(RedactMediaServerUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
                                     if ($global:posterurl -like 'https://image.tmdb.org*') {
                                         if ($global:PosterWithText) {
                                             Write-Entry -Subtext "Downloading background with Text from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
@@ -9884,7 +9900,7 @@ Elseif ($Tautulli) {
                                     Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                     $errorCount++
                                 }
-                                Write-Entry -Subtext "Poster url: $(RedactPlexUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
+                                Write-Entry -Subtext "Poster url: $(RedactMediaServerUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
                                 if ($global:posterurl -like 'https://image.tmdb.org*') {
                                     if ($global:PosterWithText) {
                                         Write-Entry -Subtext "Downloading Poster with Text from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
@@ -10296,7 +10312,7 @@ Elseif ($Tautulli) {
                                     Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                     $errorCount++
                                 }
-                                Write-Entry -Subtext "Poster url: $(RedactPlexUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
+                                Write-Entry -Subtext "Poster url: $(RedactMediaServerUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
                                 if ($global:posterurl -like 'https://image.tmdb.org*') {
                                     if ($global:PosterWithText) {
                                         Write-Entry -Subtext "Downloading background with Text from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
@@ -10819,7 +10835,7 @@ Elseif ($Tautulli) {
                                             Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                             $errorCount++
                                         }
-                                        Write-Entry -Subtext "Poster url: $(RedactPlexUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
+                                        Write-Entry -Subtext "Poster url: $(RedactMediaServerUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
                                         if ($global:posterurl -like 'https://image.tmdb.org*') {
                                             Write-Entry -Subtext "Downloading Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                             $global:AssetTextLang = $global:TMDBAssetTextLang
@@ -10981,7 +10997,7 @@ Elseif ($Tautulli) {
                                             Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                             $errorCount++
                                         }
-                                        Write-Entry -Subtext "Poster url: $(RedactPlexUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
+                                        Write-Entry -Subtext "Poster url: $(RedactMediaServerUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
                                         if ($global:posterurl -like 'https://image.tmdb.org*') {
                                             Write-Entry -Subtext "Downloading Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                             $global:AssetTextLang = $global:TMDBAssetTextLang
@@ -13042,6 +13058,9 @@ Elseif ($SyncJelly -or $SyncEmby) {
                         $MovieTitle = $entry.Title
                         $imageType = "Primary"
                         $DestUrl = "$OtherMediaServerUrl/items/$($matchingMovie.id)/images/$imageType/?api_key=$OtherMediaServerApiKey"
+                        Write-Entry -Subtext "Movie Title: $MovieTitle" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        Write-Entry -Subtext "Type: $imageType" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        Write-Entry -Subtext "Movie ID: $($matchingMovie.id)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                         SyncPlexArtwork -ArtUrl $Arturl -DestUrl $DestUrl -imagetype $imageType -title $MovieTitle -artworktype 'poster'
                     }
                 }
@@ -13068,6 +13087,9 @@ Elseif ($SyncJelly -or $SyncEmby) {
                         $MovieTitle = $entry.Title + " | Background"
                         $imageType = "Backdrop"
                         $DestUrl = "$OtherMediaServerUrl/items/$($matchingMovie.id)/images/$imageType/?api_key=$OtherMediaServerApiKey"
+                        Write-Entry -Subtext "Movie Title: $MovieTitle" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        Write-Entry -Subtext "Type: $imageType" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        Write-Entry -Subtext "Movie ID: $($matchingMovie.id)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                         SyncPlexArtwork -ArtUrl $Arturl -DestUrl $DestUrl -imagetype $imageType -title $MovieTitle -artworktype 'background'
                     }
                 }
@@ -13110,6 +13132,9 @@ Elseif ($SyncJelly -or $SyncEmby) {
                         $ShowTitle = $entry.Title
                         $imageType = "Primary"
                         $DestUrl = "$OtherMediaServerUrl/items/$($matchingShow.id)/images/$imageType/?api_key=$OtherMediaServerApiKey"
+                        Write-Entry -Subtext "Show Title: $ShowTitle" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        Write-Entry -Subtext "Type: $imageType" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        Write-Entry -Subtext "Show ID: $($matchingShow.id)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                         SyncPlexArtwork -ArtUrl $Arturl -DestUrl $DestUrl -imagetype $imageType -title $ShowTitle -artworktype 'poster'
                     }
                 }
@@ -13122,17 +13147,20 @@ Elseif ($SyncJelly -or $SyncEmby) {
                         $Arturl = $plexurl + $entry.PlexBackgroundUrl
                     }
 
-                    $matchingMovie = $OtherAllMovies | Where-Object {
+                    $matchingShow = $OtherAllShows | Where-Object {
                         ($_.Title -eq $entry.Title -or $_.originalTitle -eq $entry.originalTitle) -and
                         $_."Library Name" -eq $entry."Library Name" -and (
                             $_.TmdbId -eq $entry.TmdbId -or
                             $_.TvdbId -eq $entry.TvdbId
                         )
                     }
-                    if ($matchingMovie) {
+                    if ($matchingShow) {
                         $ShowTitle = $entry.Title + " | Background"
                         $imageType = "Backdrop"
-                        $DestUrl = "$OtherMediaServerUrl/items/$($matchingMovie.id)/images/$imageType/?api_key=$OtherMediaServerApiKey"
+                        $DestUrl = "$OtherMediaServerUrl/items/$($matchingShow.id)/images/$imageType/?api_key=$OtherMediaServerApiKey"
+                        Write-Entry -Subtext "Show Title: $ShowTitle" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        Write-Entry -Subtext "Type: $imageType" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        Write-Entry -Subtext "Show ID: $($matchingShow.id)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                         SyncPlexArtwork -ArtUrl $Arturl -DestUrl $DestUrl -imagetype $imageType -title $ShowTitle -artworktype 'background'
                     }
                 }
@@ -13163,6 +13191,9 @@ Elseif ($SyncJelly -or $SyncEmby) {
                             $ShowTitle = $entry.Title + " | Season $global:SeasonNumber"
                             $imageType = "Primary"
                             $DestUrl = "$OtherMediaServerUrl/items/$($matchingSeason.SeasonId)/images/$imageType/?api_key=$OtherMediaServerApiKey"
+                            Write-Entry -Subtext "Show Title: $ShowTitle" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-Entry -Subtext "Type: $imageType" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-Entry -Subtext "Show ID: $($matchingSeason.SeasonId)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                             SyncPlexArtwork -ArtUrl $Arturl -DestUrl $DestUrl -imagetype $imageType -title $ShowTitle -artworktype 'season'
                         }
                     }
@@ -13210,7 +13241,9 @@ Elseif ($SyncJelly -or $SyncEmby) {
                                     # Define the image type and destination URL
                                     $imageType = "Primary"
                                     $DestUrl = "$OtherMediaServerUrl/items/$($global:episodeid)/images/$imageType/?api_key=$OtherMediaServerApiKey"
-
+                                    Write-Entry -Subtext "Show Title: $ShowTitle" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                    Write-Entry -Subtext "Type: $imageType" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                    Write-Entry -Subtext "Show ID: $global:episodeid" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                                     # Call the SyncPlexArtwork function to sync the artwork
                                     SyncPlexArtwork -ArtUrl $Arturl -DestUrl $DestUrl -imagetype $imageType -title $ShowTitle -artworktype 'tc'
                                 }
@@ -18188,7 +18221,7 @@ else {
                                         Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                         $errorCount++
                                     }
-                                    Write-Entry -Subtext "Poster url: $(RedactPlexUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
+                                    Write-Entry -Subtext "Poster url: $(RedactMediaServerUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
                                     if ($global:posterurl -like 'https://image.tmdb.org*') {
                                         if ($global:PosterWithText) {
                                             Write-Entry -Subtext "Downloading Poster with Text from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
@@ -18621,7 +18654,7 @@ else {
                                         Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                         $errorCount++
                                     }
-                                    Write-Entry -Subtext "Poster url: $(RedactPlexUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
+                                    Write-Entry -Subtext "Poster url: $(RedactMediaServerUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
                                     if ($global:posterurl -like 'https://image.tmdb.org*') {
                                         if ($global:PosterWithText) {
                                             Write-Entry -Subtext "Downloading background with Text from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
@@ -19137,7 +19170,7 @@ else {
                                     Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                     $errorCount++
                                 }
-                                Write-Entry -Subtext "Poster url: $(RedactPlexUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
+                                Write-Entry -Subtext "Poster url: $(RedactMediaServerUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
                                 if ($global:posterurl -like 'https://image.tmdb.org*') {
                                     if ($global:PosterWithText) {
                                         Write-Entry -Subtext "Downloading Poster with Text from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
@@ -19579,7 +19612,7 @@ else {
                                     Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                     $errorCount++
                                 }
-                                Write-Entry -Subtext "Poster url: $(RedactPlexUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
+                                Write-Entry -Subtext "Poster url: $(RedactMediaServerUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
                                 if ($global:posterurl -like 'https://image.tmdb.org*') {
                                     if ($global:PosterWithText) {
                                         Write-Entry -Subtext "Downloading background with Text from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
@@ -20137,7 +20170,7 @@ else {
                                             Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                             $errorCount++
                                         }
-                                        Write-Entry -Subtext "Poster url: $(RedactPlexUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
+                                        Write-Entry -Subtext "Poster url: $(RedactMediaServerUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
                                         if ($global:posterurl -like 'https://image.tmdb.org*') {
                                             Write-Entry -Subtext "Downloading Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                             $global:AssetTextLang = $global:TMDBAssetTextLang
@@ -20299,7 +20332,7 @@ else {
                                             Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                             $errorCount++
                                         }
-                                        Write-Entry -Subtext "Poster url: $(RedactPlexUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
+                                        Write-Entry -Subtext "Poster url: $(RedactMediaServerUrl -url $global:posterurl)" -Path "$($global:ScriptRoot)\Logs\Scriptlog.log" -Color White -log Info
                                         if ($global:posterurl -like 'https://image.tmdb.org*') {
                                             Write-Entry -Subtext "Downloading Poster from 'TMDB'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color DarkMagenta -log Info
                                             $global:AssetTextLang = $global:TMDBAssetTextLang
