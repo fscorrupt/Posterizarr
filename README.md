@@ -93,8 +93,6 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm, but 
 > [!NOTE]
 >Upon initial execution, the script may take some time to run as it compiles necessary data. Subsequent runs will look at whether a poster in the AssetPath is missing and only create missing posters, bypassing existing assets in the directory. If you are unhappy with the downloaded artwork, delete it in the AssetPath directory, rerun and the script will populate the missing artwork.
 
-# Prerequisites
-
 > [!IMPORTANT]
 >**Requirements:**
 >
@@ -432,8 +430,44 @@ libraries:
     operations:
       assets_for_all: true
 ```
+### Manual Assets Naming
+Naming must follow this rule; otherwise, the asset will not be picked up.
 
+If you have Library Folders set to `true`, it will look like this:
+| **Asset**                      | **Naming**                                                                                                                                                                                                                                                                                  |
+|----------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Poster**           | `poster.*`|
+| **Season**           | `Season01.*`<br>`Season02.*`<br>`.....`|
+| **Season Special**           | `Season00.*`|
+| **TitleCard**           | `S01E01.*`<br>`S01E02.*`<br>`.....`|
+| **Background**           | `background.*`|
 
+```
+├───Anime Shows
+│   └───Solo Leveling (2024) [tvdb-389597]
+│           poster.jpg
+│           S01E01.jpg
+│           Season01.jpg
+│           background.jpg
+```
+If you have Library Folders set to `false`, it will look like this:
+| **Asset**                      | **Naming**                                                                                                                                                                                                                                                                                  |
+|----------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Poster**           | `Solo Leveling (2024) [tvdb-389597]_poster.*`|
+| **Season**           | `Solo Leveling (2024) [tvdb-389597]_Season01.*`<br>`Solo Leveling (2024) [tvdb-389597]_Season02.*`<br>`.....`|
+| **Season Special**           | `Solo Leveling (2024) [tvdb-389597]_Season00.*`|
+| **TitleCard**           | `Solo Leveling (2024) [tvdb-389597]_S01E01.*`<br>`Solo Leveling (2024) [tvdb-389597]_S01E02.*`<br>`.....`|
+| **Background**           | `Solo Leveling (2024) [tvdb-389597]_background.*`|
+
+```
+├───Anime Shows
+│       Solo Leveling (2024) [tvdb-389597]_poster.jpg
+│       Solo Leveling (2024) [tvdb-389597]_S01E01.jpg
+│       Solo Leveling (2024) [tvdb-389597]_Season01.jpg
+│       Solo Leveling (2024) [tvdb-389597]_background.jpg
+```
+> [!IMPORTANT] 
+> Ensure all files are named correctly to avoid detectio
 ## Modes
 
 ### Tautulli Mode Docker
