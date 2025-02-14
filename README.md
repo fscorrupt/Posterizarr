@@ -431,7 +431,8 @@ libraries:
       assets_for_all: true
 ```
 ### Manual Assets Naming
-Naming must follow this rule; otherwise, the asset will not be picked up.
+> [!IMPORTANT] 
+> Naming must follow this rule; otherwise, the asset will not be picked up.
 
 If you have Library Folders set to `true`, it will look like this:
 | **Asset**                      | **Naming**                                                                                                                                                                                                                                                                                  |
@@ -466,8 +467,6 @@ If you have Library Folders set to `false`, it will look like this:
 │       Solo Leveling (2024) [tvdb-389597]_Season01.jpg
 │       Solo Leveling (2024) [tvdb-389597]_background.jpg
 ```
-> [!IMPORTANT] 
-> Ensure all files are named correctly to avoid detectio
 ## Modes
 
 ### Tautulli Mode Docker
