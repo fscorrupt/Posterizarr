@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## [1.9.31](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.31) - 2025-02-14 08:24:20+00:00
+
+## What's Changed
+* fix: multi file sync by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/215
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.30...1.9.31
+
+### Bug Fixes
+
+- general:
+  - multi file sync (#215) ([1e1e317](https://github.com/fscorrupt/Posterizarr/commit/1e1e317b598f3ccfb2757f3d6c8e4498b57933e0)) ([#215](https://github.com/fscorrupt/Posterizarr/pull/215))
+  - multi file sync ([6064af1](https://github.com/fscorrupt/Posterizarr/commit/6064af1ad291a343e75c026e62420dc6672a1a75)) ([#215](https://github.com/fscorrupt/Posterizarr/pull/215))
+
 ## [1.9.30](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.30) - 2025-02-10 08:58:20
 
 ## [1.9.29](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.29) - 2025-02-05 21:22:05
