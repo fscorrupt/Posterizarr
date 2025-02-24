@@ -12,7 +12,7 @@ param (
     [switch]$SyncEmby
 )
 
-$CurrentScriptVersion = "1.9.31"
+$CurrentScriptVersion = "1.9.32"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -2933,7 +2933,10 @@ function GetTVDBShowBackground {
             }
             if ($response) {
                 if ($response.data) {
-                    $defaultImageurl = $response.data.image
+                    $defaultImageurltemp = $response.data.artworks | Where-Object {$_.type -eq '3' }
+                    if ($defaultImageurltemp) {
+                        $defaultImageurl = $defaultImageurltemp[0].image
+                    }
                     if ($global:WidthHeightFilter -eq 'true') {
                         $NoLangImageUrl = $response.data.artworks | Where-Object { $_.language -eq $null -and $_.type -eq '3' -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight }
                     }
@@ -6373,9 +6376,11 @@ if ($global:PreferredSeasonLanguageOrder.count -eq '1' -and $global:PreferredSea
 }
 Elseif ($global:PreferredSeasonLanguageOrder[0] -eq 'xx') {
     $global:SeasonPreferTextless = $true
+    $global:SeasonOnlyTextless = $false
 }
 Else {
     $global:SeasonPreferTextless = $false
+    $global:SeasonOnlyTextless = $false
 }
 
 # Background Lang Settings
@@ -6392,9 +6397,11 @@ if ($global:PreferredBackgroundLanguageOrder.count -eq '1' -and $global:Preferre
 }
 Elseif ($global:PreferredBackgroundLanguageOrder[0] -eq 'xx') {
     $global:BackgroundPreferTextless = $true
+    $global:BackgroundOnlyTextless = $false
 }
 Else {
     $global:BackgroundPreferTextless = $false
+    $global:BackgroundOnlyTextless = $false
 }
 
 # default to TMDB if favprovider missing
