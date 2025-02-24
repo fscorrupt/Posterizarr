@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## [1.9.32](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.32) - 2025-02-24 07:25:09+00:00
+
+## What's Changed
+* Sync by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/216
+* fix: Background fallback search by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/217
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.31...1.9.32
+
+### Bug Fixes
+
+- general:
+  - Background fallback search (#217) ([735b31d](https://github.com/fscorrupt/Posterizarr/commit/735b31d3973bcc6f8de790f268ea0cd264a5dd69)) ([#217](https://github.com/fscorrupt/Posterizarr/pull/217))
+  - Background fallback search ([53a3caa](https://github.com/fscorrupt/Posterizarr/commit/53a3caa7c21711ed08b06ab8254bce6511550ad5)) ([#217](https://github.com/fscorrupt/Posterizarr/pull/217))
+
 ## [1.9.31](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.31) - 2025-02-14 08:24:20+00:00
 
 ## [1.9.30](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.30) - 2025-02-10 08:58:20
