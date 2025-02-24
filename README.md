@@ -43,6 +43,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm, but 
 >- Season Posters
 >- TitleCards
 
+## Walkthrough - How-To
 > [!TIP]
 > Here is an installation [walkthrough](walkthrough.md)
 
