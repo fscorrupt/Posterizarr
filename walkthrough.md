@@ -17,6 +17,65 @@
     - [Linux](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-linux?view=powershell-7.4)
     - [macOS](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-macos?view=powershell-7.4)
     - [Windows](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-windows?view=powershell-7.4)
+1. After that you need to install the Fanart Api Wrapper (On Windows as Administrator).
+   ```powershell
+    pwsh Install-Module -Name FanartTvAPI -Scope AllUsers -Force
+   ```
+    Linux:
+     - It should be visible here `/usr/local/share/powershell/Modules`
+
+    Windows:
+     - It should be visible here `C:\Program Files\PowerShell\Modules`
+       
+     you can check locations with this command:
+    ```powershell
+    pwsh $env:PSModulePath -split ":"
+    ```
+    
+    **Check If the Profile Exists**
+    
+    Run:
+    ```powershell
+    pwsh $PROFILE.AllUsersAllHosts
+    ```
+    By default, this should point to:
+    
+    - Linux: `/etc/powershell/profile.ps1`
+    - Windows: `C:\Program Files\PowerShell\7\profile.ps1`
+    
+    If the file doesn’t exist, create it:
+    
+    Linux:
+    ```bash
+    sudo mkdir -p /etc/powershell
+    sudo touch /etc/powershell/profile.ps1
+    ```
+
+    Windows:
+    ```powershell
+    New-Item -Path $PROFILE.AllUsersAllHosts -ItemType File -Force
+    ```
+    
+    **Add the Import Statement**
+    
+    Edit the file:
+    
+    Linux:
+    ```bash
+    sudo nano /etc/powershell/profile.ps1
+    ```
+
+    Windows:
+    ```powershell
+    notepad $PROFILE.AllUsersAllHosts
+    ```
+    Add the following line:
+    
+    ```powershell
+    Import-Module FanartTvAPI -Force
+    ```
+    
+    Save and exit, then it should be loaded and imported everytime you open a pwsh window.
 1. If you are on Windows/Linux next step is to clone the repo.
     - switch into the directory on your server where you want the project to land. (Make sure you have git installed)
         
