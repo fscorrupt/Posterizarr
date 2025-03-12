@@ -1,0 +1,16 @@
+version: "3"
+services:
+  posterizarr:
+    hostname: "posterizarr"
+    container_name: "posterizarr"
+    environment:
+      - "TZ=Europe/Berlin"
+      - "TERM=xterm"
+      - "RUN_TIME=03:30"
+    image: "ghcr.io/fscorrupt/docker-posterizarr:latest"
+    restart: "unless-stopped"
+    volumes:
+      - 'C:\Docker\Posterizarr:/config:rw'
+      - 'C:\Docker\Kometa\assets:/assets:rw'
+      - 'C:\Docker\Posterizarr\assetsbackup:/assetsbackup:rw'
+      - 'C:\Docker\Posterizarr\manualassets:/manualassets:rw'
