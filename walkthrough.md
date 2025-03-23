@@ -13,6 +13,7 @@
 
 - For Docker please continue here: [Docker](#docker)
 - For Linux/ARM please Start here: [ARM](#arm-prerequisites)
+### Manual install
 1. Please install Powershell (Not needed on docker/unraid)
     - [Linux](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-linux?view=powershell-7.4)
     - [macOS](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-macos?view=powershell-7.4)
