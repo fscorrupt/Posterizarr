@@ -4,7 +4,8 @@
 > If you are an unRAID user, just use the Community app from [@nwithan8](https://github.com/nwithan8) it is listed in Store.
 
 > [!IMPORTANT]
-> Unraid has a strange auto-folder behavior where, unless there's a subpath, it defaults to using the app name (which is title-cased) as the folder name. Please change the uppercase `P` in `/config` under the posterizarr path section to a lowercase `p` (`/mnt/user/appdata/posterizarr`).
+> Unraid has an unusual auto-folder behavior where, unless a subpath is specified, it defaults to using the app name (title-cased) as the folder name. Please change the uppercase "P" in /config under the Posterizarr path section to a lowercase "p" `/mnt/user/appdata/posterizarr`.
+
 
 ### Requirements
 - Make sure to obtain all the api keys and tokens as you will need them later on for the `config.json`.
