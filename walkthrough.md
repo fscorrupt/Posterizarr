@@ -16,10 +16,9 @@
         - **Do not** use `"Legacy API Key"`, it only works with a Project Api Key.
     - **Plex Token:** [Optain Plex Token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/)
 
-### Docker
+### Docker/ARM
 - For Docker please start here: [Docker](#docker)
 
-### ARM
 - For Linux/ARM please start here: [ARM](#arm-prerequisites)
   
 ### Manual install (Windows/Linux)
