@@ -3,6 +3,10 @@
 > [!TIP]
 > If you are an unRAID user, just use the Community app from [@nwithan8](https://github.com/nwithan8) it is listed in Store.
 
+> [!IMPORTANT]
+> Unraid has a strange auto-folder behavior where, unless there's a subpath, it defaults to using the app name (which is title-cased) as the folder name. Please change the uppercase `P` in `/config` under the posterizarr path section to a lowercase `p` (`/mnt/user/appdata/posterizarr`).
+
+### Requirements
 - Make sure to obtain all the api keys and tokens as you will need them later on for the `config.json`.
     - **TMDB API Read Access Token:** [Obtain TMDB API Token](https://www.themoviedb.org/settings/api)
         - **NOTE** the **TMDB API Read Access Token** is the really, really long one
