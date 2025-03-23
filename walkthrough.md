@@ -16,9 +16,13 @@
         - **Do not** use `"Legacy API Key"`, it only works with a Project Api Key.
     - **Plex Token:** [Optain Plex Token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/)
 
-- For Docker please continue here: [Docker](#docker)
-- For Linux/ARM please Start here: [ARM](#arm-prerequisites)
-### Manual install
+### Docker
+- For Docker please start here: [Docker](#docker)
+
+### ARM
+- For Linux/ARM please start here: [ARM](#arm-prerequisites)
+  
+### Manual install (Windows/Linux)
 1. Please install Powershell (Not needed on docker/unraid)
     - [Linux](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-linux?view=powershell-7.4)
     - [macOS](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-macos?view=powershell-7.4)
