@@ -2,19 +2,6 @@
 
 ## [1.9.33](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.33) - 2025-03-24 08:29:36+00:00
 
-## What's Changed
-* Sync by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/220
-* feat: add TC creation to manual mode by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/221
-
-
-**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.32...1.9.33
-
-### Feature
-
-- general:
-  - add TC creation to manual mode (#221) ([4bd777f](https://github.com/fscorrupt/Posterizarr/commit/4bd777f6fc17d09e64d7e5596b2bd98d168798d1)) ([#221](https://github.com/fscorrupt/Posterizarr/pull/221))
-  - add TC creation to manual mode. ([626ca51](https://github.com/fscorrupt/Posterizarr/commit/626ca51fa57ebf886edf37f55fee3b6d6954421b)) ([#221](https://github.com/fscorrupt/Posterizarr/pull/221))
-
 ## [1.9.32](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.32) - 2025-02-24 07:25:09+00:00
 
 ## [1.9.31](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.31) - 2025-02-14 08:24:20+00:00
