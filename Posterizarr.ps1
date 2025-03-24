@@ -12,7 +12,7 @@ param (
     [switch]$SyncEmby
 )
 
-$CurrentScriptVersion = "1.9.32"
+$CurrentScriptVersion = "1.9.33"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -7130,6 +7130,7 @@ if ($Manual) {
     $FolderName = Read-Host "Enter Media Foldername (how plex sees it)"
     $Titletext = Read-Host "Enter Movie/Show Title"
     $CreateSeasonPoster = Read-Host "Create Season Poster? (y/n)"
+    $CreateTitleCard = Read-Host "Create TitleCard? (y/n)"
 
     if ($PicturePath -like 'http*') {
         $isWebPic = 'true'
@@ -7156,6 +7157,23 @@ if ($Manual) {
             }
             $PosterImageoriginal = "$AssetPath\$LibraryName\$FolderName\$global:season.jpg"
         }
+        if ($CreateTitleCard -eq 'y') {
+            $EPTitleName = Read-Host "Enter Episode Title Name"
+            $EpisodeNumber = Read-Host "Enter Episode Number (eq. 1)"
+            $SeasonName = Read-Host "Enter Season Number (eq. 1)"
+            if ($SeasonName -match '(\d+)') {
+                $global:SeasonNumber = $Matches[1]
+                $global:season = "S" + $global:SeasonNumber.PadLeft(2, '0')
+            }
+            if ($SeasonName -eq 'Specials') {
+                $global:season = "S00"
+            }
+            if ($EpisodeNumber -match '(\d+)') {
+                $global:EpisodeNumber = $Matches[1]
+                $global:episode = "E" + $global:EpisodeNumber.PadLeft(2, '0')
+            }
+            $PosterImageoriginal = "$AssetPath\$LibraryName\$FolderName\$global:season$global:episode.jpg"
+        }
     }
     Else {
         if ($CreateSeasonPoster -eq 'y') {
@@ -7168,6 +7186,23 @@ if ($Manual) {
                 $global:season = "Season00"
             }
             $PosterImageoriginal = "$AssetPath\$($FolderName)_$global:season.jpg"
+        }
+        if ($CreateTitleCard -eq 'y') {
+            $EPTitleName = Read-Host "Enter Episode Title Name"
+            $EpisodeNumber = Read-Host "Enter Episode Number (eq. 1)"
+            $SeasonName = Read-Host "Enter Season Number (eq. 1)"
+            if ($SeasonName -match '(\d+)') {
+                $global:SeasonNumber = $Matches[1]
+                $global:season = "S" + $global:SeasonNumber.PadLeft(2, '0')
+            }
+            if ($SeasonName -eq 'Specials') {
+                $global:season = "S00"
+            }
+            if ($EpisodeNumber -match '(\d+)') {
+                $global:EpisodeNumber = $Matches[1]
+                $global:episode = "E" + $global:EpisodeNumber.PadLeft(2, '0')
+            }
+            $PosterImageoriginal = "$AssetPath\$($FolderName)_$global:season$global:episode.jpg"
         }
     }
 
@@ -7197,6 +7232,29 @@ if ($Manual) {
                 }
                 Else {
                     $joinedTitle = $SeasonPosterName
+                }
+            }
+        }
+        elseif ($CreateTitleCard -eq 'y') {
+            $Posteroverlay = $titlecardoverlay
+            if ($AddTitleCardEPTitleText -eq 'true') {
+                if ($TitleCardEPTitlefontAllCaps -eq 'true') {
+                    $joinedTitle = $EPTitleName.ToUpper()
+                }
+                Else {
+                    $joinedTitle = $EPTitleName
+                }
+            }
+            if ($AddTitleCardEPText -eq 'true') {
+                $Posteroverlay = $titlecardoverlay
+                $bullet = [char]0x2022
+                $global:SeasonEPNumber = "$SeasonTCText $global:SeasonNumber $bullet $EpisodeTCText $global:EpisodeNumber"
+
+                if ($TitleCardEPfontAllCaps -eq 'true') {
+                    $EPNumberTitle = $global:SeasonEPNumber.ToUpper()
+                }
+                Else {
+                    $EPNumberTitle = $global:SeasonEPNumber
                 }
             }
         }
@@ -7240,6 +7298,24 @@ if ($Manual) {
                     Write-Entry -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                 }
             }
+            elseif ($CreateTitleCard -eq 'y') {
+                if ($AddTitleCardBorder -eq 'true' -and $AddTitleCardOverlay -eq 'true') {
+                    $Arguments = "`"$PosterImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$titlecardoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$TitleCardborderwidthsecond`"  -bordercolor `"$TitleCardbordercolor`" -border `"$TitleCardborderwidth`" `"$PosterImage`""
+                    Write-Entry -Subtext "Resizing it | Adding Borders | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                }
+                if ($AddTitleCardBorder -eq 'true' -and $AddTitleCardOverlay -eq 'false') {
+                    $Arguments = "`"$PosterImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" -shave `"$TitleCardborderwidthsecond`"  -bordercolor `"$TitleCardbordercolor`" -border `"$TitleCardborderwidth`" `"$PosterImage`""
+                    Write-Entry -Subtext "Resizing it | Adding Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                }
+                if ($AddTitleCardBorder -eq 'false' -and $AddTitleCardOverlay -eq 'true') {
+                    $Arguments = "`"$PosterImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$titlecardoverlay`" -gravity south -quality $global:outputQuality -composite `"$PosterImage`""
+                    Write-Entry -Subtext "Resizing it | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                }
+                if ($AddTitleCardBorder -eq 'false' -and $AddTitleCardOverlay -eq 'false') {
+                    $Arguments = "`"$PosterImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$PosterImage`""
+                    Write-Entry -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                }
+            }
             Else {
                 # Resize Image to 2000x3000 and apply Border and overlay
                 if ($AddBorder -eq 'true' -and $AddOverlay -eq 'true') {
@@ -7263,7 +7339,7 @@ if ($Manual) {
             $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
             InvokeMagickCommand -Command $magick -Arguments $Arguments
 
-            if ($AddText -eq 'true') {
+            if ($AddText -eq 'true' -or $AddSeasonText -eq 'true' -or $AddTitleCardEPTitleText -eq 'true' -or $AddTitleCardEPText -eq 'true') {
                 $joinedTitle = $joinedTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
                 if ($AddShowTitletoSeason -eq 'true') {
                     $ShowjoinedTitle = $ShowjoinedTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
@@ -7278,6 +7354,13 @@ if ($Manual) {
                     Write-Entry -Subtext "Optimal show font size set to: '$showoptimalFontSize'" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
 
                 }
+                if ($AddTitleCardEPText -eq 'true') {
+                    $EPNumberjoinedTitle = $EPNumberTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
+                    $EPNumberjoinedTitlePointSize = $EPNumberjoinedTitle -replace '""', '""""'
+                    $EPNumberoptimalFontSize = Get-OptimalPointSize -text $EPNumberjoinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize -lineSpacing $TitleCardEPlineSpacing
+                    Write-Entry -Subtext "Optimal EP Number font size set to: '$EPNumberoptimalFontSize'" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
+
+                }
                 # Loop through each symbol and replace it with a newline
                 if ($NewLineOnSpecificSymbols -eq 'true') {
                     foreach ($symbol in $NewLineSymbols) {
@@ -7288,6 +7371,9 @@ if ($Manual) {
                 $joinedTitlePointSize = $joinedTitle -replace '""', '""""'
                 if ($CreateSeasonPoster -eq 'y') {
                     $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize -lineSpacing $SeasonlineSpacing
+                }
+                elseif ($CreateTitleCard -eq 'y') {
+                    $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize -lineSpacing $TitleCardEPTitlelineSpacing
                 }
                 Else {
                     $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize -lineSpacing $lineSpacing
@@ -7312,6 +7398,25 @@ if ($Manual) {
                         }
                     }
                 }
+                if ($CreateTitleCard -eq 'y') {
+                    # Add Stroke
+                    if ($AddTitleCardEPTitleTextStroke -eq 'true') {
+                        $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background none -interline-spacing `"$TitleCardEPTitlelineSpacing`" -gravity south caption:`"$joinedTitle`" -trim +repage -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
+                    }
+                    Else {
+                        $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -size `"$TitleCardEPTitleboxsize`" -background none -interline-spacing `"$TitleCardEPTitlelineSpacing`" -gravity south caption:`"$joinedTitle`" -trim +repage -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
+                    }
+                    if ($AddTitleCardEPText -eq 'true') {
+                        # EP Number Part
+                        # Add Stroke
+                        if ($AddTitleCardTextStroke -eq 'true') {
+                            $EPNumberArguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$EPNumberoptimalFontSize`" -fill `"$TitleCardEPfontcolor`" -stroke `"$TitleCardstrokecolor`" -strokewidth `"$TitleCardstrokewidth`" -size `"$TitleCardEPboxsize`" -background none -interline-spacing `"$TitleCardEPlineSpacing`" -gravity south caption:`"$EPNumberjoinedTitle`" -trim +repage -extent `"$TitleCardEPboxsize`" `) -gravity south -geometry +0`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
+                        }
+                        Else {
+                            $EPNumberArguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$EPNumberoptimalFontSize`" -fill `"$TitleCardEPfontcolor`" -size `"$TitleCardEPboxsize`" -background none -interline-spacing `"$TitleCardEPlineSpacing`" -gravity south caption:`"$EPNumberjoinedTitle`" -trim +repage -extent `"$TitleCardEPboxsize`" `) -gravity south -geometry +0`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
+                        }
+                    }
+                }
                 Else {
                     # Add Stroke
                     if ($AddTextStroke -eq 'true') {
@@ -7331,6 +7436,18 @@ if ($Manual) {
                         $logEntry = "`"$magick`" $ShowOnSeasonArguments"
                         $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                         InvokeMagickCommand -Command $magick -Arguments $ShowOnSeasonArguments
+                    }
+                }
+                elseif ($CreateTitleCard -eq 'y') {
+                    Write-Entry -Subtext "    Applying TitleCard Poster text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
+                    $logEntry = "`"$magick`" $Arguments"
+                    $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+                    InvokeMagickCommand -Command $magick -Arguments $Arguments
+                    if ($AddTitleCardEPText -eq 'true') {
+                        Write-Entry -Subtext "    Applying Season + EP text: `"$EPNumberjoinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                        $logEntry = "`"$magick`" $EPNumberArguments"
+                        $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+                        InvokeMagickCommand -Command $magick -Arguments $EPNumberArguments
                     }
                 }
                 Else {
