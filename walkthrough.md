@@ -3,7 +3,12 @@
 > [!TIP]
 > If you are an unRAID user, just use the Community app from [@nwithan8](https://github.com/nwithan8) it is listed in Store.
 
-1. Make sure to obtain all the api keys and tokens as you will need them later on for the `config.json`.
+> [!IMPORTANT]
+> Unraid has an unusual auto-folder behavior where, unless a subpath is specified, it defaults to using the app name (title-cased) as the folder name. Please change the uppercase "P" in /config under the Posterizarr path section to a lowercase "p" `/mnt/user/appdata/posterizarr`.
+
+
+### Requirements
+- Make sure to obtain all the api keys and tokens as you will need them later on for the `config.json`.
     - **TMDB API Read Access Token:** [Obtain TMDB API Token](https://www.themoviedb.org/settings/api)
         - **NOTE** the **TMDB API Read Access Token** is the really, really long one
     - **Fanart Personal API Key:** [Obtain Fanart API Key](https://fanart.tv/get-an-api-key)
@@ -11,9 +16,13 @@
         - **Do not** use `"Legacy API Key"`, it only works with a Project Api Key.
     - **Plex Token:** [Optain Plex Token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/)
 
-1. For Docker please continue here: [Docker](#docker)
-1. For Linux/ARM please Start here: [ARM](#arm-prerequisites)
-1. Please install Powershell
+### Docker/ARM
+- For Docker please start here: [Docker](#docker)
+
+- For Linux/ARM please start here: [ARM](#arm-prerequisites)
+  
+### Manual install (Windows/Linux)
+1. Please install Powershell (Not needed on docker/unraid)
     - [Linux](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-linux?view=powershell-7.4)
     - [macOS](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-macos?view=powershell-7.4)
     - [Windows](https://learn.microsoft.com/en-us/powershell/scripting/install/installing-powershell-on-windows?view=powershell-7.4)
