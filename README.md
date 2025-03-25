@@ -600,6 +600,8 @@ In this mode we use Tautulli to trigger Posterizarr for an specific item in Plex
 
 Run the script with the `-Testing` flag. In this mode, the script will create pink posters/backgrounds with short, medium, and long texts (also in CAPS), using the values specified in the `config.json` file.
 
+These test images are placed in the script root under the `./test` folder.
+
 > [!TIP]
 >This is handy for testing your configuration before applying it en masse to the actual posters. You can see how and where the text would be applied, as well as the size of the textbox.
 
