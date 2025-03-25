@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## [1.9.34](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.34) - 2025-03-25 08:59:13+00:00
+
+## What's Changed
+* Sync by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/222
+* fix: jelly json conversion by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/223
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.33...1.9.34
+
+### Bug Fixes
+
+- general:
+  - jelly json conversion (#223) ([909b605](https://github.com/fscorrupt/Posterizarr/commit/909b605a3982279d9295c02ac00404a1ef33fe79)) ([#223](https://github.com/fscorrupt/Posterizarr/pull/223))
+  - jelly json conversion ([0456356](https://github.com/fscorrupt/Posterizarr/commit/0456356d1e8edd6f6baf9b15c6703e5ac3968ba7)) ([#223](https://github.com/fscorrupt/Posterizarr/pull/223))
+
 ## [1.9.33](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.33) - 2025-03-24 08:29:36+00:00
 
 ## [1.9.32](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.32) - 2025-02-24 07:25:09+00:00
