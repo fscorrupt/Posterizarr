@@ -12,7 +12,7 @@ param (
     [switch]$SyncEmby
 )
 
-$CurrentScriptVersion = "1.9.33"
+$CurrentScriptVersion = "1.9.34"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 
@@ -6132,7 +6132,10 @@ function SyncPlexArtwork {
     }
     catch {
         # Attempt to parse JSON error response
-        $errorResponse = $_.ErrorDetails.Message | ConvertFrom-Json -ErrorAction SilentlyContinue
+        $message = $_.ErrorDetails.Message
+        if ($message -match '^\s*\{.*\}\s*$') {
+            $errorResponse = $message | ConvertFrom-Json -ErrorAction SilentlyContinue
+        }
 
         if ($errorResponse) {
             $errorTitle = $errorResponse.title
@@ -6140,7 +6143,7 @@ function SyncPlexArtwork {
 
             Write-Entry -Subtext "Error uploading image: Status: $errorStatus, Title: $errorTitle" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
         } else {
-            Write-Entry -Subtext "Error uploading image: Unknown error" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "Error uploading image: $message" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
         }
     }
 
