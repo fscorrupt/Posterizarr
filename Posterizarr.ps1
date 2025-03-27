@@ -12,9 +12,11 @@ param (
     [switch]$SyncEmby
 )
 
-$CurrentScriptVersion = "1.9.35"
+$CurrentScriptVersion = "1.9.36"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
+$env:PSModuleAnalysisCachePath = $null
+$env:PSModuleAnalysisCacheEnabled = $false
 
 #################
 # What you need #
