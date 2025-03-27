@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [1.9.35](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.35) - 2025-03-27 07:38:06+00:00
+
+## What's Changed
+* add: NonRoot Container Support by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/224
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.34...1.9.35
+
 ## [1.9.34](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.34) - 2025-03-25 08:59:13+00:00
 
 ## [1.9.33](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.33) - 2025-03-24 08:29:36+00:00
