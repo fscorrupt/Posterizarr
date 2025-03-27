@@ -4,13 +4,8 @@ services:
   posterizarr:
     hostname: "posterizarr"
     container_name: "posterizarr"
-    environment:
-      - "PGID=1000"
-      - "PUID=1000"
-      - "TZ=Europe/Berlin"
-      - "UMASK=022"
-      - "TERM=xterm"
-      - "RUN_TIME=10:30,19:30"
+    env_file:
+      - .env
     image: "ghcr.io/fscorrupt/docker-posterizarr:latest"
     restart: "unless-stopped"
     networks:

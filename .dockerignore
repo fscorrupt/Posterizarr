@@ -1,0 +1,27 @@
+# Git files
+.github/
+.git
+.gitignore
+.gitattributes
+
+# Logs and cache
+Logs/
+RotatedLogs/
+Cache/
+*.zip
+
+# Dev
+config/
+
+# Configuration examples (not the actual config)
+config.example.json
+MyPersonalConfig.json
+
+# Docker files (not needed in the image)
+docker-compose.*
+
+# Documentation
+*.md
+LICENSE
+Release.txt
+ReleaseModule.txt

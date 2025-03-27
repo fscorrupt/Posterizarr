@@ -1,0 +1,62 @@
+---
+schemaVersion: "2.0.0"
+
+fileExistenceTests:
+    
+  - name: "PowerShell"
+    path: "/usr/bin/pwsh"
+    shouldExist: true
+    permissions: "Lrwxrwxrwx"
+    
+  - name: "Entrypoint script"
+    path: "/entrypoint.sh"
+    shouldExist: true
+    permissions: "-rwxr-xr-x"
+    
+  - name: "App directory"
+    path: "/app"
+    shouldExist: true
+    permissions: "drwxr-xr-x"
+    
+  - name: "PowerShell modules directory - usr"
+    path: "/usr/local/share/powershell"
+    shouldExist: true
+    permissions: "drwxr-xr-x"
+    
+commandTests:
+  - name: "ImageMagick version"
+    command: "magick"
+    args: ["-version"]
+    expectedOutput: ["Version: ImageMagick"]
+    
+  - name: "PowerShell version"
+    command: "pwsh"
+    args: ["--version"]
+    expectedOutput: ["PowerShell"]
+    
+  - name: "PowerShell FanartTvAPI module"
+    command: "pwsh"
+    args: ["-Command", "Get-Module -ListAvailable FanartTvAPI"]
+    expectedOutput: ["FanartTvAPI"]
+    
+  - name: "FanartTvAPI module import"
+    command: "pwsh"
+    args: ["-Command", "Import-Module FanartTvAPI -Force; Write-Host 'Module imported successfully'"]
+    expectedOutput: ["Module imported successfully"]
+    
+  - name: "Add-FanartTvAPIKey function availability"
+    command: "pwsh"
+    args: ["-Command", "Import-Module FanartTvAPI -Force; if (Get-Command -Name Add-FanartTvAPIKey -ErrorAction SilentlyContinue) { Write-Host 'Function exists' } else { Write-Error 'Function not found'; exit 1 }"]
+    expectedOutput: ["Function exists"]
+    
+  # Skipping the nobody user test as it requires password authentication
+  # Instead, we'll check if the module directories have the right permissions
+  - name: "FanartTvAPI module directory permissions"
+    command: "ls"
+    args: ["-la", "/usr/local/share/powershell/Modules/FanartTvAPI"]
+    expectedOutput: ["drwxr-xr-x"]
+    
+metadataTest:
+  labels:
+    - key: "org.opencontainers.image.licenses"
+      value: "GPL-3.0"
