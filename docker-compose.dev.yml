@@ -1,0 +1,18 @@
+---
+version: "3"
+services:
+  posterizarr:
+    hostname: "posterizarr-dev"
+    container_name: "posterizarr-dev"
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env.dev
+    user: "1000:150"
+    restart: "unless-stopped"
+    volumes:
+      - "./config:/app/config:rw" # Map local config for easier access during dev
+      - "/assets:/assets:rw"
+      - "./config/manualassets:/manualassets:rw" # Map local manualassets
+      - "./config/assetsbackup:/assetsbackup:rw" # Map local assetsbackup
