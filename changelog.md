@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## [1.9.36](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.36) - 2025-03-27 09:15:26+00:00
+
+## What's Changed
+* Disable PSModuleAnalysisCache by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/225
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.35...1.9.36
+
 ## [1.9.35](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.35) - 2025-03-27 07:38:06+00:00
 
 ## [1.9.34](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.34) - 2025-03-25 08:59:13+00:00
