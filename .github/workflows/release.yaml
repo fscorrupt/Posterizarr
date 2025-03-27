@@ -6,71 +6,162 @@ on:
       - 'v*.*.*' # Trigger on version tags like v1.0.0
   workflow_dispatch:
     inputs:
+      app: 
+        type: string
+        description: Application Name
+        required: true
+        default: posterizarr
       version:
         description: 'Version to use for testing (e.g., test-v1.0.0)'
         required: true
         default: 'test-v1.0.0'
 
 jobs:
-  release:
-    name: Build and Push Docker Image
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write # Needed to push to GHCR
-
+  build:
+    name: Build ${{ inputs.app }} (${{ matrix.platform }})
+    runs-on: ${{ matrix.platform == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-latest' }}
+    strategy:
+      matrix:
+        platform: ["amd64", "arm64"]
+      fail-fast: false
+    outputs:
+      amd64: ${{ steps.digest.outputs.amd64 }}
+      arm64: ${{ steps.digest.outputs.arm64 }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }} # Use the automatically generated token
+          password: ${{ github.token }}
 
-      - name: Extract Docker metadata
-        id: meta
-        uses: docker/metadata-action@v5
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
+
+      - name: Build Image
+        uses: docker/build-push-action@471d1dc4e07e5cdedd4c2171150001c434f0b7a4 # v6.15.0
+        id: build
         with:
-          images: ghcr.io/${{ github.repository }} # Image name based on repo owner/name
-          tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
-            # Use the manually provided version when triggered via workflow_dispatch
-            ${{ github.event_name == 'workflow_dispatch' && format('type=raw,value={0}', github.event.inputs.version) || '' }}
-          
-      - name: Install container-structure-test
+          build-args: |
+            VENDOR=${{ github.repository_owner }}
+            VERSION=${{ inputs.version }}
+            REVISION=${{ github.sha }}
+          cache-from: |
+            ${{ format('type=registry,ref=ghcr.io/{0}/build_cache:{1}-{2},mode=max', github.repository_owner, inputs.app, matrix.platform) }}
+          cache-to: |
+            ${{ inputs.release && format('type=registry,ref=ghcr.io/{0}/build_cache:{1}-{2}', github.repository_owner, inputs.app, matrix.platform) || '' }}
+          labels: |
+            org.opencontainers.image.title=${{ inputs.app }}
+            org.opencontainers.image.url=https://ghcr.io/${{ github.repository_owner }}/${{ inputs.app }}
+            org.opencontainers.image.version=${{ inputs.version }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.vendor=${{ github.repository_owner }}
+          outputs: |
+            type=docker
+            ${{ inputs.release && format('type=image,name=ghcr.io/{0}/{1},push-by-digest=true,name-canonical=true,push=true', github.repository_owner, inputs.app) || '' }}
+          context: ./apps/${{ inputs.app }}
+          platforms: linux/${{ matrix.platform }}
+          provenance: false
+
+      - if: ${{ inputs.test }}
+        name: Run Tests
+        uses: ./.github/actions/test-container
+        with:
+          app: ${{ inputs.app }}
+          image: ${{ steps.build.outputs.imageid }}
+          token: ${{ github.token }}
+
+      - if: ${{ inputs.release }}
+        name: Export Digest
+        id: digest
         run: |
-          curl -LO https://storage.googleapis.com/container-structure-test/latest/container-structure-test-linux-amd64
-          chmod +x container-structure-test-linux-amd64
-          sudo mv container-structure-test-linux-amd64 /usr/local/bin/container-structure-test
-          
-      - name: Build test image (amd64 only)
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          load: true
-          tags: posterizarr:test
-          
-      - name: Run container structure tests
-        run: container-structure-test test --image posterizarr:test --config tests/tests.yaml
+          echo "${{ matrix.platform }}=${{ steps.build.outputs.digest }}" >> $GITHUB_OUTPUT
 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
+  release:
+    if: ${{ inputs.release }}
+    needs: build
+    name: Release ${{ inputs.app }}
+    runs-on: ubuntu-latest
+    outputs:
+      digest: ${{ steps.digest.outputs.digest }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
         with:
-          context: .
-          platforms: linux/amd64,linux/arm64 # Build for amd64 and arm64
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Determine Definitive Versions
+        uses: ./.github/actions/definitive-versions
+        id: version
+        with:
+          version: ${{ inputs.version }}
+
+      - name: Build Meta
+        uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804 # v5.7.0
+        id: meta
+        env:
+          DOCKER_METADATA_ANNOTATIONS_LEVELS: manifest,index
+        with:
+          flavor: latest=false
+          images: ghcr.io/${{ github.repository_owner }}/${{ inputs.app }}
+          tags: |
+            type=semver,pattern={{version}},value=${{ steps.version.outputs.semantic }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ steps.version.outputs.semantic }},enable=${{ steps.version.outputs.is-valid-semver }}
+            type=semver,pattern={{major}},value=${{ steps.version.outputs.semantic }},enable=${{ steps.version.outputs.is-valid-semver }}
+            type=raw,value=${{ steps.version.outputs.raw }},enable=${{ steps.version.outputs.is-valid-semver }}
+            type=raw,value=rolling
+
+      - name: Push Images
+        uses: Noelware/docker-manifest-action@b33ab348026b120a895167160f5605b0197f0862 # 0.4.3
+        id: push
+        with:
+          inputs: ${{ join(fromJSON(steps.meta.outputs.json).tags, ',') }}
+          images: >-
+            ghcr.io/${{ github.repository_owner }}/${{ inputs.app }}@${{ needs.build.outputs.amd64 }},
+            ghcr.io/${{ github.repository_owner }}/${{ inputs.app }}@${{ needs.build.outputs.arm64 }}
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+
+      - name: Export Digest
+        id: digest
+        run: |
+          digest=$(echo "${{ steps.push.outputs.images }}" | grep -oP 'sha256:[^, ]+' | head -n1)
+          echo "digest=${digest}" >> $GITHUB_OUTPUT
+
+  attest:
+    if: ${{ inputs.release }}
+    needs: release
+    name: Attest ${{ inputs.app }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@74a5d142397b4f367a81961eba4e8cd7edddf772 # v3.4.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Upload Dependency Snapshot
+        uses: anchore/sbom-action@f325610c9f50a54015d37c8d16cb3b0e2c8f4de0 # v0.18.0
+        with:
+          dependency-snapshot: true
+          image: ghcr.io/${{ github.repository_owner }}/${{ inputs.app }}@${{ needs.release.outputs.digest }}
+
+      - name: Attestation
+        uses: actions/attest-build-provenance@c074443f1aee8d4aeeae555aebba3282517141b2 # v2.2.3
+        with:
+          push-to-registry: true
+          subject-name: ghcr.io/${{ github.repository_owner }}/${{ inputs.app }}
+          subject-digest: ${{ needs.release.outputs.digest }}
+
+      - name: Verify Attestation
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: gh attestation verify --repo ${{ github.repository }} oci://ghcr.io/${{ github.repository_owner }}/${{ inputs.app }}@${{ needs.release.outputs.digest }}
