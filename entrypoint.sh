@@ -1,8 +1,5 @@
 #!/bin/sh
-
-# Needed unless you bring the defaults with you.
-cp /app/*.png /app/config
-cp /app/*.ttf /app/config
+if [ -f /donate.txt ]; then cat /donate.txt; fi
 
 # Execute the main application
-exec pwsh -File /app/Posterizarr.ps1 "$@"
+exec pwsh -NoProfile -File /Start.ps1 "$@"

@@ -8,6 +8,7 @@ services:
       - .env
     image: "ghcr.io/fscorrupt/docker-posterizarr:latest"
     restart: "unless-stopped"
+    user: "1000:1000"
     networks:
       - "proxy"
     volumes:
