@@ -35,7 +35,7 @@ RUN mkdir -p /config/Logs /config/temp /config/watcher /config/test \
 
 # Copy application & config files
 COPY entrypoint.sh Start.ps1 donate.txt /
-COPY Colus-Regular.ttf overlay-innerglow.png backgroundoverlay-innerglow.png /config/
+COPY config.example.json overlay.png backgroundoverlay.png Rocky.ttf Comfortaa-Medium.ttf Colus-Regular.ttf overlay-innerglow.png backgroundoverlay-innerglow.png Posterizarr.ps1 /config/
 
 # Fix file permissions in a single RUN command
 RUN chmod +x /entrypoint.sh \
