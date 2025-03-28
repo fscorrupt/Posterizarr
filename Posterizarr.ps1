@@ -12,7 +12,7 @@ param (
     [switch]$SyncEmby
 )
 
-$CurrentScriptVersion = "1.9.36"
+$CurrentScriptVersion = "1.9.37"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 $env:PSModuleAnalysisCachePath = $null
@@ -6785,26 +6785,27 @@ Else {
     Write-Entry -Message "Current Imagemagick Version: $CurrentImagemagickversion" -Path $configLogging -Color White -log Info
 }
 if ($global:OSType -eq "Docker") {
-    <# old way:
-        $Url = "https://pkgs.alpinelinux.org/package/edge/community/x86_64/imagemagick"
+    if ($env:PosterizarrNonRoot -eq 'TRUE'){
+        $Url = "https://pkgs.alpinelinux.org/package/v3.21/community/x86_64/imagemagick"
         $response = Invoke-WebRequest -Uri $url
         $htmlContent = $response.Content
-        #$regexPattern = '<th class="header">Version<\/th>\s*<td>\s*<strong>\s*<a[^>]*>([^<]+)<\/a>\s*<\/strong>\s*<\/td>' # Old Pattern 20240929
         $regexPattern = '<th class="header">Version<\/th>\s*<td>\s*<strong>([\d\.]+-r\d+)<\/strong>\s*<\/td>'
         $Versionmatching = [regex]::Matches($htmlContent, $regexPattern)
 
         if ($Versionmatching.Count -gt 0) {
             $LatestImagemagickversion = $Versionmatching[0].Groups[1].Value.split('-')[0]
         }
-    #>
-    $Url = "https://raw.githubusercontent.com/SoftCreatR/imei/main/versions/imagemagick.version"
-    $response = Invoke-WebRequest -Uri $url
-    $htmlContent = $response.Content
-    $regexPattern = '(\d+\.\d+\.\d+-\d+)'
-    $Versionmatching = [regex]::Matches($htmlContent, $regexPattern)
+    }
+    Else{
+        $Url = "https://raw.githubusercontent.com/SoftCreatR/imei/main/versions/imagemagick.version"
+        $response = Invoke-WebRequest -Uri $url
+        $htmlContent = $response.Content
+        $regexPattern = '(\d+\.\d+\.\d+-\d+)'
+        $Versionmatching = [regex]::Matches($htmlContent, $regexPattern)
 
-    if ($Versionmatching.Count -gt 0) {
-        $LatestImagemagickversion = $Versionmatching[0].Value
+        if ($Versionmatching.Count -gt 0) {
+            $LatestImagemagickversion = $Versionmatching[0].Value
+        }
     }
 }
 Elseif ($global:OSType -eq "Win32NT") {

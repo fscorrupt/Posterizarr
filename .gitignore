@@ -5,3 +5,11 @@
 *.xlsm
 *.ttf
 *.otf
+
+#
+.env
+.env.dev
+
+/config
+
+
