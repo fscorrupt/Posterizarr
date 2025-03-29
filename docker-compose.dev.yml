@@ -9,7 +9,7 @@ services:
       dockerfile: Dockerfile
     env_file:
       - .env.dev
-    user: "1000:1000"
+    user: "1000:1001"
     restart: "unless-stopped"
     volumes:
       - "./config:/config:rw" # Map local config for easier access during dev

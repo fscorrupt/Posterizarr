@@ -4,9 +4,11 @@ services:
   posterizarr:
     hostname: "posterizarr"
     container_name: "posterizarr"
+    build:
+      context: .
+      dockerfile: Dockerfile
     env_file:
       - .env
-    image: "ghcr.io/fscorrupt/docker-posterizarr:latest"
     restart: "unless-stopped"
     user: "1000:1000"
     networks:
