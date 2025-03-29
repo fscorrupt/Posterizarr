@@ -1,5 +1,5 @@
-$env:PSModuleAnalysisCachePath = $null
-$env:PSModuleAnalysisCacheEnabled = $false
+$env:PSMODULE_ANALYSIS_CACHE_PATH = $null
+$env:PSMODULE_ANALYSIS_CACHE_ENABLED = $false
 
 function ScriptSchedule {
     # Posterizarr File Watcher for Tautulli Recently Added Files

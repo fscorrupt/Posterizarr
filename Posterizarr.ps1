@@ -15,8 +15,8 @@ param (
 $CurrentScriptVersion = "1.9.37"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
-$env:PSModuleAnalysisCachePath = $null
-$env:PSModuleAnalysisCacheEnabled = $false
+$env:PSMODULE_ANALYSIS_CACHE_PATH = $null
+$env:PSMODULE_ANALYSIS_CACHE_ENABLED = $false
 
 #################
 # What you need #
@@ -84,7 +84,7 @@ function Set-OSTypeAndScriptRoot {
     if ($env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker*') {
         $global:OSType = "Docker"
         $currentuser = whoami
-        if ($currentuser -eq 'posterizarr' -or $currentuser -eq 'abc' -or $env:VIRTUAL_ENV -eq '/lsiopy' -or $env:PosterizarrNonRoot -eq 'TRUE') {
+        if ($currentuser -eq 'posterizarr' -or $currentuser -eq 'abc' -or $env:VIRTUAL_ENV -eq '/lsiopy' -or $env:POSTERIZARR_NON_ROOT -eq 'TRUE') {
             $global:ScriptRoot = "/config"
         }
         Else {
@@ -6785,7 +6785,7 @@ Else {
     Write-Entry -Message "Current Imagemagick Version: $CurrentImagemagickversion" -Path $configLogging -Color White -log Info
 }
 if ($global:OSType -eq "Docker") {
-    if ($env:PosterizarrNonRoot -eq 'TRUE'){
+    if ($env:POSTERIZARR_NON_ROOT -eq 'TRUE'){
         $Url = "https://pkgs.alpinelinux.org/package/v3.21/community/x86_64/imagemagick"
         $response = Invoke-WebRequest -Uri $url
         $htmlContent = $response.Content
