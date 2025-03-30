@@ -26,7 +26,7 @@ Install-Module -Name Pester -Force -SkipPublisherCheck -Scope CurrentUser
 
 ### Using VSCode Test Explorer
 
-The project now includes VSCode configuration for the test explorer. To use it:
+The project uses VSCode's test explorer to run Pester and Python tests. To use it:
 
 1. Install the recommended extensions:
    - PowerShell Extension (`ms-vscode.powershell`)
@@ -40,14 +40,6 @@ The project now includes VSCode configuration for the test explorer. To use it:
 
 4. Click on the play button next to a test to run it, or use the play buttons at the top to run all tests
 
-### Running PowerShell Tests from Command Line
-
-To run all PowerShell tests, navigate to the tests directory and run:
-
-```powershell
-./Run-Tests.ps1
-```
-
 ### Running Python Tests from Command Line
 
 To run the Python unit tests, navigate to the tests directory and run:
@@ -56,38 +48,13 @@ To run the Python unit tests, navigate to the tests directory and run:
 python unit/Trigger.Tests.py
 ```
 
-### Running Specific Test Types
-
-You can run specific types of tests by using the `-TestType` parameter:
-
-```powershell
-# Run only unit tests
-./Run-Tests.ps1 -TestType Unit
-
-# Run only functional tests
-./Run-Tests.ps1 -TestType Functional
-
-# Run only integration tests
-./Run-Tests.ps1 -TestType Integration
-```
-
-### Running in CI Mode
-
-For continuous integration environments, you can use the `-CI` switch, which will generate test results in NUnit XML format:
-
-```powershell
-./Run-Tests.ps1 -CI
-```
-
-This will create a `TestResults.xml` file in the tests directory, which can be used by CI systems to report test results.
-
 ## Test Files
 
 ### PowerShell Tests
 - `unit/Start.Tests.ps1`: Unit tests for individual functions in Start.ps1
 - `functional/Modes.Tests.ps1`: Tests for different execution modes (run, watch, scheduled)
 - `integration/Integration.Tests.ps1`: Tests for interactions with Posterizarr.ps1 and the environment
-- `integration/TriggerIntegration.Tests.ps1`: Tests for the integration between trigger.py and Start.ps1
+- `integration/Trigger_Integration.Tests.ps1`: Tests for the integration between trigger.py and Start.ps1
 
 ### Python Tests
 - `unit/Trigger.Tests.py`: Unit tests for the trigger.py script used for Tautulli integration
@@ -96,13 +63,9 @@ This will create a `TestResults.xml` file in the tests directory, which can be u
 - `mocks/MockPosterizarr.ps1`: A mock version of Posterizarr.ps1 for testing
 - `mocks/test-config.json`: A test configuration file
 
-### Test Runners
-- `Run-Tests.ps1`: PowerShell script to run all PowerShell tests
-- `run_python_tests.py`: Python script to run all Python tests
-
-## Test Plan
-
-For a detailed test plan, see [Start.ps1.TestPlan.md](Start.ps1.TestPlan.md).
+### Docker Tests
+- `docker/test.sh`: Shell script for testing the Docker container
+- `docker/tests.yaml`: YAML configuration for Docker tests
 
 ## Adding New Tests
 
