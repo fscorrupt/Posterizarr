@@ -62,7 +62,7 @@ jobs:
           tags: posterizarr:test
           
       - name: Run container structure tests
-        run: container-structure-test test --image posterizarr:test --config tests/tests.yaml
+        run: container-structure-test test --image posterizarr:test --config tests/docker/tests.yaml
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5

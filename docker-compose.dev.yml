@@ -10,7 +10,6 @@ services:
     env_file:
       - .env.dev
     user: "1000:1001"
-    restart: "unless-stopped"
     volumes:
       - "./config:/config:rw" # Map local config for easier access during dev
       - "/assets:/assets:rw"

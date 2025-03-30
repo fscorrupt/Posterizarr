@@ -91,6 +91,10 @@ function Set-OSTypeAndScriptRoot {
             $global:ScriptRoot = "./config"
         }
     }
+    elseif ($env:APP_DATA) {
+        $global:ScriptRoot = $env:APP_DATA
+        <# Action when this condition is true #>
+    }
     Else {
         $global:ScriptRoot = $PSScriptRoot
         $global:OSType = [System.Environment]::OSVersion.Platform

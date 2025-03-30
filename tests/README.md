@@ -1,11 +1,12 @@
 # Posterizarr Tests
 
-This directory contains tests for the Posterizarr project, with a focus on testing the Start.ps1 script.
+This directory contains tests for the Posterizarr project, with a focus on testing the Start.ps1 script and the trigger.py script used for Tautulli integration.
 
 ## Test Structure
 
 The tests are organized into the following directories:
 
+- `docker/`: tests to validate the docker container
 - `unit/`: Unit tests for individual functions in Start.ps1
 - `functional/`: Functional tests for different execution modes
 - `integration/`: Integration tests that verify interactions with other components
@@ -13,7 +14,7 @@ The tests are organized into the following directories:
 
 ## Running Tests
 
-To run the tests, you need to have PowerShell and Pester installed. Pester is a testing framework for PowerShell.
+To run the tests, you need to have PowerShell, Python, and Pester installed. Pester is a testing framework for PowerShell.
 
 ### Installing Pester
 
@@ -23,12 +24,36 @@ If you don't have Pester installed, you can install it using the following comma
 Install-Module -Name Pester -Force -SkipPublisherCheck -Scope CurrentUser
 ```
 
-### Running All Tests
+### Using VSCode Test Explorer
 
-To run all tests, navigate to the tests directory and run:
+The project now includes VSCode configuration for the test explorer. To use it:
+
+1. Install the recommended extensions:
+   - PowerShell Extension (`ms-vscode.powershell`)
+   - Pester Test Explorer (`pspester.pester-test`)
+   - Python Extension (`ms-python.python`)
+   - Pylance (`ms-python.vscode-pylance`)
+
+2. Open the Test Explorer view in VSCode (click on the flask icon in the sidebar)
+
+3. You should see all Pester tests and Python unittest tests listed in the explorer
+
+4. Click on the play button next to a test to run it, or use the play buttons at the top to run all tests
+
+### Running PowerShell Tests from Command Line
+
+To run all PowerShell tests, navigate to the tests directory and run:
 
 ```powershell
 ./Run-Tests.ps1
+```
+
+### Running Python Tests from Command Line
+
+To run the Python unit tests, navigate to the tests directory and run:
+
+```bash
+python unit/Trigger.Tests.py
 ```
 
 ### Running Specific Test Types
@@ -58,11 +83,22 @@ This will create a `TestResults.xml` file in the tests directory, which can be u
 
 ## Test Files
 
+### PowerShell Tests
 - `unit/Start.Tests.ps1`: Unit tests for individual functions in Start.ps1
 - `functional/Modes.Tests.ps1`: Tests for different execution modes (run, watch, scheduled)
 - `integration/Integration.Tests.ps1`: Tests for interactions with Posterizarr.ps1 and the environment
+- `integration/TriggerIntegration.Tests.ps1`: Tests for the integration between trigger.py and Start.ps1
+
+### Python Tests
+- `unit/Trigger.Tests.py`: Unit tests for the trigger.py script used for Tautulli integration
+
+### Mock Files
 - `mocks/MockPosterizarr.ps1`: A mock version of Posterizarr.ps1 for testing
 - `mocks/test-config.json`: A test configuration file
+
+### Test Runners
+- `Run-Tests.ps1`: PowerShell script to run all PowerShell tests
+- `run_python_tests.py`: Python script to run all Python tests
 
 ## Test Plan
 

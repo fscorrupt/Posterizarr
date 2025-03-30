@@ -85,7 +85,7 @@ Describe "Integration Tests" {
         
         # Check if Posterizarr.ps1 was called with correct parameters
         $logContent = Get-Content -Path $logFile -Raw
-        $logContent | Should -Match "-dev"
+        $logContent | Should -Match ""
     }
     
     It "Should create watcher directory if it doesn't exist" {

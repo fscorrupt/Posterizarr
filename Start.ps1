@@ -32,7 +32,7 @@ if (!$env:APP_DATA) {
 
 function GetLatestScriptVersion {
     try {
-        return Invoke-RestMethod -Uri "https://github.com/fscorrupt/Posterizarr/raw/dev/Release.txt" -Method Get -ErrorAction Stop
+        return Invoke-RestMethod -Uri "https://github.com/fscorrupt/Posterizarr/raw/main/Release.txt" -Method Get -ErrorAction Stop
     }
     catch {
         Write-Host "Could not query latest script version, Error: $($_.Exception.Message)"
@@ -63,17 +63,16 @@ function CompareScriptVersion {
 }
 
 function Run {
+    
     # Output this message for tests to detect
     Write-Output "Run function was called"
-    
-    # Tell user to update
-    CompareScriptVersion
+
     
     # Checking Config file
     if (-not (test-path "$env:APP_DATA/config.json")) {
         Write-Host ""
         Write-Host "Could not find a 'config.json' file" -ForegroundColor Red
-        Write-Host "Please edit the config.example.json according to GH repo and save it as 'config.json'" -ForegroundColor Yellow
+        Write-Host "Please edit the config.example.json according to GH repo and save it as 'config.json'" -ForegroundColor Yellow        Write-Host "Pl    # Output this message for tests to detectease edit the config.example.json according to GH repo and save it as 'config.json'" -ForegroundColor Yellow
         Write-Host "    After that restart the container..."
         Write-Host "Exiting now"
         do {
@@ -102,7 +101,8 @@ function Run {
     # Determine arguments to pass to Posterizarr.ps1
     $args = $RemainingArgs
     if (-not $args -or $args.Count -eq 0) {
-        $args = @("-dev")  # Default argument if none provided
+        # todo: do I need this?
+        $args = @("")  # Default argument if none provided
     }
     
     $argsString = $args -join " "
@@ -121,7 +121,7 @@ function Run {
 }
 
 function RunScheduled {
-    # Output this message for tests to detect
+    
     Write-Output "RunScheduled function was called"
     
     $StartTime = Get-Date
@@ -185,7 +185,6 @@ function RunScheduled {
         write-host "Use cron to run this at the exact scheduled times."
     }
     
-    CompareScriptVersion
 }
 
 function ProcessPosterizarrFile {
@@ -218,8 +217,6 @@ function ProcessPosterizarrFile {
             $Scriptargs += "$arg_value"
         }
     }
-    $Scriptargs += "-dev"
-    write-host "Building trigger args..."
     write-host "Calling Posterizarr with these args: $($Scriptargs -join ' ')"
     
     # Set the remaining args for the Run function to use
@@ -341,6 +338,8 @@ function WatchDirectory {
 }
 
 # Main execution based on mode
+CompareScriptVersion
+
 switch ($Mode) {
     "scheduled" {
         RunScheduled
