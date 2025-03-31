@@ -1,5 +1,8 @@
 Describe "Trigger.py Integration Tests" {
     BeforeAll {
+        # Simple mock for Write-Host to avoid parameter binding issues
+        Mock Write-Host {}
+        
         # Create test environment using TestDrive: instead of actual filesystem
         $testRoot = "$TestDrive/app"
         $testWatcher = "$TestDrive/posterizarr/watcher"  # Our test directory that will replace the hardcoded path
@@ -148,6 +151,9 @@ except Exception as e:
     }
     
     It "Should create a .posterizarr file with 2 name-value pairs" {
+        # Simple mock for Write-Host to avoid parameter binding issues
+        Mock Write-Host {}
+        
         Write-Host "Running test: Should create a .posterizarr file with 2 name-value pairs"
         
         # Execute the direct_trigger.py script with 4 arguments (2 name-value pairs)
@@ -192,6 +198,9 @@ except Exception as e:
     }
     
     It "Should create a .posterizarr file with 3 name-value pairs" {
+        # Simple mock for Write-Host to avoid parameter binding issues
+        Mock Write-Host {}
+        
         Write-Host "Running test: Should create a .posterizarr file with 3 name-value pairs"
         
         # Execute the direct_trigger.py script with 6 arguments (3 name-value pairs)
@@ -237,6 +246,9 @@ except Exception as e:
     }
     
     It "Should create a .posterizarr file with 4 name-value pairs" {
+        # Simple mock for Write-Host to avoid parameter binding issues
+        Mock Write-Host {}
+        
         Write-Host "Running test: Should create a .posterizarr file with 4 name-value pairs"
         
         # Execute the direct_trigger.py script with 8 arguments (4 name-value pairs)
@@ -283,6 +295,9 @@ except Exception as e:
     }
     
     It "Should reject invalid argument count" {
+        # Simple mock for Write-Host to avoid parameter binding issues
+        Mock Write-Host {}
+        
         Write-Host "Running test: Should reject invalid argument count"
         
         # Execute the direct_trigger.py script with 3 arguments (invalid)

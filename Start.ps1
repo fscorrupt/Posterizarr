@@ -23,8 +23,6 @@ param (
 # Capture any remaining arguments to pass to Posterizarr.ps1
 $RemainingArgs = $MyInvocation.UnboundArguments
 
-$env:PSMODULE_ANALYSIS_CACHE_PATH = $null
-$env:PSMODULE_ANALYSIS_CACHE_ENABLED = $false
 
 # Set default values for APP_ROOT and APP_DATA if not already provided
 if (!$env:APP_ROOT) {
@@ -70,7 +68,7 @@ function CompareScriptVersion {
 function Run {
     
     # Output this message for tests to detect
-    Write-Output "Run function was called"
+    Write-Host "Run function was called"
 
     
     # Checking Config file
@@ -191,7 +189,7 @@ function ShouldRunAtScheduledTime {
 
 function RunScheduled {
     
-    Write-Output "RunScheduled function was called"
+    Write-Host "RunScheduled function was called"
     
     $currentTime = Get-Date
     
@@ -230,7 +228,7 @@ function ProcessPosterizarrFile {
     )
     
     # Output this message for tests to detect
-    Write-Output "ProcessPosterizarrFile function was called with FilePath: $FilePath"
+    Write-Host "ProcessPosterizarrFile function was called with FilePath: $FilePath"
     
     if (!(Test-Path -Path $FilePath)) {
         Write-Host "File not found: $FilePath" -ForegroundColor Red
@@ -275,7 +273,7 @@ function WatchDirectory {
     )
     
     # Output this message for tests to detect
-    Write-Output "WatchDirectory function was called"
+    Write-Host "WatchDirectory function was called"
     
     # Posterizarr File Watcher for Tautulli Recently Added Files
     $inputDir = "$env:APP_DATA/watcher"
