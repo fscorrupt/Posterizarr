@@ -13,3 +13,6 @@
 /config
 __pycache__
 .vscode
+
+# integration testing
+tautulli/

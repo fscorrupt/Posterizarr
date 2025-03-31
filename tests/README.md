@@ -40,6 +40,46 @@ The project uses VSCode's test explorer to run Pester and Python tests. To use i
 
 4. Click on the play button next to a test to run it, or use the play buttons at the top to run all tests
 
+5. To run tests with code coverage, use the "Run All Tests with Coverage" button in the Test Explorer toolbar
+
+The project includes VSCode workspace settings (in `.vscode/settings.json`) that configure the Pester Test Explorer extension to use the `.pester.yml` configuration file and enable code coverage reporting.
+
+### Code Coverage Reports
+
+The project is configured to generate code coverage reports when running Pester tests. This helps identify which parts of the code are being tested and which parts need more test coverage.
+
+To generate a code coverage report:
+
+1. Run the tests using the "Run All Tests with Coverage" button in the VSCode Test Explorer toolbar
+
+2. The coverage report will be generated in the `coverage.xml` file in JaCoCo format
+
+3. You can view this report using various tools:
+   - Install the "Coverage Gutters" VSCode extension to see coverage directly in your editor
+   - Use a JaCoCo report viewer to see detailed coverage metrics
+   - Convert to HTML format for a more readable report using tools like ReportGenerator
+
+The coverage configuration is defined in the `.pester.yml` file in the root directory and includes:
+- Coverage for Start.ps1 (Posterizarr.ps1 coverage is commented out as it's not ready yet)
+- Exclusion of test files from coverage metrics
+- Output in JaCoCo XML format for compatibility with various tools
+
+#### Troubleshooting Code Coverage
+
+If the "Run All Tests with Coverage" button doesn't work:
+
+1. Make sure you have the latest version of the Pester Test Explorer extension installed
+2. Try restarting VSCode to reload the extensions
+3. Check that the `.pester.yml` file is correctly formatted
+4. Verify that the `.vscode/settings.json` file contains the correct configuration for code coverage
+5. Run tests manually with coverage using the PowerShell terminal:
+
+   ```powershell
+   Invoke-Pester -Configuration (Get-Content -Path .pester.yml | ConvertFrom-Yaml)
+   ```
+
+6. Look for any error messages in the VSCode output panel (View > Output > Pester Test Explorer)
+
 ### Running Python Tests from Command Line
 
 To run the Python unit tests, navigate to the tests directory and run:
@@ -78,6 +118,11 @@ When adding new tests, follow these guidelines:
 5. Use the Pester `Describe`, `Context`, and `It` blocks to organize tests
 6. Use mocks to isolate the code being tested
 7. Use the `TestDrive` PSDrive for temporary files and directories
+8. For testing the watch mode, use the `-Timeout` parameter to avoid infinite loops:
+   ```powershell
+   # Example: Run watch mode for 5 seconds in tests
+   & "$PSScriptRoot/../../Start.ps1" -Mode watch -Timeout 5
+   ```
 
 ## Best Practices
 

@@ -12,7 +12,10 @@ param (
     [string]$Mode = "run",
     
     [Parameter(Mandatory=$false)]
-    [string]$FilePath
+    [string]$FilePath,
+    
+    [Parameter(Mandatory=$false)]
+    [int]$Timeout = -1
 )
 
 # Capture any remaining arguments to pass to Posterizarr.ps1
@@ -99,13 +102,13 @@ function Run {
     }
     
     # Determine arguments to pass to Posterizarr.ps1
-    $args = $RemainingArgs
+    $incomming_args = $RemainingArgs
     if (-not $args -or $args.Count -eq 0) {
         # todo: do I need this?
-        $args = @("")  # Default argument if none provided
+        $incomming_args = @("")  # Default argument if none provided
     }
     
-    $argsString = $args -join " "
+    $argsString = $incomming_args -join " "
     write-host "Running Posterizarr.ps1 with arguments: $argsString"
     
     # Calling the Posterizarr Script
@@ -124,7 +127,6 @@ function RunScheduled {
     
     Write-Output "RunScheduled function was called"
     
-    $StartTime = Get-Date
     $CurrentTime = Get-Date
     
     # Check for RUN_TIME environment variable
@@ -233,6 +235,11 @@ function ProcessPosterizarrFile {
 }
 
 function WatchDirectory {
+    param (
+        [Parameter(Mandatory=$false)]
+        [int]$Timeout = -1
+    )
+    
     # Output this message for tests to detect
     Write-Output "WatchDirectory function was called"
     
@@ -245,40 +252,13 @@ function WatchDirectory {
         New-Item -Path $inputDir -ItemType Directory -Force | Out-Null
     }
     
-    # Check if we're running in a test environment
-    # If $TestDrive exists, we're in a Pester test
-    if (Test-Path variable:TestDrive) {
-        try {
-            # For unit tests, we need to set up the watcher but not start the infinite loop
-            $watcher = New-Object System.IO.FileSystemWatcher
-            $watcher.Path = $inputDir
-            $watcher.Filter = "*.posterizarr"
-            $watcher.IncludeSubdirectories = $true
-            $watcher.EnableRaisingEvents = $true
-            
-            # Check for existing files when starting
-            $existingFiles = Get-ChildItem $inputDir -Recurse | Where-Object -FilterScript {
-                $_.Extension -match 'posterizarr'
-            }
-            
-            if ($existingFiles.Count -gt 0) {
-                Write-Host "Found $($existingFiles.Count) existing .posterizarr files. Processing..." -ForegroundColor Yellow
-                foreach($item in $existingFiles) {
-                    ProcessPosterizarrFile -FilePath $item.FullName
-                }
-            }
-        }
-        catch {
-            Write-Host "Error in file watcher: $_" -ForegroundColor Red
-        }
-        
-        Write-Host "Running in test environment, skipping file watcher loop"
-        return
-    }
-    
     # Real-time file system watcher
     Write-Host "Starting real-time file watcher for directory: $inputDir" -ForegroundColor Green
-    Write-Host "Watching for .posterizarr files... Press Ctrl+C to stop." -ForegroundColor Yellow
+    if ($Timeout -gt 0) {
+        Write-Host "Watching for .posterizarr files for $Timeout seconds..." -ForegroundColor Yellow
+    } else {
+        Write-Host "Watching for .posterizarr files... Press Ctrl+C to stop." -ForegroundColor Yellow
+    }
     
     try {
         $watcher = New-Object System.IO.FileSystemWatcher
@@ -317,10 +297,21 @@ function WatchDirectory {
             }
         }
         
-        # Keep the script running
+        # Keep the script running with timeout support
         try {
-            while ($true) { Start-Sleep -Seconds 1 }
-        } 
+            $startTime = Get-Date
+            while ($true) {
+                # Check if timeout is reached
+                if ($Timeout -gt 0) {
+                    $elapsedSeconds = ((Get-Date) - $startTime).TotalSeconds
+                    if ($elapsedSeconds -ge $Timeout) {
+                        Write-Host "Timeout of $Timeout seconds reached, exiting watch mode" -ForegroundColor Yellow
+                        break
+                    }
+                }
+                Start-Sleep -Seconds 1
+            }
+        }
         finally {
             # Clean up event handlers
             $handlers | ForEach-Object {
@@ -345,7 +336,7 @@ switch ($Mode) {
         RunScheduled
     }
     "watch" {
-        WatchDirectory
+        WatchDirectory -Timeout $Timeout
     }
     "run" {
         if ($FilePath) {
