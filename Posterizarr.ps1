@@ -93,7 +93,6 @@ function Set-OSTypeAndScriptRoot {
     }
     elseif ($env:APP_DATA) {
         $global:ScriptRoot = $env:APP_DATA
-        <# Action when this condition is true #>
     }
     Else {
         $global:ScriptRoot = $PSScriptRoot

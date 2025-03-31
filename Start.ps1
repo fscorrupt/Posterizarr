@@ -2,9 +2,11 @@
 .SYNOPSIS
     Posterizarr execution script with multiple operation modes.
 .PARAMETER Mode
-    Execution mode: run (default), watch (file monitoring), or scheduled (time-based).
+    Execution mode: run (default), watch (file monitoring and scheduled execution), or scheduled (time-based).
 .PARAMETER FilePath
     Path to a specific .posterizarr file to process (only used in run mode).
+.PARAMETER Timeout
+    Optional timeout in seconds for watch mode. If specified, watch mode will exit after this many seconds.
 #>
 param (
     [Parameter(Mandatory=$false)]
@@ -75,9 +77,10 @@ function Run {
     if (-not (test-path "$env:APP_DATA/config.json")) {
         Write-Host ""
         Write-Host "Could not find a 'config.json' file" -ForegroundColor Red
-        Write-Host "Please edit the config.example.json according to GH repo and save it as 'config.json'" -ForegroundColor Yellow        Write-Host "Pl    # Output this message for tests to detectease edit the config.example.json according to GH repo and save it as 'config.json'" -ForegroundColor Yellow
+        Write-Host "Please edit the config.example.json according to GH repo and save it as 'config.json'" -ForegroundColor Yellow
+        # Output this message for tests to detect
         Write-Host "    After that restart the container..."
-        Write-Host "Exiting now"
+        Write-Host "Waiting for config.json file to be created..." -ForegroundColor Cyan
         do {
             Start-Sleep 600
         } until (
@@ -102,17 +105,19 @@ function Run {
     }
     
     # Determine arguments to pass to Posterizarr.ps1
-    $incomming_args = $RemainingArgs
-    if (-not $args -or $args.Count -eq 0) {
-        # todo: do I need this?
-        $incomming_args = @("")  # Default argument if none provided
+    $incoming_args = $RemainingArgs
+    if (-not $incoming_args -or $incoming_args.Count -eq 0) {
+        # No arguments provided
+        $incoming_args = @()
+        $argsString = ""
+    } else {
+        $argsString = $incoming_args -join " "
     }
     
-    $argsString = $incomming_args -join " "
-    write-host "Running Posterizarr.ps1 with arguments: $argsString"
+    Write-Host "Running Posterizarr.ps1 with arguments: $argsString"
     
     # Calling the Posterizarr Script
-    if ((Get-Process | Where-Object commandline -like 'pwsh')) {
+    if ((Get-Process | Where-Object commandline -like '*Posterizarr.ps1*')) {
         Write-Warning "There is currently running another Process of Posterizarr, skipping this run."
     }
     Else {
@@ -122,71 +127,100 @@ function Run {
     
     return $true
 }
-
-function RunScheduled {
-    
-    Write-Output "RunScheduled function was called"
-    
-    $CurrentTime = Get-Date
+# Common function to check if we should run at the scheduled time
+function ShouldRunAtScheduledTime {
+    param (
+        [Parameter(Mandatory=$true)]
+        [DateTime]$currentTime,
+        [Parameter(Mandatory=$false)]
+        [Nullable[DateTime]]$lastExecutionDate = $null
+    )
     
     # Check for RUN_TIME environment variable
     if (!$env:RUN_TIME) {
         $env:RUN_TIME = "05:00"  # Set default value if not provided
     }
     
-    write-host ""
-    write-host "Scheduled execution started at: $(Get-Date)" -ForegroundColor Green
-    
     # Parse the RUN_TIME value
-    $RunTimes = $env:RUN_TIME -split ','
+    $runTimes = $env:RUN_TIME -split ','
+    $shouldRun = $false
+    $closestTime = $null
+    $minuteDifference = 1440  # Max minutes in a day
     
     # Check if current time matches any of the scheduled times (within a 5-minute window)
-    $script:ShouldRun = $false  # Make this a script-level variable for testing
-    $ClosestTime = $null
-    $MinuteDifference = 1440  # Max minutes in a day
-    
-    foreach ($Time in $RunTimes) {
-        $Hour = $Time.Trim().Split(':')[0]
-        $Minute = $Time.Trim().Split(':')[1]
-        
-        # Create a datetime for the scheduled time today
-        $ScheduledTime = Get-Date -Hour $Hour -Minute $Minute -Second 0
-        
-        # Calculate minutes difference
-        $Diff = [Math]::Abs(($CurrentTime - $ScheduledTime).TotalMinutes)
-        
-        # If we're within 5 minutes of a scheduled time, we should run
-        if ($Diff -le 5) {
-            $script:ShouldRun = $true
-            break
-        }
-        
-        # Track the closest time for reporting
-        if ($Diff -lt $MinuteDifference) {
-            $MinuteDifference = $Diff
-            $ClosestTime = $ScheduledTime
+    foreach ($time in $runTimes) {
+        # Add error handling for invalid time formats
+        if ($time -match '^\s*(\d{1,2}):(\d{1,2})\s*$') {
+            $hour = $matches[1]
+            $minute = $matches[2]
+            
+            # Create a datetime for the scheduled time today
+            $scheduledTime = Get-Date -Hour $hour -Minute $minute -Second 0
+            
+            # Calculate minutes difference
+            $diff = [Math]::Abs(($currentTime - $scheduledTime).TotalMinutes)
+            
+            # If we're within 5 minutes of a scheduled time, we should run
+            if ($diff -le 5) {
+                # Check if we've already run today at this time (if lastExecutionDate is provided)
+                if ($lastExecutionDate -eq $null -or
+                    ($lastExecutionDate.Date -ne $currentTime.Date) -or
+                    ([Math]::Abs(($lastExecutionDate - $scheduledTime).TotalMinutes) -gt 10)) {
+                    $shouldRun = $true
+                    break
+                }
+            }
+            
+            # Track the closest time for reporting
+            if ($diff -lt $minuteDifference) {
+                $minuteDifference = $diff
+                $closestTime = $scheduledTime
+            }
+        } else {
+            Write-Host "Invalid time format: $time. Expected format: HH:MM" -ForegroundColor Yellow
+            continue
         }
     }
     
+    return @{
+        ShouldRun = $shouldRun
+        ClosestTime = $closestTime
+    }
+}
+
+
+function RunScheduled {
+    
+    Write-Output "RunScheduled function was called"
+    
+    $currentTime = Get-Date
+    
+    Write-Host ""
+    Write-Host "Scheduled execution started at: $(Get-Date)" -ForegroundColor Green
+    
+    # Use the common function to check if we should run
+    $result = ShouldRunAtScheduledTime -currentTime $currentTime
+    $script:ShouldRun = $result.ShouldRun  # Make this a script-level variable for testing
+    $closestTime = $result.ClosestTime
+    
     # Display information about run times
-    write-host "Configured run times: $env:RUN_TIME"
+    Write-Host "Configured run times: $env:RUN_TIME"
     
     if ($script:ShouldRun) {
-        write-host "Current time is within the scheduled window, executing Posterizarr..."
+        Write-Host "Current time is within the scheduled window, executing Posterizarr..." -ForegroundColor Green
         
         # Call the Run function to execute Posterizarr
         Run
         
-        write-host ""
-        write-host "Scheduled execution completed at: $(Get-Date)" -ForegroundColor Green
+        Write-Host ""
+        Write-Host "Scheduled execution completed at: $(Get-Date)" -ForegroundColor Green
     } else {
-        write-host "Current time is not within any scheduled window."
-        if ($ClosestTime) {
-            write-host "Closest scheduled time is: $($ClosestTime.ToString('HH:mm'))"
+        Write-Host "Current time is not within any scheduled window."
+        if ($closestTime) {
+            Write-Host "Closest scheduled time is: $($closestTime.ToString('HH:mm'))"
         }
-        write-host "Use cron to run this at the exact scheduled times."
+        Write-Host "Use cron to run this at the exact scheduled times."
     }
-    
 }
 
 function ProcessPosterizarrFile {
@@ -213,8 +247,8 @@ function ProcessPosterizarrFile {
     # Replace args
     foreach ($line in $triggerargs) {
         if ($line -match '^\[(.+)\]: (.+)$') {
-            $arg_name = $matches[1]
-            $arg_value = $matches[2]
+            $arg_name = $matches[1].TrimEnd(',')
+            $arg_value = $matches[2].TrimEnd(',')
             $Scriptargs += "-$arg_name"
             $Scriptargs += "$arg_value"
         }
@@ -260,6 +294,10 @@ function WatchDirectory {
         Write-Host "Watching for .posterizarr files... Press Ctrl+C to stop." -ForegroundColor Yellow
     }
     
+    # Initialize variables for scheduled execution
+    $lastExecutionDate = $null
+    Write-Host "Watch mode will also run scheduled executions at: $env:RUN_TIME" -ForegroundColor Cyan
+    
     try {
         $watcher = New-Object System.IO.FileSystemWatcher
         $watcher.Path = $inputDir
@@ -297,18 +335,56 @@ function WatchDirectory {
             }
         }
         
-        # Keep the script running with timeout support
+        # Keep the script running with timeout support and scheduled execution
         try {
             $startTime = Get-Date
+            $lastTimeCheck = Get-Date
+            
             while ($true) {
+                $currentTime = Get-Date
+                
                 # Check if timeout is reached
                 if ($Timeout -gt 0) {
-                    $elapsedSeconds = ((Get-Date) - $startTime).TotalSeconds
+                    $elapsedSeconds = ($currentTime - $startTime).TotalSeconds
                     if ($elapsedSeconds -ge $Timeout) {
                         Write-Host "Timeout of $Timeout seconds reached, exiting watch mode" -ForegroundColor Yellow
                         break
                     }
                 }
+                
+                # Check for scheduled execution every 30 seconds instead of every second
+                $timeCheckInterval = 30
+                if (($currentTime - $lastTimeCheck).TotalSeconds -ge $timeCheckInterval) {
+                    $lastTimeCheck = $currentTime
+                    
+                    # Use the common function to check if we should run
+                    $result = ShouldRunAtScheduledTime -currentTime $currentTime -lastExecutionDate $lastExecutionDate
+                    $script:ShouldRun = $result.ShouldRun
+                    
+                    # If it's time to run, check if Posterizarr is already running
+                    if ($script:ShouldRun) {
+                        $currentlyRunning = "$env:APP_DATA/temp/Posterizarr.Running"
+                        $isRunning = (Test-Path $currentlyRunning) -or (Get-Process | Where-Object commandline -like '*Posterizarr.ps1*')
+                        
+                        if ($isRunning) {
+                            Write-Host "Watch mode: Scheduled execution skipped at $(Get-Date -Format 'HH:mm:ss') - Posterizarr is already running" -ForegroundColor Yellow
+                        } else {
+                            Write-Host ""
+                            Write-Host "Watch mode: Scheduled execution started at: $(Get-Date)" -ForegroundColor Cyan
+                            
+                            # Call the Run function to execute Posterizarr
+                            Run
+                            
+                            Write-Host ""
+                            Write-Host "Watch mode: Scheduled execution completed at: $(Get-Date)" -ForegroundColor Cyan
+                            
+                            # Update the last execution date
+                            $lastExecutionDate = Get-Date
+                        }
+                    }
+                }
+                
+                # Sleep for 1 second before checking again
                 Start-Sleep -Seconds 1
             }
         }

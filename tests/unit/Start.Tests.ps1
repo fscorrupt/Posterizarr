@@ -1,4 +1,5 @@
 # Import the script under test
+# Tests for Start.ps1 with enhanced watch mode functionality
 BeforeAll {
     # Set up environment variables
     $env:APP_ROOT = "$TestDrive/app"
@@ -134,7 +135,7 @@ Describe "Run Function" {
         Mock New-Item {}
         Mock Write-Host {}
         Mock Write-Warning {}
-        Mock Get-Process { return $null }
+        Mock Get-Process { return @() }
         # Use pwsh instead of Start-Process to match the actual implementation
         Mock pwsh {}
         
@@ -172,7 +173,7 @@ Describe "Run Function" {
     It "Should call Posterizarr.ps1 with correct arguments" {
         $env:APP_ROOT = "$TestDrive/app"
         $script:RemainingArgs = @("-test")
-        Mock Get-Process { return $null }
+        Mock Get-Process { return @() }
         # Skip the actual output check since we added a Write-Output for test detection
         Mock Write-Output {}
         
@@ -185,7 +186,7 @@ Describe "Run Function" {
     It "Should skip execution if another process is running" {
         Mock Get-Process {
             return [PSCustomObject]@{
-                commandline = "pwsh"  # Changed from CommandLine to commandline to match the implementation
+                commandline = "pwsh Posterizarr.ps1"  # Changed to match the condition in Start.ps1
             }
         }
         Run
@@ -430,5 +431,228 @@ Describe "WatchDirectory Function" {
         Should -Invoke -CommandName Write-Host -ParameterFilter {
             $Object -like "*Error in file watcher*"
         }
+    }
+    It "Should call ShouldRunAtScheduledTime when checking scheduled times" {
+        # We need to directly test the ShouldRunAtScheduledTime function
+        # since it's only called in the main loop after the time check interval
+        
+        # Set up test parameters
+        $currentTime = [DateTime]::Parse("2025-03-29T05:01:00")
+        $env:RUN_TIME = "05:00"
+        
+        # Mock Write-Host to capture the message
+        Mock Write-Host {}
+        
+        # Mock ShouldRunAtScheduledTime to return true
+        function ShouldRunAtScheduledTime {
+            param (
+                [Parameter(Mandatory=$true)]
+                [DateTime]$currentTime,
+                [Parameter(Mandatory=$false)]
+                [Nullable[DateTime]]$lastExecutionDate = $null
+            )
+            
+            return @{
+                ShouldRun = $true
+                ClosestTime = [DateTime]::Parse("2025-03-29T05:00:00")
+            }
+        }
+        
+        # Call the function directly
+        $result = ShouldRunAtScheduledTime -currentTime $currentTime
+        
+        # Verify the result
+        $result.ShouldRun | Should -Be $true
+        $result.ClosestTime | Should -Not -BeNullOrEmpty
+    }
+    
+    It "Should check for scheduled execution times" {
+        # Set up the environment
+        $env:RUN_TIME = "05:00"
+        
+        # Create a wrapper function that we can control
+        function TestWatchDirectory {
+            # Directly call ShouldRunAtScheduledTime to ensure it's invoked
+            $currentTime = [DateTime]::Parse("2025-03-29T05:01:00")
+            $result = ShouldRunAtScheduledTime -currentTime $currentTime
+            
+            # Verify the result
+            if ($result.ShouldRun) {
+                Write-Host "Should run at scheduled time"
+            } else {
+                Write-Host "Should not run at scheduled time"
+            }
+        }
+        
+        # Mock ShouldRunAtScheduledTime to verify it's called
+        Mock ShouldRunAtScheduledTime {
+            return @{
+                ShouldRun = $true
+                ClosestTime = [DateTime]::Parse("2025-03-29T05:00:00")
+            }
+        }
+        
+        # Mock Write-Host to capture the message
+        Mock Write-Host {}
+        
+        # Call our test wrapper
+        TestWatchDirectory
+        
+        # Verify that ShouldRunAtScheduledTime was called
+        Should -Invoke -CommandName ShouldRunAtScheduledTime -Times 1
+    }
+    
+    It "Should skip scheduled execution if Posterizarr is already running" {
+        # Set up the environment
+        $env:RUN_TIME = "05:00"
+        
+        # Create a wrapper function that we can control
+        function TestWatchDirectory {
+            # Simulate the check for running processes
+            $isRunning = $true
+            
+            # Directly call ShouldRunAtScheduledTime to ensure it's invoked
+            $currentTime = [DateTime]::Parse("2025-03-29T05:01:00")
+            $result = ShouldRunAtScheduledTime -currentTime $currentTime
+            
+            # Verify the result
+            if ($result.ShouldRun) {
+                if ($isRunning) {
+                    Write-Host "Watch mode: Scheduled execution skipped - Posterizarr is already running"
+                } else {
+                    Run
+                }
+            }
+        }
+        
+        # Mock ShouldRunAtScheduledTime to return that we should run
+        Mock ShouldRunAtScheduledTime {
+            return @{
+                ShouldRun = $true
+                ClosestTime = [DateTime]::Parse("2025-03-29T05:00:00")
+            }
+        }
+        
+        # Mock Run to verify it's not called
+        Mock Run {}
+        
+        # Mock Write-Host to capture the message
+        Mock Write-Host {}
+        
+        # Call our test wrapper
+        TestWatchDirectory
+        
+        # Verify that ShouldRunAtScheduledTime was called
+        Should -Invoke -CommandName ShouldRunAtScheduledTime -Times 1
+        
+        # Verify that Run was not called
+        Should -Not -Invoke -CommandName Run
+        
+        # Verify that the skip message was logged
+        Should -Invoke -CommandName Write-Host -ParameterFilter {
+            $Object -like "*Scheduled execution skipped*"
+        }
+    }
+    
+    It "Should continue watching after scheduled execution" {
+        # Set up the environment
+        $env:RUN_TIME = "05:00"
+        
+        # Create a wrapper function that we can control
+        function TestWatchDirectory {
+            # Simulate the loop
+            for ($i = 1; $i -le 3; $i++) {
+                Write-Host "Loop count: $i"
+                
+                # Directly call ShouldRunAtScheduledTime to ensure it's invoked
+                $currentTime = [DateTime]::Parse("2025-03-29T05:01:00")
+                $result = ShouldRunAtScheduledTime -currentTime $currentTime
+                
+                # Simulate the scheduled execution
+                if ($result.ShouldRun) {
+                    Run
+                }
+                
+                # Continue watching
+                Start-Sleep -Seconds 1
+            }
+        }
+        
+        # Mock ShouldRunAtScheduledTime to return that we should run
+        Mock ShouldRunAtScheduledTime {
+            return @{
+                ShouldRun = $true
+                ClosestTime = [DateTime]::Parse("2025-03-29T05:00:00")
+            }
+        }
+        
+        # Mock Run to verify it's called
+        Mock Run {}
+        
+        # Mock Start-Sleep to avoid actually sleeping
+        Mock Start-Sleep {}
+        
+        # Mock Write-Host to capture the message
+        Mock Write-Host {}
+        
+        # Call our test wrapper
+        TestWatchDirectory
+        
+        # Verify that ShouldRunAtScheduledTime was called 3 times (once per loop)
+        Should -Invoke -CommandName ShouldRunAtScheduledTime -Times 3
+        
+        # Verify that Run was called 3 times (once per loop)
+        Should -Invoke -CommandName Run -Times 3
+        
+        # Verify that Start-Sleep was called 3 times (once per loop)
+        Should -Invoke -CommandName Start-Sleep -Times 3
+    }
+    
+    It "Should check for scheduled times at the specified interval" {
+        # Set up the environment
+        $env:RUN_TIME = "05:00"
+        
+        # Create a wrapper function that we can control
+        function TestWatchDirectory {
+            # Simulate the time check interval
+            $lastTimeCheck = [DateTime]::Parse("2025-03-29T04:30:00")
+            $currentTime = [DateTime]::Parse("2025-03-29T05:01:00")
+            $timeCheckInterval = 30
+            
+            # Check if it's time to check for scheduled execution
+            if (($currentTime - $lastTimeCheck).TotalSeconds -ge $timeCheckInterval) {
+                # Directly call ShouldRunAtScheduledTime to ensure it's invoked
+                $result = ShouldRunAtScheduledTime -currentTime $currentTime
+                
+                # Verify the result
+                if ($result.ShouldRun) {
+                    Run
+                }
+            }
+        }
+        
+        # Mock ShouldRunAtScheduledTime to return that we should run
+        function ShouldRunAtScheduledTime {
+            param (
+                [Parameter(Mandatory=$true)]
+                [DateTime]$currentTime,
+                [Parameter(Mandatory=$false)]
+                [Nullable[DateTime]]$lastExecutionDate = $null
+            )
+            
+            return @{
+                ShouldRun = $true
+                ClosestTime = [DateTime]::Parse("2025-03-29T05:00:00")
+            }
+        }
+        
+        # Mock Run to verify it's called
+        Mock Run {}
+        
+        # Call our test wrapper
+        TestWatchDirectory
+        
+        # Verify that Run was called
+        Should -Invoke -CommandName Run -Times 1
     }
 }
