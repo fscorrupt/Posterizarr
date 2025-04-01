@@ -16,8 +16,7 @@ tests/
 images/
 .env*
 
-# Configuration examples (not the actual config)
-config.example.json
+# Configuration example (not the actual config)
 MyPersonalConfig.json
 
 # Docker files (not needed in the image)

@@ -115,13 +115,6 @@ function Run {
         write-host "Cleared .running file..." -ForegroundColor Green
     }
 
-    # Create watcher directory if it doesn't exist
-    $inputDir = "$env:APP_DATA/watcher"
-    if (!(Test-Path -Path $inputDir)) {
-        Write-Host "Creating watcher directory at $inputDir"
-        New-Item -Path $inputDir -ItemType Directory -Force | Out-Null
-    }
-
     # Determine arguments to pass to Posterizarr.ps1
     $incoming_args = $RemainingArgs
     if (-not $incoming_args -or $incoming_args.Count -eq 0) {
@@ -291,17 +284,8 @@ function WatchDirectory {
     # Output this message for tests to detect
     Write-Host "WatchDirectory function was called"
 
-    # Posterizarr File Watcher for Tautulli Recently Added Files
-    $inputDir = "$env:APP_DATA/watcher"
-
-    # Create watcher directory if it doesn't exist
-    if (!(Test-Path -Path $inputDir)) {
-        Write-Host "Creating watcher directory at $inputDir"
-        New-Item -Path $inputDir -ItemType Directory -Force | Out-Null
-    }
-
     # Real-time file system watcher
-    Write-Host "Starting real-time file watcher for directory: $inputDir" -ForegroundColor Green
+    Write-Host "Starting real-time file watcher for directory: $watcherdir" -ForegroundColor Green
     if ($Timeout -gt 0) {
         Write-Host "Watching for .posterizarr files for $Timeout seconds..." -ForegroundColor Yellow
     } else {
@@ -314,7 +298,7 @@ function WatchDirectory {
 
     try {
         $watcher = New-Object System.IO.FileSystemWatcher
-        $watcher.Path = $inputDir
+        $watcher.Path = $watcherdir
         $watcher.Filter = "*.posterizarr"
         $watcher.IncludeSubdirectories = $true
         $watcher.EnableRaisingEvents = $true
@@ -338,7 +322,7 @@ function WatchDirectory {
         Write-Host "Watcher started. Waiting for .posterizarr files..." -ForegroundColor Green
 
         # Check for existing files when starting
-        $existingFiles = Get-ChildItem $inputDir -Recurse | Where-Object -FilterScript {
+        $existingFiles = Get-ChildItem $watcherdir -Recurse | Where-Object -FilterScript {
             $_.Extension -match 'posterizarr'
         }
 
@@ -417,6 +401,71 @@ function WatchDirectory {
         Write-Host "Error in file watcher: $_" -ForegroundColor Red
     }
 }
+
+function CreateDirectories {
+    param (
+        [string[]]$directories
+    )
+
+    foreach ($dir in $directories) {
+        if (!(Test-Path -Path $dir)) {
+            New-Item -Path $dir -ItemType Directory -Force | Out-Null
+        }
+    }
+}
+function CopyFiles {
+    param (
+        [string]$sourceDir,
+        [string]$destDir,
+        [string[]]$files
+    )
+
+    foreach ($file in $files) {
+        $sourcePath = Join-Path -Path $sourceDir -ChildPath $file
+        $destPath = Join-Path -Path $destDir -ChildPath $file
+
+        if (Test-Path -Path $sourcePath) {
+            Copy-Item -Path $sourcePath -Destination $destPath -Force | Out-Null
+        }
+    }
+
+    # Copy config.example.json only if config.json is missing
+    $configExample = Join-Path -Path $sourceDir -ChildPath "config.example.json"
+    $configFile = Join-Path -Path $destDir -ChildPath "config.json"
+    $configDest = Join-Path -Path $destDir -ChildPath "config.example.json"
+
+    if (!(Test-Path -Path $configFile) -and (Test-Path -Path $configExample)) {
+        Copy-Item -Path $configExample -Destination $configDest -Force | Out-Null
+    }
+}
+
+# Define paths and files
+$directories = @(
+    "$env:APP_DATA/Logs",
+    "$env:APP_DATA/temp",
+    "$env:APP_DATA/watcher",
+    "$env:APP_DATA/test"
+)
+
+$sourceDir = "/app/"
+$destDir = "$env:APP_DATA/"
+$files = @(
+    "overlay.png",
+    "backgroundoverlay.png",
+    "overlay-innerglow.png",
+    "backgroundoverlay-innerglow.png",
+    "Rocky.ttf",
+    "Colus-Regular.ttf",
+    "Comfortaa-Medium.ttf",
+    "Posterizarr.ps1"
+)
+
+# Execute functions
+CreateDirectories -directories $directories
+CopyFiles -sourceDir $sourceDir -destDir $destDir -files $files
+
+# Posterizarr File Watcher for Tautulli Recently Added Files
+$global:watcherdir = "$env:APP_DATA/watcher"
 
 # Main execution based on mode
 CompareScriptVersion
