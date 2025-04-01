@@ -201,8 +201,8 @@ function ShouldRunAtScheduledTime {
             # Calculate minutes difference
             $diff = [Math]::Abs(($currentTime - $scheduledTime).TotalMinutes)
 
-            # If we're within 5 minutes of a scheduled time, we should run
-            if ($diff -le 5) {
+            # If we're at or just past a scheduled time (within 1 minute), we should run
+            if ($diff -le 1 && $currentTime -ge $scheduledTime) {
                 # Check if we've already run today at this time (if lastExecutionDate is provided)
                 if ($lastExecutionDate -eq $null -or
                     ($lastExecutionDate.Date -ne $currentTime.Date) -or
@@ -384,7 +384,7 @@ function WatchDirectory {
                 }
 
                 # Check for scheduled execution every 30 seconds instead of every second
-                $timeCheckInterval = 30
+                $timeCheckInterval = 15
                 if (($currentTime - $lastTimeCheck).TotalSeconds -ge $timeCheckInterval) {
                     $lastTimeCheck = $currentTime
 
