@@ -313,6 +313,7 @@ function WatchDirectory {
 
     # Output this message for tests to detect
     Write-Host "WatchDirectory function was called"
+
     # Setup watch dir
     $watcherdir = "$env:APP_DATA/watcher"
         
