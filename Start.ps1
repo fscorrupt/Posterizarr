@@ -26,7 +26,7 @@ $RemainingArgs = $MyInvocation.UnboundArguments
 
 # Set default values for APP_ROOT and APP_DATA if not already provided
 if (!$env:APP_ROOT) {
-    $env:APP_ROOT = "/config"
+    $env:APP_ROOT = "/app"
 }
 
 if (!$env:APP_DATA) {
@@ -45,10 +45,8 @@ DapperDrivers & Onedr0p
  |  ___/ _ \/ __| __/ _ \ '__| |_  / _``` | '__| '__|
  | |  | (_) \__ \ ||  __/ |  | |/ / (_| | |  | |
  |_|   \___/|___/\__\___|_|  |_/___\__,_|_|  |_|
-
  ======================================================
  To support the projects visit:
-
  https://github.com/fscorrupt/Posterizarr
 ----------------------------------------------------
 "@
@@ -85,6 +83,38 @@ function CompareScriptVersion {
         write-host "Error checking script version: $($_.Exception.Message)" -ForegroundColor Red
     }
 }
+
+function CopyAssetFiles {
+    # Get all asset files - using wildcard in path to make -Include work correctly
+    $assetFiles = Get-ChildItem -Path "$env:APP_ROOT/*" -Include "*.png", "*.ttf" -File
+    $fileCount = $assetFiles.Count
+    
+    if ($fileCount -eq 0) {
+        Write-Host "No .png or .ttf files found in $env:APP_ROOT" -ForegroundColor Yellow
+    } else {
+        $successCount = 0
+        $errorCount = 0
+        
+        $assetFiles | ForEach-Object {
+            try {
+                $destinationPath = Join-Path -Path $env:APP_DATA -ChildPath $_.Name
+                Copy-Item -Path $_.FullName -Destination $destinationPath -Force
+                $successCount++
+            } catch {
+                $errorCount++
+                Write-Host "Failed to copy $($_.Name): $($_.Exception.Message)" -ForegroundColor Red
+            }
+        }
+        
+        # Simple summary message
+        Write-Host "Copied $successCount .png & .ttf files from $env:APP_ROOT to $env:APP_DATA" -ForegroundColor Cyan
+        
+        if ($errorCount -gt 0) {
+            Write-Host "Failed to copy $errorCount files" -ForegroundColor Yellow
+        }
+    }
+}
+
 function Run {
 
     # Output this message for tests to detect
@@ -283,9 +313,11 @@ function WatchDirectory {
 
     # Output this message for tests to detect
     Write-Host "WatchDirectory function was called"
-
+    # Setup watch dir
+    $watcherdir = "$env:APP_DATA/watcher"
+        
     # Real-time file system watcher
-    Write-Host "Starting real-time file watcher for directory: $global:watcherdir" -ForegroundColor Green
+    Write-Host "Starting real-time file watcher for directory: $watcherdir" -ForegroundColor Green
     if ($Timeout -gt 0) {
         Write-Host "Watching for .posterizarr files for $Timeout seconds..." -ForegroundColor Yellow
     } else {
@@ -298,7 +330,7 @@ function WatchDirectory {
 
     try {
         $watcher = New-Object System.IO.FileSystemWatcher
-        $watcher.Path = $global:watcherdir
+        $watcher.Path = $watcherdir
         $watcher.Filter = "*.posterizarr"
         $watcher.IncludeSubdirectories = $true
         $watcher.EnableRaisingEvents = $true
@@ -322,7 +354,7 @@ function WatchDirectory {
         Write-Host "Watcher started. Waiting for .posterizarr files..." -ForegroundColor Green
 
         # Check for existing files when starting
-        $existingFiles = Get-ChildItem $global:watcherdir -Recurse | Where-Object -FilterScript {
+        $existingFiles = Get-ChildItem $watcherdir -Recurse | Where-Object -FilterScript {
             $_.Extension -match 'posterizarr'
         }
 
@@ -402,73 +434,12 @@ function WatchDirectory {
     }
 }
 
-function CreateDirectories {
-    param (
-        [string[]]$directories
-    )
-
-    foreach ($dir in $directories) {
-        if (!(Test-Path -Path $dir)) {
-            New-Item -Path $dir -ItemType Directory -Force | Out-Null
-        }
-    }
-}
-function CopyFiles {
-    param (
-        [string]$sourceDir,
-        [string]$destDir,
-        [string[]]$files
-    )
-
-    foreach ($file in $files) {
-        $sourcePath = Join-Path -Path $sourceDir -ChildPath $file
-        $destPath = Join-Path -Path $destDir -ChildPath $file
-
-        if (Test-Path -Path $sourcePath) {
-            Copy-Item -Path $sourcePath -Destination $destPath -Force | Out-Null
-        }
-    }
-
-    # Copy config.example.json only if config.json is missing
-    $configExample = Join-Path -Path $sourceDir -ChildPath "config.example.json"
-    $configFile = Join-Path -Path $destDir -ChildPath "config.json"
-    $configDest = Join-Path -Path $destDir -ChildPath "config.example.json"
-
-    if (!(Test-Path -Path $configFile) -and (Test-Path -Path $configExample)) {
-        Copy-Item -Path $configExample -Destination $configDest -Force | Out-Null
-    }
-}
-
-# Define paths and files
-$directories = @(
-    "$env:APP_DATA/Logs",
-    "$env:APP_DATA/temp",
-    "$env:APP_DATA/watcher",
-    "$env:APP_DATA/test"
-)
-
-$sourceDir = "/app/"
-$destDir = "$env:APP_DATA/"
-$files = @(
-    "overlay.png",
-    "backgroundoverlay.png",
-    "overlay-innerglow.png",
-    "backgroundoverlay-innerglow.png",
-    "Rocky.ttf",
-    "Colus-Regular.ttf",
-    "Comfortaa-Medium.ttf",
-    "Posterizarr.ps1"
-)
-
-# Execute functions
-CreateDirectories -directories $directories
-CopyFiles -sourceDir $sourceDir -destDir $destDir -files $files
-
-# Posterizarr File Watcher for Tautulli Recently Added Files
-$global:watcherdir = "$env:APP_DATA/watcher"
 
 # Main execution based on mode
 CompareScriptVersion
+
+# Move assets to APP_DATA
+CopyAssetFiles
 
 switch ($Mode) {
     "scheduled" {
