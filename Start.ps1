@@ -285,7 +285,7 @@ function WatchDirectory {
     Write-Host "WatchDirectory function was called"
 
     # Real-time file system watcher
-    Write-Host "Starting real-time file watcher for directory: $watcherdir" -ForegroundColor Green
+    Write-Host "Starting real-time file watcher for directory: $global:watcherdir" -ForegroundColor Green
     if ($Timeout -gt 0) {
         Write-Host "Watching for .posterizarr files for $Timeout seconds..." -ForegroundColor Yellow
     } else {
@@ -298,7 +298,7 @@ function WatchDirectory {
 
     try {
         $watcher = New-Object System.IO.FileSystemWatcher
-        $watcher.Path = $watcherdir
+        $watcher.Path = $global:watcherdir
         $watcher.Filter = "*.posterizarr"
         $watcher.IncludeSubdirectories = $true
         $watcher.EnableRaisingEvents = $true
@@ -322,7 +322,7 @@ function WatchDirectory {
         Write-Host "Watcher started. Waiting for .posterizarr files..." -ForegroundColor Green
 
         # Check for existing files when starting
-        $existingFiles = Get-ChildItem $watcherdir -Recurse | Where-Object -FilterScript {
+        $existingFiles = Get-ChildItem $global:watcherdir -Recurse | Where-Object -FilterScript {
             $_.Extension -match 'posterizarr'
         }
 
