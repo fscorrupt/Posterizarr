@@ -12,10 +12,10 @@ param (
     [Parameter(Mandatory=$false)]
     [ValidateSet("run", "watch", "scheduled")]
     [string]$Mode = "run",
-    
+
     [Parameter(Mandatory=$false)]
     [string]$FilePath,
-    
+
     [Parameter(Mandatory=$false)]
     [int]$Timeout = -1
 )
@@ -32,6 +32,28 @@ if (!$env:APP_ROOT) {
 if (!$env:APP_DATA) {
     $env:APP_DATA = "/config"
 }
+
+$Header = @"
+----------------------------------------------------
+Ideas for the container were taken from:
+DapperDrivers & Onedr0p
+----------------------------------------------------
+======================================================
+  _____          _            _
+ |  __ \        | |          (_)
+ | |__) |__  ___| |_ ___ _ __ _ ______ _ _ __ _ __
+ |  ___/ _ \/ __| __/ _ \ '__| |_  / _``` | '__| '__|
+ | |  | (_) \__ \ ||  __/ |  | |/ / (_| | |  | |
+ |_|   \___/|___/\__\___|_|  |_/___\__,_|_|  |_|
+
+ ======================================================
+ To support the projects visit:
+
+ https://github.com/fscorrupt/Posterizarr
+----------------------------------------------------
+"@
+
+Write-Host $Header
 
 function GetLatestScriptVersion {
     try {
@@ -50,7 +72,7 @@ function CompareScriptVersion {
         if (Test-Path $posterizarrPath) {
             $lineContainingVersion = Select-String -Path $posterizarrPath -Pattern '^\$CurrentScriptVersion\s*=\s*"([^"]+)"' | Select-Object -ExpandProperty Line
             $LatestScriptVersion = GetLatestScriptVersion
-            
+
             if ($lineContainingVersion) {
                 # Extract the version from the line
                 write-host ""
@@ -66,11 +88,11 @@ function CompareScriptVersion {
 }
 
 function Run {
-    
+
     # Output this message for tests to detect
     Write-Host "Run function was called"
 
-    
+
     # Checking Config file
     if (-not (test-path "$env:APP_DATA/config.json")) {
         Write-Host ""
@@ -85,23 +107,23 @@ function Run {
             test-path "$env:APP_DATA/config.json"
         )
     }
-    
+
     # Check temp dir if there is a Currently running file present
     $CurrentlyRunning = "$env:APP_DATA/temp/Posterizarr.Running"
-    
+
     # Clear Running File
     if (Test-Path $CurrentlyRunning) {
         Remove-Item -LiteralPath $CurrentlyRunning | out-null
         write-host "Cleared .running file..." -ForegroundColor Green
     }
-    
+
     # Create watcher directory if it doesn't exist
     $inputDir = "$env:APP_DATA/watcher"
     if (!(Test-Path -Path $inputDir)) {
         Write-Host "Creating watcher directory at $inputDir"
         New-Item -Path $inputDir -ItemType Directory -Force | Out-Null
     }
-    
+
     # Determine arguments to pass to Posterizarr.ps1
     $incoming_args = $RemainingArgs
     if (-not $incoming_args -or $incoming_args.Count -eq 0) {
@@ -111,9 +133,9 @@ function Run {
     } else {
         $argsString = $incoming_args -join " "
     }
-    
+
     Write-Host "Running Posterizarr.ps1 with arguments: $argsString"
-    
+
     # Calling the Posterizarr Script
     if ((Get-Process | Where-Object commandline -like '*Posterizarr.ps1*')) {
         Write-Warning "There is currently running another Process of Posterizarr, skipping this run."
@@ -121,8 +143,8 @@ function Run {
     Else {
         pwsh -NoProfile -Command "$env:APP_ROOT/Posterizarr.ps1 $argsString"
     }
-    
-    
+
+
     return $true
 }
 # Common function to check if we should run at the scheduled time
@@ -133,31 +155,31 @@ function ShouldRunAtScheduledTime {
         [Parameter(Mandatory=$false)]
         [Nullable[DateTime]]$lastExecutionDate = $null
     )
-    
+
     # Check for RUN_TIME environment variable
     if (!$env:RUN_TIME) {
         $env:RUN_TIME = "05:00"  # Set default value if not provided
     }
-    
+
     # Parse the RUN_TIME value
     $runTimes = $env:RUN_TIME -split ','
     $shouldRun = $false
     $closestTime = $null
     $minuteDifference = 1440  # Max minutes in a day
-    
+
     # Check if current time matches any of the scheduled times (within a 5-minute window)
     foreach ($time in $runTimes) {
         # Add error handling for invalid time formats
         if ($time -match '^\s*(\d{1,2}):(\d{1,2})\s*$') {
             $hour = $matches[1]
             $minute = $matches[2]
-            
+
             # Create a datetime for the scheduled time today
             $scheduledTime = Get-Date -Hour $hour -Minute $minute -Second 0
-            
+
             # Calculate minutes difference
             $diff = [Math]::Abs(($currentTime - $scheduledTime).TotalMinutes)
-            
+
             # If we're within 5 minutes of a scheduled time, we should run
             if ($diff -le 5) {
                 # Check if we've already run today at this time (if lastExecutionDate is provided)
@@ -168,7 +190,7 @@ function ShouldRunAtScheduledTime {
                     break
                 }
             }
-            
+
             # Track the closest time for reporting
             if ($diff -lt $minuteDifference) {
                 $minuteDifference = $diff
@@ -179,7 +201,7 @@ function ShouldRunAtScheduledTime {
             continue
         }
     }
-    
+
     return @{
         ShouldRun = $shouldRun
         ClosestTime = $closestTime
@@ -188,28 +210,28 @@ function ShouldRunAtScheduledTime {
 
 
 function RunScheduled {
-    
+
     Write-Host "RunScheduled function was called"
-    
+
     $currentTime = Get-Date
-    
+
     Write-Host ""
     Write-Host "Scheduled execution started at: $(Get-Date)" -ForegroundColor Green
-    
+
     # Use the common function to check if we should run
     $result = ShouldRunAtScheduledTime -currentTime $currentTime
     $script:ShouldRun = $result.ShouldRun  # Make this a script-level variable for testing
     $closestTime = $result.ClosestTime
-    
+
     # Display information about run times
     Write-Host "Configured run times: $env:RUN_TIME"
-    
+
     if ($script:ShouldRun) {
         Write-Host "Current time is within the scheduled window, executing Posterizarr..." -ForegroundColor Green
-        
+
         # Call the Run function to execute Posterizarr
         Run
-        
+
         Write-Host ""
         Write-Host "Scheduled execution completed at: $(Get-Date)" -ForegroundColor Green
     } else {
@@ -226,22 +248,22 @@ function ProcessPosterizarrFile {
         [Parameter(Mandatory=$true)]
         [string]$FilePath
     )
-    
+
     # Output this message for tests to detect
     Write-Host "ProcessPosterizarrFile function was called with FilePath: $FilePath"
-    
+
     if (!(Test-Path -Path $FilePath)) {
         Write-Host "File not found: $FilePath" -ForegroundColor Red
         return
     }
-    
+
     $Scriptargs = @("-Tautulli")
     $fileName = [System.IO.Path]::GetFileName($FilePath)
     write-host "Processing .posterizarr file: $fileName"
-    
+
     # Get trigger Values
     $triggerargs = Get-Content $FilePath
-    
+
     # Replace args
     foreach ($line in $triggerargs) {
         if ($line -match '^\[(.+)\]: (.+)$') {
@@ -252,17 +274,17 @@ function ProcessPosterizarrFile {
         }
     }
     write-host "Calling Posterizarr with these args: $($Scriptargs -join ' ')"
-    
+
     # Set the remaining args for the Run function to use
     $script:RemainingArgs = $Scriptargs
-    
+
     # Call the Run function
     Run
-    
+
     write-host ""
     write-host "Tautulli Recently added finished, removing trigger file: $fileName"
     write-host ""
-    
+
     Remove-Item $FilePath -Force -Confirm:$false
 }
 
@@ -271,19 +293,19 @@ function WatchDirectory {
         [Parameter(Mandatory=$false)]
         [int]$Timeout = -1
     )
-    
+
     # Output this message for tests to detect
     Write-Host "WatchDirectory function was called"
-    
+
     # Posterizarr File Watcher for Tautulli Recently Added Files
     $inputDir = "$env:APP_DATA/watcher"
-    
+
     # Create watcher directory if it doesn't exist
     if (!(Test-Path -Path $inputDir)) {
         Write-Host "Creating watcher directory at $inputDir"
         New-Item -Path $inputDir -ItemType Directory -Force | Out-Null
     }
-    
+
     # Real-time file system watcher
     Write-Host "Starting real-time file watcher for directory: $inputDir" -ForegroundColor Green
     if ($Timeout -gt 0) {
@@ -291,56 +313,56 @@ function WatchDirectory {
     } else {
         Write-Host "Watching for .posterizarr files... Press Ctrl+C to stop." -ForegroundColor Yellow
     }
-    
+
     # Initialize variables for scheduled execution
     $lastExecutionDate = $null
     Write-Host "Watch mode will also run scheduled executions at: $env:RUN_TIME" -ForegroundColor Cyan
-    
+
     try {
         $watcher = New-Object System.IO.FileSystemWatcher
         $watcher.Path = $inputDir
         $watcher.Filter = "*.posterizarr"
         $watcher.IncludeSubdirectories = $true
         $watcher.EnableRaisingEvents = $true
-        
+
         # Define event handlers
         $onCreated = {
             $path = $Event.SourceEventArgs.FullPath
             $changeType = $Event.SourceEventArgs.ChangeType
             $timeStamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-            
+
             Write-Host "[$timeStamp] File ${changeType}: $path" -ForegroundColor Green
-            
+
             # Process the file
             ProcessPosterizarrFile -FilePath $path
         }
-        
+
         # Register event handlers
         $handlers = @()
         $handlers += Register-ObjectEvent -InputObject $watcher -EventName Created -Action $onCreated
-        
+
         Write-Host "Watcher started. Waiting for .posterizarr files..." -ForegroundColor Green
-        
+
         # Check for existing files when starting
         $existingFiles = Get-ChildItem $inputDir -Recurse | Where-Object -FilterScript {
             $_.Extension -match 'posterizarr'
         }
-        
+
         if ($existingFiles.Count -gt 0) {
             Write-Host "Found $($existingFiles.Count) existing .posterizarr files. Processing..." -ForegroundColor Yellow
             foreach($item in $existingFiles) {
                 ProcessPosterizarrFile -FilePath $item.FullName
             }
         }
-        
+
         # Keep the script running with timeout support and scheduled execution
         try {
             $startTime = Get-Date
             $lastTimeCheck = Get-Date
-            
+
             while ($true) {
                 $currentTime = Get-Date
-                
+
                 # Check if timeout is reached
                 if ($Timeout -gt 0) {
                     $elapsedSeconds = ($currentTime - $startTime).TotalSeconds
@@ -349,39 +371,39 @@ function WatchDirectory {
                         break
                     }
                 }
-                
+
                 # Check for scheduled execution every 30 seconds instead of every second
                 $timeCheckInterval = 30
                 if (($currentTime - $lastTimeCheck).TotalSeconds -ge $timeCheckInterval) {
                     $lastTimeCheck = $currentTime
-                    
+
                     # Use the common function to check if we should run
                     $result = ShouldRunAtScheduledTime -currentTime $currentTime -lastExecutionDate $lastExecutionDate
                     $script:ShouldRun = $result.ShouldRun
-                    
+
                     # If it's time to run, check if Posterizarr is already running
                     if ($script:ShouldRun) {
                         $currentlyRunning = "$env:APP_DATA/temp/Posterizarr.Running"
                         $isRunning = (Test-Path $currentlyRunning) -or (Get-Process | Where-Object commandline -like '*Posterizarr.ps1*')
-                        
+
                         if ($isRunning) {
                             Write-Host "Watch mode: Scheduled execution skipped at $(Get-Date -Format 'HH:mm:ss') - Posterizarr is already running" -ForegroundColor Yellow
                         } else {
                             Write-Host ""
                             Write-Host "Watch mode: Scheduled execution started at: $(Get-Date)" -ForegroundColor Cyan
-                            
+
                             # Call the Run function to execute Posterizarr
                             Run
-                            
+
                             Write-Host ""
                             Write-Host "Watch mode: Scheduled execution completed at: $(Get-Date)" -ForegroundColor Cyan
-                            
+
                             # Update the last execution date
                             $lastExecutionDate = Get-Date
                         }
                     }
                 }
-                
+
                 # Sleep for 1 second before checking again
                 Start-Sleep -Seconds 1
             }
@@ -391,7 +413,7 @@ function WatchDirectory {
             $handlers | ForEach-Object {
                 Unregister-Event -SourceIdentifier $_.Name
             }
-            
+
             # Dispose the watcher
             $watcher.Dispose()
             Write-Host "File watcher stopped." -ForegroundColor Yellow
