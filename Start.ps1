@@ -11,7 +11,7 @@
 param (
     [Parameter(Mandatory=$false)]
     [ValidateSet("run", "watch", "scheduled")]
-    [string]$Mode = "run",
+    [string]$Mode = "watch",
 
     [Parameter(Mandatory=$false)]
     [string]$FilePath,
@@ -64,7 +64,6 @@ function GetLatestScriptVersion {
         return $null
     }
 }
-
 function CompareScriptVersion {
     # Use Select-String to find the line containing the version assignment in Posterizarr.ps1
     try {
@@ -86,7 +85,6 @@ function CompareScriptVersion {
         write-host "Error checking script version: $($_.Exception.Message)" -ForegroundColor Red
     }
 }
-
 function Run {
 
     # Output this message for tests to detect
@@ -207,8 +205,6 @@ function ShouldRunAtScheduledTime {
         ClosestTime = $closestTime
     }
 }
-
-
 function RunScheduled {
 
     Write-Host "RunScheduled function was called"
@@ -242,7 +238,6 @@ function RunScheduled {
         Write-Host "Use cron to run this at the exact scheduled times."
     }
 }
-
 function ProcessPosterizarrFile {
     param (
         [Parameter(Mandatory=$true)]
@@ -287,7 +282,6 @@ function ProcessPosterizarrFile {
 
     Remove-Item $FilePath -Force -Confirm:$false
 }
-
 function WatchDirectory {
     param (
         [Parameter(Mandatory=$false)]
