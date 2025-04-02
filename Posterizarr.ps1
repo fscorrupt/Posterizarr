@@ -6789,7 +6789,7 @@ Else {
 }
 if ($global:OSType -eq "Docker") {
     if ($env:POSTERIZARR_NON_ROOT -eq 'TRUE'){
-        $Url = "https://pkgs.alpinelinux.org/package/v3.21/community/x86_64/imagemagick"
+        $Url = "https://pkgs.alpinelinux.org/package/$($OSVersion.replace('Alpine Linux ',''))/community/x86_64/imagemagick"
         $response = Invoke-WebRequest -Uri $url
         $htmlContent = $response.Content
         $regexPattern = '<th class="header">Version<\/th>\s*<td>\s*<strong>([\d\.]+-r\d+)<\/strong>\s*<\/td>'
