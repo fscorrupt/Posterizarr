@@ -18,6 +18,9 @@ RUN apk add --no-cache \
         imagemagick-heic \
         imagemagick-jpeg \
         libjpeg-turbo \
+        musl \ 
+        musl-locales \
+        musl-utils \ 
         powershell \
         tzdata \
     && pwsh -NoProfile -Command "Set-PSRepository -Name PSGallery -InstallationPolicy Trusted; \
