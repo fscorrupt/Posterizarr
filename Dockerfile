@@ -13,21 +13,30 @@ ENV UMASK="0002" \
 
 # Install packages, create directories, copy files, and set permissions in a single RUN command to reduce layers
 RUN apk add --no-cache \
+        cairo \
         catatonit \
         curl \
+        fontconfig \
         imagemagick  \
         imagemagick-heic \
         imagemagick-jpeg \
         libjpeg-turbo \
+        pango \
         powershell \
         tzdata \
     && pwsh -NoProfile -Command "Set-PSRepository -Name PSGallery -InstallationPolicy Trusted; \
         Install-Module -Name FanartTvAPI -Scope AllUsers -Force" \
     && chmod -R 755 /usr/local/share/powershell \
     && pip install apprise \
-    && mkdir -p /app && chmod -R 755 /app
+    && mkdir -p /app /usr/share/fonts/custom \
+    && chmod -R 755 /app /usr/share/fonts/custom
 
 COPY . /app/
+
+# Copy fonts from the fonts directory and update font cache
+COPY fonts/ /usr/share/fonts/custom/
+
+RUN fc-cache -fv
 
 USER nobody:nogroup
 

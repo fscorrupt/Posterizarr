@@ -11,10 +11,19 @@ Cache/
 *.zip
 
 # Dev
+.pester.yml
+.vscode/
+.dockerignore
+Dockerfile
+docker-compose*
+__pycache__/
 config/
 tests/
 images/
 .env*
+
+# No need for pythong scrpts
+*.py
 
 # Configuration example (not the actual config)
 MyPersonalConfig.json
