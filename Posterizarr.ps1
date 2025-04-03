@@ -3924,6 +3924,19 @@ function InvokeMagickCommand {
             return $lines[0]
         }
     }
+        # Check if Pango rendering is needed for RTL languages on Docker
+        if ($global:direction -eq "RTL" -and $Platform -eq 'Docker') {
+            Write-Entry -Subtext "RTL language detected on Docker, attempting to use pango:" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+            # Replace the first instance of 'caption:' with 'pango:'
+            # Ensure we only replace the rendering method, not other occurrences of 'caption'
+            if ($Arguments -match '(?<!\w)caption:') {
+                $Arguments = [regex]::Replace($Arguments, '(?<!\w)caption:', 'pango:', 1)
+                Write-Entry -Subtext "Modified Arguments for pango: $Arguments" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+            } else {
+                Write-Entry -Subtext "Argument string did not contain 'caption:' for pango replacement." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+            }
+        }
+
 
     try {
         $processInfo = New-Object System.Diagnostics.ProcessStartInfo
