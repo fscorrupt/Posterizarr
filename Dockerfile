@@ -10,9 +10,10 @@ ENV UMASK="0002" \
     POSTERIZARR_NON_ROOT="TRUE" \
     APP_ROOT="/app" \
     APP_DATA="/config"
-    
+
 # Install packages, create directories, copy files, and set permissions in a single RUN command to reduce layers
 RUN apk add --no-cache \
+        catatonit \
         curl \
         imagemagick  \
         imagemagick-heic \
@@ -35,7 +36,7 @@ WORKDIR /config
 VOLUME ["/config"]
 
 # Run Start.ps1 directly with parameter passing
-ENTRYPOINT ["pwsh", "-NoProfile", "-File", "/app/Start.ps1"]
+ENTRYPOINT ["/usr/bin/catatonit", "--", "pwsh", "-NoProfile", "/app/Start.ps1"]
 
 LABEL org.opencontainers.image.source="https://github.com/fscorrupt/Posterizarr"
 LABEL org.opencontainers.image.description="Posterizarr - Automated poster generation for Plex/Jellyfin/Emby media libraries"
