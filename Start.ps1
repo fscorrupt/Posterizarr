@@ -20,11 +20,12 @@ param (
     [int]$Timeout = -1
 )
 
+#region SCRIPT INITIALIZATION
+
 # Capture any remaining arguments to pass to Posterizarr.ps1
 $RemainingArgs = $MyInvocation.UnboundArguments
 
-
-# Set default values for APP_ROOT and APP_DATA if not already provided
+# Set default values for environment variables
 if (!$env:APP_ROOT) {
     $env:APP_ROOT = "/app"
 }
@@ -32,6 +33,14 @@ if (!$env:APP_ROOT) {
 if (!$env:APP_DATA) {
     $env:APP_DATA = "/config"
 }
+# Constants for scheduler configuration
+$script:EXECUTION_WINDOW_MINUTES = 1             # Window in minutes to consider a scheduled time as "now"
+$script:DUPLICATE_PREVENTION_WINDOW_MINUTES = 10 # Window in minutes to prevent duplicate runs
+$script:SCHEDULED_TIMES_REFRESH_MINUTES = 5      # How often to refresh scheduled times
+
+#endregion SCRIPT INITIALIZATION
+
+#region DISPLAY HEADER
 
 $Header = @"
 ----------------------------------------------------
@@ -53,7 +62,23 @@ DapperDrivers & Onedr0p
 
 Write-Host $Header
 
+#endregion DISPLAY HEADER
+
+
+
+#region UTILITY FUNCTIONS
+
+
 function GetLatestScriptVersion {
+    <#
+    .SYNOPSIS
+        Retrieves the latest script version from GitHub
+    .DESCRIPTION
+        Attempts to download the Release.txt file from the GitHub repository
+        to determine the latest available version of the script
+    .OUTPUTS
+        String containing the latest version or $null if retrieval fails
+    #>
     try {
         return Invoke-RestMethod -Uri "https://github.com/fscorrupt/Posterizarr/raw/main/Release.txt" -Method Get -ErrorAction Stop
     }
@@ -62,8 +87,15 @@ function GetLatestScriptVersion {
         return $null
     }
 }
+
 function CompareScriptVersion {
-    # Use Select-String to find the line containing the version assignment in Posterizarr.ps1
+    <#
+    .SYNOPSIS
+        Compares the current script version with the latest available version
+    .DESCRIPTION
+        Extracts the version from Posterizarr.ps1 and compares it with
+        the latest version from GitHub, displaying the results
+    #>
     try {
         $posterizarrPath = "$env:APP_ROOT/Posterizarr.ps1"
         if (Test-Path $posterizarrPath) {
@@ -72,19 +104,26 @@ function CompareScriptVersion {
 
             if ($lineContainingVersion) {
                 # Extract the version from the line
-                write-host ""
+                Write-Host ""
                 $version = $lineContainingVersion -replace '^\$CurrentScriptVersion\s*=\s*"([^"]+)".*', '$1'
-                write-host "Current Script Version: $version | Latest Script Version: $LatestScriptVersion" -ForegroundColor Green
+                Write-Host "Current Script Version: $version | Latest Script Version: $LatestScriptVersion" -ForegroundColor Green
             }
         } else {
-            write-host "Warning: Could not find Posterizarr.ps1 at $posterizarrPath" -ForegroundColor Yellow
+            Write-Host "Warning: Could not find Posterizarr.ps1 at $posterizarrPath" -ForegroundColor Yellow
         }
     } catch {
-        write-host "Error checking script version: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "Error checking script version: $($_.Exception.Message)" -ForegroundColor Red
     }
 }
 
 function CopyAssetFiles {
+    <#
+    .SYNOPSIS
+        Copies asset files from APP_ROOT to APP_DATA
+    .DESCRIPTION
+        Copies all .png and .ttf files from the APP_ROOT directory to the APP_DATA directory,
+        which is necessary for the application to function properly
+    #>
     # Get all asset files - using wildcard in path to make -Include work correctly
     $assetFiles = Get-ChildItem -Path "$env:APP_ROOT/*" -Include "*.png", "*.ttf" -File
     $fileCount = $assetFiles.Count
@@ -115,14 +154,26 @@ function CopyAssetFiles {
     }
 }
 
-function Run {
 
+#endregion UTILITY FUNCTIONS
+
+#region CORE EXECUTION FUNCTION
+
+function Run {
+    <#
+    .SYNOPSIS
+        Main function to execute Posterizarr.ps1
+    .DESCRIPTION
+        Checks for config file, clears running file if present,
+        and executes Posterizarr.ps1 with the provided arguments
+    .OUTPUTS
+        Boolean indicating success
+    #>
     # Output this message for tests to detect
     Write-Host "Run function was called"
 
-
     # Checking Config file
-    if (-not (test-path "$env:APP_DATA/config.json")) {
+    if (-not (Test-Path "$env:APP_DATA/config.json")) {
         Write-Host ""
         Write-Host "Could not find a 'config.json' file" -ForegroundColor Red
         Write-Host "Please edit the config.example.json according to GH repo and save it as 'config.json'" -ForegroundColor Yellow
@@ -132,7 +183,7 @@ function Run {
         do {
             Start-Sleep 600
         } until (
-            test-path "$env:APP_DATA/config.json"
+            Test-Path "$env:APP_DATA/config.json"
         )
     }
 
@@ -141,8 +192,8 @@ function Run {
 
     # Clear Running File
     if (Test-Path $CurrentlyRunning) {
-        Remove-Item -LiteralPath $CurrentlyRunning | out-null
-        write-host "Cleared .running file..." -ForegroundColor Green
+        Remove-Item -LiteralPath $CurrentlyRunning | Out-Null
+        Write-Host "Cleared .running file..." -ForegroundColor Green
     }
 
     # Determine arguments to pass to Posterizarr.ps1
@@ -165,11 +216,79 @@ function Run {
         pwsh -NoProfile -Command "$env:APP_ROOT/Posterizarr.ps1 $argsString"
     }
 
-
     return $true
 }
-# Common function to check if we should run at the scheduled time
+
+#endregion CORE EXECUTION FUNCTION
+
+#region SCHEDULING FUNCTIONS
+
+function ParseScheduledTimes {
+    <#
+    .SYNOPSIS
+        Parses scheduled execution times from the RUN_TIME environment variable
+    .DESCRIPTION
+        Converts the comma-separated time strings in HH:MM format from the RUN_TIME
+        environment variable into a collection of scheduled time objects
+    .OUTPUTS
+        Array of hashtables, each containing Hour and Minute properties
+    #>
+    # Set default run time if not provided
+    if (!$env:RUN_TIME) {
+        $env:RUN_TIME = "05:00"
+    }
+    
+    $scheduledTimes = @()
+    foreach ($timeString in ($env:RUN_TIME -split ',')) {
+        # Validate time format
+        if ($timeString -notmatch '^\s*(\d{1,2}):(\d{1,2})\s*$') {
+            Write-Host "Invalid time format: $timeString. Expected format: HH:MM" -ForegroundColor Yellow
+            continue
+        }
+        
+        # Validate hour and minute ranges
+        $hour = [int]$Matches[1]
+        $minute = [int]$Matches[2]
+        
+        if ($hour -lt 0 -or $hour -gt 23 -or $minute -lt 0 -or $minute -gt 59) {
+            Write-Host "Invalid time values in: $timeString. Hours must be 0-23, minutes 0-59" -ForegroundColor Yellow
+            continue
+        }
+        
+        $scheduledTimes += @{
+            Hour = $hour
+            Minute = $minute
+        }
+    }
+    
+    if ($scheduledTimes.Count -eq 0) {
+        Write-Host "Warning: No valid scheduled times found in RUN_TIME: $env:RUN_TIME" -ForegroundColor Yellow
+        # Add a default time (5:00 AM) to prevent errors
+        $scheduledTimes += @{
+            Hour = 5
+            Minute = 0
+        }
+        Write-Host "Using default scheduled time: 05:00" -ForegroundColor Yellow
+    }
+    
+    return $scheduledTimes
+}
+
 function ShouldRunAtScheduledTime {
+    <#
+    .SYNOPSIS
+        Determines if the current time matches a scheduled execution time
+    .DESCRIPTION
+        Compares the current time with the scheduled times and determines
+        if Posterizarr should be executed based on the execution window
+        and duplicate prevention settings
+    .PARAMETER currentTime
+        The current date and time to check against scheduled times
+    .PARAMETER lastExecutionDate
+        The date and time of the last execution, used to prevent duplicates
+    .OUTPUTS
+        Hashtable with ShouldRun (boolean) and ClosestTime (DateTime) properties
+    #>
     param (
         [Parameter(Mandatory=$true)]
         [DateTime]$currentTime,
@@ -177,49 +296,44 @@ function ShouldRunAtScheduledTime {
         [Nullable[DateTime]]$lastExecutionDate = $null
     )
 
-    # Check for RUN_TIME environment variable
-    if (!$env:RUN_TIME) {
-        $env:RUN_TIME = "05:00"  # Set default value if not provided
-    }
-
-    # Parse the RUN_TIME value
-    $runTimes = $env:RUN_TIME -split ','
+    # Initialize return values
     $shouldRun = $false
     $closestTime = $null
-    $minuteDifference = 1440  # Max minutes in a day
+    $minuteDifference = 1440  # Max minutes in a day (24 hours * 60 minutes)
 
-    # Check if current time matches any of the scheduled times (within a 5-minute window)
-    foreach ($time in $runTimes) {
-        # Add error handling for invalid time formats
-        if ($time -match '^\s*(\d{1,2}):(\d{1,2})\s*$') {
-            $hour = $matches[1]
-            $minute = $matches[2]
+    # Process each scheduled time
+    foreach ($timeObj in $script:ScheduledTimes) {
+        # Create scheduled time object for today
+        $scheduledTime = [DateTime]::new(
+            $currentTime.Year,
+            $currentTime.Month,
+            $currentTime.Day,
+            $timeObj.Hour,
+            $timeObj.Minute,
+            0
+        )
 
-            # Create a datetime for the scheduled time today
-            $scheduledTime = Get-Date -Hour $hour -Minute $minute -Second 0
+        # Calculate time difference in minutes
+        $diffMinutes = [Math]::Abs(($currentTime - $scheduledTime).TotalMinutes)
 
-            # Calculate minutes difference
-            $diff = [Math]::Abs(($currentTime - $scheduledTime).TotalMinutes)
-
-            # If we're at or just past a scheduled time (within 1 minute), we should run
-            if ($diff -le 1 && $currentTime -ge $scheduledTime) {
-                # Check if we've already run today at this time (if lastExecutionDate is provided)
-                if ($lastExecutionDate -eq $null -or
-                    ($lastExecutionDate.Date -ne $currentTime.Date) -or
-                    ([Math]::Abs(($lastExecutionDate - $scheduledTime).TotalMinutes) -gt 10)) {
-                    $shouldRun = $true
-                    break
-                }
-            }
-
-            # Track the closest time for reporting
-            if ($diff -lt $minuteDifference) {
-                $minuteDifference = $diff
+        # Check if we should run (within execution window and not already run)
+        if ($diffMinutes -le $script:EXECUTION_WINDOW_MINUTES -and $currentTime -ge $scheduledTime) {
+            # Skip if we already ran at this time today
+            $alreadyRan = $null -ne $lastExecutionDate -and
+                        $lastExecutionDate.Date -eq $currentTime.Date -and
+                        [Math]::Abs(($lastExecutionDate - $scheduledTime).TotalMinutes) -le $script:DUPLICATE_PREVENTION_WINDOW_MINUTES
+            
+            if (-not $alreadyRan) {
+                $shouldRun = $true
                 $closestTime = $scheduledTime
+                break
             }
-        } else {
-            Write-Host "Invalid time format: $time. Expected format: HH:MM" -ForegroundColor Yellow
-            continue
+        }
+
+        # Track closest time for reporting
+        if ($diffMinutes -lt $minuteDifference) {
+            $minuteDifference = $diffMinutes
+            $closestTime = $scheduledTime
         }
     }
 
@@ -228,10 +342,20 @@ function ShouldRunAtScheduledTime {
         ClosestTime = $closestTime
     }
 }
-function RunScheduled {
 
+function RunScheduled {
+    <#
+    .SYNOPSIS
+        Executes Posterizarr on a schedule
+    .DESCRIPTION
+        Checks if the current time matches any of the scheduled times
+        and executes Posterizarr if it does
+    #>
     Write-Host "RunScheduled function was called"
 
+    # Refresh scheduled times in case RUN_TIME was changed
+    $script:ScheduledTimes = ParseScheduledTimes
+    
     $currentTime = Get-Date
 
     Write-Host ""
@@ -261,7 +385,21 @@ function RunScheduled {
         Write-Host "Use cron to run this at the exact scheduled times."
     }
 }
+
+#endregion SCHEDULING FUNCTIONS
+
+#region FILE PROCESSING FUNCTIONS
+
 function ProcessPosterizarrFile {
+    <#
+    .SYNOPSIS
+        Processes a .posterizarr file
+    .DESCRIPTION
+        Reads a .posterizarr file, extracts arguments, and calls Posterizarr.ps1
+        with those arguments, then removes the file after processing
+    .PARAMETER FilePath
+        The path to the .posterizarr file to process
+    #>
     param (
         [Parameter(Mandatory=$true)]
         [string]$FilePath
@@ -277,7 +415,7 @@ function ProcessPosterizarrFile {
 
     $Scriptargs = @("-Tautulli")
     $fileName = [System.IO.Path]::GetFileName($FilePath)
-    write-host "Processing .posterizarr file: $fileName"
+    Write-Host "Processing .posterizarr file: $fileName"
 
     # Get trigger Values
     $triggerargs = Get-Content $FilePath
@@ -291,7 +429,7 @@ function ProcessPosterizarrFile {
             $Scriptargs += "$arg_value"
         }
     }
-    write-host "Calling Posterizarr with these args: $($Scriptargs -join ' ')"
+    Write-Host "Calling Posterizarr with these args: $($Scriptargs -join ' ')"
 
     # Set the remaining args for the Run function to use
     $script:RemainingArgs = $Scriptargs
@@ -299,13 +437,27 @@ function ProcessPosterizarrFile {
     # Call the Run function
     Run
 
-    write-host ""
-    write-host "Tautulli Recently added finished, removing trigger file: $fileName"
-    write-host ""
+    Write-Host ""
+    Write-Host "Tautulli Recently added finished, removing trigger file: $fileName"
+    Write-Host ""
 
     Remove-Item $FilePath -Force -Confirm:$false
 }
+
+#endregion FILE PROCESSING FUNCTIONS
+
+#region WATCH MODE FUNCTIONS
+
 function WatchDirectory {
+    <#
+    .SYNOPSIS
+        Watches a directory for .posterizarr files and processes them
+    .DESCRIPTION
+        Sets up a FileSystemWatcher to monitor a directory for new .posterizarr files,
+        processes them when they appear, and also handles scheduled executions
+    .PARAMETER Timeout
+        Optional timeout in seconds. If specified, watch mode will exit after this many seconds
+    #>
     param (
         [Parameter(Mandatory=$false)]
         [int]$Timeout = -1
@@ -327,7 +479,12 @@ function WatchDirectory {
 
     # Initialize variables for scheduled execution
     $lastExecutionDate = $null
-    Write-Host "Watch mode will also run scheduled executions at: $env:RUN_TIME" -ForegroundColor Cyan
+    
+    # Refresh scheduled times in case RUN_TIME was changed
+    $script:ScheduledTimes = ParseScheduledTimes
+    
+    $scheduledTimesString = $env:RUN_TIME
+    Write-Host "Watch mode will also run scheduled executions at: $scheduledTimesString" -ForegroundColor Cyan
 
     try {
         $watcher = New-Object System.IO.FileSystemWatcher
@@ -383,10 +540,19 @@ function WatchDirectory {
                     }
                 }
 
-                # Check for scheduled execution every 30 seconds instead of every second
+                # Check for scheduled execution every 15 seconds instead of every second
                 $timeCheckInterval = 15
                 if (($currentTime - $lastTimeCheck).TotalSeconds -ge $timeCheckInterval) {
                     $lastTimeCheck = $currentTime
+                    
+                    # Periodically refresh scheduled times in case RUN_TIME was changed
+                    # Only refresh every 5 minutes to avoid unnecessary processing
+                    $timeSinceStart = ($currentTime - $startTime).TotalSeconds
+                    $shouldRefreshSchedule = ($timeSinceStart % ($script:SCHEDULED_TIMES_REFRESH_MINUTES * 60)) -lt $timeCheckInterval
+                    
+                    if ($shouldRefreshSchedule) {
+                        $script:ScheduledTimes = ParseScheduledTimes
+                    }
 
                     # Use the common function to check if we should run
                     $result = ShouldRunAtScheduledTime -currentTime $currentTime -lastExecutionDate $lastExecutionDate
@@ -435,13 +601,20 @@ function WatchDirectory {
     }
 }
 
+#endregion WATCH MODE FUNCTIONS
 
-# Main execution based on mode
+#region MAIN EXECUTION
+
+# Initialize scheduled times at startup
+$script:ScheduledTimes = ParseScheduledTimes
+
+# Check script version
 CompareScriptVersion
 
 # Move assets to APP_DATA
 CopyAssetFiles
 
+# Execute based on mode
 switch ($Mode) {
     "scheduled" {
         RunScheduled
@@ -462,3 +635,5 @@ switch ($Mode) {
         exit 1
     }
 }
+
+#endregion MAIN EXECUTION
