@@ -6811,7 +6811,8 @@ Else {
 }
 if ($global:OSType -eq "Docker") {
     if ($env:POSTERIZARR_NON_ROOT -eq 'TRUE'){
-        $Url = "https://pkgs.alpinelinux.org/package/$($OSVersion.replace('Alpine Linux ',''))/community/x86_64/imagemagick"
+        $OSVersionTag = (Get-Content /etc/os-release | Select-String -Pattern "^PRETTY_NAME=").ToString().Split('=')[1].Trim('"').replace('Alpine Linux ','')
+        $Url = "https://pkgs.alpinelinux.org/package/$OSVersionTag/community/x86_64/imagemagick"
         $response = Invoke-WebRequest -Uri $url
         $htmlContent = $response.Content
         $regexPattern = '<th class="header">Version<\/th>\s*<td>\s*<strong>([\d\.]+-r\d+)<\/strong>\s*<\/td>'
