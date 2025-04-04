@@ -6200,7 +6200,14 @@ $Platform = Get-Platform
 $LatestScriptVersion = (Get-LatestScriptVersion -split "`r?`n" | Select-Object -First 1).Trim()
 ##### START #####
 $startTime = Get-Date
-$IM_Font_Cache = "/var/cache/fontconfig"
+
+# Check if the environment variable exists and is not empty, otherwise use the default
+if (-not [string]::IsNullOrEmpty($env:FONTCONFIG_CACHE_DIR)) {
+    $IM_Font_Cache = $env:FONTCONFIG_CACHE_DIR
+} else {
+    $IM_Font_Cache = "/var/cache/fontconfig"
+}
+
 $Font_Cache = "/usr/share/fonts/custom/"
 # Rotate logs before doing anything!
 $folderPattern = "Logs_*"

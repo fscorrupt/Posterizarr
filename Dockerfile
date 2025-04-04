@@ -7,13 +7,15 @@ ARG VERSION
 ENV UMASK="0002" \
     TZ="Europe/Berlin" \
     POWERSHELL_DISTRIBUTION_CHANNEL="PSDocker" \
+    FONTS_GID=5555 \
     POSTERIZARR_NON_ROOT="TRUE" \
     APP_ROOT="/app" \
-    APP_DATA="/config"
+    APP_DATA="/config" \
+    FONTCONFIG_CACHE_DIR="/var/cache/fontconfig"
 
-# Install packages, create directories, copy files, and set permissions in a single RUN command to reduce layers
+
+# Install packages, create directories, copy files, set permissions, and clean up in a single RUN command to reduce layers
 RUN apk add --no-cache \
-        cairo \
         catatonit \
         curl \
         fontconfig \
@@ -26,12 +28,14 @@ RUN apk add --no-cache \
         tzdata \
     && pwsh -NoProfile -Command "Set-PSRepository -Name PSGallery -InstallationPolicy Trusted; \
         Install-Module -Name FanartTvAPI -Scope AllUsers -Force" \
-    && pip install apprise \
+    && pip install --no-cache-dir apprise \
     && mkdir -p /app /usr/share/fonts/custom /var/cache/fontconfig \
-    && chmod -R 755 /app /usr/share/fonts/custom /usr/local/share/powershell \
-    && chmod -R 777 /var/cache/fontconfig # Needed for imagemagick to cache fonts
+    && chmod -R 755  /app \
+        /usr/local/share/powershell \
+    && chmod -R 777 /usr/share/fonts/custom /var/cache/fontconfig \
+    && apk del curl
 
-COPY . /app/
+COPY . /app
 
 USER nobody:nogroup
 
