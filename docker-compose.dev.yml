@@ -12,12 +12,12 @@ services:
       - watch
     env_file:
       - .env.dev
-    user: "1000:1001"
+    user: "1000:140"
     volumes:
-      - "./config:/config:rw" # Map local config for easier access during dev
-      - "/assets:/assets:rw"
-      - "./config/manualassets:/manualassets:rw" # Map local manualassets
-      - "./config/assetsbackup:/assetsbackup:rw" # Map local assetsbackup
+      - "./config/posterizarr:/config:rw" # Map local config for easier access during dev
+      - "./config/assets:/assets:rw"
+      - "./config/posterizarr/manualassets:/manualassets:rw" # Map local manualassets
+      - "./config/posterizarr/assetsbackup:/assetsbackup:rw" # Map local assetsbackup
     
   tautulli:
     hostname: tautulli-dev
@@ -29,6 +29,19 @@ services:
     env_file:
       - .env.dev
     volumes:
-      - "./config/watcher:/posterizarr/watcher:rw" # Map watcher dir
-      - "./tautulli:/config:rw"
-      - "./trigger.py:/scripts/trigger.py" 
+      - "./config/posterizarr/watcher:/posterizarr/watcher:rw" # Map watcher dir
+      - "./config/tautulli:/config:rw"
+      - "./trigger.py:/scripts/trigger.py"
+
+  kometa:
+    hostname: kometa-dev
+    container_name: "kometa-dev"
+    image: kometateam/kometa:nightly
+    restart: no
+    command:
+      --run --overlays-only
+    env_file:
+      - .env.dev
+    volumes:
+      - "./config/kometa:/config:rw"
+      - "./config/assets:/assets:rw"

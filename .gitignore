@@ -8,9 +8,9 @@
 .env
 .env.dev
 
-/config
 __pycache__
 .vscode
 coverage.*
-# integration testing
-tautulli/
+
+# mounted volumes
+config/
