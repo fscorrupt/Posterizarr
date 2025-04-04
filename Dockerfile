@@ -9,8 +9,7 @@ ENV UMASK="0002" \
     POWERSHELL_DISTRIBUTION_CHANNEL="PSDocker" \
     POSTERIZARR_NON_ROOT="TRUE" \
     APP_ROOT="/app" \
-    APP_DATA="/config" \
-    FONTCONFIG_CACHE_DIR="/var/cache/fontconfig" 
+    APP_DATA="/config"
 
 # Install packages, create directories, copy files, and set permissions in a single RUN command to reduce layers
 RUN apk add --no-cache \
@@ -33,11 +32,6 @@ RUN apk add --no-cache \
     && chmod -R 777 /var/cache/fontconfig # Needed for imagemagick to cache fonts
 
 COPY . /app/
-
-# Copy fonts from the fonts directory and update font cache
-COPY fonts/ /usr/share/fonts/custom/
-
-RUN fc-cache -fv
 
 USER nobody:nogroup
 

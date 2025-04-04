@@ -6200,6 +6200,8 @@ $Platform = Get-Platform
 $LatestScriptVersion = (Get-LatestScriptVersion -split "`r?`n" | Select-Object -First 1).Trim()
 ##### START #####
 $startTime = Get-Date
+$IM_Font_Cache = "/var/cache/fontconfig"
+$Font_Cache = "/usr/share/fonts/custom/"
 # Rotate logs before doing anything!
 $folderPattern = "Logs_*"
 $global:RotationFolderName = $null
@@ -7004,13 +7006,30 @@ foreach ($file in $files) {
             Copy-Item -Path $file.FullName -Destination $destinationPath -Force -ErrorAction Stop
             Write-Entry -Subtext "Found File: '$($file.Name)' in ScriptRoot - copying it into temp folder..." -Path $configLogging -Color Cyan -log Info
         }
+
+        # Check if the file is a font (.ttf or .otf)
+        if ($file.Extension -match "\.(ttf|otf)$") {
+            $fontDestination = Join-Path -Path $Font_Cache -ChildPath $file.Name
+
+            Write-Entry -Subtext "Copying font '$($file.Name)' to ImageMagick cache..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+            Copy-Item -Path $file.FullName -Destination $fontDestination -Force -ErrorAction Stop
+
+            # Ensure font cache directory exists
+            if (!(Test-Path -Path $IM_Font_Cache)) {
+                New-Item -ItemType Directory -Path $IM_Font_Cache -Force | Out-Null
+            }
+        }
     }
     catch {
         Write-Entry -Subtext "Error copying file '$file': $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
     }
 }
 
-# Call the function with your variables
+# Refresh font cache if any fonts were copied
+if ($files.Extension -match "\.(ttf|otf)$") {
+    Write-Entry -Subtext "Updating ImageMagick font cache..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+    Start-Process -NoNewWindow -FilePath "fc-cache" -ArgumentList "-fv" -Wait
+}
 
 CheckJsonPaths -font "$font" -RTLfont "$RTLfont" -backgroundfont "$backgroundfont "-titlecardfont "$titlecardfont" -Posteroverlay "$Posteroverlay" -Backgroundoverlay "$Backgroundoverlay" -titlecardoverlay "$titlecardoverlay" -Seasonoverlay "$Seasonoverlay" -Posteroverlay4k "$4kposter" -Posteroverlay1080p "$1080pPoster"
 # Check Plex now:
