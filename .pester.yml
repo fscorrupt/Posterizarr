@@ -1,0 +1,26 @@
+# Pester configuration for VSCode Test Explorer
+Run:
+  Path: ./tests/
+  ExcludePath:
+    - "*/mocks/*"
+  Exit: true
+  Throw: true
+
+CodeCoverage:
+  Enabled: true
+  Path:
+    - ./Start.ps1
+    #- ./Posterizarr.ps1 not ready for that
+  OutputPath: ./coverage.xml
+  OutputFormat: JaCoCo
+  ExcludeTests: true
+  RecursePaths: false
+  UseBreakpoints: false
+
+TestResult:
+  Enabled: true
+  OutputPath: ./test-results.xml
+  OutputFormat: NUnitXml
+
+Output:
+  Verbosity: Detailed
