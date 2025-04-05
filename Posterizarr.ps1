@@ -7016,7 +7016,7 @@ foreach ($file in $files) {
         }
 
         # Check if the file is a font (.ttf or .otf)
-        if ($file.Extension -match "\.(ttf|otf)$") {
+        if ($file.Extension -match "\.(ttf|otf)$" -and $env:POSTERIZARR_NON_ROOT -eq 'TRUE') {
             $fontDestination = Join-Path -Path $Font_Cache -ChildPath $file.Name
 
             Write-Entry -Subtext "Copying font '$($file.Name)' to ImageMagick cache..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
@@ -7034,7 +7034,7 @@ foreach ($file in $files) {
 }
 
 # Refresh font cache if any fonts were copied
-if ($files.Extension -match "\.(ttf|otf)$" -and $Platform -eq 'Docker') {
+if ($files.Extension -match "\.(ttf|otf)$" -and $env:POSTERIZARR_NON_ROOT -eq 'TRUE') {
     Write-Entry -Subtext "Updating ImageMagick font cache..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
     Start-Process -NoNewWindow -FilePath "fc-cache" -ArgumentList "-fv" -Wait
 }

@@ -35,13 +35,44 @@
 This PowerShell script automates the process of generating images for your Plex/Jellyfin/Emby media library. Leveraging information from your Plex/Jellyfin/Emby library, such as movie or show titles, season and episode data, it fetches relevant artwork from Fanart.tv, TMDB, TVDB, Plex and IMDB. The script is able to focus on artwork with specific languages to grab. By default, textless artwork `xx` is retrieved and will fall back to `en` if textless is not found. This is a setting a user can decide on, either to focus on textless or on text posters. It also offers both automatic and manual modes for generating posters. The manual mode can accommodate custom creations that cannot be bulk retrieved.
 
 > [!NOTE]
-Posterizarr is cross-platform ready, meaning it can run on Linux (also arm, but it could break at any time - no official support.), [Docker (Ubuntu 22.04 Base Image) does not work on ARM/MAC](#docker), [unRAID](#unraid) and on Windows operating systems.
+Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpine Base Image)](#docker), [unRAID](#unraid) and on Windows operating systems.
 >
 > **Supported Poster Types:**
 >- Movie/Show Posters
 >- Movie/Show Backgrounds
 >- Season Posters
 >- TitleCards
+
+## 📚 Table of Contents
+
+- [🚀 Walkthrough](#walkthrough---how-to)
+- [⚙️ Configuration](#configuration)
+- [🧪 Usage](#usage)
+- [📌 Main Capabilities of Posterizarr](#main-capabilities-of-posterizarr)
+  - [🤖 Automatic Mode](#automatic-mode)
+  - [🖼️ Asset Tips](#assets-tip)
+  - [✍️ Manual Assets Naming](#manual-assets-naming)
+- [🧩 Script Modes](#scipt-modes)
+  - [🐳 Tautulli Mode Docker](#tautulli-mode-docker)
+  - [🪟 Tautulli Mode Windows](#tautulli-mode-windows)
+  - [🧪 Testing Mode](#testing-mode)
+  - [🛠️ Manual Mode](#manual-mode)
+  - [💾 Backup Mode](#backup-mode)
+  - [🔄 Sync Modes](#sync-modes)
+- [🧰 Platforms & Tools](#platforms--tools)
+  - [🐳 Docker](#docker)
+  - [🧲 unRAID](#unraid)
+  - [📺 Jellyfin](#jellyfin)
+  - [🔔 Webhook](#webhook)
+  - [🖼️ Example Pictures](#example-pictures)
+  - [🧪 Images from Testing Mode](#images-from-testing-mode)
+  - [📑 Brief Overview of Key Settings](#brief-overview-of-key-settings)
+  - [📊 How to create the Posterizarr.xlsm](#how-to-create-the-posterizarrxlsm)
+  - [🧭 How to use the Posterizarr.xlsm](#how-to-use-the-posterizarrxlsm)
+- [🔍 Search Order](#search-order)
+- [📬 PR Rules](#pr-rules)
+- [🎉 Enjoy](#enjoy)
+
 
 ## Walkthrough - How-To
 > [!TIP]
@@ -82,7 +113,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux (also arm, but 
 # Configuration
 
 1. Open `config.example.json` located in the script directory.
-2. Update the following variables with your API keys and preferences:
+2. Update the following variables with your API keys and preferences [my personal config](MyPersonalConfig.json):
 
     <details close>
     <summary>ApiPart [click to unfold]</summary>
