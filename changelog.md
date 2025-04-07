@@ -1,5 +1,43 @@
 # CHANGELOG
 
+## [1.9.37](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.37) - 2025-04-07 19:38:50+00:00
+
+## What's Changed
+* Adding dockerfile, and build actions for local by @DapperDivers in https://github.com/fscorrupt/Posterizarr/pull/227
+
+## New Contributors
+* @DapperDivers made their first contribution in https://github.com/fscorrupt/Posterizarr/pull/227
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.36...1.9.37
+
+### Feature
+
+- general:
+  - automaticall add alpine version in pkgs url ([3158f67](https://github.com/fscorrupt/Posterizarr/commit/3158f67eef34832bbdc862cf64f206f91d489bdd)) ([#227](https://github.com/fscorrupt/Posterizarr/pull/227))
+  - set 'watch' as the default mode for consistency with user behavior ([a140f1e](https://github.com/fscorrupt/Posterizarr/commit/a140f1e8295ea6f31eca98924c7cf1cbc621701c)) ([#227](https://github.com/fscorrupt/Posterizarr/pull/227))
+  - removing unneeded things from dockerfile and allowing config volume mount ([343e487](https://github.com/fscorrupt/Posterizarr/commit/343e48775c91472ba79cce0d09291c11e06425ca)) ([#227](https://github.com/fscorrupt/Posterizarr/pull/227))
+
+### Bug Fixes
+
+- general:
+  - figuring out permissions ([e777c49](https://github.com/fscorrupt/Posterizarr/commit/e777c49c03ee27257b316b35c5c402937f876492)) ([#227](https://github.com/fscorrupt/Posterizarr/pull/227))
+  - revert the font change ([7b0f93b](https://github.com/fscorrupt/Posterizarr/commit/7b0f93b45fdd9559fe577fc6d6a23342ae4fdf88)) ([#227](https://github.com/fscorrupt/Posterizarr/pull/227))
+  - watcher dir variable adjustment. ([8092cc8](https://github.com/fscorrupt/Posterizarr/commit/8092cc8ecf0e13ed77aa6d337a2e6a78a92fb6fe)) ([#227](https://github.com/fscorrupt/Posterizarr/pull/227))
+  - update tests to default use "WatchDirectory" ([439ba77](https://github.com/fscorrupt/Posterizarr/commit/439ba77eaf54e6474bdf0ba6649d4a76c46c66ab)) ([#227](https://github.com/fscorrupt/Posterizarr/pull/227))
+  - unicodeescape python ([731234b](https://github.com/fscorrupt/Posterizarr/commit/731234b6d6bcf9584c029f2a00812d401923ca03)) ([#227](https://github.com/fscorrupt/Posterizarr/pull/227))
+
+### Small fixes
+
+- general:
+  - docker check for cache update ([19850b7](https://github.com/fscorrupt/Posterizarr/commit/19850b75e0f9578a449ac5132689e21f5bc3aca0)) ([#227](https://github.com/fscorrupt/Posterizarr/pull/227))
+  - adding documentation and fixing the scheduler ([6d13235](https://github.com/fscorrupt/Posterizarr/commit/6d132356da65dcbe60d834725e6cb38b1a8bda52)) ([#227](https://github.com/fscorrupt/Posterizarr/pull/227))
+  - add back catatonit ([f7c9533](https://github.com/fscorrupt/Posterizarr/commit/f7c9533d32f71f778b069bc145ee050ccae38227)) ([#227](https://github.com/fscorrupt/Posterizarr/pull/227))
+  - adding locales ([ee22f5c](https://github.com/fscorrupt/Posterizarr/commit/ee22f5c6004684ac719af3dbf7628f1967e586bc)) ([#227](https://github.com/fscorrupt/Posterizarr/pull/227))
+  - add space ([1d56822](https://github.com/fscorrupt/Posterizarr/commit/1d5682209e39e52ffc396629b230586db09c687a)) ([#227](https://github.com/fscorrupt/Posterizarr/pull/227))
+  - adding asset copy ([b4c9f84](https://github.com/fscorrupt/Posterizarr/commit/b4c9f841a44662a6739f507666d8b1a43879a018)) ([#227](https://github.com/fscorrupt/Posterizarr/pull/227))
+  - function to create dirs and copy files ([e3f8688](https://github.com/fscorrupt/Posterizarr/commit/e3f868856c6f4f2ffeede4cd7f10ed93d78bbb27)) ([#227](https://github.com/fscorrupt/Posterizarr/pull/227))
+  - adding a TON of tests. at this point time to button this thing up and do extensive tesing ([96defd4](https://github.com/fscorrupt/Posterizarr/commit/96defd4a151f6e3c7ccce48a4655e69aed8c97ac)) ([#227](https://github.com/fscorrupt/Posterizarr/pull/227))
+
 ## [1.9.36](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.36) - 2025-03-27 09:15:26+00:00
 
 ## [1.9.35](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.35) - 2025-03-27 07:38:06+00:00
