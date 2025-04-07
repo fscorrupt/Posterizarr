@@ -8,11 +8,6 @@ fileExistenceTests:
     shouldExist: true
     permissions: "Lrwxrwxrwx"
 
-  - name: "Entrypoint script"
-    path: "/entrypoint.sh"
-    shouldExist: true
-    permissions: "-rwxr-xr-x"
-
   - name: "App directory"
     path: "/config"
     shouldExist: true

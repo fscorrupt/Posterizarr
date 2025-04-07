@@ -28,8 +28,8 @@ TEST_FILE="${SCRIPT_DIR}/tests.yaml"
 echo "Building container image: ${IMAGE_NAME}"
 # Create a temporary build context with the entrypoint.sh file in the right place
 BUILD_CONTEXT=$(mktemp -d)
-cp ${SCRIPT_DIR}/Dockerfile ${BUILD_CONTEXT}/
-cp ${SCRIPT_DIR}/entrypoint.sh ${BUILD_CONTEXT}/
+cp ./Dockerfile ${BUILD_CONTEXT}/
+
 echo "Created temporary build context at ${BUILD_CONTEXT}"
 
 # Build from the temporary context
