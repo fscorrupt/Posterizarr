@@ -33,13 +33,17 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }} # Use the automatically generated token
+          password: ${{ github.token }}
+
+      - name: Lowercase repository name
+        id: repo_name_lowercase
+        run: echo "REPO_NAME_LOWERCASE=$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
       - name: Extract Docker metadata
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository }} # Image name based on repo owner/name
+          images: ghcr.io/${{ env.REPO_NAME_LOWERCASE }} # Image name based on repo owner/name
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
