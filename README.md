@@ -462,7 +462,7 @@ libraries:
       assets_for_all: true
 ```
 ### Manual Assets Naming
-> [!IMPORTANT] 
+> [!IMPORTANT]
 > Naming must follow this rule; otherwise, the asset will not be picked up.
 
 If you have Library Folders set to `true`, it will look like this:
@@ -485,7 +485,7 @@ If you have Library Folders set to `true`, it will look like this:
 If you have Library Folders set to `false`, it will look like this:
 | **Asset**                      | **Naming**                                                                                                                                                                                                                                                                                  |
 |----------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Poster**           | `Solo Leveling (2024) [tvdb-389597]_poster.*`|
+| **Poster**           | `Solo Leveling (2024) [tvdb-389597].*`|
 | **Season**           | `Solo Leveling (2024) [tvdb-389597]_Season01.*`<br>`Solo Leveling (2024) [tvdb-389597]_Season02.*`<br>`.....`|
 | **Season Special**           | `Solo Leveling (2024) [tvdb-389597]_Season00.*`|
 | **TitleCard**           | `Solo Leveling (2024) [tvdb-389597]_S01E01.*`<br>`Solo Leveling (2024) [tvdb-389597]_S01E02.*`<br>`.....`|
@@ -493,7 +493,7 @@ If you have Library Folders set to `false`, it will look like this:
 
 ```
 ├───Anime Shows
-│       Solo Leveling (2024) [tvdb-389597]_poster.jpg
+│       Solo Leveling (2024) [tvdb-389597].jpg
 │       Solo Leveling (2024) [tvdb-389597]_S01E01.jpg
 │       Solo Leveling (2024) [tvdb-389597]_Season01.jpg
 │       Solo Leveling (2024) [tvdb-389597]_background.jpg
