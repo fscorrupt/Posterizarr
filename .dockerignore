@@ -22,7 +22,7 @@ tests/
 images/
 .env*
 
-# No need for pythong scrpts
+# No need for python scrpts
 *.py
 
 # Configuration example (not the actual config)
