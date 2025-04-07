@@ -3,13 +3,13 @@ name: Release Posterizarr
 on:
   push:
     tags:
-      - 'v*.*.*' # Trigger on version tags like v1.0.0
+      - '*.*.*' # Trigger on version tags like 1.0.0
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version to use for testing (e.g., test-v1.0.0)'
+        description: 'Version to use for testing (e.g., test-1.0.0)'
         required: true
-        default: 'test-v1.0.0'
+        default: 'test-1.0.0'
 
 jobs:
   release:
