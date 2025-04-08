@@ -30,6 +30,7 @@
 [![Linux](https://img.shields.io/static/v1?style=for-the-badge&logo=linux&logoColor=FFFFFF&message=Linux&color=0D597F&label=)](walkthrough.md)
 [![Windows](https://img.shields.io/static/v1?style=for-the-badge&logo=windows&logoColor=FFFFFF&message=windows&color=097CD7&label=)](walkthrough.md)
 [![MacOS](https://img.shields.io/static/v1?style=for-the-badge&logo=apple&logoColor=FFFFFF&message=macOS&color=515151&label=)](walkthrough.md)
+[![ARM](https://img.shields.io/static/v1?style=for-the-badge&logo=arm&logoColor=FFFFFF&message=ARM&color=815151&label=)](walkthrough.md)
 
 ## Introduction
 This PowerShell script automates the process of generating images for your Plex/Jellyfin/Emby media library. Leveraging information from your Plex/Jellyfin/Emby library, such as movie or show titles, season and episode data, it fetches relevant artwork from Fanart.tv, TMDB, TVDB, Plex and IMDB. The script is able to focus on artwork with specific languages to grab. By default, textless artwork `xx` is retrieved and will fall back to `en` if textless is not found. This is a setting a user can decide on, either to focus on textless or on text posters. It also offers both automatic and manual modes for generating posters. The manual mode can accommodate custom creations that cannot be bulk retrieved.
@@ -434,7 +435,7 @@ Run the script without any parameters:
 
 On [docker](#docker) this way:
 ```sh
-  docker exec -it posterizarr s6-setuidgid abc pwsh /config/Posterizarr.ps1
+  docker exec -it posterizarr pwsh /config/Posterizarr.ps1
 ```
 
 This will generate posters for your entire Plex library based on the configured settings.
@@ -641,7 +642,7 @@ These test images are placed in the script root under the `./test` folder.
 
 On [docker](#docker) this way:
 ```sh
-  docker exec -it posterizarr s6-setuidgid abc pwsh /config/Posterizarr.ps1 -Testing
+  docker exec -it posterizarr pwsh /config/Posterizarr.ps1 -Testing
 ```
 
 ### Manual Mode
@@ -659,7 +660,7 @@ Run the script with the `-Manual` switch:
 
 On [docker](#docker) this way:
 ```sh
-  docker exec -it posterizarr s6-setuidgid abc pwsh /config/Posterizarr.ps1 -Manual
+  docker exec -it posterizarr pwsh /config/Posterizarr.ps1 -Manual
 ```
 
 Follow the prompts to enter the source picture path (Container needs Access to it), media folder name, and movie/show title to manually create a custom poster.
@@ -677,7 +678,7 @@ Run the script with the `-Backup` flag. In this mode, the script will download e
 
 On [docker](#docker) this way:
 ```sh
-  docker exec -it posterizarr s6-setuidgid abc pwsh /config/Posterizarr.ps1 -Backup
+  docker exec -it posterizarr pwsh /config/Posterizarr.ps1 -Backup
 ```
 
 ### Sync Modes
@@ -692,7 +693,7 @@ Run the script with the `-SyncJelly` flag. In this mode, the script will sync ev
 
 On [docker](#docker) this way:
 ```sh
-  docker exec -it posterizarr s6-setuidgid abc pwsh /config/Posterizarr.ps1 -SyncJelly
+  docker exec -it posterizarr pwsh /config/Posterizarr.ps1 -SyncJelly
 ```
 
 #### Emby
@@ -704,7 +705,7 @@ Run the script with the `-SyncEmby` flag. In this mode, the script will sync eve
 
 On [docker](#docker) this way:
 ```sh
-  docker exec -it posterizarr s6-setuidgid abc pwsh /config/Posterizarr.ps1 -SyncEmby
+  docker exec -it posterizarr pwsh /config/Posterizarr.ps1 -SyncEmby
 ```
 
 > [!TIP]
@@ -725,39 +726,39 @@ On [docker](#docker) this way:
 
   **Automatic Mode:**
   ```sh
-  docker exec -it posterizarr s6-setuidgid abc pwsh /config/Posterizarr.ps1
+  docker exec -it posterizarr pwsh /config/Posterizarr.ps1
   ```
   **Testing Mode:**
   ```sh
-  docker exec -it posterizarr s6-setuidgid abc pwsh /config/Posterizarr.ps1 -Testing
+  docker exec -it posterizarr pwsh /config/Posterizarr.ps1 -Testing
   ```
   **Manual Mode:**
   ```sh
-  docker exec -it posterizarr s6-setuidgid abc pwsh /config/Posterizarr.ps1 -Manual
+  docker exec -it posterizarr pwsh /config/Posterizarr.ps1 -Manual
   ```
   **Backup Mode:**
   ```sh
-  docker exec -it posterizarr s6-setuidgid abc pwsh /config/Posterizarr.ps1 -Backup
+  docker exec -it posterizarr pwsh /config/Posterizarr.ps1 -Backup
   ```
   **SyncJelly Mode:**
   ```sh
-  docker exec -it posterizarr s6-setuidgid abc pwsh /config/Posterizarr.ps1 -SyncJelly
+  docker exec -it posterizarr pwsh /config/Posterizarr.ps1 -SyncJelly
   ```
   **SyncEmby Mode:**
   ```sh
-  docker exec -it posterizarr s6-setuidgid abc pwsh /config/Posterizarr.ps1 -SyncEmby
+  docker exec -it posterizarr pwsh /config/Posterizarr.ps1 -SyncEmby
   ```
 > [!TIP]
 > If you did not used `pwsh` on docker exec you can do it this way.
 >
 > Inside your `Unraid` or `Bash` or `Sh` console:
 > ```sh
-> s6-setuidgid abc pwsh /config/Posterizarr.ps1
-> s6-setuidgid abc pwsh /config/Posterizarr.ps1 -Manual
-> s6-setuidgid abc pwsh /config/Posterizarr.ps1 -Testing
-> s6-setuidgid abc pwsh /config/Posterizarr.ps1 -Backup
-> s6-setuidgid abc pwsh /config/Posterizarr.ps1 -SyncEmby
-> s6-setuidgid abc pwsh /config/Posterizarr.ps1 -SyncJelly
+> pwsh /config/Posterizarr.ps1
+> pwsh /config/Posterizarr.ps1 -Manual
+> pwsh /config/Posterizarr.ps1 -Testing
+> pwsh /config/Posterizarr.ps1 -Backup
+> pwsh /config/Posterizarr.ps1 -SyncEmby
+> pwsh /config/Posterizarr.ps1 -SyncJelly
 > ```
 
 ### unRAID

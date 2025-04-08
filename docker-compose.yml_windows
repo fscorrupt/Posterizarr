@@ -7,7 +7,7 @@ services:
       - "TZ=Europe/Berlin"
       - "TERM=xterm"
       - "RUN_TIME=03:30"
-    image: "ghcr.io/fscorrupt/docker-posterizarr:latest"
+    image: "ghcr.io/fscorrupt/posterizarr:latest"
     restart: "unless-stopped"
     volumes:
       - 'C:\Docker\Posterizarr:/config:rw'
