@@ -1,5 +1,7 @@
 # CHANGELOG
 
+## [1.9.40](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.40) - 2025-04-08 07:07:36+00:00
+
 ## [1.9.39](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.39) - 2025-04-08 06:48:51+00:00
 
 feat: add script update on container startup by @fscorrupt 
