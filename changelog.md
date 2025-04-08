@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## [1.9.42](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.42) - 2025-04-08 12:19:24+00:00
+
+## What's Changed
+* fix: start.ps1 by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/234
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.41...1.9.42
+
+### Bug Fixes
+
+- general:
+  - start.ps1 (#234) ([c7eeaa9](https://github.com/fscorrupt/Posterizarr/commit/c7eeaa938781a097167ddcc723205ad0232069b4)) ([#234](https://github.com/fscorrupt/Posterizarr/pull/234))
+  - start.ps1 ([e6ebcfc](https://github.com/fscorrupt/Posterizarr/commit/e6ebcfc00d5b18cb7729ccb568a61fedf830cd19)) ([#234](https://github.com/fscorrupt/Posterizarr/pull/234))
+
 ## [1.9.41](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.41) - 2025-04-08 12:08:04+00:00
 
 ## [1.9.40](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.40) - 2025-04-08 07:07:36+00:00
