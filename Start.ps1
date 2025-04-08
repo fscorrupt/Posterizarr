@@ -1,6 +1,6 @@
 function ScriptSchedule {
     # Posterizarr File Watcher for Tautulli Recently Added Files
-    $inputDir = '$env:APP_DATA/watcher'
+    $inputDir = "$env:APP_DATA/watcher"
     $Scriptargs = "-Tautulli"
     $Directory = Get-ChildItem -Name $inputDir
 
