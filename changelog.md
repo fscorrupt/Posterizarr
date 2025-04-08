@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## [1.9.41](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.41) - 2025-04-08 12:08:04+00:00
+
+## What's Changed
+* sync main by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/232
+* fix: revert Start.ps1 by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/233
+
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.40...1.9.41
+
+### Bug Fixes
+
+- general:
+  - revert Start.ps1 (#233) ([d0755ad](https://github.com/fscorrupt/Posterizarr/commit/d0755ade651d27975ff20eb6761318d11dbdda53)) ([#233](https://github.com/fscorrupt/Posterizarr/pull/233))
+  - revert Start.ps1 as there are problems with the latest changes. ([1a4faf1](https://github.com/fscorrupt/Posterizarr/commit/1a4faf13f5e7978260ee05702301d9bb5d25d7f8)) ([#233](https://github.com/fscorrupt/Posterizarr/pull/233))
+
 ## [1.9.40](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.40) - 2025-04-08 07:07:36+00:00
 
 ## [1.9.39](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.39) - 2025-04-08 06:48:51+00:00
