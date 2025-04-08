@@ -12,11 +12,11 @@ param (
     [switch]$SyncEmby
 )
 
-$CurrentScriptVersion = "1.9.36"
+$CurrentScriptVersion = "1.9.39"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
-$env:PSModuleAnalysisCachePath = $null
-$env:PSModuleAnalysisCacheEnabled = $false
+$env:PSMODULE_ANALYSIS_CACHE_PATH = $null
+$env:PSMODULE_ANALYSIS_CACHE_ENABLED = $false
 
 #################
 # What you need #
@@ -84,12 +84,15 @@ function Set-OSTypeAndScriptRoot {
     if ($env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker*') {
         $global:OSType = "Docker"
         $currentuser = whoami
-        if ($currentuser -eq 'posterizarr' -or $currentuser -eq 'abc' -or $env:VIRTUAL_ENV -eq '/lsiopy' -or $env:PosterizarrNonRoot -eq 'TRUE') {
+        if ($currentuser -eq 'posterizarr' -or $currentuser -eq 'abc' -or $env:VIRTUAL_ENV -eq '/lsiopy' -or $env:POSTERIZARR_NON_ROOT -eq 'TRUE') {
             $global:ScriptRoot = "/config"
         }
         Else {
             $global:ScriptRoot = "./config"
         }
+    }
+    elseif ($env:APP_DATA) {
+        $global:ScriptRoot = $env:APP_DATA
     }
     Else {
         $global:ScriptRoot = $PSScriptRoot
@@ -3921,6 +3924,19 @@ function InvokeMagickCommand {
             return $lines[0]
         }
     }
+        # Check if Pango rendering is needed for RTL languages on Docker
+        if ($global:direction -eq "RTL" -and $Platform -eq 'Docker') {
+            Write-Entry -Subtext "RTL language detected on Docker, attempting to use pango:" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+            # Replace the first instance of 'caption:' with 'pango:'
+            # Ensure we only replace the rendering method, not other occurrences of 'caption'
+            if ($Arguments -match '(?<!\w)caption:') {
+                $Arguments = [regex]::Replace($Arguments, '(?<!\w)caption:', 'pango:', 1)
+                Write-Entry -Subtext "Modified Arguments for pango: $Arguments" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+            } else {
+                Write-Entry -Subtext "Argument string did not contain 'caption:' for pango replacement." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+            }
+        }
+
 
     try {
         $processInfo = New-Object System.Diagnostics.ProcessStartInfo
@@ -6184,6 +6200,15 @@ $Platform = Get-Platform
 $LatestScriptVersion = (Get-LatestScriptVersion -split "`r?`n" | Select-Object -First 1).Trim()
 ##### START #####
 $startTime = Get-Date
+
+# Check if the environment variable exists and is not empty, otherwise use the default
+if (-not [string]::IsNullOrEmpty($env:FONTCONFIG_CACHE_DIR)) {
+    $IM_Font_Cache = $env:FONTCONFIG_CACHE_DIR
+} else {
+    $IM_Font_Cache = "/var/cache/fontconfig"
+}
+
+$Font_Cache = "/usr/share/fonts/custom/"
 # Rotate logs before doing anything!
 $folderPattern = "Logs_*"
 $global:RotationFolderName = $null
@@ -6785,26 +6810,28 @@ Else {
     Write-Entry -Message "Current Imagemagick Version: $CurrentImagemagickversion" -Path $configLogging -Color White -log Info
 }
 if ($global:OSType -eq "Docker") {
-    <# old way:
-        $Url = "https://pkgs.alpinelinux.org/package/edge/community/x86_64/imagemagick"
+    if ($env:POSTERIZARR_NON_ROOT -eq 'TRUE'){
+        $OSVersionTag = (Get-Content /etc/os-release | Select-String -Pattern "^PRETTY_NAME=").ToString().Split('=')[1].Trim('"').replace('Alpine Linux ','')
+        $Url = "https://pkgs.alpinelinux.org/package/$OSVersionTag/community/x86_64/imagemagick"
         $response = Invoke-WebRequest -Uri $url
         $htmlContent = $response.Content
-        #$regexPattern = '<th class="header">Version<\/th>\s*<td>\s*<strong>\s*<a[^>]*>([^<]+)<\/a>\s*<\/strong>\s*<\/td>' # Old Pattern 20240929
         $regexPattern = '<th class="header">Version<\/th>\s*<td>\s*<strong>([\d\.]+-r\d+)<\/strong>\s*<\/td>'
         $Versionmatching = [regex]::Matches($htmlContent, $regexPattern)
 
         if ($Versionmatching.Count -gt 0) {
             $LatestImagemagickversion = $Versionmatching[0].Groups[1].Value.split('-')[0]
         }
-    #>
-    $Url = "https://raw.githubusercontent.com/SoftCreatR/imei/main/versions/imagemagick.version"
-    $response = Invoke-WebRequest -Uri $url
-    $htmlContent = $response.Content
-    $regexPattern = '(\d+\.\d+\.\d+-\d+)'
-    $Versionmatching = [regex]::Matches($htmlContent, $regexPattern)
+    }
+    Else{
+        $Url = "https://raw.githubusercontent.com/SoftCreatR/imei/main/versions/imagemagick.version"
+        $response = Invoke-WebRequest -Uri $url
+        $htmlContent = $response.Content
+        $regexPattern = '(\d+\.\d+\.\d+-\d+)'
+        $Versionmatching = [regex]::Matches($htmlContent, $regexPattern)
 
-    if ($Versionmatching.Count -gt 0) {
-        $LatestImagemagickversion = $Versionmatching[0].Value
+        if ($Versionmatching.Count -gt 0) {
+            $LatestImagemagickversion = $Versionmatching[0].Value
+        }
     }
 }
 Elseif ($global:OSType -eq "Win32NT") {
@@ -6987,13 +7014,30 @@ foreach ($file in $files) {
             Copy-Item -Path $file.FullName -Destination $destinationPath -Force -ErrorAction Stop
             Write-Entry -Subtext "Found File: '$($file.Name)' in ScriptRoot - copying it into temp folder..." -Path $configLogging -Color Cyan -log Info
         }
+
+        # Check if the file is a font (.ttf or .otf)
+        if ($file.Extension -match "\.(ttf|otf)$" -and $env:POSTERIZARR_NON_ROOT -eq 'TRUE') {
+            $fontDestination = Join-Path -Path $Font_Cache -ChildPath $file.Name
+
+            Write-Entry -Subtext "Copying font '$($file.Name)' to ImageMagick cache..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+            Copy-Item -Path $file.FullName -Destination $fontDestination -Force -ErrorAction Stop
+
+            # Ensure font cache directory exists
+            if (!(Test-Path -Path $IM_Font_Cache)) {
+                New-Item -ItemType Directory -Path $IM_Font_Cache -Force | Out-Null
+            }
+        }
     }
     catch {
         Write-Entry -Subtext "Error copying file '$file': $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
     }
 }
 
-# Call the function with your variables
+# Refresh font cache if any fonts were copied
+if ($files.Extension -match "\.(ttf|otf)$" -and $env:POSTERIZARR_NON_ROOT -eq 'TRUE') {
+    Write-Entry -Subtext "Updating ImageMagick font cache..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+    Start-Process -NoNewWindow -FilePath "fc-cache" -ArgumentList "-fv" -Wait
+}
 
 CheckJsonPaths -font "$font" -RTLfont "$RTLfont" -backgroundfont "$backgroundfont "-titlecardfont "$titlecardfont" -Posteroverlay "$Posteroverlay" -Backgroundoverlay "$Backgroundoverlay" -titlecardoverlay "$titlecardoverlay" -Seasonoverlay "$Seasonoverlay" -Posteroverlay4k "$4kposter" -Posteroverlay1080p "$1080pPoster"
 # Check Plex now:

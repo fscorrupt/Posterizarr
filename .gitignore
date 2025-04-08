@@ -1,7 +1,16 @@
 /images
 *.gif
-*.png
 *.jpg
 *.xlsm
-*.ttf
 *.otf
+
+#
+.env
+.env.dev
+
+__pycache__
+.vscode
+coverage.*
+
+# mounted volumes
+config/

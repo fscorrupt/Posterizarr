@@ -1,0 +1,38 @@
+# Git files
+.github/
+.git
+.gitignore
+.gitattributes
+
+# Logs and cache
+Logs/
+RotatedLogs/
+Cache/
+*.zip
+
+# Dev
+.pester.yml
+.vscode/
+.dockerignore
+Dockerfile
+docker-compose*
+__pycache__/
+config/
+tests/
+images/
+.env*
+
+# No need for python scrpts
+*.py
+
+# Configuration example (not the actual config)
+MyPersonalConfig.json
+
+# Docker files (not needed in the image)
+docker-compose.*
+
+# Documentation
+*.md
+LICENSE
+Release.txt
+ReleaseModule.txt
