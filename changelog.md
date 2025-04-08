@@ -2,19 +2,6 @@
 
 ## [1.9.40](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.40) - 2025-04-08 07:07:36+00:00
 
-## What's Changed
-* Sync Main by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/230
-* fix: revert start.ps1 changes & readme update by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/231
-
-
-**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.39...1.9.40
-
-### Bug Fixes
-
-- general:
-  - revert start.ps1 changes & readme update (#231) ([9887a3c](https://github.com/fscorrupt/Posterizarr/commit/9887a3cad320068d0f611bcb862b26446bb57558)) ([#231](https://github.com/fscorrupt/Posterizarr/pull/231))
-  - revert start.ps1 changes & readme update ([1a63b9b](https://github.com/fscorrupt/Posterizarr/commit/1a63b9b04c4bdca540c11812c5fa2cc1de98413f)) ([#231](https://github.com/fscorrupt/Posterizarr/pull/231))
-
 ## [1.9.39](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.39) - 2025-04-08 06:48:51+00:00
 
 feat: add script update on container startup by @fscorrupt 
