@@ -2,17 +2,6 @@
 
 ## [1.9.38](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.38) - 2025-04-08 06:12:57+00:00
 
-## What's Changed
-* updating release trigger by @dapperdivers in https://github.com/fscorrupt/Posterizarr/pull/229
-* Update readme to reflect new container by @fscorrupt in https://github.com/fscorrupt/Posterizarr/commit/076efc09e3380917904c4feeaeccaf78af1f9d13
-
-**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.37...1.9.38
-
-### Bug Fixes
-
-- general:
-  - fixing uppercase repo name ([8fb48fd](https://github.com/fscorrupt/Posterizarr/commit/8fb48fdb417ca16ef48279fe284542179fdde0ad)) ([#229](https://github.com/fscorrupt/Posterizarr/pull/229))
-
 ## [1.9.37](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.37) - 2025-04-07 19:38:50+00:00
 
 ## [1.9.36](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.36) - 2025-03-27 09:15:26+00:00
