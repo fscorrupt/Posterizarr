@@ -107,6 +107,16 @@ function CompareScriptVersion {
                 Write-Host ""
                 $version = $lineContainingVersion -replace '^\$CurrentScriptVersion\s*=\s*"([^"]+)".*', '$1'
                 Write-Host "Current Script Version: $version | Latest Script Version: $LatestScriptVersion" -ForegroundColor Green
+                if ($version -ne $LatestScriptVersion) {
+                    Write-Host "Updating posterizarr for you.." -ForegroundColor Yellow
+                    Invoke-WebRequest -uri "https://github.com/fscorrupt/Posterizarr/raw/main/Posterizarr.ps1" -OutFile $posterizarrPath
+                    $lineContainingVersion = Select-String -Path $posterizarrPath -Pattern '^\$CurrentScriptVersion\s*=\s*"([^"]+)"' | Select-Object -ExpandProperty Line
+                    if ($lineContainingVersion -eq $LatestScriptVersion){
+                        Write-Host "Posterizarr updated to the latest version: $LatestScriptVersion" -ForegroundColor Green
+                    } else {
+                        Write-Host "Failed to update Posterizarr to the latest version." -ForegroundColor Red
+                    }
+                }
             }
         } else {
             Write-Host "Warning: Could not find Posterizarr.ps1 at $posterizarrPath" -ForegroundColor Yellow
@@ -127,13 +137,13 @@ function CopyAssetFiles {
     # Get all asset files - using wildcard in path to make -Include work correctly
     $assetFiles = Get-ChildItem -Path "$env:APP_ROOT/*" -Include "*.png", "*.ttf" -File
     $fileCount = $assetFiles.Count
-    
+
     if ($fileCount -eq 0) {
         Write-Host "No .png or .ttf files found in $env:APP_ROOT" -ForegroundColor Yellow
     } else {
         $successCount = 0
         $errorCount = 0
-        
+
         $assetFiles | ForEach-Object {
             try {
                 $destinationPath = Join-Path -Path $env:APP_DATA -ChildPath $_.Name
@@ -144,10 +154,10 @@ function CopyAssetFiles {
                 Write-Host "Failed to copy $($_.Name): $($_.Exception.Message)" -ForegroundColor Red
             }
         }
-        
+
         # Simple summary message
         Write-Host "Copied $successCount .png & .ttf files from $env:APP_ROOT to $env:APP_DATA" -ForegroundColor Cyan
-        
+
         if ($errorCount -gt 0) {
             Write-Host "Failed to copy $errorCount files" -ForegroundColor Yellow
         }
@@ -237,7 +247,7 @@ function ParseScheduledTimes {
     if (!$env:RUN_TIME) {
         $env:RUN_TIME = "05:00"
     }
-    
+
     $scheduledTimes = @()
     foreach ($timeString in ($env:RUN_TIME -split ',')) {
         # Validate time format
@@ -245,22 +255,22 @@ function ParseScheduledTimes {
             Write-Host "Invalid time format: $timeString. Expected format: HH:MM" -ForegroundColor Yellow
             continue
         }
-        
+
         # Validate hour and minute ranges
         $hour = [int]$Matches[1]
         $minute = [int]$Matches[2]
-        
+
         if ($hour -lt 0 -or $hour -gt 23 -or $minute -lt 0 -or $minute -gt 59) {
             Write-Host "Invalid time values in: $timeString. Hours must be 0-23, minutes 0-59" -ForegroundColor Yellow
             continue
         }
-        
+
         $scheduledTimes += @{
             Hour = $hour
             Minute = $minute
         }
     }
-    
+
     if ($scheduledTimes.Count -eq 0) {
         Write-Host "Warning: No valid scheduled times found in RUN_TIME: $env:RUN_TIME" -ForegroundColor Yellow
         # Add a default time (5:00 AM) to prevent errors
@@ -270,7 +280,7 @@ function ParseScheduledTimes {
         }
         Write-Host "Using default scheduled time: 05:00" -ForegroundColor Yellow
     }
-    
+
     return $scheduledTimes
 }
 
@@ -322,7 +332,7 @@ function ShouldRunAtScheduledTime {
             $alreadyRan = $null -ne $lastExecutionDate -and
                         $lastExecutionDate.Date -eq $currentTime.Date -and
                         [Math]::Abs(($lastExecutionDate - $scheduledTime).TotalMinutes) -le $script:DUPLICATE_PREVENTION_WINDOW_MINUTES
-            
+
             if (-not $alreadyRan) {
                 $shouldRun = $true
                 $closestTime = $scheduledTime
@@ -355,7 +365,7 @@ function RunScheduled {
 
     # Refresh scheduled times in case RUN_TIME was changed
     $script:ScheduledTimes = ParseScheduledTimes
-    
+
     $currentTime = Get-Date
 
     Write-Host ""
@@ -468,7 +478,7 @@ function WatchDirectory {
 
     # Setup watch dir
     $watcherdir = "$env:APP_DATA/watcher"
-        
+
     # Real-time file system watcher
     Write-Host "Starting real-time file watcher for directory: $watcherdir" -ForegroundColor Green
     if ($Timeout -gt 0) {
@@ -479,10 +489,10 @@ function WatchDirectory {
 
     # Initialize variables for scheduled execution
     $lastExecutionDate = $null
-    
+
     # Refresh scheduled times in case RUN_TIME was changed
     $script:ScheduledTimes = ParseScheduledTimes
-    
+
     $scheduledTimesString = $env:RUN_TIME
     Write-Host "Watch mode will also run scheduled executions at: $scheduledTimesString" -ForegroundColor Cyan
 
@@ -544,12 +554,12 @@ function WatchDirectory {
                 $timeCheckInterval = 15
                 if (($currentTime - $lastTimeCheck).TotalSeconds -ge $timeCheckInterval) {
                     $lastTimeCheck = $currentTime
-                    
+
                     # Periodically refresh scheduled times in case RUN_TIME was changed
                     # Only refresh every 5 minutes to avoid unnecessary processing
                     $timeSinceStart = ($currentTime - $startTime).TotalSeconds
                     $shouldRefreshSchedule = ($timeSinceStart % ($script:SCHEDULED_TIMES_REFRESH_MINUTES * 60)) -lt $timeCheckInterval
-                    
+
                     if ($shouldRefreshSchedule) {
                         $script:ScheduledTimes = ParseScheduledTimes
                     }
