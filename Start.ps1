@@ -107,16 +107,6 @@ function CompareScriptVersion {
                 Write-Host ""
                 $version = $lineContainingVersion -replace '^\$CurrentScriptVersion\s*=\s*"([^"]+)".*', '$1'
                 Write-Host "Current Script Version: $version | Latest Script Version: $LatestScriptVersion" -ForegroundColor Green
-                if ($version -ne $LatestScriptVersion) {
-                    Write-Host "Updating posterizarr for you.." -ForegroundColor Yellow
-                    Invoke-WebRequest -uri "https://github.com/fscorrupt/Posterizarr/raw/main/Posterizarr.ps1" -OutFile $posterizarrPath
-                    $lineContainingVersion = Select-String -Path $posterizarrPath -Pattern '^\$CurrentScriptVersion\s*=\s*"([^"]+)"' | Select-Object -ExpandProperty Line
-                    if ($lineContainingVersion -eq $LatestScriptVersion){
-                        Write-Host "Posterizarr updated to the latest version: $LatestScriptVersion" -ForegroundColor Green
-                    } else {
-                        Write-Host "Failed to update Posterizarr to the latest version." -ForegroundColor Red
-                    }
-                }
             }
         } else {
             Write-Host "Warning: Could not find Posterizarr.ps1 at $posterizarrPath" -ForegroundColor Yellow
