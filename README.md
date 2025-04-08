@@ -435,7 +435,7 @@ Run the script without any parameters:
 
 On [docker](#docker) this way:
 ```sh
-  docker exec -it posterizarr pwsh /config/Posterizarr.ps1
+  docker exec -it posterizarr pwsh /app/Posterizarr.ps1
 ```
 
 This will generate posters for your entire Plex library based on the configured settings.
@@ -642,7 +642,7 @@ These test images are placed in the script root under the `./test` folder.
 
 On [docker](#docker) this way:
 ```sh
-  docker exec -it posterizarr pwsh /config/Posterizarr.ps1 -Testing
+  docker exec -it posterizarr pwsh /app/Posterizarr.ps1 -Testing
 ```
 
 ### Manual Mode
@@ -660,7 +660,7 @@ Run the script with the `-Manual` switch:
 
 On [docker](#docker) this way:
 ```sh
-  docker exec -it posterizarr pwsh /config/Posterizarr.ps1 -Manual
+  docker exec -it posterizarr pwsh /app/Posterizarr.ps1 -Manual
 ```
 
 Follow the prompts to enter the source picture path (Container needs Access to it), media folder name, and movie/show title to manually create a custom poster.
@@ -678,7 +678,7 @@ Run the script with the `-Backup` flag. In this mode, the script will download e
 
 On [docker](#docker) this way:
 ```sh
-  docker exec -it posterizarr pwsh /config/Posterizarr.ps1 -Backup
+  docker exec -it posterizarr pwsh /app/Posterizarr.ps1 -Backup
 ```
 
 ### Sync Modes
@@ -693,7 +693,7 @@ Run the script with the `-SyncJelly` flag. In this mode, the script will sync ev
 
 On [docker](#docker) this way:
 ```sh
-  docker exec -it posterizarr pwsh /config/Posterizarr.ps1 -SyncJelly
+  docker exec -it posterizarr pwsh /app/Posterizarr.ps1 -SyncJelly
 ```
 
 #### Emby
@@ -705,7 +705,7 @@ Run the script with the `-SyncEmby` flag. In this mode, the script will sync eve
 
 On [docker](#docker) this way:
 ```sh
-  docker exec -it posterizarr pwsh /config/Posterizarr.ps1 -SyncEmby
+  docker exec -it posterizarr pwsh /app/Posterizarr.ps1 -SyncEmby
 ```
 
 > [!TIP]
@@ -726,39 +726,39 @@ On [docker](#docker) this way:
 
   **Automatic Mode:**
   ```sh
-  docker exec -it posterizarr pwsh /config/Posterizarr.ps1
+  docker exec -it posterizarr pwsh /app/Posterizarr.ps1
   ```
   **Testing Mode:**
   ```sh
-  docker exec -it posterizarr pwsh /config/Posterizarr.ps1 -Testing
+  docker exec -it posterizarr pwsh /app/Posterizarr.ps1 -Testing
   ```
   **Manual Mode:**
   ```sh
-  docker exec -it posterizarr pwsh /config/Posterizarr.ps1 -Manual
+  docker exec -it posterizarr pwsh /app/Posterizarr.ps1 -Manual
   ```
   **Backup Mode:**
   ```sh
-  docker exec -it posterizarr pwsh /config/Posterizarr.ps1 -Backup
+  docker exec -it posterizarr pwsh /app/Posterizarr.ps1 -Backup
   ```
   **SyncJelly Mode:**
   ```sh
-  docker exec -it posterizarr pwsh /config/Posterizarr.ps1 -SyncJelly
+  docker exec -it posterizarr pwsh /app/Posterizarr.ps1 -SyncJelly
   ```
   **SyncEmby Mode:**
   ```sh
-  docker exec -it posterizarr pwsh /config/Posterizarr.ps1 -SyncEmby
+  docker exec -it posterizarr pwsh /app/Posterizarr.ps1 -SyncEmby
   ```
 > [!TIP]
 > If you did not used `pwsh` on docker exec you can do it this way.
 >
 > Inside your `Unraid` or `Bash` or `Sh` console:
 > ```sh
-> pwsh /config/Posterizarr.ps1
-> pwsh /config/Posterizarr.ps1 -Manual
-> pwsh /config/Posterizarr.ps1 -Testing
-> pwsh /config/Posterizarr.ps1 -Backup
-> pwsh /config/Posterizarr.ps1 -SyncEmby
-> pwsh /config/Posterizarr.ps1 -SyncJelly
+> pwsh /app/Posterizarr.ps1
+> pwsh /app/Posterizarr.ps1 -Manual
+> pwsh /app/Posterizarr.ps1 -Testing
+> pwsh /app/Posterizarr.ps1 -Backup
+> pwsh /app/Posterizarr.ps1 -SyncEmby
+> pwsh /app/Posterizarr.ps1 -SyncJelly
 > ```
 
 ### unRAID
