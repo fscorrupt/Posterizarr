@@ -2,18 +2,6 @@
 
 ## [1.9.45](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.45) - 2025-04-09 06:43:19+00:00
 
-## What's Changed
-* sync by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/237
-* fix: small fixes for script output. by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/238
-
-**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.44...1.9.45
-
-### Bug Fixes
-
-- general:
-  - small fixes for script output. (#238) ([1518bb5](https://github.com/fscorrupt/Posterizarr/commit/1518bb5df73e22b2fcafcdef37a836236193c700)) ([#238](https://github.com/fscorrupt/Posterizarr/pull/238))
-  - small fixes for script output. ([856c091](https://github.com/fscorrupt/Posterizarr/commit/856c091c1978b2366560b3776d75950db5926e43)) ([#238](https://github.com/fscorrupt/Posterizarr/pull/238))
-
 ## [1.9.44](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.44) - 2025-04-09 06:11:27+00:00
 
 ## [1.9.43](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.43) - 2025-04-08 16:26:15+00:00
