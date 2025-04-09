@@ -187,6 +187,8 @@ function CopyAssetFiles {
     }
 }
 
+Set-PSReadLineOption -HistorySaveStyle SaveNothing
+
 $Header = @"
 ----------------------------------------------------
 Ideas for the container were taken from:

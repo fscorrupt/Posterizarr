@@ -11,8 +11,9 @@ param (
     [switch]$SyncJelly,
     [switch]$SyncEmby
 )
+Set-PSReadLineOption -HistorySaveStyle SaveNothing
 
-$CurrentScriptVersion = "1.9.44"
+$CurrentScriptVersion = "1.9.45"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 $env:PSMODULE_ANALYSIS_CACHE_PATH = $null
@@ -7036,7 +7037,7 @@ foreach ($file in $files) {
 # Refresh font cache if any fonts were copied
 if ($files.Extension -match "\.(ttf|otf)$" -and $env:POSTERIZARR_NON_ROOT -eq 'TRUE') {
     Write-Entry -Subtext "Updating ImageMagick font cache..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
-    Start-Process -NoNewWindow -FilePath "fc-cache" -ArgumentList "-fv" -Wait
+    & fc-cache -fv 1> $null 2> $null
 }
 
 CheckJsonPaths -font "$font" -RTLfont "$RTLfont" -backgroundfont "$backgroundfont "-titlecardfont "$titlecardfont" -Posteroverlay "$Posteroverlay" -Backgroundoverlay "$Backgroundoverlay" -titlecardoverlay "$titlecardoverlay" -Seasonoverlay "$Seasonoverlay" -Posteroverlay4k "$4kposter" -Posteroverlay1080p "$1080pPoster"
