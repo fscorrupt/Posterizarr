@@ -2,18 +2,6 @@
 
 ## [1.9.44](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.44) - 2025-04-09 06:11:27+00:00
 
-## What's Changed
-* sync by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/235
-* fix: container startup script by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/236
-
-**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.43...1.9.44
-
-### Bug Fixes
-
-- general:
-  - container startup script (#236) ([f888347](https://github.com/fscorrupt/Posterizarr/commit/f888347bf4e8e4337e93e7f41246d25f6486bf0e)) ([#236](https://github.com/fscorrupt/Posterizarr/pull/236))
-  - container startup script ([15399d9](https://github.com/fscorrupt/Posterizarr/commit/15399d912dec83faf62147bb644671a56607cdb3)) ([#236](https://github.com/fscorrupt/Posterizarr/pull/236))
-
 ## [1.9.43](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.43) - 2025-04-08 16:26:15+00:00
 
 *No description*
