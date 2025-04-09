@@ -50,7 +50,7 @@ function ScriptSchedule {
                 Write-Warning "There is currently running another Process of Posterizarr, skipping this run."
             }
             Else {
-                pwsh $env:APP_DATA/Posterizarr.ps1
+                pwsh $env:APP_ROOT/Posterizarr.ps1
             }
         }
         If ($Directory)
