@@ -79,7 +79,7 @@ function ScriptSchedule {
                 write-host "Calling Posterizarr with this args: $Scriptargs"
 
                 # Call Posterizarr with Args
-                pwsh -Command "$env:APP_DATA/Posterizarr.ps1 $Scriptargs"
+                pwsh -Command "$env:APP_ROOT/Posterizarr.ps1 $Scriptargs"
 
                 # Reset scriptargs
                 $Scriptargs = "-Tautulli"
