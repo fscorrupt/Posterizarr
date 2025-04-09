@@ -33,7 +33,7 @@
 [![ARM](https://img.shields.io/static/v1?style=for-the-badge&logo=arm&logoColor=FFFFFF&message=ARM&color=815151&label=)](walkthrough.md)
 
 ## Introduction
-This PowerShell script automates the process of generating images for your Plex/Jellyfin/Emby media library. Leveraging information from your Plex/Jellyfin/Emby library, such as movie or show titles, season and episode data, it fetches relevant artwork from Fanart.tv, TMDB, TVDB, Plex and IMDB. The script is able to focus on artwork with specific languages to grab. By default, textless artwork `xx` is retrieved and will fall back to `en` if textless is not found. This is a setting a user can decide on, either to focus on textless or on text posters. It also offers both automatic and manual modes for generating posters. The manual mode can accommodate custom creations that cannot be bulk retrieved.
+This PowerShell  automates the process of generating images for your Plex/Jellyfin/Emby media library. Leveraging information from your Plex/Jellyfin/Emby library, such as movie or show titles, season and episode data, it fetches relevant artwork from Fanart.tv, TMDB, TVDB, Plex and IMDB. The  is able to focus on artwork with specific languages to grab. By default, textless artwork `xx` is retrieved and will fall back to `en` if textless is not found. This is a setting a user can decide on, either to focus on textless or on text posters. It also offers both automatic and manual modes for generating posters. The manual mode can accommodate custom creations that cannot be bulk retrieved.
 
 > [!NOTE]
 Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpine Base Image)](#docker), [unRAID](#unraid) and on Windows operating systems.
@@ -53,7 +53,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpin
   - [🤖 Automatic Mode](#automatic-mode)
   - [🖼️ Asset Tips](#assets-tip)
   - [✍️ Manual Assets Naming](#manual-assets-naming)
-- [🧩 Script Modes](#scipt-modes)
+- [🧩  Modes](#scipt-modes)
   - [🐳 Tautulli Mode Docker](#tautulli-mode-docker)
   - [🪟 Tautulli Mode Windows](#tautulli-mode-windows)
   - [🧪 Testing Mode](#testing-mode)
@@ -80,9 +80,6 @@ Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpin
 > Here is an installation [walkthrough](walkthrough.md)
 
 > [!IMPORTANT]
-> You do not have to redeploy the container if the script version changes because it is not part of the container.
-> Container rebuilds only happen when there are changes to the ImageMagick, PowerShell, or other prerequisite versions.
->
 > Do not enable more then one media server.
 >
 > If you want to install it on ARM please follow this carefully [ARM prerequisites](walkthrough.md#arm-prerequisites)
