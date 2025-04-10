@@ -13,7 +13,7 @@ param (
 )
 Set-PSReadLineOption -HistorySaveStyle SaveNothing
 
-$CurrentScriptVersion = "1.9.45"
+$CurrentScriptVersion = "1.9.46"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 $env:PSMODULE_ANALYSIS_CACHE_PATH = $null
@@ -4165,9 +4165,58 @@ function UploadOtherMediaServerArtwork {
         # Set the API endpoint URL
         $apiUrl = "$OtherMediaServerUrl/items/$itemId/images/$imageType/?api_key=$OtherMediaServerApiKey"
 
+        if ($imageType -eq "Backdrop") {
+            $deleteUrl = "$OtherMediaServerUrl/items/$itemId/images/$imageType/0?api_key=$OtherMediaServerApiKey"
+            # Make the API request to delete the backdrop image
+            try {
+                # Delete the existing image first
+                $response = Invoke-RestMethod -Uri $deleteUrl -Method Delete -ErrorAction Stop
+                Write-Entry -Subtext "Image successfully deleted..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                $UploadCount++
+            }
+            catch {
+                if ($_.Exception.Response -is [System.Net.Http.HttpResponseMessage] -and $_.Exception.Response.Content) {
+                    try {
+                        $response = $_.Exception.Response.Content.ReadAsStringAsync().Result
+                    }
+                    catch {
+                        $response = "Unable to read server response (content may be disposed)."
+                    }
+                    Write-Entry -Subtext "Failed to delete image. Server response: $response" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                }
+                else {
+                    Write-Entry -Subtext "Failed to delete image. Error: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                }
+            }
+            if ($global:ReplaceThumbwithBackdrop -eq 'true'){
+                # Make the API request to upload the Thumb image
+                $thumbapiUrl = "$OtherMediaServerUrl/items/$itemId/images/Thumb/?api_key=$OtherMediaServerApiKey"
+                try {
+                    $response = Invoke-RestMethod -Uri $thumbapiUrl -Method Post -Body $imageBase64 -ContentType $contentType -ErrorAction Stop
+
+                    Write-Entry -Subtext "Thumb Image successfully uploaded..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                    $UploadCount++
+                }
+                catch {
+                    if ($_.Exception.Response -is [System.Net.Http.HttpResponseMessage] -and $_.Exception.Response.Content) {
+                        try {
+                            $response = $_.Exception.Response.Content.ReadAsStringAsync().Result
+                        }
+                        catch {
+                            $response = "Unable to read server response (content may be disposed)."
+                        }
+                        Write-Entry -Subtext "Failed to upload Thumb image. Server response: $response" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    }
+                    else {
+                        Write-Entry -Subtext "Failed to upload Thumb image. Error: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    }
+                }
+            }
+        }
         # Make the API request to upload the image
         try {
             $response = Invoke-RestMethod -Uri $apiUrl -Method Post -Body $imageBase64 -ContentType $contentType -ErrorAction Stop
+
             Write-Entry -Subtext "Image successfully uploaded..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
             $UploadCount++
         }
@@ -6480,6 +6529,7 @@ if ($UseJellyfin -eq 'true') {
     $UseOtherMediaServer = $UseJellyfin
     $OtherMediaServerApiKey = $JellyfinAPIKey
     $global:UploadExistingAssets = $config.JellyfinPart.UploadExistingAssets.tolower()
+    $global:ReplaceThumbwithBackdrop = $config.JellyfinPart.ReplaceThumbwithBackdrop.tolower()
 }
 
 # Emby Part
@@ -6491,6 +6541,7 @@ if ($UseEmby -eq 'true') {
     $UseOtherMediaServer = $UseEmby
     $OtherMediaServerApiKey = $EmbyAPIKey
     $global:UploadExistingAssets = $config.EmbyPart.UploadExistingAssets.tolower()
+    $global:ReplaceThumbwithBackdrop = $config.EmbyPart.ReplaceThumbwithBackdrop.tolower()
 }
 
 # Count how many media servers are enabled
