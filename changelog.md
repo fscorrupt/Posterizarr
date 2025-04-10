@@ -2,18 +2,6 @@
 
 ## [1.9.46](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.46) - 2025-04-10 06:22:43+00:00
 
-## What's Changed
-* sync by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/239
-* feat: replace Thumb with backdrop if enabled.  by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/240
-
-**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.45...1.9.46
-
-### Feature
-
-- general:
-  - replace Thumb with backdrop if enabled.  (#240) ([1b1caa2](https://github.com/fscorrupt/Posterizarr/commit/1b1caa21d0bade91ba90c0251a37b6f35da11f40)) ([#240](https://github.com/fscorrupt/Posterizarr/pull/240))
-  - replace Thumb with backdrop if enabled. ([8e42930](https://github.com/fscorrupt/Posterizarr/commit/8e429302c7abfd75a36b7052107718ec80db7acb)) ([#240](https://github.com/fscorrupt/Posterizarr/pull/240))
-
 ## [1.9.45](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.45) - 2025-04-09 06:43:19+00:00
 
 ## [1.9.44](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.44) - 2025-04-09 06:11:27+00:00
