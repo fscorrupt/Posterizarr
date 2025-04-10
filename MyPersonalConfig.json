@@ -54,7 +54,8 @@
         ],
         "JellyfinUrl": "http://192.168.1.93:8096",
         "UseJellyfin": "false",
-        "UploadExistingAssets": "false"
+        "UploadExistingAssets": "false",
+        "ReplaceThumbwithBackdrop": "false"
     },
     "EmbyPart": {
         "LibstoExclude": [
@@ -67,7 +68,8 @@
         ],
         "EmbyUrl": "http://192.168.1.93:8096/emby",
         "UseEmby": "false",
-        "UploadExistingAssets": "false"
+        "UploadExistingAssets": "false",
+        "ReplaceThumbwithBackdrop": "false"
     },
     "Notification": {
         "SendNotification": "true",
