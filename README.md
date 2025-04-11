@@ -269,6 +269,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpin
     - `MaxHeight`: Maximum height of text box.
     - `text_offset`: Text box offset from the bottom of the picture.
     - `lineSpacing`: Adjust the height between lines of text (Default is `0`)
+    - `TextGravity`: Specifies the text alignment within the textbox (Default is `south`)
     </details>
     <details close>
     <summary>SeasonPosterOverlayPart [click to unfold]</summary>
@@ -291,6 +292,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpin
     - `MaxHeight`: Maximum height of text box.
     - `text_offset`: Text box offset from the bottom of the picture.
     - `lineSpacing`: Adjust the height between lines of text (Default is `0`)
+    - `TextGravity`: Specifies the text alignment within the textbox (Default is `south`)
     </details>
     <details close>
     <summary>ShowTilteOnSeasonPosterPart [click to unfold]</summary>
@@ -308,6 +310,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpin
     - `MaxHeight`: Maximum height of text box.
     - `text_offset`: Text box offset from the bottom of the picture.
     - `lineSpacing`: Adjust the height between lines of text (Default is `0`)
+    - `TextGravity`: Specifies the text alignment within the textbox (Default is `south`)
     </details>
     <details close>
     <summary>BackgroundOverlayPart [click to unfold]</summary>
@@ -329,6 +332,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpin
     - `MaxHeight`: Maximum height of text box in background image.
     - `text_offset`: Text box offset from the bottom of the background image.
     - `lineSpacing`: Adjust the height between lines of text (Default is `0`)
+    - `TextGravity`: Specifies the text alignment within the textbox (Default is `south`)
     </details>
     <details close>
     <summary>TitleCardOverlayPart [click to unfold]</summary>
@@ -357,6 +361,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpin
     - `MaxHeight`: Maximum height of text box in TitleCard image.
     - `text_offset`: Text box offset from the bottom of the TitleCard image.
     - `lineSpacing`: Adjust the height between lines of text (Default is `0`)
+    - `TextGravity`: Specifies the text alignment within the textbox (Default is `south`)
     </details>
     <details close>
     <summary>TitleCardEpisodeTextPart [click to unfold]</summary>
@@ -378,6 +383,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpin
     - `MaxHeight`: Maximum height of text box in TitleCard image.
     - `text_offset`: Text box offset from the bottom of the TitleCard image.
     - `lineSpacing`: Adjust the height between lines of text (Default is `0`)
+    - `TextGravity`: Specifies the text alignment within the textbox (Default is `south`)
     </details>
     <br>
 
