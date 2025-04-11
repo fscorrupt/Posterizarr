@@ -139,7 +139,8 @@
         "MaxWidth": "1900",
         "MaxHeight": "500",
         "text_offset": "+430",
-        "lineSpacing": "0"
+        "lineSpacing": "0",
+        "TextGravity": "south"
     },
     "BackgroundOverlayPart": {
         "fontAllCaps": "true",
@@ -157,7 +158,8 @@
         "MaxWidth": "3640",
         "MaxHeight": "500",
         "text_offset": "+200",
-        "lineSpacing": "0"
+        "lineSpacing": "0",
+        "TextGravity": "south"
     },
     "TitleCardOverlayPart": {
         "UseBackgroundAsTitleCard": "false",
@@ -179,7 +181,8 @@
         "MaxWidth": "3640",
         "MaxHeight": "280",
         "text_offset": "+300",
-        "lineSpacing": "0"
+        "lineSpacing": "0",
+        "TextGravity": "south"
     },
     "TitleCardEPTextPart": {
         "fontAllCaps": "true",
@@ -195,7 +198,8 @@
         "text_offset": "+150",
         "SeasonTCText": "Season",
         "EpisodeTCText": "Episode",
-        "lineSpacing": "0"
+        "lineSpacing": "0",
+        "TextGravity": "south"
     },
     "SeasonPosterOverlayPart": {
         "ShowFallback": "true",
@@ -214,7 +218,8 @@
         "MaxWidth": "1900",
         "MaxHeight": "500",
         "text_offset": "+400",
-        "lineSpacing": "0"
+        "lineSpacing": "0",
+        "TextGravity": "south"
     },
     "ShowTitleOnSeasonPosterPart": {
         "AddShowTitletoSeason": "false",
@@ -228,6 +233,7 @@
         "MaxWidth": "1900",
         "MaxHeight": "500",
         "text_offset": "+300",
-        "lineSpacing": "0"
+        "lineSpacing": "0",
+        "TextGravity": "south"
     }
 }
