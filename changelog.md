@@ -1,5 +1,18 @@
 # CHANGELOG
 
+## [1.9.47](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.47) - 2025-04-11 07:51:40+00:00
+
+## What's Changed
+* add: text alignment control inside textbox by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/241
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.46...1.9.47
+
+### Small fixes
+
+- general:
+  - text alignment control inside textbox (#241) ([ff6ea51](https://github.com/fscorrupt/Posterizarr/commit/ff6ea51b8e886ee9dafcc980d3701b23b49d96c9)) ([#241](https://github.com/fscorrupt/Posterizarr/pull/241))
+  - text alignment control inside textbox ([cee28c1](https://github.com/fscorrupt/Posterizarr/commit/cee28c14f932ff5d5b5e24a0c9b657f476a6839c)) ([#241](https://github.com/fscorrupt/Posterizarr/pull/241))
+
 ## [1.9.46](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.46) - 2025-04-10 06:22:43+00:00
 
 ## [1.9.45](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.45) - 2025-04-09 06:43:19+00:00
