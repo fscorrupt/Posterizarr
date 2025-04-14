@@ -59,6 +59,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpin
   - [🧪 Testing Mode](#testing-mode)
   - [🛠️ Manual Mode](#manual-mode)
   - [💾 Backup Mode](#backup-mode)
+  - [🖼️ Poster reset Mode](#poster-reset-mode)
   - [🔄 Sync Modes](#sync-modes)
 - [🧰 Platforms & Tools](#platforms--tools)
   - [🐳 Docker](#docker)
@@ -104,8 +105,8 @@ Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpin
 >- **TVDB API Key:** [Obtain TVDB API Key](https://thetvdb.com/api-information/signup)
     - **Do not** use `"Legacy API Key"`, it only works with a Project Api Key.
 >- **ImageMagick:**
-    - **Version 7.x is required** - The script handles downloading and using a portable version of ImageMagick for all platforms. **(You may need to run the Script as Admin on first run)**. If you prefer to reference your own installation or prefer to download and install it yourself, goto: [Download ImageMagick](https://imagemagick.org/script/download.php)
->- **Powershell Version:** 5.x or higher (Docker Image uses v7.4.6).
+    - **Version 7.x is required** - The script handles downloading and using a portable version of ImageMagick for all platforms. **(You may need to run the Script as Admin on first run)**. If you prefer to reference your own installation or prefer to download and install it yourself (already integrated in container), goto: [Download ImageMagick](https://imagemagick.org/script/download.php)
+>- **Powershell Version:** 5.x or higher (already integrated in container).
 >- **FanartTv Powershell Module:** This module is required (already integrated in container), goto: [Install Module](https://github.com/Celerium/FanartTV-PowerShellWrapper)
 
 # Configuration
@@ -395,6 +396,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpin
 - **Testing Mode**: Run the script with the `-Testing` switch to create Test posters before you start using it.
 - **Manual Mode**: Run the script with the `-Manual` switch to create custom posters manually.
 - **Backup Mode**: Run the script with the `-Backup` switch to download every artwork from plex (only those what are set to `true` in config)
+- **Poster reset Mode**: Run the script with the `-PosterReset -LibraryToReset "Test Lib"` switch to reset every artwork from a specifc plex lib.
 
 > [!NOTE]
 >- Ensure PowerShell execution policy allows script execution.
@@ -684,6 +686,19 @@ Run the script with the `-Backup` flag. In this mode, the script will download e
 On [docker](#docker) this way:
 ```sh
   docker exec -it posterizarr pwsh /app/Posterizarr.ps1 -Backup
+```
+
+### Poster reset Mode
+
+Run the script with the `-PosterReset -LibraryToReset "Test Lib"` flag. In this mode, posterizarr will reset every artwork from a specifc plex lib.
+
+```powershell
+.\Posterizarr.ps1 -PosterReset -LibraryToReset "Test Lib"
+```
+
+On [docker](#docker) this way:
+```sh
+  docker exec -it posterizarr pwsh /app/Posterizarr.ps1 -PosterReset -LibraryToReset "Test Lib"
 ```
 
 ### Sync Modes
