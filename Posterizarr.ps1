@@ -18021,8 +18021,8 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
         Send-UptimeKumaWebhook -status "up" -ping $executionTime.TotalMilliseconds
     }
 }
-ElseIf ($PosterReset -and $LibraryToReset) {
-    if ($UsePlex -eq 'true') {
+ElseIf ($PosterReset) {
+    if ($UsePlex -eq 'true' -and $null -ne $LibraryToReset) {
         Write-Entry -Message "Poster reset requested for library: $LibraryToReset" -Path "$global:ScriptRoot\Logs\Scriptlog.log" -Color Yellow -log Warning
         Write-Entry -Subtext "This action will reset all posters and cannot be undone." -Path "$global:ScriptRoot\Logs\Scriptlog.log" -Color Red -log Warning
         Write-Entry -Subtext "Starting in 20 seconds... Press Ctrl+C to cancel." -Path "$global:ScriptRoot\Logs\Scriptlog.log" -Color Cyan -log Info
