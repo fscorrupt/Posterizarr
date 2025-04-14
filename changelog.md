@@ -2,18 +2,6 @@
 
 ## [1.9.48](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.48) - 2025-04-14 12:19:41+00:00
 
-## What's Changed
-* sync by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/242
-* feat: add ability to reset plex posters by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/243
-
-**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.47...1.9.48
-
-### Feature
-
-- general:
-  - add ability to reset plex posters (#243) ([d494ee8](https://github.com/fscorrupt/Posterizarr/commit/d494ee8679ecf190d66b6d1e553b6dafa4dca2ad)) ([#243](https://github.com/fscorrupt/Posterizarr/pull/243))
-  - add ability to reset plex posters ([ab2fbfe](https://github.com/fscorrupt/Posterizarr/commit/ab2fbfeba66de8adb2fa2beb635fa390314e77d8)) ([#243](https://github.com/fscorrupt/Posterizarr/pull/243))
-
 ## [1.9.47](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.47) - 2025-04-11 07:51:40+00:00
 
 ## [1.9.46](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.46) - 2025-04-10 06:22:43+00:00
