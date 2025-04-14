@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## [1.9.50](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.50) - 2025-04-14 12:45:06+00:00
+
+## What's Changed
+* sync by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/246
+* fix: versions mismatch by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/247
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.49...1.9.50
+
+### Bug Fixes
+
+- general:
+  - versions mismatch (#247) ([3e40b9a](https://github.com/fscorrupt/Posterizarr/commit/3e40b9a31b2952e75c6cd8878d85745ec9abb313)) ([#247](https://github.com/fscorrupt/Posterizarr/pull/247))
+  - versions mismatch ([8a14291](https://github.com/fscorrupt/Posterizarr/commit/8a142915b8a620d1c99abf13a4c26eadcd622554)) ([#247](https://github.com/fscorrupt/Posterizarr/pull/247))
+
 ## [1.9.49](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.49) - 2025-04-14 12:33:05+00:00
 
 ## [1.9.48](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.48) - 2025-04-14 12:19:41+00:00
