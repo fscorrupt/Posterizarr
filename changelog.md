@@ -2,18 +2,6 @@
 
 ## [1.9.51](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.51) - 2025-04-15 12:00:29+00:00
 
-## What's Changed
-* sync by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/248
-* fix: plex token handeling on poster reset by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/249
-
-**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.50...1.9.51
-
-### Bug Fixes
-
-- general:
-  - plex token handeling on poster reset (#249) ([dc4f03e](https://github.com/fscorrupt/Posterizarr/commit/dc4f03e039de13f3f41700e2c67f5fb5f117465a)) ([#249](https://github.com/fscorrupt/Posterizarr/pull/249))
-  - plex token handeling on poster reset ([f7955c2](https://github.com/fscorrupt/Posterizarr/commit/f7955c2ff55e63c898bd9bf443f0fe1bdea9525a)) ([#249](https://github.com/fscorrupt/Posterizarr/pull/249))
-
 ## [1.9.50](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.50) - 2025-04-14 12:45:06+00:00
 
 ## [1.9.49](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.49) - 2025-04-14 12:33:05+00:00
