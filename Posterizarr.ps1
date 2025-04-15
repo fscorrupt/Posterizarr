@@ -15,7 +15,7 @@ param (
 )
 Set-PSReadLineOption -HistorySaveStyle SaveNothing
 
-$CurrentScriptVersion = "1.9.50"
+$CurrentScriptVersion = "1.9.51"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 $env:PSMODULE_ANALYSIS_CACHE_PATH = $null
@@ -39,7 +39,12 @@ function Reset-PlexLibraryPictures {
 
     # Fetch the sections of the Plex library
     try {
-        $sections = Invoke-RestMethod -Uri "$PlexUrl/library/sections?X-Plex-Token=$PlexToken"
+        if ($PlexToken) {
+            $sections = Invoke-RestMethod -Uri "$PlexUrl/library/sections?X-Plex-Token=$PlexToken"
+        }
+        Else {
+            $sections = Invoke-RestMethod -Uri "$PlexUrl/library/sections"
+        }
     }
     catch {
         Write-Entry -Subtext "Error fetching sections: $_" -Path "$global:ScriptRoot\Logs\Scriptlog.log" -Color Red -log Error
