@@ -700,6 +700,9 @@ On [docker](#docker) this way:
 ```sh
   docker exec -it posterizarr pwsh /app/Posterizarr.ps1 -PosterReset -LibraryToReset "Test Lib"
 ```
+> [!TIP]
+> Note: This operation **does not delete** any artwork. It simply sets each item's poster to the first available poster from Plex’s metadata. This action cannot be undone, so proceed with caution.
+
 
 ### Sync Modes
 > [!IMPORTANT]
@@ -768,6 +771,10 @@ On [docker](#docker) this way:
   ```sh
   docker exec -it posterizarr pwsh /app/Posterizarr.ps1 -SyncEmby
   ```
+  **Poster reset Mode:**
+  ```sh
+  docker exec -it posterizarr pwsh /app/Posterizarr.ps1 -PosterReset -LibraryToReset "Test Lib"
+  ```
 > [!TIP]
 > If you did not used `pwsh` on docker exec you can do it this way.
 >
@@ -779,6 +786,7 @@ On [docker](#docker) this way:
 > pwsh /app/Posterizarr.ps1 -Backup
 > pwsh /app/Posterizarr.ps1 -SyncEmby
 > pwsh /app/Posterizarr.ps1 -SyncJelly
+>pwsh /app/Posterizarr.ps1 -PosterReset -LibraryToReset "Test Lib"
 > ```
 
 ### unRAID
