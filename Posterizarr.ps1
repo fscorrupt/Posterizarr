@@ -15,7 +15,7 @@ param (
 )
 Set-PSReadLineOption -HistorySaveStyle SaveNothing
 
-$CurrentScriptVersion = "1.9.51"
+$CurrentScriptVersion = "1.9.52"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 $env:PSMODULE_ANALYSIS_CACHE_PATH = $null
@@ -13229,10 +13229,15 @@ Elseif ($SyncJelly -or $SyncEmby) {
 
             $libraryQuery = "$OtherMediaServerUrl/Library/VirtualFolders?api_key=$OtherMediaServerApiKey"
             $librarytemp = Invoke-RestMethod -Method Get -Uri $libraryQuery
-            $librariestemp = $librarytemp | Where-Object { $_.CollectionType -eq 'movies' } | Select-Object Name, Locations -Unique
+            $librariestemp = $librarytemp | Where-Object { $_.CollectionType -eq 'movies' } | Select-Object Name, Locations, LibraryOptions -Unique
 
             foreach ($singlelibrary in $librariestemp) {
                 foreach ($location in $singlelibrary.Locations) {
+                    # Select correct NetworkPath
+                    $LibraryOptions = $singlelibrary.LibraryOptions.PathInfos | Where-Object {$_.Path -eq $location}
+                    if ($LibraryOptions.NetworkPath) {
+                        $location = $LibraryOptions.NetworkPath
+                    }
                     Write-Entry -Subtext "  Found location - '$($location)'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                     # Compare lib.Path with each location
                     if ($Movie.Path -like "$($location)/*" -or $Movie.Path -like "$($location)\*") {
@@ -13363,10 +13368,22 @@ Elseif ($SyncJelly -or $SyncEmby) {
         $libraryQuery = "$OtherMediaServerUrl/Library/VirtualFolders?api_key=$OtherMediaServerApiKey"
         $librarytemp = Invoke-RestMethod -Method Get -Uri $libraryQuery
         $librariestemp = $librarytemp | Where-Object { $_.CollectionType -eq 'tvshows' } | Select-Object Name, Locations -Unique
-
+        if ($UseEmby -eq 'true') {
+            $librariestemp = $librarytemp | Where-Object { $_.CollectionType -eq 'tvshows' } | Select-Object Name, Locations, LibraryOptions -Unique
+        }
+        Else {
+            $librariestemp = $librarytemp | Where-Object { $_.CollectionType -eq 'tvshows' } | Select-Object Name, Locations -Unique
+        }
         foreach ($singlelibrary in $librariestemp) {
             # Loop through each location in the library's Locations array
             foreach ($location in $singlelibrary.Locations) {
+                if ($UseEmby -eq 'true') {
+                    # Select correct NetworkPath
+                    $LibraryOptions = $singlelibrary.LibraryOptions.PathInfos | Where-Object {$_.Path -eq $location}
+                    if ($LibraryOptions.NetworkPath) {
+                        $location = $LibraryOptions.NetworkPath
+                    }
+                }
                 Write-Entry -Subtext "  Found location - '$($location)'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                 # Compare lib.Path with each location
                 if ($Show.Path -like "$location/*" -or $Show.Path -like "$location\*") {
@@ -13978,10 +13995,16 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
 
             $libraryQuery = "$OtherMediaServerUrl/Library/VirtualFolders?api_key=$OtherMediaServerApiKey"
             $librarytemp = Invoke-RestMethod -Method Get -Uri $libraryQuery
-            $librariestemp = $librarytemp | Where-Object { $_.CollectionType -eq 'movies' } | Select-Object Name, Locations -Unique
+            $librariestemp = $librarytemp | Where-Object { $_.CollectionType -eq 'movies' } | Select-Object Name, Locations, LibraryOptions -Unique
 
             foreach ($singlelibrary in $librariestemp) {
                 foreach ($location in $singlelibrary.Locations) {
+                    # Select correct NetworkPath
+                    $LibraryOptions = $singlelibrary.LibraryOptions.PathInfos | Where-Object {$_.Path -eq $location}
+                    if ($LibraryOptions.NetworkPath) {
+                        $location = $LibraryOptions.NetworkPath
+                    }
+
                     Write-Entry -Subtext "  Found location - '$($location)'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                     # Compare lib.Path with each location
                     if ($Movie.Path -like "$($location)/*" -or $Movie.Path -like "$($location)\*") {
@@ -14135,11 +14158,22 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
 
         $libraryQuery = "$OtherMediaServerUrl/Library/VirtualFolders?api_key=$OtherMediaServerApiKey"
         $librarytemp = Invoke-RestMethod -Method Get -Uri $libraryQuery
-        $librariestemp = $librarytemp | Where-Object { $_.CollectionType -eq 'tvshows' } | Select-Object Name, Locations -Unique
-
+        if ($UseEmby -eq 'true') {
+            $librariestemp = $librarytemp | Where-Object { $_.CollectionType -eq 'tvshows' } | Select-Object Name, Locations, LibraryOptions -Unique
+        }
+        Else {
+            $librariestemp = $librarytemp | Where-Object { $_.CollectionType -eq 'tvshows' } | Select-Object Name, Locations -Unique
+        }
         foreach ($singlelibrary in $librariestemp) {
             # Loop through each location in the library's Locations array
             foreach ($location in $singlelibrary.Locations) {
+                if ($UseEmby -eq 'true') {
+                    # Select correct NetworkPath
+                    $LibraryOptions = $singlelibrary.LibraryOptions.PathInfos | Where-Object {$_.Path -eq $location}
+                    if ($LibraryOptions.NetworkPath) {
+                        $location = $LibraryOptions.NetworkPath
+                    }
+                }
                 Write-Entry -Subtext "  Found location - '$($location)'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                 # Compare lib.Path with each location
                 if ($Show.Path -like "$location/*" -or $Show.Path -like "$location\*") {
