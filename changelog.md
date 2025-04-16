@@ -2,18 +2,6 @@
 
 ## [1.9.52](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.52) - 2025-04-16 11:07:44+00:00
 
-## What's Changed
-* sync by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/250
-* fix: emby lib query by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/251
-
-**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.51...1.9.52
-
-### Bug Fixes
-
-- general:
-  - emby lib query (#251) ([a105aab](https://github.com/fscorrupt/Posterizarr/commit/a105aab3445abea71a87fab69d8f36343aa076d9)) ([#251](https://github.com/fscorrupt/Posterizarr/pull/251))
-  - emby lib query ([9499711](https://github.com/fscorrupt/Posterizarr/commit/94997117119079ef7819c0a450b7f4550eef998c)) ([#251](https://github.com/fscorrupt/Posterizarr/pull/251))
-
 ## [1.9.51](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.51) - 2025-04-15 12:00:29+00:00
 
 ## [1.9.50](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.50) - 2025-04-14 12:45:06+00:00
