@@ -5,7 +5,7 @@ function ScriptSchedule {
     $Directory = Get-ChildItem -Name $inputDir
 
     if (!$env:RUN_TIME) {
-        $env:RUN_TIME = "05:00"  # Set default value if not provided
+        $env:RUN_TIME = "05:00" # Set default value if not provided
     }
 
     $NextScriptRun = $env:RUN_TIME -split ',' | Sort-Object
@@ -15,42 +15,46 @@ function ScriptSchedule {
     while ($true) {
         $elapsedTime = $(get-date) - $StartTime
         $totalTime = $elapsedTime.Days.ToString() + ' Days ' + $elapsedTime.Hours.ToString() + ' Hours ' + $elapsedTime.Minutes.ToString() + ' Min ' + $elapsedTime.Seconds.ToString() + ' Sec'
-        $NextScriptRun = $env:RUN_TIME -split ',' | ForEach-Object {
-            $Hour = $_.split(':')[0]
-            $Minute = $_.split(':')[1]
-            $NextTrigger = Get-Date -Hour $Hour -Minute $Minute
-            $CurrentTime = Get-Date
-            if ($NextTrigger -lt $CurrentTime) {
-                $NextTrigger = $NextTrigger.AddDays(1)
-            }
-            $offset = $NextTrigger - $CurrentTime
-            [PSCustomObject]@{
-                RunTime = $_
-                Offset = $offset.TotalSeconds
-            }
-        } | Sort-Object -Property Offset | Select-Object -First 1
+        $env:RUN_TIME = $env:RUN_TIME.ToLower()
 
-        # Use the nearest scheduled run time
-        $NextScriptRunTime = $NextScriptRun.RunTime
-        $NextScriptRunOffset = $NextScriptRun.Offset
-        if (!$alreadydisplayed){
-            write-host ""
-            write-host "Container is running since: " -NoNewline
-            write-host "$totalTime" -ForegroundColor Cyan
-            CompareScriptVersion
-            write-host ""
-            Write-Host "Next Script Run is at: $NextScriptRunTime"
-            $alreadydisplayed = $true
-        }
-        if ($NextScriptRunOffset -le '60') {
-            $alreadydisplayed = $null
-            Start-Sleep $NextScriptRunOffset
-            # Calling the Posterizarr Script
-            if ((Get-Process | Where-Object commandline -like 'pwsh')) {
-                Write-Warning "There is currently running another Process of Posterizarr, skipping this run."
+        if ($env:RUN_TIME -ne "disabled") {
+            $NextScriptRun = $env:RUN_TIME -split ',' | ForEach-Object {
+                $Hour = $_.split(':')[0]
+                $Minute = $_.split(':')[1]
+                $NextTrigger = Get-Date -Hour $Hour -Minute $Minute
+                $CurrentTime = Get-Date
+                if ($NextTrigger -lt $CurrentTime) {
+                    $NextTrigger = $NextTrigger.AddDays(1)
+                }
+                $offset = $NextTrigger - $CurrentTime
+                [PSCustomObject]@{
+                    RunTime = $_
+                    Offset = $offset.TotalSeconds
+                }
+            } | Sort-Object -Property Offset | Select-Object -First 1
+
+            # Use the nearest scheduled run time
+            $NextScriptRunTime = $NextScriptRun.RunTime
+            $NextScriptRunOffset = $NextScriptRun.Offset
+            if (!$alreadydisplayed){
+                write-host ""
+                write-host "Container is running since: " -NoNewline
+                write-host "$totalTime" -ForegroundColor Cyan
+                CompareScriptVersion
+                write-host ""
+                Write-Host "Next Script Run is at: $NextScriptRunTime"
+                $alreadydisplayed = $true
             }
-            Else {
-                pwsh $env:APP_ROOT/Posterizarr.ps1
+            if ($NextScriptRunOffset -le '60') {
+                $alreadydisplayed = $null
+                Start-Sleep $NextScriptRunOffset
+                # Calling the Posterizarr Script
+                if ((Get-Process | Where-Object commandline -like 'pwsh')) {
+                    Write-Warning "There is currently running another Process of Posterizarr, skipping this run."
+                }
+                Else {
+                    pwsh $env:APP_ROOT/Posterizarr.ps1
+                }
             }
         }
         If ($Directory)
