@@ -15,7 +15,7 @@ param (
 )
 Set-PSReadLineOption -HistorySaveStyle SaveNothing
 
-$CurrentScriptVersion = "1.9.52"
+$CurrentScriptVersion = "1.9.53"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 $env:PSMODULE_ANALYSIS_CACHE_PATH = $null
@@ -16803,6 +16803,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                                     }
                                                     try {
                                                         $response = Invoke-WebRequest -Uri $global:posterurl -OutFile $EpisodeImage -ErrorAction Stop
+                                                        Copy-Item -LiteralPath $EpisodeImage -destination $EpisodeTempImage | Out-Null
                                                     }
                                                     catch {
                                                         $statusCode = $_.Exception.Response.StatusCode
