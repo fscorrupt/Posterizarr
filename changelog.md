@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## [1.9.53](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.53) - 2025-04-21 16:37:16+00:00
+
+## What's Changed
+* sync by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/252
+* fix: background temp file missing by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/255
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.52...1.9.53
+
+### Bug Fixes
+
+- general:
+  - background temp file missing (#255) ([a241dd6](https://github.com/fscorrupt/Posterizarr/commit/a241dd659bd574b7b5209885d5f42f1efab55ef9)) ([#255](https://github.com/fscorrupt/Posterizarr/pull/255))
+  - background temp file missing ([ccc9de2](https://github.com/fscorrupt/Posterizarr/commit/ccc9de2308edd40fbbc01828b36eec1761473496)) ([#255](https://github.com/fscorrupt/Posterizarr/pull/255))
+
 ## [1.9.52](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.52) - 2025-04-16 11:07:44+00:00
 
 ## [1.9.51](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.51) - 2025-04-15 12:00:29+00:00
