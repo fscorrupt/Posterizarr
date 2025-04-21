@@ -1,5 +1,20 @@
 # CHANGELOG
 
+## [1.9.54](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.54) - 2025-04-21 16:52:57+00:00
+
+## What's Changed
+* feat: add support for disabling scheduled runs via RUN_TIME=disabled by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/256
+	- If RUN_TIME is set to "disabled", the script will skip scheduled execution.
+	- Still watches for .posterizarr trigger files and handles manual triggers.
+	
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.53...1.9.54
+
+### Feature
+
+- general:
+  - add support for disabling scheduled runs via RUN_TIME=disabled (#256) ([45a6566](https://github.com/fscorrupt/Posterizarr/commit/45a65665f8d1d1d3890952b3cd403bfe0e1fa6cc)) ([#256](https://github.com/fscorrupt/Posterizarr/pull/256))
+  - add support for disabling scheduled runs via RUN_TIME=disabled ([df2d03d](https://github.com/fscorrupt/Posterizarr/commit/df2d03d57f0cee10ac899e5e461ad0ca404ea294)) ([#256](https://github.com/fscorrupt/Posterizarr/pull/256))
+
 ## [1.9.53](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.53) - 2025-04-21 16:37:16+00:00
 
 ## [1.9.52](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.52) - 2025-04-16 11:07:44+00:00
