@@ -2,18 +2,6 @@
 
 ## [1.9.55](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.55) - 2025-04-22 07:13:23+00:00
 
-## What's Changed
-* sync by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/257
-* fix: copy logic and temp image logging by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/258
-
-**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.54...1.9.55
-
-### Bug Fixes
-
-- general:
-  - copy logic and temp image logging (#258) ([007dc7f](https://github.com/fscorrupt/Posterizarr/commit/007dc7f5b06a91fbef8693c9a2c59c734201872d)) ([#258](https://github.com/fscorrupt/Posterizarr/pull/258))
-  - copy logic and temp image logging ([01ac43f](https://github.com/fscorrupt/Posterizarr/commit/01ac43faffd79c1fc99b4ed5aae657865065e3f7)) ([#258](https://github.com/fscorrupt/Posterizarr/pull/258))
-
 ## [1.9.54](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.54) - 2025-04-21 16:52:57+00:00
 
 ## [1.9.53](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.53) - 2025-04-21 16:37:16+00:00
