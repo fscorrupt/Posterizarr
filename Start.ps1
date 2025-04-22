@@ -156,10 +156,10 @@ function Test-And-Download {
 function CopyAssetFiles {
     <#
     .SYNOPSIS
-        Copies asset files from APP_ROOT to APP_DATA
+        Copies asset files from APP_ROOT to APP_DATA if they are missing
     .DESCRIPTION
         Copies all .png and .ttf files from the APP_ROOT directory to the APP_DATA directory,
-        which is necessary for the application to function properly
+        but only if they do not already exist in APP_DATA.
     #>
     # Get all asset files - using wildcard in path to make -Include work correctly
     $assetFiles = Get-ChildItem -Path "$env:APP_ROOT/*" -Include "*.png", "*.ttf" -File
@@ -168,22 +168,29 @@ function CopyAssetFiles {
     if ($fileCount -eq 0) {
         Write-Host "No .png or .ttf files found in $env:APP_ROOT" -ForegroundColor Yellow
     } else {
-        $successCount = 0
+        $copiedCount = 0
+        $skippedCount = 0
         $errorCount = 0
 
         $assetFiles | ForEach-Object {
             try {
                 $destinationPath = Join-Path -Path $env:APP_DATA -ChildPath $_.Name
-                Copy-Item -Path $_.FullName -Destination $destinationPath -Force
-                $successCount++
+
+                if (-Not (Test-Path -Path $destinationPath)) {
+                    Copy-Item -Path $_.FullName -Destination $destinationPath -Force
+                    $copiedCount++
+                } else {
+                    $skippedCount++
+                }
             } catch {
                 $errorCount++
                 Write-Host "Failed to copy $($_.Name): $($_.Exception.Message)" -ForegroundColor Red
             }
         }
 
-        # Simple summary message
-        Write-Host "Copied $successCount .png & .ttf files from $env:APP_ROOT to $env:APP_DATA" -ForegroundColor Cyan
+        # Summary
+        Write-Host "Copied $copiedCount new .png & .ttf files to $env:APP_DATA" -ForegroundColor Cyan
+        Write-Host "Skipped $skippedCount files (already exist)" -ForegroundColor Gray
 
         if ($errorCount -gt 0) {
             Write-Host "Failed to copy $errorCount files" -ForegroundColor Yellow
