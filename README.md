@@ -471,7 +471,7 @@ libraries:
 ```
 ### Manual Assets Naming
 > [!IMPORTANT]
-> Naming must follow this rule; otherwise, the asset will not be picked up.
+> Naming must follow these rules, including proper case sensitivity (uppercase and lowercase) in file/folder names; otherwise, the asset will not be picked up.
 
 If you have Library Folders set to `true`, it will look like this:
 | **Asset**                      | **Naming**                                                                                                                                                                                                                                                                                  |
