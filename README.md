@@ -744,7 +744,7 @@ On [docker](#docker) this way:
     - If set to `disabled`, the script will **not** run on a schedule but will still watch for file triggers and respond to manual triggers.
   - Change `volume` and `network` to fit your environment (Make sure you have the same network as your plex container when you use local IP of plex)
   - Change `TimeZone` to yours, otherwise it will get scheduled to a different time you may want it to.
-  - You may also have to change `PUID/PGID`
+  - You may also have to change `user: "1000:1000"` (PUID/PGID)
 
   If you manually want to run the Script you can do it this way:
 
