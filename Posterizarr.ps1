@@ -15,7 +15,7 @@ param (
 )
 Set-PSReadLineOption -HistorySaveStyle SaveNothing
 
-$CurrentScriptVersion = "1.9.55"
+$CurrentScriptVersion = "1.9.56"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 $env:PSMODULE_ANALYSIS_CACHE_PATH = $null
@@ -13545,85 +13545,105 @@ Elseif ($SyncJelly -or $SyncEmby) {
                 if ($global:Posters -eq 'true') {
                     $global:posterurl = $null
                     $global:PosterWithText = $null
-                    if ($PlexToken) {
-                        $Arturl = $plexurl + $entry.PlexPosterUrl + "?X-Plex-Token=$PlexToken"
-                    }
-                    Else {
-                        $Arturl = $plexurl + $entry.PlexPosterUrl
-                    }
-                    $matchingMovie = $OtherAllMovies | Where-Object {
-                        $_.Title -eq $entry.Title -and
-                        $_."Library Name" -eq $entry."Library Name" -and (
-                            $_.TmdbId -eq $entry.TmdbId -or
-                            $_.TvdbId -eq $entry.TvdbId -or
-                            $_.ImdbId -eq $entry.ImdbId
-                        )
-                    }
-                    if ($matchingMovie) {
-                        $MovieTitle = $entry.Title
-                        $imageType = "Primary"
-                        Write-Entry -Subtext "Movie Title: $MovieTitle" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                        Write-Entry -Subtext "Type: $imageType" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                        if ($matchingMovie.id.Count -gt 1) {
-                            foreach ($id in $matchingMovie.id){
-                                $DestUrl = "$OtherMediaServerUrl/items/$id/images/$imageType/?api_key=$OtherMediaServerApiKey"
-                                SyncPlexArtwork -ArtUrl $Arturl -DestUrl $DestUrl -imagetype $imageType -title $MovieTitle -artworktype 'poster'
-                                Write-Entry -Subtext "Movie ID: $id" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                            }
+                    if ($null -ne $entry.PlexPosterUrl){
+                        if ($PlexToken) {
+                            $Arturl = $plexurl + $entry.PlexPosterUrl + "?X-Plex-Token=$PlexToken"
                         }
                         Else {
-                            $DestUrl = "$OtherMediaServerUrl/items/$($matchingMovie.id)/images/$imageType/?api_key=$OtherMediaServerApiKey"
-                            if ($matchingMovie.id){
-                                SyncPlexArtwork -ArtUrl $Arturl -DestUrl $DestUrl -imagetype $imageType -title $MovieTitle -artworktype 'poster'
-                                Write-Entry -Subtext "Movie ID: $($matchingMovie.id)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            $Arturl = $plexurl + $entry.PlexPosterUrl
+                        }
+                        $matchingMovie = $OtherAllMovies | Where-Object {
+                            $_.Title -eq $entry.Title -and
+                            $_."Library Name" -eq $entry."Library Name" -and (
+                                $_.TmdbId -eq $entry.TmdbId -or
+                                $_.TvdbId -eq $entry.TvdbId -or
+                                $_.ImdbId -eq $entry.ImdbId
+                            )
+                        }
+                        if ($matchingMovie) {
+                            $MovieTitle = $entry.Title
+                            $imageType = "Primary"
+                            Write-Entry -Subtext "--------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-Entry -Message "Movie Title: $MovieTitle" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-Entry -Message "Type: $imageType" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            if ($matchingMovie.id.Count -gt 1) {
+                                foreach ($id in $matchingMovie.id){
+                                    $DestUrl = "$OtherMediaServerUrl/items/$id/images/$imageType/?api_key=$OtherMediaServerApiKey"
+                                    SyncPlexArtwork -ArtUrl $Arturl -DestUrl $DestUrl -imagetype $imageType -title $MovieTitle -artworktype 'poster'
+                                    Write-Entry -Subtext "Movie ID: $id" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                }
                             }
                             Else {
-                                Write-Entry -Message "Could not find Movie ID for '$MovieTitle' in $($entry.'Library Name')" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                $DestUrl = "$OtherMediaServerUrl/items/$($matchingMovie.id)/images/$imageType/?api_key=$OtherMediaServerApiKey"
+                                if ($matchingMovie.id){
+                                    SyncPlexArtwork -ArtUrl $Arturl -DestUrl $DestUrl -imagetype $imageType -title $MovieTitle -artworktype 'poster'
+                                    Write-Entry -Subtext "Movie ID: $($matchingMovie.id)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                }
+                                Else {
+                                    Write-Entry -Message "Could not find Movie ID for '$MovieTitle' in $($entry.'Library Name')" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                }
                             }
                         }
                     }
+                    Else {
+                        Write-Entry -Message "Could not find Poster URL for '$($entry.title)' in $($entry.'Library Name')" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                        Write-Entry -Message "Please fix the metadata on the source media server to resolve this issue." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                        Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                        $errorCount++
+                    }
+
                 }
                 # Now we can start the Background Poster Part
                 if ($global:BackgroundPosters -eq 'true') {
                     $global:posterurl = $null
                     $global:PosterWithText = $null
-                    if ($PlexToken) {
-                        $Arturl = $plexurl + $entry.PlexBackgroundUrl + "?X-Plex-Token=$PlexToken"
-                    }
-                    Else {
-                        $Arturl = $plexurl + $entry.PlexBackgroundUrl
-                    }
-
-                    $matchingMovie = $OtherAllMovies | Where-Object {
-                        $_.Title -eq $entry.Title -and
-                        $_."Library Name" -eq $entry."Library Name" -and (
-                            $_.TmdbId -eq $entry.TmdbId -or
-                            $_.TvdbId -eq $entry.TvdbId -or
-                            $_.ImdbId -eq $entry.ImdbId
-                        )
-                    }
-                    if ($matchingMovie) {
-                        $MovieTitle = $entry.Title + " | Background"
-                        $imageType = "Backdrop"
-                        Write-Entry -Subtext "Movie Title: $MovieTitle" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                        Write-Entry -Subtext "Type: $imageType" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                        if ($matchingMovie.id.Count -gt 1) {
-                            foreach ($id in $matchingMovie.id){
-                                $DestUrl = "$OtherMediaServerUrl/items/$id/images/$imageType/?api_key=$OtherMediaServerApiKey"
-                                SyncPlexArtwork -ArtUrl $Arturl -DestUrl $DestUrl -imagetype $imageType -title $MovieTitle -artworktype 'background'
-                                Write-Entry -Subtext "Movie ID: $id" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                            }
+                    # check if Background url id exists.
+                    if ($null -ne $entry.PlexBackgroundUrl){
+                        if ($PlexToken) {
+                            $Arturl = $plexurl + $entry.PlexBackgroundUrl + "?X-Plex-Token=$PlexToken"
                         }
                         Else {
-                            $DestUrl = "$OtherMediaServerUrl/items/$($matchingMovie.id)/images/$imageType/?api_key=$OtherMediaServerApiKey"
-                            if ($matchingMovie.id){
-                                SyncPlexArtwork -ArtUrl $Arturl -DestUrl $DestUrl -imagetype $imageType -title $MovieTitle -artworktype 'background'
-                                Write-Entry -Subtext "Movie ID: $($matchingMovie.id)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            $Arturl = $plexurl + $entry.PlexBackgroundUrl
+                        }
+
+                        $matchingMovie = $OtherAllMovies | Where-Object {
+                            $_.Title -eq $entry.Title -and
+                            $_."Library Name" -eq $entry."Library Name" -and (
+                                $_.TmdbId -eq $entry.TmdbId -or
+                                $_.TvdbId -eq $entry.TvdbId -or
+                                $_.ImdbId -eq $entry.ImdbId
+                            )
+                        }
+                        if ($matchingMovie) {
+                            $MovieTitle = $entry.Title + " | Background"
+                            $imageType = "Backdrop"
+                            Write-Entry -Subtext "--------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-Entry -Message "Movie Title: $MovieTitle" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-Entry -Message "Type: $imageType" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            if ($matchingMovie.id.Count -gt 1) {
+                                foreach ($id in $matchingMovie.id){
+                                    $DestUrl = "$OtherMediaServerUrl/items/$id/images/$imageType/?api_key=$OtherMediaServerApiKey"
+                                    SyncPlexArtwork -ArtUrl $Arturl -DestUrl $DestUrl -imagetype $imageType -title $MovieTitle -artworktype 'background'
+                                    Write-Entry -Subtext "Movie ID: $id" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                }
                             }
                             Else {
-                                Write-Entry -Message "Could not find Movie ID for '$MovieTitle' in $($entry.'Library Name')" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                $DestUrl = "$OtherMediaServerUrl/items/$($matchingMovie.id)/images/$imageType/?api_key=$OtherMediaServerApiKey"
+                                if ($matchingMovie.id){
+                                    SyncPlexArtwork -ArtUrl $Arturl -DestUrl $DestUrl -imagetype $imageType -title $MovieTitle -artworktype 'background'
+                                    Write-Entry -Subtext "Movie ID: $($matchingMovie.id)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                }
+                                Else {
+                                    Write-Entry -Message "Could not find Movie ID for '$MovieTitle' in $($entry.'Library Name')" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                }
                             }
                         }
+                    }
+                    Else {
+                        Write-Entry -Message "Could not find Background URL for '$($entry.title)' in $($entry.'Library Name')" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                        Write-Entry -Message "Please fix the metadata on the source media server to resolve this issue." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                        Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                        $errorCount++
                     }
                 }
             }
@@ -13647,83 +13667,103 @@ Elseif ($SyncJelly -or $SyncEmby) {
             Else {
                 # Now we can start the Poster Part
                 if ($global:Posters -eq 'true') {
-                    if ($PlexToken) {
-                        $Arturl = $plexurl + $entry.PlexPosterUrl + "?X-Plex-Token=$PlexToken"
-                    }
-                    Else {
-                        $Arturl = $plexurl + $entry.PlexPosterUrl
-                    }
-
-                    $matchingShow = $OtherAllShows | Where-Object {
-                        ($_.Title -eq $entry.Title -or $_.originalTitle -eq $entry.originalTitle) -and
-                        $_."Library Name" -eq $entry."Library Name" -and (
-                            $_.TmdbId -eq $entry.TmdbId -or
-                            $_.TvdbId -eq $entry.TvdbId
-                        )
-                    }
-                    if ($matchingShow) {
-                        $ShowTitle = $entry.Title
-                        $imageType = "Primary"
-                        Write-Entry -Subtext "Show Title: $ShowTitle" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                        Write-Entry -Subtext "Type: $imageType" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                        if ($matchingShow.id.Count -gt 1) {
-                            foreach ($id in $matchingShow.id){
-                                $DestUrl = "$OtherMediaServerUrl/items/$id/images/$imageType/?api_key=$OtherMediaServerApiKey"
-                                SyncPlexArtwork -ArtUrl $Arturl -DestUrl $DestUrl -imagetype $imageType -title $ShowTitle -artworktype 'poster'
-                                Write-Entry -Subtext "Show ID: $id" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                            }
+                    if ($null -ne $entry.PlexPosterUrl){
+                        if ($PlexToken) {
+                            $Arturl = $plexurl + $entry.PlexPosterUrl + "?X-Plex-Token=$PlexToken"
                         }
                         Else {
-                            $DestUrl = "$OtherMediaServerUrl/items/$($matchingShow.id)/images/$imageType/?api_key=$OtherMediaServerApiKey"
-                            if ($matchingShow.id){
-                                SyncPlexArtwork -ArtUrl $Arturl -DestUrl $DestUrl -imagetype $imageType -title $ShowTitle -artworktype 'poster'
-                                Write-Entry -Subtext "Show ID: $($matchingShow.id)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            $Arturl = $plexurl + $entry.PlexPosterUrl
+                        }
+
+                        $matchingShow = $OtherAllShows | Where-Object {
+                            ($_.Title -eq $entry.Title -or $_.originalTitle -eq $entry.originalTitle) -and
+                            $_."Library Name" -eq $entry."Library Name" -and (
+                                $_.TmdbId -eq $entry.TmdbId -or
+                                $_.TvdbId -eq $entry.TvdbId
+                            )
+                        }
+                        if ($matchingShow) {
+                            $ShowTitle = $entry.Title
+                            $imageType = "Primary"
+                            Write-Entry -Subtext "--------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-Entry -Message "Show Title: $ShowTitle" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-Entry -Message "Type: $imageType" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            if ($matchingShow.id.Count -gt 1) {
+                                foreach ($id in $matchingShow.id){
+                                    $DestUrl = "$OtherMediaServerUrl/items/$id/images/$imageType/?api_key=$OtherMediaServerApiKey"
+                                    SyncPlexArtwork -ArtUrl $Arturl -DestUrl $DestUrl -imagetype $imageType -title $ShowTitle -artworktype 'poster'
+                                    Write-Entry -Subtext "Show ID: $id" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                }
                             }
                             Else {
-                                Write-Entry -Message "Could not find Show ID for '$ShowTitle' in $($entry.'Library Name')" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                $DestUrl = "$OtherMediaServerUrl/items/$($matchingShow.id)/images/$imageType/?api_key=$OtherMediaServerApiKey"
+                                if ($matchingShow.id){
+                                    SyncPlexArtwork -ArtUrl $Arturl -DestUrl $DestUrl -imagetype $imageType -title $ShowTitle -artworktype 'poster'
+                                    Write-Entry -Subtext "Show ID: $($matchingShow.id)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                }
+                                Else {
+                                    Write-Entry -Message "Could not find Show ID for '$ShowTitle' in $($entry.'Library Name')" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                }
                             }
                         }
                     }
+                    Else {
+                        Write-Entry -Message "Could not find Poster URL for '$($entry.title)' in $($entry.'Library Name')" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                        Write-Entry -Message "Please fix the metadata on the source media server to resolve this issue." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                        Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                        $errorCount++
+                    }
+
                 }
                 # Now we can start the Background Poster Part
                 if ($global:BackgroundPosters -eq 'true') {
-                    if ($PlexToken) {
-                        $Arturl = $plexurl + $entry.PlexBackgroundUrl + "?X-Plex-Token=$PlexToken"
-                    }
-                    Else {
-                        $Arturl = $plexurl + $entry.PlexBackgroundUrl
-                    }
-
-                    $matchingShow = $OtherAllShows | Where-Object {
-                        ($_.Title -eq $entry.Title -or $_.originalTitle -eq $entry.originalTitle) -and
-                        $_."Library Name" -eq $entry."Library Name" -and (
-                            $_.TmdbId -eq $entry.TmdbId -or
-                            $_.TvdbId -eq $entry.TvdbId
-                        )
-                    }
-                    if ($matchingShow) {
-                        $ShowTitle = $entry.Title + " | Background"
-                        $imageType = "Backdrop"
-                        Write-Entry -Subtext "Show Title: $ShowTitle" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                        Write-Entry -Subtext "Type: $imageType" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                        if ($matchingShow.id.Count -gt 1) {
-                            foreach ($id in $matchingShow.id){
-                                $DestUrl = "$OtherMediaServerUrl/items/$id/images/$imageType/?api_key=$OtherMediaServerApiKey"
-                                SyncPlexArtwork -ArtUrl $Arturl -DestUrl $DestUrl -imagetype $imageType -title $ShowTitle -artworktype 'background'
-                                Write-Entry -Subtext "Show ID: $id" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                            }
+                    if ($null -ne $entry.PlexBackgroundUrl){
+                        if ($PlexToken) {
+                            $Arturl = $plexurl + $entry.PlexBackgroundUrl + "?X-Plex-Token=$PlexToken"
                         }
                         Else {
-                            $DestUrl = "$OtherMediaServerUrl/items/$($matchingShow.id)/images/$imageType/?api_key=$OtherMediaServerApiKey"
-                            if ($matchingShow.id){
-                                SyncPlexArtwork -ArtUrl $Arturl -DestUrl $DestUrl -imagetype $imageType -title $ShowTitle -artworktype 'background'
-                                Write-Entry -Subtext "Show ID: $($matchingShow.id)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            $Arturl = $plexurl + $entry.PlexBackgroundUrl
+                        }
+
+                        $matchingShow = $OtherAllShows | Where-Object {
+                            ($_.Title -eq $entry.Title -or $_.originalTitle -eq $entry.originalTitle) -and
+                            $_."Library Name" -eq $entry."Library Name" -and (
+                                $_.TmdbId -eq $entry.TmdbId -or
+                                $_.TvdbId -eq $entry.TvdbId
+                            )
+                        }
+                        if ($matchingShow) {
+                            $ShowTitle = $entry.Title + " | Background"
+                            $imageType = "Backdrop"
+                            Write-Entry -Subtext "--------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-Entry -Message "Show Title: $ShowTitle" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            Write-Entry -Message "Type: $imageType" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                            if ($matchingShow.id.Count -gt 1) {
+                                foreach ($id in $matchingShow.id){
+                                    $DestUrl = "$OtherMediaServerUrl/items/$id/images/$imageType/?api_key=$OtherMediaServerApiKey"
+                                    SyncPlexArtwork -ArtUrl $Arturl -DestUrl $DestUrl -imagetype $imageType -title $ShowTitle -artworktype 'background'
+                                    Write-Entry -Subtext "Show ID: $id" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                }
                             }
                             Else {
-                                Write-Entry -Message "Could not find Show ID for '$ShowTitle' in $($entry.'Library Name')" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                $DestUrl = "$OtherMediaServerUrl/items/$($matchingShow.id)/images/$imageType/?api_key=$OtherMediaServerApiKey"
+                                if ($matchingShow.id){
+                                    SyncPlexArtwork -ArtUrl $Arturl -DestUrl $DestUrl -imagetype $imageType -title $ShowTitle -artworktype 'background'
+                                    Write-Entry -Subtext "Show ID: $($matchingShow.id)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                }
+                                Else {
+                                    Write-Entry -Message "Could not find Show ID for '$ShowTitle' in $($entry.'Library Name')" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                }
                             }
                         }
                     }
+                    Else {
+                        Write-Entry -Message "Could not find Background URL for '$($entry.title)' in $($entry.'Library Name')" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                        write-Entry -Subtext "At line $($_.InvocationInfo.ScriptLineNumber)." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                        Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                        $errorCount++
+                    }
+
                 }
                 # Now we can start the Season Poster Part
                 if ($global:SeasonPosters -eq 'true') {
@@ -13732,45 +13772,54 @@ Elseif ($SyncJelly -or $SyncEmby) {
                     for ($i = 0; $i -lt $global:seasonNumbers.Count; $i++) {
                         $global:SeasonNumber = $global:seasonNumbers[$i]
                         $global:PlexSeasonUrl = $global:PlexSeasonUrls[$i]
-
-                        if ($PlexToken) {
-                            $Arturl = $plexurl + $global:PlexSeasonUrl + "?X-Plex-Token=$PlexToken"
-                        }
-                        Else {
-                            $Arturl = $plexurl + $global:PlexSeasonUrl
-                        }
-
-                        $matchingSeason = $OtherEpisodedata | Where-Object {
-                            ($_.'Show Name' -eq $entry.Title -or $_.'Show Name' -eq $entry.originalTitle -or $_."Show Original Name" -eq $entry.originalTitle -or $_."Show Original Name" -eq $entry.Title) -and
-                            $_."Library Name" -eq $entry."Library Name" -and
-                            $_."Season Number" -eq $global:SeasonNumber -and (
-                                $_.TmdbId -eq $entry.TmdbId -or
-                                $_.TvdbId -eq $entry.TvdbId
-                            )
-                        }
-                        if ($matchingSeason) {
-                            $ShowTitle = $entry.Title + " | Season $global:SeasonNumber"
-                            $imageType = "Primary"
-                            Write-Entry -Subtext "Show Title: $ShowTitle" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                            Write-Entry -Subtext "Type: $imageType" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                            if ($matchingSeason.SeasonId.Count -gt 1) {
-                                foreach ($id in $matchingSeason.SeasonId){
-                                    $DestUrl = "$OtherMediaServerUrl/items/$id/images/$imageType/?api_key=$OtherMediaServerApiKey"
-                                    SyncPlexArtwork -ArtUrl $Arturl -DestUrl $DestUrl -imagetype $imageType -title $ShowTitle -artworktype 'season'
-                                    Write-Entry -Subtext "Season ID: $id" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                                }
+                        if ($null -ne $global:PlexSeasonUrl){
+                            if ($PlexToken) {
+                                $Arturl = $plexurl + $global:PlexSeasonUrl + "?X-Plex-Token=$PlexToken"
                             }
                             Else {
-                                $DestUrl = "$OtherMediaServerUrl/items/$($matchingSeason.SeasonId)/images/$imageType/?api_key=$OtherMediaServerApiKey"
-                                if ($matchingSeason.SeasonId){
-                                    SyncPlexArtwork -ArtUrl $Arturl -DestUrl $DestUrl -imagetype $imageType -title $ShowTitle -artworktype 'season'
-                                    Write-Entry -Subtext "Season ID: $($matchingSeason.SeasonId)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                $Arturl = $plexurl + $global:PlexSeasonUrl
+                            }
+
+                            $matchingSeason = $OtherEpisodedata | Where-Object {
+                                ($_.'Show Name' -eq $entry.Title -or $_.'Show Name' -eq $entry.originalTitle -or $_."Show Original Name" -eq $entry.originalTitle -or $_."Show Original Name" -eq $entry.Title) -and
+                                $_."Library Name" -eq $entry."Library Name" -and
+                                $_."Season Number" -eq $global:SeasonNumber -and (
+                                    $_.TmdbId -eq $entry.TmdbId -or
+                                    $_.TvdbId -eq $entry.TvdbId
+                                )
+                            }
+                            if ($matchingSeason) {
+                                $ShowTitle = $entry.Title + " | Season $global:SeasonNumber"
+                                $imageType = "Primary"
+                                Write-Entry -Subtext "--------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                Write-Entry -Message "Show Title: $ShowTitle" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                Write-Entry -Message "Type: $imageType" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                if ($matchingSeason.SeasonId.Count -gt 1) {
+                                    foreach ($id in $matchingSeason.SeasonId){
+                                        $DestUrl = "$OtherMediaServerUrl/items/$id/images/$imageType/?api_key=$OtherMediaServerApiKey"
+                                        SyncPlexArtwork -ArtUrl $Arturl -DestUrl $DestUrl -imagetype $imageType -title $ShowTitle -artworktype 'season'
+                                        Write-Entry -Subtext "Season ID: $id" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                    }
                                 }
                                 Else {
-                                    Write-Entry -Message "Could not find Season ID for '$ShowTitle' in $($entry.'Library Name')" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                    $DestUrl = "$OtherMediaServerUrl/items/$($matchingSeason.SeasonId)/images/$imageType/?api_key=$OtherMediaServerApiKey"
+                                    if ($matchingSeason.SeasonId){
+                                        SyncPlexArtwork -ArtUrl $Arturl -DestUrl $DestUrl -imagetype $imageType -title $ShowTitle -artworktype 'season'
+                                        Write-Entry -Subtext "Season ID: $($matchingSeason.SeasonId)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                    }
+                                    Else {
+                                        Write-Entry -Message "Could not find Season ID for '$ShowTitle' in $($entry.'Library Name')" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                    }
                                 }
                             }
                         }
+                        Else {
+                            Write-Entry -Message "Could not find Season URL for '$($entry.Title) - Season $global:SeasonNumber' in $($entry.'Library Name')" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            Write-Entry -Message "Please fix the metadata on the source media server to resolve this issue." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            $errorCount++
+                        }
+
                     }
                 }
                 # Now we can start the Title Card Part
@@ -13790,43 +13839,51 @@ Elseif ($SyncJelly -or $SyncEmby) {
                             for ($i = 0; $i -lt $global:episode_numbers.Count; $i++) {
                                 $global:PlexTitleCardUrl = $($global:PlexTitleCardUrls[$i].Trim())
                                 $global:episodenumber = $($global:episode_numbers[$i].Trim())
-
-                                if ($PlexToken) {
-                                    $Arturl = $plexurl + $global:PlexTitleCardUrl + "?X-Plex-Token=$PlexToken"
-                                }
-                                else {
-                                    $Arturl = $plexurl + $global:PlexTitleCardUrl
-                                }
-
-                                # Find matching episode in OtherEpisodedata
-                                $matchingEpisode = $OtherEpisodedata | Where-Object {
-                                    ($_.'Show Name' -eq $entry.title -or $_.'Show Name' -eq $entry.originalTitle) -and
-                                    $_."Library Name" -eq $entry."Library Name" -and
-                                    $_."Season Number" -eq $global:season_number -and
-                                    ($_.Episodes.Split(",") -contains $global:episodenumber) -and (
-                                        $_.TmdbId -eq $entry.TmdbId -or
-                                        $_.TvdbId -eq $entry.TvdbId
-                                    )
-                                }
-                                if ($matchingEpisode) {
-                                    # Select the matching episode ID based on the current index
-                                    $global:episodeid = $matchingEpisode.EpisodeIds.Split(",")[$i]
-                                    # Construct the show title with the current episode number
-                                    $ShowTitle = "$($entry.Title) | Season $($global:season_number) - Episode $global:episodenumber"
-                                    # Define the image type and destination URL
-                                    $imageType = "Primary"
-                                    $DestUrl = "$OtherMediaServerUrl/items/$($global:episodeid)/images/$imageType/?api_key=$OtherMediaServerApiKey"
-                                    # Call the SyncPlexArtwork function to sync the artwork
-                                    if ($matchingShow.id){
-                                        SyncPlexArtwork -ArtUrl $Arturl -DestUrl $DestUrl -imagetype $imageType -title $ShowTitle -artworktype 'tc'
+                                if ($null -ne $global:PlexTitleCardUrl){
+                                    if ($PlexToken) {
+                                        $Arturl = $plexurl + $global:PlexTitleCardUrl + "?X-Plex-Token=$PlexToken"
                                     }
-                                    Else {
-                                        Write-Entry -Message "Could not find Episode ID for '$ShowTitle' in $($entry.'Library Name')" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                    else {
+                                        $Arturl = $plexurl + $global:PlexTitleCardUrl
                                     }
-                                    Write-Entry -Subtext "Show Title: $ShowTitle" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                                    Write-Entry -Subtext "Type: $imageType" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                                    Write-Entry -Subtext "Episode ID: $global:episodeid" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+
+                                    # Find matching episode in OtherEpisodedata
+                                    $matchingEpisode = $OtherEpisodedata | Where-Object {
+                                        ($_.'Show Name' -eq $entry.title -or $_.'Show Name' -eq $entry.originalTitle) -and
+                                        $_."Library Name" -eq $entry."Library Name" -and
+                                        $_."Season Number" -eq $global:season_number -and
+                                        ($_.Episodes.Split(",") -contains $global:episodenumber) -and (
+                                            $_.TmdbId -eq $entry.TmdbId -or
+                                            $_.TvdbId -eq $entry.TvdbId
+                                        )
+                                    }
+                                    if ($matchingEpisode) {
+                                        # Select the matching episode ID based on the current index
+                                        $global:episodeid = $matchingEpisode.EpisodeIds.Split(",")[$i]
+                                        # Construct the show title with the current episode number
+                                        $ShowTitle = "$($entry.Title) | Season $($global:season_number) - Episode $global:episodenumber"
+                                        # Define the image type and destination URL
+                                        $imageType = "Primary"
+                                        $DestUrl = "$OtherMediaServerUrl/items/$($global:episodeid)/images/$imageType/?api_key=$OtherMediaServerApiKey"
+                                        # Call the SyncPlexArtwork function to sync the artwork
+                                        if ($matchingShow.id){
+                                            SyncPlexArtwork -ArtUrl $Arturl -DestUrl $DestUrl -imagetype $imageType -title $ShowTitle -artworktype 'tc'
+                                        }
+                                        Else {
+                                            Write-Entry -Message "Could not find Episode ID for '$ShowTitle' in $($entry.'Library Name')" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                        }
+                                        Write-Entry -Subtext "Show Title: $ShowTitle" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                        Write-Entry -Subtext "Type: $imageType" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                        Write-Entry -Subtext "Episode ID: $global:episodeid" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                                    }
                                 }
+                                Else {
+                                    Write-Entry -Message "Could not find TitleCard URL for '$($entry.Title) - Season $global:season_number - Episode $global:episodenumber' in $($entry.'Library Name')" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                    Write-Entry -Message "Please fix the metadata on the source media server to resolve this issue." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                    Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                    $errorCount++
+                                }
+
                             }
                         }
                     }
