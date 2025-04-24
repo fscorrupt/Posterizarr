@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## [1.9.56](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.56) - 2025-04-24 10:02:24+00:00
+
+## What's Changed
+* sync by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/259
+* fix: Improve error handling for missing poster URLs by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/260
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.55...1.9.56
+
+### Bug Fixes
+
+- general:
+  - Improve error handling for missing poster URLs (#260) ([6d8f204](https://github.com/fscorrupt/Posterizarr/commit/6d8f2043dbdec6333eea3ee3084664620350adda)) ([#260](https://github.com/fscorrupt/Posterizarr/pull/260))
+  - Improve error handling for missing poster URLs ([efeacc8](https://github.com/fscorrupt/Posterizarr/commit/efeacc852bc9d1598002e20595565723f510ada8)) ([#260](https://github.com/fscorrupt/Posterizarr/pull/260))
+
 ## [1.9.55](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.55) - 2025-04-22 07:13:23+00:00
 
 ## [1.9.54](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.54) - 2025-04-21 16:52:57+00:00
