@@ -236,6 +236,28 @@ CompareScriptVersion
 # Move assets to APP_DATA
 CopyAssetFiles
 
+# Creating Folder structure
+$folders = @("$env:APP_DATA/Logs", "$env:APP_DATA/temp", "$env:APP_DATA/watcher", "$env:APP_DATA/test")
+$createdFolders = @()
+$allPresent = $true
+
+foreach ($folder in $folders) {
+    if (-not (Test-Path $folder)) {
+        $null = New-Item -Path $folder -ItemType Directory -ErrorAction SilentlyContinue
+        $createdFolders += $folder
+        $allPresent = $false
+    }
+}
+
+if ($allPresent) {
+    Write-Host "All folders are already present. Folder creation skipped." -ForegroundColor Green
+} else {
+    Write-Host "The following folders were created:" -ForegroundColor Cyan
+    foreach ($createdFolder in $createdFolders) {
+        Write-Host "    - $createdFolder" -ForegroundColor Yellow
+    }
+}
+
 # Checking Config file
 if (-not (test-path "$env:APP_DATA/config.json")) {
     Write-Host ""
