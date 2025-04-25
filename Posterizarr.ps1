@@ -15,7 +15,7 @@ param (
 )
 Set-PSReadLineOption -HistorySaveStyle SaveNothing
 
-$CurrentScriptVersion = "1.9.56"
+$CurrentScriptVersion = "1.9.57"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 $env:PSMODULE_ANALYSIS_CACHE_PATH = $null
@@ -6438,7 +6438,20 @@ $folderPattern = "Logs_*"
 $global:RotationFolderName = $null
 $global:logLevel = 2
 RotateLogs -ScriptRoot $global:ScriptRoot
+$LogsPath = Join-Path $global:ScriptRoot 'Logs'
+$TempPath = Join-Path $global:ScriptRoot 'temp'
+$TestPath = Join-Path $global:ScriptRoot 'test'
+$WatcherPath = Join-Path $global:ScriptRoot 'watcher'
+$CurrentlyRunning = Join-Path $TempPath 'Posterizarr.Running'
+
 Write-Entry -Message "Starting..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+# Create directories if they don't exist
+foreach ($path in $LogsPath, $TempPath, $TestPath, $WatcherPath) {
+    if (!(Test-Path $path)) {
+        New-Item -ItemType Directory -Path $path -Force | Out-Null
+        Write-Entry -Message "Created missing directory: $path" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+    }
+}
 # Check if Config file is present
 CheckConfigFile -ScriptRoot $global:ScriptRoot
 # Test Json if something is missing
@@ -7117,28 +7130,21 @@ if ($AutoUpdateIM -eq 'true' -and $global:OSType -ne "Docker" -and $LatestImagem
 }
 
 # Create directories if they don't exist
-foreach ($path in $LogsPath, $TempPath, $TestPath, $AssetPath) {
-    if (!(Test-Path $path)) {
-        if ($global:OSType -ne "Win32NT" -and $path -eq 'P:\assets') {
-            Write-Entry -Message 'Please change default asset Path...' -Path $configLogging -Color Red -log Error
-            # Clear Running File
-            if (Test-Path $CurrentlyRunning) {
-                Remove-Item -LiteralPath $CurrentlyRunning | out-null
-            }
-            if ($global:UptimeKumaUrl) {
-                Send-UptimeKumaWebhook -status "down" -msg "Default asset path"
-            }
-            Exit
+
+if (!(Test-Path $AssetPath)) {
+    if ($global:OSType -ne "Win32NT" -and $AssetPath -eq 'P:\assets') {
+        Write-Entry -Message 'Please change default asset Path...' -Path $configLogging -Color Red -log Error
+        # Clear Running File
+        if (Test-Path $CurrentlyRunning) {
+            Remove-Item -LiteralPath $CurrentlyRunning | out-null
         }
-        New-Item -ItemType Directory -Path $path -Force | Out-Null
+        if ($global:UptimeKumaUrl) {
+            Send-UptimeKumaWebhook -status "down" -msg "Default asset path"
+        }
+        Exit
     }
+    New-Item -ItemType Directory -Path $AssetPath -Force | Out-Null
 }
-# create cache dir if missing
-if (!(Test-Path $global:ScriptRoot\Cache)) {
-    New-Item -ItemType Directory -Path $global:ScriptRoot\Cache -Force | Out-Null
-}
-# Check temp dir if there is a Currently running file present
-$CurrentlyRunning = Join-Path $TempPath 'Posterizarr.Running'
 
 if ($ForceRunningDeletion -eq 'true') {
     if (Test-Path $CurrentlyRunning) {
@@ -7195,8 +7201,14 @@ if ($Testing) {
 if ($config.PrerequisitePart.overlayfile -eq 'overlay.png' -or $config.PrerequisitePart.seasonoverlayfile -eq 'overlay.png') {
     Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/overlay.png" -destination (Join-Path $global:ScriptRoot 'overlay.png')
 }
+if ($config.PrerequisitePart.overlayfile -eq 'overlay-innerglow.png' -or $config.PrerequisitePart.seasonoverlayfile -eq 'overlay-innerglow.png') {
+    Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/overlay-innerglow.png" -destination (Join-Path $global:ScriptRoot 'overlay-innerglow.png')
+}
 if ($config.PrerequisitePart.backgroundoverlayfile -eq 'backgroundoverlay.png' -or $config.PrerequisitePart.titlecardoverlayfile -eq 'backgroundoverlay.png') {
     Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/backgroundoverlay.png" -destination (Join-Path $global:ScriptRoot 'backgroundoverlay.png')
+}
+if ($config.PrerequisitePart.backgroundoverlayfile -eq 'backgroundoverlay-innerglow.png' -or $config.PrerequisitePart.titlecardoverlayfile -eq 'backgroundoverlay-innerglow.png') {
+    Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/backgroundoverlay-innerglow.png" -destination (Join-Path $global:ScriptRoot 'backgroundoverlay-innerglow.png')
 }
 if ($config.PrerequisitePart.font -eq 'Rocky.ttf' -or $config.PrerequisitePart.backgroundfont -eq 'Rocky.ttf' -or $config.PrerequisitePart.titlecardfont -eq 'Rocky.ttf' -or $config.PrerequisitePart.RTLFont -eq 'Rocky.ttf') {
     Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/Rocky.ttf" -destination (Join-Path $global:ScriptRoot 'Rocky.ttf')
