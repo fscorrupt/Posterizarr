@@ -2,18 +2,6 @@
 
 ## [1.9.57](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.57) - 2025-04-25 05:43:38+00:00
 
-## What's Changed
-* sync by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/262
-* fix: missing folders/files on first run by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/263
-
-**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.56...1.9.57
-
-### Bug Fixes
-
-- general:
-  - missing folders/files on first run (#263) ([4335332](https://github.com/fscorrupt/Posterizarr/commit/4335332ad6ad65921226addecf957317a1b30ed9)) ([#263](https://github.com/fscorrupt/Posterizarr/pull/263))
-  - missing folders/files on first run ([ad754ed](https://github.com/fscorrupt/Posterizarr/commit/ad754ed970fcde0a4a353a4d5839b09ac43f528e)) ([#263](https://github.com/fscorrupt/Posterizarr/pull/263))
-
 ## [1.9.56](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.56) - 2025-04-24 10:02:24+00:00
 
 ## [1.9.55](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.55) - 2025-04-22 07:13:23+00:00
