@@ -2,19 +2,6 @@
 
 ## [1.9.58](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.58) - 2025-05-06 18:24:43+00:00
 
-## What's Changed
-* sync by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/264
-* add: Path permission check, container adjustments, and new setting by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/265
-
-
-**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.57...1.9.58
-
-### Small fixes
-
-- general:
-  - Path permission check, container adjustments, and new setting (#265) ([d0c5bcc](https://github.com/fscorrupt/Posterizarr/commit/d0c5bccc2caac43842e1dbf8e0ccda99a91eef70)) ([#265](https://github.com/fscorrupt/Posterizarr/pull/265))
-  - Path permission check, container adjustments, and new setting ([5d54cf7](https://github.com/fscorrupt/Posterizarr/commit/5d54cf77e7e1e02281ad3c6a53ab54fdb4db0922)) ([#265](https://github.com/fscorrupt/Posterizarr/pull/265))
-
 ## [1.9.57](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.57) - 2025-04-25 05:43:38+00:00
 
 ## [1.9.56](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.56) - 2025-04-24 10:02:24+00:00
