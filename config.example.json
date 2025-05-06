@@ -106,7 +106,8 @@
     "SkipTBA": "false",
     "SkipJapTitle": "false",
     "AssetCleanup": "false",
-    "AutoUpdateIM": "false"
+    "AutoUpdateIM": "false",
+    "DisableHashValidation": "false"
   },
   "OverlayPart": {
     "ImageProcessing": "true",

@@ -15,7 +15,7 @@ param (
 )
 Set-PSReadLineOption -HistorySaveStyle SaveNothing
 
-$CurrentScriptVersion = "1.9.57"
+$CurrentScriptVersion = "1.9.58"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 $env:PSMODULE_ANALYSIS_CACHE_PATH = $null
@@ -32,6 +32,40 @@ $env:PSMODULE_ANALYSIS_CACHE_ENABLED = $false
 #####################################################################################################################
 
 #### FUNCTION START ####
+function Test-PathPermissions {
+    param (
+        [string]$PathToTest
+    )
+
+    # Check if directory exists
+    $canRead = Test-Path $PathToTest -PathType Container -ErrorAction SilentlyContinue
+
+    # Check write access
+    $testFile = Join-Path $PathToTest ".perm_check"
+    try {
+        New-Item -ItemType File -Path $testFile -Force -ErrorAction Stop | Out-Null
+        Remove-Item $testFile -Force
+        $canWrite = $true
+    } catch {
+        $canWrite = $false
+    }
+
+    if ($canRead -and $canWrite) {
+        Write-Entry -Message "You have read and write permissions to $PathToTest" -Path "$global:ScriptRoot\Logs\Scriptlog.log" -Color Green -log Info
+    } else {
+        Write-Entry -Message "You do NOT have read and/or write permissions to $PathToTest" -Path "$global:ScriptRoot\Logs\Scriptlog.log" -Color Red -log Error
+        if ($PathToTest -eq $AssetPath) {
+            # Clear Running File
+            if (Test-Path $CurrentlyRunning) {
+                Remove-Item -LiteralPath $CurrentlyRunning | out-null
+            }
+            if ($global:UptimeKumaUrl) {
+                Send-UptimeKumaWebhook -status "down" -msg "Perm issues on /assets"
+            }
+            Exit  # Abort the script
+        }
+    }
+}
 function Reset-PlexLibraryPictures {
     param (
         [string]$LibraryName
@@ -3327,7 +3361,7 @@ function GetPlexArtwork {
     # Execute command and get exif data
     $value = (Invoke-Expression $magickcommand | Select-String -Pattern 'overlay|titlecard|created with ppm|created with posterizarr')
 
-    if ($value) {
+    if ($value -and $DisableHashValidation -eq 'false') {
         $ExifFound = $True
         if ($global:UploadExistingAssets -eq 'true') {
             Write-Entry -Subtext "Artwork has exif data from posterizarr/kometa/tcm, skip upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
@@ -3338,7 +3372,13 @@ function GetPlexArtwork {
         Remove-Item -LiteralPath $TempImage | out-null
     }
     Else {
-        Write-Entry -Subtext "No posterizarr/kometa/tcm exif data found, taking Plex artwork..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+        if ($DisableHashValidation -eq 'false'){
+            Write-Entry -Subtext "No posterizarr/kometa/tcm exif data found, taking Plex artwork..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+        }
+        Else {
+            Write-Entry -Subtext "taking Plex artwork..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+        }
+
         $global:PlexartworkDownloaded = $true
         $global:posterurl = $ArtUrl
     }
@@ -3392,9 +3432,6 @@ function CheckJson {
                 }
                 if ($global:UptimeKumaUrl) {
                     Send-UptimeKumaWebhook -status "down" -msg "Failed to read the existing configuration file."
-                }
-                if ($global:UptimeKumaUrl) {
-                    Send-UptimeKumaWebhook -status "down" -msg "Failed to read config"
                 }
                 Exit
             }
@@ -4099,19 +4136,6 @@ function InvokeMagickCommand {
             return $lines[0]
         }
     }
-        # Check if Pango rendering is needed for RTL languages on Docker
-        if ($global:direction -eq "RTL" -and $Platform -eq 'Docker') {
-            Write-Entry -Subtext "RTL language detected on Docker, attempting to use pango:" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-            # Replace the first instance of 'caption:' with 'pango:'
-            # Ensure we only replace the rendering method, not other occurrences of 'caption'
-            if ($Arguments -match '(?<!\w)caption:') {
-                $Arguments = [regex]::Replace($Arguments, '(?<!\w)caption:', 'pango:', 1)
-                Write-Entry -Subtext "Modified Arguments for pango: $Arguments" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-            } else {
-                Write-Entry -Subtext "Argument string did not contain 'caption:' for pango replacement." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-            }
-        }
-
 
     try {
         $processInfo = New-Object System.Diagnostics.ProcessStartInfo
@@ -4302,13 +4326,14 @@ function UploadOtherMediaServerArtwork {
         }
     }
 
-    if ($value) {
+    if ($value -and $DisableHashValidation -eq 'false') {
         $ExifFound = $True
         Write-Entry -Subtext "Artwork has exif data from posterizarr/kometa/tcm, skip upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     }
     Else {
-        Write-Entry -Subtext "No posterizarr/kometa/tcm exif data found, starting upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
-
+        if ($DisableHashValidation -eq 'false'){
+            Write-Entry -Subtext "No posterizarr/kometa/tcm exif data found, starting upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+        }
         # Read the image file as binary
         $imageData = [System.IO.File]::ReadAllBytes($imagePath)
 
@@ -6332,7 +6357,12 @@ function SyncPlexArtwork {
         Else {
             Write-Entry -Subtext "Image hashes match, skipping upload for $title" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Debug
         }
-        return
+        if ($DisableHashValidation -eq 'true') {
+            Write-Entry -Subtext "Hash validation is disabled, proceeding with upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+        }
+        else {
+            return
+        }
     }
 
     Write-Entry -Subtext "Uploading new artwork to Jelly/Emby for: $title" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -6761,6 +6791,7 @@ $BackupPath = RemoveTrailingSlash $config.PrerequisitePart.BackupPath
 $ManualAssetPath = RemoveTrailingSlash $config.PrerequisitePart.ManualAssetPath
 $Upload2Plex = $config.PrerequisitePart.PlexUpload.tolower()
 $SkipAddText = $config.PrerequisitePart.SkipAddText.tolower()
+$DisableHashValidation = $config.PrerequisitePart.DisableHashValidation.tolower()
 
 # Check if its a Network Share
 if ($AssetPath.StartsWith("\")) {
@@ -7026,6 +7057,7 @@ if ($Testing) {
     $configLogging = Join-Path $LogsPath 'Testinglog.log'
 }
 
+# Check for latest Imagemagick Version
 if ($global:OSarch -eq "Arm64") {
     try {
         $CurrentImagemagickversion = & $magick -version
@@ -7054,6 +7086,7 @@ Else {
     $CurrentImagemagickversion = $CurrentImagemagickversion.Groups[1].Value.replace('-', '.')
     Write-Entry -Message "Current Imagemagick Version: $CurrentImagemagickversion" -Path $configLogging -Color White -log Info
 }
+
 if ($global:OSType -eq "Docker") {
     if ($env:POSTERIZARR_NON_ROOT -eq 'TRUE'){
         $OSVersionTag = (Get-Content /etc/os-release | Select-String -Pattern "^PRETTY_NAME=").ToString().Split('=')[1].Trim('"').replace('Alpine Linux ','')
@@ -7145,6 +7178,11 @@ if (!(Test-Path $AssetPath)) {
     }
     New-Item -ItemType Directory -Path $AssetPath -Force | Out-Null
 }
+
+# Check directory perms
+Test-PathPermissions -PathToTest $AssetPath
+Test-PathPermissions -PathToTest $BackupPath
+Test-PathPermissions -PathToTest $ManualAssetPath
 
 if ($ForceRunningDeletion -eq 'true') {
     if (Test-Path $CurrentlyRunning) {
