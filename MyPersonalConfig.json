@@ -117,7 +117,8 @@
         "ManualAssetPath": "/manualassets",
         "ForceRunningDeletion": "false",
         "AutoUpdatePosterizarr": "false",
-        "SkipAddText": "false"
+        "SkipAddText": "false",
+        "DisableHashValidation": "false"
     },
     "OverlayPart": {
         "ImageProcessing": "true",

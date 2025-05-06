@@ -242,6 +242,8 @@ Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpin
         ```
     - `AutoUpdateIM` : Set to `true` to AutoUpdate Imagemagick Portable Version (Does not work with Docker/Unraid).
       - Doing this could break things, cause you then uses IM Versions that are not tested with Posterizarr.
+    - `DisableHashValidation` : Set to `true` to skip hash validation (Default value is: false).
+      - *Note: This may produce bloat, as every item will be re-uploaded to the media servers.*
     </details>
     <details close>
     <summary>OverlayPart [click to unfold]</summary>
