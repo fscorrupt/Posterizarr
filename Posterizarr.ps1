@@ -15,7 +15,7 @@ param (
 )
 Set-PSReadLineOption -HistorySaveStyle SaveNothing
 
-$CurrentScriptVersion = "1.9.58"
+$CurrentScriptVersion = "1.9.59"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 $env:PSMODULE_ANALYSIS_CACHE_PATH = $null
@@ -7088,19 +7088,6 @@ Else {
 }
 
 if ($global:OSType -eq "Docker") {
-    if ($env:POSTERIZARR_NON_ROOT -eq 'TRUE'){
-        $OSVersionTag = (Get-Content /etc/os-release | Select-String -Pattern "^PRETTY_NAME=").ToString().Split('=')[1].Trim('"').replace('Alpine Linux ','')
-        $Url = "https://pkgs.alpinelinux.org/package/$OSVersionTag/community/x86_64/imagemagick"
-        $response = Invoke-WebRequest -Uri $url
-        $htmlContent = $response.Content
-        $regexPattern = '<th class="header">Version<\/th>\s*<td>\s*<strong>([\d\.]+-r\d+)<\/strong>\s*<\/td>'
-        $Versionmatching = [regex]::Matches($htmlContent, $regexPattern)
-
-        if ($Versionmatching.Count -gt 0) {
-            $LatestImagemagickversion = $Versionmatching[0].Groups[1].Value.split('-')[0]
-        }
-    }
-    Else{
         $Url = "https://raw.githubusercontent.com/SoftCreatR/imei/main/versions/imagemagick.version"
         $response = Invoke-WebRequest -Uri $url
         $htmlContent = $response.Content
@@ -7110,7 +7097,6 @@ if ($global:OSType -eq "Docker") {
         if ($Versionmatching.Count -gt 0) {
             $LatestImagemagickversion = $Versionmatching[0].Value
         }
-    }
 }
 Elseif ($global:OSType -eq "Win32NT") {
     $Url = "https://imagemagick.org/archive/binaries/?C=M;O=D"
