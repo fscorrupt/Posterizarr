@@ -2,17 +2,6 @@
 
 ## [1.9.59](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.59) - 2025-05-07 09:52:41+00:00
 
-## What's Changed
-* fix: IM version check by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/266
-
-**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.58...1.9.59
-
-### Bug Fixes
-
-- general:
-  - IM version check (#266) ([f60a707](https://github.com/fscorrupt/Posterizarr/commit/f60a707d1077212287dc2bc5ccd514f25ab38ef3)) ([#266](https://github.com/fscorrupt/Posterizarr/pull/266))
-  - IM version check ([8bbc8b6](https://github.com/fscorrupt/Posterizarr/commit/8bbc8b6dd320ba0bdfc5a27b477d6463c752ba4f)) ([#266](https://github.com/fscorrupt/Posterizarr/pull/266))
-
 ## [1.9.58](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.58) - 2025-05-06 18:24:43+00:00
 
 ## [1.9.57](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.57) - 2025-04-25 05:43:38+00:00
