@@ -5,7 +5,7 @@ ARG VENDOR
 ARG VERSION
     
 ENV UMASK="0002" \
-    TZ="Europe/Berlin" \
+    TZ="Europe/Berlin"
     
 # Install build tools, runtime dependencies, libraqm, and ImageMagick with raqm support
 RUN apk add --no-cache \
