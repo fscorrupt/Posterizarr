@@ -15,7 +15,7 @@ param (
 )
 Set-PSReadLineOption -HistorySaveStyle SaveNothing
 
-$CurrentScriptVersion = "1.9.59"
+$CurrentScriptVersion = "1.9.60"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 $env:PSMODULE_ANALYSIS_CACHE_PATH = $null
@@ -4717,7 +4717,7 @@ function MassDownloadPlexArtwork {
                 }
                 if ($Seasondata) {
                     $SeasonsTemp = $Seasondata.MediaContainer.Directory | Where-Object { $_.Title -ne 'All episodes' }
-                    $SeasonNames = $SeasonsTemp.Title -join ','
+                    $SeasonNames = $SeasonsTemp.Title -join ';'
                     $SeasonNumbers = $SeasonsTemp.index -join ','
                     $SeasonRatingkeys = $SeasonsTemp.ratingKey -join ','
                     $SeasonPosterUrl = ($SeasonsTemp | Where-Object { $_.type -eq "season" }).thumb -join ','
@@ -5541,7 +5541,7 @@ function MassDownloadPlexArtwork {
                 $global:PosterWithText = $null
                 $global:ImageMagickError = $null
                 $global:TextlessPoster = $null
-                $global:seasonNames = $entry.SeasonNames -split ','
+                $global:seasonNames = $entry.SeasonNames -split ';'
                 $global:SeasonRatingKeys = $entry.SeasonRatingKeys -split ','
                 $global:seasonNumbers = $entry.seasonNumbers -split ','
                 $global:PlexSeasonUrls = $entry.PlexSeasonUrls -split ','
@@ -9058,7 +9058,7 @@ Elseif ($Tautulli) {
         }
         if ($Seasondata) {
             $SeasonsTemp = $Seasondata.MediaContainer.Directory | Where-Object { $_.Title -ne 'All episodes' }
-            $SeasonNames = $SeasonsTemp.Title -join ','
+            $SeasonNames = $SeasonsTemp.Title -join ';'
             $SeasonNumbers = $SeasonsTemp.index -join ','
             $SeasonRatingkeys = $SeasonsTemp.ratingKey -join ','
             $SeasonPosterUrl = ($SeasonsTemp | Where-Object { $_.type -eq "season" }).thumb -join ','
@@ -11053,7 +11053,7 @@ Elseif ($Tautulli) {
                     $global:PosterWithText = $null
                     $global:ImageMagickError = $null
                     $global:TextlessPoster = $null
-                    $global:seasonNames = $entry.SeasonNames -split ','
+                    $global:seasonNames = $entry.SeasonNames -split ';'
                     $global:SeasonRatingKeys = $entry.SeasonRatingKeys -split ','
                     $global:seasonNumbers = $entry.seasonNumbers -split ','
                     $global:PlexSeasonUrls = $entry.PlexSeasonUrls -split ','
@@ -13093,7 +13093,7 @@ Elseif ($SyncJelly -or $SyncEmby) {
                 }
                 if ($Seasondata) {
                     $SeasonsTemp = $Seasondata.MediaContainer.Directory | Where-Object { $_.Title -ne 'All episodes' }
-                    $SeasonNames = $SeasonsTemp.Title -join ','
+                    $SeasonNames = $SeasonsTemp.Title -join ';'
                     $SeasonNumbers = $SeasonsTemp.index -join ','
                     $SeasonRatingkeys = $SeasonsTemp.ratingKey -join ','
                     $SeasonPosterUrl = ($SeasonsTemp | Where-Object { $_.type -eq "season" }).thumb -join ','
@@ -18435,7 +18435,7 @@ else {
                 }
                 if ($Seasondata) {
                     $SeasonsTemp = $Seasondata.MediaContainer.Directory | Where-Object { $_.Title -ne 'All episodes' }
-                    $SeasonNames = $SeasonsTemp.Title -join ','
+                    $SeasonNames = $SeasonsTemp.Title -join ';'
                     $SeasonNumbers = $SeasonsTemp.index -join ','
                     $SeasonRatingkeys = $SeasonsTemp.ratingKey -join ','
                     $SeasonPosterUrl = ($SeasonsTemp | Where-Object { $_.type -eq "season" }).thumb -join ','
@@ -20576,7 +20576,7 @@ else {
                     $global:PosterWithText = $null
                     $global:ImageMagickError = $null
                     $global:TextlessPoster = $null
-                    $global:seasonNames = $entry.SeasonNames -split ','
+                    $global:seasonNames = $entry.SeasonNames -split ';'
                     $global:SeasonRatingKeys = $entry.SeasonRatingKeys -split ','
                     $global:seasonNumbers = $entry.seasonNumbers -split ','
                     $global:PlexSeasonUrls = $entry.PlexSeasonUrls -split ','
