@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## [1.9.60](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.60) - 2025-05-15 09:49:18+00:00
+
+## What's Changed
+* sync by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/267
+* fix: use ";" instead "," for season names by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/268
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.59...1.9.60
+
+### Bug Fixes
+
+- general:
+  - use ";" instead "," for season names (#268) ([34a720b](https://github.com/fscorrupt/Posterizarr/commit/34a720b2a3bcc84f64378eaa49a3464b675e6ee6)) ([#268](https://github.com/fscorrupt/Posterizarr/pull/268))
+  - use ";" instead "," for season names ([710e357](https://github.com/fscorrupt/Posterizarr/commit/710e35726149236ffe1585a2fbda5d11adf1ae5e)) ([#268](https://github.com/fscorrupt/Posterizarr/pull/268))
+
 ## [1.9.59](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.59) - 2025-05-07 09:52:41+00:00
 
 ## [1.9.58](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.58) - 2025-05-06 18:24:43+00:00
