@@ -371,6 +371,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpin
 - **Manual Mode**: Run the script with the `-Manual` switch to create custom posters manually.
 - **Backup Mode**: Run the script with the `-Backup` switch to download every artwork from plex (only those what are set to `true` in config)
 - **Poster reset Mode**: Run the script with the `-PosterReset -LibraryToReset "Test Lib"` switch to reset every artwork from a specifc plex lib.
+- **Sync Modes**: Run the script with the `-SyncJelly or -SyncEmby` switch to sync every artwork you have in Plex to Jelly/Emby.
 
 > [!NOTE]
 >- Ensure PowerShell execution policy allows script execution.
