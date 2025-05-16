@@ -361,7 +361,6 @@ Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpin
     - `lineSpacing`: Adjust the height between lines of text (Default is `0`)
     - `TextGravity`: Specifies the text alignment within the textbox (Default is `south`)
     </details>
-    <br>
 
 3. Rename the config file to `config.json`.
 4. Place the `overlay.png`, or whatever file you defined earlier in `overlayfile`, and `Rocky.ttf` font, or whatever font you defined earlier in `font` files in the same directory as Posterizarr.ps1 which is `$ScriptRoot`.
@@ -405,7 +404,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpin
 | **RTL (Right-to-Left) Font Support**     | - Supports **right-to-left (RTL) fonts** for media titles, making it more accessible for non-Latin-based languages such as Arabic or Hebrew.                                                                                         |
 | **New Line on Specific Symbols**         | - Automatically adds a **new line on specific symbols** (e.g., hyphen or colon) within text to enhance visual aesthetics on overlays.                                                                                                |
 | **Fallback Options for Title Cards**     | - Uses **background images as title cards** if title-specific artwork is unavailable.                                                                                         |
-
+|**Overlay Reset**| - Reset all posters in a library of your choice to the Plex default.|
 
 ### Automatic Mode
 
