@@ -15,7 +15,7 @@ param (
 )
 Set-PSReadLineOption -HistorySaveStyle SaveNothing
 
-$CurrentScriptVersion = "1.9.60"
+$CurrentScriptVersion = "1.9.61"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 $env:PSMODULE_ANALYSIS_CACHE_PATH = $null
@@ -3575,10 +3575,14 @@ function CheckJsonPaths {
         [string]$Seasonoverlay,
         [string]$Backgroundoverlay,
         [string]$Posteroverlay4k,
-        [string]$Posteroverlay1080p
+        [string]$Posteroverlay1080p,
+        [string]$Backgroundoverlay4k,
+        [string]$Backgroundoverlay1080p,
+        [string]$TCoverlay4k,
+        [string]$TCoverlay1080p
     )
 
-    $paths = @($font, $RTLfont, $backgroundfont, $titlecardfont, $Posteroverlay, $Backgroundoverlay, $titlecardoverlay, $Seasonoverlay, $Posteroverlay4k, $Posteroverlay1080p)
+    $paths = @($font, $RTLfont, $backgroundfont, $titlecardfont, $Posteroverlay, $Backgroundoverlay, $titlecardoverlay, $Seasonoverlay, $Posteroverlay4k, $Posteroverlay1080p, $Backgroundoverlay4k, $Backgroundoverlay1080p, $TCoverlay4k, $TCoverlay1080p)
     $errorCount = 0
     foreach ($path in $paths) {
         if (-not (Test-Path -LiteralPath $path.TrimEnd())) {
@@ -3789,8 +3793,16 @@ function LogConfigSettings {
     Write-Entry -Subtext "| Used Background Overlay File:    $Backgroundoverlay" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Used TitleCard Overlay File:     $titlecardoverlay" -Path $configLogging -Color White -log Info
     if ($UsePosterResolutionOverlays -eq 'true') {
-        Write-Entry -Subtext "| Used 4K Overlay File:            $4kposter" -Path $configLogging -Color White -log Info
-        Write-Entry -Subtext "| Used 1080P Overlay File:         $1080pPoster" -Path $configLogging -Color White -log Info
+        Write-Entry -Subtext "| Used 4K Poster Overlay File:     $4kposter" -Path $configLogging -Color White -log Info
+        Write-Entry -Subtext "| Used 1080P Poster Overlay File:  $1080pPoster" -Path $configLogging -Color White -log Info
+    }
+    if ($UseBackgroundResolutionOverlays -eq 'true') {
+        Write-Entry -Subtext "| Used 4K BG Overlay File:         $4kBackground" -Path $configLogging -Color White -log Info
+        Write-Entry -Subtext "| Used 1080P BG Overlay File:      $1080pBackground" -Path $configLogging -Color White -log Info
+    }
+    if ($UseTCResolutionOverlays -eq 'true') {
+        Write-Entry -Subtext "| Used 4K TC Overlay File:         $4kTC" -Path $configLogging -Color White -log Info
+        Write-Entry -Subtext "| Used 1080P TC Overlay File:      $1080pTC" -Path $configLogging -Color White -log Info
     }
     Write-Entry -Subtext "| Create Library Folders:          $LibraryFolders" -Path $configLogging -Color White -log Info
     Write-Entry -Subtext "| Create Season Posters:           $global:SeasonPosters" -Path $configLogging -Color White -log Info
@@ -4057,6 +4069,10 @@ function CheckOverlayDimensions {
         [string]$Titlecardoverlay,
         [string]$Posteroverlay4k,
         [string]$Posteroverlay1080p,
+        [string]$Backgroundoverlay4k,
+        [string]$Backgroundoverlay1080p,
+        [string]$TCoverlay4k,
+        [string]$TCoverlay1080p,
         [string]$PosterSize,
         [string]$BackgroundSize
     )
@@ -4068,6 +4084,10 @@ function CheckOverlayDimensions {
     $Titlecardoverlaydimensions = & $magick $Titlecardoverlay -format "%wx%h" info:
     $4kPosteroverlaydimensions = & $magick $Posteroverlay4k -format "%wx%h" info:
     $1080pPosteroverlaydimensions = & $magick $Posteroverlay1080p -format "%wx%h" info:
+    $4kBackgroundoverlaydimensions = & $magick $Backgroundoverlay4k -format "%wx%h" info:
+    $1080pBackgroundoverlaydimensions = & $magick $Backgroundoverlay1080p -format "%wx%h" info:
+    $4kTCoverlaydimensions = & $magick $TCoverlay4k -format "%wx%h" info:
+    $1080pTCoverlaydimensions = & $magick $TCoverlay1080p -format "%wx%h" info:
 
     # Check Poster Overlay Size
     if ($Posteroverlaydimensions -eq $PosterSize) {
@@ -4114,6 +4134,37 @@ function CheckOverlayDimensions {
     }
     else {
         Write-Entry -Subtext "1080p Poster overlay is NOT correctly sized at: $Postersize. Actual dimensions: $1080pPosteroverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+    }
+
+    # Check 4K Background Overlay Size
+    if ($4kBackgroundoverlaydimensions -eq $BackgroundSize) {
+        Write-Entry -Subtext "4K Background overlay is correctly sized at: $BackgroundSize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+    }
+    else {
+        Write-Entry -Subtext "4K Background overlay is NOT correctly sized at: $BackgroundSize. Actual dimensions: $4kBackgroundoverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+    }
+
+    # Check 1080p Background Overlay Size
+    if ($1080pBackgroundoverlaydimensions -eq $BackgroundSize) {
+        Write-Entry -Subtext "1080p Background overlay is correctly sized at: $BackgroundSize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+    }
+    else {
+        Write-Entry -Subtext "1080p Background overlay is NOT correctly sized at: $BackgroundSize. Actual dimensions: $1080pBackgroundoverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+    }
+
+    # Check 4K TitleCard Overlay Size
+    if ($4kTCoverlaydimensions -eq $BackgroundSize) {
+        Write-Entry -Subtext "4K TitleCard overlay is correctly sized at: $BackgroundSize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+    }
+    else {
+        Write-Entry -Subtext "4K TitleCard overlay is NOT correctly sized at: $BackgroundSize. Actual dimensions: $4kTCoverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+    }
+    # Check 1080p TitleCard Overlay Size
+    if ($1080pTCoverlaydimensions -eq $BackgroundSize) {
+        Write-Entry -Subtext "1080p TitleCard overlay is correctly sized at: $BackgroundSize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+    }
+    else {
+        Write-Entry -Subtext "1080p TitleCard overlay is NOT correctly sized at: $BackgroundSize. Actual dimensions: $1080pTCoverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     }
 }
 function InvokeMagickCommand {
@@ -6847,9 +6898,16 @@ $NewLineSymbols = $config.PrerequisitePart.NewLineSymbols
 
 # Resolution Part
 $UsePosterResolutionOverlays = $config.PrerequisitePart.UsePosterResolutionOverlays.tolower()
+$UseBackgroundResolutionOverlays = $config.PrerequisitePart.UseBackgroundResolutionOverlays.tolower()
+$UseTCResolutionOverlays = $config.PrerequisitePart.UseTCResolutionOverlays.tolower()
 
 $4kposter = Join-Path -Path $global:ScriptRoot -ChildPath ('temp', $config.PrerequisitePart.poster4k -join $($joinsymbol))
 $1080pPoster = Join-Path -Path $global:ScriptRoot -ChildPath ('temp', $config.PrerequisitePart.Poster1080p -join $($joinsymbol))
+$4kBackground = Join-Path -Path $global:ScriptRoot -ChildPath ('temp', $config.PrerequisitePart.Background4k -join $($joinsymbol))
+$1080pBackground = Join-Path -Path $global:ScriptRoot -ChildPath ('temp', $config.PrerequisitePart.Background1080p -join $($joinsymbol))
+$4kTC = Join-Path -Path $global:ScriptRoot -ChildPath ('temp', $config.PrerequisitePart.TC4k -join $($joinsymbol))
+$1080pTC = Join-Path -Path $global:ScriptRoot -ChildPath ('temp', $config.PrerequisitePart.TC1080p -join $($joinsymbol))
+
 # Poster Overlay Part
 $global:ImageProcessing = $config.OverlayPart.ImageProcessing.tolower()
 $global:outputQuality = $config.OverlayPart.outputQuality
@@ -7307,7 +7365,7 @@ if ($files.Extension -match "\.(ttf|otf)$" -and $env:POSTERIZARR_NON_ROOT -eq 'T
     & fc-cache -fv 1> $null 2> $null
 }
 
-CheckJsonPaths -font "$font" -RTLfont "$RTLfont" -backgroundfont "$backgroundfont "-titlecardfont "$titlecardfont" -Posteroverlay "$Posteroverlay" -Backgroundoverlay "$Backgroundoverlay" -titlecardoverlay "$titlecardoverlay" -Seasonoverlay "$Seasonoverlay" -Posteroverlay4k "$4kposter" -Posteroverlay1080p "$1080pPoster"
+CheckJsonPaths -font "$font" -RTLfont "$RTLfont" -backgroundfont "$backgroundfont "-titlecardfont "$titlecardfont" -Posteroverlay "$Posteroverlay" -Backgroundoverlay "$Backgroundoverlay" -titlecardoverlay "$titlecardoverlay" -Seasonoverlay "$Seasonoverlay" -Posteroverlay4k "$4kposter" -Posteroverlay1080p "$1080pPoster" -Backgroundoverlay4k "$4kBackground" -Backgroundoverlay1080p "$1080pBackground" -TCoverlay4k "$4kTC" -TCoverlay1080p "$1080pTC"
 # Check Plex now:
 if (!$SyncJelly -and !$SyncEmby) {
     if ($UsePlex -eq 'true') {
@@ -7325,7 +7383,7 @@ if (!$SyncJelly -and !$SyncEmby) {
 }
 # Check overlay artwork for poster, background, and titlecard dimensions
 Write-Entry -Message "Checking size of overlay files..." -Path $configLogging -Color White -log Info
-CheckOverlayDimensions -Posteroverlay "$Posteroverlay" -Backgroundoverlay "$Backgroundoverlay" -Titlecardoverlay "$titlecardoverlay" -PosterSize "$PosterSize" -BackgroundSize "$BackgroundSize" -Seasonoverlay "$Seasonoverlay" -Posteroverlay4k "$4kposter" -Posteroverlay1080p "$1080pPoster"
+CheckOverlayDimensions -Posteroverlay "$Posteroverlay" -Backgroundoverlay "$Backgroundoverlay" -Titlecardoverlay "$titlecardoverlay" -PosterSize "$PosterSize" -BackgroundSize "$BackgroundSize" -Seasonoverlay "$Seasonoverlay" -Posteroverlay4k "$4kposter" -Posteroverlay1080p "$1080pPoster" -Backgroundoverlay4k "$4kBackground" -Backgroundoverlay1080p "$1080pBackground" -TCoverlay4k "$4kTC" -TCoverlay1080p "$1080pTC"
 
 # Check if the FanartTvAPI module is installed
 $module = Get-Module -ListAvailable -Name FanartTvAPI
@@ -9988,6 +10046,13 @@ Elseif ($Tautulli) {
                                     $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                     InvokeMagickCommand -Command $magick -Arguments $CommentArguments
                                     if (!$global:ImageMagickError -eq 'true') {
+                                        if ($UseBackgroundResolutionOverlays -eq 'true'){
+                                            switch ($entry.Resolution) {
+                                                '4K' { $backgroundoverlay = $4kBackground }
+                                                '1080p' { $backgroundoverlay = $1080pBackground }
+                                                Default { $backgroundoverlay = $backgroundoverlay }
+                                            }
+                                        }
                                         # Calculate the height to maintain the aspect ratio with a width of 1000 pixels
                                         if ($AddBackgroundBorder -eq 'true' -and $AddBackgroundOverlay -eq 'true') {
                                             $Arguments = "`"$backgroundImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$backgroundoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundImage`""
@@ -10878,6 +10943,13 @@ Elseif ($Tautulli) {
                                 $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                 InvokeMagickCommand -Command $magick -Arguments $CommentArguments
                                 if (!$global:ImageMagickError -eq 'true') {
+                                    if ($UseBackgroundResolutionOverlays -eq 'true'){
+                                        switch ($entry.Resolution) {
+                                            '4K' { $Backgroundoverlay = $4kBackground }
+                                            '1080p' { $Backgroundoverlay = $1080pBackground }
+                                            Default { $Backgroundoverlay = $Backgroundoverlay }
+                                        }
+                                    }
                                     # Calculate the height to maintain the aspect ratio with a width of 1000 pixels
                                     if ($AddBackgroundBorder -eq 'true' -and $AddBackgroundOverlay -eq 'true') {
                                         $Arguments = "`"$backgroundImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$Backgroundoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundImage`""
@@ -11691,9 +11763,11 @@ Elseif ($Tautulli) {
                         $global:IsFallback = $null
                         $global:FallbackText = $null
                         $global:TextlessPoster = $null
+                        $global:EPResolutions = $null
 
                         if (($episode.tmdbid -eq $entry.tmdbid -or $episode.tvdbid -eq $entry.tvdbid) -and $episode.'Show Name' -eq $entry.title -and $episode.'Library Name' -eq $entry.'Library Name') {
                             $global:show_name = $episode."Show Name"
+                            $global:EPResolutions = $episode."Resolutions".Split(",")
                             $global:season_number = $episode."Season Number"
                             $global:episode_numbers = $episode."Episodes".Split(",")
                             $global:episode_ratingkeys = $episode."ratingKeys".Split(",")
@@ -11724,6 +11798,7 @@ Elseif ($Tautulli) {
                                     $global:PlexTitleCardUrl = $entry.PlexBackgroundUrl
                                     $global:episode_ratingkey = $($global:episode_ratingkeys[$i].Trim())
                                     $global:EPTitle = $($global:titles[$i].Trim())
+                                    $global:EPResolution = $($global:EPResolutions[$i].Trim())
                                     $global:episodenumber = $($global:episode_numbers[$i].Trim())
                                     $global:FileNaming = "S" + $global:season_number.PadLeft(2, '0') + "E" + $global:episodenumber.PadLeft(2, '0')
                                     $bullet = [char]0x2022
@@ -11969,6 +12044,13 @@ Elseif ($Tautulli) {
                                                             $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                                             InvokeMagickCommand -Command $magick -Arguments $CommentArguments
                                                             if (!$global:ImageMagickError -eq 'true') {
+                                                                if ($UseTCResolutionOverlays -eq 'true'){
+                                                                    switch ($global:EPResolution) {
+                                                                        '4K' { $TitleCardoverlay = $4kTC }
+                                                                        '1080p' { $TitleCardoverlay = $1080pTC }
+                                                                        Default { $TitleCardoverlay = $TitleCardoverlay }
+                                                                    }
+                                                                }
                                                                 # Resize Image to 2000x3000 and apply Border and overlay
                                                                 if ($AddTitleCardBorder -eq 'true' -and $AddTitleCardOverlay -eq 'true') {
                                                                     $Arguments = "`"$EpisodeImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$TitleCardoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$TitleCardborderwidthsecond`"  -bordercolor `"$TitleCardbordercolor`" -border `"$TitleCardborderwidth`" `"$EpisodeImage`""
@@ -12493,6 +12575,13 @@ Elseif ($Tautulli) {
                                                         $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                                         InvokeMagickCommand -Command $magick -Arguments $CommentArguments
                                                         if (!$global:ImageMagickError -eq 'true') {
+                                                            if ($UseTCResolutionOverlays -eq 'true'){
+                                                                switch ($global:EPResolution) {
+                                                                    '4K' { $TitleCardoverlay = $4kTC }
+                                                                    '1080p' { $TitleCardoverlay = $1080pTC }
+                                                                    Default { $TitleCardoverlay = $TitleCardoverlay }
+                                                                }
+                                                            }
                                                             # Resize Image to 2000x3000 and apply Border and overlay
                                                             if ($AddTitleCardBorder -eq 'true' -and $AddTitleCardOverlay -eq 'true') {
                                                                 $Arguments = "`"$EpisodeImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$TitleCardoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$TitleCardborderwidthsecond`"  -bordercolor `"$TitleCardbordercolor`" -border `"$TitleCardborderwidth`" `"$EpisodeImage`""
@@ -14423,6 +14512,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
 
     # Export the formatted data to CSV
     $FormattedData | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\OtherMediaServerEpisodeExport.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
+    $Episodedata = $FormattedData
     if ($AllEpisodes) {
         Write-Entry -Subtext "Found '$($AllEpisodes.Items.count)' Episodes..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     }
@@ -15143,6 +15233,13 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                     $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                     InvokeMagickCommand -Command $magick -Arguments $CommentArguments
                                     if (!$global:ImageMagickError -eq 'True') {
+                                        if ($UseBackgroundResolutionOverlays -eq 'true'){
+                                            switch ($entry.Resolution) {
+                                                '4K' { $backgroundoverlay = $4kBackground }
+                                                '1080p' { $backgroundoverlay = $1080pBackground }
+                                                Default { $backgroundoverlay = $backgroundoverlay }
+                                            }
+                                        }
                                         # Calculate the height to maintain the aspect ratio with a width of 1000 pixels
                                         if ($AddBackgroundBorder -eq 'true' -and $AddBackgroundOverlay -eq 'true') {
                                             $Arguments = "`"$backgroundImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$backgroundoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundImage`""
@@ -15967,6 +16064,13 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                 $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                 InvokeMagickCommand -Command $magick -Arguments $CommentArguments
                                 if (!$global:ImageMagickError -eq 'True') {
+                                    if ($UseBackgroundResolutionOverlays -eq 'true'){
+                                        switch ($entry.Resolution) {
+                                            '4K' { $backgroundoverlay = $4kBackground }
+                                            '1080p' { $backgroundoverlay = $1080pBackground }
+                                            Default { $backgroundoverlay = $backgroundoverlay }
+                                        }
+                                    }
                                     # Calculate the height to maintain the aspect ratio with a width of 1000 pixels
                                     if ($AddBackgroundBorder -eq 'true' -and $AddBackgroundOverlay -eq 'true') {
                                         $Arguments = "`"$backgroundImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$Backgroundoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundImage`""
@@ -16689,10 +16793,12 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                         $global:IsFallback = $null
                         $global:FallbackText = $null
                         $global:TextlessPoster = $null
+                        $global:EPResolutions = $null
 
                         if (($episode.tmdbid -eq $entry.tmdbid -or $episode.tvdbid -eq $entry.tvdbid) -and $episode.'Show Name' -eq $entry.title) {
                             $global:show_name = $episode."Show Name"
                             $global:season_number = $episode."Season Number"
+                            $global:EPResolutions = $episode."Resolutions".Split(",")
                             $global:episode_numbers = $episode."Episodes".Split(",")
                             $global:episodeids = $episode."EpisodeIDs".Split(",")
                             $global:titles = $episode."Title".Split(";")
@@ -16718,6 +16824,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                     $Arturl = $null
                                     $TakeLocal = $null
                                     $global:EPTitle = $($global:titles[$i].Trim())
+                                    $global:EPResolution = $($global:EPResolutions[$i].Trim())
                                     $global:episodenumber = $($global:episode_numbers[$i].Trim())
                                     $global:episodeid = $($global:episodeids[$i].Trim())
                                     $global:FileNaming = "S" + $global:season_number.ToString().PadLeft(2, '0') + "E" + $global:episodenumber.ToString().PadLeft(2, '0')
@@ -16928,6 +17035,13 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                                             $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                                             InvokeMagickCommand -Command $magick -Arguments $CommentArguments
                                                             if (!$global:ImageMagickError -eq 'True') {
+                                                                if ($UseTCResolutionOverlays -eq 'true'){
+                                                                    switch ($global:EPResolution) {
+                                                                        '4K' { $TitleCardoverlay = $4kTC }
+                                                                        '1080p' { $TitleCardoverlay = $1080pTC }
+                                                                        Default { $TitleCardoverlay = $TitleCardoverlay }
+                                                                    }
+                                                                }
                                                                 # Resize Image to 2000x3000 and apply Border and overlay
                                                                 if ($AddTitleCardBorder -eq 'true' -and $AddTitleCardOverlay -eq 'true') {
                                                                     $Arguments = "`"$EpisodeImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$TitleCardoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$TitleCardborderwidthsecond`"  -bordercolor `"$TitleCardbordercolor`" -border `"$TitleCardborderwidth`" `"$EpisodeImage`""
@@ -17366,6 +17480,14 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                                         $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                                         InvokeMagickCommand -Command $magick -Arguments $CommentArguments
                                                         if (!$global:ImageMagickError -eq 'True') {
+                                                            if ($UseTCResolutionOverlays -eq 'true'){
+                                                                Write-Entry -Subtext "Queried Overlay Resolution: $global:EPResolution" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                                                                switch ($global:EPResolution) {
+                                                                    '4K' { $TitleCardoverlay = $4kTC }
+                                                                    '1080p' { $TitleCardoverlay = $1080pTC }
+                                                                    Default { $TitleCardoverlay = $TitleCardoverlay }
+                                                                }
+                                                            }
                                                             # Resize Image to 2000x3000 and apply Border and overlay
                                                             if ($AddTitleCardBorder -eq 'true' -and $AddTitleCardOverlay -eq 'true') {
                                                                 $Arguments = "`"$EpisodeImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$TitleCardoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$TitleCardborderwidthsecond`"  -bordercolor `"$TitleCardbordercolor`" -border `"$TitleCardborderwidth`" `"$EpisodeImage`""
@@ -19413,6 +19535,13 @@ else {
                                     $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                     InvokeMagickCommand -Command $magick -Arguments $CommentArguments
                                     if (!$global:ImageMagickError -eq 'true') {
+                                        if ($UseBackgroundResolutionOverlays -eq 'true'){
+                                            switch ($entry.Resolution) {
+                                                '4K' { $backgroundoverlay = $4kBackground }
+                                                '1080p' { $backgroundoverlay = $1080pBackground }
+                                                Default { $backgroundoverlay = $backgroundoverlay }
+                                            }
+                                        }
                                         # Calculate the height to maintain the aspect ratio with a width of 1000 pixels
                                         if ($AddBackgroundBorder -eq 'true' -and $AddBackgroundOverlay -eq 'true') {
                                             $Arguments = "`"$backgroundImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$backgroundoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundImage`""
@@ -20371,6 +20500,13 @@ else {
                                 $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                 InvokeMagickCommand -Command $magick -Arguments $CommentArguments
                                 if (!$global:ImageMagickError -eq 'true') {
+                                    if ($UseBackgroundResolutionOverlays -eq 'true'){
+                                        switch ($entry.Resolution) {
+                                            '4K' { $backgroundoverlay = $4kBackground }
+                                            '1080p' { $backgroundoverlay = $1080pBackground }
+                                            Default { $backgroundoverlay = $backgroundoverlay }
+                                        }
+                                    }
                                     # Calculate the height to maintain the aspect ratio with a width of 1000 pixels
                                     if ($AddBackgroundBorder -eq 'true' -and $AddBackgroundOverlay -eq 'true') {
                                         $Arguments = "`"$backgroundImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$Backgroundoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$backgroundImage`""
@@ -21249,10 +21385,12 @@ else {
                         $global:IsFallback = $null
                         $global:FallbackText = $null
                         $global:TextlessPoster = $null
+                        $global:EPResolutions = $null
 
                         if (($episode.tmdbid -eq $entry.tmdbid -or $episode.tvdbid -eq $entry.tvdbid) -and $episode.'Show Name' -eq $entry.title -and $episode.'Library Name' -eq $entry.'Library Name') {
                             $global:show_name = $episode."Show Name"
                             $global:season_number = $episode."Season Number"
+                            $global:EPResolutions = $episode."Resolutions".Split(",")
                             $global:episode_numbers = $episode."Episodes".Split(",")
                             $global:episode_ratingkeys = $episode."ratingKeys".Split(",")
                             $global:titles = $episode."Title".Split(";")
@@ -21282,6 +21420,7 @@ else {
                                     $global:PlexTitleCardUrl = $entry.PlexBackgroundUrl
                                     $global:episode_ratingkey = $($global:episode_ratingkeys[$i].Trim())
                                     $global:EPTitle = $($global:titles[$i].Trim())
+                                    $global:EPResolution = $($global:EPResolutions[$i].Trim())
                                     $global:episodenumber = $($global:episode_numbers[$i].Trim())
                                     $global:FileNaming = "S" + $global:season_number.PadLeft(2, '0') + "E" + $global:episodenumber.PadLeft(2, '0')
                                     $bullet = [char]0x2022
@@ -21527,6 +21666,13 @@ else {
                                                             $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                                             InvokeMagickCommand -Command $magick -Arguments $CommentArguments
                                                             if (!$global:ImageMagickError -eq 'true') {
+                                                                if ($UseTCResolutionOverlays -eq 'true'){
+                                                                    switch ($global:EPResolution) {
+                                                                        '4K' { $TitleCardoverlay = $4kTC }
+                                                                        '1080p' { $TitleCardoverlay = $1080pTC }
+                                                                        Default { $TitleCardoverlay = $TitleCardoverlay }
+                                                                    }
+                                                                }
                                                                 # Resize Image to 2000x3000 and apply Border and overlay
                                                                 if ($AddTitleCardBorder -eq 'true' -and $AddTitleCardOverlay -eq 'true') {
                                                                     $Arguments = "`"$EpisodeImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$TitleCardoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$TitleCardborderwidthsecond`"  -bordercolor `"$TitleCardbordercolor`" -border `"$TitleCardborderwidth`" `"$EpisodeImage`""
@@ -22081,6 +22227,13 @@ else {
                                                         $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                                         InvokeMagickCommand -Command $magick -Arguments $CommentArguments
                                                         if (!$global:ImageMagickError -eq 'true') {
+                                                            if ($UseTCResolutionOverlays -eq 'true'){
+                                                                switch ($global:EPResolution) {
+                                                                    '4K' { $TitleCardoverlay = $4kTC }
+                                                                    '1080p' { $TitleCardoverlay = $1080pTC }
+                                                                    Default { $TitleCardoverlay = $TitleCardoverlay }
+                                                                }
+                                                            }
                                                             # Resize Image to 2000x3000 and apply Border and overlay
                                                             if ($AddTitleCardBorder -eq 'true' -and $AddTitleCardOverlay -eq 'true') {
                                                                 $Arguments = "`"$EpisodeImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$TitleCardoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$TitleCardborderwidthsecond`"  -bordercolor `"$TitleCardbordercolor`" -border `"$TitleCardborderwidth`" `"$EpisodeImage`""
