@@ -6899,6 +6899,7 @@ $NewLineSymbols = $config.PrerequisitePart.NewLineSymbols
 # Resolution Part
 $UsePosterResolutionOverlays = $config.PrerequisitePart.UsePosterResolutionOverlays.tolower()
 $UseBackgroundResolutionOverlays = $config.PrerequisitePart.UseBackgroundResolutionOverlays.tolower()
+$UseTCResolutionOverlays = $config.PrerequisitePart.UseTCResolutionOverlays.tolower()
 
 $4kposter = Join-Path -Path $global:ScriptRoot -ChildPath ('temp', $config.PrerequisitePart.poster4k -join $($joinsymbol))
 $1080pPoster = Join-Path -Path $global:ScriptRoot -ChildPath ('temp', $config.PrerequisitePart.Poster1080p -join $($joinsymbol))
@@ -14511,6 +14512,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
 
     # Export the formatted data to CSV
     $FormattedData | Select-Object * | Export-Csv -Path "$global:ScriptRoot\Logs\OtherMediaServerEpisodeExport.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force
+    $Episodedata = $FormattedData
     if ($AllEpisodes) {
         Write-Entry -Subtext "Found '$($AllEpisodes.Items.count)' Episodes..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     }
@@ -17479,6 +17481,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                                         InvokeMagickCommand -Command $magick -Arguments $CommentArguments
                                                         if (!$global:ImageMagickError -eq 'True') {
                                                             if ($UseTCResolutionOverlays -eq 'true'){
+                                                                Write-Entry -Subtext "Queried Overlay Resolution: $global:EPResolution" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
                                                                 switch ($global:EPResolution) {
                                                                     '4K' { $TitleCardoverlay = $4kTC }
                                                                     '1080p' { $TitleCardoverlay = $1080pTC }
