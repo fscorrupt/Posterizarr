@@ -11766,7 +11766,7 @@ Elseif ($Tautulli) {
 
                         if (($episode.tmdbid -eq $entry.tmdbid -or $episode.tvdbid -eq $entry.tvdbid) -and $episode.'Show Name' -eq $entry.title -and $episode.'Library Name' -eq $entry.'Library Name') {
                             $global:show_name = $episode."Show Name"
-                            $global:EPResolutions = $episode."Resolution".Split(",")
+                            $global:EPResolutions = $episode."Resolutions".Split(",")
                             $global:season_number = $episode."Season Number"
                             $global:episode_numbers = $episode."Episodes".Split(",")
                             $global:episode_ratingkeys = $episode."ratingKeys".Split(",")
@@ -16796,7 +16796,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                         if (($episode.tmdbid -eq $entry.tmdbid -or $episode.tvdbid -eq $entry.tvdbid) -and $episode.'Show Name' -eq $entry.title) {
                             $global:show_name = $episode."Show Name"
                             $global:season_number = $episode."Season Number"
-                            $global:EPResolutions = $episode."Resolution".Split(",")
+                            $global:EPResolutions = $episode."Resolutions".Split(",")
                             $global:episode_numbers = $episode."Episodes".Split(",")
                             $global:episodeids = $episode."EpisodeIDs".Split(",")
                             $global:titles = $episode."Title".Split(";")
@@ -21387,7 +21387,7 @@ else {
                         if (($episode.tmdbid -eq $entry.tmdbid -or $episode.tvdbid -eq $entry.tvdbid) -and $episode.'Show Name' -eq $entry.title -and $episode.'Library Name' -eq $entry.'Library Name') {
                             $global:show_name = $episode."Show Name"
                             $global:season_number = $episode."Season Number"
-                            $global:EPResolutions = $episode."Resolution".Split(",")
+                            $global:EPResolutions = $episode."Resolutions".Split(",")
                             $global:episode_numbers = $episode."Episodes".Split(",")
                             $global:episode_ratingkeys = $episode."ratingKeys".Split(",")
                             $global:titles = $episode."Title".Split(";")
