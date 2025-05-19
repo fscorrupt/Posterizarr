@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## [1.9.61](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.61) - 2025-05-19 07:59:08+00:00
+
+## What's Changed
+* Sync by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/269
+* add: Bg & Tc resolution overlay function. by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/270
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.60...1.9.61
+
+### Small fixes
+
+- general:
+  - Bg & Tc resolution overlay function. (#270) ([f8c2028](https://github.com/fscorrupt/Posterizarr/commit/f8c2028b842a4d9f118d5596767ca2721b583b79)) ([#270](https://github.com/fscorrupt/Posterizarr/pull/270))
+  - Bg & Tc resolution overlay function. ([c6ef79c](https://github.com/fscorrupt/Posterizarr/commit/c6ef79c684033abf28bb22404479d15b3a09bbda)) ([#270](https://github.com/fscorrupt/Posterizarr/pull/270))
+
 ## [1.9.60](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.60) - 2025-05-15 09:49:18+00:00
 
 ## [1.9.59](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.59) - 2025-05-07 09:52:41+00:00
