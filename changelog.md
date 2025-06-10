@@ -2,17 +2,6 @@
 
 ## [1.9.62](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.62) - 2025-06-10 09:10:50+00:00
 
-## What's Changed
-* fix: Normalize path slashes for Linux compatibility by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/275
-
-**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.61...1.9.62
-
-### Bug Fixes
-
-- general:
-  - Normalize path slashes for Linux compatibility (#275) ([e0def18](https://github.com/fscorrupt/Posterizarr/commit/e0def180aef064b0bae577a66fee16d988ad5813)) ([#275](https://github.com/fscorrupt/Posterizarr/pull/275))
-  - Normalize path slashes for Linux compatibility ([c120ee0](https://github.com/fscorrupt/Posterizarr/commit/c120ee06a952c3eac566740942d3ea9ba2792a2d)) ([#275](https://github.com/fscorrupt/Posterizarr/pull/275))
-
 ## [1.9.61](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.61) - 2025-05-19 07:59:08+00:00
 
 ## [1.9.60](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.60) - 2025-05-15 09:49:18+00:00
