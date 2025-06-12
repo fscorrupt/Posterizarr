@@ -1,5 +1,19 @@
 # CHANGELOG
 
+## [1.9.63](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.63) - 2025-06-12 05:37:51+00:00
+
+## What's Changed
+* Sync by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/276
+* fix: Manual Mode for custom Season names. by @fscorrupt in https://github.com/fscorrupt/Posterizarr/pull/277
+
+**Full Changelog**: https://github.com/fscorrupt/Posterizarr/compare/1.9.62...1.9.63
+
+### Bug Fixes
+
+- general:
+  - Manual Mode for custom Season names. (#277) ([d343a1e](https://github.com/fscorrupt/Posterizarr/commit/d343a1e50243b467cbebffbc4c344e01ea3a01b5)) ([#277](https://github.com/fscorrupt/Posterizarr/pull/277))
+  - Manual Mode for custom Season names. ([3a6c67f](https://github.com/fscorrupt/Posterizarr/commit/3a6c67feec09ec89ba20272c155741be1ac6c6ae)) ([#277](https://github.com/fscorrupt/Posterizarr/pull/277))
+
 ## [1.9.62](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.62) - 2025-06-10 09:10:50+00:00
 
 ## [1.9.61](https://github.com/fscorrupt/Posterizarr/releases/tag/1.9.61) - 2025-05-19 07:59:08+00:00
