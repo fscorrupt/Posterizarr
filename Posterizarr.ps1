@@ -15,7 +15,7 @@ param (
 )
 Set-PSReadLineOption -HistorySaveStyle SaveNothing
 
-$CurrentScriptVersion = "1.9.62"
+$CurrentScriptVersion = "1.9.63"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 $env:PSMODULE_ANALYSIS_CACHE_PATH = $null
@@ -7532,9 +7532,19 @@ if ($Manual) {
             if ($SeasonPosterName -match 'Season\s+(\d+)') {
                 $global:SeasonNumber = $Matches[1]
                 $global:season = "Season" + $global:SeasonNumber.PadLeft(2, '0')
-            }
-            if ($SeasonPosterName -eq 'Specials') {
+            }Elseif ($SeasonPosterName -eq 'Specials') {
                 $global:season = "Season00"
+            }
+            Else {
+                Write-Entry -Subtext "Could not match Season name..." -Path $global:ScriptRoot\Logs\Manuallog.log -Color Yellow -log Warning
+                $seasontemp = Read-Host "Please enter Season Name for the local file (eq. Season00 or Season01....)"
+                if ($seasontemp -match '^Season(\d{2})$') {
+                    $global:SeasonNumber = $Matches[1]
+                    $global:season = "Season" + $global:SeasonNumber.PadLeft(2, '0')
+                } else {
+                    Write-Entry -Subtext "Invalid season format. Please enter something like Season00 or Season01." -Path $global:ScriptRoot\Logs\Manuallog.log -Color Yellow -log Warning
+                    Exit
+                }
             }
             $PosterImageoriginal = "$AssetPath\$LibraryName\$FolderName\$global:season.jpg"
         }
@@ -7563,8 +7573,19 @@ if ($Manual) {
                 $global:SeasonNumber = $Matches[1]
                 $global:season = "Season" + $global:SeasonNumber.PadLeft(2, '0')
             }
-            if ($SeasonPosterName -eq 'Specials') {
+            Elseif ($SeasonPosterName -eq 'Specials') {
                 $global:season = "Season00"
+            }
+            Else {
+                Write-Entry -Subtext "Could not match Season name..." -Path $global:ScriptRoot\Logs\Manuallog.log -Color Yellow -log Warning
+                $seasontemp = Read-Host "Please enter Season Name for the local file (eq. Season00 or Season01....)"
+                if ($seasontemp -match '^Season(\d{2})$') {
+                    $global:SeasonNumber = $Matches[1]
+                    $global:season = "Season" + $global:SeasonNumber.PadLeft(2, '0')
+                } else {
+                    Write-Entry -Subtext "Invalid season format. Please enter something like Season00 or Season01." -Path $global:ScriptRoot\Logs\Manuallog.log -Color Yellow -log Warning
+                    Exit
+                }
             }
             $PosterImageoriginal = "$AssetPath\$($FolderName)_$global:season.jpg"
         }
@@ -11023,6 +11044,11 @@ Elseif ($Tautulli) {
                                 $logEntry = "`"$magick`" $Resizeargument"
                                 $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                                 InvokeMagickCommand -Command $magick -Arguments $Resizeargument
+
+                                $CommentArguments = "`"$backgroundImage`" -set `"comment`" `"created with posterizarr`" `"$backgroundImage`""
+                                $CommentlogEntry = "`"$magick`" $CommentArguments"
+                                $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+                                InvokeMagickCommand -Command $magick -Arguments $CommentArguments
                             }
                             if (!$global:ImageMagickError -eq 'true') {
                                 # Move file back to original naming with Brackets.
