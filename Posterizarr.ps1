@@ -15,7 +15,7 @@ param (
 )
 Set-PSReadLineOption -HistorySaveStyle SaveNothing
 
-$CurrentScriptVersion = "1.9.63"
+$CurrentScriptVersion = "1.9.64"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 $env:PSMODULE_ANALYSIS_CACHE_PATH = $null
@@ -6810,6 +6810,15 @@ if ($UseJellyfin -eq 'true') {
 $EmbyUrl = $config.EmbyPart.EmbyUrl
 $UseEmby = $config.EmbyPart.UseEmby.tolower()
 if ($UseEmby -eq 'true') {
+
+    # Check and normalize Emby URL
+    # Only modify if IP or localhost and missing /emby
+    if ($EmbyUrl -match '^http[s]?://(?:localhost|\d{1,3}(?:\.\d{1,3}){3})(:\d+)?(?!/emby)(/?$)') {
+        # Append /emby if it's not already there
+        $EmbyUrl = $EmbyUrl.TrimEnd('/') + '/emby'
+        Write-Entry -Message "Your Emby URL is missing '/emby' at the end. It has been auto-corrected, but please update your config.json to avoid this message." -Path "$global:ScriptRoot\Logs\Scriptlog.log" -Color Yellow -log Warning
+    }
+
     $LibstoExclude = $config.EmbyPart.LibstoExclude
     $OtherMediaServerUrl = $EmbyUrl
     $UseOtherMediaServer = $UseEmby
