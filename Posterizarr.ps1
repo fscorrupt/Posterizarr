@@ -15,7 +15,7 @@ param (
 )
 Set-PSReadLineOption -HistorySaveStyle SaveNothing
 
-$CurrentScriptVersion = "1.9.67"
+$CurrentScriptVersion = "1.9.68"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 $env:PSMODULE_ANALYSIS_CACHE_PATH = $null
@@ -6858,6 +6858,7 @@ $ManualAssetPath = RemoveTrailingSlash $config.PrerequisitePart.ManualAssetPath
 $Upload2Plex = $config.PrerequisitePart.PlexUpload.tolower()
 $SkipAddText = $config.PrerequisitePart.SkipAddText.tolower()
 $DisableHashValidation = $config.PrerequisitePart.DisableHashValidation.tolower()
+$global:DisableOnlineAssetFetch = $config.PrerequisitePart.DisableOnlineAssetFetch.tolower()
 
 # Check if its a Network Share
 if ($AssetPath.StartsWith("\")) {
@@ -9506,6 +9507,7 @@ Elseif ($Tautulli) {
                             $global:IsFallback = $null
                             $global:ImageMagickError = $null
                             $TakeLocal = $null
+                            $LocalAssetMissing = $null
 
                             foreach ($ext in $allowedExtensions) {
                                 $filePath = "$ManualTestPath$ext"
@@ -9519,6 +9521,9 @@ Elseif ($Tautulli) {
                             if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
                                 Write-Entry -Message "Found Manual Poster for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 $TakeLocal = $true
+                            }
+                            Elseif($global:DisableOnlineAssetFetch -eq 'true'){
+                                $LocalAssetMissing = 'true'
                             }
                             Else {
                                 Write-Entry -Message "Start Poster Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -9817,6 +9822,9 @@ Elseif ($Tautulli) {
                                     }
                                 }
                             }
+                            Elseif ($LocalAssetMissing -eq 'true'){
+                                Write-Entry -Subtext "Skipping [$Titletext] - local asset missing and online fetch is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                            }
                             Else {
                                 Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
                                 Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
@@ -9928,6 +9936,7 @@ Elseif ($Tautulli) {
                             $global:TVDBAssetChangeUrl = $null
                             $global:ImageMagickError = $null
                             $TakeLocal = $null
+                            $LocalAssetMissing = $null
 
                             foreach ($ext in $allowedExtensions) {
                                 $filePath = "$ManualTestPath$ext"
@@ -9941,6 +9950,9 @@ Elseif ($Tautulli) {
                             if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
                                 Write-Entry -Message "Found Manual Background for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 $TakeLocal = $true
+                            }
+                            Elseif($global:DisableOnlineAssetFetch -eq 'true'){
+                                $LocalAssetMissing = 'true'
                             }
                             Else {
                                 Write-Entry -Message "Start Background Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -10218,6 +10230,9 @@ Elseif ($Tautulli) {
                                     }
                                 }
                             }
+                            Elseif ($LocalAssetMissing -eq 'true'){
+                                Write-Entry -Subtext "Skipping [$Titletext] - local asset missing and online fetch is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                            }
                             Else {
                                 Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
                                 Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
@@ -10329,6 +10344,7 @@ Elseif ($Tautulli) {
                 $global:tvdbalreadysearched = $null
                 $global:PlexartworkDownloaded = $null
                 $TakeLocal = $null
+                $LocalAssetMissing = $null
 
                 # Determine the language direction
                 $global:langCode = $entry.'Library Language'
@@ -10422,6 +10438,9 @@ Elseif ($Tautulli) {
                         if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
                             Write-Entry -Message "Found Manual Poster for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             $TakeLocal = $true
+                        }
+                        Elseif($global:DisableOnlineAssetFetch -eq 'true'){
+                            $LocalAssetMissing = 'true'
                         }
                         Else {
                             Write-Entry -Message "Start Poster Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -10704,6 +10723,9 @@ Elseif ($Tautulli) {
                                 }
                             }
                         }
+                        Elseif ($LocalAssetMissing -eq 'true'){
+                            Write-Entry -Subtext "Skipping [$Titletext] - local asset missing and online fetch is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                        }
                         Else {
                             Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
                             Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
@@ -10825,6 +10847,7 @@ Elseif ($Tautulli) {
                         $global:TextlessPoster = $null
                         $global:ImageMagickError = $null
                         $TakeLocal = $null
+                        $LocalAssetMissing = $null
 
                         foreach ($ext in $allowedExtensions) {
                             $filePath = "$ManualTestPath$ext"
@@ -10837,6 +10860,9 @@ Elseif ($Tautulli) {
                         if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
                             Write-Entry -Message "Found Manual Background for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             $TakeLocal = $true
+                        }
+                        Elseif($global:DisableOnlineAssetFetch -eq 'true'){
+                            $LocalAssetMissing = 'true'
                         }
                         Else {
                             Write-Entry -Message "Start Background Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -11122,6 +11148,9 @@ Elseif ($Tautulli) {
                                 }
                             }
                         }
+                        Elseif ($LocalAssetMissing -eq 'true'){
+                            Write-Entry -Subtext "Skipping [$Titletext] - local asset missing and online fetch is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                        }
                         Else {
                             Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
                             Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
@@ -11194,6 +11223,7 @@ Elseif ($Tautulli) {
                         $global:TVDBSeasonFallback = $null
                         $global:FANARTSeasonFallback = $null
                         $TakeLocal = $null
+                        $LocalAssetMissing = $null
 
                         if ($SeasonfontAllCaps -eq 'true') {
                             $global:seasonTitle = $global:seasonNames[$i].ToUpper()
@@ -11272,6 +11302,9 @@ Elseif ($Tautulli) {
                             if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
                                 Write-Entry -Message "Found Manual Season Poster for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 $TakeLocal = $true
+                            }
+                            Elseif($global:DisableOnlineAssetFetch -eq 'true'){
+                                $LocalAssetMissing = 'true'
                             }
                             Else {
                                 if (!$Seasonpostersearchtext) {
@@ -11745,6 +11778,9 @@ Elseif ($Tautulli) {
                                     }
                                 }
                             }
+                            Elseif ($LocalAssetMissing -eq 'true'){
+                                Write-Entry -Subtext "Skipping [$Titletext] - local asset missing and online fetch is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                            }
                             Else {
                                 Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
                                 Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
@@ -11841,6 +11877,7 @@ Elseif ($Tautulli) {
                                     $magickcommand = $null
                                     $Arturl = $null
                                     $TakeLocal = $null
+                                    $LocalAssetMissing = $null
                                     $global:PlexTitleCardUrl = $entry.PlexBackgroundUrl
                                     $global:episode_ratingkey = $($global:episode_ratingkeys[$i].Trim())
                                     $global:EPTitle = $($global:titles[$i].Trim())
@@ -11927,6 +11964,9 @@ Elseif ($Tautulli) {
                                             if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
                                                 Write-Entry -Message "Found Manual Title Card for: $global:show_name - $global:SeasonEPNumber" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                 $TakeLocal = $true
+                                            }
+                                            Elseif($global:DisableOnlineAssetFetch -eq 'true'){
+                                                $LocalAssetMissing = 'true'
                                             }
                                             Else {
                                                 if (!$Episodepostersearchtext) {
@@ -12299,6 +12339,9 @@ Elseif ($Tautulli) {
                                                     }
                                                 }
                                             }
+                                            Elseif ($LocalAssetMissing -eq 'true'){
+                                                Write-Entry -Subtext "Skipping [$global:show_name - $global:SeasonEPNumber] - local asset missing and online fetch is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                            }
                                             Else {
                                                 Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                                 Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
@@ -12362,6 +12405,7 @@ Elseif ($Tautulli) {
                                     $magickcommand = $null
                                     $Arturl = $null
                                     $TakeLocal = $null
+                                    $LocalAssetMissing = $null
                                     $global:PlexTitleCardUrl = $($global:PlexTitleCardUrls[$i].Trim())
                                     $global:episode_ratingkey = $($global:episode_ratingkeys[$i].Trim())
                                     $global:EPTitle = $($global:titles[$i].Trim())
@@ -12436,6 +12480,9 @@ Elseif ($Tautulli) {
                                             if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
                                                 Write-Entry -Message "Found Manual Title Card for: $global:show_name - $global:SeasonEPNumber" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                 $TakeLocal = $true
+                                            }
+                                            Elseif($global:DisableOnlineAssetFetch -eq 'true'){
+                                                $LocalAssetMissing = 'true'
                                             }
                                             Else {
                                                 if (!$Episodepostersearchtext) {
@@ -12828,6 +12875,9 @@ Elseif ($Tautulli) {
                                                         }
                                                     }
                                                 }
+                                            }
+                                            Elseif ($LocalAssetMissing -eq 'true'){
+                                                Write-Entry -Subtext "Skipping [$global:show_name - $global:SeasonEPNumber] - local asset missing and online fetch is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                             }
                                             Else {
                                                 Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
@@ -14752,6 +14802,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                             $global:IsFallback = $null
                             $global:ImageMagickError = $null
                             $TakeLocal = $null
+                            $LocalAssetMissing = $null
                             foreach ($ext in $allowedExtensions) {
                                 $filePath = "$ManualTestPath$ext"
                                 if (Test-Path -LiteralPath $filePath) {
@@ -14764,6 +14815,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                             if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
                                 Write-Entry -Message "Found Manual Poster for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 $TakeLocal = $true
+                            }
+                            Elseif($global:DisableOnlineAssetFetch -eq 'true'){
+                                $LocalAssetMissing = 'true'
                             }
                             Else {
                                 Write-Entry -Message "Start Poster Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -15028,6 +15082,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                     }
                                 }
                             }
+                            Elseif ($LocalAssetMissing -eq 'true'){
+                                Write-Entry -Subtext "Skipping [$Titletext] - local asset missing and online fetch is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                            }
                             Else {
                                 Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
                                 Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
@@ -15142,6 +15199,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                             $global:ImageMagickError = $null
                             $global:TextlessPoster = $null
                             $TakeLocal = $null
+                            $LocalAssetMissing = $null
                             foreach ($ext in $allowedExtensions) {
                                 $filePath = "$ManualTestPath$ext"
                                 if (Test-Path -LiteralPath $filePath) {
@@ -15154,6 +15212,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                             if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
                                 Write-Entry -Message "Found Manual Background for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 $TakeLocal = $true
+                            }
+                            Elseif($global:DisableOnlineAssetFetch -eq 'true'){
+                                $LocalAssetMissing = 'true'
                             }
                             Else {
                                 Write-Entry -Message "Start Background Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -15401,6 +15462,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                     }
                                 }
                             }
+                            Elseif ($LocalAssetMissing -eq 'true'){
+                                Write-Entry -Subtext "Skipping [$Titletext] - local asset missing and online fetch is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                            }
                             Else {
                                 Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
                                 Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
@@ -15515,6 +15579,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                 $global:TextlessPoster = $null
                 $global:tvdbalreadysearched = $null
                 $TakeLocal = $null
+                $LocalAssetMissing = $null
 
                 # Determine the language direction
                 $global:langCode = $entry.'Library Language'
@@ -15604,6 +15669,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                         if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
                             Write-Entry -Message "Found Manual Poster for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             $TakeLocal = $true
+                        }
+                        Elseif($global:DisableOnlineAssetFetch -eq 'true'){
+                            $LocalAssetMissing = 'true'
                         }
                         Else {
                             Write-Entry -Message "Start Poster Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -15849,6 +15917,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                 }
                             }
                         }
+                        Elseif ($LocalAssetMissing -eq 'true'){
+                            Write-Entry -Subtext "Skipping [$Titletext] - local asset missing and online fetch is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                        }
                         Else {
                             Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
                             Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
@@ -15972,6 +16043,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                         $global:TextlessPoster = $null
                         $global:ImageMagickError = $null
                         $TakeLocal = $null
+                        $LocalAssetMissing = $null
                         foreach ($ext in $allowedExtensions) {
                             $filePath = "$ManualTestPath$ext"
                             if (Test-Path -LiteralPath $filePath) {
@@ -15984,6 +16056,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                         if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
                             Write-Entry -Message "Found Manual Background for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             $TakeLocal = $true
+                        }
+                        Elseif($global:DisableOnlineAssetFetch -eq 'true'){
+                            $LocalAssetMissing = 'true'
                         }
                         Else {
                             Write-Entry -Message "Start Background Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -16232,6 +16307,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                 }
                             }
                         }
+                        Elseif ($LocalAssetMissing -eq 'true'){
+                            Write-Entry -Subtext "Skipping [$Titletext] - local asset missing and online fetch is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                        }
                         Else {
                             Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
                             Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
@@ -16311,6 +16389,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                         $global:seasonId = $null
                         $global:SeasonNumber = $null
                         $TakeLocal = $null
+                        $LocalAssetMissing = $null
 
                         if ($season.tmdbid -eq $entry.tmdbid -or $season.tvdbid -eq $entry.tvdbid) {
                             $global:seasonId = $season.SeasonId
@@ -16391,6 +16470,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                 if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
                                     Write-Entry -Message "Found Manual Season Poster for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                     $TakeLocal = $true
+                                }
+                                Elseif($global:DisableOnlineAssetFetch -eq 'true'){
+                                    $LocalAssetMissing = 'true'
                                 }
                                 Else {
                                     if (!$Seasonpostersearchtext) {
@@ -16774,6 +16856,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                         }
                                     }
                                 }
+                                Elseif ($LocalAssetMissing -eq 'true'){
+                                    Write-Entry -Subtext "Skipping [$Titletext] - local asset missing and online fetch is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                }
                                 Else {
                                     Write-Entry -Subtext "Missing poster URL for: $global:seasonTitle" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
                                     Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
@@ -16876,6 +16961,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                     $magickcommand = $null
                                     $Arturl = $null
                                     $TakeLocal = $null
+                                    $LocalAssetMissing = $null
                                     $global:EPTitle = $($global:titles[$i].Trim())
                                     $global:EPResolution = $($global:EPResolutions[$i].Trim())
                                     $global:episodenumber = $($global:episode_numbers[$i].Trim())
@@ -16956,6 +17042,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                             if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
                                                 Write-Entry -Message "Found Manual Title Card for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                 $TakeLocal = $true
+                                            }
+                                            Elseif($global:DisableOnlineAssetFetch -eq 'true'){
+                                                $LocalAssetMissing = 'true'
                                             }
                                             Else {
                                                 if (!$Episodepostersearchtext) {
@@ -17242,6 +17331,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                                     }
                                                 }
                                             }
+                                            Elseif ($LocalAssetMissing -eq 'true'){
+                                                Write-Entry -Subtext "Skipping [$Titletext] - local asset missing and online fetch is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                            }
                                             Else {
                                                 Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                                 Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
@@ -17311,6 +17403,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                     $magickcommand = $null
                                     $Arturl = $null
                                     $TakeLocal = $null
+                                    $LocalAssetMissing = $null
                                     $global:EPTitle = $($global:titles[$i].Trim())
                                     $global:episodenumber = $($global:episode_numbers[$i].Trim())
                                     $global:episodeid = $($global:episodeids[$i].Trim())
@@ -17380,6 +17473,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                             if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
                                                 Write-Entry -Message "Found Manual Title Card for: $global:show_name - $global:SeasonEPNumber" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                 $TakeLocal = $true
+                                            }
+                                            Elseif($global:DisableOnlineAssetFetch -eq 'true'){
+                                                $LocalAssetMissing = 'true'
                                             }
                                             Else {
                                                 if (!$Episodepostersearchtext) {
@@ -17687,6 +17783,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                                         }
                                                     }
                                                 }
+                                            }
+                                            Elseif ($LocalAssetMissing -eq 'true'){
+                                                Write-Entry -Subtext "Skipping [$global:show_name - $global:SeasonEPNumber] - local asset missing and online fetch is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                             }
                                             Else {
                                                 Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
@@ -18981,6 +19080,7 @@ else {
                             $global:IsFallback = $null
                             $global:ImageMagickError = $null
                             $TakeLocal = $null
+                            $LocalAssetMissing = $null
 
                             foreach ($ext in $allowedExtensions) {
                                 $filePath = "$ManualTestPath$ext"
@@ -18994,6 +19094,9 @@ else {
                             if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
                                 Write-Entry -Message "Found Manual Poster for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 $TakeLocal = $true
+                            }
+                            Elseif($global:DisableOnlineAssetFetch -eq 'true'){
+                                $LocalAssetMissing = 'true'
                             }
                             Else {
                                 Write-Entry -Message "Start Poster Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -19293,6 +19396,9 @@ else {
                                     }
                                 }
                             }
+                            Elseif ($LocalAssetMissing -eq 'true'){
+                                Write-Entry -Subtext "Skipping [$Titletext] - local asset missing and online fetch is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                            }
                             Else {
                                 Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
                                 Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
@@ -19435,6 +19541,7 @@ else {
                             $global:ImageMagickError = $null
                             $global:TextlessPoster = $null
                             $TakeLocal = $null
+                            $LocalAssetMissing = $null
 
                             foreach ($ext in $allowedExtensions) {
                                 $filePath = "$ManualTestPath$ext"
@@ -19448,6 +19555,9 @@ else {
                             if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
                                 Write-Entry -Message "Found Manual Background for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 $TakeLocal = $true
+                            }
+                            Elseif($global:DisableOnlineAssetFetch -eq 'true'){
+                                $LocalAssetMissing = 'true'
                             }
                             Else {
                                 Write-Entry -Message "Start Background Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -19727,6 +19837,9 @@ else {
                                     }
                                 }
                             }
+                            Elseif ($LocalAssetMissing -eq 'true'){
+                                Write-Entry -Subtext "Skipping [$Titletext] - local asset missing and online fetch is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                            }
                             Else {
                                 Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
                                 Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
@@ -19867,6 +19980,7 @@ else {
                 $global:langCode = $null
                 $global:direction = $null
                 $TakeLocal = $null
+                $LocalAssetMissing = $null
 
                 # Determine the language direction
                 $global:langCode = $entry.'Library Language'
@@ -19961,6 +20075,9 @@ else {
                         if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
                             Write-Entry -Message "Found Manual Poster for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             $TakeLocal = $true
+                        }
+                        Elseif($global:DisableOnlineAssetFetch -eq 'true'){
+                            $LocalAssetMissing = 'true'
                         }
                         Else {
                             Write-Entry -Message "Start Poster Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -20251,6 +20368,9 @@ else {
                                 }
                             }
                         }
+                        Elseif ($LocalAssetMissing -eq 'true'){
+                            Write-Entry -Subtext "Skipping [$Titletext] - local asset missing and online fetch is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                        }
                         Else {
                             Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
                             Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
@@ -20402,6 +20522,7 @@ else {
                         $global:TextlessPoster = $null
                         $global:ImageMagickError = $null
                         $TakeLocal = $null
+                        $LocalAssetMissing = $null
 
                         foreach ($ext in $allowedExtensions) {
                             $filePath = "$ManualTestPath$ext"
@@ -20414,6 +20535,9 @@ else {
                         if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
                             Write-Entry -Message "Found Manual Background for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             $TakeLocal = $true
+                        }
+                        Elseif($global:DisableOnlineAssetFetch -eq 'true'){
+                            $LocalAssetMissing = 'true'
                         }
                         Else {
                             Write-Entry -Message "Start Background Search for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -20694,6 +20818,9 @@ else {
                                 }
                             }
                         }
+                        Elseif ($LocalAssetMissing -eq 'true'){
+                            Write-Entry -Subtext "Skipping [$Titletext] - local asset missing and online fetch is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                        }
                         Else {
                             Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
                             Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
@@ -20795,6 +20922,7 @@ else {
                         $global:TVDBSeasonFallback = $null
                         $global:FANARTSeasonFallback = $null
                         $TakeLocal = $null
+                        $LocalAssetMissing = $null
                         if ($SeasonfontAllCaps -eq 'true') {
                             $global:seasonTitle = $global:seasonNames[$i].ToUpper()
                         }
@@ -20872,6 +21000,9 @@ else {
                             if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
                                 Write-Entry -Message "Found Manual Season Poster for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 $TakeLocal = $true
+                            }
+                            Elseif($global:DisableOnlineAssetFetch -eq 'true'){
+                                $LocalAssetMissing = 'true'
                             }
                             Else {
                                 if (!$Seasonpostersearchtext) {
@@ -21352,6 +21483,9 @@ else {
                                     }
                                 }
                             }
+                            Elseif ($LocalAssetMissing -eq 'true'){
+                                Write-Entry -Subtext "Skipping [$Titletext] - local asset missing and online fetch is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                            }
                             Else {
                                 Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
                                 Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
@@ -21477,6 +21611,7 @@ else {
                                     $magickcommand = $null
                                     $Arturl = $null
                                     $TakeLocal = $null
+                                    $LocalAssetMissing = $null
                                     $global:PlexTitleCardUrl = $entry.PlexBackgroundUrl
                                     $global:episode_ratingkey = $($global:episode_ratingkeys[$i].Trim())
                                     $global:EPTitle = $($global:titles[$i].Trim())
@@ -21564,6 +21699,9 @@ else {
                                                 Write-Entry -Message "Found Manual Title Card for: $global:show_name - $global:SeasonEPNumber" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                 $TakeLocal = $true
                                                 $Episodepostersearchtext = $true
+                                            }
+                                            Elseif($global:DisableOnlineAssetFetch -eq 'true'){
+                                                $LocalAssetMissing = 'true'
                                             }
                                             Else {
                                                 if (!$Episodepostersearchtext) {
@@ -21935,6 +22073,9 @@ else {
                                                     }
                                                 }
                                             }
+                                            Elseif ($LocalAssetMissing -eq 'true'){
+                                                Write-Entry -Subtext "Skipping [$global:show_name - $global:SeasonEPNumber] - local asset missing and online fetch is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+                                            }
                                             Else {
                                                 Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                                 Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
@@ -22027,6 +22168,7 @@ else {
                                     $magickcommand = $null
                                     $Arturl = $null
                                     $TakeLocal = $null
+                                    $LocalAssetMissing = $null
                                     $global:PlexTitleCardUrl = $($global:PlexTitleCardUrls[$i].Trim())
                                     $global:episode_ratingkey = $($global:episode_ratingkeys[$i].Trim())
                                     $global:EPTitle = $($global:titles[$i].Trim())
@@ -22102,6 +22244,9 @@ else {
                                             if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
                                                 Write-Entry -Message "Found Manual Title Card for: $global:show_name - $global:SeasonEPNumber" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                 $TakeLocal = $true
+                                            }
+                                            Elseif($global:DisableOnlineAssetFetch -eq 'true'){
+                                                $LocalAssetMissing = 'true'
                                             }
                                             Else {
                                                 if (!$Episodepostersearchtext) {
@@ -22495,6 +22640,9 @@ else {
                                                         }
                                                     }
                                                 }
+                                            }
+                                            Elseif ($LocalAssetMissing -eq 'true'){
+                                                Write-Entry -Subtext "Skipping [$global:show_name - $global:SeasonEPNumber] - local asset missing and online fetch is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                             }
                                             Else {
                                                 Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
