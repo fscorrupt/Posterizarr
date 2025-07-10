@@ -113,7 +113,8 @@
     "SkipJapTitle": "false",
     "AssetCleanup": "false",
     "AutoUpdateIM": "false",
-    "DisableHashValidation": "false"
+    "DisableHashValidation": "false",
+    "DisableOnlineAssetFetch": "false"
   },
   "OverlayPart": {
     "ImageProcessing": "true",

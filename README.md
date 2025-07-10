@@ -225,6 +225,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpin
       - Doing this could break things, cause you then uses IM Versions that are not tested with Posterizarr.
     - `DisableHashValidation` : Set to `true` to skip hash validation (Default value is: false).
       - *Note: This may produce bloat, as every item will be re-uploaded to the media servers.*
+    - `DisableOnlineAssetFetch` : Set to `true` to skip all online lookups and use only locally available assets. (Default value is: false).
     </details>
     <details close>
     <summary>OverlayPart [click to unfold]</summary>
