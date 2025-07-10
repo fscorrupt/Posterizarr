@@ -9823,8 +9823,7 @@ Elseif ($Tautulli) {
                                 }
                             }
                             Elseif ($LocalAssetMissing -eq 'true'){
-                                Write-Entry -Subtext "[$Titletext] Asset skipped - no local asset was found and online search is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-                                Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
+                                Write-Entry -Subtext "Skipping [$Titletext] - local asset missing and online fetch is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                             }
                             Else {
                                 Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
@@ -10232,8 +10231,7 @@ Elseif ($Tautulli) {
                                 }
                             }
                             Elseif ($LocalAssetMissing -eq 'true'){
-                                Write-Entry -Subtext "[$Titletext] Asset skipped - no local asset was found and online search is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-                                Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
+                                Write-Entry -Subtext "Skipping [$Titletext] - local asset missing and online fetch is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                             }
                             Else {
                                 Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
@@ -10726,8 +10724,7 @@ Elseif ($Tautulli) {
                             }
                         }
                         Elseif ($LocalAssetMissing -eq 'true'){
-                            Write-Entry -Subtext "[$Titletext] Asset skipped - no local asset was found and online search is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-                            Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
+                            Write-Entry -Subtext "Skipping [$Titletext] - local asset missing and online fetch is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                         }
                         Else {
                             Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
@@ -11152,8 +11149,7 @@ Elseif ($Tautulli) {
                             }
                         }
                         Elseif ($LocalAssetMissing -eq 'true'){
-                            Write-Entry -Subtext "[$Titletext] Asset skipped - no local asset was found and online search is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-                            Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
+                            Write-Entry -Subtext "Skipping [$Titletext] - local asset missing and online fetch is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                         }
                         Else {
                             Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
@@ -11783,8 +11779,7 @@ Elseif ($Tautulli) {
                                 }
                             }
                             Elseif ($LocalAssetMissing -eq 'true'){
-                                Write-Entry -Subtext "[$Titletext] Asset skipped - no local asset was found and online search is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-                                Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
+                                Write-Entry -Subtext "Skipping [$Titletext] - local asset missing and online fetch is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                             }
                             Else {
                                 Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
@@ -12345,8 +12340,7 @@ Elseif ($Tautulli) {
                                                 }
                                             }
                                             Elseif ($LocalAssetMissing -eq 'true'){
-                                                Write-Entry -Subtext "[$global:show_name - $global:SeasonEPNumber] Asset skipped - no local asset was found and online search is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-                                                Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
+                                                Write-Entry -Subtext "Skipping [$global:show_name - $global:SeasonEPNumber] - local asset missing and online fetch is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                             }
                                             Else {
                                                 Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
@@ -12883,8 +12877,7 @@ Elseif ($Tautulli) {
                                                 }
                                             }
                                             Elseif ($LocalAssetMissing -eq 'true'){
-                                                Write-Entry -Subtext "[$global:show_name - $global:SeasonEPNumber] Asset skipped - no local asset was found and online search is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-                                                Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
+                                                Write-Entry -Subtext "Skipping [$global:show_name - $global:SeasonEPNumber] - local asset missing and online fetch is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                             }
                                             Else {
                                                 Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
@@ -15090,8 +15083,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                 }
                             }
                             Elseif ($LocalAssetMissing -eq 'true'){
-                                Write-Entry -Subtext "[$Titletext] Asset skipped - no local asset was found and online search is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-                                Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
+                                Write-Entry -Subtext "Skipping [$Titletext] - local asset missing and online fetch is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                             }
                             Else {
                                 Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
@@ -15471,8 +15463,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                 }
                             }
                             Elseif ($LocalAssetMissing -eq 'true'){
-                                Write-Entry -Subtext "[$Titletext] Asset skipped - no local asset was found and online search is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-                                Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
+                                Write-Entry -Subtext "Skipping [$Titletext] - local asset missing and online fetch is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                             }
                             Else {
                                 Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
@@ -15927,8 +15918,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                             }
                         }
                         Elseif ($LocalAssetMissing -eq 'true'){
-                            Write-Entry -Subtext "[$Titletext] Asset skipped - no local asset was found and online search is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-                            Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
+                            Write-Entry -Subtext "Skipping [$Titletext] - local asset missing and online fetch is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                         }
                         Else {
                             Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
@@ -16318,8 +16308,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                             }
                         }
                         Elseif ($LocalAssetMissing -eq 'true'){
-                            Write-Entry -Subtext "[$Titletext] Asset skipped - no local asset was found and online search is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-                            Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
+                            Write-Entry -Subtext "Skipping [$Titletext] - local asset missing and online fetch is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                         }
                         Else {
                             Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
@@ -16868,8 +16857,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                     }
                                 }
                                 Elseif ($LocalAssetMissing -eq 'true'){
-                                    Write-Entry -Subtext "[$Titletext] Asset skipped - no local asset was found and online search is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-                                    Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
+                                    Write-Entry -Subtext "Skipping [$Titletext] - local asset missing and online fetch is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                 }
                                 Else {
                                     Write-Entry -Subtext "Missing poster URL for: $global:seasonTitle" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
@@ -17344,8 +17332,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                                 }
                                             }
                                             Elseif ($LocalAssetMissing -eq 'true'){
-                                                Write-Entry -Subtext "[$Titletext] Asset skipped - no local asset was found and online search is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-                                                Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
+                                                Write-Entry -Subtext "Skipping [$Titletext] - local asset missing and online fetch is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                             }
                                             Else {
                                                 Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
@@ -17798,8 +17785,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                                 }
                                             }
                                             Elseif ($LocalAssetMissing -eq 'true'){
-                                                Write-Entry -Subtext "[$global:show_name - $global:SeasonEPNumber] Asset skipped - no local asset was found and online search is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-                                                Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
+                                                Write-Entry -Subtext "Skipping [$global:show_name - $global:SeasonEPNumber] - local asset missing and online fetch is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                             }
                                             Else {
                                                 Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
@@ -19411,8 +19397,7 @@ else {
                                 }
                             }
                             Elseif ($LocalAssetMissing -eq 'true'){
-                                Write-Entry -Subtext "[$Titletext] Asset skipped - no local asset was found and online search is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-                                Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
+                                Write-Entry -Subtext "Skipping [$Titletext] - local asset missing and online fetch is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                             }
                             Else {
                                 Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
@@ -19853,8 +19838,7 @@ else {
                                 }
                             }
                             Elseif ($LocalAssetMissing -eq 'true'){
-                                Write-Entry -Subtext "[$Titletext] Asset skipped - no local asset was found and online search is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-                                Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
+                                Write-Entry -Subtext "Skipping [$Titletext] - local asset missing and online fetch is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                             }
                             Else {
                                 Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
@@ -20385,8 +20369,7 @@ else {
                             }
                         }
                         Elseif ($LocalAssetMissing -eq 'true'){
-                            Write-Entry -Subtext "[$Titletext] Asset skipped - no local asset was found and online search is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-                            Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
+                            Write-Entry -Subtext "Skipping [$Titletext] - local asset missing and online fetch is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                         }
                         Else {
                             Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
@@ -20836,8 +20819,7 @@ else {
                             }
                         }
                         Elseif ($LocalAssetMissing -eq 'true'){
-                            Write-Entry -Subtext "[$Titletext] Asset skipped - no local asset was found and online search is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-                            Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
+                            Write-Entry -Subtext "Skipping [$Titletext] - local asset missing and online fetch is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                         }
                         Else {
                             Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
@@ -21502,8 +21484,7 @@ else {
                                 }
                             }
                             Elseif ($LocalAssetMissing -eq 'true'){
-                                Write-Entry -Subtext "[$Titletext] Asset skipped - no local asset was found and online search is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-                                Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
+                                Write-Entry -Subtext "Skipping [$Titletext] - local asset missing and online fetch is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                             }
                             Else {
                                 Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
@@ -22093,8 +22074,7 @@ else {
                                                 }
                                             }
                                             Elseif ($LocalAssetMissing -eq 'true'){
-                                                Write-Entry -Subtext "[$global:show_name - $global:SeasonEPNumber] Asset skipped - no local asset was found and online search is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-                                                Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
+                                                Write-Entry -Subtext "Skipping [$global:show_name - $global:SeasonEPNumber] - local asset missing and online fetch is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                             }
                                             Else {
                                                 Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
@@ -22662,8 +22642,7 @@ else {
                                                 }
                                             }
                                             Elseif ($LocalAssetMissing -eq 'true'){
-                                                Write-Entry -Subtext "[$global:show_name - $global:SeasonEPNumber] Asset skipped - no local asset was found and online search is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-                                                Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
+                                                Write-Entry -Subtext "Skipping [$global:show_name - $global:SeasonEPNumber] - local asset missing and online fetch is disabled." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                             }
                                             Else {
                                                 Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
