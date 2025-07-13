@@ -15,7 +15,7 @@ param (
 )
 Set-PSReadLineOption -HistorySaveStyle SaveNothing
 
-$CurrentScriptVersion = "1.9.68"
+$CurrentScriptVersion = "1.9.70"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 $env:PSMODULE_ANALYSIS_CACHE_PATH = $null
@@ -910,7 +910,7 @@ function GetTMDBMoviePoster {
     }
     if ($global:PreferTextless -eq $true) {
         try {
-            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($global:tmdbid)?append_to_response=images&language=xx&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
+            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($global:tmdbid)?append_to_response=images&language=null&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
         }
         catch {
             Write-Entry -Subtext "Could not query TMDB url, error message: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
@@ -1117,7 +1117,7 @@ function GetTMDBMovieBackground {
     }
     if ($global:BackgroundPreferTextless -eq $true) {
         try {
-            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($global:tmdbid)?append_to_response=images&language=xx&include_image_language=$($global:PreferredBackgroundLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
+            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($global:tmdbid)?append_to_response=images&language=null&include_image_language=$($global:PreferredBackgroundLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
         }
         catch {
             Write-Entry -Subtext "Could not query TMDB url, error message: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
@@ -1336,7 +1336,7 @@ function GetTMDBShowPoster {
     Else {
         if ($global:PreferTextless -eq $true) {
             try {
-                $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=xx&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
+                $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=null&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
             }
             catch {
                 Write-Entry -Subtext "Could not query TMDB url, error message: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
@@ -1537,7 +1537,7 @@ function GetTMDBSeasonPoster {
     }
     if ($global:SeasonPreferTextless -eq $true) {
         try {
-            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)/season/$global:SeasonNumber/images?append_to_response=images&language=xx&include_image_language=$($global:PreferredSeasonLanguageOrder -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
+            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)/season/$global:SeasonNumber/images?append_to_response=images&language=xx&include_image_language=$($global:PreferredSeasonLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
         }
         catch {
             Write-Entry -Subtext "Could not query TMDB url, error message: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
@@ -1796,7 +1796,7 @@ function GetTMDBShowBackground {
     }
     if ($global:BackgroundPreferTextless -eq $true) {
         try {
-            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=xx&include_image_language=$($global:PreferredBackgroundLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
+            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=null&include_image_language=$($global:PreferredBackgroundLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
         }
         catch {
             Write-Entry -Subtext "Could not query TMDB url, error message: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
@@ -2011,7 +2011,7 @@ function GetTMDBTitleCard {
         Write-Entry -Subtext "Cannot search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     }
     try {
-        $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)/season/$($global:season_number)/episode/$($global:episodenumber)/images?append_to_response=images&language=xx&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
+        $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)/season/$($global:season_number)/episode/$($global:episodenumber)/images?append_to_response=images&language=null&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
     }
     catch {
         Write-Entry -Subtext "Could not query TMDB url, error message: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
@@ -7418,97 +7418,98 @@ if (-not $module) {
         Write-Host "Failed to install $moduleName module. Error: $_"
     }
 }
-# Add Fanart API
-Add-FanartTvAPIKey -Api_Key $FanartTvAPIKey
 
-# Check TMDB Token before building the Header.
-if ($global:tmdbtoken.Length -le '35') {
-    Write-Entry -Message "TMDB Token is too short, you may have used the API key in your config file. Please use the 'API Read Access Token'." -Path $configLogging -Color Red -log Error
-    # Clear Running File
-    if (Test-Path $CurrentlyRunning) {
-        Remove-Item -LiteralPath $CurrentlyRunning | out-null
+# Only connect if DisableOnlineAssetFetch is not set to false
+if ($global:DisableOnlineAssetFetch -eq 'false'){
+    # Add Fanart API
+    Add-FanartTvAPIKey -Api_Key $FanartTvAPIKey
+
+    # Check TMDB Token before building the Header.
+    if ($global:tmdbtoken.Length -le '35') {
+        Write-Entry -Message "TMDB Token is too short, you may have used the API key in your config file. Please use the 'API Read Access Token'." -Path $configLogging -Color Red -log Error
+        # Clear Running File
+        if (Test-Path $CurrentlyRunning) {
+            Remove-Item -LiteralPath $CurrentlyRunning | out-null
+        }
+        if ($global:UptimeKumaUrl) {
+            Send-UptimeKumaWebhook -status "down" -msg "Wrong TMDB token"
+        }
+        Exit
     }
-    if ($global:UptimeKumaUrl) {
-        Send-UptimeKumaWebhook -status "down" -msg "Wrong TMDB token"
-    }
-    Exit
-}
 
-$maxRetries = 6
-$retryCount = 0
-$success = $false
-Write-Entry -Message "Trying to receive a TVDB Token..." -Path $configLogging -Color White -log Info
+    $maxRetries = 6
+    $retryCount = 0
+    $success = $false
+    Write-Entry -Message "Trying to receive a TVDB Token..." -Path $configLogging -Color White -log Info
 
-while (-not $success -and $retryCount -lt $maxRetries) {
-    try {
-        # tvdb token Header
-        $global:apiUrl = "https://api4.thetvdb.com/v4/login"
-        if ($global:tvdbpin) {
-            $global:requestBody = @{
-                apikey = $global:tvdbapi
-                pin    = $global:tvdbpin
-            } | ConvertTo-Json
-        }
-        Else {
-            $global:requestBody = @{
-                apikey = $global:tvdbapi
-            } | ConvertTo-Json
-        }
-        # tvdb Header
-        $global:tvdbtokenheader = @{
-            'accept'       = 'application/json'
-            'Content-Type' = 'application/json'
-        }
-
-        # Make tvdb the POST request
-        $global:tvdbtoken = (Invoke-RestMethod -Uri $global:apiUrl -Headers $global:tvdbtokenheader -Method Post -Body $global:requestBody).data.token
-        $global:tvdbheader = @{}
-        $global:tvdbheader.Add("accept", "application/json")
-        $global:tvdbheader.Add("Authorization", "Bearer $global:tvdbtoken")
-
-        if ($global:tvdbtoken) {
-            $success = $true
-            Write-Entry -Subtext "Successfully received a TVDB Token" -Path $configLogging -Color Green -log Info
-        }
-
-    }
-    catch {
-        $retryCount++
-
-        if ($retryCount -lt $maxRetries) {
-            Start-Sleep -Seconds 10  # Wait for 10 seconds before the next retry
-        }
-        else {
-            if ($global:FavProvider -eq 'TVDB') {
-                Write-Entry -Subtext "Could not receive a TVDB Token - $($retryCount)/$($maxRetries) - you may have used an legacy API key in your config file. Please use an 'Project Api Key'" -Path $configLogging -Color Red -log Error
-                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                $errorCount++
-                # Clear Running File
-                if (Test-Path $CurrentlyRunning) {
-                    Remove-Item -LiteralPath $CurrentlyRunning | out-null
-                }
-                if ($global:UptimeKumaUrl) {
-                    Send-UptimeKumaWebhook -status "down" -msg "Could not receive a TVDB Token"
-                }
-                Exit
+    while (-not $success -and $retryCount -lt $maxRetries) {
+        try {
+            # tvdb token Header
+            $global:apiUrl = "https://api4.thetvdb.com/v4/login"
+            if ($global:tvdbpin) {
+                $global:requestBody = @{
+                    apikey = $global:tvdbapi
+                    pin    = $global:tvdbpin
+                } | ConvertTo-Json
             }
             Else {
-                Write-Entry -Subtext "Could not receive a TVDB Token - $($retryCount)/$($maxRetries) - you may have used an legacy API key in your config file. Please use an 'Project Api Key'" -Path $configLogging -Color Red -log Error
-                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                $errorCount++
-                break
+                $global:requestBody = @{
+                    apikey = $global:tvdbapi
+                } | ConvertTo-Json
+            }
+            # tvdb Header
+            $global:tvdbtokenheader = @{
+                'accept'       = 'application/json'
+                'Content-Type' = 'application/json'
+            }
+
+            # Make tvdb the POST request
+            $global:tvdbtoken = (Invoke-RestMethod -Uri $global:apiUrl -Headers $global:tvdbtokenheader -Method Post -Body $global:requestBody).data.token
+            $global:tvdbheader = @{}
+            $global:tvdbheader.Add("accept", "application/json")
+            $global:tvdbheader.Add("Authorization", "Bearer $global:tvdbtoken")
+
+            if ($global:tvdbtoken) {
+                $success = $true
+                Write-Entry -Subtext "Successfully received a TVDB Token" -Path $configLogging -Color Green -log Info
+            }
+
+        }
+        catch {
+            $retryCount++
+
+            if ($retryCount -lt $maxRetries) {
+                Start-Sleep -Seconds 10  # Wait for 10 seconds before the next retry
+            }
+            else {
+                if ($global:FavProvider -eq 'TVDB') {
+                    Write-Entry -Subtext "Could not receive a TVDB Token - $($retryCount)/$($maxRetries) - you may have used an legacy API key in your config file. Please use an 'Project Api Key'" -Path $configLogging -Color Red -log Error
+                    Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    $errorCount++
+                    # Clear Running File
+                    if (Test-Path $CurrentlyRunning) {
+                        Remove-Item -LiteralPath $CurrentlyRunning | out-null
+                    }
+                    if ($global:UptimeKumaUrl) {
+                        Send-UptimeKumaWebhook -status "down" -msg "Could not receive a TVDB Token"
+                    }
+                    Exit
+                }
+                Else {
+                    Write-Entry -Subtext "Could not receive a TVDB Token - $($retryCount)/$($maxRetries) - you may have used an legacy API key in your config file. Please use an 'Project Api Key'" -Path $configLogging -Color Red -log Error
+                    Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    $errorCount++
+                    break
+                }
             }
         }
     }
+
+    # tmdb Header
+    $global:headers = @{}
+    $global:headers.Add("accept", "application/json")
+    $global:headers.Add("Authorization", "Bearer $global:tmdbtoken")
 }
-
-# tmdb Header
-$global:headers = @{}
-$global:headers.Add("accept", "application/json")
-$global:headers.Add("Authorization", "Bearer $global:tmdbtoken")
-
-
-
 # Plex Headers
 $extraPlexHeaders = @{
     'X-Plex-Container-Size' = '1000'
