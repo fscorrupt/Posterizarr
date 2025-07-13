@@ -15,7 +15,7 @@ param (
 )
 Set-PSReadLineOption -HistorySaveStyle SaveNothing
 
-$CurrentScriptVersion = "1.9.69"
+$CurrentScriptVersion = "1.9.70"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 $env:PSMODULE_ANALYSIS_CACHE_PATH = $null
@@ -910,7 +910,7 @@ function GetTMDBMoviePoster {
     }
     if ($global:PreferTextless -eq $true) {
         try {
-            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($global:tmdbid)?append_to_response=images&language=xx&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
+            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($global:tmdbid)?append_to_response=images&language=null&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
         }
         catch {
             Write-Entry -Subtext "Could not query TMDB url, error message: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
@@ -1117,7 +1117,7 @@ function GetTMDBMovieBackground {
     }
     if ($global:BackgroundPreferTextless -eq $true) {
         try {
-            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($global:tmdbid)?append_to_response=images&language=xx&include_image_language=$($global:PreferredBackgroundLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
+            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($global:tmdbid)?append_to_response=images&language=null&include_image_language=$($global:PreferredBackgroundLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
         }
         catch {
             Write-Entry -Subtext "Could not query TMDB url, error message: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
@@ -1336,7 +1336,7 @@ function GetTMDBShowPoster {
     Else {
         if ($global:PreferTextless -eq $true) {
             try {
-                $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=xx&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
+                $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=null&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
             }
             catch {
                 Write-Entry -Subtext "Could not query TMDB url, error message: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
@@ -1537,7 +1537,7 @@ function GetTMDBSeasonPoster {
     }
     if ($global:SeasonPreferTextless -eq $true) {
         try {
-            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)/season/$global:SeasonNumber/images?append_to_response=images&language=xx&include_image_language=$($global:PreferredSeasonLanguageOrder -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
+            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)/season/$global:SeasonNumber/images?append_to_response=images&language=xx&include_image_language=$($global:PreferredSeasonLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
         }
         catch {
             Write-Entry -Subtext "Could not query TMDB url, error message: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
@@ -1796,7 +1796,7 @@ function GetTMDBShowBackground {
     }
     if ($global:BackgroundPreferTextless -eq $true) {
         try {
-            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=xx&include_image_language=$($global:PreferredBackgroundLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
+            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=null&include_image_language=$($global:PreferredBackgroundLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
         }
         catch {
             Write-Entry -Subtext "Could not query TMDB url, error message: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
@@ -2011,7 +2011,7 @@ function GetTMDBTitleCard {
         Write-Entry -Subtext "Cannot search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     }
     try {
-        $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)/season/$($global:season_number)/episode/$($global:episodenumber)/images?append_to_response=images&language=xx&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
+        $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)/season/$($global:season_number)/episode/$($global:episodenumber)/images?append_to_response=images&language=null&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
     }
     catch {
         Write-Entry -Subtext "Could not query TMDB url, error message: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
