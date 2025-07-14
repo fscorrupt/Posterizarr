@@ -14,63 +14,23 @@ ENV UMASK="0002" \
     FONTCONFIG_CACHE_DIR="/var/cache/fontconfig"
 
 # Install build tools, runtime dependencies, libraqm, and ImageMagick with raqm support
-RUN apk add --no-cache \
-        meson \
-        ninja \
+RUN echo @edge http://dl-cdn.alpinelinux.org/alpine/edge/community >> /etc/apk/repositories \
+    && echo @edge http://dl-cdn.alpinelinux.org/alpine/edge/main >> /etc/apk/repositories \
+    && apk upgrade --update-cache --available \
+    && apk update \
+    && apk add --no-cache \
         catatonit \
         curl \
         fontconfig \
         libjpeg-turbo \
-        pango \
+        imagemagick@edge \
+        imagemagick-libs@edge \
+        imagemagick-heic \
+        imagemagick-jpeg \
         powershell \
         tzdata \
-        git \
-        build-base \
-        freetype-dev \
-        harfbuzz-dev \
-        fribidi-dev \
-        cairo-dev \
-        pango-dev \
-        glib-dev \
-        fontconfig-dev \
-        libjpeg-turbo-dev \
-        libpng-dev \
-        tiff-dev \
-        libwebp-dev \
-        libxml2-dev \
-        lcms2-dev \
-        libzip-dev \
-        bzip2-dev \
-        ghostscript-dev \
-        xz-dev \
-        zlib-dev \
-        fftw-dev \
-        pkgconfig \
-    && git clone https://github.com/HOST-Oman/libraqm.git \
-    && cd libraqm \
-    && meson setup build \
-    && meson compile -C build \
-    && meson install -C build \
-    && cd .. \
-    && wget https://imagemagick.org/download/ImageMagick.tar.gz \
-    && tar -xzf ImageMagick.tar.gz \
-    && cd ImageMagick-* \
-    && ./configure --with-raqm=yes --disable-dependency-tracking \
-    && make -j$(nproc) \
-    && make install \
-    && cd .. \
-    && rm -rf libraqm ImageMagick-* ImageMagick.tar.gz \
-    && apk del \
-        build-base \
-        meson \
-        ninja \
-        curl \
-        git \
-    && rm -rf /var/cache/* /root/.cache /tmp/* /usr/share/man /usr/share/doc /usr/include
-
-# Install Python and PowerShell dependencies
-RUN pwsh -NoProfile -Command "Set-PSRepository -Name PSGallery -InstallationPolicy Trusted; \
-        Install-Module -Name FanartTvAPI -Scope AllUsers -Force" \
+    && pwsh -NoProfile -Command "Set-PSRepository -Name PSGallery -InstallationPolicy Trusted; \
+            Install-Module -Name FanartTvAPI -Scope AllUsers -Force" \
     && pip install --no-cache-dir apprise \
     && mkdir -p /app /usr/share/fonts/custom /var/cache/fontconfig \
     && chmod -R 755 /app /usr/local/share/powershell \
