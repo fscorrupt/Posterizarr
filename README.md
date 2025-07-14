@@ -87,8 +87,8 @@ Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpin
 1. Open `config.example.json` located in the script directory.
 2. Update the following variables with your API keys and preferences [my personal config](MyPersonalConfig.json):
 
-    <details close>
-    <summary>ApiPart [click to unfold]</summary>
+    <details open>
+    <summary>ApiPart</summary>
     <br>
 
     - `tvdbapi`: Your TVDB Project API key.
@@ -121,8 +121,8 @@ Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpin
     - `PreferredBackgroundLanguageOrder`: Specify language preferences for backgrounds. Default is `PleaseFillMe` ( It will take your poster lang order / `xx` is Textless). Example configurations can be found in the config file. 2-digit language codes can be found here: [ISO 3166-1 Lang Codes](https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2).
       - If you set it to `xx` you tell the script it should only search for textless, posters with text will be skipped.
     </details>
-    <details close>
-    <summary>PlexPart [click to unfold]</summary>
+    <details open>
+    <summary>PlexPart</summary>
     <br>
 
     - `LibstoExclude`: Libraries, by name, to exclude from processing.
@@ -130,8 +130,8 @@ Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpin
     - `UsePlex`: If set to `true`, you tell the script to use a Plex Server (Default value is: `true`)
     - `UploadExistingAssets`: If set to `true`, the script will check local assets and upload them to Plex, but only if Plex does not already have EXIF data from Posterizarr, Kometa, or TCM for the artwork being uploaded.
     </details>
-    <details close>
-    <summary>JellyfinPart [click to unfold]</summary>
+    <details open>
+    <summary>JellyfinPart</summary>
     <br>
 
     - `LibstoExclude`: Libraries, by local folder name, to exclude from processing.
@@ -141,8 +141,8 @@ Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpin
     - `UploadExistingAssets`: If set to `true`, the script will check local assets and upload them to Jellyfin, but only if Jellyfin does not already have EXIF data from Posterizarr, Kometa, or TCM for the artwork being uploaded.
     - `ReplaceThumbwithBackdrop`: If set to `true` (Default value is: false), the script will replace the `Thumb` picture with the `backdrop` image. This will only occur if `BackgroundPosters` is also set to `true`.
     </details>
-    <details close>
-    <summary>EmbyPart [click to unfold]</summary>
+    <details open>
+    <summary>EmbyPart</summary>
     <br>
 
     - `LibstoExclude`: Libraries, by local folder name, to exclude from processing.
@@ -151,8 +151,8 @@ Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpin
     - `UploadExistingAssets`: If set to `true`, the script will check local assets and upload them to Emby, but only if Emby does not already have EXIF data from Posterizarr, Kometa, or TCM for the artwork being uploaded.
     - `ReplaceThumbwithBackdrop`: If set to `true` (Default value is: false), the script will replace the `Thumb` picture with the `backdrop` image. This will only occur if `BackgroundPosters` is also set to `true`.
     </details>
-    <details close>
-    <summary>Notification [click to unfold]</summary>
+    <details open>
+    <summary>Notification</summary>
     <br>
 
     - `SendNotification`: Set to `true` if you want to send notifications via discord or apprise, else `false`.
@@ -162,8 +162,8 @@ Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpin
     - `UptimeKumaUrl`: Uptime-Kuma Webhook Url.
     - `UseUptimeKuma`: Set to `true` if you want to send webhook to Uptime-Kuma.
     </details>
-    <details close>
-    <summary>PrerequisitePart [click to unfold]</summary>
+    <details open>
+    <summary>PrerequisitePart</summary>
     <br>
 
     - `AssetPath`: Path to store generated posters.
@@ -227,15 +227,15 @@ Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpin
       - *Note: This may produce bloat, as every item will be re-uploaded to the media servers.*
     - `DisableOnlineAssetFetch` : Set to `true` to skip all online lookups and use only locally available assets. (Default value is: false).
     </details>
-    <details close>
-    <summary>OverlayPart [click to unfold]</summary>
+    <details open>
+    <summary>OverlayPart</summary>
     <br>
 
     - `ImageProcessing`: Set to `true` if you want the ImageMagick part (text, overlay and/or border); if `false`, it only downloads the posters.
     - `outputQuality`: Image output quality, default is `92%` if you set it to `100%` the image size gets doubled.
     </details>
-    <details close>
-    <summary>PosterOverlayPart [click to unfold]</summary>
+    <details open>
+    <summary>PosterOverlayPart</summary>
     <br>
 
     - `fontAllCaps`: Set to `true` for all caps text, else `false`.
@@ -256,8 +256,8 @@ Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpin
     - `lineSpacing`: Adjust the height between lines of text (Default is `0`)
     - `TextGravity`: Specifies the text alignment within the textbox (Default is `south`)
     </details>
-    <details close>
-    <summary>SeasonPosterOverlayPart [click to unfold]</summary>
+    <details open>
+    <summary>SeasonPosterOverlayPart</summary>
     <br>
 
     - `ShowFallback`: Set to `true` if you want to fallback to show poster if no season poster was found.
@@ -279,8 +279,8 @@ Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpin
     - `lineSpacing`: Adjust the height between lines of text (Default is `0`)
     - `TextGravity`: Specifies the text alignment within the textbox (Default is `south`)
     </details>
-    <details close>
-    <summary>ShowTilteOnSeasonPosterPart [click to unfold]</summary>
+    <details open>
+    <summary>ShowTilteOnSeasonPosterPart</summary>
     <br>
 
     - `fontAllCaps`: Set to `true` for all caps text, else `false`.
@@ -297,8 +297,8 @@ Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpin
     - `lineSpacing`: Adjust the height between lines of text (Default is `0`)
     - `TextGravity`: Specifies the text alignment within the textbox (Default is `south`)
     </details>
-    <details close>
-    <summary>BackgroundOverlayPart [click to unfold]</summary>
+    <details open>
+    <summary>BackgroundOverlayPart</summary>
     <br>
 
     - `fontAllCaps`: Set to `true` for all caps text, else `false`.
@@ -319,8 +319,8 @@ Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpin
     - `lineSpacing`: Adjust the height between lines of text (Default is `0`)
     - `TextGravity`: Specifies the text alignment within the textbox (Default is `south`)
     </details>
-    <details close>
-    <summary>TitleCardOverlayPart [click to unfold]</summary>
+    <details open>
+    <summary>TitleCardOverlayPart</summary>
     <br>
 
     - `UseBackgroundAsTitleCard`: Set to `true` if you prefer show background as TitleCard, default is `false` where it uses episode image as TitleCard.
@@ -330,8 +330,8 @@ Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpin
     - `borderwidth`: Border width.
     - `bordercolor`: Color of border.
     </details>
-    <details close>
-    <summary>TitleCardTitleTextPart [click to unfold]</summary>
+    <details open>
+    <summary>TitleCardTitleTextPart</summary>
     <br>
 
     - `AddEPTitleText`: Set to `true` to add episode title text to the TitleCard image.
@@ -348,8 +348,8 @@ Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpin
     - `lineSpacing`: Adjust the height between lines of text (Default is `0`)
     - `TextGravity`: Specifies the text alignment within the textbox (Default is `south`)
     </details>
-    <details close>
-    <summary>TitleCardEpisodeTextPart [click to unfold]</summary>
+    <details open>
+    <summary>TitleCardEpisodeTextPart</summary>
     <br>
 
     - `SeasonTCText`: You can Specify the default text for `Season` that appears on TitleCard.
