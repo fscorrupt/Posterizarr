@@ -5129,10 +5129,15 @@ function MassDownloadPlexArtwork {
                                 $response = Invoke-WebRequest -Uri $global:posterurl -OutFile $PosterImage -ErrorAction Stop
                             }
                             catch {
-                                $statusCode = $_.Exception.Response.StatusCode
+                                if ($_.Exception.Response) {
+                                    $statusCode = $_.Exception.Response.StatusCode.value__
+                                } else {
+                                    $statusCode = $_.Exception.Message
+                                }
                                 Write-Entry -Subtext "An error occurred while downloading the artwork: $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                 Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                 $errorCount++
+
                             }
                             # Move file back to original naming with Brackets.
                             if (Get-ChildItem -LiteralPath $PosterImage -ErrorAction SilentlyContinue) {
@@ -5245,7 +5250,11 @@ function MassDownloadPlexArtwork {
                                 $response = Invoke-WebRequest -Uri $global:posterurl -OutFile $BackgroundImage -ErrorAction Stop
                             }
                             catch {
-                                $statusCode = $_.Exception.Response.StatusCode
+                                if ($_.Exception.Response) {
+                                    $statusCode = $_.Exception.Response.StatusCode.value__
+                                } else {
+                                    $statusCode = $_.Exception.Message
+                                }
                                 Write-Entry -Subtext "An error occurred while downloading the artwork: $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                 Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                 $errorCount++
@@ -5419,7 +5428,11 @@ function MassDownloadPlexArtwork {
                             $response = Invoke-WebRequest -Uri $global:posterurl -OutFile $PosterImage -ErrorAction Stop
                         }
                         catch {
-                            $statusCode = $_.Exception.Response.StatusCode
+                            if ($_.Exception.Response) {
+                                $statusCode = $_.Exception.Response.StatusCode.value__
+                            } else {
+                                $statusCode = $_.Exception.Message
+                            }
                             Write-Entry -Subtext "An error occurred while downloading the artwork: $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                             Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                             $errorCount++
@@ -5542,7 +5555,11 @@ function MassDownloadPlexArtwork {
                             $response = Invoke-WebRequest -Uri $global:posterurl -OutFile $BackgroundImage -ErrorAction Stop
                         }
                         catch {
-                            $statusCode = $_.Exception.Response.StatusCode
+                            if ($_.Exception.Response) {
+                                $statusCode = $_.Exception.Response.StatusCode.value__
+                            } else {
+                                $statusCode = $_.Exception.Message
+                            }
                             Write-Entry -Subtext "An error occurred while downloading the artwork: $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                             Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                             $errorCount++
@@ -5682,7 +5699,11 @@ function MassDownloadPlexArtwork {
                                 $response = Invoke-WebRequest -Uri $global:posterurl -OutFile $SeasonImage -ErrorAction Stop
                             }
                             catch {
-                                $statusCode = $_.Exception.Response.StatusCode
+                                if ($_.Exception.Response) {
+                                    $statusCode = $_.Exception.Response.StatusCode.value__
+                                } else {
+                                    $statusCode = $_.Exception.Message
+                                }
                                 Write-Entry -Subtext "An error occurred while downloading the artwork: $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                 Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                 $errorCount++
@@ -5837,7 +5858,11 @@ function MassDownloadPlexArtwork {
                                         $response = Invoke-WebRequest -Uri $global:posterurl -OutFile $EpisodeImage -ErrorAction Stop
                                     }
                                     catch {
-                                        $statusCode = $_.Exception.Response.StatusCode
+                                        if ($_.Exception.Response) {
+                                            $statusCode = $_.Exception.Response.StatusCode.value__
+                                        } else {
+                                            $statusCode = $_.Exception.Message
+                                        }
                                         Write-Entry -Subtext "An error occurred while downloading the artwork: $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                         Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                         $errorCount++
@@ -7162,6 +7187,17 @@ Else {
 }
 
 if ($global:OSType -eq "Docker") {
+    $OSVersionTag = (Get-Content /etc/os-release | Select-String -Pattern "^PRETTY_NAME=").ToString().Split('=')[1].Trim('"').replace('Alpine Linux ','')
+    $Url = "https://pkgs.alpinelinux.org/package/$OSVersionTag/community/x86_64/imagemagick"
+    $response = Invoke-WebRequest -Uri $url
+    $htmlContent = $response.Content
+    $regexPattern = '<th class="header">Version<\/th>\s*<td>\s*<strong>([\d\.]+-r\d+)<\/strong>\s*<\/td>'
+    $Versionmatching = [regex]::Matches($htmlContent, $regexPattern)
+
+    if ($Versionmatching.Count -gt 0) {
+        $LatestImagemagickversion = $Versionmatching[0].Groups[1].Value.split('-')[0]
+    }
+    <#
         $Url = "https://raw.githubusercontent.com/SoftCreatR/imei/main/versions/imagemagick.version"
         $response = Invoke-WebRequest -Uri $url
         $htmlContent = $response.Content
@@ -7171,6 +7207,7 @@ if ($global:OSType -eq "Docker") {
         if ($Versionmatching.Count -gt 0) {
             $LatestImagemagickversion = $Versionmatching[0].Value
         }
+    #>
 }
 Elseif ($global:OSType -eq "Win32NT") {
     $Url = "https://imagemagick.org/archive/binaries/?C=M;O=D"
@@ -9639,7 +9676,11 @@ Elseif ($Tautulli) {
                                         }
                                     }
                                     catch {
-                                        $statusCode = $_.Exception.Response.StatusCode
+                                        if ($_.Exception.Response) {
+                                            $statusCode = $_.Exception.Response.StatusCode.value__
+                                        } else {
+                                            $statusCode = $_.Exception.Message
+                                        }
                                         Write-Entry -Subtext "An error occurred while downloading the artwork: $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                         Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                         $errorCount++
@@ -10047,7 +10088,11 @@ Elseif ($Tautulli) {
                                         }
                                     }
                                     catch {
-                                        $statusCode = $_.Exception.Response.StatusCode
+                                        if ($_.Exception.Response) {
+                                            $statusCode = $_.Exception.Response.StatusCode.value__
+                                        } else {
+                                            $statusCode = $_.Exception.Message
+                                        }
                                         Write-Entry -Subtext "An error occurred while downloading the artwork: $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                         Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                         $errorCount++
@@ -10540,7 +10585,11 @@ Elseif ($Tautulli) {
                                     }
                                 }
                                 catch {
-                                    $statusCode = $_.Exception.Response.StatusCode
+                                    if ($_.Exception.Response) {
+                                        $statusCode = $_.Exception.Response.StatusCode.value__
+                                    } else {
+                                        $statusCode = $_.Exception.Message
+                                    }
                                     Write-Entry -Subtext "An error occurred while downloading the artwork: $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                     Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                     $errorCount++
@@ -10960,7 +11009,11 @@ Elseif ($Tautulli) {
                                     }
                                 }
                                 catch {
-                                    $statusCode = $_.Exception.Response.StatusCode
+                                    if ($_.Exception.Response) {
+                                        $statusCode = $_.Exception.Response.StatusCode.value__
+                                    } else {
+                                        $statusCode = $_.Exception.Message
+                                    }
                                     Write-Entry -Subtext "An error occurred while downloading the artwork: $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                     Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                     $errorCount++
@@ -11503,7 +11556,11 @@ Elseif ($Tautulli) {
                                             }
                                         }
                                         catch {
-                                            $statusCode = $_.Exception.Response.StatusCode
+                                            if ($_.Exception.Response) {
+                                                $statusCode = $_.Exception.Response.StatusCode.value__
+                                            } else {
+                                                $statusCode = $_.Exception.Message
+                                            }
                                             Write-Entry -Subtext "An error occurred while downloading the artwork: $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                             Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                             $errorCount++
@@ -11665,7 +11722,11 @@ Elseif ($Tautulli) {
                                             }
                                         }
                                         catch {
-                                            $statusCode = $_.Exception.Response.StatusCode
+                                            if ($_.Exception.Response) {
+                                                $statusCode = $_.Exception.Response.StatusCode.value__
+                                            } else {
+                                                $statusCode = $_.Exception.Message
+                                            }
                                             Write-Entry -Subtext "An error occurred while downloading the artwork: $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                             Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                             $errorCount++
@@ -12084,7 +12145,11 @@ Elseif ($Tautulli) {
                                                             }
                                                         }
                                                         catch {
-                                                            $statusCode = $_.Exception.Response.StatusCode
+                                                            if ($_.Exception.Response) {
+                                                                $statusCode = $_.Exception.Response.StatusCode.value__
+                                                            } else {
+                                                                $statusCode = $_.Exception.Message
+                                                            }
                                                             Write-Entry -Subtext "An error occurred while downloading the artwork: $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                             Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                             $errorCount++
@@ -12241,7 +12306,11 @@ Elseif ($Tautulli) {
                                                             }
                                                         }
                                                         catch {
-                                                            $statusCode = $_.Exception.Response.StatusCode
+                                                            if ($_.Exception.Response) {
+                                                                $statusCode = $_.Exception.Response.StatusCode.value__
+                                                            } else {
+                                                                $statusCode = $_.Exception.Message
+                                                            }
                                                             Write-Entry -Subtext "An error occurred while downloading the artwork: $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                             Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                             $errorCount++
@@ -12638,7 +12707,11 @@ Elseif ($Tautulli) {
                                                             }
                                                         }
                                                         catch {
-                                                            $statusCode = $_.Exception.Response.StatusCode
+                                                            if ($_.Exception.Response) {
+                                                                $statusCode = $_.Exception.Response.StatusCode.value__
+                                                            } else {
+                                                                $statusCode = $_.Exception.Message
+                                                            }
                                                             Write-Entry -Subtext "An error occurred while downloading the artwork: $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                             Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                             $errorCount++
@@ -12778,7 +12851,11 @@ Elseif ($Tautulli) {
                                                             }
                                                         }
                                                         catch {
-                                                            $statusCode = $_.Exception.Response.StatusCode
+                                                            if ($_.Exception.Response) {
+                                                                $statusCode = $_.Exception.Response.StatusCode.value__
+                                                            } else {
+                                                                $statusCode = $_.Exception.Message
+                                                            }
                                                             Write-Entry -Subtext "An error occurred while downloading the artwork: $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                             Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                             $errorCount++
@@ -14954,7 +15031,11 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                         $response = Invoke-WebRequest -Uri $global:posterurl -OutFile $PosterImage -ErrorAction Stop
                                     }
                                     catch {
-                                        $statusCode = $_.Exception.Response.StatusCode
+                                        if ($_.Exception.Response) {
+                                            $statusCode = $_.Exception.Response.StatusCode.value__
+                                        } else {
+                                            $statusCode = $_.Exception.Message
+                                        }
                                         Write-Entry -Subtext "An error occurred while downloading the artwork: $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                         Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                         $errorCount++
@@ -15332,7 +15413,11 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                         $response = Invoke-WebRequest -Uri $global:posterurl -OutFile $backgroundImage -ErrorAction Stop
                                     }
                                     catch {
-                                        $statusCode = $_.Exception.Response.StatusCode
+                                        if ($_.Exception.Response) {
+                                            $statusCode = $_.Exception.Response.StatusCode.value__
+                                        } else {
+                                            $statusCode = $_.Exception.Message
+                                        }
                                         Write-Entry -Subtext "An error occurred while downloading the artwork: $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                         Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                         $errorCount++
@@ -15789,7 +15874,11 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                     $response = Invoke-WebRequest -Uri $global:posterurl -OutFile $PosterImage -ErrorAction Stop
                                 }
                                 catch {
-                                    $statusCode = $_.Exception.Response.StatusCode
+                                    if ($_.Exception.Response) {
+                                        $statusCode = $_.Exception.Response.StatusCode.value__
+                                    } else {
+                                        $statusCode = $_.Exception.Message
+                                    }
                                     Write-Entry -Subtext "An error occurred while downloading the artwork: $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                     Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                     $errorCount++
@@ -16179,7 +16268,11 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                     $response = Invoke-WebRequest -Uri $global:posterurl -OutFile $backgroundImage -ErrorAction Stop
                                 }
                                 catch {
-                                    $statusCode = $_.Exception.Response.StatusCode
+                                    if ($_.Exception.Response) {
+                                        $statusCode = $_.Exception.Response.StatusCode.value__
+                                    } else {
+                                        $statusCode = $_.Exception.Message
+                                    }
                                     Write-Entry -Subtext "An error occurred while downloading the artwork: $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                     Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                     $errorCount++
@@ -16685,7 +16778,11 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                             $response = Invoke-WebRequest -Uri $global:posterurl -OutFile $SeasonImage -ErrorAction Stop
                                         }
                                         catch {
-                                            $statusCode = $_.Exception.Response.StatusCode
+                                            if ($_.Exception.Response) {
+                                                $statusCode = $_.Exception.Response.StatusCode.value__
+                                            } else {
+                                                $statusCode = $_.Exception.Message
+                                            }
                                             Write-Entry -Subtext "An error occurred while downloading the artwork: $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                             Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                             $errorCount++
@@ -17157,7 +17254,11 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                                             Copy-Item -LiteralPath $EpisodeImage -destination $EpisodeTempImage | Out-Null
                                                         }
                                                         catch {
-                                                            $statusCode = $_.Exception.Response.StatusCode
+                                                            if ($_.Exception.Response) {
+                                                                $statusCode = $_.Exception.Response.StatusCode.value__
+                                                            } else {
+                                                                $statusCode = $_.Exception.Message
+                                                            }
                                                             Write-Entry -Subtext "An error occurred while downloading the artwork: $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                             Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                             $errorCount++
@@ -17619,7 +17720,11 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                                         $response = Invoke-WebRequest -Uri $global:posterurl -OutFile $EpisodeImage -ErrorAction Stop
                                                     }
                                                     catch {
-                                                        $statusCode = $_.Exception.Response.StatusCode
+                                                        if ($_.Exception.Response) {
+                                                            $statusCode = $_.Exception.Response.StatusCode.value__
+                                                        } else {
+                                                            $statusCode = $_.Exception.Message
+                                                        }
                                                         Write-Entry -Subtext "An error occurred while downloading the artwork: $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                         Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                         $errorCount++
@@ -19212,7 +19317,11 @@ else {
                                         }
                                     }
                                     catch {
-                                        $statusCode = $_.Exception.Response.StatusCode
+                                        if ($_.Exception.Response) {
+                                            $statusCode = $_.Exception.Response.StatusCode.value__
+                                        } else {
+                                            $statusCode = $_.Exception.Message
+                                        }
                                         Write-Entry -Subtext "An error occurred while downloading the artwork: $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                         Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                         $errorCount++
@@ -19653,7 +19762,11 @@ else {
                                         }
                                     }
                                     catch {
-                                        $statusCode = $_.Exception.Response.StatusCode
+                                        if ($_.Exception.Response) {
+                                            $statusCode = $_.Exception.Response.StatusCode.value__
+                                        } else {
+                                            $statusCode = $_.Exception.Message
+                                        }
                                         Write-Entry -Subtext "An error occurred while downloading the artwork: $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                         Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                         $errorCount++
@@ -20184,7 +20297,11 @@ else {
                                     }
                                 }
                                 catch {
-                                    $statusCode = $_.Exception.Response.StatusCode
+                                    if ($_.Exception.Response) {
+                                        $statusCode = $_.Exception.Response.StatusCode.value__
+                                    } else {
+                                        $statusCode = $_.Exception.Message
+                                    }
                                     Write-Entry -Subtext "An error occurred while downloading the artwork: $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                     Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                     $errorCount++
@@ -20634,7 +20751,11 @@ else {
                                     }
                                 }
                                 catch {
-                                    $statusCode = $_.Exception.Response.StatusCode
+                                    if ($_.Exception.Response) {
+                                        $statusCode = $_.Exception.Response.StatusCode.value__
+                                    } else {
+                                        $statusCode = $_.Exception.Message
+                                    }
                                     Write-Entry -Subtext "An error occurred while downloading the artwork: $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                     Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                     $errorCount++
@@ -21207,7 +21328,11 @@ else {
                                             }
                                         }
                                         catch {
-                                            $statusCode = $_.Exception.Response.StatusCode
+                                            if ($_.Exception.Response) {
+                                                $statusCode = $_.Exception.Response.StatusCode.value__
+                                            } else {
+                                                $statusCode = $_.Exception.Message
+                                            }
                                             Write-Entry -Subtext "An error occurred while downloading the artwork: $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                             Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                             $errorCount++
@@ -21369,7 +21494,11 @@ else {
                                             }
                                         }
                                         catch {
-                                            $statusCode = $_.Exception.Response.StatusCode
+                                            if ($_.Exception.Response) {
+                                                $statusCode = $_.Exception.Response.StatusCode.value__
+                                            } else {
+                                                $statusCode = $_.Exception.Message
+                                            }
                                             Write-Entry -Subtext "An error occurred while downloading the artwork: $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                             Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                             $errorCount++
@@ -21819,7 +21948,11 @@ else {
                                                             }
                                                         }
                                                         catch {
-                                                            $statusCode = $_.Exception.Response.StatusCode
+                                                            if ($_.Exception.Response) {
+                                                                $statusCode = $_.Exception.Response.StatusCode.value__
+                                                            } else {
+                                                                $statusCode = $_.Exception.Message
+                                                            }
                                                             Write-Entry -Subtext "An error occurred while downloading the artwork: $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                             Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                             $errorCount++
@@ -21974,7 +22107,11 @@ else {
                                                             }
                                                         }
                                                         catch {
-                                                            $statusCode = $_.Exception.Response.StatusCode
+                                                            if ($_.Exception.Response) {
+                                                                $statusCode = $_.Exception.Response.StatusCode.value__
+                                                            } else {
+                                                                $statusCode = $_.Exception.Message
+                                                            }
                                                             Write-Entry -Subtext "An error occurred while downloading the artwork: $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                             Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                             $errorCount++
@@ -22402,7 +22539,11 @@ else {
                                                             }
                                                         }
                                                         catch {
-                                                            $statusCode = $_.Exception.Response.StatusCode
+                                                            if ($_.Exception.Response) {
+                                                                $statusCode = $_.Exception.Response.StatusCode.value__
+                                                            } else {
+                                                                $statusCode = $_.Exception.Message
+                                                            }
                                                             Write-Entry -Subtext "An error occurred while downloading the artwork: $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                             Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                             $errorCount++
@@ -22542,7 +22683,11 @@ else {
                                                             }
                                                         }
                                                         catch {
-                                                            $statusCode = $_.Exception.Response.StatusCode
+                                                            if ($_.Exception.Response) {
+                                                                $statusCode = $_.Exception.Response.StatusCode.value__
+                                                            } else {
+                                                                $statusCode = $_.Exception.Message
+                                                            }
                                                             Write-Entry -Subtext "An error occurred while downloading the artwork: $statusCode" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                             Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                                                             $errorCount++
