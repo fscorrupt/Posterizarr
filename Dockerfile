@@ -27,6 +27,9 @@ RUN echo @edge http://dl-cdn.alpinelinux.org/alpine/edge/community >> /etc/apk/r
         imagemagick-libs@edge \
         imagemagick-heic \
         imagemagick-jpeg \
+        imagemagick-webp@edge \
+        libwebp \
+        libwebp-tools \
         powershell \
         tzdata \
     && pwsh -NoProfile -Command "Set-PSRepository -Name PSGallery -InstallationPolicy Trusted; \
