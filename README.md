@@ -33,7 +33,7 @@
 [![ARM](https://img.shields.io/static/v1?style=for-the-badge&logo=arm&logoColor=FFFFFF&message=ARM&color=815151&label=)](walkthrough.md)
 
 ## Introduction
-This PowerShell script automates generating images for your Plex, Jellyfin, or Emby library by using media info like titles, seasons, and episodes. It fetches artwork from Fanart.tv, TMDB, TVDB, Plex, and IMDb, focusing on specific languages - **defaulting to textless** images and falling back to English if unavailable. Users can choose between textless or text posters. The script supports both automatic bulk downloads and manual mode for custom artwork that can’t be retrieved automatically.
+This PowerShell script automates generating images for your Plex, Jellyfin, or Emby library by using media info like titles, seasons, and episodes. It fetches artwork from Fanart.tv, TMDB, TVDB, Plex, and IMDb, focusing on specific languages - **defaulting to textless** images and falling back to English if unavailable. Users can choose between textless or text posters. The script supports both automatic bulk downloads and manual mode (interactive) for custom artwork that can’t be retrieved automatically.
 
 > [!NOTE]
 Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpine Base Image)](#docker), [unRAID](#unraid) and on Windows operating systems.
@@ -377,7 +377,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpin
 ## Usage
 - **Automatic Mode**: Execute the script without any parameters to generate posters for your entire Plex library.
 - **Testing Mode**: Run the script with the `-Testing` switch to create Test posters before you start using it.
-- **Manual Mode**: Run the script with the `-Manual` switch to create custom posters manually.
+- **Manual Mode**: Run the script with the `-Manual` switch to create custom posters manually (Interactive).
 - **Backup Mode**: Run the script with the `-Backup` switch to download every artwork from plex (only those what are set to `true` in config)
 - **Poster reset Mode**: Run the script with the `-PosterReset -LibraryToReset "Test Lib"` switch to reset every artwork from a specifc plex lib.
 - **Sync Modes**: Run the script with the `-SyncJelly or -SyncEmby` switch to sync every artwork you have in Plex to Jelly/Emby.
@@ -636,12 +636,11 @@ On [docker](#docker) this way:
   docker exec -it posterizarr pwsh /app/Posterizarr.ps1 -Testing
 ```
 
-### Manual Mode
+### Manual Mode (Interactive)
 
 > [!IMPORTANT]
-> Currently only movie/show/season poster creation integrated.
 >
-> Source picture gets edited by script and  is then moved to desired asset location.
+> Source picture gets edited by script and is then moved to desired asset location.
 
 Run the script with the `-Manual` switch:
 
@@ -655,6 +654,28 @@ On [docker](#docker) this way:
 ```
 
 Follow the prompts to enter the source picture path (Container needs Access to it), media folder name, and movie/show title to manually create a custom poster.
+
+**Posterizarr Input Prompts**
+
+```Enter local path or URL to source picture:```
+- Paste the image URL or provide the full local path to the image file you want to use as the poster source. This is the image that Posterizarr will base the new poster on.
+
+```Enter Media Folder Name (as seen by Plex):```
+- The name of the local movie or show folder where the .mkv (or other media) file is stored. This should match the folder structure Plex recognizes.
+
+```Enter Movie/Show Title:```
+- The title that will be displayed on the generated poster.
+
+```Create Season Poster? (y/n):```
+- Type `y` if you're generating a season poster, otherwise `n`.
+
+```Create TitleCard? (y/n):```
+- Type `y` if you also want to create a title card, otherwise `n`.
+
+```Enter Plex Library Name:```
+- Enter the name of the Plex (or Jellyfin) library, e.g., "Movies" or "TV Shows".
+
+All inputs are entered step-by-step interactively, simply type or paste each value and press Enter to continue.
 
 ### Backup Mode
 
@@ -740,7 +761,7 @@ On [docker](#docker) this way:
   ```sh
   docker exec -it posterizarr pwsh /app/Posterizarr.ps1 -Testing
   ```
-  **Manual Mode:**
+  **Manual Mode (Interactive):**
   ```sh
   docker exec -it posterizarr pwsh /app/Posterizarr.ps1 -Manual
   ```
