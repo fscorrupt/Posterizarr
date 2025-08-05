@@ -15,7 +15,7 @@ param (
 )
 Set-PSReadLineOption -HistorySaveStyle SaveNothing
 
-$CurrentScriptVersion = "1.9.71"
+$CurrentScriptVersion = "1.9.72"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 $env:PSMODULE_ANALYSIS_CACHE_PATH = $null
@@ -7210,9 +7210,19 @@ if ($global:OSType -eq "Docker") {
     #>
 }
 Elseif ($global:OSType -eq "Win32NT") {
+    try {
     $Url = "https://imagemagick.org/archive/binaries/?C=M;O=D"
-    $result = Invoke-WebRequest -Uri $Url
-    $LatestImagemagickversion = ($result.links.href | Where-Object { $_ -like '*portable-Q16-HDRI-x64.zip' } | Sort-Object -Descending)[0].Replace('-portable-Q16-HDRI-x64.zip', '').Replace('ImageMagick-', '')
+    $result = Invoke-WebRequest -Uri $Url -ErrorAction Stop
+
+    $LatestImagemagickversion = ($result.links.href |
+        Where-Object { $_ -like '*portable-Q16-HDRI-x64.zip' } |
+        Sort-Object -Descending)[0] -replace '-portable-Q16-HDRI-x64.zip', '' -replace 'ImageMagick-', ''
+    }
+    catch {
+        # Fallback to GitHub API if direct access is forbidden or fails
+        Write-Entry -Message "Primary method failed. Falling back to GitHub API..." -Path $configLogging -Color Yellow -log Warning
+        $LatestImagemagickversion = (Invoke-RestMethod -Uri "https://api.github.com/repos/ImageMagick/ImageMagick/releases/latest" -Method Get).tag_name
+    }
 }
 Else {
     $LatestImagemagickversion = (Invoke-RestMethod -Uri "https://api.github.com/repos/ImageMagick/ImageMagick/releases/latest" -Method Get).tag_name
@@ -7241,10 +7251,9 @@ if ($AutoUpdateIM -eq 'true' -and $global:OSType -ne "Docker" -and $LatestImagem
     }
     else {
         Write-Entry -Subtext "Downloading the latest Imagemagick portable version for you..." -Path $configLogging -Color Cyan -log Info
-        $result = Invoke-WebRequest "https://imagemagick.org/archive/binaries/?C=M;O=D"
-        $LatestRelease = ($result.links.href | Where-Object { $_ -like '*portable-Q16-HDRI-x64.zip' } | Sort-Object -Descending)[0]
-        $DownloadPath = Join-Path -Path $global:ScriptRoot -ChildPath (Join-Path -Path 'temp' -ChildPath $LatestRelease)
-        Invoke-WebRequest "https://imagemagick.org/archive/binaries/$LatestRelease" -OutFile $DownloadPath
+        $LatestRelease = "https://imagemagick.org/archive/binaries/ImageMagick-$LatestImagemagickversion-portable-Q16-HDRI-x64.zip"
+        $DownloadPath = Join-Path -Path $global:ScriptRoot -ChildPath (Join-Path -Path 'temp' -ChildPath $LatestImagemagickversion)
+        Invoke-WebRequest $LatestRelease -OutFile $DownloadPath
         Expand-Archive -Path $DownloadPath -DestinationPath $magickinstalllocation -Force
         if ((Get-ChildItem -Directory -LiteralPath $magickinstalllocation).name -eq $($LatestRelease.replace('.zip', ''))) {
             Copy-item -Force -Recurse "$magickinstalllocation\$((Get-ChildItem -Directory -LiteralPath $magickinstalllocation).name)\*" $magickinstalllocation
@@ -7254,7 +7263,7 @@ if ($AutoUpdateIM -eq 'true' -and $global:OSType -ne "Docker" -and $LatestImagem
             Write-Entry -Subtext "Placed Portable ImageMagick here: $magickinstalllocation" -Path $configLogging -Color Green -log Info
         }
         Else {
-            Write-Entry -Subtext "Error During extraction, please manually install/copy portable Imagemagick from here: https://imagemagick.org/archive/binaries/$LatestRelease" -Path $configLogging -Color Red -log Error
+            Write-Entry -Subtext "Error During extraction, please manually install/copy portable Imagemagick from here: $LatestRelease" -Path $configLogging -Color Red -log Error
         }
     }
 }
