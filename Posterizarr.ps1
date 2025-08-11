@@ -15,7 +15,7 @@ param (
 )
 Set-PSReadLineOption -HistorySaveStyle SaveNothing
 
-$CurrentScriptVersion = "1.9.72"
+$CurrentScriptVersion = "1.9.73"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 $env:PSMODULE_ANALYSIS_CACHE_PATH = $null
@@ -32,6 +32,238 @@ $env:PSMODULE_ANALYSIS_CACHE_ENABLED = $false
 #####################################################################################################################
 
 #### FUNCTION START ####
+function InvokeIMChecks {
+    # Check for latest Imagemagick Version
+    if ($global:OSarch -eq "Arm64") {
+        try {
+            $CurrentImagemagickversion = & $magick -version
+        }
+        catch {
+            Write-Entry -Message "Could not query installed Imagemagick" -Path $configLogging -Color Red -log Error
+            # Clear Running File
+            if (Test-Path $CurrentlyRunning) {
+                Remove-Item -LiteralPath $CurrentlyRunning | out-null
+            }
+            if ($global:UptimeKumaUrl) {
+                Send-UptimeKumaWebhook -status "down" -msg "Imagemagick missing"
+            }
+            Exit
+        }
+        $CurrentImagemagickversion = [regex]::Match($CurrentImagemagickversion, 'Version: ImageMagick (\d+(\.\d+){1,2}-\d+)')
+        $CurrentImagemagickversion = $CurrentImagemagickversion.Groups[1].Value.replace('-', '.')
+        Write-Entry -Message "Current Imagemagick Version: $CurrentImagemagickversion" -Path $configLogging -Color White -log Info
+    }
+    Else {
+        # Check ImageMagick now:
+        CheckImageMagick -magick $magick -magickinstalllocation $magickinstalllocation
+
+        $CurrentImagemagickversion = & $magick -version
+        $CurrentImagemagickversion = [regex]::Match($CurrentImagemagickversion, 'Version: ImageMagick (\d+(\.\d+){1,2}-\d+)')
+        $CurrentImagemagickversion = $CurrentImagemagickversion.Groups[1].Value.replace('-', '.')
+        Write-Entry -Message "Current Imagemagick Version: $CurrentImagemagickversion" -Path $configLogging -Color White -log Info
+    }
+
+    if ($global:OSType -eq "Docker") {
+        $OSVersionTag = (Get-Content /etc/os-release | Select-String -Pattern "^PRETTY_NAME=").ToString().Split('=')[1].Trim('"').replace('Alpine Linux ', '')
+        $Url = "https://pkgs.alpinelinux.org/package/$OSVersionTag/community/x86_64/imagemagick"
+        $response = Invoke-WebRequest -Uri $url
+        $htmlContent = $response.Content
+        $regexPattern = '<th class="header">Version<\/th>\s*<td>\s*<strong>([\d\.]+-r\d+)<\/strong>\s*<\/td>'
+        $Versionmatching = [regex]::Matches($htmlContent, $regexPattern)
+
+        if ($Versionmatching.Count -gt 0) {
+            $LatestImagemagickversion = $Versionmatching[0].Groups[1].Value.split('-')[0]
+        }
+        <#
+        $Url = "https://raw.githubusercontent.com/SoftCreatR/imei/main/versions/imagemagick.version"
+        $response = Invoke-WebRequest -Uri $url
+        $htmlContent = $response.Content
+        $regexPattern = '(\d+\.\d+\.\d+-\d+)'
+        $Versionmatching = [regex]::Matches($htmlContent, $regexPattern)
+
+        if ($Versionmatching.Count -gt 0) {
+            $LatestImagemagickversion = $Versionmatching[0].Value
+        }
+    #>
+    }
+    Elseif ($global:OSType -eq "Win32NT") {
+        try {
+            $Url = "https://imagemagick.org/archive/binaries/?C=M;O=D"
+            $result = Invoke-WebRequest -Uri $Url -ErrorAction Stop
+
+            $LatestImagemagickversion = ($result.links.href |
+                Where-Object { $_ -like '*portable-Q16-HDRI-x64.zip' } |
+                Sort-Object -Descending)[0] -replace '-portable-Q16-HDRI-x64.zip', '' -replace 'ImageMagick-', ''
+        }
+        catch {
+            # Fallback to GitHub API if direct access is forbidden or fails
+            Write-Entry -Subtext "Primary method failed. Falling back to GitHub API..." -Path $configLogging -Color Yellow -log Debug
+            $LatestImagemagickversion = (Invoke-RestMethod -Uri "https://api.github.com/repos/ImageMagick/ImageMagick/releases/latest" -Method Get).tag_name
+        }
+    }
+    Else {
+        $LatestImagemagickversion = (Invoke-RestMethod -Uri "https://api.github.com/repos/ImageMagick/ImageMagick/releases/latest" -Method Get).tag_name
+    }
+    if ($LatestImagemagickversion) {
+        $LatestImagemagickversion = $LatestImagemagickversion.replace('-', '.')
+        Write-Entry -Subtext "Latest Imagemagick Version: $LatestImagemagickversion" -Path $configLogging -Color Yellow -log Info
+    }
+
+    # Auto Update Magick
+    if ($AutoUpdateIM -eq 'true' -and $global:OSType -ne "Docker" -and $LatestImagemagickversion -gt $CurrentImagemagickversion -and $global:OSarch -ne "Arm64") {
+        if ($global:OSType -eq "Win32NT") {
+            Remove-Item -LiteralPath $magickinstalllocation -Recurse -Force
+        }
+        Else {
+            Remove-Item -LiteralPath "$global:ScriptRoot/magick" -Force
+        }
+        if ($global:OSType -ne "Win32NT") {
+            if ($global:OSType -ne "Docker") {
+                Write-Entry -Subtext "Downloading the latest Imagemagick portable version for you..." -Path $configLogging -Color Cyan -log Info
+                $magickUrl = "https://imagemagick.org/archive/binaries/magick"
+                Invoke-WebRequest -Uri $magickUrl -OutFile "$global:ScriptRoot/magick"
+                chmod +x "$global:ScriptRoot/magick"
+                Write-Entry -Subtext "Made the portable Magick executable..." -Path $configLogging -Color Green -log Info
+            }
+        }
+        else {
+            Write-Entry -Subtext "Downloading the latest Imagemagick portable version for you..." -Path $configLogging -Color Cyan -log Info
+            $LatestRelease = "https://imagemagick.org/archive/binaries/ImageMagick-$LatestImagemagickversion-portable-Q16-HDRI-x64.zip"
+            $DownloadPath = Join-Path -Path $global:ScriptRoot -ChildPath (Join-Path -Path 'temp' -ChildPath $LatestImagemagickversion)
+            Invoke-WebRequest $LatestRelease -OutFile $DownloadPath
+            Expand-Archive -Path $DownloadPath -DestinationPath $magickinstalllocation -Force
+            if ((Get-ChildItem -Directory -LiteralPath $magickinstalllocation).name -eq $($LatestRelease.replace('.zip', ''))) {
+                Copy-item -Force -Recurse "$magickinstalllocation\$((Get-ChildItem -Directory -LiteralPath $magickinstalllocation).name)\*" $magickinstalllocation
+                Remove-Item -Recurse -LiteralPath "$magickinstalllocation\$((Get-ChildItem -Directory -LiteralPath $magickinstalllocation).name)" -Force
+            }
+            if (Test-Path -LiteralPath $magickinstalllocation\magick.exe) {
+                Write-Entry -Subtext "Placed Portable ImageMagick here: $magickinstalllocation" -Path $configLogging -Color Green -log Info
+            }
+            Else {
+                Write-Entry -Subtext "Error During extraction, please manually install/copy portable Imagemagick from here: $LatestRelease" -Path $configLogging -Color Red -log Error
+            }
+        }
+    }
+}
+function Output-ConfigJson {
+    param (
+        $obj,
+        [int]$indentLevel = 0
+    )
+    function RedactUrl($value) {
+        if ($null -eq $value) { return $null }
+        if ($value.Length -le 10) { return $value }
+        return ($value[0..9] -join '') + '****'
+}
+    function RedactKey($value) {
+        if ($null -eq $value) { return $null }
+        if ($value.Length -le 7) { return $value }
+        return ($value[0..6] -join '') + '****'
+    }
+    $redactKeys = @("tvdbapi", "tmdbtoken", "fanarttvapikey", "plextoken", "jellyfinapikey", "embyapikey", "embyurl", "jellyfinurl", "discord", "plexurl", "UptimeKumaUrl", "AppriseUrl")
+    $indent = '  ' * $indentLevel
+
+    if ($indentLevel -eq 0) {
+        foreach ($section in $obj.PSObject.Properties) {
+            Write-Entry "===== $($section.Name) =====" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+            Output-ConfigJson -obj $section.Value -indentLevel 1
+        }
+        return
+    }
+
+    if ($obj -is [System.Management.Automation.PSCustomObject] -or $obj -is [Hashtable]) {
+        foreach ($prop in $obj.PSObject.Properties) {
+            $keyLower = $prop.Name.ToLower()
+            $val = $prop.Value
+
+            if ($redactKeys -contains $keyLower) {
+                if ($keyLower.EndsWith("url")) {
+                    $redacted = RedactUrl $val
+                } else {
+                    $redacted = RedactKey $val
+                }
+                Write-Entry -Subtext "$indent$($prop.Name): $redacted" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+            }
+            elseif ($val -is [System.Management.Automation.PSCustomObject] -or $val -is [Hashtable]) {
+                # For nested objects, print key with colon and then recurse with increased indent
+                Write-Entry -Subtext "$indent$($prop.Name):" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+                Output-ConfigJson -obj $val -indentLevel ($indentLevel + 1)
+            }
+            elseif ($val -is [System.Collections.IEnumerable] -and -not ($val -is [string])) {
+                # For arrays/lists, join with comma and print on the same line
+                $joined = ($val | ForEach-Object { $_ }) -join ", "
+                Write-Entry -Subtext "$indent$($prop.Name): $joined" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+            }
+            else {
+                Write-Entry -Subtext "$indent$($prop.Name): $val" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+            }
+        }
+    }
+    else {
+        Write-Entry -Subtext ("{0}{1}" -f ('  ' * $indentLevel), $obj) -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+    }
+}
+function Initialize-LanguageSettings {
+    param (
+        [string]$SettingName, # e.g. "PreferredLanguageOrder"
+        [string]$Label,       # e.g. "Poster"
+        [string[]]$Default = @("xx","en","de")
+    )
+
+    # Get the starting value (global if exists, else default)
+    if (Get-Variable -Name $SettingName -Scope Global -ErrorAction SilentlyContinue) {
+        $valueToValidate = (Get-Variable -Name $SettingName -Scope Global).Value
+    }
+    else {
+        $valueToValidate = $Default
+        Write-Entry -Message "$Label search Order not set in Config, setting it to '$($Default -join ",")'" -Path "$global:ScriptRoot\Logs\Scriptlog.log" -Color Yellow -log Warning
+    }
+
+    # Log and remove invalid entries (> 2 chars and not "xx")
+    $invalids = $valueToValidate | Where-Object { $_ -ne 'xx' -and $_.Length -ne 2 }
+    foreach ($inv in $invalids) {
+        Write-Entry -Message "$Label search Order contains invalid language code '$inv' (must be exactly 2 chars), removing it." -Path "$global:ScriptRoot\Logs\Scriptlog.log" -Color Red -log Error
+    }
+
+    $validLangs = $valueToValidate | Where-Object { $_ -eq 'xx' -or ($_ -match '^[a-z]{2}$') }
+
+    # Fallback to default if empty after filtering
+    if (-not $validLangs -or $validLangs.Count -eq 0) {
+        $validLangs = $Default
+        Write-Entry -Message "$Label order invalid after filtering, using default '$($Default -join ",")'" -Path "$global:ScriptRoot\Logs\Scriptlog.log" -Color Red -log Error
+    }
+
+    # Always overwrite the global variable
+    Set-Variable -Name $SettingName -Scope Global -Value $validLangs -Force
+
+    # Derived variants
+    Set-Variable -Name "${SettingName}TMDB"   -Scope Global -Value ($validLangs -replace '^xx$', 'null')
+    Set-Variable -Name "${SettingName}Fanart" -Scope Global -Value ($validLangs -replace '^xx$', '00')
+    Set-Variable -Name "${SettingName}TVDB"   -Scope Global -Value ($validLangs -replace '^xx$', 'null')
+
+    # Flags
+    if ($validLangs.Count -eq 1 -and $validLangs[0] -eq 'xx') {
+        Set-Variable -Name "${Label}PreferTextless" -Scope Global -Value $true
+        Set-Variable -Name "${Label}OnlyTextless"   -Scope Global -Value $true
+    }
+    elseif ($validLangs[0] -eq 'xx') {
+        Set-Variable -Name "${Label}PreferTextless" -Scope Global -Value $true
+        Set-Variable -Name "${Label}OnlyTextless"   -Scope Global -Value $false
+    }
+    else {
+        Set-Variable -Name "${Label}PreferTextless" -Scope Global -Value $false
+        Set-Variable -Name "${Label}OnlyTextless"   -Scope Global -Value $false
+    }
+
+    # Debug logs
+
+    $preferTextless = (Get-Variable -Name "${Label}PreferTextless" -Scope Global).Value
+    $onlyTextless = (Get-Variable -Name "${Label}OnlyTextless" -Scope Global).Value
+
+    Write-Entry -Subtext "$Label PreferTextless Value: $preferTextless" -Path "$global:ScriptRoot\Logs\Scriptlog.log" -Color Cyan -log Debug
+    Write-Entry -Subtext "$Label OnlyTextless Value: $onlyTextless" -Path "$global:ScriptRoot\Logs\Scriptlog.log" -Color Cyan -log Debug
+
+}
 function Test-PathPermissions {
     param (
         [string]$PathToTest
@@ -3726,197 +3958,6 @@ function RedactMediaServerUrl {
         return $url  # Return original if no match found
     }
 }
-
-function LogConfigSettings {
-    Write-Entry -Message "Current Config.json Settings" -Path $configLogging -Color Cyan -log Info
-    Write-Entry -Subtext "___________________________________________" -Path $configLogging -Color DarkMagenta -log Info
-    # Plex Part
-    Write-Entry -Subtext "API Part" -Path $configLogging -Color Cyan -log Info
-    Write-Entry -Subtext "| TVDB API Key:                    $($global:tvdbapi[0..7] -join '')****" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| TMDB API Read Access Token:      $($global:tmdbtoken[0..7] -join '')****" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Fanart API Key:                  $($FanartTvAPIKey[0..7] -join '')****" -Path $configLogging -Color White -log Info
-    if ($PlexToken) {
-        Write-Entry -Subtext "| Plex Token:                      $($PlexToken[0..7] -join '')****" -Path $configLogging -Color White -log Info
-    }
-    if ($JellyfinAPIKey) {
-        Write-Entry -Subtext "| Jellyfin API Key:                $($JellyfinAPIKey[0..7] -join '')****" -Path $configLogging -Color White -log Info
-    }
-    if ($EmbyAPIKey) {
-        Write-Entry -Subtext "| Emby API Key:                    $($EmbyAPIKey[0..7] -join '')****" -Path $configLogging -Color White -log Info
-    }
-    Write-Entry -Subtext "| Fav Provider:                    $global:FavProvider" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Width/Height Filtering:          $global:WidthHeightFilter" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Poster min width:                $global:PosterMinWidth" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Poster min height:               $global:PosterMinHeight" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Background/TC min width:         $global:BgTcMinWidth" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Background/TC min height:        $global:BgTcMinHeight" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| TMDB Vote Sorting:               $global:TMDBVoteSorting" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Preferred Lang Order:            $($global:PreferredLanguageOrder -join ',')" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Preferred Season Lang Order:     $($global:PreferredSeasonLanguageOrder -join ',')" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Preferred Background Lang Order: $($global:PreferredBackgroundLanguageOrder -join ',')" -Path $configLogging -Color White -log Info
-    if ($UsePlex -eq 'true') {
-        Write-Entry -Subtext "Plex Part" -Path $configLogging -Color Cyan -log Info
-        Write-Entry -Subtext "| Excluded Libs:                   $($LibstoExclude -join ',')" -Path $configLogging -Color White -log Info
-        Write-Entry -Subtext "| Plex Url:                        $($PlexUrl[0..10] -join '')****" -Path $configLogging -Color White -log Info
-        Write-Entry -Subtext "| Upload Existing Assets:          $global:UploadExistingAssets" -Path $configLogging -Color White -log Info
-    }
-    if ($UseJellyfin -eq 'true') {
-        Write-Entry -Subtext "Jellyfin Part" -Path $configLogging -Color Cyan -log Info
-        Write-Entry -Subtext "| Excluded Libs:                   $($LibstoExclude -join ',')" -Path $configLogging -Color White -log Info
-        Write-Entry -Subtext "| Jellyfin Url:                    $($JellyfinUrl[0..10] -join '')****" -Path $configLogging -Color White -log Info
-        Write-Entry -Subtext "| Upload Existing Assets:          $global:UploadExistingAssets" -Path $configLogging -Color White -log Info
-    }
-    if ($UseEmby -eq 'true') {
-        Write-Entry -Subtext "Emby Part" -Path $configLogging -Color Cyan -log Info
-        Write-Entry -Subtext "| Excluded Libs:                   $($LibstoExclude -join ',')" -Path $configLogging -Color White -log Info
-        Write-Entry -Subtext "| Emby Url:                        $($EmbyUrl[0..10] -join '')****" -Path $configLogging -Color White -log Info
-        Write-Entry -Subtext "| Upload Existing Assets:          $global:UploadExistingAssets" -Path $configLogging -Color White -log Info
-    }
-    Write-Entry -Subtext "Prerequisites Part" -Path $configLogging -Color Cyan -log Info
-    Write-Entry -Subtext "| Asset Path:                      $AssetPath" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Backup Path:                     $BackupPath" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Follow Symlink:                  $FollowSymlink" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Skip adding Text:                $SkipAddText" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Manual Asset Path:               $ManualAssetPath" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Upload to Plex:                  $Upload2Plex" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Show skipped:                    $show_skipped" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Script Root:                     $global:ScriptRoot" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Magick Location:                 $magickinstalllocation" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| # of Log Folders to retain:      $maxLogs" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Log Level:                       $logLevel" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Used Poster Font:                $font" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Used RTL Font:                   $RTLfont" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Used Background Font:            $backgroundfont" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Used TitleCard Font:             $titlecardfont" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Used Poster Overlay File:        $Posteroverlay" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Used Season Overlay File:        $Seasonoverlay" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Used Background Overlay File:    $Backgroundoverlay" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Used TitleCard Overlay File:     $titlecardoverlay" -Path $configLogging -Color White -log Info
-    if ($UsePosterResolutionOverlays -eq 'true') {
-        Write-Entry -Subtext "| Used 4K Poster Overlay File:     $4kposter" -Path $configLogging -Color White -log Info
-        Write-Entry -Subtext "| Used 1080P Poster Overlay File:  $1080pPoster" -Path $configLogging -Color White -log Info
-    }
-    if ($UseBackgroundResolutionOverlays -eq 'true') {
-        Write-Entry -Subtext "| Used 4K BG Overlay File:         $4kBackground" -Path $configLogging -Color White -log Info
-        Write-Entry -Subtext "| Used 1080P BG Overlay File:      $1080pBackground" -Path $configLogging -Color White -log Info
-    }
-    if ($UseTCResolutionOverlays -eq 'true') {
-        Write-Entry -Subtext "| Used 4K TC Overlay File:         $4kTC" -Path $configLogging -Color White -log Info
-        Write-Entry -Subtext "| Used 1080P TC Overlay File:      $1080pTC" -Path $configLogging -Color White -log Info
-    }
-    Write-Entry -Subtext "| Create Library Folders:          $LibraryFolders" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Create Season Posters:           $global:SeasonPosters" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Create Posters:                  $global:Posters" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Create Background Posters:       $global:BackgroundPosters" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Create Title Cards:              $global:TitleCards" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Skip TC creation on TBA:         $SkipTBA" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Skip TC creation on Jap char:    $SkipJapTitle" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Clear Asset:                     $AssetCleanup" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "OverLay General Part" -Path $configLogging -Color Cyan -log Info
-    Write-Entry -Subtext "| Process Images:                  $global:ImageProcessing" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "OverLay Poster Part" -Path $configLogging -Color Cyan -log Info
-    Write-Entry -Subtext "| All Caps on Text:                $fontAllCaps" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Add Border to Image:             $AddBorder" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Add Text to Image:               $AddText" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Add Stroke to Text:              $AddTextStroke" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Stroke color:                    $strokecolor" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Stroke width:                    $strokewidth" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Add Overlay to Image:            $AddOverlay" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Font Color:                      $fontcolor" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Border Color:                    $bordercolor" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Min Font Size:                   $minPointSize" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Max Font Size:                   $maxPointSize" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Border Width:                    $borderwidth" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Text Box Width:                  $MaxWidth" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Text Box Height:                 $MaxHeight" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Text Box Offset:                 $text_offset" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Line Spacing:                    $lineSpacing" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "OverLay Season Part" -Path $configLogging -Color Cyan -log Info
-    Write-Entry -Subtext "| Fallback to Show:                $ShowFallback" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| All Caps on Text:                $SeasonfontAllCaps" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Add Border to Image:             $AddSeasonBorder" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Add Text to Image:               $AddSeasonText" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Add Stroke to Text:              $AddSeasonTextStroke" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Stroke color:                    $Seasonstrokecolor" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Stroke width:                    $Seasonstrokewidth" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Add Overlay to Image:            $AddSeasonOverlay" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Font Color:                      $Seasonfontcolor" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Border Color:                    $Seasonbordercolor" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Min Font Size:                   $SeasonminPointSize" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Max Font Size:                   $SeasonmaxPointSize" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Border Width:                    $Seasonborderwidth" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Text Box Width:                  $SeasonMaxWidth" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Text Box Height:                 $SeasonMaxHeight" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Text Box Offset:                 $Seasontext_offset" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Line Spacing:                    $SeasonlineSpacing" -Path $configLogging -Color White -log Info
-    if ($AddShowTitletoSeason -eq 'true') {
-        Write-Entry -Subtext "Show Text on Season Part" -Path $configLogging -Color Cyan -log Info
-        Write-Entry -Subtext "| All Caps on Text:                $ShowOnSeasonfontAllCaps" -Path $configLogging -Color White -log Info
-        Write-Entry -Subtext "| Add Stroke to Text:              $AddShowOnSeasonTextStroke" -Path $configLogging -Color White -log Info
-        Write-Entry -Subtext "| Stroke color:                    $ShowOnSeasonstrokecolor" -Path $configLogging -Color White -log Info
-        Write-Entry -Subtext "| Stroke width:                    $ShowOnSeasonstrokewidth" -Path $configLogging -Color White -log Info
-        Write-Entry -Subtext "| Font Color:                      $ShowOnSeasonfontcolor" -Path $configLogging -Color White -log Info
-        Write-Entry -Subtext "| Min Font Size:                   $ShowOnSeasonminPointSize" -Path $configLogging -Color White -log Info
-        Write-Entry -Subtext "| Max Font Size:                   $ShowOnSeasonmaxPointSize" -Path $configLogging -Color White -log Info
-        Write-Entry -Subtext "| Text Box Width:                  $ShowOnSeasonMaxWidth" -Path $configLogging -Color White -log Info
-        Write-Entry -Subtext "| Text Box Height:                 $ShowOnSeasonMaxHeight" -Path $configLogging -Color White -log Info
-        Write-Entry -Subtext "| Text Box Offset:                 $ShowOnSeasontext_offset" -Path $configLogging -Color White -log Info
-        Write-Entry -Subtext "| Line Spacing:                    $ShowOnSeasonlineSpacing" -Path $configLogging -Color White -log Info
-    }
-    Write-Entry -Subtext "OverLay Background Part" -Path $configLogging -Color Cyan -log Info
-    Write-Entry -Subtext "| All Caps on Text:                $BackgroundfontAllCaps" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Add Border to Background:        $AddBackgroundBorder" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Add Text to Background:          $AddBackgroundText" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Add Stroke to Text:              $AddBackgroundTextStroke" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Stroke color:                    $Backgroundstrokecolor" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Stroke width:                    $Backgroundstrokewidth" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Add Overlay to Background:       $AddBackgroundOverlay" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Font Color:                      $Backgroundfontcolor" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Border Color:                    $Backgroundbordercolor" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Min Font Size:                   $BackgroundminPointSize" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Max Font Size:                   $BackgroundmaxPointSize" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Border Width:                    $Backgroundborderwidth" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Text Box Width:                  $BackgroundMaxWidth" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Text Box Height:                 $BackgroundMaxHeight" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Text Box Offset:                 $Backgroundtext_offset" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Line Spacing:                    $BackgroundlineSpacing" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "OverLay TitleCard Part" -Path $configLogging -Color Cyan -log Info
-    Write-Entry -Subtext "| Use Background as Title Card:    $UseBackgroundAsTitleCard" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Fallback to Background:          $BackgroundFallback" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Add Border to Background:        $AddTitleCardBorder" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Border Color:                    $TitleCardbordercolor" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Add Overlay to Background:       $AddTitleCardOverlay" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Border Width:                    $TitleCardborderwidth" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "OverLay TitleCard Title Part" -Path $configLogging -Color Cyan -log Info
-    Write-Entry -Subtext "| All Caps on Text:                $TitleCardEPTitlefontAllCaps" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Add Title to TitleCard:          $AddTitleCardEPTitleText" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Add Stroke to Text:              $AddTitleCardEPTitleTextStroke" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Stroke color:                    $TitleCardEPTitlestrokecolor" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Stroke width:                    $TitleCardEPTitlestrokewidth" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Font Color:                      $TitleCardEPTitlefontcolor" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Min Font Size:                   $TitleCardEPTitleminPointSize" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Max Font Size:                   $TitleCardEPTitlemaxPointSize" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Text Box Width:                  $TitleCardEPTitleMaxWidth" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Text Box Height:                 $TitleCardEPTitleMaxHeight" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Text Box Offset:                 $TitleCardEPTitletext_offset" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Line Spacing:                    $TitleCardEPTitlelineSpacing" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "OverLay TitleCard EP Part" -Path $configLogging -Color Cyan -log Info
-    Write-Entry -Subtext "| Season TC Text:                  $SeasonTCText" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Episode TC Text:                 $EpisodeTCText" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| All Caps on Text:                $TitleCardEPfontAllCaps" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Add Episode to TitleCard:        $AddTitleCardEPText" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Add Stroke to Text:              $AddTitleCardTextStroke" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Stroke color:                    $TitleCardstrokecolor" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Stroke width:                    $TitleCardstrokewidth" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Font Color:                      $TitleCardEPfontcolor" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Min Font Size:                   $TitleCardEPminPointSize" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Max Font Size:                   $TitleCardEPmaxPointSize" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Text Box Width:                  $TitleCardEPMaxWidth" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Text Box Height:                 $TitleCardEPMaxHeight" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Text Box Offset:                 $TitleCardEPtext_offset" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "| Line Spacing:                    $TitleCardEPlineSpacing" -Path $configLogging -Color White -log Info
-    Write-Entry -Subtext "___________________________________________" -Path $configLogging -Color DarkMagenta -log Info
-}
 function CheckPlexAccess {
     param (
         [string]$PlexUrl,
@@ -6706,82 +6747,21 @@ if (!$global:TMDBVoteSorting) {
     Write-Entry -Message "TMDB Sorting option not set in config, setting it to 'vote_average' for you" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     $global:TMDBVoteSorting = "vote_average"
 }
-$global:PreferredLanguageOrder = $config.ApiPart.PreferredLanguageOrder
-$global:PreferredSeasonLanguageOrder = $config.ApiPart.PreferredSeasonLanguageOrder
+
+# 1. Load user-configured values
+$global:PreferredLanguageOrder           = $config.ApiPart.PreferredLanguageOrder
+$global:PreferredSeasonLanguageOrder     = $config.ApiPart.PreferredSeasonLanguageOrder
 $global:PreferredBackgroundLanguageOrder = $config.ApiPart.PreferredBackgroundLanguageOrder
 
+# Special handling: inherit poster language if set to "PleaseFillMe"
 if ($global:PreferredBackgroundLanguageOrder -eq 'PleaseFillMe') {
     $global:PreferredBackgroundLanguageOrder = $global:PreferredLanguageOrder
 }
 
-# Poster Lang Settings
-if (!$global:PreferredLanguageOrder) {
-    Write-Entry -Message "Poster Lang search Order not set in Config, setting it to 'xx,en,de' for you" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-    $global:PreferredLanguageOrder = "xx", "en", "de"
-}
-$global:PreferredLanguageOrderTMDB = $global:PreferredLanguageOrder.Replace('xx', 'null')
-$global:PreferredLanguageOrderFanart = $global:PreferredLanguageOrder.Replace('xx', '00')
-$global:PreferredLanguageOrderTVDB = $global:PreferredLanguageOrder.Replace('xx', 'null')
-if ($global:PreferredLanguageOrder.count -eq '1' -and $global:PreferredLanguageOrder -eq 'xx') {
-    $global:PreferTextless = $true
-    $global:OnlyTextless = $true
-    Write-Entry -Subtext "PreferTextless Value: $global:PreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-    Write-Entry -Subtext "OnlyTextless Value: $global:OnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-}
-Elseif ($global:PreferredLanguageOrder[0] -eq 'xx') {
-    $global:PreferTextless = $true
-    $global:OnlyTextless = $false
-    Write-Entry -Subtext "PreferTextless Value: $global:PreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-    Write-Entry -Subtext "OnlyTextless Value: $global:OnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-}
-Else {
-    $global:PreferTextless = $false
-    $global:OnlyTextless = $false
-    Write-Entry -Subtext "PreferTextless Value: $global:PreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-    Write-Entry -Subtext "OnlyTextless Value: $global:OnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-}
-
-# Season Lang Settings
-if (!$global:PreferredSeasonLanguageOrder) {
-    Write-Entry -Message "Season Lang search Order not set in Config, setting it to 'xx,en,de' for you" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-    $global:PreferredSeasonLanguageOrder = "xx", "en", "de"
-}
-$global:PreferredSeasonLanguageOrderTMDB = $global:PreferredSeasonLanguageOrder.Replace('xx', 'null')
-$global:PreferredSeasonLanguageOrderFanart = $global:PreferredSeasonLanguageOrder.Replace('xx', '00')
-$global:PreferredSeasonLanguageOrderTVDB = $global:PreferredSeasonLanguageOrder.Replace('xx', 'null')
-if ($global:PreferredSeasonLanguageOrder.count -eq '1' -and $global:PreferredSeasonLanguageOrder -eq 'xx') {
-    $global:SeasonPreferTextless = $true
-    $global:SeasonOnlyTextless = $true
-}
-Elseif ($global:PreferredSeasonLanguageOrder[0] -eq 'xx') {
-    $global:SeasonPreferTextless = $true
-    $global:SeasonOnlyTextless = $false
-}
-Else {
-    $global:SeasonPreferTextless = $false
-    $global:SeasonOnlyTextless = $false
-}
-
-# Background Lang Settings
-if (!$global:PreferredBackgroundLanguageOrder) {
-    Write-Entry -Message "Background Lang search Order not set in Config, setting it to 'xx,en,de' for you" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
-    $global:PreferredBackgroundLanguageOrder = "xx", "en", "de"
-}
-$global:PreferredBackgroundLanguageOrderTMDB = $global:PreferredBackgroundLanguageOrder.Replace('xx', 'null')
-$global:PreferredBackgroundLanguageOrderFanart = $global:PreferredBackgroundLanguageOrder.Replace('xx', '00')
-$global:PreferredBackgroundLanguageOrderTVDB = $global:PreferredBackgroundLanguageOrder.Replace('xx', 'null')
-if ($global:PreferredBackgroundLanguageOrder.count -eq '1' -and $global:PreferredBackgroundLanguageOrder -eq 'xx') {
-    $global:BackgroundPreferTextless = $true
-    $global:BackgroundOnlyTextless = $true
-}
-Elseif ($global:PreferredBackgroundLanguageOrder[0] -eq 'xx') {
-    $global:BackgroundPreferTextless = $true
-    $global:BackgroundOnlyTextless = $false
-}
-Else {
-    $global:BackgroundPreferTextless = $false
-    $global:BackgroundOnlyTextless = $false
-}
+# 2️. Initialize all settings — function will validate and set defaults if needed
+Initialize-LanguageSettings -SettingName "PreferredLanguageOrder"           -Label "Poster"
+Initialize-LanguageSettings -SettingName "PreferredSeasonLanguageOrder"     -Label "Season"
+Initialize-LanguageSettings -SettingName "PreferredBackgroundLanguageOrder" -Label "Background"
 
 # default to TMDB if favprovider missing
 if (!$global:FavProvider) {
@@ -7156,117 +7136,8 @@ if ($Testing) {
     $configLogging = Join-Path $LogsPath 'Testinglog.log'
 }
 
-# Check for latest Imagemagick Version
-if ($global:OSarch -eq "Arm64") {
-    try {
-        $CurrentImagemagickversion = & $magick -version
-    }
-    catch {
-        Write-Entry -Message "Could not query installed Imagemagick" -Path $configLogging -Color Red -log Error
-        # Clear Running File
-        if (Test-Path $CurrentlyRunning) {
-            Remove-Item -LiteralPath $CurrentlyRunning | out-null
-        }
-        if ($global:UptimeKumaUrl) {
-            Send-UptimeKumaWebhook -status "down" -msg "Imagemagick missing"
-        }
-        Exit
-    }
-    $CurrentImagemagickversion = [regex]::Match($CurrentImagemagickversion, 'Version: ImageMagick (\d+(\.\d+){1,2}-\d+)')
-    $CurrentImagemagickversion = $CurrentImagemagickversion.Groups[1].Value.replace('-', '.')
-    Write-Entry -Message "Current Imagemagick Version: $CurrentImagemagickversion" -Path $configLogging -Color White -log Info
-}
-Else {
-    # Check ImageMagick now:
-    CheckImageMagick -magick $magick -magickinstalllocation $magickinstalllocation
-
-    $CurrentImagemagickversion = & $magick -version
-    $CurrentImagemagickversion = [regex]::Match($CurrentImagemagickversion, 'Version: ImageMagick (\d+(\.\d+){1,2}-\d+)')
-    $CurrentImagemagickversion = $CurrentImagemagickversion.Groups[1].Value.replace('-', '.')
-    Write-Entry -Message "Current Imagemagick Version: $CurrentImagemagickversion" -Path $configLogging -Color White -log Info
-}
-
-if ($global:OSType -eq "Docker") {
-    $OSVersionTag = (Get-Content /etc/os-release | Select-String -Pattern "^PRETTY_NAME=").ToString().Split('=')[1].Trim('"').replace('Alpine Linux ','')
-    $Url = "https://pkgs.alpinelinux.org/package/$OSVersionTag/community/x86_64/imagemagick"
-    $response = Invoke-WebRequest -Uri $url
-    $htmlContent = $response.Content
-    $regexPattern = '<th class="header">Version<\/th>\s*<td>\s*<strong>([\d\.]+-r\d+)<\/strong>\s*<\/td>'
-    $Versionmatching = [regex]::Matches($htmlContent, $regexPattern)
-
-    if ($Versionmatching.Count -gt 0) {
-        $LatestImagemagickversion = $Versionmatching[0].Groups[1].Value.split('-')[0]
-    }
-    <#
-        $Url = "https://raw.githubusercontent.com/SoftCreatR/imei/main/versions/imagemagick.version"
-        $response = Invoke-WebRequest -Uri $url
-        $htmlContent = $response.Content
-        $regexPattern = '(\d+\.\d+\.\d+-\d+)'
-        $Versionmatching = [regex]::Matches($htmlContent, $regexPattern)
-
-        if ($Versionmatching.Count -gt 0) {
-            $LatestImagemagickversion = $Versionmatching[0].Value
-        }
-    #>
-}
-Elseif ($global:OSType -eq "Win32NT") {
-    try {
-    $Url = "https://imagemagick.org/archive/binaries/?C=M;O=D"
-    $result = Invoke-WebRequest -Uri $Url -ErrorAction Stop
-
-    $LatestImagemagickversion = ($result.links.href |
-        Where-Object { $_ -like '*portable-Q16-HDRI-x64.zip' } |
-        Sort-Object -Descending)[0] -replace '-portable-Q16-HDRI-x64.zip', '' -replace 'ImageMagick-', ''
-    }
-    catch {
-        # Fallback to GitHub API if direct access is forbidden or fails
-        Write-Entry -Message "Primary method failed. Falling back to GitHub API..." -Path $configLogging -Color Yellow -log Warning
-        $LatestImagemagickversion = (Invoke-RestMethod -Uri "https://api.github.com/repos/ImageMagick/ImageMagick/releases/latest" -Method Get).tag_name
-    }
-}
-Else {
-    $LatestImagemagickversion = (Invoke-RestMethod -Uri "https://api.github.com/repos/ImageMagick/ImageMagick/releases/latest" -Method Get).tag_name
-}
-if ($LatestImagemagickversion) {
-    $LatestImagemagickversion = $LatestImagemagickversion.replace('-', '.')
-    Write-Entry -Message "Latest Imagemagick Version: $LatestImagemagickversion" -Path $configLogging -Color Yellow -log Info
-}
-
-# Auto Update Magick
-if ($AutoUpdateIM -eq 'true' -and $global:OSType -ne "Docker" -and $LatestImagemagickversion -gt $CurrentImagemagickversion -and $global:OSarch -ne "Arm64") {
-    if ($global:OSType -eq "Win32NT") {
-        Remove-Item -LiteralPath $magickinstalllocation -Recurse -Force
-    }
-    Else {
-        Remove-Item -LiteralPath "$global:ScriptRoot/magick" -Force
-    }
-    if ($global:OSType -ne "Win32NT") {
-        if ($global:OSType -ne "Docker") {
-            Write-Entry -Subtext "Downloading the latest Imagemagick portable version for you..." -Path $configLogging -Color Cyan -log Info
-            $magickUrl = "https://imagemagick.org/archive/binaries/magick"
-            Invoke-WebRequest -Uri $magickUrl -OutFile "$global:ScriptRoot/magick"
-            chmod +x "$global:ScriptRoot/magick"
-            Write-Entry -Subtext "Made the portable Magick executable..." -Path $configLogging -Color Green -log Info
-        }
-    }
-    else {
-        Write-Entry -Subtext "Downloading the latest Imagemagick portable version for you..." -Path $configLogging -Color Cyan -log Info
-        $LatestRelease = "https://imagemagick.org/archive/binaries/ImageMagick-$LatestImagemagickversion-portable-Q16-HDRI-x64.zip"
-        $DownloadPath = Join-Path -Path $global:ScriptRoot -ChildPath (Join-Path -Path 'temp' -ChildPath $LatestImagemagickversion)
-        Invoke-WebRequest $LatestRelease -OutFile $DownloadPath
-        Expand-Archive -Path $DownloadPath -DestinationPath $magickinstalllocation -Force
-        if ((Get-ChildItem -Directory -LiteralPath $magickinstalllocation).name -eq $($LatestRelease.replace('.zip', ''))) {
-            Copy-item -Force -Recurse "$magickinstalllocation\$((Get-ChildItem -Directory -LiteralPath $magickinstalllocation).name)\*" $magickinstalllocation
-            Remove-Item -Recurse -LiteralPath "$magickinstalllocation\$((Get-ChildItem -Directory -LiteralPath $magickinstalllocation).name)" -Force
-        }
-        if (Test-Path -LiteralPath $magickinstalllocation\magick.exe) {
-            Write-Entry -Subtext "Placed Portable ImageMagick here: $magickinstalllocation" -Path $configLogging -Color Green -log Info
-        }
-        Else {
-            Write-Entry -Subtext "Error During extraction, please manually install/copy portable Imagemagick from here: $LatestRelease" -Path $configLogging -Color Red -log Error
-        }
-    }
-}
+# Invoke ImageMagick Checks
+InvokeIMChecks
 
 # Create directories if they don't exist
 
@@ -7364,7 +7235,8 @@ if ($config.PrerequisitePart.font -eq 'Colus-Regular.ttf' -or $config.Prerequisi
 # Write log message
 Write-Entry -Message "Old log files cleared..." -Path $configLogging -Color White -log Info
 # Display Current Config settings:
-LogConfigSettings
+Write-Entry -Message "Current Config settings:" -Path $configLogging -Color DarkMagenta -log Info
+Output-ConfigJson -obj $config
 # Starting main Script now...
 Write-Entry -Message "Starting main Script now..." -Path $configLogging -Color Green -log Info
 
