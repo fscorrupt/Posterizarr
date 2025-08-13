@@ -9,14 +9,19 @@
 <h1 align="center">Posterizarr</h1>
 
   <p align="center">
+    <a href="https://ko-fi.com/R6R81S6SC">Donate</a>
+    ·
     <a href="https://github.com/fscorrupt/Posterizarr/issues">Report Bug</a>
     ·
     <a href="https://github.com/fscorrupt/Posterizarr/issues">Request Feature</a>
+    ·
+    <a href="https://discord.gg/fYyJQSGt54">Discord</a>
+    
   </p>
 </div>
 <p align="center">
-    <a href="https://ko-fi.com/R6R81S6SC" target="_blank"><img src="https://storage.ko-fi.com/cdn/brandasset/logo_white_stroke_small.png" alt="Buy Me A Coffee" height="35"></a>
-    <a href="https://discord.gg/fYyJQSGt54" target="_blank"><img src="https://assets-global.website-files.com/6257adef93867e50d84d30e2/636e0a6a49cf127bf92de1e2_icon_clyde_blurple_RGB.png" alt="Discord" height="35"></a>
+    <a href="https://ko-fi.com/R6R81S6SC" target="_blank"><img src="https://storage.ko-fi.com/cdn/brandasset/logo_white_stroke_small.png" alt="Buy Me A Coffee" height="25"></a>
+    <a href="https://discord.gg/fYyJQSGt54" target="_blank"><img src="https://assets-global.website-files.com/6257adef93867e50d84d30e2/636e0a6a49cf127bf92de1e2_icon_clyde_blurple_RGB.png" alt="Discord" height="25"></a>
 </p>
 <p align="center">
 <a href="https://discord.gg/fYyJQSGt54" target="_blank"><img src="/images/posterizarr_banner.jpg" alt="Discord" height="10%"></a>
