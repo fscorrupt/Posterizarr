@@ -15,7 +15,7 @@ param (
 )
 Set-PSReadLineOption -HistorySaveStyle SaveNothing
 
-$CurrentScriptVersion = "1.9.73"
+$CurrentScriptVersion = "1.9.74"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 $env:PSMODULE_ANALYSIS_CACHE_PATH = $null
@@ -36,7 +36,7 @@ function InvokeIMChecks {
     # Check for latest Imagemagick Version
     if ($global:OSarch -eq "Arm64") {
         try {
-            $CurrentImagemagickversion = & $magick -version
+            $global:CurrentImagemagickversion = & $magick -version
         }
         catch {
             Write-Entry -Message "Could not query installed Imagemagick" -Path $configLogging -Color Red -log Error
@@ -49,18 +49,18 @@ function InvokeIMChecks {
             }
             Exit
         }
-        $CurrentImagemagickversion = [regex]::Match($CurrentImagemagickversion, 'Version: ImageMagick (\d+(\.\d+){1,2}-\d+)')
-        $CurrentImagemagickversion = $CurrentImagemagickversion.Groups[1].Value.replace('-', '.')
-        Write-Entry -Message "Current Imagemagick Version: $CurrentImagemagickversion" -Path $configLogging -Color White -log Info
+        $global:CurrentImagemagickversion = [regex]::Match($global:CurrentImagemagickversion, 'Version: ImageMagick (\d+(\.\d+){1,2}-\d+)')
+        $global:CurrentImagemagickversion = $global:CurrentImagemagickversion.Groups[1].Value.replace('-', '.')
+        Write-Entry -Message "Current Imagemagick Version: $global:CurrentImagemagickversion" -Path $configLogging -Color White -log Info
     }
     Else {
         # Check ImageMagick now:
         CheckImageMagick -magick $magick -magickinstalllocation $magickinstalllocation
 
-        $CurrentImagemagickversion = & $magick -version
-        $CurrentImagemagickversion = [regex]::Match($CurrentImagemagickversion, 'Version: ImageMagick (\d+(\.\d+){1,2}-\d+)')
-        $CurrentImagemagickversion = $CurrentImagemagickversion.Groups[1].Value.replace('-', '.')
-        Write-Entry -Message "Current Imagemagick Version: $CurrentImagemagickversion" -Path $configLogging -Color White -log Info
+        $global:CurrentImagemagickversion = & $magick -version
+        $global:CurrentImagemagickversion = [regex]::Match($global:CurrentImagemagickversion, 'Version: ImageMagick (\d+(\.\d+){1,2}-\d+)')
+        $global:CurrentImagemagickversion = $global:CurrentImagemagickversion.Groups[1].Value.replace('-', '.')
+        Write-Entry -Message "Current Imagemagick Version: $global:CurrentImagemagickversion" -Path $configLogging -Color White -log Info
     }
 
     if ($global:OSType -eq "Docker") {
@@ -72,7 +72,7 @@ function InvokeIMChecks {
         $Versionmatching = [regex]::Matches($htmlContent, $regexPattern)
 
         if ($Versionmatching.Count -gt 0) {
-            $LatestImagemagickversion = $Versionmatching[0].Groups[1].Value.split('-')[0]
+            $global:LatestImagemagickversion = $Versionmatching[0].Groups[1].Value.split('-')[0]
         }
         <#
         $Url = "https://raw.githubusercontent.com/SoftCreatR/imei/main/versions/imagemagick.version"
@@ -82,7 +82,7 @@ function InvokeIMChecks {
         $Versionmatching = [regex]::Matches($htmlContent, $regexPattern)
 
         if ($Versionmatching.Count -gt 0) {
-            $LatestImagemagickversion = $Versionmatching[0].Value
+            $global:LatestImagemagickversion = $Versionmatching[0].Value
         }
     #>
     }
@@ -91,26 +91,26 @@ function InvokeIMChecks {
             $Url = "https://imagemagick.org/archive/binaries/?C=M;O=D"
             $result = Invoke-WebRequest -Uri $Url -ErrorAction Stop
 
-            $LatestImagemagickversion = ($result.links.href |
+            $global:LatestImagemagickversion = ($result.links.href |
                 Where-Object { $_ -like '*portable-Q16-HDRI-x64.zip' } |
                 Sort-Object -Descending)[0] -replace '-portable-Q16-HDRI-x64.zip', '' -replace 'ImageMagick-', ''
         }
         catch {
             # Fallback to GitHub API if direct access is forbidden or fails
             Write-Entry -Subtext "Primary method failed. Falling back to GitHub API..." -Path $configLogging -Color Yellow -log Debug
-            $LatestImagemagickversion = (Invoke-RestMethod -Uri "https://api.github.com/repos/ImageMagick/ImageMagick/releases/latest" -Method Get).tag_name
+            $global:LatestImagemagickversion = (Invoke-RestMethod -Uri "https://api.github.com/repos/ImageMagick/ImageMagick/releases/latest" -Method Get).tag_name
         }
     }
     Else {
-        $LatestImagemagickversion = (Invoke-RestMethod -Uri "https://api.github.com/repos/ImageMagick/ImageMagick/releases/latest" -Method Get).tag_name
+        $global:LatestImagemagickversion = (Invoke-RestMethod -Uri "https://api.github.com/repos/ImageMagick/ImageMagick/releases/latest" -Method Get).tag_name
     }
-    if ($LatestImagemagickversion) {
-        $LatestImagemagickversion = $LatestImagemagickversion.replace('-', '.')
-        Write-Entry -Subtext "Latest Imagemagick Version: $LatestImagemagickversion" -Path $configLogging -Color Yellow -log Info
+    if ($global:LatestImagemagickversion) {
+        $global:LatestImagemagickversion = $global:LatestImagemagickversion.replace('-', '.')
+        Write-Entry -Subtext "Latest Imagemagick Version: $global:LatestImagemagickversion" -Path $configLogging -Color Yellow -log Info
     }
 
     # Auto Update Magick
-    if ($AutoUpdateIM -eq 'true' -and $global:OSType -ne "Docker" -and $LatestImagemagickversion -gt $CurrentImagemagickversion -and $global:OSarch -ne "Arm64") {
+    if ($AutoUpdateIM -eq 'true' -and $global:OSType -ne "Docker" -and $global:LatestImagemagickversion -gt $global:CurrentImagemagickversion -and $global:OSarch -ne "Arm64") {
         if ($global:OSType -eq "Win32NT") {
             Remove-Item -LiteralPath $magickinstalllocation -Recurse -Force
         }
@@ -128,8 +128,8 @@ function InvokeIMChecks {
         }
         else {
             Write-Entry -Subtext "Downloading the latest Imagemagick portable version for you..." -Path $configLogging -Color Cyan -log Info
-            $LatestRelease = "https://imagemagick.org/archive/binaries/ImageMagick-$LatestImagemagickversion-portable-Q16-HDRI-x64.zip"
-            $DownloadPath = Join-Path -Path $global:ScriptRoot -ChildPath (Join-Path -Path 'temp' -ChildPath $LatestImagemagickversion)
+            $LatestRelease = "https://imagemagick.org/archive/binaries/ImageMagick-$global:LatestImagemagickversion-portable-Q16-HDRI-x64.zip"
+            $DownloadPath = Join-Path -Path $global:ScriptRoot -ChildPath (Join-Path -Path 'temp' -ChildPath $global:LatestImagemagickversion)
             Invoke-WebRequest $LatestRelease -OutFile $DownloadPath
             Expand-Archive -Path $DownloadPath -DestinationPath $magickinstalllocation -Force
             if ((Get-ChildItem -Directory -LiteralPath $magickinstalllocation).name -eq $($LatestRelease.replace('.zip', ''))) {
@@ -827,7 +827,7 @@ function SendMessage {
                 "url": "$DLSource"
             },
             "footer": {
-                "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $CurrentImagemagickversion | IM vNext: $LatestImagemagickversion"
+                "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $global:CurrentImagemagickversion | IM vNext: $global:LatestImagemagickversion"
             }
 
         }
@@ -901,7 +901,7 @@ function SendMessage {
                 "url": "$DLSource"
             },
             "footer": {
-                "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $CurrentImagemagickversion | IM vNext: $LatestImagemagickversion"
+                "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $global:CurrentImagemagickversion | IM vNext: $global:LatestImagemagickversion"
             }
 
         }
@@ -1002,7 +1002,7 @@ function SendMessage {
                 "url": "$DLSource"
             },
             "footer": {
-                "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $CurrentImagemagickversion | IM vNext: $LatestImagemagickversion"
+                "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $global:CurrentImagemagickversion | IM vNext: $global:LatestImagemagickversion"
             }
 
         }
@@ -1076,7 +1076,7 @@ function SendMessage {
                 "url": "$DLSource"
             },
             "footer": {
-                "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $CurrentImagemagickversion | IM vNext: $LatestImagemagickversion"
+                "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $global:CurrentImagemagickversion | IM vNext: $global:LatestImagemagickversion"
             }
 
         }
@@ -6150,7 +6150,7 @@ function MassDownloadPlexArtwork {
                         "url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png"
                     },
                     "footer": {
-                        "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $CurrentImagemagickversion | IM vNext: $LatestImagemagickversion"
+                        "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $global:CurrentImagemagickversion | IM vNext: $global:LatestImagemagickversion"
                     }
                 }
                 ]
@@ -6203,7 +6203,7 @@ function MassDownloadPlexArtwork {
                     "url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png"
                 },
                 "footer": {
-                    "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $CurrentImagemagickversion | IM vNext: $LatestImagemagickversion"
+                    "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $global:CurrentImagemagickversion | IM vNext: $global:LatestImagemagickversion"
                 }
             }
             ]
@@ -6278,7 +6278,7 @@ function MassDownloadPlexArtwork {
                         "url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png"
                     },
                     "footer": {
-                        "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $CurrentImagemagickversion | IM vNext: $LatestImagemagickversion"
+                        "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $global:CurrentImagemagickversion | IM vNext: $global:LatestImagemagickversion"
                     }
                 }
                 ]
@@ -6331,7 +6331,7 @@ function MassDownloadPlexArtwork {
                         "url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png"
                     },
                     "footer": {
-                        "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $CurrentImagemagickversion | IM vNext: $LatestImagemagickversion"
+                        "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $global:CurrentImagemagickversion | IM vNext: $global:LatestImagemagickversion"
                     }
                 }
                 ]
@@ -8840,7 +8840,7 @@ Elseif ($Testing) {
                     "url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png"
                 },
                 "footer": {
-                    "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $CurrentImagemagickversion | IM vNext: $LatestImagemagickversion"
+                    "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $global:CurrentImagemagickversion | IM vNext: $global:LatestImagemagickversion"
                 }
 
             }
@@ -8903,7 +8903,7 @@ Elseif ($Testing) {
                         "url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png"
                     },
                     "footer": {
-                        "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $CurrentImagemagickversion | IM vNext: $LatestImagemagickversion"
+                        "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $global:CurrentImagemagickversion | IM vNext: $global:LatestImagemagickversion"
                     }
 
                 }
@@ -14152,7 +14152,7 @@ Elseif ($SyncJelly -or $SyncEmby) {
                         "url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png"
                     },
                     "footer": {
-                        "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $CurrentImagemagickversion | IM vNext: $LatestImagemagickversion"
+                        "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $global:CurrentImagemagickversion | IM vNext: $global:LatestImagemagickversion"
                     }
                 }
                 ]
@@ -18114,7 +18114,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                 "url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png"
                             },
                             "footer": {
-                                "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $CurrentImagemagickversion | IM vNext: $LatestImagemagickversion"
+                                "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $global:CurrentImagemagickversion | IM vNext: $global:LatestImagemagickversion"
                             }
                         }
                         ]
@@ -18207,7 +18207,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                             "url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png"
                         },
                         "footer": {
-                            "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $CurrentImagemagickversion | IM vNext: $LatestImagemagickversion"
+                            "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $global:CurrentImagemagickversion | IM vNext: $global:LatestImagemagickversion"
                         }
                     }
                     ]
@@ -18312,7 +18312,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                 "url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png"
                             },
                             "footer": {
-                                "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $CurrentImagemagickversion | IM vNext: $LatestImagemagickversion"
+                                "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $global:CurrentImagemagickversion | IM vNext: $global:LatestImagemagickversion"
                             }
                         }
                         ]
@@ -18395,7 +18395,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                 "url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png"
                             },
                             "footer": {
-                                "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $CurrentImagemagickversion | IM vNext: $LatestImagemagickversion"
+                                "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $global:CurrentImagemagickversion | IM vNext: $global:LatestImagemagickversion"
                             }
                         }
                         ]
@@ -23034,7 +23034,7 @@ else {
                             "url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png"
                         },
                         "footer": {
-                            "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $CurrentImagemagickversion | IM vNext: $LatestImagemagickversion"
+                            "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $global:CurrentImagemagickversion | IM vNext: $global:LatestImagemagickversion"
                         }
                     }
                     ]
@@ -23127,7 +23127,7 @@ else {
                         "url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png"
                     },
                     "footer": {
-                        "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $CurrentImagemagickversion | IM vNext: $LatestImagemagickversion"
+                        "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $global:CurrentImagemagickversion | IM vNext: $global:LatestImagemagickversion"
                     }
                 }
                 ]
@@ -23232,7 +23232,7 @@ else {
                             "url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png"
                         },
                         "footer": {
-                            "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $CurrentImagemagickversion | IM vNext: $LatestImagemagickversion"
+                            "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $global:CurrentImagemagickversion | IM vNext: $global:LatestImagemagickversion"
                         }
                     }
                     ]
@@ -23315,7 +23315,7 @@ else {
                             "url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png"
                         },
                         "footer": {
-                            "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $CurrentImagemagickversion | IM vNext: $LatestImagemagickversion"
+                            "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $global:CurrentImagemagickversion | IM vNext: $global:LatestImagemagickversion"
                         }
                     }
                     ]
