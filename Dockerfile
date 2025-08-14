@@ -30,6 +30,7 @@ RUN echo @edge http://dl-cdn.alpinelinux.org/alpine/edge/community >> /etc/apk/r
         imagemagick-webp@edge \
         libwebp \
         libwebp-tools \
+        librsvg@edge \
         powershell \
         tzdata \
     && pwsh -NoProfile -Command "Set-PSRepository -Name PSGallery -InstallationPolicy Trusted; \

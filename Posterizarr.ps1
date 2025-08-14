@@ -15,7 +15,7 @@ param (
 )
 Set-PSReadLineOption -HistorySaveStyle SaveNothing
 
-$CurrentScriptVersion = "1.9.75"
+$CurrentScriptVersion = "1.9.76"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 $env:PSMODULE_ANALYSIS_CACHE_PATH = $null
@@ -1140,7 +1140,7 @@ function GetTMDBMoviePoster {
     if (!$global:tmdbid) {
         Write-Entry -Subtext "Cannot search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     }
-    if ($global:PreferTextless -eq $true) {
+    if ($global:PosterPreferTextless -eq $true) {
         try {
             $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($global:tmdbid)?append_to_response=images&language=null&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
         }
@@ -1159,9 +1159,9 @@ function GetTMDBMoviePoster {
                     $NoLangPoster = ($response.images.posters | Where-Object iso_639_1 -eq $null)
                 }
                 if (!$NoLangPoster) {
-                    Write-Entry -Subtext "PreferTextless Value: $global:PreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                    Write-Entry -Subtext "OnlyTextless Value: $global:OnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                    if ($global:OnlyTextless -eq $false) {
+                    Write-Entry -Subtext "PreferTextless Value: $global:PosterPreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                    Write-Entry -Subtext "OnlyTextless Value: $global:PosterOnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                    if ($global:PosterOnlyTextless -eq $false) {
                         if ($global:WidthHeightFilter -eq 'true') {
                             if ($global:TMDBVoteSorting -eq 'primary') {
                                 $filteredPosters = $response.images.posters | Where-Object { $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
@@ -1566,7 +1566,7 @@ function GetTMDBShowPoster {
         $global:tmdbsearched = $true
     }
     Else {
-        if ($global:PreferTextless -eq $true) {
+        if ($global:PosterPreferTextless -eq $true) {
             try {
                 $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=null&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
             }
@@ -1585,9 +1585,9 @@ function GetTMDBShowPoster {
                         $NoLangPoster = ($response.images.posters | Where-Object iso_639_1 -eq $null)
                     }
                     if (!$NoLangPoster) {
-                        Write-Entry -Subtext "PreferTextless Value: $global:PreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                        Write-Entry -Subtext "OnlyTextless Value: $global:OnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                        if ($global:OnlyTextless -eq $false) {
+                        Write-Entry -Subtext "PreferTextless Value: $global:PosterPreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        Write-Entry -Subtext "OnlyTextless Value: $global:PosterOnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        if ($global:PosterOnlyTextless -eq $false) {
                             if ($global:WidthHeightFilter -eq 'true') {
                                 if ($global:TMDBVoteSorting -eq 'primary') {
                                     $filteredPosters = $response.images.posters | Where-Object { $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
@@ -2371,7 +2371,7 @@ function GetTMDBTitleCard {
 function GetFanartMoviePoster {
     $global:Fallback = $null
     Write-Entry -Subtext "Searching on Fanart.tv for a movie poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
-    if ($global:PreferTextless -eq $true) {
+    if ($global:PosterPreferTextless -eq $true) {
         $ids = @($global:tmdbid, $global:imdbid)
         $entrytemp = $null
 
@@ -2380,9 +2380,9 @@ function GetFanartMoviePoster {
                 $entrytemp = Get-FanartTv -Type movies -id $id -ErrorAction SilentlyContinue
                 if ($entrytemp -and $entrytemp.movieposter) {
                     if (!($entrytemp.movieposter | Where-Object lang -eq '00')) {
-                        Write-Entry -Subtext "PreferTextless Value: $global:PreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                        Write-Entry -Subtext "OnlyTextless Value: $global:OnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                        if ($global:OnlyTextless -eq $false) {
+                        Write-Entry -Subtext "PreferTextless Value: $global:PosterPreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        Write-Entry -Subtext "OnlyTextless Value: $global:PosterOnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        if ($global:PosterOnlyTextless -eq $false) {
                             $global:posterurl = ($entrytemp.movieposter)[0].url
                             Write-Entry -Subtext "Found Poster with text on Fanart.tv"  -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                             $global:PosterWithText = $true
@@ -2520,16 +2520,16 @@ function GetFanartMovieBackground {
 function GetFanartShowPoster {
     $global:Fallback = $null
     Write-Entry -Subtext "Searching on Fanart.tv for a show poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
-    if ($global:PreferTextless -eq $true) {
+    if ($global:PosterPreferTextless -eq $true) {
         $id = $global:tvdbid
         $entrytemp = $null
         if ($id) {
             $entrytemp = Get-FanartTv -Type tv -id $id -ErrorAction SilentlyContinue
             if ($entrytemp -and $entrytemp.tvposter) {
                 if (!($entrytemp.tvposter | Where-Object lang -eq '00')) {
-                    Write-Entry -Subtext "PreferTextless Value: $global:PreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                    Write-Entry -Subtext "OnlyTextless Value: $global:OnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                    if ($global:OnlyTextless -eq $false) {
+                    Write-Entry -Subtext "PreferTextless Value: $global:PosterPreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                    Write-Entry -Subtext "OnlyTextless Value: $global:PosterOnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                    if ($global:PosterOnlyTextless -eq $false) {
                         $global:posterurl = ($entrytemp.tvposter)[0].url
 
                         Write-Entry -Subtext "Found Poster with text on Fanart.tv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
@@ -2768,7 +2768,7 @@ function GetFanartSeasonPoster {
             return $global:posterurl
         }
         Else {
-            if ($global:OnlyTextless -eq $true) {
+            if ($global:PosterOnlyTextless -eq $true) {
                 Write-Entry -Subtext "No Textless Season Poster on Fanart" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
             }
             Else {
@@ -2814,7 +2814,7 @@ function GetFanartSeasonPoster {
             return $global:posterurl
         }
         Else {
-            if ($global:OnlyTextless -eq $true) {
+            if ($global:PosterOnlyTextless -eq $true) {
                 Write-Entry -Subtext "No Textless Season Poster on Fanart" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
             }
             Else {
@@ -2825,7 +2825,7 @@ function GetFanartSeasonPoster {
 }
 function GetTVDBMoviePoster {
     if ($global:tvdbid) {
-        if ($global:PreferTextless -eq $true) {
+        if ($global:PosterPreferTextless -eq $true) {
             Write-Entry -Subtext "Searching on TVDB for a movie poster - TVDBID: $global:tvdbid" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
             try {
                 $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/movies/$($global:tvdbid)/extended" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
@@ -2853,9 +2853,9 @@ function GetTVDBMoviePoster {
                         return $global:posterurl
                     }
                     Else {
-                        Write-Entry -Subtext "PreferTextless Value: $global:PreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                        Write-Entry -Subtext "OnlyTextless Value: $global:OnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                        if ($global:OnlyTextless -eq $false) {
+                        Write-Entry -Subtext "PreferTextless Value: $global:PosterPreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        Write-Entry -Subtext "OnlyTextless Value: $global:PosterOnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        if ($global:PosterOnlyTextless -eq $false) {
                             foreach ($lang in $global:PreferredLanguageOrderTVDB) {
                                 if ($global:WidthHeightFilter -eq 'true') {
                                     if ($lang -eq 'null') {
@@ -3139,7 +3139,7 @@ function GetTVDBMovieBackground {
 function GetTVDBShowPoster {
     if ($global:tvdbid) {
         Write-Entry -Subtext "Searching on TVDB for a poster - TVDBID: $global:tvdbid" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
-        if ($global:PreferTextless -eq $true) {
+        if ($global:PosterPreferTextless -eq $true) {
             try {
                 $response = (Invoke-WebRequest -Uri "https://api4.thetvdb.com/v4/series/$($global:tvdbid)/artworks" -Method GET -Headers $global:tvdbheader).content | ConvertFrom-Json
             }
@@ -3168,9 +3168,9 @@ function GetTVDBShowPoster {
                         $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)#artwork"
                     }
                     Else {
-                        Write-Entry -Subtext "PreferTextless Value: $global:PreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                        Write-Entry -Subtext "OnlyTextless Value: $global:OnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                        if ($global:OnlyTextless -eq $false) {
+                        Write-Entry -Subtext "PreferTextless Value: $global:PosterPreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        Write-Entry -Subtext "OnlyTextless Value: $global:PosterOnlyTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                        if ($global:PosterOnlyTextless -eq $false) {
                             $global:posterurl = $defaultImageurl
                             Write-Entry -Subtext "Found Poster with text on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Blue -log Info
                             $global:TVDBAssetChangeUrl = "https://thetvdb.com/series/$($response.data.slug)#artwork"
@@ -3342,7 +3342,7 @@ function GetTVDBSeasonPoster {
                             continue
                         }
                     }
-                    if (!$global:posterurl -and $global:OnlyTextless -eq $true) {
+                    if (!$global:posterurl -and $global:PosterOnlyTextless -eq $true) {
                         Write-Entry -Subtext "No Textless Poster found on TVDB" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                     }
                     Else {
@@ -9457,7 +9457,7 @@ Elseif ($Tautulli) {
                                     'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBMoviePoster } }
                                     'FANART' { $global:posterurl = GetFanartMoviePoster }
                                 }
-                                if ($global:PreferTextless -eq $true) {
+                                if ($global:PosterPreferTextless -eq $true) {
                                     if (!$global:TextlessPoster -and $global:fanartfallbackposterurl) {
                                         $global:posterurl = $global:fanartfallbackposterurl
                                         Write-Entry -Subtext "Took Fanart.tv Fallback poster because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
@@ -9480,7 +9480,7 @@ Elseif ($Tautulli) {
                                     }
                                 }
 
-                                if ($global:OnlyTextless -and !$global:posterurl) {
+                                if ($global:PosterOnlyTextless -and !$global:posterurl) {
                                     if ($global:FavProvider -eq 'TVDB') {
                                         if ($entry.tmdbid) {
                                             $global:posterurl = GetTMDBMoviePoster
@@ -9514,11 +9514,11 @@ Elseif ($Tautulli) {
                                 }
 
                                 if (!$global:posterurl) {
-                                    if ($global:FavProvider -ne 'TVDB' -and !$global:OnlyTextless -and !$global:PreferTextless) {
+                                    if ($global:FavProvider -ne 'TVDB' -and !$global:PosterOnlyTextless -and !$global:PosterPreferTextless) {
                                         $global:posterurl = GetTVDBMoviePoster
                                         $global:IsFallback = $true
                                     }
-                                    if (!$global:posterurl -and !$global:OnlyTextless) {
+                                    if (!$global:posterurl -and !$global:PosterOnlyTextless) {
                                         if ($ArtUrl) {
                                             GetPlexArtwork -Type ' a Movie Poster' -ArtUrl $Arturl -TempImage $PosterImage
                                             $global:IsFallback = $true
@@ -9527,7 +9527,7 @@ Elseif ($Tautulli) {
                                             Write-Entry -Subtext "Plex Poster Url empty, cannot search on plex, likely there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                         }
                                     }
-                                    if (!$global:posterurl -and $global:imdbid -and !$global:OnlyTextless) {
+                                    if (!$global:posterurl -and $global:imdbid -and !$global:PosterOnlyTextless) {
                                         Write-Entry -Subtext "Searching on IMDB for a movie poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                                         $global:posterurl = GetIMDBPoster
                                         $global:IsFallback = $true
@@ -9752,7 +9752,7 @@ Elseif ($Tautulli) {
                                 Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
                                 Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                 Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                                if ($global:OnlyTextless) {
+                                if ($global:PosterOnlyTextless) {
                                     $movietemp = New-Object psobject
                                     $movietemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
                                     $movietemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie'
@@ -10164,7 +10164,7 @@ Elseif ($Tautulli) {
                                 Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
                                 Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                 Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                                if ($global:OnlyTextless) {
+                                if ($global:BackgroundOnlyTextless) {
                                     $moviebackgroundtemp = New-Object psobject
                                     $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
                                     $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie Background'
@@ -10207,7 +10207,7 @@ Elseif ($Tautulli) {
             Write-Entry -Subtext "Could not query entries from movies array, error message: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             write-Entry -Subtext "At line $($_.InvocationInfo.ScriptLineNumber)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-            if ($global:OnlyTextless) {
+            if ($global:PosterOnlyTextless) {
                 $moviebackgroundtemp = New-Object psobject
                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie Background'
@@ -10382,7 +10382,7 @@ Elseif ($Tautulli) {
                                 'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBShowPoster } }
                                 'FANART' { $global:posterurl = GetFanartShowPoster }
                             }
-                            if ($global:PreferTextless -eq $true) {
+                            if ($global:PosterPreferTextless -eq $true) {
                                 if (!$global:TextlessPoster -and $global:fanartfallbackposterurl) {
                                     $global:posterurl = $global:fanartfallbackposterurl
                                     Write-Entry -Subtext "Took Fanart.tv Fallback poster because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
@@ -10413,7 +10413,7 @@ Elseif ($Tautulli) {
                                 $global:posterurl = GetTVDBShowPoster
                                 $global:IsFallback = $true
                                 if (!$global:posterurl -and !$global:TMDBfallbackposterurl -and !$global:fanartfallbackposterurl) {
-                                    if ($ArtUrl -and !$global:OnlyTextless) {
+                                    if ($ArtUrl -and !$global:PosterOnlyTextless) {
                                         GetPlexArtwork -Type ' a Show Poster' -ArtUrl $Arturl -TempImage $PosterImage
                                         $global:plexalreadysearched = $True
                                     }
@@ -10427,7 +10427,7 @@ Elseif ($Tautulli) {
                             }
                             if (!$global:posterurl -and !$global:plexalreadysearched -eq 'true') {
                                 $global:IsFallback = $true
-                                if ($ArtUrl -and !$global:OnlyTextless) {
+                                if ($ArtUrl -and !$global:PosterOnlyTextless) {
                                     GetPlexArtwork -Type ' a Show Poster' -ArtUrl $Arturl -TempImage $PosterImage
                                     $global:plexalreadysearched = $True
                                 }
@@ -10661,7 +10661,7 @@ Elseif ($Tautulli) {
                             Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
                             Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                             Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                            if ($global:OnlyTextless) {
+                            if ($global:PosterOnlyTextless) {
                                 $showtemp = New-Object psobject
                                 $showtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
                                 $showtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Show'
@@ -11090,7 +11090,7 @@ Elseif ($Tautulli) {
                             Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
                             Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                             Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                            if ($global:OnlyTextless) {
+                            if ($global:BackgroundOnlyTextless) {
                                 $showbackgroundtemp = New-Object psobject
                                 $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
                                 $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Show Background'
@@ -11728,7 +11728,7 @@ Elseif ($Tautulli) {
                                 Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
                                 Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                 Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                                if ($global:OnlyTextless) {
+                                if ($global:SeasonOnlyTextless) {
                                     $seasontemp = New-Object psobject
                                     $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
                                     $seasontemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Season'
@@ -12296,7 +12296,7 @@ Elseif ($Tautulli) {
                                             Else {
                                                 Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                                 Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                                                if ($global:OnlyTextless) {
+                                                if ($global:BackgroundOnlyTextless) {
                                                     $episodetemp = New-Object psobject
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Episode'
@@ -12841,7 +12841,7 @@ Elseif ($Tautulli) {
                                             Else {
                                                 Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                                 Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                                                if ($global:OnlyTextless) {
+                                                if ($global:BackgroundOnlyTextless) {
                                                     $episodetemp = New-Object psobject
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Episode'
@@ -14790,7 +14790,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                     'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBMoviePoster } }
                                     'FANART' { $global:posterurl = GetFanartMoviePoster }
                                 }
-                                if ($global:PreferTextless -eq 'True') {
+                                if ($global:PosterPreferTextless -eq 'True') {
                                     if (!$global:TextlessPoster -and $global:fanartfallbackposterurl) {
                                         $global:posterurl = $global:fanartfallbackposterurl
                                         Write-Entry -Subtext "Took Fanart.tv Fallback poster because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
@@ -14813,7 +14813,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                     }
                                 }
 
-                                if ($global:OnlyTextless -and !$global:posterurl) {
+                                if ($global:PosterOnlyTextless -and !$global:posterurl) {
                                     if ($global:FavProvider -eq 'TVDB') {
                                         if ($entry.tmdbid) {
                                             $global:posterurl = GetTMDBMoviePoster
@@ -14847,11 +14847,11 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                 }
 
                                 if (!$global:posterurl) {
-                                    if ($global:FavProvider -ne 'TVDB' -and !$global:OnlyTextless -and !$global:PreferTextless) {
+                                    if ($global:FavProvider -ne 'TVDB' -and !$global:PosterOnlyTextless -and !$global:PosterPreferTextless) {
                                         $global:posterurl = GetTVDBMoviePoster
                                         $global:IsFallback = $true
                                     }
-                                    if (!$global:posterurl -and $global:imdbid -and !$global:OnlyTextless) {
+                                    if (!$global:posterurl -and $global:imdbid -and !$global:PosterOnlyTextless) {
                                         Write-Entry -Subtext "Searching on IMDB for a movie poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                                         $global:posterurl = GetIMDBPoster
                                         $global:IsFallback = $true
@@ -15052,7 +15052,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                 Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
                                 Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                 Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                                if ($global:OnlyTextless) {
+                                if ($global:PosterOnlyTextless) {
                                     $movietemp = New-Object psobject
                                     $movietemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
                                     $movietemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie'
@@ -15436,7 +15436,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                 Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
                                 Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                 Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                                if ($global:OnlyTextless) {
+                                if ($global:BackgroundOnlyTextless) {
                                     $moviebackgroundtemp = New-Object psobject
                                     $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
                                     $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie Background'
@@ -15486,7 +15486,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
             Write-Entry -Subtext "Could not query entries from movies array, error message: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             write-Entry -Subtext "At line $($_.InvocationInfo.ScriptLineNumber)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-            if ($global:OnlyTextless) {
+            if ($global:PosterOnlyTextless) {
                 $moviebackgroundtemp = New-Object psobject
                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie Background'
@@ -15652,7 +15652,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                 'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBShowPoster } }
                                 'FANART' { $global:posterurl = GetFanartShowPoster }
                             }
-                            if ($global:PreferTextless -eq 'True') {
+                            if ($global:PosterPreferTextless -eq 'True') {
                                 if (!$global:TextlessPoster -and $global:fanartfallbackposterurl) {
                                     $global:posterurl = $global:fanartfallbackposterurl
                                     Write-Entry -Subtext "Took Fanart.tv Fallback poster because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
@@ -15895,7 +15895,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                             Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
                             Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                             Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                            if ($global:OnlyTextless) {
+                            if ($global:PosterOnlyTextless) {
                                 $showtemp = New-Object psobject
                                 $showtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
                                 $showtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Show'
@@ -16289,7 +16289,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                             Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
                             Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                             Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                            if ($global:OnlyTextless) {
+                            if ($global:BackgroundOnlyTextless) {
                                 $showbackgroundtemp = New-Object psobject
                                 $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
                                 $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Show Background'
@@ -16842,7 +16842,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                     Write-Entry -Subtext "Missing poster URL for: $global:seasonTitle" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
                                     Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                     Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                                    if ($global:OnlyTextless) {
+                                    if ($global:SeasonOnlyTextless) {
                                         $seasontemp = New-Object psobject
                                         $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
                                         $seasontemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Season'
@@ -17320,7 +17320,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                             Else {
                                                 Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                                 Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                                                if ($global:OnlyTextless) {
+                                                if ($global:BackgroundOnlyTextless) {
                                                     $episodetemp = New-Object psobject
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Episode'
@@ -17777,7 +17777,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                             Else {
                                                 Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                                 Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                                                if ($global:OnlyTextless) {
+                                                if ($global:BackgroundOnlyTextless) {
                                                     $episodetemp = New-Object psobject
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Episode'
@@ -19098,7 +19098,7 @@ else {
                                     'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBMoviePoster } }
                                     'FANART' { $global:posterurl = GetFanartMoviePoster }
                                 }
-                                if ($global:PreferTextless -eq $true) {
+                                if ($global:PosterPreferTextless -eq $true) {
                                     if (!$global:TextlessPoster -and $global:fanartfallbackposterurl) {
                                         $global:posterurl = $global:fanartfallbackposterurl
                                         Write-Entry -Subtext "Took Fanart.tv Fallback poster because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
@@ -19121,7 +19121,7 @@ else {
                                     }
                                 }
 
-                                if ($global:OnlyTextless -and !$global:posterurl) {
+                                if ($global:PosterOnlyTextless -and !$global:posterurl) {
                                     if ($global:FavProvider -eq 'TVDB') {
                                         if ($entry.tmdbid) {
                                             $global:posterurl = GetTMDBMoviePoster
@@ -19155,11 +19155,11 @@ else {
                                 }
 
                                 if (!$global:posterurl) {
-                                    if ($global:FavProvider -ne 'TVDB' -and !$global:OnlyTextless -and !$global:PreferTextless) {
+                                    if ($global:FavProvider -ne 'TVDB' -and !$global:PosterOnlyTextless -and !$global:PosterPreferTextless) {
                                         $global:posterurl = GetTVDBMoviePoster
                                         $global:IsFallback = $true
                                     }
-                                    if (!$global:posterurl -and !$global:OnlyTextless) {
+                                    if (!$global:posterurl -and !$global:PosterOnlyTextless) {
                                         if ($ArtUrl) {
                                             GetPlexArtwork -Type ' a Movie Poster' -ArtUrl $Arturl -TempImage $PosterImage
                                             $global:IsFallback = $true
@@ -19168,7 +19168,7 @@ else {
                                             Write-Entry -Subtext "Plex Poster Url empty, cannot search on plex, likely there is no artwork on plex..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                                         }
                                     }
-                                    if (!$global:posterurl -and $global:imdbid -and !$global:OnlyTextless) {
+                                    if (!$global:posterurl -and $global:imdbid -and !$global:PosterOnlyTextless) {
                                         Write-Entry -Subtext "Searching on IMDB for a movie poster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                                         $global:posterurl = GetIMDBPoster
                                         $global:IsFallback = $true
@@ -19394,7 +19394,7 @@ else {
                                 Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
                                 Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                 Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                                if ($global:OnlyTextless) {
+                                if ($global:PosterOnlyTextless) {
                                     $movietemp = New-Object psobject
                                     $movietemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
                                     $movietemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie'
@@ -19839,7 +19839,7 @@ else {
                                 Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
                                 Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                 Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                                if ($global:OnlyTextless) {
+                                if ($global:BackgroundOnlyTextless) {
                                     $moviebackgroundtemp = New-Object psobject
                                     $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
                                     $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie Background'
@@ -19911,7 +19911,7 @@ else {
             Write-Entry -Subtext "Could not query entries from movies array, error message: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             write-Entry -Subtext "At line $($_.InvocationInfo.ScriptLineNumber)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-            if ($global:OnlyTextless) {
+            if ($global:PosterOnlyTextless) {
                 $moviebackgroundtemp = New-Object psobject
                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
                 $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Movie Background'
@@ -20090,7 +20090,7 @@ else {
                                 'TMDB' { if ($entry.tmdbid) { $global:posterurl = GetTMDBShowPoster } Else { Write-Entry -Subtext "Can't search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning } }
                                 'FANART' { $global:posterurl = GetFanartShowPoster }
                             }
-                            if ($global:PreferTextless -eq $true) {
+                            if ($global:PosterPreferTextless -eq $true) {
                                 if (!$global:TextlessPoster -and $global:fanartfallbackposterurl) {
                                     $global:posterurl = $global:fanartfallbackposterurl
                                     Write-Entry -Subtext "Took Fanart.tv Fallback poster because it is your Fav Provider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
@@ -20126,7 +20126,7 @@ else {
                                 $global:posterurl = GetTVDBShowPoster
                                 $global:IsFallback = $true
                                 if (!$global:posterurl -and !$global:TMDBfallbackposterurl -and !$global:fanartfallbackposterurl) {
-                                    if ($ArtUrl -and !$global:OnlyTextless) {
+                                    if ($ArtUrl -and !$global:PosterOnlyTextless) {
                                         GetPlexArtwork -Type ' a Show Poster' -ArtUrl $Arturl -TempImage $PosterImage
                                         $global:plexalreadysearched = $True
                                     }
@@ -20140,7 +20140,7 @@ else {
                             }
                             if (!$global:posterurl -and !$global:plexalreadysearched -eq 'true') {
                                 $global:IsFallback = $true
-                                if ($ArtUrl -and !$global:OnlyTextless) {
+                                if ($ArtUrl -and !$global:PosterOnlyTextless) {
                                     GetPlexArtwork -Type ' a Show Poster' -ArtUrl $Arturl -TempImage $PosterImage
                                     $global:plexalreadysearched = $True
                                 }
@@ -20374,7 +20374,7 @@ else {
                             Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
                             Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                             Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                            if ($global:OnlyTextless) {
+                            if ($global:PosterOnlyTextless) {
                                 $showtemp = New-Object psobject
                                 $showtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
                                 $showtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Show'
@@ -20828,7 +20828,7 @@ else {
                             Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
                             Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                             Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                            if ($global:OnlyTextless) {
+                            if ($global:BackgroundOnlyTextless) {
                                 $showbackgroundtemp = New-Object psobject
                                 $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
                                 $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Show Background'
@@ -21501,7 +21501,7 @@ else {
                                 Write-Entry -Subtext "Missing poster URL for: $($entry.title)" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color Red -log Error
                                 Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                 Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                                if ($global:OnlyTextless) {
+                                if ($global:SeasonOnlyTextless) {
                                     $seasontemp = New-Object psobject
                                     $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
                                     $seasontemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Season'
@@ -22098,7 +22098,7 @@ else {
                                             Else {
                                                 Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                                 Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                                                if ($global:OnlyTextless) {
+                                                if ($global:BackgroundOnlyTextless) {
                                                     $episodetemp = New-Object psobject
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Episode'
@@ -22674,7 +22674,7 @@ else {
                                             Else {
                                                 Write-Entry -Subtext "--------------------------------------------------------------------------------" -Path $global:ScriptRoot\Logs\Scriptlog.log  -Color White -log Info
                                                 Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-                                                if ($global:OnlyTextless) {
+                                                if ($global:BackgroundOnlyTextless) {
                                                     $episodetemp = New-Object psobject
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
                                                     $episodetemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Episode'
