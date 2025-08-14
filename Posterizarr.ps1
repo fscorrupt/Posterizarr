@@ -15,7 +15,7 @@ param (
 )
 Set-PSReadLineOption -HistorySaveStyle SaveNothing
 
-$CurrentScriptVersion = "1.9.74"
+$CurrentScriptVersion = "1.9.75"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 $env:PSMODULE_ANALYSIS_CACHE_PATH = $null
@@ -242,7 +242,7 @@ function Initialize-LanguageSettings {
     Set-Variable -Name "${SettingName}TVDB"   -Scope Global -Value ($validLangs -replace '^xx$', 'null')
 
     # Flags
-    if ($validLangs.Count -eq 1 -and $validLangs[0] -eq 'xx') {
+    if ($validLangs -contains 'xx' -and $validLangs.Count -eq 1) {
         Set-Variable -Name "${Label}PreferTextless" -Scope Global -Value $true
         Set-Variable -Name "${Label}OnlyTextless"   -Scope Global -Value $true
     }
