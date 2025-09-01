@@ -15,7 +15,7 @@ param (
 )
 Set-PSReadLineOption -HistorySaveStyle SaveNothing
 
-$CurrentScriptVersion = "1.9.77"
+$CurrentScriptVersion = "1.9.78"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 $env:PSMODULE_ANALYSIS_CACHE_PATH = $null
@@ -64,11 +64,11 @@ function InvokeIMChecks {
     }
 
     if ($global:OSType -eq "Docker") {
-        $OSVersionTag = (Get-Content /etc/os-release | Select-String -Pattern "^PRETTY_NAME=").ToString().Split('=')[1].Trim('"').replace('Alpine Linux ', '')
-        $Url = "https://pkgs.alpinelinux.org/package/$OSVersionTag/community/x86_64/imagemagick"
+        #$OSVersionTag = (Get-Content /etc/os-release | Select-String -Pattern "^PRETTY_NAME=").ToString().Split('=')[1].Trim('"').replace('Alpine Linux ', '')
+        $Url = "https://pkgs.alpinelinux.org/package/edge/community/x86_64/imagemagick"
         $response = Invoke-WebRequest -Uri $url
         $htmlContent = $response.Content
-        $regexPattern = '<th class="header">Version<\/th>\s*<td>\s*<strong>([\d\.]+-r\d+)<\/strong>\s*<\/td>'
+        $regexPattern = '<th class="header">Version<\/th>\s*<td>\s*<strong[^>]*>([\d\.]+-r\d+)<\/strong>'
         $Versionmatching = [regex]::Matches($htmlContent, $regexPattern)
 
         if ($Versionmatching.Count -gt 0) {
