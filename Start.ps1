@@ -156,41 +156,60 @@ function Test-And-Download {
 function CopyAssetFiles {
     <#
     .SYNOPSIS
-        Copies asset files from APP_ROOT to APP_DATA if they are missing
+        Copies asset files from APP_ROOT to APP_DATA if they are missing.
     .DESCRIPTION
         Copies all .png and .ttf files from the APP_ROOT directory to the APP_DATA directory,
         but only if they do not already exist in APP_DATA.
+        Special rule: config.example.json is only copied if config.json does not exist in APP_DATA.
     #>
+
     # Get all asset files - using wildcard in path to make -Include work correctly
-    $assetFiles = Get-ChildItem -Path "$env:APP_ROOT/*" -Include "*.png", "*.ttf" -File
+    $assetFiles = Get-ChildItem -Path "$env:APP_ROOT/*" -Include "*.png", "*.ttf", "config.example.json" -File
     $fileCount = $assetFiles.Count
 
     if ($fileCount -eq 0) {
-        Write-Host "No .png or .ttf files found in $env:APP_ROOT" -ForegroundColor Yellow
+        Write-Host "No asset files found in $env:APP_ROOT" -ForegroundColor Yellow
     } else {
         $copiedCount = 0
         $skippedCount = 0
-        $errorCount = 0
+        $errorCount  = 0
 
         $assetFiles | ForEach-Object {
             try {
                 $destinationPath = Join-Path -Path $env:APP_DATA -ChildPath $_.Name
 
-                if (-Not (Test-Path -Path $destinationPath)) {
-                    Copy-Item -Path $_.FullName -Destination $destinationPath -Force
-                    $copiedCount++
-                } else {
-                    $skippedCount++
+                if ($_.Name -eq "config.example.json") {
+                    $configJsonPath = Join-Path -Path $env:APP_DATA -ChildPath "config.json"
+
+                    if (-Not (Test-Path -Path $configJsonPath)) {
+                        if (-Not (Test-Path -Path $destinationPath)) {
+                            Copy-Item -Path $_.FullName -Destination $destinationPath -Force
+                            $copiedCount++
+                        } else {
+                            $skippedCount++
+                        }
+                    } else {
+                        $skippedCount++
+                    }
                 }
-            } catch {
+                else {
+                    if (-Not (Test-Path -Path $destinationPath)) {
+                        Copy-Item -Path $_.FullName -Destination $destinationPath -Force
+                        $copiedCount++
+                    } else {
+                        $skippedCount++
+                    }
+                }
+            }
+            catch {
                 $errorCount++
                 Write-Host "Failed to copy $($_.Name): $($_.Exception.Message)" -ForegroundColor Red
             }
         }
 
         # Summary
-        Write-Host "Copied $copiedCount new .png & .ttf files to $env:APP_DATA" -ForegroundColor Cyan
-        Write-Host "Skipped $skippedCount files (already exist)" -ForegroundColor Gray
+        Write-Host "Copied $copiedCount new asset files to $env:APP_DATA" -ForegroundColor Cyan
+        Write-Host "Skipped $skippedCount files (already exist or not needed)" -ForegroundColor Gray
 
         if ($errorCount -gt 0) {
             Write-Host "Failed to copy $errorCount files" -ForegroundColor Yellow
