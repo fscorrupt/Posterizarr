@@ -20925,6 +20925,8 @@ else {
                     $global:PlexSeasonUrls = $entry.PlexSeasonUrls -split ','
                     for ($i = 0; $i -lt $global:seasonNames.Count; $i++) {
                         $SkipingText = 'false'
+                        $Seasonpostersearchtext = $null
+                        $global:TextlessPoster = $null
                         $global:tmdbsearched = $null
                         $global:posterurl = $null
                         $global:IsFallback = $null
