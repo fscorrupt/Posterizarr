@@ -15,7 +15,7 @@ param (
 )
 Set-PSReadLineOption -HistorySaveStyle SaveNothing
 
-$CurrentScriptVersion = "1.9.78"
+$CurrentScriptVersion = "1.9.79"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 $env:PSMODULE_ANALYSIS_CACHE_PATH = $null
@@ -105,6 +105,7 @@ function InvokeIMChecks {
         $global:LatestImagemagickversion = (Invoke-RestMethod -Uri "https://api.github.com/repos/ImageMagick/ImageMagick/releases/latest" -Method Get).tag_name
     }
     if ($global:LatestImagemagickversion) {
+        $global:LatestImagemagickversiontemp = $global:LatestImagemagickversion
         $global:LatestImagemagickversion = $global:LatestImagemagickversion.replace('-', '.')
         Write-Entry -Subtext "Latest Imagemagick Version: $global:LatestImagemagickversion" -Path $configLogging -Color Yellow -log Info
     }
@@ -128,7 +129,7 @@ function InvokeIMChecks {
         }
         else {
             Write-Entry -Subtext "Downloading the latest Imagemagick portable version for you..." -Path $configLogging -Color Cyan -log Info
-            $LatestRelease = "https://imagemagick.org/archive/binaries/ImageMagick-$global:LatestImagemagickversion-portable-Q16-HDRI-x64.zip"
+            $LatestRelease = "https://imagemagick.org/archive/binaries/ImageMagick-$($global:LatestImagemagickversiontemp)-portable-Q16-HDRI-x64.zip"
             $DownloadPath = Join-Path -Path $global:ScriptRoot -ChildPath (Join-Path -Path 'temp' -ChildPath $global:LatestImagemagickversion)
             Invoke-WebRequest $LatestRelease -OutFile $DownloadPath
             Expand-Archive -Path $DownloadPath -DestinationPath $magickinstalllocation -Force
