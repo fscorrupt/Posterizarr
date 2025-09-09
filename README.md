@@ -618,6 +618,37 @@ In this mode we use Tautulli to trigger Posterizarr for an specific item in Plex
     </p>
     </details>
 
+### Arr Mode Docker
+> [!IMPORTANT]
+> Arrs and Posterizarr must run as a container in Docker
+
+> [!Note]
+> If Discord is configured it will send a Notification on each trigger.
+
+In this mode we use Sonarr/Radarr to trigger Posterizarr for an specific item in Plex/Jellyfin, like a new show, movie or episode got added.
+
+To use it we need to configure a script in Sonarr/Radarr, please follow these instructions.
+1. Ensure you mount the `Posterizarr` directory to your Sonarr/Radarr container, as the script requires access to `/posterizarr`:
+    ```yml
+    volumes:
+      - "/opt/appdata/posterizarr:/posterizarr:rw"
+    ```
+2. Download [ArrTrigger.sh](ArrTrigger.sh) from GitHub and place it in your Sonarr/Radarr script directory.
+    - For example, create a `scripts` folder in `/opt/appdata/sonarr`, resulting in the path:
+  `/opt/appdata/sonarr/scripts/ArrTrigger.sh`
+    - Make sure to set executable permissions: `chmod +x ArrTrigger.sh`
+3. In Sonarr/Radarr, go to **Settings** → **Connect**.
+4. Click the `+` button and select **Custom Script**.
+5. Enter a name for the script.
+6. For **Notification Triggers**, select only `On File Import`.
+7. Under **Path**, browse to and select your `ArrTrigger.sh` script.
+    - Example: `/config/scripts/ArrTrigger.sh`
+8. With this setup, the Arr suite will create a file in `/posterizarr/watcher` whenever a file is imported.
+    - The file will be named like: `recently_added_20250909105509.posterizarr`
+9. Posterizarr monitors this directory for files ending in `.posterizarr`. When such a file is detected, it reads the file and triggers a Posterizarr run for the specific item.
+
+
+
 ### Testing Mode
 
 Run the script with the `-Testing` flag. In this mode, the script will create pink posters/backgrounds with short, medium, and long texts (also in CAPS), using the values specified in the `config.json` file.
