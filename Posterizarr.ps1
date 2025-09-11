@@ -7793,7 +7793,7 @@ if ($Manual) {
                         }
                     }
                 }
-                if ($CreateTitleCard -eq 'y') {
+                Elseif ($CreateTitleCard -eq 'y') {
                     # Add Stroke
                     if ($AddTitleCardEPTitleTextStroke -eq 'true') {
                         $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background none -interline-spacing `"$TitleCardEPTitlelineSpacing`" -gravity `"$TitleCardEPTitletextgravity`" caption:`"$joinedTitle`" -trim +repage -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
@@ -13072,6 +13072,34 @@ Elseif ($ArrTrigger) {
                 $AllShows = [PSCustomObject]@{ Items = @($seriesItem) }
                 $AllEpisodes = [PSCustomObject]@{ Items = @($episodeItem) }
             }
+            elseif ($UseEmby -eq 'true') {
+                Write-Entry -Message "Using Emby media server" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                $seriesSearch = Invoke-RestMethod -Uri "$OtherMediaServerUrl/Items?IncludeItemTypes=Series&Fields=ProviderIds,SeasonUserData,OriginalTitle,Path,Overview,ProductionYear,Tags,Width,Height&Recursive=true&SearchTerm=$seriesTitle&api_key=$OtherMediaServerApiKey"
+                $seriesItem = $seriesSearch.Items | Where-Object { $_.ProductionYear -eq $seriesYear } | Select-Object -First 1
+                if (-not $seriesItem) {
+                    Write-Entry -Message "Series '$seriesTitle' ($seriesYear) not found in Jellyfin" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                }
+                Write-Entry -Message "Found series: $($seriesItem.Name)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                $seriesId = $seriesItem.Id
+
+                $seasons = Invoke-RestMethod -Uri "$OtherMediaServerUrl/Items?ParentId=$seriesId&Fields=ProviderIds,SeasonUserData,OriginalTitle,Path,Overview,ProductionYear,Tags,Width,Height&IncludeItemTypes=Season&api_key=$OtherMediaServerApiKey"
+                $seasonItem = $seasons.Items | Where-Object { $_.IndexNumber -eq $seasonIndex }
+                if (-not $seasonItem) {
+                    Write-Entry -Message "Season $seasonIndex not found for series $($seriesItem.Name)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                }
+                Write-Entry -Message "Found season $seasonIndex" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                $seasonId = $seasonItem.Id
+
+                $episodes = Invoke-RestMethod -Uri "$OtherMediaServerUrl/Items?ParentId=$seasonId&Recursive=true&Fields=ProviderIds,SeasonUserData,OriginalTitle,Path,Overview,Settings,Tags,Width,Height&IncludeItemTypes=Episode&api_key=$OtherMediaServerApiKey"
+                $episodeItem = $episodes.Items | Where-Object { $_.IndexNumber -eq $episodeIndex }
+                if (-not $episodeItem) {
+                    Write-Entry -Message "Episode $episodeIndex not found in season $seasonIndex of series $($seriesItem.Name)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                }
+                Write-Entry -Message "Found episode $($episodeIndex): $($episodeItem.Name)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+
+                $AllShows = [PSCustomObject]@{ Items = @($seriesItem) }
+                $AllEpisodes = [PSCustomObject]@{ Items = @($episodeItem) }
+            }
             elseif ($UsePlex -eq 'true') {
                 Write-Entry -Message "Using Plex media server" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                 $searchUrl = "$PlexUrl/search?query=$([uri]::EscapeDataString($seriesTitle))"
@@ -13113,6 +13141,16 @@ Elseif ($ArrTrigger) {
                 Write-Entry -Message "Found movie: $($movieItem.Name)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                 $AllMovies = [PSCustomObject]@{ Items = @($movieItem) }
             }
+            elseif ($UseEmby -eq 'true') {
+                Write-Entry -Message "Using Emby media server" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                $movieSearch = Invoke-RestMethod -Uri "$OtherMediaServerUrl/Items?IncludeItemTypes=Movie&Recursive=true&Fields=ProviderIds,OriginalTitle,Settings,Path,Overview,ProductionYear,Tags,Width,Height&SearchTerm=$movieTitle&api_key=$OtherMediaServerApiKey"
+                $movieItem = $movieSearch.Items | Where-Object { $_.ProductionYear -eq $movieYear } | Select-Object -First 1
+                if (-not $movieItem) {
+                    Write-Entry -Message "Movie '$movieTitle' ($movieYear) not found in Jellyfin" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                }
+                Write-Entry -Message "Found movie: $($movieItem.Name)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
+                $AllMovies = [PSCustomObject]@{ Items = @($movieItem) }
+            }
             elseif ($UsePlex -eq 'true') {
                 Write-Entry -Message "Using Plex media server" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                 $searchUrl = "$PlexUrl/search?query=$([uri]::EscapeDataString($movieTitle))"
@@ -13134,7 +13172,7 @@ Elseif ($ArrTrigger) {
         default { Write-Entry -Message "Unknown platform: $arrplatform" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error }
     }
     $Libraries = @()
-    if ($UseJellyfin -eq 'true') {
+    if ($UseJellyfin -eq 'true' -or $UseEmby -eq 'true') {
         $PreferredMetadataLanguage = (Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/System/Configuration?api_key=$OtherMediaServerApiKey").PreferredMetadataLanguage
         foreach ($Movie in $AllMovies.Items) {
             $Resolution = $null
