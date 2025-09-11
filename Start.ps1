@@ -1,7 +1,6 @@
 function ScriptSchedule {
     # Posterizarr File Watcher for Tautulli Recently Added Files
     $inputDir = "$env:APP_DATA/watcher"
-    $Scriptargs = "-Tautulli"
     $Directory = Get-ChildItem -Name $inputDir
 
     if (!$env:RUN_TIME) {
@@ -59,23 +58,31 @@ function ScriptSchedule {
         }
         If ($Directory)
         {
-            $TautulliTriggers = Get-ChildItem $inputDir -Recurse | Where-Object -FilterScript {
+            $Triggers = Get-ChildItem $inputDir -Recurse | Where-Object -FilterScript {
                 $_.Extension -match 'posterizarr'
             }
 
-            foreach($item in $TautulliTriggers)
+            foreach($item in $Triggers)
             {
                 write-host "Found .posterizarr file..."
 
                 # Get trigger Values
-                $triggerargs = Get-Content $item
+                $triggerargs = Get-Content $item.FullName
 
-                # Replace args
+                # Initialize as an array
+                $ScriptArgs = @("-Tautulli")  # default
+                if ($triggerargs -like '*arr_*') {
+                    $ScriptArgs = @("-ArrTrigger")
+                    Start-Sleep -Seconds 300 # Give time for media server to finish processing
+                }
                 foreach ($line in $triggerargs) {
                     if ($line -match '^\[(.+)\]: (.+)$') {
                         $arg_name = $matches[1]
                         $arg_value = $matches[2]
-                        $Scriptargs += " -$arg_name $arg_value"
+
+                        # Add key/value to args
+                        $ScriptArgs += "-$arg_name"
+                        $ScriptArgs += $arg_value
                     }
                 }
 
@@ -88,7 +95,12 @@ function ScriptSchedule {
                 # Reset scriptargs
                 $Scriptargs = "-Tautulli"
                 write-host ""
-                write-host "Tautulli Recently added finished, removing trigger file: $($item.Name)"
+                if ($triggerargs -like '*arr_*') {
+                    write-host "Arr Recently added finished, removing trigger file: $($item.Name)"
+                }
+                else {
+                    write-host "Tautulli Recently added finished, removing trigger file: $($item.Name)"
+                }
                 write-host ""
                 write-host "Container is running since: " -NoNewline
                 write-host "$totalTime" -ForegroundColor Cyan
