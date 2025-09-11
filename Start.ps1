@@ -73,6 +73,7 @@ function ScriptSchedule {
                 $ScriptArgs = @("-Tautulli")  # default
                 if ($triggerargs -like '*arr_*') {
                     $ScriptArgs = @("-ArrTrigger")
+                    Start-Sleep -Seconds 360 # Give time for media server to finish processing
                 }
                 foreach ($line in $triggerargs) {
                     if ($line -match '^\[(.+)\]: (.+)$') {
