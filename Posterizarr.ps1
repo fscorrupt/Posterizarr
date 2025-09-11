@@ -7172,6 +7172,10 @@ if ($global:OSType -ne "Win32NT") {
 }
 Else {
     $magickinstalllocation = RemoveTrailingSlash $config.PrerequisitePart.magickinstalllocation
+    # Convert relative to absolute
+    if ($magickinstalllocation.StartsWith('.')) {
+        $magickinstalllocation = Resolve-Path $magickinstalllocation
+    }
     $magick = Join-Path $magickinstalllocation 'magick.exe'
 }
 $fileExtensions = @(".otf", ".ttf", ".otc", ".ttc", ".png")
