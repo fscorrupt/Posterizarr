@@ -28,14 +28,14 @@ function ScriptSchedule {
                 $offset = $NextTrigger - $CurrentTime
                 [PSCustomObject]@{
                     RunTime = $_
-                    Offset = $offset.TotalSeconds
+                    Offset  = $offset.TotalSeconds
                 }
             } | Sort-Object -Property Offset | Select-Object -First 1
 
             # Use the nearest scheduled run time
             $NextScriptRunTime = $NextScriptRun.RunTime
             $NextScriptRunOffset = $NextScriptRun.Offset
-            if (!$alreadydisplayed){
+            if (!$alreadydisplayed) {
                 write-host ""
                 write-host "Container is running since: " -NoNewline
                 write-host "$totalTime" -ForegroundColor Cyan
@@ -56,14 +56,12 @@ function ScriptSchedule {
                 }
             }
         }
-        If ($Directory)
-        {
+        If ($Directory) {
             $Triggers = Get-ChildItem $inputDir -Recurse | Where-Object -FilterScript {
                 $_.Extension -match 'posterizarr'
             }
 
-            foreach($item in $Triggers)
-            {
+            foreach ($item in $Triggers) {
                 write-host "Found .posterizarr file..."
 
                 # Get trigger Values
@@ -73,7 +71,21 @@ function ScriptSchedule {
                 $ScriptArgs = @("-Tautulli")  # default
                 if ($triggerargs -like '*arr_*') {
                     $ScriptArgs = @("-ArrTrigger")
-                    Start-Sleep -Seconds 300 # Give time for media server to finish processing
+                    # Extract timestamp from filename
+                    if ($item.BaseName -match 'recently_added_(\d{14})') {
+                        $timestamp = $matches[1]
+                        # Convert to datetime
+                        $fileTime = [datetime]::ParseExact($timestamp, "yyyyMMddHHmmss", $null)
+
+                        # Calculate age in seconds
+                        $fileAge = (Get-Date) - $fileTime
+                        $waitTime = [Math]::Max(0, 300 - $fileAge.TotalSeconds)  # 5 min buffer
+
+                        if ($waitTime -gt 0) {
+                            write-host "Waiting $([math]::Round($waitTime)) seconds for media server..."
+                            Start-Sleep -Seconds $waitTime
+                        }
+                    }
                 }
                 foreach ($line in $triggerargs) {
                     if ($line -match '^\[(.+)\]: (.+)$') {
@@ -112,8 +124,7 @@ function ScriptSchedule {
 
             $Directory = Get-ChildItem -Name $inputDir
         }
-        if (!$Directory)
-        {
+        if (!$Directory) {
             Start-Sleep -Seconds 30
             $Directory = Get-ChildItem -Name $inputDir
         }
@@ -148,10 +159,12 @@ function CompareScriptVersion {
                 $version = $lineContainingVersion -replace '^\$CurrentScriptVersion\s*=\s*"([^"]+)".*', '$1'
                 Write-Host "Current Script Version: $version | Latest Script Version: $LatestScriptVersion" -ForegroundColor Green
             }
-        } else {
+        }
+        else {
             Write-Host "Warning: Could not find Posterizarr.ps1 at $posterizarrPath" -ForegroundColor Yellow
         }
-    } catch {
+    }
+    catch {
         Write-Host "Error checking script version: $($_.Exception.Message)" -ForegroundColor Red
     }
 }
@@ -181,10 +194,11 @@ function CopyAssetFiles {
 
     if ($fileCount -eq 0) {
         Write-Host "No asset files found in $env:APP_ROOT" -ForegroundColor Yellow
-    } else {
+    }
+    else {
         $copiedCount = 0
         $skippedCount = 0
-        $errorCount  = 0
+        $errorCount = 0
 
         $assetFiles | ForEach-Object {
             try {
@@ -197,10 +211,12 @@ function CopyAssetFiles {
                         if (-Not (Test-Path -Path $destinationPath)) {
                             Copy-Item -Path $_.FullName -Destination $destinationPath -Force
                             $copiedCount++
-                        } else {
+                        }
+                        else {
                             $skippedCount++
                         }
-                    } else {
+                    }
+                    else {
                         $skippedCount++
                     }
                 }
@@ -208,7 +224,8 @@ function CopyAssetFiles {
                     if (-Not (Test-Path -Path $destinationPath)) {
                         Copy-Item -Path $_.FullName -Destination $destinationPath -Force
                         $copiedCount++
-                    } else {
+                    }
+                    else {
                         $skippedCount++
                     }
                 }
@@ -282,7 +299,8 @@ foreach ($folder in $folders) {
 
 if ($allPresent) {
     Write-Host "All folders are already present. Folder creation skipped." -ForegroundColor Green
-} else {
+}
+else {
     Write-Host "The following folders were created:" -ForegroundColor Cyan
     foreach ($createdFolder in $createdFolders) {
         Write-Host "    - $createdFolder" -ForegroundColor Yellow
