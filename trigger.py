@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import uuid
 import sys
 from datetime import datetime
 
@@ -10,11 +11,14 @@ def create_file(args):
         arg_name1, arg_value1, arg_name2, arg_value2 = args
 
         # Get current timestamp for file name uniqueness
-        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S%f")[:17]
+
+        # Create unique ID
+        unique_id = uuid.uuid4().hex[:6]
 
         # Create a file with unique name in the /posterizarr directory
         filename = (f"/posterizarr/watcher/recently_added_"
-                    f"{timestamp}.posterizarr")
+                    f"{timestamp}_{unique_id}.posterizarr")
 
         # Create the file with provided content
         with open(filename, "w") as f:
@@ -29,12 +33,15 @@ def create_file(args):
         arg_name1, arg_value1, arg_name2, arg_value2 = args[0:4]
         arg_name3, arg_value3 = args[4:6]
 
+        # Create unique ID
+        unique_id = uuid.uuid4().hex[:6]
+
         # Get current timestamp for file name uniqueness
-        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S%f")[:17]
 
         # Create a file with unique name in the /posterizarr directory
         filename = (f"/posterizarr/watcher/recently_added_"
-                    f"{timestamp}.posterizarr")
+                    f"{timestamp}_{unique_id}.posterizarr")
 
         # Create the file with provided content
         with open(filename, "w") as f:
@@ -51,12 +58,15 @@ def create_file(args):
         arg_name1, arg_value1, arg_name2, arg_value2 = args[0:4]
         arg_name3, arg_value3, arg_name4, arg_value4 = args[4:8]
 
+        # Create unique ID
+        unique_id = uuid.uuid4().hex[:6]
+
         # Get current timestamp for file name uniqueness
-        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S%f")[:17]
 
         # Create a file with unique name in the /posterizarr directory
         filename = (f"/posterizarr/watcher/recently_added_"
-                    f"{timestamp}.posterizarr")
+                    f"{timestamp}_{unique_id}.posterizarr")
 
         # Create the file with provided content
         with open(filename, "w") as f:
