@@ -35,7 +35,7 @@ for ($i = 0; $i -lt $ExtraArgs.Count; $i++) {
     }
 }
 
-$CurrentScriptVersion = "1.9.82"
+$CurrentScriptVersion = "1.9.83"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 $env:PSMODULE_ANALYSIS_CACHE_PATH = $null
@@ -13043,9 +13043,9 @@ Elseif ($ArrTrigger) {
         'Sonarr' {
             Write-Entry -Message "Processing Sonarr trigger" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
             $seriesTitle = $arrTriggers['arr_series_title']
-            $seasonIndex = [int]$arrTriggers['arr_episode_season']
-            $episodeIndex = [int]$arrTriggers['arr_episode_numbers']
-            $seriesYear = [int]$arrTriggers['arr_series_year']
+            $seasonIndex = $arrTriggers['arr_episode_season']
+            $episodeIndex = $arrTriggers['arr_episode_numbers']
+            $seriesYear = $arrTriggers['arr_sonarr_series_year']
             Write-Entry -Message "Series: '$seriesTitle' ($seriesYear) - Season $seasonIndex, Episode $episodeIndex" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
 
             if ($UseJellyfin -eq 'true') {
