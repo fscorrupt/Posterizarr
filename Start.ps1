@@ -52,7 +52,7 @@ function ScriptSchedule {
                     Write-Warning "There is currently running another Process of Posterizarr, skipping this run."
                 }
                 Else {
-                    pwsh $env:APP_ROOT/Posterizarr.ps1
+                    pwsh -File "$env:APP_ROOT/Posterizarr.ps1"
                 }
             }
         }
@@ -67,15 +67,18 @@ function ScriptSchedule {
                 # Get trigger Values
                 $triggerargs = Get-Content $item.FullName
 
-                # Initialize as an array
-                $ScriptArgs = @("-Tautulli")  # default
+                # Reset scriptargs
+                $IsTautulli = $false
                 if ($triggerargs -like '*arr_*') {
                     $ScriptArgs = @("-ArrTrigger")
                     # Extract timestamp from filename
-                    if ($item.BaseName -match 'recently_added_(\d{14})') {
+                    if ($item.BaseName -match 'recently_added_(\d+)_') {
                         $timestamp = $matches[1]
+                        # Take only the first 14 digits (yyyyMMddHHmmss)
+                        $timestamp14 = $timestamp.Substring(0,14)
+
                         # Convert to datetime
-                        $fileTime = [datetime]::ParseExact($timestamp, "yyyyMMddHHmmss", $null)
+                        $fileTime = [datetime]::ParseExact($timestamp14, "yyyyMMddHHmmss", $null)
 
                         # Calculate age in seconds
                         $fileAge = (Get-Date) - $fileTime
@@ -86,26 +89,39 @@ function ScriptSchedule {
                             Start-Sleep -Seconds $waitTime
                         }
                     }
-                }
-                foreach ($line in $triggerargs) {
-                    if ($line -match '^\[(.+)\]: (.+)$') {
-                        $arg_name = $matches[1]
-                        $arg_value = $matches[2]
+                    foreach ($line in $triggerargs) {
+                        if ($line -match '^\[(.+)\]: (.+)$') {
+                            $arg_name = $matches[1]
+                            $arg_value = $matches[2]
 
-                        # Add key/value to args
-                        $ScriptArgs += "-$arg_name"
-                        $ScriptArgs += $arg_value
+                            # Add key/value to args
+                            $ScriptArgs += "-$arg_name"
+                            $ScriptArgs += $arg_value
+                        }
+                    }
+                } Else {
+                    $IsTautulli = $true
+                    $ScriptArgs = "-Tautulli"
+                    foreach ($line in $triggerargs) {
+                        if ($line -match '^\[(.+)\]: (.+)$') {
+                            $arg_name = $matches[1]
+                            $arg_value = $matches[2]
+                            $Scriptargs += " -$arg_name $arg_value"
+                        }
                     }
                 }
 
                 write-host "Building trigger args..."
-                write-host "Calling Posterizarr with this args: $Scriptargs"
+                if ($IsTautulli) {
+                    write-host "Calling Posterizarr with this args: $ScriptArgs"
+                    pwsh -Command "$env:APP_ROOT/Posterizarr.ps1 $ScriptArgs"
+                } Else {
+                    write-host "Calling Posterizarr with this args: $($ScriptArgs -join ' ')"
 
-                # Call Posterizarr with Args
-                pwsh -Command "$env:APP_ROOT/Posterizarr.ps1 $Scriptargs"
+                    # Call Posterizarr with Args
+                    pwsh -File "$env:APP_ROOT/Posterizarr.ps1" @ScriptArgs
+                }
 
-                # Reset scriptargs
-                $Scriptargs = "-Tautulli"
                 write-host ""
                 if ($triggerargs -like '*arr_*') {
                     write-host "Arr Recently added finished, removing trigger file: $($item.Name)"
