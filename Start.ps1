@@ -72,7 +72,7 @@ function ScriptSchedule {
                 if ($triggerargs -like '*arr_*') {
                     $ScriptArgs = @("-ArrTrigger")
                     # Extract timestamp from filename
-                    if ($item.BaseName -match 'recently_added_(\d+)_') {
+                    if ($item.BaseName -match 'recently_added_(\d+)') {
                         $timestamp = $matches[1]
                         # Take only the first 14 digits (yyyyMMddHHmmss)
                         $timestamp14 = $timestamp.Substring(0,14)
