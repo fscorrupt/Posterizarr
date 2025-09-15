@@ -35,7 +35,7 @@ for ($i = 0; $i -lt $ExtraArgs.Count; $i++) {
     }
 }
 
-$CurrentScriptVersion = "1.9.81"
+$CurrentScriptVersion = "1.9.82"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 $env:PSMODULE_ANALYSIS_CACHE_PATH = $null
@@ -13082,6 +13082,7 @@ Elseif ($ArrTrigger) {
                 $seriesItem = $seriesSearch.Items | Where-Object { $_.ProductionYear -eq $seriesYear } | Select-Object -First 1
                 if (-not $seriesItem) {
                     Write-Entry -Message "Series '$seriesTitle' ($seriesYear) not found in Jellyfin" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    Exit
                 }
                 Write-Entry -Message "Found series: $($seriesItem.Name)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                 $seriesId = $seriesItem.Id
@@ -13090,6 +13091,7 @@ Elseif ($ArrTrigger) {
                 $seasonItem = $seasons.Items | Where-Object { $_.IndexNumber -eq $seasonIndex }
                 if (-not $seasonItem) {
                     Write-Entry -Message "Season $seasonIndex not found for series $($seriesItem.Name)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    Exit
                 }
                 Write-Entry -Message "Found season $seasonIndex" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                 $seasonId = $seasonItem.Id
@@ -13098,6 +13100,7 @@ Elseif ($ArrTrigger) {
                 $episodeItem = $episodes.Items | Where-Object { $_.IndexNumber -eq $episodeIndex }
                 if (-not $episodeItem) {
                     Write-Entry -Message "Episode $episodeIndex not found in season $seasonIndex of series $($seriesItem.Name)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    Exit
                 }
                 Write-Entry -Message "Found episode $($episodeIndex): $($episodeItem.Name)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
 
@@ -13110,6 +13113,12 @@ Elseif ($ArrTrigger) {
                 if ($PlexToken) { $searchUrl += "&X-Plex-Token=$PlexToken" }
                 [xml]$searchXml = (Invoke-WebRequest $searchUrl -Headers $extraPlexHeaders).content
                 $shows = $searchXml.MediaContainer.directory | Where-Object { $_.type -eq 'show' }
+
+                if ($null -eq $shows -or $shows.Count -eq 0) {
+                    Write-Entry -Message "No shows found matching '$seriesTitle'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    Exit
+                }
+
                 Write-Entry -Message "Found $($shows.Count) show(s) matching '$seriesTitle'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                 if ($shows.Count -gt 1) { $shows = $shows | Where-Object { $_.year -eq $seriesYear } }
                 if ($shows.type -eq 'show') {
@@ -13141,6 +13150,7 @@ Elseif ($ArrTrigger) {
                 $movieItem = $movieSearch.Items | Where-Object { $_.ProductionYear -eq $movieYear } | Select-Object -First 1
                 if (-not $movieItem) {
                     Write-Entry -Message "Movie '$movieTitle' ($movieYear) not found in Jellyfin" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    Exit
                 }
                 Write-Entry -Message "Found movie: $($movieItem.Name)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                 $AllMovies = [PSCustomObject]@{ Items = @($movieItem) }
@@ -13151,6 +13161,7 @@ Elseif ($ArrTrigger) {
                 $movieItem = $movieSearch.Items | Where-Object { $_.ProductionYear -eq $movieYear } | Select-Object -First 1
                 if (-not $movieItem) {
                     Write-Entry -Message "Movie '$movieTitle' ($movieYear) not found in Jellyfin" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    Exit
                 }
                 Write-Entry -Message "Found movie: $($movieItem.Name)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                 $AllMovies = [PSCustomObject]@{ Items = @($movieItem) }
@@ -13161,6 +13172,12 @@ Elseif ($ArrTrigger) {
                 if ($PlexToken) { $searchUrl += "&X-Plex-Token=$PlexToken" }
                 [xml]$searchXml = (Invoke-WebRequest $searchUrl -Headers $extraPlexHeaders).content
                 $movies = $searchXml.MediaContainer.video | Where-Object { $_.type -eq 'movie' }
+
+                if ($null -eq $movies -or $movies.Count -eq 0) {
+                    Write-Entry -Message "No movies found matching '$movieTitle'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    Exit
+                }
+
                 Write-Entry -Message "Found $($movies.Count) movie(s) matching '$movieTitle'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
                 if ($movies.Count -gt 1) { $movies = $movies | Where-Object { $_.year -eq $movieYear } }
                 if ($movies.type -eq 'movie') {
