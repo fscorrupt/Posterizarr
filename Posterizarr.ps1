@@ -35,7 +35,7 @@ for ($i = 0; $i -lt $ExtraArgs.Count; $i++) {
     }
 }
 
-$CurrentScriptVersion = "1.9.83"
+$CurrentScriptVersion = "1.9.84"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 $env:PSMODULE_ANALYSIS_CACHE_PATH = $null
@@ -52,6 +52,7 @@ $env:PSMODULE_ANALYSIS_CACHE_ENABLED = $false
 #####################################################################################################################
 
 #### FUNCTION START ####
+#region Functions
 function InvokeIMChecks {
     # Check for latest Imagemagick Version
     if ($global:OSarch -eq "Arm64") {
@@ -6618,6 +6619,7 @@ function Send-UptimeKumaWebhook {
 #### FUNCTION END ####
 
 ##### PRE-START #####
+#region Variables
 # Set Branch
 if ($dev) {
     $Branch = 'dev'
@@ -7178,6 +7180,7 @@ Else {
     }
     $magick = Join-Path $magickinstalllocation 'magick.exe'
 }
+#region Prerequisites Check
 $fileExtensions = @(".otf", ".ttf", ".otc", ".ttc", ".png")
 
 $errorCount = 0
@@ -7225,6 +7228,7 @@ if (!(Test-Path $AssetPath)) {
 Test-PathPermissions -PathToTest $AssetPath
 Test-PathPermissions -PathToTest $BackupPath
 Test-PathPermissions -PathToTest $ManualAssetPath
+
 
 if ($ForceRunningDeletion -eq 'true') {
     if (Test-Path $CurrentlyRunning) {
@@ -7499,6 +7503,7 @@ $extraPlexHeaders = @{
 }
 
 #### MAIN SCRIPT START ####
+#region Manual Mode
 if ($Manual) {
     Write-Entry -Message "Manual Poster Creation Started" -Path $global:ScriptRoot\Logs\Manuallog.log -Color DarkMagenta -log Info
     $PicturePath = Read-Host "Enter local path or url to source picture"
@@ -7880,6 +7885,7 @@ if ($Manual) {
         Send-UptimeKumaWebhook -status "up" -ping $executionTime.TotalMilliseconds
     }
 }
+#region Testing Mode
 Elseif ($Testing) {
     Write-Entry -Message "Poster Testing Started" -Path $global:ScriptRoot\Logs\Testinglog.log -Color DarkMagenta -log Info
     Write-Entry -Subtext "I will now create a few posters for you with different text lengths using your current configuration settings." -Path $global:ScriptRoot\Logs\Testinglog.log -Color Yellow -log Warning
@@ -9003,6 +9009,7 @@ Elseif ($Testing) {
         Send-UptimeKumaWebhook -status "up" -ping $executionTime.TotalMilliseconds
     }
 }
+#region Tautulli Mode
 Elseif ($Tautulli) {
     # Get Plex data for this Show/Movie
     # {rating_key}	The unique identifier for the movie, episode, or track.
@@ -13036,6 +13043,7 @@ Elseif ($Tautulli) {
         Send-UptimeKumaWebhook -status "up" -ping $executionTime.TotalMilliseconds
     }
 }
+#region Arr Mode
 Elseif ($ArrTrigger) {
     $arrplatform = $arrTriggers['arr_platform']
 
@@ -21397,9 +21405,11 @@ Elseif ($ArrTrigger) {
         Exit
     }
 }
+#region Backup Mode
 Elseif ($Backup) {
     MassDownloadPlexArtwork
 }
+#region Sync Mode
 Elseif ($SyncJelly -or $SyncEmby) {
     # Initialize counter variable
     $posterCount = 0
@@ -22619,6 +22629,7 @@ Elseif ($SyncJelly -or $SyncEmby) {
         Send-UptimeKumaWebhook -status "up" -ping $executionTime.TotalMilliseconds
     }
 }
+#region Emby/Jelly Mode
 Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaServer -eq 'true') {
     $posterCount = 0
     $SeasonCount = 0
@@ -26871,6 +26882,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
         Send-UptimeKumaWebhook -status "up" -ping $executionTime.TotalMilliseconds
     }
 }
+#region Posterreset Mode
 ElseIf ($PosterReset) {
     if ($UsePlex -eq 'true' -and $null -ne $LibraryToReset) {
         Write-Entry -Message "Poster reset requested for library: $LibraryToReset" -Path "$global:ScriptRoot\Logs\Scriptlog.log" -Color Yellow -log Warning
@@ -26889,6 +26901,7 @@ ElseIf ($PosterReset) {
         Remove-Item -LiteralPath $CurrentlyRunning | out-null
     }
 }
+#region Normal Mode
 else {
     Write-Entry -Message "Query plex libs..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
     $Libsoverview = @()
