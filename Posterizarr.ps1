@@ -35,7 +35,7 @@ for ($i = 0; $i -lt $ExtraArgs.Count; $i++) {
     }
 }
 
-$CurrentScriptVersion = "1.9.84"
+$CurrentScriptVersion = "1.9.85"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 $env:PSMODULE_ANALYSIS_CACHE_PATH = $null
@@ -7172,13 +7172,36 @@ if ($global:OSType -ne "Win32NT") {
         $magick = Join-Path $global:ScriptRoot 'magick'
     }
 }
-Else {
-    $magickinstalllocation = RemoveTrailingSlash $config.PrerequisitePart.magickinstalllocation
-    # Convert relative to absolute
-    if ($magickinstalllocation.StartsWith('.')) {
-        $magickinstalllocation = Resolve-Path $magickinstalllocation
+else {
+    $raw = $config.PrerequisitePart.magickinstalllocation
+    $raw = RemoveTrailingSlash $raw
+
+    if ([string]::IsNullOrWhiteSpace($raw)) {
+        $raw = '.\magick'
     }
-    $magick = Join-Path $magickinstalllocation 'magick.exe'
+    try {
+        if ($raw.StartsWith('.')) {
+            $fullPath = [System.IO.Path]::GetFullPath((Join-Path $global:ScriptRoot $raw))
+        } else {
+            $fullPath = [System.IO.Path]::GetFullPath($raw)
+        }
+    } catch {
+        $fullPath = Join-Path $global:ScriptRoot 'magick'
+    }
+    if ($fullPath -match '(?i)\.exe$') {
+        $dir = Split-Path $fullPath -Parent
+        if (-not (Test-Path $dir)) {
+            New-Item -ItemType Directory -Force -Path $dir | Out-Null
+        }
+        $magickinstalllocation = $dir
+        $magick = $fullPath
+    } else {
+        if (-not (Test-Path $fullPath)) {
+            New-Item -ItemType Directory -Force -Path $fullPath | Out-Null
+        }
+        $magickinstalllocation = (Get-Item -LiteralPath $fullPath -ErrorAction Stop).FullName
+        $magick = Join-Path $magickinstalllocation 'magick.exe'
+    }
 }
 #region Prerequisites Check
 $fileExtensions = @(".otf", ".ttf", ".otc", ".ttc", ".png")
