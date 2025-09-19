@@ -35,7 +35,7 @@ for ($i = 0; $i -lt $ExtraArgs.Count; $i++) {
     }
 }
 
-$CurrentScriptVersion = "1.9.88"
+$CurrentScriptVersion = "1.9.89"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 $env:PSMODULE_ANALYSIS_CACHE_PATH = $null
@@ -5737,7 +5737,7 @@ function MassDownloadPlexArtwork {
                     $global:SeasonNumber = $global:seasonNumbers[$i]
                     $global:SeasonRatingKey = $global:SeasonRatingKeys[$i]
                     $global:PlexSeasonUrl = $global:PlexSeasonUrls[$i]
-                    if ($global:SeasonNumber) {
+                    if ($null -ne $global:SeasonNumber) {
                         $global:seasontmp = "Season" + $global:SeasonNumber.PadLeft(2, '0')
                     }
                     if ($LibraryFolders -eq 'true') {
@@ -9536,7 +9536,7 @@ Elseif ($Tautulli) {
                                 }
                             }
 
-                            if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
+                            if ((Test-Path -LiteralPath "$($Manualtestpath)$posterext") -and $Manualtestpath -ne '\') {
                                 Write-Entry -Message "Found Manual Poster for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 $TakeLocal = $true
                             }
@@ -9970,7 +9970,7 @@ Elseif ($Tautulli) {
                                 }
                             }
 
-                            if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
+                            if ((Test-Path -LiteralPath "$($Manualtestpath)$posterext") -and $Manualtestpath -ne '\') {
                                 Write-Entry -Message "Found Manual Background for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 $TakeLocal = $true
                             }
@@ -10463,7 +10463,7 @@ Elseif ($Tautulli) {
                                 break
                             }
                         }
-                        if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
+                        if ((Test-Path -LiteralPath "$($Manualtestpath)$posterext") -and $Manualtestpath -ne '\') {
                             Write-Entry -Message "Found Manual Poster for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             $TakeLocal = $true
                         }
@@ -10890,7 +10890,7 @@ Elseif ($Tautulli) {
                                 break
                             }
                         }
-                        if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
+                        if ((Test-Path -LiteralPath "$($Manualtestpath)$posterext") -and $Manualtestpath -ne '\') {
                             Write-Entry -Message "Found Manual Background for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             $TakeLocal = $true
                         }
@@ -11273,7 +11273,7 @@ Elseif ($Tautulli) {
                         $global:SeasonNumber = $global:seasonNumbers[$i]
                         $global:SeasonRatingKey = $global:SeasonRatingKeys[$i]
                         $global:PlexSeasonUrl = $global:PlexSeasonUrls[$i]
-                        if ($global:SeasonNumber) {
+                        if ($null -ne $global:SeasonNumber) {
                             $global:seasontmp = "Season" + $global:SeasonNumber.PadLeft(2, '0')
                         }
                         if ($LibraryFolders -eq 'true') {
@@ -11338,7 +11338,7 @@ Elseif ($Tautulli) {
                                 }
                             }
 
-                            if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
+                            if ((Test-Path -LiteralPath "$($Manualtestpath)$posterext") -and $Manualtestpath -ne '\') {
                                 Write-Entry -Message "Found Manual Season Poster for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 $TakeLocal = $true
                             }
@@ -12010,7 +12010,7 @@ Elseif ($Tautulli) {
                                                 }
                                             }
 
-                                            if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
+                                            if ((Test-Path -LiteralPath "$($Manualtestpath)$posterext") -and $Manualtestpath -ne '\') {
                                                 Write-Entry -Message "Found Manual Title Card for: $global:show_name - $global:SeasonEPNumber" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                 $TakeLocal = $true
                                             }
@@ -12536,7 +12536,7 @@ Elseif ($Tautulli) {
                                                     break
                                                 }
                                             }
-                                            if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
+                                            if ((Test-Path -LiteralPath "$($Manualtestpath)$posterext") -and $Manualtestpath -ne '\') {
                                                 Write-Entry -Message "Found Manual Title Card for: $global:show_name - $global:SeasonEPNumber" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                 $TakeLocal = $true
                                             }
@@ -13768,7 +13768,7 @@ Elseif ($ArrTrigger) {
                                     }
                                 }
 
-                                if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
+                                if ((Test-Path -LiteralPath "$($Manualtestpath)$posterext") -and $Manualtestpath -ne '\') {
                                     Write-Entry -Message "Found Manual Poster for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                     $TakeLocal = $true
                                 }
@@ -14170,7 +14170,7 @@ Elseif ($ArrTrigger) {
                                     }
                                 }
 
-                                if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
+                                if ((Test-Path -LiteralPath "$($Manualtestpath)$posterext") -and $Manualtestpath -ne '\') {
                                     Write-Entry -Message "Found Manual Background for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                     $TakeLocal = $true
                                 }
@@ -14632,7 +14632,7 @@ Elseif ($ArrTrigger) {
                                 }
                             }
 
-                            if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
+                            if ((Test-Path -LiteralPath "$($Manualtestpath)$posterext") -and $Manualtestpath -ne '\') {
                                 Write-Entry -Message "Found Manual Poster for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 $TakeLocal = $true
                             }
@@ -15024,7 +15024,7 @@ Elseif ($ArrTrigger) {
                                 }
                             }
 
-                            if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
+                            if ((Test-Path -LiteralPath "$($Manualtestpath)$posterext") -and $Manualtestpath -ne '\') {
                                 Write-Entry -Message "Found Manual Background for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 $TakeLocal = $true
                             }
@@ -15385,7 +15385,7 @@ Elseif ($ArrTrigger) {
                                         $global:seasonTitle = "Season " + $global:SeasonNumber
                                     }
                                 }
-                                if ($global:SeasonNumber) {
+                                if ($null -ne $global:SeasonNumber) {
                                     $global:seasontmp = "Season" + $global:SeasonNumber.ToString().PadLeft(2, '0')
                                 }
                                 if ($LibraryFolders -eq 'true') {
@@ -15444,7 +15444,7 @@ Elseif ($ArrTrigger) {
                                         }
                                     }
 
-                                    if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
+                                    if ((Test-Path -LiteralPath "$($Manualtestpath)$posterext") -and $Manualtestpath -ne '\') {
                                         Write-Entry -Message "Found Manual Season Poster for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                         $TakeLocal = $true
                                     }
@@ -16021,7 +16021,7 @@ Elseif ($ArrTrigger) {
                                                     }
                                                 }
 
-                                                if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
+                                                if ((Test-Path -LiteralPath "$($Manualtestpath)$posterext") -and $Manualtestpath -ne '\') {
                                                     Write-Entry -Message "Found Manual Title Card for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                     $TakeLocal = $true
                                                 }
@@ -16457,7 +16457,7 @@ Elseif ($ArrTrigger) {
                                                     }
                                                 }
 
-                                                if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
+                                                if ((Test-Path -LiteralPath "$($Manualtestpath)$posterext") -and $Manualtestpath -ne '\') {
                                                     Write-Entry -Message "Found Manual Title Card for: $global:show_name - $global:SeasonEPNumber" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                     $TakeLocal = $true
                                                 }
@@ -17562,7 +17562,7 @@ Elseif ($ArrTrigger) {
                                     }
                                 }
 
-                                if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
+                                if ((Test-Path -LiteralPath "$($Manualtestpath)$posterext") -and $Manualtestpath -ne '\') {
                                     Write-Entry -Message "Found Manual Poster for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                     $TakeLocal = $true
                                 }
@@ -17996,7 +17996,7 @@ Elseif ($ArrTrigger) {
                                     }
                                 }
 
-                                if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
+                                if ((Test-Path -LiteralPath "$($Manualtestpath)$posterext") -and $Manualtestpath -ne '\') {
                                     Write-Entry -Message "Found Manual Background for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                     $TakeLocal = $true
                                 }
@@ -18489,7 +18489,7 @@ Elseif ($ArrTrigger) {
                                     break
                                 }
                             }
-                            if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
+                            if ((Test-Path -LiteralPath "$($Manualtestpath)$posterext") -and $Manualtestpath -ne '\') {
                                 Write-Entry -Message "Found Manual Poster for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 $TakeLocal = $true
                             }
@@ -18916,7 +18916,7 @@ Elseif ($ArrTrigger) {
                                     break
                                 }
                             }
-                            if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
+                            if ((Test-Path -LiteralPath "$($Manualtestpath)$posterext") -and $Manualtestpath -ne '\') {
                                 Write-Entry -Message "Found Manual Background for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 $TakeLocal = $true
                             }
@@ -19299,7 +19299,7 @@ Elseif ($ArrTrigger) {
                             $global:SeasonNumber = $global:seasonNumbers[$i]
                             $global:SeasonRatingKey = $global:SeasonRatingKeys[$i]
                             $global:PlexSeasonUrl = $global:PlexSeasonUrls[$i]
-                            if ($global:SeasonNumber) {
+                            if ($null -ne $global:SeasonNumber) {
                                 $global:seasontmp = "Season" + $global:SeasonNumber.PadLeft(2, '0')
                             }
                             if ($LibraryFolders -eq 'true') {
@@ -19364,7 +19364,7 @@ Elseif ($ArrTrigger) {
                                     }
                                 }
 
-                                if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
+                                if ((Test-Path -LiteralPath "$($Manualtestpath)$posterext") -and $Manualtestpath -ne '\') {
                                     Write-Entry -Message "Found Manual Season Poster for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                     $TakeLocal = $true
                                 }
@@ -20036,7 +20036,7 @@ Elseif ($ArrTrigger) {
                                                     }
                                                 }
 
-                                                if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
+                                                if ((Test-Path -LiteralPath "$($Manualtestpath)$posterext") -and $Manualtestpath -ne '\') {
                                                     Write-Entry -Message "Found Manual Title Card for: $global:show_name - $global:SeasonEPNumber" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                     $TakeLocal = $true
                                                 }
@@ -20562,7 +20562,7 @@ Elseif ($ArrTrigger) {
                                                         break
                                                     }
                                                 }
-                                                if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
+                                                if ((Test-Path -LiteralPath "$($Manualtestpath)$posterext") -and $Manualtestpath -ne '\') {
                                                     Write-Entry -Message "Found Manual Title Card for: $global:show_name - $global:SeasonEPNumber" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                     $TakeLocal = $true
                                                 }
@@ -21786,8 +21786,26 @@ Elseif ($SyncJelly -or $SyncEmby) {
             $Thumbs = ($SeasonEpisodes.ImageTags.Primary -join ',')
 
             # Calculate the ShowID and SeasonId
-            $ShowID = if ($SeasonEpisodes.SeriesId) { $SeasonEpisodes.SeriesId[0] } else { $null }
-            $SeasonId = if ($SeasonEpisodes.SeasonId) { $SeasonEpisodes.SeasonId[0] } else { $null }
+            if ($null -ne $SeasonEpisodes.SeriesId) {
+                if ($SeasonEpisodes.SeriesId -is [System.Array]) {
+                    $ShowID = $SeasonEpisodes.SeriesId[0]
+                } else {
+                    $ShowID = $SeasonEpisodes.SeriesId
+                }
+            } else {
+                $ShowID = $null
+            }
+
+            if ($null -ne $SeasonEpisodes.SeasonId) {
+                if ($SeasonEpisodes.SeasonId -is [System.Array]) {
+                    $SeasonId = $SeasonEpisodes.SeasonId[0]
+                } else {
+                    $SeasonId = $SeasonEpisodes.SeasonId
+                }
+            } else {
+                $SeasonId = $null
+            }
+
 
             # Create an object for the current season
             $seasonObject = [PSCustomObject]@{
@@ -22643,8 +22661,26 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
             $Thumbs = ($SeasonEpisodes.ImageTags.Primary -join ',')
 
             # Calculate the ShowID and SeasonId
-            $ShowID = if ($SeasonEpisodes.SeriesId) { $SeasonEpisodes.SeriesId[0] } else { $null }
-            $SeasonId = if ($SeasonEpisodes.SeasonId) { $SeasonEpisodes.SeasonId[0] } else { $null }
+            if ($null -ne $SeasonEpisodes.SeriesId) {
+                if ($SeasonEpisodes.SeriesId -is [System.Array]) {
+                    $ShowID = $SeasonEpisodes.SeriesId[0]
+                } else {
+                    $ShowID = $SeasonEpisodes.SeriesId
+                }
+            } else {
+                $ShowID = $null
+            }
+
+            if ($null -ne $SeasonEpisodes.SeasonId) {
+                if ($SeasonEpisodes.SeasonId -is [System.Array]) {
+                    $SeasonId = $SeasonEpisodes.SeasonId[0]
+                } else {
+                    $SeasonId = $SeasonEpisodes.SeasonId
+                }
+            } else {
+                $SeasonId = $null
+            }
+
 
             # Create an object for the current season
             $seasonObject = [PSCustomObject]@{
@@ -22915,7 +22951,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                 }
                             }
 
-                            if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
+                            if ((Test-Path -LiteralPath "$($Manualtestpath)$posterext") -and $Manualtestpath -ne '\') {
                                 Write-Entry -Message "Found Manual Poster for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 $TakeLocal = $true
                             }
@@ -23317,7 +23353,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                 }
                             }
 
-                            if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
+                            if ((Test-Path -LiteralPath "$($Manualtestpath)$posterext") -and $Manualtestpath -ne '\') {
                                 Write-Entry -Message "Found Manual Background for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 $TakeLocal = $true
                             }
@@ -23779,7 +23815,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                             }
                         }
 
-                        if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
+                        if ((Test-Path -LiteralPath "$($Manualtestpath)$posterext") -and $Manualtestpath -ne '\') {
                             Write-Entry -Message "Found Manual Poster for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             $TakeLocal = $true
                         }
@@ -24171,7 +24207,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                             }
                         }
 
-                        if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
+                        if ((Test-Path -LiteralPath "$($Manualtestpath)$posterext") -and $Manualtestpath -ne '\') {
                             Write-Entry -Message "Found Manual Background for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             $TakeLocal = $true
                         }
@@ -24519,26 +24555,34 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                             $global:seasonId = $season.SeasonId
                             $global:seasonNames = $season.SeasonName
                             $global:SeasonNumber = $season."Season Number"
+                            Write-Entry -Message "Processing season: Id=$($global:seasonId), Name=$($global:seasonNames), Number=$($global:SeasonNumber)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+
                             if ($SeasonfontAllCaps -eq 'true') {
                                 $global:seasonTitle = $global:seasonNames.ToUpper()
+                                Write-Entry -Message "Season font all caps enabled. SeasonTitle set to: $($global:seasonTitle)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                                 if (!$global:seasonTitle) {
                                     $global:seasonTitle = ("Season " + $global:SeasonNumber).ToUpper()
+                                    Write-Entry -Message "SeasonTitle was empty, fallback to: $($global:seasonTitle)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Debug
                                 }
                             }
                             Else {
                                 $global:seasonTitle = $global:seasonNames
+                                Write-Entry -Message "Season font all caps disabled. SeasonTitle set to: $($global:seasonTitle)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                                 if (!$global:seasonTitle) {
                                     $global:seasonTitle = "Season " + $global:SeasonNumber
+                                    Write-Entry -Message "SeasonTitle was empty, fallback to: $($global:seasonTitle)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Debug
                                 }
                             }
-                            if ($global:SeasonNumber) {
+                            if ($null -ne $global:SeasonNumber) {
                                 $global:seasontmp = "Season" + $global:SeasonNumber.ToString().PadLeft(2, '0')
+                                Write-Entry -Message "seasontmp set to: $($global:seasontmp)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                             }
                             if ($LibraryFolders -eq 'true') {
                                 $SeasonImageoriginal = "$EntryDir\$global:seasontmp.jpg"
                                 $TestPath = $EntryDir
                                 $ManualTestPath = $ManualEntryDir
                                 $Testfile = "$global:seasontmp"
+                                Write-Entry -Message "LibraryFolders enabled. SeasonImageoriginal: $SeasonImageoriginal, TestPath: $TestPath, ManualTestPath: $ManualTestPath, Testfile: $Testfile" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                             }
                             Else {
                                 if ($entry.extraFolder) {
@@ -24550,12 +24594,14 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                 $TestPath = $AssetPath
                                 $ManualTestPath = $ManualPath
                                 $Testfile = "$($entry.RootFoldername)_$global:seasontmp"
+                                Write-Entry -Message "LibraryFolders disabled. SeasonImageoriginal: $SeasonImageoriginal, TestPath: $TestPath, ManualTestPath: $ManualTestPath, Testfile: $Testfile" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                             }
 
                             if ($Platform -eq 'Docker' -or $Platform -eq 'Linux') {
                                 $hashtestpath = ($TestPath + "/" + $Testfile).Replace('\', '/').Replace('./', '/')
                                 $SeasonImageoriginal = ($SeasonImageoriginal).Replace('\', '/').Replace('./', '/')
                                 $manualtestpath = ($ManualTestPath + "/" + $Testfile).Replace('\', '/').Replace('./', '/')
+                                Write-Entry -Message "Platform is Docker/Linux. hashtestpath: $hashtestpath, SeasonImageoriginal: $SeasonImageoriginal, manualtestpath: $manualtestpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                             }
                             else {
                                 $fullTestPath = Resolve-Path -Path $TestPath -ErrorAction SilentlyContinue
@@ -24563,10 +24609,12 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                 if ($fullTestPath) {
                                     $hashtestpath = ($fullTestPath.ProviderPath + "\" + $Testfile).Replace('/', '\')
                                     $Manualtestpath = ($fullManualTestPath.ProviderPath + "\" + $Testfile).Replace('/', '\')
+                                    Write-Entry -Message "Windows path resolved. fullTestPath: $($fullTestPath.ProviderPath), fullManualTestPath: $($fullManualTestPath.ProviderPath)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                                 }
                                 Else {
                                     $hashtestpath = ($TestPath + "\" + $Testfile).Replace('/', '\')
                                     $Manualtestpath = ($ManualTestPath + "\" + $Testfile).Replace('/', '\')
+                                    Write-Entry -Message "Windows path fallback. TestPath: $TestPath, ManualTestPath: $ManualTestPath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Debug
                                 }
                             }
 
@@ -24580,7 +24628,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
 
                             $SeasonImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_$global:seasontmp.jpg"
                             $SeasonImage = $SeasonImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
+                            Write-Entry -Message "SeasonImage temp path: $SeasonImage" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                             $checkedItems += $hashtestpath
+                            Write-Entry -Message "Added $hashtestpath to checkedItems" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                             if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
                                 foreach ($ext in $allowedExtensions) {
                                     $filePath = "$ManualTestPath$ext"
@@ -24591,7 +24641,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                     }
                                 }
 
-                                if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
+                                if ((Test-Path -LiteralPath "$($Manualtestpath)$posterext") -and $Manualtestpath -ne '\') {
                                     Write-Entry -Message "Found Manual Season Poster for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                     $TakeLocal = $true
                                 }
@@ -25168,7 +25218,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                                 }
                                             }
 
-                                            if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
+                                            if ((Test-Path -LiteralPath "$($Manualtestpath)$posterext") -and $Manualtestpath -ne '\') {
                                                 Write-Entry -Message "Found Manual Title Card for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                 $TakeLocal = $true
                                             }
@@ -25604,7 +25654,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                                 }
                                             }
 
-                                            if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
+                                            if ((Test-Path -LiteralPath "$($Manualtestpath)$posterext") -and $Manualtestpath -ne '\') {
                                                 Write-Entry -Message "Found Manual Title Card for: $global:show_name - $global:SeasonEPNumber" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                 $TakeLocal = $true
                                             }
@@ -27232,7 +27282,7 @@ else {
                                 }
                             }
 
-                            if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
+                            if ((Test-Path -LiteralPath "$($Manualtestpath)$posterext") -and $Manualtestpath -ne '\') {
                                 Write-Entry -Message "Found Manual Poster for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 $TakeLocal = $true
                             }
@@ -27698,7 +27748,7 @@ else {
                                 }
                             }
 
-                            if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
+                            if ((Test-Path -LiteralPath "$($Manualtestpath)$posterext") -and $Manualtestpath -ne '\') {
                                 Write-Entry -Message "Found Manual Background for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 $TakeLocal = $true
                             }
@@ -28223,7 +28273,7 @@ else {
                                 break
                             }
                         }
-                        if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
+                        if ((Test-Path -LiteralPath "$($Manualtestpath)$posterext") -and $Manualtestpath -ne '\') {
                             Write-Entry -Message "Found Manual Poster for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             $TakeLocal = $true
                         }
@@ -28688,7 +28738,7 @@ else {
                                 break
                             }
                         }
-                        if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
+                        if ((Test-Path -LiteralPath "$($Manualtestpath)$posterext") -and $Manualtestpath -ne '\') {
                             Write-Entry -Message "Found Manual Background for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                             $TakeLocal = $true
                         }
@@ -29096,7 +29146,7 @@ else {
                         $global:SeasonNumber = $global:seasonNumbers[$i]
                         $global:SeasonRatingKey = $global:SeasonRatingKeys[$i]
                         $global:PlexSeasonUrl = $global:PlexSeasonUrls[$i]
-                        if ($global:SeasonNumber) {
+                        if ($null -ne $global:SeasonNumber) {
                             $global:seasontmp = "Season" + $global:SeasonNumber.PadLeft(2, '0')
                         }
                         if ($LibraryFolders -eq 'true') {
@@ -29161,7 +29211,7 @@ else {
                                     break
                                 }
                             }
-                            if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
+                            if ((Test-Path -LiteralPath "$($Manualtestpath)$posterext") -and $Manualtestpath -ne '\') {
                                 Write-Entry -Message "Found Manual Season Poster for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                 $TakeLocal = $true
                             }
@@ -29869,7 +29919,7 @@ else {
                                                     break
                                                 }
                                             }
-                                            if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
+                                            if ((Test-Path -LiteralPath "$($Manualtestpath)$posterext") -and $Manualtestpath -ne '\') {
                                                 Write-Entry -Message "Found Manual Title Card for: $global:show_name - $global:SeasonEPNumber" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                 $TakeLocal = $true
                                                 $Episodepostersearchtext = $true
@@ -30425,7 +30475,7 @@ else {
                                                     break
                                                 }
                                             }
-                                            if (Test-Path -LiteralPath "$($Manualtestpath)$posterext") {
+                                            if ((Test-Path -LiteralPath "$($Manualtestpath)$posterext") -and $Manualtestpath -ne '\') {
                                                 Write-Entry -Message "Found Manual Title Card for: $global:show_name - $global:SeasonEPNumber" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                                 $TakeLocal = $true
                                             }
