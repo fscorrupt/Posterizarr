@@ -35,7 +35,7 @@ for ($i = 0; $i -lt $ExtraArgs.Count; $i++) {
     }
 }
 
-$CurrentScriptVersion = "1.9.87"
+$CurrentScriptVersion = "1.9.88"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 $env:PSMODULE_ANALYSIS_CACHE_PATH = $null
@@ -5712,6 +5712,7 @@ function MassDownloadPlexArtwork {
                 for ($i = 0; $i -lt $global:seasonNames.Count; $i++) {
                     $SkipingText = 'false'
                     $global:posterurl = $null
+                    $global:seasontmp = $null
                     $global:IsFallback = $null
                     $global:FallbackText = $null
                     $global:AssetTextLang = $null
@@ -5737,17 +5738,17 @@ function MassDownloadPlexArtwork {
                     $global:SeasonRatingKey = $global:SeasonRatingKeys[$i]
                     $global:PlexSeasonUrl = $global:PlexSeasonUrls[$i]
                     if ($global:SeasonNumber) {
-                        $global:season = "Season" + $global:SeasonNumber.PadLeft(2, '0')
+                        $global:seasontmp = "Season" + $global:SeasonNumber.PadLeft(2, '0')
                     }
                     if ($LibraryFolders -eq 'true') {
-                        $SeasonImageoriginal = "$EntryDir\$global:season.jpg"
+                        $SeasonImageoriginal = "$EntryDir\$global:seasontmp.jpg"
                         $TestPath = $EntryDir
-                        $Testfile = "$global:season"
+                        $Testfile = "$global:seasontmp"
                     }
                     Else {
-                        $SeasonImageoriginal = "$BackupPath\$($entry.RootFoldername)_$global:season.jpg"
+                        $SeasonImageoriginal = "$BackupPath\$($entry.RootFoldername)_$global:seasontmp.jpg"
                         $TestPath = $BackupPath
-                        $Testfile = "$($entry.RootFoldername)_$global:season"
+                        $Testfile = "$($entry.RootFoldername)_$global:seasontmp"
                     }
 
                     if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
@@ -5769,7 +5770,7 @@ function MassDownloadPlexArtwork {
                     Write-Entry -Message "Resolved Full Test Path is: $fullTestPath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                     Write-Entry -Message "Resolved hash Test Path is: $hashtestpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
 
-                    $SeasonImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_$global:season.jpg"
+                    $SeasonImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_$global:seasontmp.jpg"
                     $SeasonImage = $SeasonImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
                     $checkedItems += $hashtestpath
                     if ($PlexToken) {
@@ -7553,24 +7554,24 @@ if ($Manual) {
             $SeasonPosterName = Read-Host "Enter Season Name"
             if ($SeasonPosterName -match 'Season\s+(\d+)') {
                 $global:SeasonNumber = $Matches[1]
-                $global:season = "Season" + $global:SeasonNumber.PadLeft(2, '0')
+                $global:seasontmp = "Season" + $global:SeasonNumber.PadLeft(2, '0')
             }
             Elseif ($SeasonPosterName -eq 'Specials') {
-                $global:season = "Season00"
+                $global:seasontmp = "Season00"
             }
             Else {
                 Write-Entry -Subtext "Could not match Season name..." -Path $global:ScriptRoot\Logs\Manuallog.log -Color Yellow -log Warning
                 $seasontemp = Read-Host "Please enter Season Name for the local file (eq. Season00 or Season01....)"
                 if ($seasontemp -match '^Season(\d{2})$') {
                     $global:SeasonNumber = $Matches[1]
-                    $global:season = "Season" + $global:SeasonNumber.PadLeft(2, '0')
+                    $global:seasontmp = "Season" + $global:SeasonNumber.PadLeft(2, '0')
                 }
                 else {
                     Write-Entry -Subtext "Invalid season format. Please enter something like Season00 or Season01." -Path $global:ScriptRoot\Logs\Manuallog.log -Color Yellow -log Warning
                     Exit
                 }
             }
-            $PosterImageoriginal = "$AssetPath\$LibraryName\$FolderName\$global:season.jpg"
+            $PosterImageoriginal = "$AssetPath\$LibraryName\$FolderName\$global:seasontmp.jpg"
         }
         if ($CreateTitleCard -eq 'y') {
             $EPTitleName = Read-Host "Enter Episode Title Name"
@@ -7578,16 +7579,16 @@ if ($Manual) {
             $SeasonName = Read-Host "Enter Season Number (eq. 1)"
             if ($SeasonName -match '(\d+)') {
                 $global:SeasonNumber = $Matches[1]
-                $global:season = "S" + $global:SeasonNumber.PadLeft(2, '0')
+                $global:seasontmp = "S" + $global:SeasonNumber.PadLeft(2, '0')
             }
             if ($SeasonName -eq 'Specials') {
-                $global:season = "S00"
+                $global:seasontmp = "S00"
             }
             if ($EpisodeNumber -match '(\d+)') {
                 $global:EpisodeNumber = $Matches[1]
                 $global:episode = "E" + $global:EpisodeNumber.PadLeft(2, '0')
             }
-            $PosterImageoriginal = "$AssetPath\$LibraryName\$FolderName\$global:season$global:episode.jpg"
+            $PosterImageoriginal = "$AssetPath\$LibraryName\$FolderName\$global:seasontmp$global:episode.jpg"
         }
     }
     Else {
@@ -7595,24 +7596,24 @@ if ($Manual) {
             $SeasonPosterName = Read-Host "Enter Season Name"
             if ($SeasonPosterName -match 'Season\s+(\d+)') {
                 $global:SeasonNumber = $Matches[1]
-                $global:season = "Season" + $global:SeasonNumber.PadLeft(2, '0')
+                $global:seasontmp = "Season" + $global:SeasonNumber.PadLeft(2, '0')
             }
             Elseif ($SeasonPosterName -eq 'Specials') {
-                $global:season = "Season00"
+                $global:seasontmp = "Season00"
             }
             Else {
                 Write-Entry -Subtext "Could not match Season name..." -Path $global:ScriptRoot\Logs\Manuallog.log -Color Yellow -log Warning
                 $seasontemp = Read-Host "Please enter Season Name for the local file (eq. Season00 or Season01....)"
                 if ($seasontemp -match '^Season(\d{2})$') {
                     $global:SeasonNumber = $Matches[1]
-                    $global:season = "Season" + $global:SeasonNumber.PadLeft(2, '0')
+                    $global:seasontmp = "Season" + $global:SeasonNumber.PadLeft(2, '0')
                 }
                 else {
                     Write-Entry -Subtext "Invalid season format. Please enter something like Season00 or Season01." -Path $global:ScriptRoot\Logs\Manuallog.log -Color Yellow -log Warning
                     Exit
                 }
             }
-            $PosterImageoriginal = "$AssetPath\$($FolderName)_$global:season.jpg"
+            $PosterImageoriginal = "$AssetPath\$($FolderName)_$global:seasontmp.jpg"
         }
         if ($CreateTitleCard -eq 'y') {
             $EPTitleName = Read-Host "Enter Episode Title Name"
@@ -7620,16 +7621,16 @@ if ($Manual) {
             $SeasonName = Read-Host "Enter Season Number (eq. 1)"
             if ($SeasonName -match '(\d+)') {
                 $global:SeasonNumber = $Matches[1]
-                $global:season = "S" + $global:SeasonNumber.PadLeft(2, '0')
+                $global:seasontmp = "S" + $global:SeasonNumber.PadLeft(2, '0')
             }
             if ($SeasonName -eq 'Specials') {
-                $global:season = "S00"
+                $global:seasontmp = "S00"
             }
             if ($EpisodeNumber -match '(\d+)') {
                 $global:EpisodeNumber = $Matches[1]
                 $global:episode = "E" + $global:EpisodeNumber.PadLeft(2, '0')
             }
-            $PosterImageoriginal = "$AssetPath\$($FolderName)_$global:season$global:episode.jpg"
+            $PosterImageoriginal = "$AssetPath\$($FolderName)_$global:seasontmp$global:episode.jpg"
         }
     }
 
@@ -11243,6 +11244,7 @@ Elseif ($Tautulli) {
                     for ($i = 0; $i -lt $global:seasonNames.Count; $i++) {
                         $SkipingText = 'false'
                         $global:tmdbsearched = $null
+                        $global:seasontmp = $null
                         $global:posterurl = $null
                         $global:IsFallback = $null
                         $global:FallbackText = $null
@@ -11272,24 +11274,24 @@ Elseif ($Tautulli) {
                         $global:SeasonRatingKey = $global:SeasonRatingKeys[$i]
                         $global:PlexSeasonUrl = $global:PlexSeasonUrls[$i]
                         if ($global:SeasonNumber) {
-                            $global:season = "Season" + $global:SeasonNumber.PadLeft(2, '0')
+                            $global:seasontmp = "Season" + $global:SeasonNumber.PadLeft(2, '0')
                         }
                         if ($LibraryFolders -eq 'true') {
-                            $SeasonImageoriginal = "$EntryDir\$global:season.jpg"
+                            $SeasonImageoriginal = "$EntryDir\$global:seasontmp.jpg"
                             $TestPath = $EntryDir
                             $ManualTestPath = $ManualEntryDir
-                            $Testfile = "$global:season"
+                            $Testfile = "$global:seasontmp"
                         }
                         Else {
                             if ($entry.extraFolder) {
-                                $SeasonImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername)_$global:season.jpg"
+                                $SeasonImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername)_$global:seasontmp.jpg"
                             }
                             Else {
-                                $SeasonImageoriginal = "$AssetPath\$($entry.RootFoldername)_$global:season.jpg"
+                                $SeasonImageoriginal = "$AssetPath\$($entry.RootFoldername)_$global:seasontmp.jpg"
                             }
                             $TestPath = $AssetPath
                             $ManualTestPath = $ManualPath
-                            $Testfile = "$($entry.RootFoldername)_$global:season"
+                            $Testfile = "$($entry.RootFoldername)_$global:seasontmp"
                         }
 
                         if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
@@ -11318,7 +11320,7 @@ Elseif ($Tautulli) {
                         Write-Entry -Message "Resolved Manual Test Path is: $Manualtestpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                         Write-Entry -Message "Resolved Manual Full Test Path is: $fullManualTestPath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
 
-                        $SeasonImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_$global:season.jpg"
+                        $SeasonImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_$global:seasontmp.jpg"
                         $SeasonImage = $SeasonImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
                         if ($PlexToken) {
                             $Arturl = $plexurl + $global:PlexSeasonUrl + "?X-Plex-Token=$PlexToken"
@@ -11804,7 +11806,7 @@ Elseif ($Tautulli) {
                                         }
                                         if (!$TakeLocal) {
                                             $seasontemp = New-Object psobject
-                                            $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Titletext + " | " + $global:season)
+                                            $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Titletext + " | " + $global:seasontmp)
                                             $seasontemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Season'
                                             $seasontemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                             $seasontemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
@@ -15331,6 +15333,7 @@ Elseif ($ArrTrigger) {
                         foreach ($season in $Episodedata) {
                             $SkipingText = 'false'
                             $global:tmdbsearched = $null
+                            $global:seasontmp = $null
                             $global:IsFallback = $null
                             $global:FallbackText = $null
                             $global:AssetTextLang = $null
@@ -15383,24 +15386,24 @@ Elseif ($ArrTrigger) {
                                     }
                                 }
                                 if ($global:SeasonNumber) {
-                                    $global:season = "Season" + $global:SeasonNumber.ToString().PadLeft(2, '0')
+                                    $global:seasontmp = "Season" + $global:SeasonNumber.ToString().PadLeft(2, '0')
                                 }
                                 if ($LibraryFolders -eq 'true') {
-                                    $SeasonImageoriginal = "$EntryDir\$global:season.jpg"
+                                    $SeasonImageoriginal = "$EntryDir\$global:seasontmp.jpg"
                                     $TestPath = $EntryDir
                                     $ManualTestPath = $ManualEntryDir
-                                    $Testfile = "$global:season"
+                                    $Testfile = "$global:seasontmp"
                                 }
                                 Else {
                                     if ($entry.extraFolder) {
-                                        $SeasonImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername)_$global:season.jpg"
+                                        $SeasonImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername)_$global:seasontmp.jpg"
                                     }
                                     Else {
-                                        $SeasonImageoriginal = "$AssetPath\$($entry.RootFoldername)_$global:season.jpg"
+                                        $SeasonImageoriginal = "$AssetPath\$($entry.RootFoldername)_$global:seasontmp.jpg"
                                     }
                                     $TestPath = $AssetPath
                                     $ManualTestPath = $ManualPath
-                                    $Testfile = "$($entry.RootFoldername)_$global:season"
+                                    $Testfile = "$($entry.RootFoldername)_$global:seasontmp"
                                 }
 
                                 if ($Platform -eq 'Docker' -or $Platform -eq 'Linux') {
@@ -15429,7 +15432,7 @@ Elseif ($ArrTrigger) {
                                 Write-Entry -Message "Resolved Manual Test Path is: $Manualtestpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                                 Write-Entry -Message "Resolved Manual Full Test Path is: $fullManualTestPath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
 
-                                $SeasonImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_$global:season.jpg"
+                                $SeasonImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_$global:seasontmp.jpg"
                                 $SeasonImage = $SeasonImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
                                 if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
                                     foreach ($ext in $allowedExtensions) {
@@ -15815,7 +15818,7 @@ Elseif ($ArrTrigger) {
                                                 }
                                                 if (!$TakeLocal) {
                                                     $seasontemp = New-Object psobject
-                                                    $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Titletext + " | " + $global:season)
+                                                    $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Titletext + " | " + $global:seasontmp)
                                                     $seasontemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Season'
                                                     $seasontemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                                     $seasontemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
@@ -19267,6 +19270,7 @@ Elseif ($ArrTrigger) {
                         for ($i = 0; $i -lt $global:seasonNames.Count; $i++) {
                             $SkipingText = 'false'
                             $global:tmdbsearched = $null
+                            $global:seasontmp = $null
                             $global:posterurl = $null
                             $global:IsFallback = $null
                             $global:FallbackText = $null
@@ -19296,24 +19300,24 @@ Elseif ($ArrTrigger) {
                             $global:SeasonRatingKey = $global:SeasonRatingKeys[$i]
                             $global:PlexSeasonUrl = $global:PlexSeasonUrls[$i]
                             if ($global:SeasonNumber) {
-                                $global:season = "Season" + $global:SeasonNumber.PadLeft(2, '0')
+                                $global:seasontmp = "Season" + $global:SeasonNumber.PadLeft(2, '0')
                             }
                             if ($LibraryFolders -eq 'true') {
-                                $SeasonImageoriginal = "$EntryDir\$global:season.jpg"
+                                $SeasonImageoriginal = "$EntryDir\$global:seasontmp.jpg"
                                 $TestPath = $EntryDir
                                 $ManualTestPath = $ManualEntryDir
-                                $Testfile = "$global:season"
+                                $Testfile = "$global:seasontmp"
                             }
                             Else {
                                 if ($entry.extraFolder) {
-                                    $SeasonImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername)_$global:season.jpg"
+                                    $SeasonImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername)_$global:seasontmp.jpg"
                                 }
                                 Else {
-                                    $SeasonImageoriginal = "$AssetPath\$($entry.RootFoldername)_$global:season.jpg"
+                                    $SeasonImageoriginal = "$AssetPath\$($entry.RootFoldername)_$global:seasontmp.jpg"
                                 }
                                 $TestPath = $AssetPath
                                 $ManualTestPath = $ManualPath
-                                $Testfile = "$($entry.RootFoldername)_$global:season"
+                                $Testfile = "$($entry.RootFoldername)_$global:seasontmp"
                             }
 
                             if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
@@ -19342,7 +19346,7 @@ Elseif ($ArrTrigger) {
                             Write-Entry -Message "Resolved Manual Test Path is: $Manualtestpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                             Write-Entry -Message "Resolved Manual Full Test Path is: $fullManualTestPath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
 
-                            $SeasonImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_$global:season.jpg"
+                            $SeasonImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_$global:seasontmp.jpg"
                             $SeasonImage = $SeasonImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
                             if ($PlexToken) {
                                 $Arturl = $plexurl + $global:PlexSeasonUrl + "?X-Plex-Token=$PlexToken"
@@ -19828,7 +19832,7 @@ Elseif ($ArrTrigger) {
                                             }
                                             if (!$TakeLocal) {
                                                 $seasontemp = New-Object psobject
-                                                $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Titletext + " | " + $global:season)
+                                                $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Titletext + " | " + $global:seasontmp)
                                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Season'
                                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
@@ -24475,6 +24479,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                     foreach ($season in $Episodedata) {
                         $SkipingText = 'false'
                         $global:tmdbsearched = $null
+                        $global:seasontmp = $null
                         $global:IsFallback = $null
                         $global:FallbackText = $null
                         $global:AssetTextLang = $null
@@ -24527,24 +24532,24 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                 }
                             }
                             if ($global:SeasonNumber) {
-                                $global:season = "Season" + $global:SeasonNumber.ToString().PadLeft(2, '0')
+                                $global:seasontmp = "Season" + $global:SeasonNumber.ToString().PadLeft(2, '0')
                             }
                             if ($LibraryFolders -eq 'true') {
-                                $SeasonImageoriginal = "$EntryDir\$global:season.jpg"
+                                $SeasonImageoriginal = "$EntryDir\$global:seasontmp.jpg"
                                 $TestPath = $EntryDir
                                 $ManualTestPath = $ManualEntryDir
-                                $Testfile = "$global:season"
+                                $Testfile = "$global:seasontmp"
                             }
                             Else {
                                 if ($entry.extraFolder) {
-                                    $SeasonImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername)_$global:season.jpg"
+                                    $SeasonImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername)_$global:seasontmp.jpg"
                                 }
                                 Else {
-                                    $SeasonImageoriginal = "$AssetPath\$($entry.RootFoldername)_$global:season.jpg"
+                                    $SeasonImageoriginal = "$AssetPath\$($entry.RootFoldername)_$global:seasontmp.jpg"
                                 }
                                 $TestPath = $AssetPath
                                 $ManualTestPath = $ManualPath
-                                $Testfile = "$($entry.RootFoldername)_$global:season"
+                                $Testfile = "$($entry.RootFoldername)_$global:seasontmp"
                             }
 
                             if ($Platform -eq 'Docker' -or $Platform -eq 'Linux') {
@@ -24573,7 +24578,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                             Write-Entry -Message "Resolved Manual Test Path is: $Manualtestpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                             Write-Entry -Message "Resolved Manual Full Test Path is: $fullManualTestPath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
 
-                            $SeasonImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_$global:season.jpg"
+                            $SeasonImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_$global:seasontmp.jpg"
                             $SeasonImage = $SeasonImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
                             $checkedItems += $hashtestpath
                             if (-not $directoryHashtable.ContainsKey("$hashtestpath")) {
@@ -24960,7 +24965,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                             }
                                             if (!$TakeLocal) {
                                                 $seasontemp = New-Object psobject
-                                                $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Titletext + " | " + $global:season)
+                                                $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Titletext + " | " + $global:seasontmp)
                                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Season'
                                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                                 $seasontemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
@@ -29061,6 +29066,7 @@ else {
                     for ($i = 0; $i -lt $global:seasonNames.Count; $i++) {
                         $SkipingText = 'false'
                         $Seasonpostersearchtext = $null
+                        $global:seasontmp = $null
                         $global:TextlessPoster = $null
                         $global:tmdbsearched = $null
                         $global:posterurl = $null
@@ -29091,24 +29097,24 @@ else {
                         $global:SeasonRatingKey = $global:SeasonRatingKeys[$i]
                         $global:PlexSeasonUrl = $global:PlexSeasonUrls[$i]
                         if ($global:SeasonNumber) {
-                            $global:season = "Season" + $global:SeasonNumber.PadLeft(2, '0')
+                            $global:seasontmp = "Season" + $global:SeasonNumber.PadLeft(2, '0')
                         }
                         if ($LibraryFolders -eq 'true') {
-                            $SeasonImageoriginal = "$EntryDir\$global:season.jpg"
+                            $SeasonImageoriginal = "$EntryDir\$global:seasontmp.jpg"
                             $TestPath = $EntryDir
                             $ManualTestPath = $ManualEntryDir
-                            $Testfile = "$global:season"
+                            $Testfile = "$global:seasontmp"
                         }
                         Else {
                             if ($entry.extraFolder) {
-                                $SeasonImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername)_$global:season.jpg"
+                                $SeasonImageoriginal = "$AssetPath\$($entry.extraFolder)\$($entry.RootFoldername)_$global:seasontmp.jpg"
                             }
                             Else {
-                                $SeasonImageoriginal = "$AssetPath\$($entry.RootFoldername)_$global:season.jpg"
+                                $SeasonImageoriginal = "$AssetPath\$($entry.RootFoldername)_$global:seasontmp.jpg"
                             }
                             $TestPath = $AssetPath
                             $ManualTestPath = $ManualPath
-                            $Testfile = "$($entry.RootFoldername)_$global:season"
+                            $Testfile = "$($entry.RootFoldername)_$global:seasontmp"
                         }
 
                         if ($Platform -eq 'Docker' -or $Platform -eq 'Linux' -or $Platform -eq 'macOS') {
@@ -29137,7 +29143,7 @@ else {
                         Write-Entry -Message "Resolved Manual Test Path is: $Manualtestpath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                         Write-Entry -Message "Resolved Manual Full Test Path is: $fullManualTestPath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
 
-                        $SeasonImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_$global:season.jpg"
+                        $SeasonImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$($entry.RootFoldername)_$global:seasontmp.jpg"
                         $SeasonImage = $SeasonImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
                         $checkedItems += $hashtestpath
                         if ($PlexToken) {
@@ -29631,7 +29637,7 @@ else {
                                         }
                                         if (!$TakeLocal) {
                                             $seasontemp = New-Object psobject
-                                            $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Titletext + " | " + $global:season)
+                                            $seasontemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $($Titletext + " | " + $global:seasontmp)
                                             $seasontemp | Add-Member -MemberType NoteProperty -Name "Type" -Value 'Season'
                                             $seasontemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $($entry.RootFoldername)
                                             $seasontemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $($entry.'Library Name')
@@ -29685,7 +29691,7 @@ else {
                             if ($global:UploadExistingAssets -eq 'true') {
                                 Write-Entry -Message "Starting Existing Asset Upload..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
                                 try {
-                                    GetPlexArtwork -Type " $Titletext | $global:season Artwork." -ArtUrl $Arturl -TempImage $SeasonImage
+                                    GetPlexArtwork -Type " $Titletext | $global:seasontmp Artwork." -ArtUrl $Arturl -TempImage $SeasonImage
                                     if ($global:PlexartworkDownloaded -eq 'true') {
                                         Write-Entry -Subtext "Uploading Existing Artwork for: $Titletext" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                                         $fileContent = [System.IO.File]::ReadAllBytes($SeasonImageoriginal)
