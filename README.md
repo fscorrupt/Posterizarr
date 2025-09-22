@@ -376,6 +376,48 @@ Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpin
     - `TextGravity`: Specifies the text alignment within the textbox (Default is `south`)
     </details>
 
+    <details open>
+    <summary>CollectionPosterOverlayPart</summary>
+    <br>
+
+    - `fontAllCaps`: Set to `true` for all caps text, else `false`.
+    - `AddBorder`: Set to `true` to add a border to the image.
+    - `AddText`: Set to `true` to add text to the image.
+    - `AddTextStroke`: Set to `true` to add stroke to text.
+    - `strokecolor`: Color of text stroke.
+    - `strokewidth`: Stroke width.
+    - `AddOverlay`: Set to `true` to add the defined overlay file to the image.
+    - `fontcolor`: Color of font text.
+    - `bordercolor`: Color of border.
+    - `minPointSize`: Minimum size of text in poster.
+    - `maxPointSize`: Maximum size of text in poster.
+    - `borderwidth`: Border width.
+    - `MaxWidth`: Maximum width of text box.
+    - `MaxHeight`: Maximum height of text box.
+    - `text_offset`: Text box offset from the bottom of the picture.
+    - `lineSpacing`: Adjust the height between lines of text (Default is `0`)
+    - `TextGravity`: Specifies the text alignment within the textbox (Default is `south`)
+    </details>
+    <details open>
+    <summary>CollectionTitlePosterPart</summary>
+    <br>
+
+    - `fontAllCaps`: Set to `true` for all caps text, else `false`.
+    - `AddCollectionTitle`: if set to `true` it will add collectiontitle to collection poster (Default Value is: `true`)
+    - `CollectionTitle`: Extra text that gets added to the collection poster (Default is `Collection`)
+    - `AddTextStroke`: Set to `true` to add stroke to text.
+    - `strokecolor`: Color of text stroke.
+    - `strokewidth`: Stroke width.
+    - `fontcolor`: Color of font text.
+    - `minPointSize`: Minimum size of text in poster.
+    - `maxPointSize`: Maximum size of text in poster.
+    - `MaxWidth`: Maximum width of text box.
+    - `MaxHeight`: Maximum height of text box.
+    - `text_offset`: Text box offset from the bottom of the picture.
+    - `lineSpacing`: Adjust the height between lines of text (Default is `0`)
+    - `TextGravity`: Specifies the text alignment within the textbox (Default is `south`)
+    </details>
+
 3. Rename the config file to `config.json`.
 4. Place the `overlay.png`, or whatever file you defined earlier in `overlayfile`, and `Rocky.ttf` font, or whatever font you defined earlier in `font` files in the same directory as Posterizarr.ps1 which is `$ScriptRoot`.
 
@@ -702,7 +744,7 @@ Follow the prompts to enter the source picture path (Container needs Access to i
 ```Enter Media Folder Name (as seen by Plex):```
 - The name of the local movie or show folder where the .mkv (or other media) file is stored. This should match the folder structure Plex recognizes.
 
-```Enter Movie/Show Title:```
+```Enter Movie/Show/Collection Title:```
 - The title that will be displayed on the generated poster.
 
 ```Create Season Poster? (y/n):```
@@ -710,6 +752,9 @@ Follow the prompts to enter the source picture path (Container needs Access to i
 
 ```Create TitleCard? (y/n):```
 - Type `y` if you also want to create a title card, otherwise `n`.
+
+```Create Collection Poster? (y/n):```
+- Type `y` if you're generating a collection poster, otherwise `n`.
 
 ```Enter Plex Library Name:```
 - Enter the name of the Plex (or Jellyfin) library, e.g., "Movies" or "TV Shows".
