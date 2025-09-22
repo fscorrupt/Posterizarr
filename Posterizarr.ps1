@@ -35,7 +35,7 @@ for ($i = 0; $i -lt $ExtraArgs.Count; $i++) {
     }
 }
 
-$CurrentScriptVersion = "1.9.89"
+$CurrentScriptVersion = "1.9.90"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 $env:PSMODULE_ANALYSIS_CACHE_PATH = $null
@@ -3850,6 +3850,7 @@ function CheckJsonPaths {
         [string]$backgroundfont,
         [string]$titlecardfont,
         [string]$Posteroverlay,
+        [string]$Collectionoverlay,
         [string]$titlecardoverlay,
         [string]$Seasonoverlay,
         [string]$Backgroundoverlay,
@@ -3861,7 +3862,7 @@ function CheckJsonPaths {
         [string]$TCoverlay1080p
     )
 
-    $paths = @($font, $RTLfont, $backgroundfont, $titlecardfont, $Posteroverlay, $Backgroundoverlay, $titlecardoverlay, $Seasonoverlay, $Posteroverlay4k, $Posteroverlay1080p, $Backgroundoverlay4k, $Backgroundoverlay1080p, $TCoverlay4k, $TCoverlay1080p)
+    $paths = @($font, $RTLfont, $backgroundfont, $titlecardfont, $Posteroverlay, $Collectionoverlay, $Backgroundoverlay, $titlecardoverlay, $Seasonoverlay, $Posteroverlay4k, $Posteroverlay1080p, $Backgroundoverlay4k, $Backgroundoverlay1080p, $TCoverlay4k, $TCoverlay1080p)
     $errorCount = 0
     foreach ($path in $paths) {
         if (-not (Test-Path -LiteralPath $path.TrimEnd())) {
@@ -4154,6 +4155,7 @@ function CheckOverlayDimensions {
         [string]$Posteroverlay,
         [string]$Seasonoverlay,
         [string]$Backgroundoverlay,
+        [string]$Collectionoverlay,
         [string]$Titlecardoverlay,
         [string]$Posteroverlay4k,
         [string]$Posteroverlay1080p,
@@ -4168,6 +4170,7 @@ function CheckOverlayDimensions {
     # Use magick to check dimensions
     $Posteroverlaydimensions = & $magick $Posteroverlay -format "%wx%h" info:
     $Seasonoverlaydimensions = & $magick $Seasonoverlay -format "%wx%h" info:
+    $Collectionverlaydimensions = & $magick $Collectionoverlay -format "%wx%h" info:
     $Backgroundoverlaydimensions = & $magick $Backgroundoverlay -format "%wx%h" info:
     $Titlecardoverlaydimensions = & $magick $Titlecardoverlay -format "%wx%h" info:
     $4kPosteroverlaydimensions = & $magick $Posteroverlay4k -format "%wx%h" info:
@@ -4185,13 +4188,22 @@ function CheckOverlayDimensions {
         Write-Entry -Subtext "Poster overlay is NOT correctly sized at: $Postersize. Actual dimensions: $Posteroverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     }
 
-    # Check Poster Overlay Size
+    # Check Season Poster Overlay Size
     if ($Seasonoverlaydimensions -eq $PosterSize) {
         Write-Entry -Subtext "Season overlay is correctly sized at: $Postersize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
     }
     else {
         Write-Entry -Subtext "Season overlay is NOT correctly sized at: $Postersize. Actual dimensions: $Seasonoverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     }
+
+    # Check Collection Poster Overlay Size
+    if ($Collectionverlaydimensions -eq $PosterSize) {
+        Write-Entry -Subtext "Collection overlay is correctly sized at: $Postersize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
+    }
+    else {
+        Write-Entry -Subtext "Collection overlay is NOT correctly sized at: $Postersize. Actual dimensions: $Collectionverlaydimensions" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
+    }
+
     # Check Background Overlay Size
     if ($Backgroundoverlaydimensions -eq $BackgroundSize) {
         Write-Entry -Subtext "Background overlay is correctly sized at: $BackgroundSize" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
@@ -6961,11 +6973,13 @@ Else {
     $joinsymbol = "\"
 }
 $font = Join-Path -Path $global:ScriptRoot -ChildPath ('temp', $config.PrerequisitePart.font -join $($joinsymbol))
+$collectionfont = Join-Path -Path $global:ScriptRoot -ChildPath ('temp', $config.PrerequisitePart.collectionfont -join $($joinsymbol))
 $RTLFont = Join-Path -Path $global:ScriptRoot -ChildPath ('temp', $config.PrerequisitePart.RTLFont -join $($joinsymbol))
 $backgroundfont = Join-Path -Path $global:ScriptRoot -ChildPath ('temp', $config.PrerequisitePart.backgroundfont -join $($joinsymbol))
 $titlecardfont = Join-Path -Path $global:ScriptRoot -ChildPath ('temp', $config.PrerequisitePart.titlecardfont -join $($joinsymbol))
 $Posteroverlay = Join-Path -Path $global:ScriptRoot -ChildPath ('temp', $config.PrerequisitePart.overlayfile -join $($joinsymbol))
 $Seasonoverlay = Join-Path -Path $global:ScriptRoot -ChildPath ('temp', $config.PrerequisitePart.seasonoverlayfile -join $($joinsymbol))
+$collectionoverlay = Join-Path -Path $global:ScriptRoot -ChildPath ('temp', $config.PrerequisitePart.collectionoverlayfile -join $($joinsymbol))
 $Backgroundoverlay = Join-Path -Path $global:ScriptRoot -ChildPath ('temp', $config.PrerequisitePart.backgroundoverlayfile -join $($joinsymbol))
 $titlecardoverlay = Join-Path -Path $global:ScriptRoot -ChildPath ('temp', $config.PrerequisitePart.titlecardoverlayfile -join $($joinsymbol))
 $testimage = Join-Path -Path $global:ScriptRoot -ChildPath ('test', 'testimage.png' -join $($joinsymbol))
@@ -7056,6 +7070,44 @@ $ShowOnSeasontextgravity = $config.ShowTitleOnSeasonPosterPart.TextGravity.tolow
 $ShowOnSeasonboxsize = $ShowOnSeasonMaxWidth + 'x' + $ShowOnSeasonMaxHeight
 $ShowOnSeasonlineSpacing = $config.ShowTitleOnSeasonPosterPart.lineSpacing
 
+# Collection Title on Collection Poster Overlay Part
+$CollectionTitleAllCaps = $config.CollectionTitlePosterPart.fontAllCaps.tolower()
+$AddCollectionTitle = $config.CollectionTitlePosterPart.AddCollectionTitle.tolower()
+$CollectionTitle = $config.CollectionTitlePosterPart.CollectionTitle.tolower()
+$AddCollectionTitleTextStroke = $config.CollectionTitlePosterPart.AddTextStroke.tolower()
+$CollectionTitlestrokecolor = $config.CollectionTitlePosterPart.strokecolor
+$CollectionTitlestrokewidth = $config.CollectionTitlePosterPart.strokewidth
+$CollectionTitlefontcolor = $config.CollectionTitlePosterPart.fontcolor
+$CollectionTitleminPointSize = $config.CollectionTitlePosterPart.minPointSize
+$CollectionTitlemaxPointSize = $config.CollectionTitlePosterPart.maxPointSize
+$CollectionTitleMaxWidth = $config.CollectionTitlePosterPart.MaxWidth
+$CollectionTitleMaxHeight = $config.CollectionTitlePosterPart.MaxHeight
+$CollectionTitletext_offset = $config.CollectionTitlePosterPart.text_offset
+$CollectionTitletextgravity = $config.CollectionTitlePosterPart.TextGravity.tolower()
+$CollectionTitleboxsize = $CollectionTitleMaxWidth + 'x' + $CollectionTitleMaxHeight
+$CollectionTitlelineSpacing = $config.CollectionTitlePosterPart.lineSpacing
+
+# Collection Poster Overlay Part
+$CollectionAllCaps = $config.CollectionPosterOverlayPart.fontAllCaps.tolower()
+$AddCollectionBorder = $config.CollectionPosterOverlayPart.AddBorder.tolower()
+$AddCollectionText = $config.CollectionPosterOverlayPart.AddText.tolower()
+$AddCollectionTextStroke = $config.CollectionPosterOverlayPart.AddTextStroke.tolower()
+$Collectionstrokecolor = $config.CollectionPosterOverlayPart.strokecolor
+$Collectionstrokewidth = $config.CollectionPosterOverlayPart.strokewidth
+$AddCollectionOverlay = $config.CollectionPosterOverlayPart.AddOverlay.tolower()
+$Collectionfontcolor = $config.CollectionPosterOverlayPart.fontcolor
+$Collectionbordercolor = $config.CollectionPosterOverlayPart.bordercolor
+$CollectionminPointSize = $config.CollectionPosterOverlayPart.minPointSize
+$CollectionmaxPointSize = $config.CollectionPosterOverlayPart.maxPointSize
+$Collectionborderwidth = $config.CollectionPosterOverlayPart.borderwidth
+$CollectionMaxWidth = $config.CollectionPosterOverlayPart.MaxWidth
+$CollectionMaxHeight = $config.CollectionPosterOverlayPart.MaxHeight
+$Collectiontext_offset = $config.CollectionPosterOverlayPart.text_offset
+$CollectionlineSpacing = $config.CollectionPosterOverlayPart.lineSpacing
+$Collectiontextgravity = $config.CollectionPosterOverlayPart.TextGravity.tolower()
+$Collectionborderwidthsecond = $borderwidth + 'x' + $borderwidth
+$Collectionboxsize = $CollectionMaxWidth + 'x' + $CollectionMaxHeight
+
 # Background Overlay Part
 $BackgroundfontAllCaps = $config.BackgroundOverlayPart.fontAllCaps.tolower()
 $AddBackgroundOverlay = $config.BackgroundOverlayPart.AddOverlay.tolower()
@@ -7124,6 +7176,7 @@ $TitleCardEPboxsize = $TitleCardEPMaxWidth + 'x' + $TitleCardEPMaxHeight
 $PosterSize = "2000x3000"
 $BackgroundSize = "3840x2160"
 $fontImagemagick = $font.replace('\', '\\')
+$CollectionfontImagemagick = $collectionfont.replace('\', '\\')
 $RTLfontImagemagick = $RTLFont.replace('\', '\\')
 $backgroundfontImagemagick = $backgroundfont.replace('\', '\\')
 $TitleCardfontImagemagick = $TitleCardfont.replace('\', '\\')
@@ -7392,7 +7445,7 @@ if ($files.Extension -match "\.(ttf|otf)$" -and $env:POSTERIZARR_NON_ROOT -eq 'T
     & fc-cache -fv 1> $null 2> $null
 }
 
-CheckJsonPaths -font "$font" -RTLfont "$RTLfont" -backgroundfont "$backgroundfont "-titlecardfont "$titlecardfont" -Posteroverlay "$Posteroverlay" -Backgroundoverlay "$Backgroundoverlay" -titlecardoverlay "$titlecardoverlay" -Seasonoverlay "$Seasonoverlay" -Posteroverlay4k "$4kposter" -Posteroverlay1080p "$1080pPoster" -Backgroundoverlay4k "$4kBackground" -Backgroundoverlay1080p "$1080pBackground" -TCoverlay4k "$4kTC" -TCoverlay1080p "$1080pTC"
+CheckJsonPaths -font "$font" -RTLfont "$RTLfont" -backgroundfont "$backgroundfont "-titlecardfont "$titlecardfont" -Posteroverlay "$Posteroverlay" -Backgroundoverlay "$Backgroundoverlay" -titlecardoverlay "$titlecardoverlay" -Collectionoverlay "$collectionoverlay" -Seasonoverlay "$Seasonoverlay" -Posteroverlay4k "$4kposter" -Posteroverlay1080p "$1080pPoster" -Backgroundoverlay4k "$4kBackground" -Backgroundoverlay1080p "$1080pBackground" -TCoverlay4k "$4kTC" -TCoverlay1080p "$1080pTC"
 # Check Plex now:
 if (!$SyncJelly -and !$SyncEmby) {
     if ($UsePlex -eq 'true') {
@@ -7410,7 +7463,7 @@ if (!$SyncJelly -and !$SyncEmby) {
 }
 # Check overlay artwork for poster, background, and titlecard dimensions
 Write-Entry -Message "Checking size of overlay files..." -Path $configLogging -Color White -log Info
-CheckOverlayDimensions -Posteroverlay "$Posteroverlay" -Backgroundoverlay "$Backgroundoverlay" -Titlecardoverlay "$titlecardoverlay" -PosterSize "$PosterSize" -BackgroundSize "$BackgroundSize" -Seasonoverlay "$Seasonoverlay" -Posteroverlay4k "$4kposter" -Posteroverlay1080p "$1080pPoster" -Backgroundoverlay4k "$4kBackground" -Backgroundoverlay1080p "$1080pBackground" -TCoverlay4k "$4kTC" -TCoverlay1080p "$1080pTC"
+CheckOverlayDimensions -Posteroverlay "$Posteroverlay" -Backgroundoverlay "$Backgroundoverlay" -Titlecardoverlay "$titlecardoverlay" -PosterSize "$PosterSize" -BackgroundSize "$BackgroundSize" -Collectionoverlay "$collectionoverlay" -Seasonoverlay "$Seasonoverlay" -Posteroverlay4k "$4kposter" -Posteroverlay1080p "$1080pPoster" -Backgroundoverlay4k "$4kBackground" -Backgroundoverlay1080p "$1080pBackground" -TCoverlay4k "$4kTC" -TCoverlay1080p "$1080pTC"
 
 # Check if the FanartTvAPI module is installed
 $module = Get-Module -ListAvailable -Name FanartTvAPI
@@ -7531,10 +7584,17 @@ $extraPlexHeaders = @{
 if ($Manual) {
     Write-Entry -Message "Manual Poster Creation Started" -Path $global:ScriptRoot\Logs\Manuallog.log -Color DarkMagenta -log Info
     $PicturePath = Read-Host "Enter local path or url to source picture"
-    $FolderName = Read-Host "Enter Media Foldername (how plex sees it)"
-    $Titletext = Read-Host "Enter Movie/Show Title"
     $CreateSeasonPoster = Read-Host "Create Season Poster? (y/n)"
     $CreateTitleCard = Read-Host "Create TitleCard? (y/n)"
+    $CreateCollectionCard = Read-Host "Create Collection? (y/n)"
+    if ($CreateCollectionCard -eq 'y') {
+        $Titletext = Read-Host "Enter Movie/Show/Collection Title"
+        $FolderName = $Titletext
+    }
+    else {
+        $FolderName = Read-Host "Enter Media Foldername (how plex sees it)"
+        $Titletext = Read-Host "Enter Movie/Show/Collection Title"
+    }
 
     if ($PicturePath -like 'http*') {
         $isWebPic = 'true'
@@ -7549,6 +7609,7 @@ if ($Manual) {
     if ($LibraryFolders -eq 'true') {
         $LibraryName = Read-Host "Enter Plex Library Name"
         $LibraryName = $LibraryName.replace('"', '')
+
         $PosterImageoriginal = "$AssetPath\$LibraryName\$FolderName\poster.jpg"
         if ($CreateSeasonPoster -eq 'y') {
             $SeasonPosterName = Read-Host "Enter Season Name"
@@ -7572,6 +7633,21 @@ if ($Manual) {
                 }
             }
             $PosterImageoriginal = "$AssetPath\$LibraryName\$FolderName\$global:seasontmp.jpg"
+        }
+        if ($CreateCollectionCard -eq 'y') {
+            $PosterImageoriginal = "$AssetPath\Collections\$LibraryName\$FolderName\poster.jpg"
+            $CollectionPath = "$AssetPath\Collections\$LibraryName\$FolderName"
+            # Ensure the Collection directory exists
+            if (!(Test-Path $CollectionPath)) {
+                try {
+                    New-Item -ItemType Directory -Path $CollectionPath -Force | Out-Null
+                    Write-Entry -Subtext "Created Collection directory: $CollectionPath" -Path $global:ScriptRoot\Logs\Manuallog.log -Color Green -log Info
+                }
+                catch {
+                    Write-Entry -Subtext "Failed to create Collection directory: $CollectionPath - Error: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Manuallog.log -Color Red -log Error
+                    return
+                }
+            }
         }
         if ($CreateTitleCard -eq 'y') {
             $EPTitleName = Read-Host "Enter Episode Title Name"
@@ -7614,6 +7690,21 @@ if ($Manual) {
                 }
             }
             $PosterImageoriginal = "$AssetPath\$($FolderName)_$global:seasontmp.jpg"
+        }
+        if ($CreateCollectionCard -eq 'y') {
+            $PosterImageoriginal = "$AssetPath\Collections\$($FolderName)_poster.jpg"
+            $CollectionPath = "$AssetPath\Collections"
+            # Ensure the Collection directory exists
+            if (!(Test-Path $CollectionPath)) {
+                try {
+                    New-Item -ItemType Directory -Path $CollectionPath -Force | Out-Null
+                    Write-Entry -Subtext "Created Collection directory: $CollectionPath" -Path $global:ScriptRoot\Logs\Manuallog.log -Color Green -log Info
+                }
+                catch {
+                    Write-Entry -Subtext "Failed to create Collection directory: $CollectionPath - Error: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Manuallog.log -Color Red -log Error
+                    return
+                }
+            }
         }
         if ($CreateTitleCard -eq 'y') {
             $EPTitleName = Read-Host "Enter Episode Title Name"
@@ -7660,6 +7751,32 @@ if ($Manual) {
                 }
                 Else {
                     $joinedTitle = $SeasonPosterName
+                }
+            }
+        }
+        elseif ($CreateCollectionCard -eq 'y') {
+            $Posteroverlay = $Collectionoverlay
+            if ($AddCollectionTitle -eq 'true') {
+                if ($CollectionTitleAllCaps -eq 'true') {
+                    $CollectionjoinedTitle = $CollectionTitle.ToUpper()
+                }
+                Else {
+                    $CollectionjoinedTitle = $CollectionTitle
+                }
+
+                if ($CollectionAllCaps -eq 'true') {
+                    $joinedTitle = $titletext.ToUpper()
+                }
+                Else {
+                    $joinedTitle = $titletext
+                }
+            }
+            Else {
+                if ($fontAllCaps -eq 'true') {
+                    $joinedTitle = $titletext.ToUpper()
+                }
+                Else {
+                    $joinedTitle = $titletext
                 }
             }
         }
@@ -7726,6 +7843,24 @@ if ($Manual) {
                     Write-Entry -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                 }
             }
+            elseif ($CreateCollectionCard -eq 'y') {
+                if ($AddCollectionBorder -eq 'true' -and $AddCollectionOverlay -eq 'true') {
+                    $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Collectionoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Collectionborderwidthsecond`"  -bordercolor `"$Collectionbordercolor`" -border `"$Collectionborderwidth`" `"$PosterImage`""
+                    Write-Entry -Subtext "Resizing it | Adding Borders | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                }
+                if ($AddCollectionBorder -eq 'true' -and $AddCollectionOverlay -eq 'false') {
+                    $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" -shave `"$Collectionborderwidthsecond`"  -bordercolor `"$Collectionbordercolor`" -border `"$Collectionborderwidth`" `"$PosterImage`""
+                    Write-Entry -Subtext "Resizing it | Adding Borders" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                }
+                if ($AddCollectionBorder -eq 'false' -and $AddCollectionOverlay -eq 'true') {
+                    $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Collectionoverlay`" -gravity south -quality $global:outputQuality -composite `"$PosterImage`""
+                    Write-Entry -Subtext "Resizing it | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                }
+                if ($AddCollectionBorder -eq 'false' -and $AddCollectionOverlay -eq 'false') {
+                    $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$PosterImage`""
+                    Write-Entry -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                }
+            }
             elseif ($CreateTitleCard -eq 'y') {
                 if ($AddTitleCardBorder -eq 'true' -and $AddTitleCardOverlay -eq 'true') {
                     $Arguments = "`"$PosterImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$titlecardoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$TitleCardborderwidthsecond`"  -bordercolor `"$TitleCardbordercolor`" -border `"$TitleCardborderwidth`" `"$PosterImage`""
@@ -7767,9 +7902,9 @@ if ($Manual) {
             $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
             InvokeMagickCommand -Command $magick -Arguments $Arguments
 
-            if ($AddText -eq 'true' -or $AddSeasonText -eq 'true' -or $AddTitleCardEPTitleText -eq 'true' -or $AddTitleCardEPText -eq 'true') {
+            if ($AddText -eq 'true' -or $AddSeasonText -eq 'true' -or $AddTitleCardEPTitleText -eq 'true' -or $AddTitleCardEPText -eq 'true' -or $AddCollectionText -eq 'true') {
                 $joinedTitle = $joinedTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
-                if ($AddShowTitletoSeason -eq 'true') {
+                if ($AddShowTitletoSeason -eq 'true' -and $CreateSeasonPoster -eq 'y') {
                     $ShowjoinedTitle = $ShowjoinedTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
                     # Loop through each symbol and replace it with a newline
                     if ($NewLineOnSpecificSymbols -eq 'true') {
@@ -7782,7 +7917,20 @@ if ($Manual) {
                     Write-Entry -Subtext "Optimal show font size set to: '$showoptimalFontSize'" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
 
                 }
-                if ($AddTitleCardEPText -eq 'true') {
+                if ($AddCollectionTitle -eq 'true' -and $CreateCollectionCard -eq 'y') {
+                    $CollectionjoinedTitle = $CollectionjoinedTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
+                    # Loop through each symbol and replace it with a newline
+                    if ($NewLineOnSpecificSymbols -eq 'true') {
+                        foreach ($symbol in $NewLineSymbols) {
+                            $CollectionjoinedTitle = $CollectionjoinedTitle -replace [regex]::Escape($symbol), "`n"
+                        }
+                    }
+                    $CollectionjoinedTitlePointSize = $CollectionjoinedTitle -replace '""', '""""'
+                    $CollectionTitleoptimalFontSize = Get-OptimalPointSize -text $CollectionjoinedTitlePointSize -font $CollectionfontImagemagick -box_width $CollectionTitleMaxWidth  -box_height $CollectionTitleMaxHeight -min_pointsize $CollectionTitleminPointSize -max_pointsize $CollectionTitlemaxPointSize -lineSpacing $CollectionTitlelineSpacing
+                    Write-Entry -Subtext "Optimal Collection Title font size set to: '$CollectionTitleoptimalFontSize'" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
+
+                }
+                if ($AddTitleCardEPText -eq 'true' -and $CreateTitleCard -eq 'y') {
                     $EPNumberjoinedTitle = $EPNumberTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
                     $EPNumberjoinedTitlePointSize = $EPNumberjoinedTitle -replace '""', '""""'
                     $EPNumberoptimalFontSize = Get-OptimalPointSize -text $EPNumberjoinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize -lineSpacing $TitleCardEPlineSpacing
@@ -7799,6 +7947,9 @@ if ($Manual) {
                 $joinedTitlePointSize = $joinedTitle -replace '""', '""""'
                 if ($CreateSeasonPoster -eq 'y') {
                     $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize -lineSpacing $SeasonlineSpacing
+                }
+                elseif ($CreateCollectionCard -eq 'y') {
+                    $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $CollectionfontImagemagick -box_width $CollectionMaxWidth  -box_height $CollectionMaxHeight -min_pointsize $CollectionminPointSize -max_pointsize $CollectionmaxPointSize -lineSpacing $CollectionlineSpacing
                 }
                 elseif ($CreateTitleCard -eq 'y') {
                     $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize -lineSpacing $TitleCardEPTitlelineSpacing
@@ -7823,6 +7974,25 @@ if ($Manual) {
                         }
                         Else {
                             $ShowOnSeasonArguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$showoptimalFontSize`" -fill `"$ShowOnSeasonfontcolor`" -size `"$ShowOnSeasonboxsize`" -background none -interline-spacing `"$ShowOnSeasonlineSpacing`" -gravity `"$ShowOnSeasontextgravity`" caption:`"$ShowjoinedTitle`" -trim +repage -extent `"$ShowOnSeasonboxsize`" `) -gravity south -geometry +0`"$ShowOnSeasontext_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
+                        }
+                    }
+                }
+                elseif ($CreateCollectionCard -eq 'y') {
+                    # Add Stroke
+                    if ($AddCollectionTextStroke -eq 'true') {
+                        $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$CollectionfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Collectionfontcolor`" -stroke `"$Collectionstrokecolor`" -strokewidth `"$Collectionstrokewidth`" -size `"$Collectionboxsize`" -background none -interline-spacing `"$CollectionlineSpacing`" -gravity `"$Collectiontextgravity`" caption:`"$joinedTitle`" -trim +repage -extent `"$Collectionboxsize`" `) -gravity south -geometry +0`"$Collectiontext_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
+                    }
+                    Else {
+                        $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$CollectionfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Collectionfontcolor`" -size `"$Collectionboxsize`" -background none -interline-spacing `"$CollectionlineSpacing`" -gravity `"$Collectiontextgravity`" caption:`"$joinedTitle`" -trim +repage -extent `"$Collectionboxsize`" `) -gravity south -geometry +0`"$Collectiontext_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
+                    }
+                    if ($AddCollectionTitle -eq 'true') {
+                        # Show Part
+                        # Add Stroke
+                        if ($AddCollectionTitleTextStroke -eq 'true') {
+                            $CollectionTitleArguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$CollectionfontImagemagick`" -pointsize `"$CollectionTitleoptimalFontSize`" -fill `"$CollectionTitlefontcolor`" -stroke `"$CollectionTitlestrokecolor`" -strokewidth `"$CollectionTitlestrokewidth`" -size `"$CollectionTitleboxsize`" -background none -interline-spacing `"$CollectionTitlelineSpacing`" -gravity `"$CollectionTitletextgravity`" caption:`"$CollectionjoinedTitle`" -trim +repage -extent `"$CollectionTitleboxsize`" `) -gravity south -geometry +0`"$CollectionTitletext_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
+                        }
+                        Else {
+                            $CollectionTitleArguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$CollectionfontImagemagick`" -pointsize `"$CollectionTitleoptimalFontSize`" -fill `"$CollectionTitlefontcolor`" -size `"$CollectionTitleboxsize`" -background none -interline-spacing `"$CollectionTitlelineSpacing`" -gravity `"$CollectionTitletextgravity`" caption:`"$CollectionjoinedTitle`" -trim +repage -extent `"$CollectionTitleboxsize`" `) -gravity south -geometry +0`"$CollectionTitletext_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
                         }
                     }
                 }
@@ -7864,6 +8034,18 @@ if ($Manual) {
                         $logEntry = "`"$magick`" $ShowOnSeasonArguments"
                         $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                         InvokeMagickCommand -Command $magick -Arguments $ShowOnSeasonArguments
+                    }
+                }
+                elseif ($CreateCollectionCard -eq 'y') {
+                    Write-Entry -Subtext "    Applying Collection Poster text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
+                    $logEntry = "`"$magick`" $Arguments"
+                    $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+                    InvokeMagickCommand -Command $magick -Arguments $Arguments
+                    if ($AddCollectionTitle -eq 'true') {
+                        Write-Entry -Subtext "    Applying collectionTitle text: `"$CollectionjoinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                        $logEntry = "`"$magick`" $CollectionTitleArguments"
+                        $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+                        InvokeMagickCommand -Command $magick -Arguments $CollectionTitleArguments
                     }
                 }
                 elseif ($CreateTitleCard -eq 'y') {
