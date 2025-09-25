@@ -693,9 +693,9 @@ To use it we need to configure a script in Sonarr/Radarr, please follow these in
 7. Under **Path**, browse to and select your `ArrTrigger.sh` script.
     - Example: `/config/scripts/ArrTrigger.sh`
 8. With this setup, the Arr suite will create a file in `/posterizarr/watcher` whenever a file is imported.
-    - The file will be named like: `recently_added_20250909105509.posterizarr`
+    - The file will be named like: `recently_added_20250925114601966_1da214d7.posterizarr`
 9. Posterizarr monitors this directory for files ending in `.posterizarr`.
-    - When such a file is detected, it **waits** `5 minutes`, then reads the file and triggers a Posterizarr run for the corresponding item.
+    - When such a file is detected, it **waits** up to `5 minutes`(based on fileage), then reads the file and triggers a Posterizarr run for the corresponding item.
 
 
 
