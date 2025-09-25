@@ -48,7 +48,7 @@ function ScriptSchedule {
                 $alreadydisplayed = $null
                 Start-Sleep $NextScriptRunOffset
                 # Calling the Posterizarr Script
-                if ((Get-Process | Where-Object commandline -like 'pwsh')) {
+                if ((Get-Process pwsh -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -like "*Posterizarr.ps1*" })) {
                     Write-Warning "There is currently running another Process of Posterizarr, skipping this run."
                 }
                 Else {
@@ -112,15 +112,23 @@ function ScriptSchedule {
                 }
 
                 write-host "Building trigger args..."
+                # Wait until no other Posterizarr process is running
+                while (Get-Process pwsh -ErrorAction SilentlyContinue |
+                    Where-Object { $_.CommandLine -like "*Posterizarr.ps1*" }) {
+                    Write-Warning "Posterizarr is already running. Waiting 20 seconds..."
+                    Start-Sleep -Seconds 20
+                }
+
                 if ($IsTautulli) {
-                    write-host "Calling Posterizarr with this args: $ScriptArgs"
+                    Write-Host "Calling Posterizarr with these args: $ScriptArgs"
                     pwsh -Command "$env:APP_ROOT/Posterizarr.ps1 $ScriptArgs"
-                } Else {
-                    write-host "Calling Posterizarr with this args: $($ScriptArgs -join ' ')"
+                } else {
+                    Write-Host "Calling Posterizarr with these args: $($ScriptArgs -join ' ')"
 
                     # Call Posterizarr with Args
                     pwsh -File "$env:APP_ROOT/Posterizarr.ps1" @ScriptArgs
                 }
+
 
                 write-host ""
                 if ($triggerargs -like '*arr_*') {
