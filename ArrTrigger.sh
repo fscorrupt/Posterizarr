@@ -56,9 +56,9 @@ else
 fi
 
 # Create the .posterizarr file with timestamp
-NOW=$(date +"%Y%m%d%H%M%S")
-OUTFILE="$OUTPUT_DIR/recently_added_${NOW}.posterizarr"
-
+NOW=$(date +"%Y%m%d%H%M%S%3N")
+RAND=$(printf "%06x" $((RANDOM * RANDOM)))  # 6 hex characters from $RANDOM
+OUTFILE="$OUTPUT_DIR/recently_added_${NOW}_${RAND}.posterizarr"
 # Write key/value pairs
 {
     for KEY in "${!DATA[@]}"; do
