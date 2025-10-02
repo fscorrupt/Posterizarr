@@ -35,7 +35,7 @@ for ($i = 0; $i -lt $ExtraArgs.Count; $i++) {
     }
 }
 
-$CurrentScriptVersion = "1.9.93"
+$CurrentScriptVersion = "1.9.94"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 $env:PSMODULE_ANALYSIS_CACHE_PATH = $null
@@ -63,7 +63,14 @@ function InvokeIMChecks {
             Write-Entry -Message "Could not query installed Imagemagick" -Path $configLogging -Color Red -log Error
             # Clear Running File
             if (Test-Path $CurrentlyRunning) {
-                Remove-Item -LiteralPath $CurrentlyRunning | out-null
+                try {
+                    Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+                }
+                catch {
+                    Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                    Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                }
             }
             if ($global:UptimeKumaUrl) {
                 Send-UptimeKumaWebhook -status "down" -msg "Imagemagick missing"
@@ -314,7 +321,14 @@ function Test-PathPermissions {
         if ($PathToTest -eq $AssetPath) {
             # Clear Running File
             if (Test-Path $CurrentlyRunning) {
-                Remove-Item -LiteralPath $CurrentlyRunning | out-null
+                try {
+                    Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+                }
+                catch {
+                    Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                    Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                }
             }
             if ($global:UptimeKumaUrl) {
                 Send-UptimeKumaWebhook -status "down" -msg "Perm issues on /assets"
@@ -3707,7 +3721,14 @@ function CheckJson {
                 Write-Entry -Message "Failed to read the existing configuration file: $jsonFilePath. Please ensure it is valid JSON. Aborting..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                 # Clear Running File
                 if (Test-Path $CurrentlyRunning) {
-                    Remove-Item -LiteralPath $CurrentlyRunning | out-null
+                    try {
+                        Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+                    }
+                    catch {
+                        Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                        Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                        Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    }
                 }
                 if ($global:UptimeKumaUrl) {
                     Send-UptimeKumaWebhook -status "down" -msg "Failed to read the existing configuration file."
@@ -3773,7 +3794,14 @@ function CheckJson {
                     Write-Entry -Subtext "Please correct the casing of the property in your configuration file to '$partKey'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
                     # Clear Running File
                     if (Test-Path $CurrentlyRunning) {
-                        Remove-Item -LiteralPath $CurrentlyRunning | out-null
+                        try {
+                            Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+                        }
+                        catch {
+                            Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                        }
                     }
                     if ($global:UptimeKumaUrl) {
                         Send-UptimeKumaWebhook -status "down" -msg "Wrong Main Attribute casing in config file"
@@ -3800,7 +3828,14 @@ function CheckJson {
                             Write-Entry -Subtext "Please correct the casing of the Sub-Attribute in your configuration file to '$partKey.$propertyKey'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
                             # Clear Running File
                             if (Test-Path $CurrentlyRunning) {
-                                Remove-Item -LiteralPath $CurrentlyRunning | out-null
+                                try {
+                                    Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+                                }
+                                catch {
+                                    Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                    Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                                    Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                                }
                             }
                             if ($global:UptimeKumaUrl) {
                                 Send-UptimeKumaWebhook -status "down" -msg "Wrong Sub Attribute casing in config file"
@@ -3824,7 +3859,14 @@ function CheckJson {
         Write-Entry -Message "Failed to download the default configuration JSON file from the URL." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
         # Clear Running File
         if (Test-Path $CurrentlyRunning) {
-            Remove-Item -LiteralPath $CurrentlyRunning | out-null
+            try {
+                Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+            }
+            catch {
+                Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            }
         }
         if ($global:UptimeKumaUrl) {
             Send-UptimeKumaWebhook -status "down" -msg "Config.json download failed."
@@ -3835,7 +3877,14 @@ function CheckJson {
         Write-Entry -Message "An unexpected error occurred: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
         # Clear Running File
         if (Test-Path $CurrentlyRunning) {
-            Remove-Item -LiteralPath $CurrentlyRunning | out-null
+            try {
+                Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+            }
+            catch {
+                Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            }
         }
         if ($global:UptimeKumaUrl) {
             Send-UptimeKumaWebhook -status "down" -msg "$($_.Exception.Message)"
@@ -3876,7 +3925,14 @@ function CheckJsonPaths {
     if ($errorCount -ge 1) {
         # Clear Running File
         if (Test-Path $CurrentlyRunning) {
-            Remove-Item -LiteralPath $CurrentlyRunning | out-null
+            try {
+                Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+            }
+            catch {
+                Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            }
         }
         if ($global:UptimeKumaUrl) {
             Send-UptimeKumaWebhook -status "down" -msg "File missing"
@@ -3953,7 +4009,14 @@ function CheckConfigFile {
         Write-Entry -Subtext "Please configure the config file according to GitHub, Exit script now..." -Path "$ScriptRoot\Logs\Scriptlog.log" -Color Yellow -log Warning
         # Clear Running File
         if (Test-Path $CurrentlyRunning) {
-            Remove-Item -LiteralPath $CurrentlyRunning | out-null
+            try {
+                Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+            }
+            catch {
+                Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            }
         }
         if ($global:UptimeKumaUrl) {
             Send-UptimeKumaWebhook -status "down" -msg "Configure config file"
@@ -4027,7 +4090,14 @@ function CheckPlexAccess {
                     Write-Entry -Subtext "No libs on Plex, abort script now..." -Path $configLogging -Color Red -log Error
                     # Clear Running File
                     if (Test-Path $CurrentlyRunning) {
-                        Remove-Item -LiteralPath $CurrentlyRunning | out-null
+                        try {
+                            Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+                        }
+                        catch {
+                            Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                        }
                     }
                     if ($global:UptimeKumaUrl) {
                         Send-UptimeKumaWebhook -status "down" -msg "No Plex Libs found"
@@ -4042,7 +4112,14 @@ function CheckPlexAccess {
                 $errorCount++
                 # Clear Running File
                 if (Test-Path $CurrentlyRunning) {
-                    Remove-Item -LiteralPath $CurrentlyRunning | out-null
+                    try {
+                        Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+                    }
+                    catch {
+                        Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                        Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                        Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    }
                 }
                 if ($global:UptimeKumaUrl) {
                     Send-UptimeKumaWebhook -status "down" -msg "Could not access plex"
@@ -4055,7 +4132,14 @@ function CheckPlexAccess {
             Write-Entry -Subtext "Error occurred while accessing Plex server: $($_.Exception.Message)" -Path $configLogging -Color Red -log Error
             # Clear Running File
             if (Test-Path $CurrentlyRunning) {
-                Remove-Item -LiteralPath $CurrentlyRunning | out-null
+                try {
+                    Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+                }
+                catch {
+                    Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                    Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                }
             }
             if ($global:UptimeKumaUrl) {
                 Send-UptimeKumaWebhook -status "down" -msg "Could not access plex"
@@ -4091,7 +4175,14 @@ function CheckPlexAccess {
             Write-Entry -Message "You have to enter your IP range in 'Settings -> Network -> List of IP addresses and networks that are allowed without auth: '192.168.1.0/255.255.255.0''" -Path $configLogging -Color White -log Info
             # Clear Running File
             if (Test-Path $CurrentlyRunning) {
-                Remove-Item -LiteralPath $CurrentlyRunning | out-null
+                try {
+                    Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+                }
+                catch {
+                    Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                    Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                }
             }
             if ($global:UptimeKumaUrl) {
                 Send-UptimeKumaWebhook -status "down" -msg "Could not access plex"
@@ -4378,7 +4469,14 @@ function CheckJellyfinAccess {
                 $errorCount++
                 # Clear Running File
                 if (Test-Path $CurrentlyRunning) {
-                    Remove-Item -LiteralPath $CurrentlyRunning | out-null
+                    try {
+                        Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+                    }
+                    catch {
+                        Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                        Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                        Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    }
                 }
                 if ($global:UptimeKumaUrl) {
                     Send-UptimeKumaWebhook -status "down" -msg "Clould not access jellyfin"
@@ -4391,7 +4489,14 @@ function CheckJellyfinAccess {
             Write-Entry -Subtext "Error occurred while accessing Jellyfin server: $($_.Exception.Message)" -Path $configLogging -Color Red -log Error
             # Clear Running File
             if (Test-Path $CurrentlyRunning) {
-                Remove-Item -LiteralPath $CurrentlyRunning | out-null
+                try {
+                    Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+                }
+                catch {
+                    Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                    Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                }
             }
             if ($global:UptimeKumaUrl) {
                 Send-UptimeKumaWebhook -status "down" -msg "Clould not access jellyfin"
@@ -4420,7 +4525,14 @@ function CheckEmbyAccess {
                 $errorCount++
                 # Clear Running File
                 if (Test-Path $CurrentlyRunning) {
-                    Remove-Item -LiteralPath $CurrentlyRunning | out-null
+                    try {
+                        Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+                    }
+                    catch {
+                        Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                        Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                        Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    }
                 }
                 if ($global:UptimeKumaUrl) {
                     Send-UptimeKumaWebhook -status "down" -msg "Clould not access emby"
@@ -4433,7 +4545,14 @@ function CheckEmbyAccess {
             Write-Entry -Subtext "Error occurred while accessing Emby server: $($_.Exception.Message)" -Path $configLogging -Color Red -log Error
             # Clear Running File
             if (Test-Path $CurrentlyRunning) {
-                Remove-Item -LiteralPath $CurrentlyRunning | out-null
+                try {
+                    Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+                }
+                catch {
+                    Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                    Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                }
             }
             if ($global:UptimeKumaUrl) {
                 Send-UptimeKumaWebhook -status "down" -msg "Clould not access emby"
@@ -4503,7 +4622,14 @@ function UploadOtherMediaServerArtwork {
                 Write-Entry -Subtext "Unsupported image format." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
                 # Clear Running File
                 if (Test-Path $CurrentlyRunning) {
-                    Remove-Item -LiteralPath $CurrentlyRunning | out-null
+                    try {
+                        Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+                    }
+                    catch {
+                        Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                        Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                        Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    }
                 }
                 if ($global:UptimeKumaUrl) {
                     Send-UptimeKumaWebhook -status "down" -msg "Unsupported image format"
@@ -4651,7 +4777,14 @@ function MassDownloadPlexArtwork {
     if ($($Libsoverview.count) -lt 1) {
         Write-Entry -Subtext "0 libraries were found. Are you on the correct Plex server?" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
         if (Test-Path $CurrentlyRunning) {
-            Remove-Item -LiteralPath $CurrentlyRunning | out-null
+            try {
+                Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+            }
+            catch {
+                Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            }
         }
         if ($global:UptimeKumaUrl) {
             Send-UptimeKumaWebhook -status "down" -msg "No libs found"
@@ -5103,7 +5236,14 @@ function MassDownloadPlexArtwork {
     catch {
         Write-Entry -Subtext "Error during Hashtable creation, please check Asset dir is available..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
         if (Test-Path $CurrentlyRunning) {
-            Remove-Item -LiteralPath $CurrentlyRunning | out-null
+            try {
+                Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+            }
+            catch {
+                Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            }
         }
         if ($global:UptimeKumaUrl) {
             Send-UptimeKumaWebhook -status "down" -msg "Hashtable creation failed"
@@ -6421,7 +6561,14 @@ function MassDownloadPlexArtwork {
 
     # Clear Running File
     if (Test-Path $CurrentlyRunning) {
-        Remove-Item -LiteralPath $CurrentlyRunning | out-null
+        try {
+            Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+        }
+        catch {
+            Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        }
     }
     if ($global:UptimeKumaUrl) {
         Send-UptimeKumaWebhook -status "up" -ping $executionTime.TotalMilliseconds
@@ -6773,7 +6920,14 @@ if ($env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker*') {
             Write-Entry -Message "Found default Notification Url, please update url in config..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             # Clear Running File
             if (Test-Path $CurrentlyRunning) {
-                Remove-Item -LiteralPath $CurrentlyRunning | out-null
+                try {
+                    Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+                }
+                catch {
+                    Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                    Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                }
             }
             if ($global:UptimeKumaUrl) {
                 Send-UptimeKumaWebhook -status "down" -msg "Default notify url in config"
@@ -6791,7 +6945,14 @@ Else {
         Write-Entry -Message "Found default Notification Url, please update url in config..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
         # Clear Running File
         if (Test-Path $CurrentlyRunning) {
-            Remove-Item -LiteralPath $CurrentlyRunning | out-null
+            try {
+                Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+            }
+            catch {
+                Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            }
         }
         if ($global:UptimeKumaUrl) {
             Send-UptimeKumaWebhook -status "down" -msg "Default notify url in config"
@@ -6920,7 +7081,14 @@ if ($enabledServers -gt 1) {
     Write-Entry -Subtext "Exiting Posterizarr now..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
     # Clear Running File
     if (Test-Path $CurrentlyRunning) {
-        Remove-Item -LiteralPath $CurrentlyRunning | out-null
+        try {
+            Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+        }
+        catch {
+            Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        }
     }
     if ($global:UptimeKumaUrl) {
         Send-UptimeKumaWebhook -status "down" -msg "Multiple media servers enabled"
@@ -7189,7 +7357,14 @@ if ($global:OSType -ne "Win32NT") {
             Write-Entry -Subtext "Exiting Posterizarr now..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             # Clear Running File
             if (Test-Path $CurrentlyRunning) {
-                Remove-Item -LiteralPath $CurrentlyRunning | out-null
+                try {
+                    Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+                }
+                catch {
+                    Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                    Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                }
             }
             if ($global:UptimeKumaUrl) {
                 Send-UptimeKumaWebhook -status "down" -msg "Wrong asset path"
@@ -7201,7 +7376,14 @@ if ($global:OSType -ne "Win32NT") {
             Write-Entry -Subtext "Exiting Posterizarr now..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             # Clear Running File
             if (Test-Path $CurrentlyRunning) {
-                Remove-Item -LiteralPath $CurrentlyRunning | out-null
+                try {
+                    Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+                }
+                catch {
+                    Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                    Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                }
             }
             if ($global:UptimeKumaUrl) {
                 Send-UptimeKumaWebhook -status "down" -msg "Wrong backup path"
@@ -7213,7 +7395,14 @@ if ($global:OSType -ne "Win32NT") {
             Write-Entry -Subtext "Exiting Posterizarr now..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             # Clear Running File
             if (Test-Path $CurrentlyRunning) {
-                Remove-Item -LiteralPath $CurrentlyRunning | out-null
+                try {
+                    Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+                }
+                catch {
+                    Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                    Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                }
             }
             if ($global:UptimeKumaUrl) {
                 Send-UptimeKumaWebhook -status "down" -msg "Wrong manual asset path"
@@ -7291,7 +7480,14 @@ if (!(Test-Path $AssetPath)) {
         Write-Entry -Message 'Please change default asset Path...' -Path $configLogging -Color Red -log Error
         # Clear Running File
         if (Test-Path $CurrentlyRunning) {
-            Remove-Item -LiteralPath $CurrentlyRunning | out-null
+            try {
+                Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+            }
+            catch {
+                Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            }
         }
         if ($global:UptimeKumaUrl) {
             Send-UptimeKumaWebhook -status "down" -msg "Default asset path"
@@ -7309,7 +7505,14 @@ Test-PathPermissions -PathToTest $ManualAssetPath
 
 if ($ForceRunningDeletion -eq 'true') {
     if (Test-Path $CurrentlyRunning) {
-        Remove-Item -LiteralPath $CurrentlyRunning | out-null
+        try {
+            Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+        }
+        catch {
+            Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        }
     }
 }
 
@@ -7493,7 +7696,14 @@ if ($global:DisableOnlineAssetFetch -eq 'false') {
         Write-Entry -Message "TMDB Token is too short, you may have used the API key in your config file. Please use the 'API Read Access Token'." -Path $configLogging -Color Red -log Error
         # Clear Running File
         if (Test-Path $CurrentlyRunning) {
-            Remove-Item -LiteralPath $CurrentlyRunning | out-null
+            try {
+                Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+            }
+            catch {
+                Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            }
         }
         if ($global:UptimeKumaUrl) {
             Send-UptimeKumaWebhook -status "down" -msg "Wrong TMDB token"
@@ -7552,7 +7762,14 @@ if ($global:DisableOnlineAssetFetch -eq 'false') {
                     $errorCount++
                     # Clear Running File
                     if (Test-Path $CurrentlyRunning) {
-                        Remove-Item -LiteralPath $CurrentlyRunning | out-null
+                        try {
+                            Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+                        }
+                        catch {
+                            Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                            Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                        }
                     }
                     if ($global:UptimeKumaUrl) {
                         Send-UptimeKumaWebhook -status "down" -msg "Could not receive a TVDB Token"
@@ -8085,7 +8302,14 @@ if ($Manual) {
 
     # Clear Running File
     if (Test-Path $CurrentlyRunning) {
-        Remove-Item -LiteralPath $CurrentlyRunning | out-null
+        try {
+            Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+        }
+        catch {
+            Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        }
     }
     if ($global:UptimeKumaUrl) {
         Send-UptimeKumaWebhook -status "up" -ping $executionTime.TotalMilliseconds
@@ -9209,7 +9433,14 @@ Elseif ($Testing) {
 
     # Clear Running File
     if (Test-Path $CurrentlyRunning) {
-        Remove-Item -LiteralPath $CurrentlyRunning | out-null
+        try {
+            Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+        }
+        catch {
+            Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        }
     }
     if ($global:UptimeKumaUrl) {
         Send-UptimeKumaWebhook -status "up" -ping $executionTime.TotalMilliseconds
@@ -9577,7 +9808,14 @@ Elseif ($Tautulli) {
         Write-Entry -Subtext "Error during Hashtable creation, please check Asset dir is available..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
         # Clear Running File
         if (Test-Path $CurrentlyRunning) {
-            Remove-Item -LiteralPath $CurrentlyRunning | out-null
+            try {
+                Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+            }
+            catch {
+                Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            }
         }
         if ($global:UptimeKumaUrl) {
             Send-UptimeKumaWebhook -status "down" -msg "Hashtable creation failed"
@@ -13244,7 +13482,14 @@ Elseif ($Tautulli) {
 
     # Clear Running File
     if (Test-Path $CurrentlyRunning) {
-        Remove-Item -LiteralPath $CurrentlyRunning | out-null
+        try {
+            Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+        }
+        catch {
+            Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        }
     }
     if ($global:UptimeKumaUrl) {
         Send-UptimeKumaWebhook -status "up" -ping $executionTime.TotalMilliseconds
@@ -13817,7 +14062,14 @@ Elseif ($ArrTrigger) {
             Write-Entry -Subtext "Error during Hashtable creation, please check Asset dir is available..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             # Clear Running File
             if (Test-Path $CurrentlyRunning) {
-                Remove-Item -LiteralPath $CurrentlyRunning | out-null
+                try {
+                    Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+                }
+                catch {
+                    Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                    Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                }
             }
             if ($global:UptimeKumaUrl) {
                 Send-UptimeKumaWebhook -status "down" -msg "Hashtable creation failed"
@@ -17282,7 +17534,14 @@ Elseif ($ArrTrigger) {
 
         # Clear Running File
         if (Test-Path $CurrentlyRunning) {
-            Remove-Item -LiteralPath $CurrentlyRunning | out-null
+            try {
+                Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+            }
+            catch {
+                Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            }
         }
         if ($global:UptimeKumaUrl) {
             Send-UptimeKumaWebhook -status "up" -ping $executionTime.TotalMilliseconds
@@ -17603,7 +17862,14 @@ Elseif ($ArrTrigger) {
             Write-Entry -Subtext "Error during Hashtable creation, please check Asset dir is available..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
             # Clear Running File
             if (Test-Path $CurrentlyRunning) {
-                Remove-Item -LiteralPath $CurrentlyRunning | out-null
+                try {
+                    Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+                }
+                catch {
+                    Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                    Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                }
             }
             if ($global:UptimeKumaUrl) {
                 Send-UptimeKumaWebhook -status "down" -msg "Hashtable creation failed"
@@ -21270,7 +21536,14 @@ Elseif ($ArrTrigger) {
 
         # Clear Running File
         if (Test-Path $CurrentlyRunning) {
-            Remove-Item -LiteralPath $CurrentlyRunning | out-null
+            try {
+                Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+            }
+            catch {
+                Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            }
         }
         if ($global:UptimeKumaUrl) {
             Send-UptimeKumaWebhook -status "up" -ping $executionTime.TotalMilliseconds
@@ -21333,7 +21606,14 @@ Elseif ($SyncJelly -or $SyncEmby) {
                 Write-Entry -Subtext "Please rename your lib and remove all chars that are listed here: '/, :, *, ?, `", <, >, |, \, or }'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                 # Clear Running File
                 if (Test-Path $CurrentlyRunning) {
-                    Remove-Item -LiteralPath $CurrentlyRunning | out-null
+                    try {
+                        Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+                    }
+                    catch {
+                        Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                        Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                        Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    }
                 }
                 if ($global:UptimeKumaUrl) {
                     Send-UptimeKumaWebhook -status "down" -msg "Lib contains invalid chars"
@@ -21347,7 +21627,14 @@ Elseif ($SyncJelly -or $SyncEmby) {
         Write-Entry -Subtext "0 libraries were found. Are you on the correct Plex server?" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
         # Clear Running File
         if (Test-Path $CurrentlyRunning) {
-            Remove-Item -LiteralPath $CurrentlyRunning | out-null
+            try {
+                Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+            }
+            catch {
+                Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            }
         }
         if ($global:UptimeKumaUrl) {
             Send-UptimeKumaWebhook -status "down" -msg "No libs found"
@@ -22517,7 +22804,14 @@ Elseif ($SyncJelly -or $SyncEmby) {
 
     # Clear Running File
     if (Test-Path $CurrentlyRunning) {
-        Remove-Item -LiteralPath $CurrentlyRunning | out-null
+        try {
+            Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+        }
+        catch {
+            Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        }
     }
     if ($global:UptimeKumaUrl) {
         Send-UptimeKumaWebhook -status "up" -ping $executionTime.TotalMilliseconds
@@ -22998,7 +23292,14 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
         Write-Entry -Subtext "Error during Hashtable creation, please check Asset dir is available..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
         # Clear Running File
         if (Test-Path $CurrentlyRunning) {
-            Remove-Item -LiteralPath $CurrentlyRunning | out-null
+            try {
+                Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+            }
+            catch {
+                Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            }
         }
         if ($global:UptimeKumaUrl) {
             Send-UptimeKumaWebhook -status "down" -msg "Hashtable creation failed"
@@ -26803,7 +27104,14 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
 
     # Clear Running File
     if (Test-Path $CurrentlyRunning) {
-        Remove-Item -LiteralPath $CurrentlyRunning | out-null
+        try {
+            Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+        }
+        catch {
+            Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        }
     }
     if ($global:UptimeKumaUrl) {
         Send-UptimeKumaWebhook -status "up" -ping $executionTime.TotalMilliseconds
@@ -26825,7 +27133,14 @@ ElseIf ($PosterReset) {
         Write-Entry -Message "This only works for plex servers..." -Path "$global:ScriptRoot\Logs\Scriptlog.log" -Color Red -log Error
     }
     if (Test-Path $CurrentlyRunning) {
-        Remove-Item -LiteralPath $CurrentlyRunning | out-null
+        try {
+            Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+        }
+        catch {
+            Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        }
     }
 }
 #region Normal Mode
@@ -26853,7 +27168,14 @@ else {
                 Write-Entry -Subtext "Please rename your lib and remove all chars that are listed here: '/, :, *, ?, `", <, >, |, \, or }'" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
                 # Clear Running File
                 if (Test-Path $CurrentlyRunning) {
-                    Remove-Item -LiteralPath $CurrentlyRunning | out-null
+                    try {
+                        Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+                    }
+                    catch {
+                        Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                        Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                        Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                    }
                 }
                 if ($global:UptimeKumaUrl) {
                     Send-UptimeKumaWebhook -status "down" -msg "Invalid chars on lib"
@@ -26867,7 +27189,14 @@ else {
         Write-Entry -Subtext "0 libraries were found. Are you on the correct Plex server?" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
         # Clear Running File
         if (Test-Path $CurrentlyRunning) {
-            Remove-Item -LiteralPath $CurrentlyRunning | out-null
+            try {
+                Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+            }
+            catch {
+                Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            }
         }
         if ($global:UptimeKumaUrl) {
             Send-UptimeKumaWebhook -status "down" -msg "No libs found"
@@ -27318,7 +27647,14 @@ else {
         Write-Entry -Subtext "Error during Hashtable creation, please check Asset dir is available..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
         # Clear Running File
         if (Test-Path $CurrentlyRunning) {
-            Remove-Item -LiteralPath $CurrentlyRunning | out-null
+            try {
+                Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+            }
+            catch {
+                Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+                Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+                Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            }
         }
         if ($global:UptimeKumaUrl) {
             Send-UptimeKumaWebhook -status "down" -msg "Hashtable creation failed"
@@ -31738,7 +32074,14 @@ else {
 
     # Clear Running File
     if (Test-Path $CurrentlyRunning) {
-        Remove-Item -LiteralPath $CurrentlyRunning | out-null
+        try {
+            Remove-Item -LiteralPath $CurrentlyRunning -ErrorAction Stop | Out-Null
+        }
+        catch {
+            Write-Entry -Message "Failed to delete '$CurrentlyRunning'." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Write-Entry -Subtext "Reason: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Error
+            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        }
     }
     if ($global:UptimeKumaUrl) {
         Send-UptimeKumaWebhook -status "up" -ping $executionTime.TotalMilliseconds
