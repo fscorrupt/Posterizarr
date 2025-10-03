@@ -35,7 +35,7 @@ for ($i = 0; $i -lt $ExtraArgs.Count; $i++) {
     }
 }
 
-$CurrentScriptVersion = "1.9.94"
+$CurrentScriptVersion = "1.9.95"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 $env:PSMODULE_ANALYSIS_CACHE_PATH = $null
@@ -267,7 +267,7 @@ function Initialize-LanguageSettings {
     Set-Variable -Name $SettingName -Scope Global -Value $validLangs -Force
 
     # Derived variants
-    Set-Variable -Name "${SettingName}TMDB"   -Scope Global -Value ($validLangs -replace '^xx$', 'null')
+    Set-Variable -Name "${SettingName}TMDB"   -Scope Global -Value $validLangs
     Set-Variable -Name "${SettingName}Fanart" -Scope Global -Value ($validLangs -replace '^xx$', '00')
     Set-Variable -Name "${SettingName}TVDB"   -Scope Global -Value ($validLangs -replace '^xx$', 'null')
 
@@ -1185,7 +1185,7 @@ function GetTMDBMoviePoster {
     }
     if ($global:PosterPreferTextless -eq $true) {
         try {
-            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($global:tmdbid)?append_to_response=images&language=null&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
+            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($global:tmdbid)?append_to_response=images&language=xx&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
         }
         catch {
             Write-Entry -Subtext "Could not query TMDB url, error message: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
@@ -1196,10 +1196,10 @@ function GetTMDBMoviePoster {
         if ($response) {
             if ($response.images.posters) {
                 if ($global:WidthHeightFilter -eq 'true') {
-                    $NoLangPoster = ($response.images.posters | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
+                    $NoLangPoster = ($response.images.posters | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX') -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
                 }
                 Else {
-                    $NoLangPoster = ($response.images.posters | Where-Object iso_639_1 -eq $null)
+                    $NoLangPoster = ($response.images.posters | Where-Object {$_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX'})
                 }
                 if (!$NoLangPoster) {
                     Write-Entry -Subtext "PreferTextless Value: $global:PosterPreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
@@ -1271,7 +1271,7 @@ function GetTMDBMoviePoster {
                 Else {
                     if ($global:WidthHeightFilter -eq 'true') {
                         if ($global:TMDBVoteSorting -eq 'primary') {
-                            $filteredPosters = $response.images.posters | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
+                            $filteredPosters = $response.images.posters | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX') -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
 
                             if ($filteredPosters) {
                                 $posterpath = $filteredPosters[0].file_path
@@ -1282,7 +1282,7 @@ function GetTMDBMoviePoster {
                             }
                         }
                         Else {
-                            $filteredPosters = $response.images.posters | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
+                            $filteredPosters = $response.images.posters | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX') -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
 
                             if ($filteredPosters) {
                                 $posterpath = (($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
@@ -1295,14 +1295,14 @@ function GetTMDBMoviePoster {
                     }
                     Else {
                         if ($global:TMDBVoteSorting -eq 'primary') {
-                            $filteredPosters = $response.images.posters | Where-Object iso_639_1 -eq $null
+                            $filteredPosters = $response.images.posters | Where-Object {$_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX'}
                             if ($filteredPosters) {
                                 $posterpath = $filteredPosters[0].file_path
                             }
 
                         }
                         Else {
-                            $filteredPosters = $response.images.posters | Where-Object iso_639_1 -eq $null
+                            $filteredPosters = $response.images.posters | Where-Object {$_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX'}
 
                             if ($filteredPosters) {
                                 $posterpath = (($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
@@ -1340,10 +1340,10 @@ function GetTMDBMoviePoster {
                 foreach ($lang in $global:PreferredLanguageOrderTMDB) {
                     if ($lang -eq 'null') {
                         if ($global:WidthHeightFilter -eq 'true') {
-                            $FavPoster = ($response.images.posters | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
+                            $FavPoster = ($response.images.posters | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX') -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
                         }
                         Else {
-                            $FavPoster = ($response.images.posters | Where-Object iso_639_1 -eq $null)
+                            $FavPoster = ($response.images.posters | Where-Object {$_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX'})
                         }
                     }
                     Else {
@@ -1394,7 +1394,7 @@ function GetTMDBMovieBackground {
     }
     if ($global:BackgroundPreferTextless -eq $true) {
         try {
-            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($global:tmdbid)?append_to_response=images&language=null&include_image_language=$($global:PreferredBackgroundLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
+            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/movie/$($global:tmdbid)?append_to_response=images&language=xx&include_image_language=$($global:PreferredBackgroundLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
         }
         catch {
             Write-Entry -Subtext "Could not query TMDB url, error message: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
@@ -1405,10 +1405,10 @@ function GetTMDBMovieBackground {
         if ($response) {
             if ($response.images.backdrops) {
                 if ($global:WidthHeightFilter -eq 'true') {
-                    $NoLangPoster = ($response.images.backdrops | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight })
+                    $NoLangPoster = ($response.images.backdrops | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX') -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight })
                 }
                 Else {
-                    $NoLangPoster = ($response.images.backdrops | Where-Object iso_639_1 -eq $null)
+                    $NoLangPoster = ($response.images.backdrops | Where-Object {$_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX'})
                 }
                 if (!$NoLangPoster) {
                     Write-Entry -Subtext "PreferTextless Value: $global:BackgroundPreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
@@ -1472,7 +1472,7 @@ function GetTMDBMovieBackground {
                 Else {
                     if ($global:WidthHeightFilter -eq 'true') {
                         if ($global:TMDBVoteSorting -eq 'primary') {
-                            $filteredPosters = $response.images.backdrops | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight }
+                            $filteredPosters = $response.images.backdrops | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX') -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight }
 
                             if ($filteredPosters) {
                                 $posterpath = $filteredPosters[0].file_path
@@ -1483,7 +1483,7 @@ function GetTMDBMovieBackground {
                             }
                         }
                         Else {
-                            $filteredPosters = $response.images.backdrops | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight }
+                            $filteredPosters = $response.images.backdrops | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX') -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight }
 
                             if ($filteredPosters) {
                                 $posterpath = (($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
@@ -1496,10 +1496,10 @@ function GetTMDBMovieBackground {
                     }
                     Else {
                         if ($global:TMDBVoteSorting -eq 'primary') {
-                            $posterpath = (($response.images.backdrops | Where-Object iso_639_1 -eq $null)[0]).file_path
+                            $posterpath = (($response.images.backdrops | Where-Object {$_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX'})[0]).file_path
                         }
                         Else {
-                            $posterpath = (($response.images.backdrops | Where-Object iso_639_1 -eq $null | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                            $posterpath = (($response.images.backdrops | Where-Object {$_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX'} | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
                         }
                     }
                     if ($posterpath) {
@@ -1540,7 +1540,7 @@ function GetTMDBMovieBackground {
                 foreach ($lang in $global:PreferredBackgroundLanguageOrderTMDB) {
                     if ($global:WidthHeightFilter -eq 'true') {
                         if ($lang -eq 'null') {
-                            $FavPoster = ($response.images.backdrops | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight })
+                            $FavPoster = ($response.images.backdrops | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX') -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight })
                         }
                         Else {
                             $FavPoster = ($response.images.backdrops | Where-Object { $_.iso_639_1 -eq $lang -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight })
@@ -1548,7 +1548,7 @@ function GetTMDBMovieBackground {
                     }
                     Else {
                         if ($lang -eq 'null') {
-                            $FavPoster = ($response.images.backdrops | Where-Object iso_639_1 -eq $null)
+                            $FavPoster = ($response.images.backdrops | Where-Object {$_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX'})
                         }
                         Else {
                             $FavPoster = ($response.images.backdrops | Where-Object iso_639_1 -eq $lang)
@@ -1613,7 +1613,7 @@ function GetTMDBShowPoster {
     Else {
         if ($global:PosterPreferTextless -eq $true) {
             try {
-                $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=null&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
+                $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=xx&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
             }
             catch {
                 Write-Entry -Subtext "Could not query TMDB url, error message: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
@@ -1624,10 +1624,10 @@ function GetTMDBShowPoster {
             if ($response) {
                 if ($response.images.posters) {
                     if ($global:WidthHeightFilter -eq 'true') {
-                        $NoLangPoster = ($response.images.posters | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
+                        $NoLangPoster = ($response.images.posters | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX') -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
                     }
                     Else {
-                        $NoLangPoster = ($response.images.posters | Where-Object iso_639_1 -eq $null)
+                        $NoLangPoster = ($response.images.posters | Where-Object {$_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX'})
                     }
                     if (!$NoLangPoster) {
                         Write-Entry -Subtext "PreferTextless Value: $global:PosterPreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
@@ -1690,7 +1690,7 @@ function GetTMDBShowPoster {
                     Else {
                         if ($global:WidthHeightFilter -eq 'true') {
                             if ($global:TMDBVoteSorting -eq 'primary') {
-                                $filteredPosters = $response.images.posters | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
+                                $filteredPosters = $response.images.posters | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX') -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
 
                                 if ($filteredPosters) {
                                     $posterpath = $filteredPosters[0].file_path
@@ -1701,7 +1701,7 @@ function GetTMDBShowPoster {
                                 }
                             }
                             Else {
-                                $filteredPosters = $response.images.posters | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
+                                $filteredPosters = $response.images.posters | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX') -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
 
                                 if ($filteredPosters) {
                                     $posterpath = (($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
@@ -1714,13 +1714,13 @@ function GetTMDBShowPoster {
                         }
                         Else {
                             if ($global:TMDBVoteSorting -eq 'primary') {
-                                $posterpath = ($response.images.posters | Where-Object iso_639_1 -eq $null)
+                                $posterpath = ($response.images.posters | Where-Object {$_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX'})
                                 if ($posterpath) {
                                     $posterpath = $posterpath[0].file_path
                                 }
                             }
                             Else {
-                                $posterpath = ($response.images.posters | Where-Object iso_639_1 -eq $null | Sort-Object $global:TMDBVoteSorting -Descending)
+                                $posterpath = ($response.images.posters | Where-Object {$_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX'} | Sort-Object $global:TMDBVoteSorting -Descending)
                                 if ($posterpath) {
                                     $posterpath = $posterpath[0].file_path
                                 }
@@ -1759,7 +1759,7 @@ function GetTMDBShowPoster {
                     foreach ($lang in $global:PreferredLanguageOrderTMDB) {
                         if ($global:WidthHeightFilter -eq 'true') {
                             if ($lang -eq 'null') {
-                                $FavPoster = ($response.images.posters | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
+                                $FavPoster = ($response.images.posters | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX') -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
                             }
                             Else {
                                 $FavPoster = ($response.images.posters | Where-Object { $_.iso_639_1 -eq $lang -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
@@ -1767,7 +1767,7 @@ function GetTMDBShowPoster {
                         }
                         Else {
                             if ($lang -eq 'null') {
-                                $FavPoster = ($response.images.posters | Where-Object iso_639_1 -eq $null)
+                                $FavPoster = ($response.images.posters | Where-Object {$_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX'})
                             }
                             Else {
                                 $FavPoster = ($response.images.posters | Where-Object iso_639_1 -eq $lang)
@@ -1827,10 +1827,10 @@ function GetTMDBSeasonPoster {
         if ($response) {
             if ($response.posters) {
                 if ($global:WidthHeightFilter -eq 'true') {
-                    $NoLangPoster = ($response.posters | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
+                    $NoLangPoster = ($response.posters | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX') -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
                 }
                 Else {
-                    $NoLangPoster = ($response.posters | Where-Object iso_639_1 -eq $null)
+                    $NoLangPoster = ($response.posters | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX') })
                 }
                 Write-Entry -Subtext "NoLangPoster: $NoLangPoster" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
                 if (!$NoLangPoster) {
@@ -1894,7 +1894,7 @@ function GetTMDBSeasonPoster {
                 Else {
                     if ($global:WidthHeightFilter -eq 'true') {
                         if ($global:TMDBVoteSorting -eq 'primary') {
-                            $filteredPosters = $response.posters | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
+                            $filteredPosters = $response.posters | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX') -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
 
                             if ($filteredPosters) {
                                 $posterpath = $filteredPosters[0].file_path
@@ -1905,7 +1905,7 @@ function GetTMDBSeasonPoster {
                             }
                         }
                         Else {
-                            $filteredPosters = $response.posters | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
+                            $filteredPosters = $response.posters | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX') -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
 
                             if ($filteredPosters) {
                                 $posterpath = (($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
@@ -1918,10 +1918,10 @@ function GetTMDBSeasonPoster {
                     }
                     Else {
                         if ($global:TMDBVoteSorting -eq 'primary') {
-                            $posterpath = (($response.posters | Where-Object iso_639_1 -eq $null)[0]).file_path
+                            $posterpath = (($response.posters | Where-Object {$_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX'})[0]).file_path
                         }
                         Else {
-                            $posterpath = (($response.posters | Where-Object iso_639_1 -eq $null | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                            $posterpath = (($response.posters | Where-Object {$_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX'} | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
                         }
                     }
                     if ($posterpath) {
@@ -1969,7 +1969,7 @@ function GetTMDBSeasonPoster {
                 foreach ($lang in $global:PreferredSeasonLanguageOrderTMDB) {
                     if ($global:WidthHeightFilter -eq 'true') {
                         if ($lang -eq 'null') {
-                            $FavPoster = ($responseBackup.images.posters | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
+                            $FavPoster = ($responseBackup.images.posters | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX') -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
                         }
                         Else {
                             $FavPoster = ($responseBackup.images.posters | Where-Object { $_.iso_639_1 -eq $lang -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
@@ -1977,7 +1977,7 @@ function GetTMDBSeasonPoster {
                     }
                     Else {
                         if ($lang -eq 'null') {
-                            $FavPoster = ($responseBackup.images.posters | Where-Object iso_639_1 -eq $null)
+                            $FavPoster = ($responseBackup.images.posters | Where-Object {$_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX'})
                         }
                         Else {
                             $FavPoster = ($responseBackup.images.posters | Where-Object iso_639_1 -eq $lang)
@@ -2020,7 +2020,7 @@ function GetTMDBSeasonPoster {
                 foreach ($lang in $global:PreferredSeasonLanguageOrderTMDB) {
                     if ($global:WidthHeightFilter -eq 'true') {
                         if ($lang -eq 'null') {
-                            $FavPoster = ($response.posters | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
+                            $FavPoster = ($response.posters | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX') -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
                         }
                         Else {
                             $FavPoster = ($response.posters | Where-Object { $_.iso_639_1 -eq $lang -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
@@ -2028,7 +2028,7 @@ function GetTMDBSeasonPoster {
                     }
                     Else {
                         if ($lang -eq 'null') {
-                            $FavPoster = ($response.posters | Where-Object iso_639_1 -eq $null)
+                            $FavPoster = ($response.posters | Where-Object {$_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX'})
                         }
                         Else {
                             $FavPoster = ($response.posters | Where-Object iso_639_1 -eq $lang)
@@ -2079,7 +2079,7 @@ function GetTMDBShowBackground {
     }
     if ($global:BackgroundPreferTextless -eq $true) {
         try {
-            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=null&include_image_language=$($global:PreferredBackgroundLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
+            $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)?append_to_response=images&language=xx&include_image_language=$($global:PreferredBackgroundLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
         }
         catch {
             Write-Entry -Subtext "Could not query TMDB url, error message: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
@@ -2090,10 +2090,10 @@ function GetTMDBShowBackground {
         if ($response) {
             if ($response.images.backdrops) {
                 if ($global:WidthHeightFilter -eq 'true') {
-                    $NoLangPoster = ($response.images.backdrops | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
+                    $NoLangPoster = ($response.images.backdrops | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX') -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
                 }
                 Else {
-                    $NoLangPoster = ($response.images.backdrops | Where-Object iso_639_1 -eq $null)
+                    $NoLangPoster = ($response.images.backdrops | Where-Object {$_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX'})
                 }
                 if (!$NoLangPoster) {
                     Write-Entry -Subtext "PreferTextless Value: $global:BackgroundPreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
@@ -2155,7 +2155,7 @@ function GetTMDBShowBackground {
                 Else {
                     if ($global:WidthHeightFilter -eq 'true') {
                         if ($global:TMDBVoteSorting -eq 'primary') {
-                            $filteredPosters = $response.images.backdrops | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
+                            $filteredPosters = $response.images.backdrops | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX') -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
 
                             if ($filteredPosters) {
                                 $posterpath = $filteredPosters[0].file_path
@@ -2166,7 +2166,7 @@ function GetTMDBShowBackground {
                             }
                         }
                         Else {
-                            $filteredPosters = $response.images.backdrops | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
+                            $filteredPosters = $response.images.backdrops | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX') -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
 
                             if ($filteredPosters) {
                                 $posterpath = (($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
@@ -2179,10 +2179,10 @@ function GetTMDBShowBackground {
                     }
                     Else {
                         if ($global:TMDBVoteSorting -eq 'primary') {
-                            $posterpath = (($response.images.backdrops | Where-Object iso_639_1 -eq $null)[0]).file_path
+                            $posterpath = (($response.images.backdrops | Where-Object {$_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX'})[0]).file_path
                         }
                         Else {
-                            $posterpath = (($response.images.backdrops | Where-Object iso_639_1 -eq $null | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                            $posterpath = (($response.images.backdrops | Where-Object {$_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX'} | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
                         }
                     }
                     if ($posterpath) {
@@ -2229,7 +2229,7 @@ function GetTMDBShowBackground {
                 foreach ($lang in $global:PreferredBackgroundLanguageOrderTMDB) {
                     if ($global:WidthHeightFilter -eq 'true') {
                         if ($lang -eq 'null') {
-                            $FavPoster = ($response.images.backdrops | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
+                            $FavPoster = ($response.images.backdrops | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX') -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
                         }
                         Else {
                             $FavPoster = ($response.images.backdrops | Where-Object { $_.iso_639_1 -eq $lang -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
@@ -2237,7 +2237,7 @@ function GetTMDBShowBackground {
                     }
                     Else {
                         if ($lang -eq 'null') {
-                            $FavPoster = ($response.images.backdrops | Where-Object iso_639_1 -eq $null)
+                            $FavPoster = ($response.images.backdrops | Where-Object {$_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX'})
                         }
                         Else {
                             $FavPoster = ($response.images.backdrops | Where-Object iso_639_1 -eq $lang)
@@ -2294,7 +2294,7 @@ function GetTMDBTitleCard {
         Write-Entry -Subtext "Cannot search on TMDB, missing ID..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Warning
     }
     try {
-        $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)/season/$($global:season_number)/episode/$($global:episodenumber)/images?append_to_response=images&language=null&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
+        $response = (Invoke-WebRequest -Uri "https://api.themoviedb.org/3/tv/$($global:tmdbid)/season/$($global:season_number)/episode/$($global:episodenumber)/images?append_to_response=images&language=xx&include_image_language=$($global:PreferredLanguageOrderTMDB -join ',')" -Method GET -Headers $global:headers -ErrorAction SilentlyContinue).content | ConvertFrom-Json -ErrorAction SilentlyContinue
     }
     catch {
         Write-Entry -Subtext "Could not query TMDB url, error message: $($_.Exception.Message)" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
@@ -2304,7 +2304,7 @@ function GetTMDBTitleCard {
     }
     if ($response) {
         if ($response.stills) {
-            $NoLangPoster = ($response.stills | Where-Object iso_639_1 -eq $null)
+            $NoLangPoster = ($response.stills | Where-Object {$_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX'})
             if (!$NoLangPoster) {
                 if ($global:WidthHeightFilter -eq 'true') {
                     if ($global:TMDBVoteSorting -eq 'primary') {
@@ -2357,7 +2357,7 @@ function GetTMDBTitleCard {
             Else {
                 if ($global:WidthHeightFilter -eq 'true') {
                     if ($global:TMDBVoteSorting -eq 'primary') {
-                        $filteredPosters = $response.stills | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight }
+                        $filteredPosters = $response.stills | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX') -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight }
 
                         if ($filteredPosters) {
                             $posterpath = $filteredPosters[0].file_path
@@ -2368,7 +2368,7 @@ function GetTMDBTitleCard {
                         }
                     }
                     Else {
-                        $filteredPosters = $response.stills | Where-Object { $null -eq $_.iso_639_1 -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight }
+                        $filteredPosters = $response.stills | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX') -and $_.width -ge $global:BgTcMinWidth -and $_.height -ge $global:BgTcMinHeight }
 
                         if ($filteredPosters) {
                             $posterpath = (($filteredPosters | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
@@ -2381,10 +2381,10 @@ function GetTMDBTitleCard {
                 }
                 Else {
                     if ($global:TMDBVoteSorting -eq 'primary') {
-                        $posterpath = (($response.stills | Where-Object iso_639_1 -eq $null)[0]).file_path
+                        $posterpath = (($response.stills | Where-Object {$_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX'})[0]).file_path
                     }
                     Else {
-                        $posterpath = (($response.stills | Where-Object iso_639_1 -eq $null | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
+                        $posterpath = (($response.stills | Where-Object {$_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX'} | Sort-Object $global:TMDBVoteSorting -Descending)[0]).file_path
                     }
                 }
                 if ($posterpath) {
