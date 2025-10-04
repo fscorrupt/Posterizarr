@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  posterizarr-webui:
+    build:
+      context: ..
+      dockerfile: webui/Dockerfile
+    container_name: posterizarr-webui
+    ports:
+      - "8000:8000"
+      - "3000:3000"
+    volumes:
+      - ../config.json:/app/config.json
+      - ../Logs:/app/Logs
+      - ../assets:/app/assets
+      - ../temp:/app/temp
+    environment:
+      - TZ=Europe/Berlin
+    restart: unless-stopped

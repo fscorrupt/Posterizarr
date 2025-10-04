@@ -14,3 +14,6 @@ coverage.*
 
 # mounted volumes
 config/
+4k.png
+config.json
+posteroverlay_0.7.png
