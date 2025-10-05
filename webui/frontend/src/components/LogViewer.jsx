@@ -193,7 +193,7 @@ function LogViewer() {
     <div className="px-4 py-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
-        <h1 className="text-3xl font-bold text-purple-400">Logs</h1>
+        <h1 className="text-3xl font-bold text-theme-primary">Logs</h1>
 
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center space-x-2">
@@ -202,7 +202,7 @@ function LogViewer() {
                 connected ? "bg-green-400 animate-pulse" : "bg-red-400"
               }`}
             ></span>
-            <span className="text-sm text-gray-400">
+            <span className="text-sm text-theme-muted">
               {connected ? "Live" : "Disconnected"}
             </span>
           </div>
@@ -212,15 +212,15 @@ function LogViewer() {
               type="checkbox"
               checked={autoScroll}
               onChange={(e) => setAutoScroll(e.target.checked)}
-              className="w-4 h-4 rounded bg-gray-700 border-gray-600"
+              className="w-4 h-4 rounded bg-theme-card border-theme"
             />
-            <span className="text-sm text-gray-300">Auto-scroll</span>
+            <span className="text-sm text-theme-text">Auto-scroll</span>
           </label>
 
           <button
             onClick={fetchAvailableLogs}
             disabled={isRefreshing}
-            className="px-3 py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed rounded text-sm flex items-center gap-2 transition-colors"
+            className="px-3 py-2 bg-theme-card hover:bg-theme-hover border border-theme disabled:opacity-50 disabled:cursor-not-allowed rounded text-sm flex items-center gap-2 transition-colors"
           >
             <RefreshCw
               className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`}
@@ -254,7 +254,7 @@ function LogViewer() {
             setSelectedLog(e.target.value);
             fetchLogFile(e.target.value);
           }}
-          className="px-4 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm"
+          className="px-4 py-2 bg-theme-card border border-theme rounded text-white text-sm"
         >
           {availableLogs.map((log) => (
             <option key={log.name} value={log.name}>
@@ -265,7 +265,7 @@ function LogViewer() {
       </div>
 
       {/* Compact Terminal-Style Log Container */}
-      <div className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+      <div className="bg-theme-card rounded-lg border border-theme overflow-hidden">
         <div
           ref={logContainerRef}
           className="h-[700px] overflow-y-auto bg-black p-2"

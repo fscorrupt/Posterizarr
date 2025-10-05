@@ -110,12 +110,14 @@ function Gallery() {
       <Toaster />
 
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 space-y-4 md:space-y-0">
-        <h1 className="text-3xl font-bold text-purple-400">Poster Gallery</h1>
+        <h1 className="text-3xl font-bold text-theme-primary">
+          Poster Gallery
+        </h1>
 
         <button
           onClick={() => fetchImages(true)}
           disabled={loading}
-          className="flex items-center px-4 py-2 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-colors"
+          className="flex items-center px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-colors"
         >
           <RefreshCw
             className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`}
@@ -134,7 +136,7 @@ function Gallery() {
               placeholder="Search posters..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full pl-10 pr-4 py-3 bg-theme-card border border-theme rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
             />
           </div>
         </div>
@@ -142,7 +144,7 @@ function Gallery() {
 
       {loading ? (
         <div className="flex items-center justify-center py-32">
-          <RefreshCw className="w-12 h-12 animate-spin text-purple-400" />
+          <RefreshCw className="w-12 h-12 animate-spin text-theme-primary" />
         </div>
       ) : error ? (
         <div className="bg-red-900/30 border border-red-700 rounded-lg p-6 text-center">
@@ -159,12 +161,12 @@ function Gallery() {
           </button>
         </div>
       ) : filteredImages.length === 0 ? (
-        <div className="bg-gray-800 border border-gray-700 rounded-lg p-12 text-center">
+        <div className="bg-theme-card border border-theme rounded-lg p-12 text-center">
           <ImageIcon className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-gray-400 mb-2">
+          <h3 className="text-xl font-semibold text-theme-muted mb-2">
             {searchTerm ? "No Matching Posters" : "No Posters Found"}
           </h3>
-          <p className="text-gray-500 text-sm">
+          <p className="text-theme-muted text-sm">
             {searchTerm
               ? "Try adjusting your search terms"
               : "Posters will appear here after running Posterizarr"}
@@ -172,7 +174,7 @@ function Gallery() {
         </div>
       ) : (
         <>
-          <div className="mb-4 text-sm text-gray-400">
+          <div className="mb-4 text-sm text-theme-muted">
             Showing {filteredImages.length} of {images.length} posters
           </div>
 
@@ -180,7 +182,7 @@ function Gallery() {
             {filteredImages.map((image, index) => (
               <div
                 key={index}
-                className="group relative bg-gray-800 rounded-lg overflow-hidden border border-gray-700 hover:border-purple-500 transition-all cursor-pointer"
+                className="group relative bg-theme-card rounded-lg overflow-hidden border border-theme hover:border-theme-primary transition-all cursor-pointer"
               >
                 {/* Delete Button */}
                 <button
@@ -202,7 +204,7 @@ function Gallery() {
                 </button>
 
                 <div
-                  className="aspect-[2/3] bg-gray-900 flex items-center justify-center overflow-hidden"
+                  className="aspect-[2/3] bg-theme-dark flex items-center justify-center overflow-hidden"
                   onClick={() => setSelectedImage(image)}
                 >
                   <img
@@ -225,14 +227,14 @@ function Gallery() {
                     </span>
                   </div>
                 </div>
-                <div className="p-3 border-t border-gray-700">
+                <div className="p-3 border-t border-theme">
                   <p
-                    className="text-sm text-gray-300 truncate"
+                    className="text-sm text-theme-text truncate"
                     title={image.name}
                   >
                     {image.name}
                   </p>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-theme-muted mt-1">
                     {(image.size / 1024).toFixed(2)} KB
                   </p>
                 </div>
@@ -249,10 +251,10 @@ function Gallery() {
           onClick={() => setSelectedImage(null)}
         >
           <div
-            className="bg-gray-800 rounded-lg max-w-6xl w-full overflow-hidden"
+            className="bg-theme-card rounded-lg max-w-6xl w-full overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-4 border-b border-gray-700 flex justify-between items-center">
+            <div className="p-4 border-b border-theme flex justify-between items-center">
               <h3 className="text-lg font-semibold text-white">
                 {selectedImage.name}
               </h3>
@@ -298,13 +300,13 @@ function Gallery() {
                 </div>
               </div>
             </div>
-            <div className="p-4 border-t border-gray-700 flex justify-between items-center">
-              <span className="text-sm text-gray-400">
+            <div className="p-4 border-t border-theme flex justify-between items-center">
+              <span className="text-sm text-theme-muted">
                 Größe: {(selectedImage.size / 1024).toFixed(2)} KB
               </span>
               <button
                 onClick={() => setSelectedImage(null)}
-                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg text-sm font-medium transition-colors"
+                className="px-4 py-2 bg-theme-primary hover:bg-theme-primary-hover rounded-lg text-sm font-medium transition-colors text-white"
               >
                 Schließen
               </button>

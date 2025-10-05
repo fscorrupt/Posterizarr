@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -6,6 +6,7 @@ import {
   Link,
   useLocation,
 } from "react-router-dom";
+import { ThemeProvider, useTheme } from "./context/ThemeContext";
 import ConfigEditor from "./components/ConfigEditor";
 import LogViewer from "./components/LogViewer";
 import Dashboard from "./components/Dashboard";
@@ -18,7 +19,64 @@ import {
   FileText,
   Activity,
   TestTube,
+  Palette,
 } from "lucide-react";
+
+function ThemeSwitcher() {
+  const { theme, setTheme, themes } = useTheme();
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center px-3 py-2 rounded-md text-sm font-medium text-gray-300 hover:bg-theme-hover hover:text-white transition-colors"
+        title="Change Theme"
+      >
+        <Palette className="w-4 h-4" />
+      </button>
+
+      {isOpen && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 z-40"
+            onClick={() => setIsOpen(false)}
+          />
+
+          {/* Dropdown */}
+          <div className="absolute right-0 mt-2 w-48 rounded-lg bg-theme-card border border-theme shadow-lg z-50">
+            <div className="p-2">
+              <div className="px-3 py-2 text-xs font-semibold text-theme-muted uppercase tracking-wider">
+                Select Theme
+              </div>
+              {themes.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => {
+                    setTheme(t.id);
+                    setIsOpen(false);
+                  }}
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors ${
+                    theme === t.id
+                      ? "bg-theme-primary text-white"
+                      : "text-theme-text hover:bg-theme-hover"
+                  }`}
+                >
+                  <span>{t.name}</span>
+                  <span
+                    className="w-4 h-4 rounded-full border-2 border-white/30"
+                    style={{ backgroundColor: t.color }}
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
 
 function Navigation() {
   const location = useLocation();
@@ -26,7 +84,6 @@ function Navigation() {
 
   const navItems = [
     { path: "/", icon: Activity, label: "Dashboard" },
-
     { path: "/test-gallery", icon: TestTube, label: "Test Poster" },
     { path: "/gallery", icon: Image, label: "Poster Gallery" },
     { path: "/config", icon: Settings, label: "Configuration" },
@@ -34,12 +91,12 @@ function Navigation() {
   ];
 
   return (
-    <nav className="bg-gray-800 border-b border-gray-700">
+    <nav className="bg-theme-card border-b border-theme">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <h1 className="text-2xl font-bold text-purple-400">
+              <h1 className="text-2xl font-bold text-theme-primary">
                 Posterizarr
               </h1>
             </div>
@@ -54,8 +111,8 @@ function Navigation() {
                       to={item.path}
                       className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                         isActive
-                          ? "bg-gray-900 text-white"
-                          : "text-gray-300 hover:bg-gray-700 hover:text-white"
+                          ? "bg-theme-primary text-white"
+                          : "text-gray-300 hover:bg-theme-hover hover:text-white"
                       }`}
                     >
                       <Icon className="w-4 h-4 mr-2" />
@@ -66,6 +123,13 @@ function Navigation() {
               </div>
             </div>
           </div>
+
+          {/* Desktop Theme Switcher */}
+          <div className="hidden md:flex items-center">
+            <ThemeSwitcher />
+          </div>
+
+          {/* Mobile menu button */}
           <div className="md:hidden">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -77,8 +141,9 @@ function Navigation() {
         </div>
       </div>
 
+      {/* Mobile menu */}
       {mobileMenuOpen && (
-        <div className="md:hidden">
+        <div className="md:hidden bg-theme-card border-t border-theme">
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             {navItems.map((item) => {
               const Icon = item.icon;
@@ -90,8 +155,8 @@ function Navigation() {
                   onClick={() => setMobileMenuOpen(false)}
                   className={`flex items-center px-3 py-2 rounded-md text-base font-medium ${
                     isActive
-                      ? "bg-gray-900 text-white"
-                      : "text-gray-300 hover:bg-gray-700 hover:text-white"
+                      ? "bg-theme-primary text-white"
+                      : "text-gray-300 hover:bg-theme-hover hover:text-white"
                   }`}
                 >
                   <Icon className="w-5 h-5 mr-3" />
@@ -100,28 +165,43 @@ function Navigation() {
               );
             })}
           </div>
+
+          {/* Mobile Theme Switcher */}
+          <div className="px-2 pb-3 border-t border-theme">
+            <div className="pt-3">
+              <ThemeSwitcher />
+            </div>
+          </div>
         </div>
       )}
     </nav>
   );
 }
 
+function AppContent() {
+  return (
+    <div className="min-h-screen bg-theme-dark text-theme-text">
+      <Navigation />
+      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+        <Routes>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/test-gallery" element={<TestGallery />} />
+          <Route path="/gallery" element={<Gallery />} />
+          <Route path="/config" element={<ConfigEditor />} />
+          <Route path="/logs" element={<LogViewer />} />
+        </Routes>
+      </main>
+    </div>
+  );
+}
+
 function App() {
   return (
-    <Router>
-      <div className="min-h-screen bg-gray-900 text-gray-100">
-        <Navigation />
-        <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/test-gallery" element={<TestGallery />} />
-            <Route path="/gallery" element={<Gallery />} />
-            <Route path="/config" element={<ConfigEditor />} />
-            <Route path="/logs" element={<LogViewer />} />
-          </Routes>
-        </main>
-      </div>
-    </Router>
+    <ThemeProvider>
+      <Router>
+        <AppContent />
+      </Router>
+    </ThemeProvider>
   );
 }
 

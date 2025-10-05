@@ -2,6 +2,66 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ========================================
+   THEME CSS VARIABLES
+   ======================================== */
+
+:root {
+  /* Default Theme (Plex) */
+  --theme-primary: #e5a00d;
+  --theme-primary-hover: #cc8f0c;
+  --theme-accent: #282a2d;
+  --theme-bg-dark: #000000;
+  --theme-bg-card: #1a1a1a;
+  --theme-bg-hover: #2a2a2a;
+  --theme-border: #3a3a3a;
+  --theme-text: #f5f5f5;
+  --theme-text-muted: #a0a0a0;
+}
+
+/* Jellyfin Theme */
+[data-theme="jellyfin"] {
+  --theme-primary: #00a4dc;
+  --theme-primary-hover: #0091c2;
+  --theme-accent: #aa5cc3;
+  --theme-bg-dark: #0b0b0f;
+  --theme-bg-card: #1a1a24;
+  --theme-bg-hover: #252535;
+  --theme-border: #2a2a3a;
+  --theme-text: #e5f6fb;
+  --theme-text-muted: #8ca7b3;
+}
+
+/* Emby Theme */
+[data-theme="emby"] {
+  --theme-primary: #52b54b;
+  --theme-primary-hover: #469d40;
+  --theme-accent: #2c3e50;
+  --theme-bg-dark: #1c1c1c;
+  --theme-bg-card: #252525;
+  --theme-bg-hover: #2f2f2f;
+  --theme-border: #3a3a3a;
+  --theme-text: #ecf0f1;
+  --theme-text-muted: #95a5a6;
+}
+
+/* Plex Theme (explicit) */
+[data-theme="plex"] {
+  --theme-primary: #e5a00d;
+  --theme-primary-hover: #cc8f0c;
+  --theme-accent: #282a2d;
+  --theme-bg-dark: #000000;
+  --theme-bg-card: #1a1a1a;
+  --theme-bg-hover: #2a2a2a;
+  --theme-border: #3a3a3a;
+  --theme-text: #f5f5f5;
+  --theme-text-muted: #a0a0a0;
+}
+
+/* ========================================
+   BASE STYLES
+   ======================================== */
+
 * {
   margin: 0;
   padding: 0;
@@ -9,33 +69,82 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: var(--theme-bg-dark);
+  color: var(--theme-text);
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New",
     monospace;
 }
 
-/* Custom scrollbar */
+/* ========================================
+   CUSTOM SCROLLBAR
+   ======================================== */
+
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #1f2937;
+  background: var(--theme-bg-card);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #4b5563;
+  background: var(--theme-border);
   border-radius: 5px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #6b7280;
+  background: var(--theme-bg-hover);
+}
+
+/* ========================================
+   THEME UTILITY CLASSES
+   ======================================== */
+
+.bg-theme-dark {
+  background-color: var(--theme-bg-dark);
+}
+
+.bg-theme-card {
+  background-color: var(--theme-bg-card);
+}
+
+.bg-theme-hover:hover {
+  background-color: var(--theme-bg-hover);
+}
+
+.border-theme {
+  border-color: var(--theme-border);
+}
+
+.text-theme-primary {
+  color: var(--theme-primary);
+}
+
+.text-theme-muted {
+  color: var(--theme-text-muted);
+}
+
+.bg-theme-primary {
+  background-color: var(--theme-primary);
+}
+
+.bg-theme-primary:hover {
+  background-color: var(--theme-primary-hover);
+}
+
+.border-theme-primary {
+  border-color: var(--theme-primary);
+}
+
+.border-theme-primary:hover {
+  border-color: var(--theme-primary-hover);
 }

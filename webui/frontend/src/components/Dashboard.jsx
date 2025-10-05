@@ -37,7 +37,6 @@ function Dashboard() {
     } catch (error) {
       console.error("Error fetching status:", error);
     } finally {
-      // ✅ Kurze Verzögerung damit die Animation sichtbar ist
       setTimeout(() => setIsRefreshing(false), 500);
     }
   };
@@ -149,25 +148,44 @@ function Dashboard() {
   const deleteRunningFile = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/delete-running`, {
-        method: "POST",
+      // ✅ KORRIGIERT: Verwende DELETE-Methode und den richtigen Endpoint
+      const response = await fetch(`${API_URL}/running-file`, {
+        method: "DELETE",
       });
+
+      if (!response.ok) {
+        let errorMessage = `HTTP Error ${response.status}: ${response.statusText}`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.detail || errorData.message || errorMessage;
+        } catch {
+          // JSON-Parsing fehlgeschlagen
+        }
+
+        toast.error(errorMessage, {
+          duration: 5000,
+          position: "top-right",
+        });
+        return;
+      }
+
       const data = await response.json();
 
       if (data.success) {
-        toast.success(data.message, {
+        toast.success(data.message || "Running file deleted successfully", {
           duration: 3000,
           position: "top-right",
         });
       } else {
-        toast.error(data.message, {
+        toast.error(data.message || "Failed to delete running file", {
           duration: 4000,
           position: "top-right",
         });
       }
       fetchStatus();
     } catch (error) {
-      toast.error(`Error: ${error.message}`, {
+      console.error("Delete running file error:", error);
+      toast.error(`Error deleting running file: ${error.message}`, {
         duration: 5000,
         position: "top-right",
       });
@@ -176,14 +194,11 @@ function Dashboard() {
     }
   };
 
-  // ✅ PERFEKT: Entfernt nur NULL-Bytes, behält alle Leerzeichen
   const parseLogLine = (line) => {
-    // Entferne nur NULL-Bytes (\x00) und trim die Zeile
     const cleanedLine = line.replace(/\x00/g, "").trim();
 
-    // Prüfe ob die Zeile leer ist
     if (!cleanedLine) {
-      return { raw: null }; // Ignoriere leere Zeilen
+      return { raw: null };
     }
 
     const logPattern = /^\[([^\]]+)\]\s*\[([^\]]+)\]\s*\|L\.(\d+)\s*\|\s*(.*)$/;
@@ -200,7 +215,6 @@ function Dashboard() {
     return { raw: cleanedLine };
   };
 
-  // ✅ Farbige Log-Level mit passender Message-Farbe
   const LogLevel = ({ level }) => {
     const levelLower = (level || "").toLowerCase().trim();
 
@@ -219,7 +233,6 @@ function Dashboard() {
     return <span style={{ color: color, fontWeight: "bold" }}>[{level}]</span>;
   };
 
-  // ✅ Farbe für die ganze Log-Zeile basierend auf Level
   const getLogColor = (level) => {
     const levelLower = (level || "").toLowerCase().trim();
 
@@ -240,7 +253,7 @@ function Dashboard() {
     <div className="px-4 py-6">
       <Toaster />
 
-      <h1 className="text-3xl font-bold mb-8 text-purple-400">Dashboard</h1>
+      <h1 className="text-3xl font-bold mb-8 text-theme-primary">Dashboard</h1>
 
       {status.already_running_detected && (
         <div className="mb-6 bg-yellow-900/30 border-2 border-yellow-600/50 rounded-lg p-4">
@@ -256,7 +269,8 @@ function Dashboard() {
               </p>
               <button
                 onClick={deleteRunningFile}
-                className="flex items-center px-4 py-2 bg-yellow-600 hover:bg-yellow-700 rounded-lg font-medium transition-colors text-sm"
+                disabled={loading}
+                className="flex items-center px-4 py-2 bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-colors text-sm"
               >
                 <Trash2 className="w-4 h-4 mr-2" />
                 Delete Running File
@@ -268,19 +282,21 @@ function Dashboard() {
 
       {/* Status Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+        <div className="bg-theme-card rounded-lg p-6 border border-theme">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-400 text-sm">Script Status</p>
+              <p className="text-theme-muted text-sm">Script Status</p>
               <p
                 className={`text-2xl font-bold ${
-                  status.running ? "text-green-400" : "text-gray-300"
+                  status.running ? "text-green-400" : "text-theme-text"
                 }`}
               >
                 {status.running ? "Running" : "Stopped"}
               </p>
               {status.running && status.pid && (
-                <p className="text-sm text-gray-500 mt-1">PID: {status.pid}</p>
+                <p className="text-sm text-theme-muted mt-1">
+                  PID: {status.pid}
+                </p>
               )}
             </div>
             {status.running ? (
@@ -291,10 +307,10 @@ function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+        <div className="bg-theme-card rounded-lg p-6 border border-theme">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-400 text-sm">Script File</p>
+              <p className="text-theme-muted text-sm">Script File</p>
               <p
                 className={`text-2xl font-bold ${
                   status.script_exists ? "text-green-400" : "text-red-400"
@@ -311,10 +327,10 @@ function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+        <div className="bg-theme-card rounded-lg p-6 border border-theme">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-400 text-sm">Config File</p>
+              <p className="text-theme-muted text-sm">Config File</p>
               <p
                 className={`text-2xl font-bold ${
                   status.config_exists ? "text-green-400" : "text-red-400"
@@ -333,8 +349,8 @@ function Dashboard() {
       </div>
 
       {/* Control Buttons */}
-      <div className="bg-gray-800 rounded-lg p-6 border border-gray-700 mb-8">
-        <h2 className="text-xl font-semibold mb-4 text-purple-400">
+      <div className="bg-theme-card rounded-lg p-6 border border-theme mb-8">
+        <h2 className="text-xl font-semibold mb-4 text-theme-primary">
           Script Controls
         </h2>
 
@@ -407,15 +423,15 @@ function Dashboard() {
       </div>
 
       {/* Log Viewer */}
-      <div className="bg-gray-800 rounded-lg p-6 border border-gray-700">
+      <div className="bg-theme-card rounded-lg p-6 border border-theme">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-purple-400">
+          <h2 className="text-xl font-semibold text-theme-primary">
             Last Log Entries
           </h2>
           <button
             onClick={fetchStatus}
             disabled={isRefreshing}
-            className="text-gray-400 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="text-theme-muted hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <RefreshCw
               className={`w-5 h-5 ${isRefreshing ? "animate-spin" : ""}`}
@@ -429,7 +445,6 @@ function Dashboard() {
               {status.last_logs.map((line, index) => {
                 const parsed = parseLogLine(line);
 
-                // Ignoriere leere Zeilen
                 if (parsed.raw === null) {
                   return null;
                 }

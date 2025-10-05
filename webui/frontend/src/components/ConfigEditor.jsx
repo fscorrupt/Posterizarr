@@ -112,13 +112,13 @@ function ConfigEditor() {
             onChange={(e) =>
               updateValue(section, key, e.target.checked ? "true" : "false")
             }
-            className="w-5 h-5 rounded bg-gray-700 border-gray-600 text-purple-600 focus:ring-purple-500"
+            className="w-5 h-5 rounded bg-theme-card border-theme text-purple-600 focus:ring-purple-500"
           />
           <span
             className={
               value === "true" || value === true
                 ? "text-green-400"
-                : "text-gray-400"
+                : "text-theme-muted"
             }
           >
             {value === "true" || value === true ? "Enabled" : "Disabled"}
@@ -139,7 +139,7 @@ function ConfigEditor() {
               e.target.value.split(",").map((v) => v.trim())
             )
           }
-          className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+          className="w-full px-3 py-2 bg-theme-card border border-theme rounded-md text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
           placeholder="Comma-separated values"
         />
       );
@@ -188,7 +188,7 @@ function ConfigEditor() {
               updateValue(section, key, "0");
             }
           }}
-          className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-purple-500 font-mono"
+          className="w-full px-3 py-2 bg-theme-card border border-theme rounded-md text-white focus:outline-none focus:ring-2 focus:ring-purple-500 font-mono"
           placeholder="e.g., +400, -50, 100"
         />
       );
@@ -210,7 +210,7 @@ function ConfigEditor() {
           value={stringValue}
           onChange={(e) => updateValue(section, key, e.target.value)}
           rows={2}
-          className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-purple-500 font-mono text-sm resize-y"
+          className="w-full px-3 py-2 bg-theme-card border border-theme rounded-md text-white focus:outline-none focus:ring-2 focus:ring-purple-500 font-mono text-sm resize-y"
         />
       );
     }
@@ -221,7 +221,7 @@ function ConfigEditor() {
         type="text"
         value={stringValue}
         onChange={(e) => updateValue(section, key, e.target.value)}
-        className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+        className="w-full px-3 py-2 bg-theme-card border border-theme rounded-md text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
         placeholder={
           keyLower.includes("color") ? "e.g., white, black, #FF0000" : ""
         }
@@ -232,7 +232,7 @@ function ConfigEditor() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <RefreshCw className="w-8 h-8 animate-spin text-purple-400" />
+        <RefreshCw className="w-8 h-8 animate-spin text-theme-primary" />
       </div>
     );
   }
@@ -257,11 +257,11 @@ function ConfigEditor() {
       <Toaster />
 
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold text-purple-400">Configuration</h1>
+        <h1 className="text-3xl font-bold text-theme-primary">Configuration</h1>
         <div className="flex space-x-3">
           <button
             onClick={fetchConfig}
-            className="flex items-center px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg font-medium transition-colors"
+            className="flex items-center px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme rounded-lg font-medium transition-colors"
           >
             <RefreshCw className="w-4 h-4 mr-2" />
             Reload
@@ -269,7 +269,7 @@ function ConfigEditor() {
           <button
             onClick={saveConfig}
             disabled={saving}
-            className="flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-colors"
+            className="flex items-center px-4 py-2 bg-theme-primary hover:bg-theme-primary-hover disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-colors text-white"
           >
             <Save className="w-4 h-4 mr-2" />
             {saving ? "Saving..." : "Save Config"}
@@ -282,29 +282,29 @@ function ConfigEditor() {
           Object.entries(config).map(([section, values]) => (
             <div
               key={section}
-              className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden"
+              className="bg-theme-card rounded-lg border border-theme overflow-hidden"
             >
               <button
                 onClick={() => toggleSection(section)}
-                className="w-full px-6 py-4 flex items-center justify-between hover:bg-gray-750 transition-colors"
+                className="w-full px-6 py-4 flex items-center justify-between hover:bg-theme-hover transition-colors"
               >
-                <h2 className="text-xl font-semibold text-purple-400">
+                <h2 className="text-xl font-semibold text-theme-primary">
                   {section}
                 </h2>
-                <span className="text-gray-400">
+                <span className="text-theme-muted">
                   {expandedSections[section] ? "−" : "+"}
                 </span>
               </button>
 
               {expandedSections[section] && (
-                <div className="px-6 py-4 border-t border-gray-700 space-y-4">
+                <div className="px-6 py-4 border-t border-theme space-y-4">
                   {typeof values === "object" && !Array.isArray(values) ? (
                     Object.entries(values).map(([key, value]) => (
                       <div
                         key={key}
                         className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start"
                       >
-                        <label className="text-sm font-medium text-gray-300 md:col-span-1 pt-2">
+                        <label className="text-sm font-medium text-theme-text md:col-span-1 pt-2">
                           {key}
                         </label>
                         <div className="md:col-span-2">
@@ -313,7 +313,7 @@ function ConfigEditor() {
                       </div>
                     ))
                   ) : (
-                    <div className="text-gray-400">
+                    <div className="text-theme-muted">
                       {JSON.stringify(values)}
                     </div>
                   )}
