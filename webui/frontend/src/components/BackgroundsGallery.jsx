@@ -108,6 +108,15 @@ function BackgroundsGallery() {
     }
   };
 
+  // Format path to remove folder prefix
+  const formatDisplayPath = (path) => {
+    const parts = path.split(/[\\/]/);
+    if (parts.length > 1) {
+      return parts.slice(1).join("/");
+    }
+    return path;
+  };
+
   const fetchStatus = async () => {
     try {
       const response = await fetch(`${API_URL}/status`);
@@ -315,7 +324,8 @@ function BackgroundsGallery() {
         )}
 
         {folders.length > 0 && (
-          <div className="bg-theme-card rounded-lg p-2 border border-theme-primary overflow-x-auto">
+          <div className="">
+            <h3 className="text-m font-semibold text-theme-muted mb-3"></h3>
             <div className="flex gap-2 min-w-max">
               {folders
                 .filter((folder) => folder.background_count > 0)
@@ -452,9 +462,9 @@ function BackgroundsGallery() {
                 <div className="p-3 border-t-2 border-theme">
                   <p
                     className="text-sm text-theme-text truncate"
-                    title={image.path}
+                    title={formatDisplayPath(image.path)}
                   >
-                    {image.path}
+                    {formatDisplayPath(image.path)}
                   </p>
                   <p className="text-xs text-theme-muted mt-1">
                     {(image.size / 1024).toFixed(2)} KB
@@ -490,9 +500,9 @@ function BackgroundsGallery() {
             <div className="p-4 border-b-2 border-theme flex justify-between items-center">
               <h3
                 className="text-lg font-semibold text-white truncate mr-4"
-                title={selectedImage.path}
+                title={formatDisplayPath(selectedImage.path)}
               >
-                {selectedImage.path}
+                {formatDisplayPath(selectedImage.path)}
               </h3>
               <button
                 onClick={(e) =>
