@@ -35,6 +35,8 @@ function Dashboard() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [resetLibrary, setResetLibrary] = useState("");
   const [showManualModal, setShowManualModal] = useState(false);
+  const [showJellyfinSyncModal, setShowJellyfinSyncModal] = useState(false);
+  const [showEmbySyncModal, setShowEmbySyncModal] = useState(false);
 
   const fetchStatus = async () => {
     setIsRefreshing(true);
@@ -315,7 +317,7 @@ function Dashboard() {
       <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
         <div className="bg-theme-card border-2 border-theme-primary rounded-xl max-w-2xl w-full shadow-2xl animate-in fade-in duration-200">
           {/* Header */}
-          <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-4 rounded-t-xl flex items-center justify-between">
+          <div className="bg-gradient-to-r from-theme-primary to-theme-primary/80 px-6 py-4 rounded-t-xl flex items-center justify-between">
             <div className="flex items-center">
               <Settings className="w-6 h-6 mr-3 text-white" />
               <h3 className="text-xl font-bold text-white">
@@ -332,8 +334,8 @@ function Dashboard() {
 
           {/* Content */}
           <div className="p-6 space-y-4">
-            <div className="bg-purple-900/20 border-l-4 border-purple-500 p-4 rounded">
-              <p className="text-purple-200 font-medium mb-2">
+            <div className="bg-orange-900/20 border-l-4 border-orange-500 p-4 rounded">
+              <p className="text-orange-200 font-medium mb-2">
                 📁 Manual Mode allows you to process specific posters from a
                 custom directory.
               </p>
@@ -346,7 +348,7 @@ function Dashboard() {
 
               <ol className="space-y-3 text-theme-text">
                 <li className="flex">
-                  <span className="bg-purple-600 text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0 text-sm font-bold">
+                  <span className="bg-theme-primary text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0 text-sm font-bold">
                     1
                   </span>
                   <div>
@@ -354,28 +356,28 @@ function Dashboard() {
                       Set ManualAssetPath
                     </strong>{" "}
                     in your config.json
-                    <code className="block mt-1 bg-theme-bg p-2 rounded text-sm font-mono text-purple-300 border border-theme">
+                    <code className="block mt-1 bg-theme-bg p-2 rounded text-sm font-mono text-theme-text border border-theme">
                       "ManualAssetPath": "/path/to/your/manual/assets"
                     </code>
                   </div>
                 </li>
 
                 <li className="flex">
-                  <span className="bg-purple-600 text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0 text-sm font-bold">
+                  <span className="bg-theme-primary text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0 text-sm font-bold">
                     2
                   </span>
                   <div>
                     <strong className="text-theme-primary">
                       Create folder structure
                     </strong>
-                    <code className="block mt-1 bg-theme-bg p-2 rounded text-sm font-mono text-purple-300 border border-theme">
+                    <code className="block mt-1 bg-theme-bg p-2 rounded text-sm font-mono text-theme-text border border-theme">
                       ManualAssetPath/Movies/Movie Name (Year)/poster.ext
                     </code>
                   </div>
                 </li>
 
                 <li className="flex">
-                  <span className="bg-purple-600 text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0 text-sm font-bold">
+                  <span className="bg-theme-primary text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0 text-sm font-bold">
                     3
                   </span>
                   <div>
@@ -387,11 +389,11 @@ function Dashboard() {
                 </li>
               </ol>
 
-              <div className="bg-theme-bg border-2 border-purple-500/50 rounded-lg p-4 mt-4">
+              <div className="bg-theme-bg border-2 border-theme-primary/50 rounded-lg p-4 mt-4">
                 <p className="text-sm text-theme-muted mb-2 font-semibold">
                   PowerShell Command:
                 </p>
-                <code className="block bg-black/40 p-3 rounded font-mono text-sm text-purple-300 border border-purple-500/30">
+                <code className="block bg-black/40 p-3 rounded font-mono text-sm text-theme-text border border-theme-primary/30">
                   pwsh -File /path/to/Posterizarr.ps1 -Manual
                 </code>
               </div>
@@ -410,7 +412,7 @@ function Dashboard() {
                 href="https://github.com/fscorrupt/Posterizarr?tab=readme-ov-file#manual-mode-interactive"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg font-medium transition-colors text-white"
+                className="flex items-center justify-center px-6 py-3 bg-theme-primary hover:bg-theme-primary/90 rounded-lg font-medium transition-colors text-white"
               >
                 <ExternalLink className="w-5 h-5 mr-2" />
                 View Full Documentation
@@ -432,10 +434,296 @@ function Dashboard() {
     );
   };
 
+  // Jellyfin Sync Modal Component
+  const JellyfinSyncModal = () => {
+    if (!showJellyfinSyncModal) return null;
+
+    const startJellyfinSync = () => {
+      setShowJellyfinSyncModal(false);
+      runScript("syncjelly");
+    };
+
+    return (
+      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="bg-theme-card border-2 border-theme-primary rounded-xl max-w-2xl w-full shadow-2xl animate-in fade-in duration-200">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-orange-600 to-orange-700 px-6 py-4 rounded-t-xl flex items-center justify-between">
+            <div className="flex items-center">
+              <Cloud className="w-6 h-6 mr-3 text-white" />
+              <h3 className="text-xl font-bold text-white">
+                Jellyfin Sync Mode
+              </h3>
+            </div>
+            <button
+              onClick={() => setShowJellyfinSyncModal(false)}
+              className="text-white/80 hover:text-white transition-colors p-1 hover:bg-white/10 rounded"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+
+          {/* Content */}
+          <div className="p-6 space-y-4">
+            <div className="bg-orange-900/20 border-l-4 border-orange-500 p-4 rounded">
+              <p className="text-orange-200 font-medium mb-2">
+                🔄 Sync all artwork from Plex to Jellyfin
+              </p>
+              <p className="text-orange-100 text-sm">
+                This mode will synchronize every artwork you have in Plex to
+                your Jellyfin server.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <h4 className="font-semibold text-theme-primary text-lg">
+                How Jellyfin Sync works:
+              </h4>
+
+              <ul className="space-y-3 text-theme-text">
+                <li className="flex">
+                  <span className="bg-orange-600 text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0 text-sm font-bold">
+                    1
+                  </span>
+                  <div>
+                    <strong className="text-theme-primary">
+                      Library Names Must Match
+                    </strong>
+                    <p className="text-sm text-theme-muted mt-1">
+                      The script requires that library names in Plex and
+                      Jellyfin match exactly for the sync to work.
+                    </p>
+                  </div>
+                </li>
+
+                <li className="flex">
+                  <span className="bg-orange-600 text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0 text-sm font-bold">
+                    2
+                  </span>
+                  <div>
+                    <strong className="text-theme-primary">
+                      Hash Calculation
+                    </strong>
+                    <p className="text-sm text-theme-muted mt-1">
+                      The script calculates the hash of artwork from both
+                      servers to determine if there are differences.
+                    </p>
+                  </div>
+                </li>
+
+                <li className="flex">
+                  <span className="bg-orange-600 text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0 text-sm font-bold">
+                    3
+                  </span>
+                  <div>
+                    <strong className="text-theme-primary">Smart Sync</strong>
+                    <p className="text-sm text-theme-muted mt-1">
+                      Only syncs artwork if the hashes don't match, saving time
+                      and bandwidth.
+                    </p>
+                  </div>
+                </li>
+              </ul>
+
+              <div className="bg-blue-900/20 border-l-4 border-blue-500 p-4 rounded mt-4">
+                <p className="text-blue-200 text-sm">
+                  💡 <strong>Tip:</strong> This is handy if you want to run the
+                  sync after a Kometa run, so you have Kometa overlayed images
+                  in Jellyfin.
+                </p>
+              </div>
+
+              <div className="bg-yellow-900/20 border-l-4 border-yellow-500 p-4 rounded mt-4">
+                <p className="text-yellow-200 text-sm">
+                  ⚠️ <strong>Important:</strong> Make sure both UseJellyfin and
+                  UsePlex are set to true in your config.json, and that library
+                  names match exactly.
+                </p>
+              </div>
+            </div>
+
+            {/* Documentation Link */}
+            <div className="pt-4 border-t-2 border-theme">
+              <a
+                href="https://github.com/fscorrupt/Posterizarr?tab=readme-ov-file#sync-modes"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center px-6 py-3 bg-theme-bg hover:bg-theme-hover border border-theme rounded-lg font-medium transition-colors text-theme-text"
+              >
+                <ExternalLink className="w-5 h-5 mr-2" />
+                View Full Documentation
+              </a>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="bg-theme-bg px-6 py-4 rounded-b-xl flex justify-between">
+            <button
+              onClick={() => setShowJellyfinSyncModal(false)}
+              className="px-6 py-2 bg-theme-card hover:bg-theme-hover border border-theme rounded-lg font-medium transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={startJellyfinSync}
+              disabled={loading || status.running}
+              className="px-6 py-2 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-colors text-white flex items-center"
+            >
+              <Cloud className="w-5 h-5 mr-2" />
+              Start Jellyfin Sync
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Emby Sync Modal Component
+  const EmbySyncModal = () => {
+    if (!showEmbySyncModal) return null;
+
+    const startEmbySync = () => {
+      setShowEmbySyncModal(false);
+      runScript("syncemby");
+    };
+
+    return (
+      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="bg-theme-card border-2 border-theme-primary rounded-xl max-w-2xl w-full shadow-2xl animate-in fade-in duration-200">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-teal-600 to-teal-700 px-6 py-4 rounded-t-xl flex items-center justify-between">
+            <div className="flex items-center">
+              <Cloud className="w-6 h-6 mr-3 text-white" />
+              <h3 className="text-xl font-bold text-white">Emby Sync Mode</h3>
+            </div>
+            <button
+              onClick={() => setShowEmbySyncModal(false)}
+              className="text-white/80 hover:text-white transition-colors p-1 hover:bg-white/10 rounded"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+
+          {/* Content */}
+          <div className="p-6 space-y-4">
+            <div className="bg-teal-900/20 border-l-4 border-teal-500 p-4 rounded">
+              <p className="text-teal-200 font-medium mb-2">
+                🔄 Sync all artwork from Plex to Emby
+              </p>
+              <p className="text-teal-100 text-sm">
+                This mode will synchronize every artwork you have in Plex to
+                your Emby server.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <h4 className="font-semibold text-theme-primary text-lg">
+                How Emby Sync works:
+              </h4>
+
+              <ul className="space-y-3 text-theme-text">
+                <li className="flex">
+                  <span className="bg-teal-600 text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0 text-sm font-bold">
+                    1
+                  </span>
+                  <div>
+                    <strong className="text-theme-primary">
+                      Library Names Must Match
+                    </strong>
+                    <p className="text-sm text-theme-muted mt-1">
+                      The script requires that library names in Plex and Emby
+                      match exactly for the sync to work.
+                    </p>
+                  </div>
+                </li>
+
+                <li className="flex">
+                  <span className="bg-teal-600 text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0 text-sm font-bold">
+                    2
+                  </span>
+                  <div>
+                    <strong className="text-theme-primary">
+                      Hash Calculation
+                    </strong>
+                    <p className="text-sm text-theme-muted mt-1">
+                      The script calculates the hash of artwork from both
+                      servers to determine if there are differences.
+                    </p>
+                  </div>
+                </li>
+
+                <li className="flex">
+                  <span className="bg-teal-600 text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0 text-sm font-bold">
+                    3
+                  </span>
+                  <div>
+                    <strong className="text-theme-primary">Smart Sync</strong>
+                    <p className="text-sm text-theme-muted mt-1">
+                      Only syncs artwork if the hashes don't match, saving time
+                      and bandwidth.
+                    </p>
+                  </div>
+                </li>
+              </ul>
+
+              <div className="bg-blue-900/20 border-l-4 border-blue-500 p-4 rounded mt-4">
+                <p className="text-blue-200 text-sm">
+                  💡 <strong>Tip:</strong> This is handy if you want to run the
+                  sync after a Kometa run, so you have Kometa overlayed images
+                  in Emby.
+                </p>
+              </div>
+
+              <div className="bg-yellow-900/20 border-l-4 border-yellow-500 p-4 rounded mt-4">
+                <p className="text-yellow-200 text-sm">
+                  ⚠️ <strong>Important:</strong> Make sure both UseEmby and
+                  UsePlex are set to true in your config.json, and that library
+                  names match exactly.
+                </p>
+              </div>
+            </div>
+
+            {/* Documentation Link */}
+            <div className="pt-4 border-t-2 border-theme">
+              <a
+                href="https://github.com/fscorrupt/Posterizarr?tab=readme-ov-file#sync-modes"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center px-6 py-3 bg-theme-bg hover:bg-theme-hover border border-theme rounded-lg font-medium transition-colors text-theme-text"
+              >
+                <ExternalLink className="w-5 h-5 mr-2" />
+                View Full Documentation
+              </a>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="bg-theme-bg px-6 py-4 rounded-b-xl flex justify-between">
+            <button
+              onClick={() => setShowEmbySyncModal(false)}
+              className="px-6 py-2 bg-theme-card hover:bg-theme-hover border border-theme rounded-lg font-medium transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={startEmbySync}
+              disabled={loading || status.running}
+              className="px-6 py-2 bg-teal-600 hover:bg-teal-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-colors text-white flex items-center"
+            >
+              <Cloud className="w-5 h-5 mr-2" />
+              Start Emby Sync
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="px-4 py-6">
       <Toaster />
       <ManualModeModal />
+      <JellyfinSyncModal />
+      <EmbySyncModal />
 
       <h1 className="text-3xl font-bold mb-8 text-theme-primary">Dashboard</h1>
 
@@ -543,10 +831,10 @@ function Dashboard() {
       <div className="bg-theme-card rounded-lg p-6 border border-theme mb-6">
         <h2 className="text-xl font-semibold mb-4 text-theme-primary flex items-center">
           <Play className="w-5 h-5 mr-2" />
-          Script Execution
+          Script Modes
         </h2>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <button
             onClick={() => runScript("normal")}
             disabled={loading || status.running}
@@ -567,6 +855,7 @@ function Dashboard() {
 
           <button
             onClick={() => setShowManualModal(true)}
+            disabled={loading || status.running}
             className="flex items-center justify-center px-4 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg font-medium transition-colors"
           >
             <Settings className="w-5 h-5 mr-2" />
@@ -579,11 +868,21 @@ function Dashboard() {
             className="flex items-center justify-center px-4 py-3 bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-colors"
           >
             <Save className="w-5 h-5 mr-2" />
-            Backup
+            Backup Mode
           </button>
+        </div>
+      </div>
 
+      {/* SYNC MODE - Updated with Modals */}
+      <div className="bg-theme-card rounded-lg p-6 border border-theme mb-6">
+        <h2 className="text-xl font-semibold mb-4 text-theme-primary flex items-center">
+          <Cloud className="w-5 h-5 mr-2" />
+          Sync Mode
+        </h2>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <button
-            onClick={() => runScript("syncjelly")}
+            onClick={() => setShowJellyfinSyncModal(true)}
             disabled={loading || status.running}
             className="flex items-center justify-center px-4 py-3 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-colors"
           >
@@ -592,7 +891,7 @@ function Dashboard() {
           </button>
 
           <button
-            onClick={() => runScript("syncemby")}
+            onClick={() => setShowEmbySyncModal(true)}
             disabled={loading || status.running}
             className="flex items-center justify-center px-4 py-3 bg-teal-600 hover:bg-teal-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-colors"
           >

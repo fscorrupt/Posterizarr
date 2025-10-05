@@ -199,7 +199,7 @@ function ConfigEditor() {
     ) {
       return (
         <input
-          type="password"
+          type="text"
           value={stringValue}
           onChange={(e) => updateValue(section, key, e.target.value)}
           className="w-full px-4 py-2.5 bg-theme-card border-2 border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono"

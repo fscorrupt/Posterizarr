@@ -230,7 +230,7 @@ function LogViewer() {
 
           <button
             onClick={downloadLogs}
-            className="px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded text-sm flex items-center gap-2"
+            className="px-3 py-2 bg-theme-primary hover:bg-theme-primary/90 rounded text-sm flex items-center gap-2"
           >
             <Download className="w-4 h-4" />
             Download
