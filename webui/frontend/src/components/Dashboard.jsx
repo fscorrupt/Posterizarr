@@ -248,6 +248,30 @@ function Dashboard() {
     }
   };
 
+  const showManualModeInfo = () => {
+    const message = `Manual Mode is an interactive mode that can only be run via terminal/command line.
+
+This mode allows you to:
+• Manually select libraries
+• Choose specific items to process
+• Interact with the script step-by-step
+
+To use Manual Mode, open your terminal and run:
+pwsh -File Posterizarr.ps1 -Manual
+
+For detailed instructions, visit:
+https://github.com/fscorrupt/Posterizarr?tab=readme-ov-file#manual-mode-interactive
+
+Would you like to open the documentation?`;
+
+    if (window.confirm(message)) {
+      window.open(
+        "https://github.com/fscorrupt/Posterizarr?tab=readme-ov-file#manual-mode-interactive",
+        "_blank"
+      );
+    }
+  };
+
   const parseLogLine = (line) => {
     const cleanedLine = line.replace(/\x00/g, "").trim();
 
@@ -436,9 +460,8 @@ function Dashboard() {
           </button>
 
           <button
-            onClick={() => runScript("manual")}
-            disabled={loading || status.running}
-            className="flex items-center justify-center px-4 py-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-colors"
+            onClick={showManualModeInfo}
+            className="flex items-center justify-center px-4 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg font-medium transition-colors"
           >
             <Settings className="w-5 h-5 mr-2" />
             Manual Mode
@@ -452,6 +475,88 @@ function Dashboard() {
             <Save className="w-5 h-5 mr-2" />
             Backup
           </button>
+        </div>
+      </div>
+
+      {/* Log Viewer */}
+      <div className="bg-theme-card rounded-lg p-6 border border-theme mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-xl font-semibold text-theme-primary">
+              Last Log Entries
+            </h2>
+            {status.current_mode && (
+              <p className="text-xs text-theme-muted mt-1">
+                Reading from:{" "}
+                {status.current_mode === "testing"
+                  ? "Testinglog.log"
+                  : status.current_mode === "manual"
+                  ? "Manuallog.log"
+                  : "Scriptlog.log"}
+              </p>
+            )}
+          </div>
+          <button
+            onClick={fetchStatus}
+            disabled={isRefreshing}
+            className="text-theme-muted hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            <RefreshCw
+              className={`w-5 h-5 ${isRefreshing ? "animate-spin" : ""}`}
+            />
+          </button>
+        </div>
+
+        <div className="bg-black rounded overflow-hidden border border-gray-900">
+          {status.last_logs && status.last_logs.length > 0 ? (
+            <div className="font-mono text-[11px] leading-relaxed">
+              {status.last_logs.map((line, index) => {
+                const parsed = parseLogLine(line);
+
+                if (parsed.raw === null) {
+                  return null;
+                }
+
+                if (parsed.raw) {
+                  return (
+                    <div
+                      key={index}
+                      className="px-2 py-1 hover:bg-gray-900/50"
+                      style={{ color: "#9ca3af" }}
+                    >
+                      {parsed.raw}
+                    </div>
+                  );
+                }
+
+                const logColor = getLogColor(parsed.level);
+
+                return (
+                  <div
+                    key={index}
+                    className="px-2 py-1 hover:bg-gray-900/50 flex items-center gap-2"
+                  >
+                    <span style={{ color: "#6b7280" }}>
+                      [{parsed.timestamp}]
+                    </span>
+                    <LogLevel level={parsed.level} />
+                    <span style={{ color: "#4b5563" }}>
+                      |L.{parsed.lineNum}|
+                    </span>
+                    <span style={{ color: logColor }}>{parsed.message}</span>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="px-3 py-8 text-center text-gray-600 text-xs">
+              No logs - start a script to see output
+            </div>
+          )}
+        </div>
+
+        <div className="mt-2 text-[10px] text-gray-600 flex justify-between">
+          <span>Auto-refresh: 3s</span>
         </div>
       </div>
 
@@ -535,88 +640,6 @@ function Dashboard() {
             posters. Make sure you have entered the exact library name as it
             appears in Plex.
           </div>
-        </div>
-      </div>
-
-      {/* Log Viewer */}
-      <div className="bg-theme-card rounded-lg p-6 border border-theme">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-xl font-semibold text-theme-primary">
-              Last Log Entries
-            </h2>
-            {status.current_mode && (
-              <p className="text-xs text-theme-muted mt-1">
-                Reading from:{" "}
-                {status.current_mode === "testing"
-                  ? "Testinglog.log"
-                  : status.current_mode === "manual"
-                  ? "Manuallog.log"
-                  : "Scriptlog.log"}
-              </p>
-            )}
-          </div>
-          <button
-            onClick={fetchStatus}
-            disabled={isRefreshing}
-            className="text-theme-muted hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            <RefreshCw
-              className={`w-5 h-5 ${isRefreshing ? "animate-spin" : ""}`}
-            />
-          </button>
-        </div>
-
-        <div className="bg-black rounded overflow-hidden border border-gray-900">
-          {status.last_logs && status.last_logs.length > 0 ? (
-            <div className="font-mono text-[11px] leading-relaxed">
-              {status.last_logs.map((line, index) => {
-                const parsed = parseLogLine(line);
-
-                if (parsed.raw === null) {
-                  return null;
-                }
-
-                if (parsed.raw) {
-                  return (
-                    <div
-                      key={index}
-                      className="px-2 py-1 hover:bg-gray-900/50"
-                      style={{ color: "#9ca3af" }}
-                    >
-                      {parsed.raw}
-                    </div>
-                  );
-                }
-
-                const logColor = getLogColor(parsed.level);
-
-                return (
-                  <div
-                    key={index}
-                    className="px-2 py-1 hover:bg-gray-900/50 flex items-center gap-2"
-                  >
-                    <span style={{ color: "#6b7280" }}>
-                      [{parsed.timestamp}]
-                    </span>
-                    <LogLevel level={parsed.level} />
-                    <span style={{ color: "#4b5563" }}>
-                      |L.{parsed.lineNum}|
-                    </span>
-                    <span style={{ color: logColor }}>{parsed.message}</span>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="px-3 py-8 text-center text-gray-600 text-xs">
-              No logs - start a script to see output
-            </div>
-          )}
-        </div>
-
-        <div className="mt-2 text-[10px] text-gray-600 flex justify-between">
-          <span>Auto-refresh: 3s</span>
         </div>
       </div>
     </div>
