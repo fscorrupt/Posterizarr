@@ -11,6 +11,7 @@ import os
 from pathlib import Path
 from typing import Optional
 import logging
+import re
 
 # Setup logging
 logging.basicConfig(level=logging.INFO)
@@ -35,6 +36,27 @@ if not CONFIG_PATH.exists() and CONFIG_EXAMPLE_PATH.exists():
 # Global process tracker
 current_process: Optional[subprocess.Popen] = None
 current_mode: Optional[str] = None  # Track current execution mode
+
+
+# Helper functions for filtering images
+def is_poster_file(filename: str) -> bool:
+    """Check if file is poster.jpg only"""
+    return filename == "poster.jpg"
+
+
+def is_background_file(filename: str) -> bool:
+    """Check if file is background.jpg only"""
+    return filename == "background.jpg"
+
+
+def is_titlecard_file(filename: str) -> bool:
+    """Check if file is SeasonXX.jpg (capital S)"""
+    return re.match(r"^Season\d+\.jpg$", filename) is not None
+
+
+def is_episode_file(filename: str) -> bool:
+    """Check if file is SxxExx.jpg (capital S and E)"""
+    return re.match(r"^S\d+E\d+\.jpg$", filename) is not None
 
 
 @asynccontextmanager
@@ -537,7 +559,7 @@ async def websocket_logs(websocket: WebSocket):
 
 @app.get("/api/gallery")
 async def get_gallery():
-    """Get poster gallery from assets directory with image URLs"""
+    """Get poster gallery from assets directory (only poster.jpg)"""
     if not ASSETS_DIR.exists():
         return {"images": []}
 
@@ -547,21 +569,23 @@ async def get_gallery():
     try:
         for image_path in ASSETS_DIR.rglob("*"):
             if image_path.suffix.lower() in image_extensions:
-                try:
-                    relative_path = image_path.relative_to(ASSETS_DIR)
-                    # Create URL path with forward slashes
-                    url_path = str(relative_path).replace("\\", "/")
-                    images.append(
-                        {
-                            "path": str(relative_path),
-                            "name": image_path.name,
-                            "size": image_path.stat().st_size,
-                            "url": f"/assets/{url_path}",
-                        }
-                    )
-                except Exception as e:
-                    logger.error(f"Error processing image {image_path}: {e}")
-                    continue
+                # Filter: Only include poster.jpg
+                if is_poster_file(image_path.name):
+                    try:
+                        relative_path = image_path.relative_to(ASSETS_DIR)
+                        # Create URL path with forward slashes
+                        url_path = str(relative_path).replace("\\", "/")
+                        images.append(
+                            {
+                                "path": str(relative_path),
+                                "name": image_path.name,
+                                "size": image_path.stat().st_size,
+                                "url": f"/assets/{url_path}",
+                            }
+                        )
+                    except Exception as e:
+                        logger.error(f"Error processing image {image_path}: {e}")
+                        continue
 
         # Sort by name and limit
         images.sort(key=lambda x: x["name"])
@@ -602,6 +626,222 @@ async def delete_poster(path: str):
         raise
     except Exception as e:
         logger.error(f"Error deleting poster {path}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/backgrounds-gallery")
+async def get_backgrounds_gallery():
+    """Get backgrounds gallery from assets directory (only background.jpg)"""
+    if not ASSETS_DIR.exists():
+        return {"images": []}
+
+    images = []
+    image_extensions = {".jpg", ".jpeg", ".png", ".webp"}
+
+    try:
+        for image_path in ASSETS_DIR.rglob("*"):
+            if image_path.suffix.lower() in image_extensions:
+                # Filter: Only include background.jpg
+                if is_background_file(image_path.name):
+                    try:
+                        relative_path = image_path.relative_to(ASSETS_DIR)
+                        # Create URL path with forward slashes
+                        url_path = str(relative_path).replace("\\", "/")
+                        images.append(
+                            {
+                                "path": str(relative_path),
+                                "name": image_path.name,
+                                "size": image_path.stat().st_size,
+                                "url": f"/assets/{url_path}",
+                            }
+                        )
+                    except Exception as e:
+                        logger.error(f"Error processing background {image_path}: {e}")
+                        continue
+
+        # Sort by name and limit
+        images.sort(key=lambda x: x["name"])
+        return {"images": images[:200]}  # Limit to 200 for performance
+    except Exception as e:
+        logger.error(f"Error scanning backgrounds gallery: {e}")
+        return {"images": []}
+
+
+@app.delete("/api/backgrounds/{path:path}")
+async def delete_background(path: str):
+    """Delete a background from the assets directory"""
+    try:
+        # Construct the full file path
+        file_path = ASSETS_DIR / path
+
+        # Security check: Ensure the path is within ASSETS_DIR
+        try:
+            file_path = file_path.resolve()
+            file_path.relative_to(ASSETS_DIR.resolve())
+        except ValueError:
+            raise HTTPException(status_code=403, detail="Access denied: Invalid path")
+
+        # Check if file exists
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail="Background not found")
+
+        # Check if it's a file (not a directory)
+        if not file_path.is_file():
+            raise HTTPException(status_code=400, detail="Path is not a file")
+
+        # Delete the file
+        file_path.unlink()
+        logger.info(f"Deleted background: {file_path}")
+
+        return {"success": True, "message": f"Background '{path}' deleted successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting background {path}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/titlecards-gallery")
+async def get_titlecards_gallery():
+    """Get titlecards gallery from assets directory (only SeasonXX.jpg)"""
+    if not ASSETS_DIR.exists():
+        return {"images": []}
+
+    images = []
+    image_extensions = {".jpg", ".jpeg", ".png", ".webp"}
+
+    try:
+        for image_path in ASSETS_DIR.rglob("*"):
+            if image_path.suffix.lower() in image_extensions:
+                # Filter: Only include SeasonXX.jpg
+                if is_titlecard_file(image_path.name):
+                    try:
+                        relative_path = image_path.relative_to(ASSETS_DIR)
+                        # Create URL path with forward slashes
+                        url_path = str(relative_path).replace("\\", "/")
+                        images.append(
+                            {
+                                "path": str(relative_path),
+                                "name": image_path.name,
+                                "size": image_path.stat().st_size,
+                                "url": f"/assets/{url_path}",
+                            }
+                        )
+                    except Exception as e:
+                        logger.error(f"Error processing titlecard {image_path}: {e}")
+                        continue
+
+        # Sort by name and limit
+        images.sort(key=lambda x: x["name"])
+        return {"images": images[:200]}  # Limit to 200 for performance
+    except Exception as e:
+        logger.error(f"Error scanning titlecards gallery: {e}")
+        return {"images": []}
+
+
+@app.delete("/api/titlecards/{path:path}")
+async def delete_titlecard(path: str):
+    """Delete a titlecard from the assets directory"""
+    try:
+        # Construct the full file path
+        file_path = ASSETS_DIR / path
+
+        # Security check: Ensure the path is within ASSETS_DIR
+        try:
+            file_path = file_path.resolve()
+            file_path.relative_to(ASSETS_DIR.resolve())
+        except ValueError:
+            raise HTTPException(status_code=403, detail="Access denied: Invalid path")
+
+        # Check if file exists
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail="TitleCard not found")
+
+        # Check if it's a file (not a directory)
+        if not file_path.is_file():
+            raise HTTPException(status_code=400, detail="Path is not a file")
+
+        # Delete the file
+        file_path.unlink()
+        logger.info(f"Deleted titlecard: {file_path}")
+
+        return {"success": True, "message": f"TitleCard '{path}' deleted successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting titlecard {path}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/episodes-gallery")
+async def get_episodes_gallery():
+    """Get episodes gallery from assets directory (only SxxExx.jpg)"""
+    if not ASSETS_DIR.exists():
+        return {"images": []}
+
+    images = []
+    image_extensions = {".jpg", ".jpeg", ".png", ".webp"}
+
+    try:
+        for image_path in ASSETS_DIR.rglob("*"):
+            if image_path.suffix.lower() in image_extensions:
+                # Filter: Only include SxxExx.jpg
+                if is_episode_file(image_path.name):
+                    try:
+                        relative_path = image_path.relative_to(ASSETS_DIR)
+                        # Create URL path with forward slashes
+                        url_path = str(relative_path).replace("\\", "/")
+                        images.append(
+                            {
+                                "path": str(relative_path),
+                                "name": image_path.name,
+                                "size": image_path.stat().st_size,
+                                "url": f"/assets/{url_path}",
+                            }
+                        )
+                    except Exception as e:
+                        logger.error(f"Error processing episode {image_path}: {e}")
+                        continue
+
+        # Sort by name and limit
+        images.sort(key=lambda x: x["name"])
+        return {"images": images[:200]}  # Limit to 200 for performance
+    except Exception as e:
+        logger.error(f"Error scanning episodes gallery: {e}")
+        return {"images": []}
+
+
+@app.delete("/api/episodes/{path:path}")
+async def delete_episode(path: str):
+    """Delete an episode from the assets directory"""
+    try:
+        # Construct the full file path
+        file_path = ASSETS_DIR / path
+
+        # Security check: Ensure the path is within ASSETS_DIR
+        try:
+            file_path = file_path.resolve()
+            file_path.relative_to(ASSETS_DIR.resolve())
+        except ValueError:
+            raise HTTPException(status_code=403, detail="Access denied: Invalid path")
+
+        # Check if file exists
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail="Episode not found")
+
+        # Check if it's a file (not a directory)
+        if not file_path.is_file():
+            raise HTTPException(status_code=400, detail="Path is not a file")
+
+        # Delete the file
+        file_path.unlink()
+        logger.info(f"Deleted episode: {file_path}")
+
+        return {"success": True, "message": f"Episode '{path}' deleted successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting episode {path}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

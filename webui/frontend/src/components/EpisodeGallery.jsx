@@ -13,7 +13,7 @@ import toast, { Toaster } from "react-hot-toast";
 
 const API_URL = "http://localhost:8000/api";
 
-function Gallery() {
+function TitleCardGallery() {
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -31,7 +31,7 @@ function Gallery() {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${API_URL}/gallery`);
+      const response = await fetch(`${API_URL}/titlecards-gallery`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -39,16 +39,16 @@ function Gallery() {
       setImages(data.images || []);
 
       if (showToast && data.images && data.images.length > 0) {
-        toast.success(`Loaded ${data.images.length} posters`, {
+        toast.success(`Loaded ${data.images.length} title cards`, {
           duration: 2000,
           position: "top-right",
         });
       }
     } catch (error) {
-      console.error("Error fetching images:", error);
+      console.error("Error fetching title cards:", error);
       setError(error.message);
       setImages([]);
-      toast.error("Failed to load gallery", {
+      toast.error("Failed to load title cards gallery", {
         duration: 4000,
         position: "top-right",
       });
@@ -97,32 +97,34 @@ function Gallery() {
     }
   };
 
-  const deletePoster = async (imagePath, imageName, event) => {
+  const deleteTitleCard = async (imagePath, imageName, event) => {
     if (event) {
       event.stopPropagation();
     }
 
     if (
-      !window.confirm(`Möchtest du das Poster "${imageName}" wirklich löschen?`)
+      !window.confirm(
+        `Möchtest du das TitleCard "${imageName}" wirklich löschen?`
+      )
     ) {
       return;
     }
 
     setDeletingImage(imagePath);
     try {
-      const response = await fetch(`${API_URL}/gallery/${imagePath}`, {
+      const response = await fetch(`${API_URL}/titlecards/${imagePath}`, {
         method: "DELETE",
       });
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.detail || "Failed to delete poster");
+        throw new Error(data.detail || "Failed to delete title card");
       }
 
       const data = await response.json();
 
       if (data.success) {
-        toast.success(`Poster "${imageName}" erfolgreich gelöscht`, {
+        toast.success(`TitleCard "${imageName}" erfolgreich gelöscht`, {
           duration: 3000,
           position: "top-right",
         });
@@ -133,10 +135,10 @@ function Gallery() {
           setSelectedImage(null);
         }
       } else {
-        throw new Error(data.message || "Failed to delete poster");
+        throw new Error(data.message || "Failed to delete title card");
       }
     } catch (error) {
-      console.error("Error deleting poster:", error);
+      console.error("Error deleting title card:", error);
       toast.error(`Fehler beim Löschen: ${error.message}`, {
         duration: 5000,
         position: "top-right",
@@ -175,10 +177,9 @@ function Gallery() {
       <Toaster />
 
       <div className="flex flex-col space-y-4 mb-6">
-        {/* Header with Refresh */}
         <div className="flex flex-col md:flex-row md:items-center justify-between space-y-4 md:space-y-0">
           <h1 className="text-3xl font-bold text-theme-primary">
-            Poster Gallery
+            TitleCard Gallery
           </h1>
 
           <button
@@ -193,7 +194,6 @@ function Gallery() {
           </button>
         </div>
 
-        {/* Script & Sync Mode Buttons */}
         <div className="bg-theme-card rounded-lg p-4 border border-theme-primary">
           <h3 className="text-sm font-semibold text-theme-muted mb-3">
             Quick Actions
@@ -238,14 +238,13 @@ function Gallery() {
         </div>
       </div>
 
-      {/* Search bar */}
       {images.length > 0 && (
         <div className="mb-6">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
-              placeholder="Search posters..."
+              placeholder="Search title cards..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-3 bg-theme-card border border-theme-primary rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary"
@@ -262,7 +261,7 @@ function Gallery() {
         <div className="bg-red-900/30 border border-red-700 rounded-lg p-6 text-center">
           <ImageIcon className="w-16 h-16 text-red-400 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-red-400 mb-2">
-            Error Loading Gallery
+            Error Loading TitleCard Gallery
           </h3>
           <p className="text-red-300 text-sm mb-4">{error}</p>
           <button
@@ -276,18 +275,19 @@ function Gallery() {
         <div className="bg-theme-card border border-theme-primary rounded-lg p-12 text-center">
           <ImageIcon className="w-16 h-16 text-gray-600 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-theme-muted mb-2">
-            {searchTerm ? "No Matching Posters" : "No Posters Found"}
+            {searchTerm ? "No Matching TitleCards" : "No TitleCards Found"}
           </h3>
           <p className="text-theme-muted text-sm">
             {searchTerm
               ? "Try adjusting your search terms"
-              : "Run the script to generate posters"}
+              : "Run the script to generate title cards"}
           </p>
         </div>
       ) : (
         <>
           <div className="mb-4 text-sm text-theme-muted">
-            Showing {displayedImages.length} of {filteredImages.length} posters
+            Showing {displayedImages.length} of {filteredImages.length} title
+            cards
             {images.length !== filteredImages.length && (
               <span className="ml-2 text-theme-primary">
                 (filtered from {images.length} total)
@@ -302,14 +302,14 @@ function Gallery() {
                 className="group relative bg-theme-card rounded-lg overflow-hidden border border-theme-primary hover:border-theme-primary transition-all"
               >
                 <button
-                  onClick={(e) => deletePoster(image.path, image.name, e)}
+                  onClick={(e) => deleteTitleCard(image.path, image.name, e)}
                   disabled={deletingImage === image.path}
                   className={`absolute top-2 right-2 z-10 p-2 rounded-lg transition-all ${
                     deletingImage === image.path
                       ? "bg-gray-600 cursor-not-allowed"
                       : "bg-red-600 hover:bg-red-700 opacity-0 group-hover:opacity-100"
                   }`}
-                  title="Poster löschen"
+                  title="TitleCard löschen"
                 >
                   <Trash2
                     className={`w-4 h-4 text-white ${
@@ -371,7 +371,6 @@ function Gallery() {
         </>
       )}
 
-      {/* Image Modal */}
       {selectedImage && (
         <div
           className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
@@ -390,7 +389,7 @@ function Gallery() {
               </h3>
               <button
                 onClick={(e) =>
-                  deletePoster(selectedImage.path, selectedImage.name, e)
+                  deleteTitleCard(selectedImage.path, selectedImage.name, e)
                 }
                 disabled={deletingImage === selectedImage.path}
                 className={`flex items-center px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex-shrink-0 ${
@@ -424,7 +423,7 @@ function Gallery() {
                     Image preview not available
                   </p>
                   <p className="text-gray-600 text-xs mt-2">
-                    Use file explorer to view poster
+                    Use file explorer to view title card
                   </p>
                 </div>
               </div>
@@ -447,4 +446,4 @@ function Gallery() {
   );
 }
 
-export default Gallery;
+export default TitleCardGallery;

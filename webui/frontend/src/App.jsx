@@ -12,6 +12,7 @@ import LogViewer from "./components/LogViewer";
 import Dashboard from "./components/Dashboard";
 import Gallery from "./components/Gallery";
 import TestGallery from "./components/TestGallery";
+import BackgroundsGallery from "./components/BackgroundsGallery";
 import {
   Menu,
   Settings,
@@ -105,6 +106,7 @@ function Navigation() {
     { path: "/", icon: Activity, label: "Dashboard" },
     { path: "/test-gallery", icon: Image, label: "Test Gallery" },
     { path: "/gallery", icon: Image, label: "Poster Gallery" },
+    { path: "/backgrounds", icon: Image, label: "Backgrounds" },
     { path: "/config", icon: Settings, label: "Configuration" },
     { path: "/logs", icon: FileText, label: "Logs" },
   ];
@@ -214,6 +216,7 @@ function AppContent() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/test-gallery" element={<TestGallery />} />
           <Route path="/gallery" element={<Gallery />} />
+          <Route path="/backgrounds" element={<BackgroundsGallery />} />
           <Route path="/config" element={<ConfigEditor />} />
           <Route path="/logs" element={<LogViewer />} />
         </Routes>
