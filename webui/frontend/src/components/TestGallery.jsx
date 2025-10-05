@@ -5,6 +5,7 @@ import {
   Search,
   Play,
   ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 
@@ -17,11 +18,49 @@ function TestGallery() {
   const [selectedImage, setSelectedImage] = useState(null);
   const [error, setError] = useState(null);
   const [scriptLoading, setScriptLoading] = useState(false);
-  const [displayCount, setDisplayCount] = useState(50); // Neu: Initial 50 Poster anzeigen
+  const [expandedCategories, setExpandedCategories] = useState({
+    posters: false,
+    backgrounds: false,
+    seasonPosters: false,
+    titleCards: false,
+  });
   const [status, setStatus] = useState({
     running: false,
     current_mode: null,
   });
+
+  // Kategorisierungs-Funktion
+  const categorizeImages = (images) => {
+    const categories = {
+      posters: [],
+      backgrounds: [],
+      seasonPosters: [],
+      titleCards: [],
+    };
+
+    images.forEach((img) => {
+      const name = img.name.toLowerCase();
+
+      if (name.includes("poster") && !name.includes("season")) {
+        categories.posters.push(img);
+      } else if (name.includes("background")) {
+        categories.backgrounds.push(img);
+      } else if (name.includes("seasonposter")) {
+        categories.seasonPosters.push(img);
+      } else if (name.includes("titlecard")) {
+        categories.titleCards.push(img);
+      }
+    });
+
+    return categories;
+  };
+
+  const toggleCategory = (category) => {
+    setExpandedCategories((prev) => ({
+      ...prev,
+      [category]: !prev[category],
+    }));
+  };
 
   const fetchImages = async (showToast = false) => {
     setLoading(true);
@@ -35,7 +74,7 @@ function TestGallery() {
       setImages(data.images || []);
 
       if (showToast && data.images && data.images.length > 0) {
-        toast.success(`Loaded ${data.images.length} test posters`, {
+        toast.success(`Loaded ${data.images.length} test files`, {
           duration: 2000,
           position: "top-right",
         });
@@ -93,11 +132,6 @@ function TestGallery() {
     }
   };
 
-  // Neu: Load More Funktion
-  const loadMore = () => {
-    setDisplayCount((prev) => prev + 50);
-  };
-
   useEffect(() => {
     fetchImages(false);
     fetchStatus();
@@ -105,20 +139,108 @@ function TestGallery() {
     return () => clearInterval(interval);
   }, []);
 
-  // Reset displayCount when search term changes
-  useEffect(() => {
-    setDisplayCount(50);
-  }, [searchTerm]);
-
+  // Filtere Bilder basierend auf Suchbegriff
   const filteredImages = images.filter(
     (img) =>
       img.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       img.path.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Neu: Nur die ersten displayCount Bilder anzeigen
-  const displayedImages = filteredImages.slice(0, displayCount);
-  const hasMore = filteredImages.length > displayCount;
+  // Kategorisiere gefilterte Bilder
+  const categorizedImages = categorizeImages(filteredImages);
+
+  // Category Component
+  const CategorySection = ({ title, images, categoryKey, description }) => {
+    if (images.length === 0) return null;
+
+    const isExpanded = expandedCategories[categoryKey];
+
+    // Aspect Ratio basierend auf Kategorie
+    // Posters & Season Posters: Hochformat (2:3)
+    // Backgrounds & Title Cards: Querformat (16:9)
+    const isPortrait =
+      categoryKey === "posters" || categoryKey === "seasonPosters";
+    const aspectRatio = isPortrait ? "aspect-[2/3]" : "aspect-[16/9]";
+    const gridCols = isPortrait
+      ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
+      : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4";
+
+    return (
+      <div className="mb-6">
+        <button
+          onClick={() => toggleCategory(categoryKey)}
+          className="w-full flex items-center justify-between p-4 bg-theme-card border border-theme-primary rounded-lg hover:bg-theme-hover transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center w-8 h-8 bg-theme-primary rounded-full text-sm font-bold">
+              {images.length}
+            </div>
+            <div className="text-left">
+              <h3 className="text-lg font-semibold text-theme-primary">
+                {title}
+              </h3>
+              {description && (
+                <p className="text-xs text-theme-muted">{description}</p>
+              )}
+            </div>
+          </div>
+          {isExpanded ? (
+            <ChevronUp className="w-5 h-5 text-theme-muted" />
+          ) : (
+            <ChevronDown className="w-5 h-5 text-theme-muted" />
+          )}
+        </button>
+
+        {isExpanded && (
+          <div className={`mt-4 grid ${gridCols} gap-4`}>
+            {images.map((image, index) => (
+              <div
+                key={index}
+                className="group relative bg-theme-card rounded-lg overflow-hidden border border-theme-primary hover:border-theme-primary transition-all cursor-pointer"
+                onClick={() => setSelectedImage(image)}
+              >
+                <div
+                  className={`${aspectRatio} bg-theme-dark flex items-center justify-center overflow-hidden`}
+                >
+                  <img
+                    src={`http://localhost:8000${image.url}`}
+                    alt={image.name}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    loading="lazy"
+                    onError={(e) => {
+                      e.target.style.display = "none";
+                      e.target.nextSibling.style.display = "flex";
+                    }}
+                  />
+                  <div
+                    className="hidden flex-col items-center justify-center text-gray-600 p-4"
+                    style={{ display: "none" }}
+                  >
+                    <ImageIcon className="w-12 h-12 mb-2" />
+                    <span className="text-xs text-center">
+                      Preview unavailable
+                    </span>
+                  </div>
+                </div>
+
+                <div className="p-3 border-t-2 border-theme">
+                  <p
+                    className="text-xs text-theme-text truncate"
+                    title={image.name}
+                  >
+                    {image.name}
+                  </p>
+                  <p className="text-[10px] text-theme-muted mt-1">
+                    {(image.size / 1024).toFixed(1)} KB
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="px-4 py-6">
@@ -159,7 +281,7 @@ function TestGallery() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
-              placeholder="Search test posters..."
+              placeholder="Search test files..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-3 bg-theme-card border border-theme-primary rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary"
@@ -184,80 +306,90 @@ function TestGallery() {
         <div className="bg-theme-card border border-theme-primary rounded-lg p-12 text-center">
           <ImageIcon className="w-16 h-16 text-gray-600 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-theme-muted mb-2">
-            No Test Posters Found
+            No Test Files Found
           </h3>
           <p className="text-theme-muted text-sm">
             {searchTerm
-              ? "No test posters match your search"
-              : "Run the script in Testing mode to generate sample posters"}
+              ? "No test files match your search"
+              : "Run the script in Testing mode to generate sample files"}
           </p>
         </div>
       ) : (
         <>
-          {/* Neu: Anzeige mit displayCount */}
-          <div className="mb-4 text-sm text-theme-muted">
-            Showing {displayedImages.length} of {filteredImages.length} test
-            posters
-            {images.length !== filteredImages.length && (
-              <span className="ml-2 text-theme-primary">
-                (filtered from {images.length} total)
+          {/* Gesamtanzahl */}
+          <div className="mb-6 p-4 bg-theme-card border border-theme-primary rounded-lg">
+            <div className="flex items-center justify-between">
+              <span className="text-theme-text">
+                Total:{" "}
+                <span className="font-bold text-theme-primary">
+                  {filteredImages.length}
+                </span>{" "}
+                test files
+                {images.length !== filteredImages.length && (
+                  <span className="ml-2 text-theme-muted text-sm">
+                    (filtered from {images.length} total)
+                  </span>
+                )}
               </span>
-            )}
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {displayedImages.map((image, index) => (
-              <div
-                key={index}
-                className="group relative bg-theme-card rounded-lg overflow-hidden border border-theme-primary hover:border-theme-primary transition-all cursor-pointer"
-                onClick={() => setSelectedImage(image)}
-              >
-                <div className="aspect-[2/3] bg-theme-dark flex items-center justify-center overflow-hidden">
-                  <img
-                    src={`http://localhost:8000${image.url}`}
-                    alt={image.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    loading="lazy"
-                    onError={(e) => {
-                      e.target.style.display = "none";
-                      e.target.nextSibling.style.display = "flex";
-                    }}
-                  />
-                  <div
-                    className="hidden flex-col items-center justify-center text-gray-600 p-4"
-                    style={{ display: "none" }}
-                  >
-                    <ImageIcon className="w-12 h-12 mb-2" />
-                    <span className="text-xs text-center">
-                      Preview unavailable
-                    </span>
-                  </div>
-                </div>
-
-                <div className="p-3 bg-gradient-to-t from-black/80 to-transparent absolute bottom-0 left-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <p className="text-white text-xs font-medium truncate">
-                    {image.name}
-                  </p>
-                  <p className="text-gray-400 text-[10px]">
-                    {(image.size / 1024).toFixed(1)} KB
-                  </p>
-                </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() =>
+                    setExpandedCategories({
+                      posters: true,
+                      backgrounds: true,
+                      seasonPosters: true,
+                      titleCards: true,
+                    })
+                  }
+                  className="px-3 py-1 text-xs bg-theme-hover hover:bg-theme-primary rounded transition-colors"
+                >
+                  Expand All
+                </button>
+                <button
+                  onClick={() =>
+                    setExpandedCategories({
+                      posters: false,
+                      backgrounds: false,
+                      seasonPosters: false,
+                      titleCards: false,
+                    })
+                  }
+                  className="px-3 py-1 text-xs bg-theme-hover hover:bg-theme-primary rounded transition-colors"
+                >
+                  Collapse All
+                </button>
               </div>
-            ))}
+            </div>
           </div>
 
-          {/* Neu: Load More Button */}
-          {hasMore && (
-            <div className="mt-8 flex justify-center">
-              <button
-                onClick={loadMore}
-                className="flex items-center gap-2 px-6 py-3 bg-theme-primary hover:bg-theme-primary/90 rounded-lg font-medium transition-all transform hover:scale-105"
-              >
-                <ChevronDown className="w-5 h-5" />
-                Load More ({filteredImages.length - displayCount} remaining)
-              </button>
-            </div>
-          )}
+          {/* Kategorien */}
+          <CategorySection
+            title="Posters"
+            images={categorizedImages.posters}
+            categoryKey="posters"
+            description="Test posters (PosterTextless.jpg)"
+          />
+
+          <CategorySection
+            title="Backgrounds"
+            images={categorizedImages.backgrounds}
+            categoryKey="backgrounds"
+            description="Test backgrounds (BackgroundTextless.jpg)"
+          />
+
+          <CategorySection
+            title="Season Posters"
+            images={categorizedImages.seasonPosters}
+            categoryKey="seasonPosters"
+            description="Test season posters (SeasonPosterTextless.jpg)"
+          />
+
+          <CategorySection
+            title="Title Cards"
+            images={categorizedImages.titleCards}
+            categoryKey="titleCards"
+            description="Test title cards (Short/Medium/Long Text, CAPS variants)"
+          />
         </>
       )}
 
@@ -277,31 +409,26 @@ function TestGallery() {
               </h3>
               <button
                 onClick={() => setSelectedImage(null)}
-                className="text-theme-muted hover:text-white transition-colors"
+                className="text-theme-muted hover:text-white transition-colors text-2xl leading-none"
               >
-                ✕
+                ×
               </button>
             </div>
-            <div className="flex-1 overflow-auto flex items-center justify-center">
-              <div className="max-h-[70vh] flex items-center justify-center">
-                <img
-                  src={`http://localhost:8000${selectedImage.url}`}
-                  alt={selectedImage.name}
-                  className="max-w-full max-h-[70vh] object-contain rounded-lg"
-                  onError={(e) => {
-                    e.target.style.display = "none";
-                    e.target.nextSibling.style.display = "block";
-                  }}
-                />
-                <div className="text-center" style={{ display: "none" }}>
-                  <ImageIcon className="w-24 h-24 text-gray-700 mx-auto mb-4" />
-                  <p className="text-gray-500 text-sm">
-                    Image preview not available
-                  </p>
-                  <p className="text-gray-600 text-xs mt-2">
-                    Use file explorer to view poster
-                  </p>
-                </div>
+            <div className="flex-1 overflow-auto flex items-center justify-center p-4">
+              <img
+                src={`http://localhost:8000${selectedImage.url}`}
+                alt={selectedImage.name}
+                className="max-w-full max-h-[70vh] object-contain rounded-lg"
+                onError={(e) => {
+                  e.target.style.display = "none";
+                  e.target.nextSibling.style.display = "block";
+                }}
+              />
+              <div className="text-center" style={{ display: "none" }}>
+                <ImageIcon className="w-24 h-24 text-gray-700 mx-auto mb-4" />
+                <p className="text-gray-500 text-sm">
+                  Image preview not available
+                </p>
               </div>
             </div>
             <div className="p-4 border-t-2 border-theme flex justify-between items-center">

@@ -13,6 +13,8 @@ import Dashboard from "./components/Dashboard";
 import Gallery from "./components/Gallery";
 import TestGallery from "./components/TestGallery";
 import BackgroundsGallery from "./components/BackgroundsGallery";
+import SeasonGallery from "./components/SeasonGallery";
+import EpisodeGallery from "./components/EpisodeGallery";
 import {
   Menu,
   Settings,
@@ -21,6 +23,8 @@ import {
   Activity,
   TestTube,
   Palette,
+  Film,
+  Tv,
 } from "lucide-react";
 
 function ThemeSwitcher() {
@@ -105,9 +109,11 @@ function Navigation() {
   const navItems = [
     { path: "/", icon: Activity, label: "Dashboard" },
     { path: "/test-gallery", icon: Image, label: "Test Gallery" },
-    { path: "/gallery", icon: Image, label: "Poster Gallery" },
+    { path: "/gallery", icon: Image, label: "Posters" },
     { path: "/backgrounds", icon: Image, label: "Backgrounds" },
-    { path: "/config", icon: Settings, label: "Configuration" },
+    { path: "/seasons", icon: Film, label: "Seasons" },
+    { path: "/episodes", icon: Tv, label: "TitleCards" },
+    { path: "/config", icon: Settings, label: "Config" },
     { path: "/logs", icon: FileText, label: "Logs" },
   ];
 
@@ -217,6 +223,8 @@ function AppContent() {
           <Route path="/test-gallery" element={<TestGallery />} />
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/backgrounds" element={<BackgroundsGallery />} />
+          <Route path="/seasons" element={<SeasonGallery />} />
+          <Route path="/episodes" element={<EpisodeGallery />} />
           <Route path="/config" element={<ConfigEditor />} />
           <Route path="/logs" element={<LogViewer />} />
         </Routes>
