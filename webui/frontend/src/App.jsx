@@ -81,6 +81,25 @@ function ThemeSwitcher() {
 function Navigation() {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [uiVersion, setUiVersion] = useState(null);
+
+  // Fetch UI version on mount
+  React.useEffect(() => {
+    const fetchUIVersion = async () => {
+      try {
+        const response = await fetch("http://localhost:8000/api/version-ui");
+        if (response.ok) {
+          const data = await response.json();
+          if (data.version) {
+            setUiVersion(data.version);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching UI version:", error);
+      }
+    };
+    fetchUIVersion();
+  }, []);
 
   const navItems = [
     { path: "/", icon: Activity, label: "Dashboard" },
@@ -95,10 +114,18 @@ function Navigation() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <div className="flex items-center">
-            <div className="flex-shrink-0">
+            <div className="flex-shrink-0 flex items-center">
               <h1 className="text-2xl font-bold text-theme-primary">
                 Posterizarr
               </h1>
+              {uiVersion && (
+                <span
+                  style={{ marginTop: 0.5 + "em" }}
+                  className="ml-2 px-2 py-0.5 text-[10px] font-medium bg-theme-accent text-white rounded-full"
+                >
+                  v{uiVersion}
+                </span>
+              )}
             </div>
             <div className="hidden md:block">
               <div className="ml-10 flex items-baseline space-x-4">

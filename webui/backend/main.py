@@ -552,6 +552,42 @@ async def delete_poster(path: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/api/version")
+async def get_version():
+    try:
+        # Gehe ZWEI Verzeichnisse nach oben vom webui/backend-Ordner
+        version_file = Path(__file__).parent.parent.parent / "Release.txt"
+
+        if version_file.exists():
+            version = version_file.read_text().strip()
+            logger.info(f"Version loaded: {version} from {version_file}")
+            return {"version": version}
+
+        logger.warning(f"Version file not found at: {version_file}")
+        return {"version": None}
+    except Exception as e:
+        logger.error(f"Error reading version: {e}")
+        return {"version": None}
+
+
+@app.get("/api/version-ui")
+async def get_version_ui():
+    try:
+        # Gehe ZWEI Verzeichnisse nach oben vom webui/backend-Ordner
+        version_file = Path(__file__).parent.parent.parent / "ReleaseUI.txt"
+
+        if version_file.exists():
+            version = version_file.read_text().strip()
+            logger.info(f"UI Version loaded: {version} from {version_file}")
+            return {"version": version}
+
+        logger.warning(f"UI Version file not found at: {version_file}")
+        return {"version": None}
+    except Exception as e:
+        logger.error(f"Error reading UI version: {e}")
+        return {"version": None}
+
+
 @app.get("/api/test-gallery")
 async def get_test_gallery():
     """Get poster gallery from test directory with image URLs"""

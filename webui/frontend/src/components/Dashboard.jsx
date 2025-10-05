@@ -37,6 +37,7 @@ function Dashboard() {
   const [showManualModal, setShowManualModal] = useState(false);
   const [showJellyfinSyncModal, setShowJellyfinSyncModal] = useState(false);
   const [showEmbySyncModal, setShowEmbySyncModal] = useState(false);
+  const [version, setVersion] = useState(null);
 
   const fetchStatus = async () => {
     setIsRefreshing(true);
@@ -51,8 +52,43 @@ function Dashboard() {
     }
   };
 
+  const fetchVersion = async () => {
+    try {
+      const response = await fetch(`${API_URL}/version`);
+
+      // Check if endpoint exists
+      if (!response.ok) {
+        console.warn("Version endpoint not available:", response.status);
+        return;
+      }
+
+      const data = await response.json();
+      console.log("Version data received:", data);
+
+      if (data.version) {
+        setVersion(data.version);
+      } else {
+        console.warn("No version in response:", data);
+      }
+    } catch (error) {
+      console.error("Error fetching version:", error);
+      // Fallback: Try to read version from a static file
+      try {
+        const fallbackResponse = await fetch("/RELEASE.txt");
+        if (fallbackResponse.ok) {
+          const versionText = await fallbackResponse.text();
+          setVersion(versionText.trim());
+          console.log("Version loaded from fallback:", versionText.trim());
+        }
+      } catch (fallbackError) {
+        console.warn("Fallback version fetch also failed");
+      }
+    }
+  };
+
   useEffect(() => {
     fetchStatus();
+    fetchVersion();
     const interval = setInterval(fetchStatus, 3000);
     return () => clearInterval(interval);
   }, []);
@@ -797,6 +833,13 @@ function Dashboard() {
               >
                 {status.script_exists ? "Found" : "Missing"}
               </p>
+              {version && status.script_exists && (
+                <div className="mt-2">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-theme-primary text-white">
+                    v{version}
+                  </span>
+                </div>
+              )}
             </div>
             {status.script_exists ? (
               <CheckCircle className="h-12 w-12 text-green-400" />
