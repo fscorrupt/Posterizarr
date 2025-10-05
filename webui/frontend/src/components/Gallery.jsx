@@ -7,6 +7,7 @@ import {
   Play,
   Save,
   Cloud,
+  ChevronDown,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 
@@ -20,6 +21,7 @@ function Gallery() {
   const [error, setError] = useState(null);
   const [deletingImage, setDeletingImage] = useState(null);
   const [scriptLoading, setScriptLoading] = useState(false);
+  const [displayCount, setDisplayCount] = useState(50);
   const [status, setStatus] = useState({
     running: false,
     current_mode: null,
@@ -144,6 +146,10 @@ function Gallery() {
     }
   };
 
+  const loadMore = () => {
+    setDisplayCount((prev) => prev + 50);
+  };
+
   useEffect(() => {
     fetchImages(false);
     fetchStatus();
@@ -151,11 +157,18 @@ function Gallery() {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    setDisplayCount(50);
+  }, [searchTerm]);
+
   const filteredImages = images.filter(
     (img) =>
       img.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       img.path.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const displayedImages = filteredImages.slice(0, displayCount);
+  const hasMore = filteredImages.length > displayCount;
 
   return (
     <div className="px-4 py-6">
@@ -192,7 +205,7 @@ function Gallery() {
               className="flex items-center justify-center px-3 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-colors text-sm"
             >
               <Play className="w-4 h-4 mr-1.5" />
-              Normal
+              Normal Mode
             </button>
 
             <button
@@ -201,7 +214,7 @@ function Gallery() {
               className="flex items-center justify-center px-3 py-2 bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-colors text-sm"
             >
               <Save className="w-4 h-4 mr-1.5" />
-              Backup
+              Backup Mode
             </button>
 
             <button
@@ -274,11 +287,16 @@ function Gallery() {
       ) : (
         <>
           <div className="mb-4 text-sm text-theme-muted">
-            Showing {filteredImages.length} of {images.length} posters
+            Showing {displayedImages.length} of {filteredImages.length} posters
+            {images.length !== filteredImages.length && (
+              <span className="ml-2 text-theme-primary">
+                (filtered from {images.length} total)
+              </span>
+            )}
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {filteredImages.map((image, index) => (
+            {displayedImages.map((image, index) => (
               <div
                 key={index}
                 className="group relative bg-theme-card rounded-lg overflow-hidden border border-theme-primary hover:border-theme-primary transition-all"
@@ -338,6 +356,18 @@ function Gallery() {
               </div>
             ))}
           </div>
+
+          {hasMore && (
+            <div className="mt-8 flex justify-center">
+              <button
+                onClick={loadMore}
+                className="flex items-center gap-2 px-6 py-3 bg-theme-primary hover:bg-theme-primary/90 rounded-lg font-medium transition-all transform hover:scale-105"
+              >
+                <ChevronDown className="w-5 h-5" />
+                Load More ({filteredImages.length - displayCount} remaining)
+              </button>
+            </div>
+          )}
         </>
       )}
 

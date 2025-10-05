@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { RefreshCw, Image as ImageIcon, Search, Play } from "lucide-react";
+import {
+  RefreshCw,
+  Image as ImageIcon,
+  Search,
+  Play,
+  ChevronDown,
+} from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 
 const API_URL = "http://localhost:8000/api";
@@ -11,6 +17,7 @@ function TestGallery() {
   const [selectedImage, setSelectedImage] = useState(null);
   const [error, setError] = useState(null);
   const [scriptLoading, setScriptLoading] = useState(false);
+  const [displayCount, setDisplayCount] = useState(50); // Neu: Initial 50 Poster anzeigen
   const [status, setStatus] = useState({
     running: false,
     current_mode: null,
@@ -86,6 +93,11 @@ function TestGallery() {
     }
   };
 
+  // Neu: Load More Funktion
+  const loadMore = () => {
+    setDisplayCount((prev) => prev + 50);
+  };
+
   useEffect(() => {
     fetchImages(false);
     fetchStatus();
@@ -93,11 +105,20 @@ function TestGallery() {
     return () => clearInterval(interval);
   }, []);
 
+  // Reset displayCount when search term changes
+  useEffect(() => {
+    setDisplayCount(50);
+  }, [searchTerm]);
+
   const filteredImages = images.filter(
     (img) =>
       img.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       img.path.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Neu: Nur die ersten displayCount Bilder anzeigen
+  const displayedImages = filteredImages.slice(0, displayCount);
+  const hasMore = filteredImages.length > displayCount;
 
   return (
     <div className="px-4 py-6">
@@ -173,12 +194,19 @@ function TestGallery() {
         </div>
       ) : (
         <>
+          {/* Neu: Anzeige mit displayCount */}
           <div className="mb-4 text-sm text-theme-muted">
-            Showing {filteredImages.length} of {images.length} test posters
+            Showing {displayedImages.length} of {filteredImages.length} test
+            posters
+            {images.length !== filteredImages.length && (
+              <span className="ml-2 text-theme-primary">
+                (filtered from {images.length} total)
+              </span>
+            )}
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-            {filteredImages.map((image, index) => (
+            {displayedImages.map((image, index) => (
               <div
                 key={index}
                 className="group relative bg-theme-card rounded-lg overflow-hidden border border-theme-primary hover:border-theme-primary transition-all cursor-pointer"
@@ -217,6 +245,19 @@ function TestGallery() {
               </div>
             ))}
           </div>
+
+          {/* Neu: Load More Button */}
+          {hasMore && (
+            <div className="mt-8 flex justify-center">
+              <button
+                onClick={loadMore}
+                className="flex items-center gap-2 px-6 py-3 bg-theme-primary hover:bg-theme-primary/90 rounded-lg font-medium transition-all transform hover:scale-105"
+              >
+                <ChevronDown className="w-5 h-5" />
+                Load More ({filteredImages.length - displayCount} remaining)
+              </button>
+            </div>
+          )}
         </>
       )}
 
