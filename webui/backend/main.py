@@ -44,6 +44,7 @@ if not CONFIG_PATH.exists() and CONFIG_EXAMPLE_PATH.exists():
 
 # Global process tracker
 current_process: Optional[subprocess.Popen] = None
+current_mode: Optional[str] = None  # Track current execution mode
 
 
 @app.on_event("startup")
@@ -80,6 +81,10 @@ async def startup_event():
 
 class ConfigUpdate(BaseModel):
     config: dict
+
+
+class ResetPostersRequest(BaseModel):
+    library: str
 
 
 @app.get("/")
@@ -119,9 +124,24 @@ async def update_config(data: ConfigUpdate):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-def get_last_log_lines(count=25):
-    """Get last N lines from log files"""
-    log_files_to_check = ["Scriptlog.log", "Testinglog.log", "Manuallog.log"]
+def get_last_log_lines(count=25, mode=None):
+    """Get last N lines from log files based on current mode"""
+
+    # Map modes to their log files
+    mode_log_map = {
+        "normal": "Scriptlog.log",
+        "testing": "Testinglog.log",
+        "manual": "Manuallog.log",
+        "backup": "Scriptlog.log",
+        "reset": "Scriptlog.log",
+    }
+
+    # If mode is specified, try that log file first
+    if mode and mode in mode_log_map:
+        log_files_to_check = [mode_log_map[mode]]
+    else:
+        # Fallback: check all log files in order
+        log_files_to_check = ["Scriptlog.log", "Testinglog.log", "Manuallog.log"]
 
     for log_filename in log_files_to_check:
         scriptlog_path = LOGS_DIR / log_filename
@@ -153,11 +173,11 @@ def get_last_log_lines(count=25):
 @app.get("/api/status")
 async def get_status():
     """Get script status with last 10 log lines"""
-    global current_process
+    global current_process, current_mode
     is_running = current_process is not None and current_process.poll() is None
 
-    # Get last 25 log lines
-    last_logs = get_last_log_lines(25)
+    # Get last 25 log lines based on current mode
+    last_logs = get_last_log_lines(25, mode=current_mode)
 
     # Check for "already running" warning
     already_running = False
@@ -175,6 +195,7 @@ async def get_status():
         "script_exists": SCRIPT_PATH.exists(),
         "config_exists": CONFIG_PATH.exists(),
         "pid": current_process.pid if is_running else None,
+        "current_mode": current_mode,  # Add current mode to status
         "already_running_detected": already_running,
         "running_file_exists": running_file_exists,
     }
@@ -198,7 +219,7 @@ async def delete_running_file():
 @app.post("/api/run/{mode}")
 async def run_script(mode: str):
     """Run Posterizarr script in different modes"""
-    global current_process
+    global current_process, current_mode
 
     # Check if already running
     if current_process and current_process.poll() is None:
@@ -240,6 +261,7 @@ async def run_script(mode: str):
             stderr=None,
             text=True,
         )
+        current_mode = mode  # Set current mode
         logger.info(
             f"Started Posterizarr in {mode} mode with PID {current_process.pid}"
         )
@@ -257,10 +279,83 @@ async def run_script(mode: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.post("/api/reset-posters")
+async def reset_posters(request: ResetPostersRequest):
+    """Reset all posters in a Plex library"""
+    global current_process, current_mode
+
+    # Check if script is running
+    if current_process and current_process.poll() is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot reset posters while script is running. Please stop the script first.",
+        )
+
+    if not SCRIPT_PATH.exists():
+        raise HTTPException(status_code=404, detail="Posterizarr.ps1 not found")
+
+    if not request.library or not request.library.strip():
+        raise HTTPException(status_code=400, detail="Library name is required")
+
+    # Determine PowerShell command
+    import platform
+
+    if platform.system() == "Windows":
+        ps_command = "pwsh"
+        try:
+            subprocess.run([ps_command, "-v"], capture_output=True, check=True)
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            ps_command = "powershell"
+            logger.info("pwsh not found, using powershell instead")
+    else:
+        ps_command = "pwsh"
+
+    # Build command with PosterReset switch and library parameter
+    command = [
+        ps_command,
+        "-File",
+        str(SCRIPT_PATH),
+        "-PosterReset",
+        "-LibraryToReset",
+        request.library.strip(),
+    ]
+
+    try:
+        logger.info(f"Resetting posters for library: {request.library}")
+        logger.info(f"Running command: {' '.join(command)}")
+
+        # Run the reset command
+        current_process = subprocess.Popen(
+            command,
+            cwd=str(BASE_DIR),
+            stdout=None,
+            stderr=None,
+            text=True,
+        )
+        current_mode = "reset"  # Set current mode to reset
+
+        logger.info(
+            f"Started poster reset for library '{request.library}' with PID {current_process.pid}"
+        )
+
+        return {
+            "success": True,
+            "message": f"Started resetting posters for library: {request.library}",
+            "pid": current_process.pid,
+        }
+    except FileNotFoundError as e:
+        error_msg = f"PowerShell not found. Please install PowerShell 7+ (pwsh) or ensure Windows PowerShell is in PATH. Error: {str(e)}"
+        logger.error(error_msg)
+        raise HTTPException(status_code=500, detail=error_msg)
+    except Exception as e:
+        logger.error(f"Error resetting posters: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.post("/api/stop")
 async def stop_script():
     """Stop running script gracefully"""
-    global current_process
+    global current_process, current_mode
 
     if not current_process or current_process.poll() is not None:
         return {"success": False, "message": "No script is running"}
@@ -269,10 +364,12 @@ async def stop_script():
         current_process.terminate()
         current_process.wait(timeout=5)
         current_process = None
+        current_mode = None  # Reset mode when script stops
         return {"success": True, "message": "Script stopped"}
     except subprocess.TimeoutExpired:
         current_process.kill()
         current_process = None
+        current_mode = None  # Reset mode when script stops
         return {"success": True, "message": "Script force killed after timeout"}
     except Exception as e:
         logger.error(f"Error stopping script: {e}")
@@ -282,7 +379,7 @@ async def stop_script():
 @app.post("/api/force-kill")
 async def force_kill_script():
     """Force kill running script immediately"""
-    global current_process
+    global current_process, current_mode
 
     if not current_process or current_process.poll() is not None:
         return {"success": False, "message": "No script is running"}
@@ -291,12 +388,14 @@ async def force_kill_script():
         current_process.kill()
         current_process.wait(timeout=2)
         current_process = None
+        current_mode = None  # Reset mode when script is killed
         logger.warning("Script was force killed")
         return {"success": True, "message": "Script force killed"}
     except Exception as e:
         logger.error(f"Error force killing script: {e}")
         # Try to set to None anyway
         current_process = None
+        current_mode = None  # Reset mode when script is killed
         return {"success": True, "message": "Script process cleared"}
 
 

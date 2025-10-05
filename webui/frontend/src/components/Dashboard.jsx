@@ -10,6 +10,8 @@ import {
   Save,
   Trash2,
   AlertTriangle,
+  RotateCcw,
+  Zap,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 
@@ -22,11 +24,13 @@ function Dashboard() {
     script_exists: false,
     config_exists: false,
     pid: null,
+    current_mode: null,
     already_running_detected: false,
     running_file_exists: false,
   });
   const [loading, setLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [resetLibrary, setResetLibrary] = useState("");
 
   const fetchStatus = async () => {
     setIsRefreshing(true);
@@ -109,7 +113,7 @@ function Dashboard() {
 
   const forceKillScript = async () => {
     if (
-      !confirm(
+      !window.confirm(
         "Force kill the script? This will terminate it immediately without cleanup."
       )
     ) {
@@ -148,7 +152,6 @@ function Dashboard() {
   const deleteRunningFile = async () => {
     setLoading(true);
     try {
-      // ✅ KORRIGIERT: Verwende DELETE-Methode und den richtigen Endpoint
       const response = await fetch(`${API_URL}/running-file`, {
         method: "DELETE",
       });
@@ -186,6 +189,57 @@ function Dashboard() {
     } catch (error) {
       console.error("Delete running file error:", error);
       toast.error(`Error deleting running file: ${error.message}`, {
+        duration: 5000,
+        position: "top-right",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetPosters = async () => {
+    if (!resetLibrary.trim()) {
+      toast.error("Please enter a library name", {
+        duration: 3000,
+        position: "top-right",
+      });
+      return;
+    }
+
+    if (
+      !window.confirm(
+        `⚠️ WARNING: This will reset ALL posters in library "${resetLibrary}"!\n\nThis action CANNOT be undone. Are you absolutely sure?`
+      )
+    ) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/reset-posters`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ library: resetLibrary }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        toast.success(data.message, {
+          duration: 4000,
+          position: "top-right",
+        });
+        setResetLibrary(""); // Clear input after success
+      } else {
+        toast.error(`Error: ${data.message}`, {
+          duration: 5000,
+          position: "top-right",
+        });
+      }
+    } catch (error) {
+      toast.error(`Error: ${error.message}`, {
         duration: 5000,
         position: "top-right",
       });
@@ -294,9 +348,16 @@ function Dashboard() {
                 {status.running ? "Running" : "Stopped"}
               </p>
               {status.running && status.pid && (
-                <p className="text-sm text-theme-muted mt-1">
-                  PID: {status.pid}
-                </p>
+                <>
+                  <p className="text-sm text-theme-muted mt-1">
+                    PID: {status.pid}
+                  </p>
+                  {status.current_mode && (
+                    <p className="text-xs text-blue-400 mt-1 capitalize">
+                      Mode: {status.current_mode}
+                    </p>
+                  )}
+                </>
               )}
             </div>
             {status.running ? (
@@ -348,13 +409,14 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* Control Buttons */}
-      <div className="bg-theme-card rounded-lg p-6 border border-theme mb-8">
-        <h2 className="text-xl font-semibold mb-4 text-theme-primary">
-          Script Controls
+      {/* Script Execution Controls */}
+      <div className="bg-theme-card rounded-lg p-6 border border-theme mb-6">
+        <h2 className="text-xl font-semibold mb-4 text-theme-primary flex items-center">
+          <Play className="w-5 h-5 mr-2" />
+          Script Execution
         </h2>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <button
             onClick={() => runScript("normal")}
             disabled={loading || status.running}
@@ -391,12 +453,26 @@ function Dashboard() {
             Backup
           </button>
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {/* DANGER ZONE */}
+      <div className="bg-gradient-to-br from-red-950/40 to-red-900/20 rounded-lg p-6 border-2 border-red-600/50 mb-8">
+        <div className="flex items-center mb-4">
+          <AlertTriangle className="w-6 h-6 text-red-400 mr-3" />
+          <h2 className="text-xl font-semibold text-red-400">Danger Zone</h2>
+        </div>
+
+        <p className="text-red-200 text-sm mb-6">
+          These actions are potentially destructive and should be used with
+          caution.
+        </p>
+
+        {/* Stop and Force Kill */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <button
             onClick={stopScript}
             disabled={loading || !status.running}
-            className="flex items-center justify-center px-4 py-3 bg-red-600 hover:bg-red-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-colors shadow-lg shadow-red-900/50 border-2 border-red-500"
+            className="flex items-center justify-center px-4 py-3 bg-red-600 hover:bg-red-700 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg font-medium transition-colors border-2 border-red-500"
           >
             <Square className="w-5 h-5 mr-2" />
             Stop Script
@@ -405,29 +481,81 @@ function Dashboard() {
           <button
             onClick={forceKillScript}
             disabled={loading || !status.running}
-            className="flex items-center justify-center px-4 py-3 bg-red-800 hover:bg-red-900 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-colors border border-red-600"
+            className="flex items-center justify-center px-4 py-3 bg-red-800 hover:bg-red-900 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg font-medium transition-colors border-2 border-red-600"
           >
-            <AlertTriangle className="w-5 h-5 mr-2" />
+            <Zap className="w-5 h-5 mr-2" />
             Force Kill
           </button>
 
           <button
             onClick={deleteRunningFile}
             disabled={loading}
-            className="flex items-center justify-center px-4 py-3 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-colors"
+            className="flex items-center justify-center px-4 py-3 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg font-medium transition-colors border-2 border-orange-500"
           >
             <Trash2 className="w-5 h-5 mr-2" />
             Delete Running File
           </button>
+        </div>
+
+        {/* Reset Posters Section */}
+        <div className="border-t-2 border-red-600/30 pt-6">
+          <div className="flex items-center mb-4">
+            <RotateCcw className="w-5 h-5 text-red-400 mr-2" />
+            <h3 className="text-lg font-semibold text-red-300">
+              Reset Posters
+            </h3>
+          </div>
+
+          <p className="text-red-200 text-sm mb-4">
+            ⚠️ This will reset ALL posters in the specified Plex library. This
+            action CANNOT be undone!
+          </p>
+
+          <div className="flex flex-col md:flex-row gap-4">
+            <input
+              type="text"
+              value={resetLibrary}
+              onChange={(e) => setResetLibrary(e.target.value)}
+              placeholder="Enter library name (e.g., Movies, TV Shows)"
+              disabled={loading || status.running}
+              className="flex-1 px-4 py-3 bg-theme-card border-2 border-red-500/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
+            />
+            <button
+              onClick={resetPosters}
+              disabled={loading || status.running || !resetLibrary.trim()}
+              className="flex items-center justify-center px-6 py-3 bg-red-700 hover:bg-red-800 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg font-medium transition-colors border-2 border-red-600 whitespace-nowrap"
+            >
+              <RotateCcw className="w-5 h-5 mr-2" />
+              Reset Posters
+            </button>
+          </div>
+
+          <div className="mt-3 text-xs text-red-300/70">
+            <strong>Note:</strong> The script must be stopped before resetting
+            posters. Make sure you have entered the exact library name as it
+            appears in Plex.
+          </div>
         </div>
       </div>
 
       {/* Log Viewer */}
       <div className="bg-theme-card rounded-lg p-6 border border-theme">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold text-theme-primary">
-            Last Log Entries
-          </h2>
+          <div>
+            <h2 className="text-xl font-semibold text-theme-primary">
+              Last Log Entries
+            </h2>
+            {status.current_mode && (
+              <p className="text-xs text-theme-muted mt-1">
+                Reading from:{" "}
+                {status.current_mode === "testing"
+                  ? "Testinglog.log"
+                  : status.current_mode === "manual"
+                  ? "Manuallog.log"
+                  : "Scriptlog.log"}
+              </p>
+            )}
+          </div>
           <button
             onClick={fetchStatus}
             disabled={isRefreshing}
