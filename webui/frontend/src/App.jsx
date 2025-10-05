@@ -14,7 +14,7 @@ import Gallery from "./components/Gallery";
 import TestGallery from "./components/TestGallery";
 import BackgroundsGallery from "./components/BackgroundsGallery";
 import SeasonGallery from "./components/SeasonGallery";
-import EpisodeGallery from "./components/EpisodeGallery";
+import TitleCardGallery from "./components/TitleCardGallery";
 import {
   Menu,
   Settings,
@@ -65,14 +65,17 @@ function ThemeSwitcher() {
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors ${
                     theme === t.id
                       ? "bg-theme-primary text-white"
-                      : "text-theme-text hover:bg-theme-hover"
+                      : "text-gray-300 hover:bg-theme-hover hover:text-white"
                   }`}
                 >
-                  <span>{t.name}</span>
-                  <span
-                    className="w-4 h-4 rounded-full border-2 border-white/30"
-                    style={{ backgroundColor: t.color }}
-                  />
+                  <span className="flex items-center">
+                    <div
+                      className="w-3 h-3 rounded-full mr-2"
+                      style={{ backgroundColor: t.colors.primary }}
+                    />
+                    {t.name}
+                  </span>
+                  {theme === t.id && <span className="text-xs">✓</span>}
                 </button>
               ))}
             </div>
@@ -86,57 +89,33 @@ function ThemeSwitcher() {
 function Navigation() {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [uiVersion, setUiVersion] = useState(null);
-
-  // Fetch UI version on mount
-  React.useEffect(() => {
-    const fetchUIVersion = async () => {
-      try {
-        const response = await fetch("http://localhost:8000/api/version-ui");
-        if (response.ok) {
-          const data = await response.json();
-          if (data.version) {
-            setUiVersion(data.version);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching UI version:", error);
-      }
-    };
-    fetchUIVersion();
-  }, []);
 
   const navItems = [
-    { path: "/", icon: Activity, label: "Dashboard" },
-    { path: "/test-gallery", icon: Image, label: "Test Gallery" },
-    { path: "/gallery", icon: Image, label: "Posters" },
-    { path: "/backgrounds", icon: Image, label: "Backgrounds" },
-    { path: "/seasons", icon: Film, label: "Seasons" },
-    { path: "/episodes", icon: Tv, label: "TitleCards" },
-    { path: "/config", icon: Settings, label: "Config" },
-    { path: "/logs", icon: FileText, label: "Logs" },
+    { path: "/", label: "Dashboard", icon: Activity },
+    { path: "/test-gallery", label: "Test Gallery", icon: TestTube },
+    { path: "/gallery", label: "Posters", icon: Image },
+    { path: "/backgrounds", label: "Backgrounds", icon: Image },
+    { path: "/seasons", label: "Seasons", icon: Film },
+    { path: "/titlecards", label: "Title Cards", icon: Tv },
+    { path: "/config", label: "Config", icon: Settings },
+    { path: "/logs", label: "Logs", icon: FileText },
   ];
 
   return (
-    <nav className="bg-theme-card border-b border-theme">
+    <nav className="bg-theme-card border-b border-theme shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <div className="flex items-center">
-            <div className="flex-shrink-0 flex items-center">
-              <h1 className="text-2xl font-bold text-theme-primary">
-                Posterizarr
-              </h1>
-              {uiVersion && (
-                <span
-                  style={{ marginTop: 0.5 + "em" }}
-                  className="ml-2 px-2 py-0.5 text-[10px] font-medium bg-theme-accent text-white rounded-full"
-                >
-                  v{uiVersion}
-                </span>
-              )}
-            </div>
-            <div className="hidden md:block">
-              <div className="ml-10 flex items-baseline space-x-4">
+          {/* Logo */}
+          <div className="flex-shrink-0">
+            <h1 className="text-2xl font-bold text-theme-primary">
+              Posterizarr
+            </h1>
+          </div>
+
+          {/* Desktop menu */}
+          <div className="hidden md:block">
+            <div className="flex items-center space-x-1">
+              <div className="flex items-baseline space-x-1">
                 {navItems.map((item) => {
                   const Icon = item.icon;
                   const isActive = location.pathname === item.path;
@@ -224,7 +203,7 @@ function AppContent() {
           <Route path="/gallery" element={<Gallery />} />
           <Route path="/backgrounds" element={<BackgroundsGallery />} />
           <Route path="/seasons" element={<SeasonGallery />} />
-          <Route path="/episodes" element={<EpisodeGallery />} />
+          <Route path="/titlecards" element={<TitleCardGallery />} />
           <Route path="/config" element={<ConfigEditor />} />
           <Route path="/logs" element={<LogViewer />} />
         </Routes>

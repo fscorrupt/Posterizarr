@@ -20,16 +20,24 @@ function ConfigEditor() {
 
   // Group sections into logical tabs
   const tabs = {
-    General: ["PrerequisitePart", "PlexUrl", "RadarrUrl", "SonarrUrl"],
+    General: ["PrerequisitePart", "PlexPart", "JellyfinPart", "EmbyPart"],
     Overlays: [
+      "OverlayPart",
       "PosterOverlayPart",
       "SeasonPosterOverlayPart",
       "BackgroundOverlayPart",
       "TitleCardOverlayPart",
     ],
-    "Text & Fonts": ["TextDefinitions", "FontPart"],
+    Text: [
+      "TitleCardTitleTextPart",
+      "TitleCardEPTextPart",
+      "ShowTitleOnSeasonPosterPart",
+      "CollectionTitlePosterPart",
+      "CollectionPosterOverlayPart",
+    ],
+    API: ["ApiPart", "FontPart"],
     Notifications: ["Notification"],
-    Advanced: [], // Will contain remaining sections
+    // Advanced: [], // Will contain remaining sections
   };
 
   useEffect(() => {
@@ -148,6 +156,32 @@ function ConfigEditor() {
   };
 
   const renderInput = (section, key, value) => {
+    // Handle arrays first - FIXED: Convert to array only on blur to prevent cursor jumping
+    if (Array.isArray(value)) {
+      return (
+        <div>
+          <textarea
+            defaultValue={value.join(", ")}
+            onBlur={(e) => {
+              // Split by comma and clean up each item only when leaving the field
+              const arrayValue = e.target.value
+                .split(",")
+                .map((item) => item.trim())
+                .filter((item) => item !== "");
+              updateValue(section, key, arrayValue);
+            }}
+            rows={Math.min(value.length + 2, 8)}
+            className="w-full px-4 py-2.5 bg-theme-card border border-theme-primary rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all resize-y font-mono text-sm"
+            placeholder="Enter comma-separated values"
+          />
+          <p className="text-xs text-theme-muted mt-1">
+            Array with {value.length} item{value.length !== 1 ? "s" : ""}{" "}
+            (comma-separated)
+          </p>
+        </div>
+      );
+    }
+
     const type = typeof value;
     const keyLower = key.toLowerCase();
     const stringValue =
@@ -171,6 +205,24 @@ function ConfigEditor() {
           >
             {value === "true" || value === true ? "Enabled" : "Disabled"}
           </label>
+        </div>
+      );
+    }
+
+    // Handle text_offset specially - it needs +/- prefix support
+    if (keyLower === "text_offset") {
+      return (
+        <div>
+          <input
+            type="text"
+            value={stringValue}
+            onChange={(e) => updateValue(section, key, e.target.value)}
+            className="w-full px-4 py-2.5 bg-theme-card border border-theme-primary rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono"
+            placeholder="+200 or -150"
+          />
+          <p className="text-xs text-theme-muted mt-1">
+            Use + or - prefix (e.g., +200, -150)
+          </p>
         </div>
       );
     }
@@ -360,7 +412,8 @@ function ConfigEditor() {
                               {key}
                             </span>
                             <span className="text-xs text-theme-muted block mb-2">
-                              Type: {typeof value}
+                              Type:{" "}
+                              {Array.isArray(value) ? "array" : typeof value}
                             </span>
                             {renderInput(section, key, value)}
                           </label>

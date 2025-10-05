@@ -8,14 +8,18 @@ import {
   Save,
   Cloud,
   ChevronDown,
+  Folder,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 
 const API_URL = "http://localhost:8000/api";
 
 function Gallery() {
+  const [folders, setFolders] = useState([]);
+  const [activeFolder, setActiveFolder] = useState(null);
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [imagesLoading, setImagesLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
   const [error, setError] = useState(null);
@@ -27,11 +31,55 @@ function Gallery() {
     current_mode: null,
   });
 
-  const fetchImages = async (showToast = false) => {
+  const fetchFolders = async (showToast = false) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${API_URL}/gallery`);
+      const response = await fetch(`${API_URL}/assets-folders`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      setFolders(data.folders || []);
+
+      if (showToast && data.folders && data.folders.length > 0) {
+        toast.success(`Loaded ${data.folders.length} folders`, {
+          duration: 2000,
+          position: "top-right",
+        });
+      }
+
+      // Only auto-select folders that have posters
+      if (data.folders && data.folders.length > 0 && !activeFolder) {
+        const foldersWithPosters = data.folders.filter(
+          (f) => f.poster_count > 0
+        );
+        if (foldersWithPosters.length > 0) {
+          setActiveFolder(foldersWithPosters[0]);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching folders:", error);
+      setError(error.message);
+      setFolders([]);
+      toast.error("Failed to load folders", {
+        duration: 4000,
+        position: "top-right",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchFolderImages = async (folder, showToast = false) => {
+    if (!folder) return;
+
+    setImagesLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(
+        `${API_URL}/assets-folder-images/posters/${folder.path}`
+      );
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -39,21 +87,24 @@ function Gallery() {
       setImages(data.images || []);
 
       if (showToast && data.images && data.images.length > 0) {
-        toast.success(`Loaded ${data.images.length} posters`, {
-          duration: 2000,
-          position: "top-right",
-        });
+        toast.success(
+          `Loaded ${data.images.length} posters from ${folder.name}`,
+          {
+            duration: 2000,
+            position: "top-right",
+          }
+        );
       }
     } catch (error) {
       console.error("Error fetching images:", error);
       setError(error.message);
       setImages([]);
-      toast.error("Failed to load gallery", {
+      toast.error(`Failed to load images from ${folder.name}`, {
         duration: 4000,
         position: "top-right",
       });
     } finally {
-      setLoading(false);
+      setImagesLoading(false);
     }
   };
 
@@ -132,6 +183,9 @@ function Gallery() {
         if (selectedImage && selectedImage.path === imagePath) {
           setSelectedImage(null);
         }
+
+        // Refresh folders to update counts
+        fetchFolders(false);
       } else {
         throw new Error(data.message || "Failed to delete poster");
       }
@@ -151,15 +205,21 @@ function Gallery() {
   };
 
   useEffect(() => {
-    fetchImages(false);
+    fetchFolders(false);
     fetchStatus();
     const interval = setInterval(fetchStatus, 3000);
     return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
+    if (activeFolder) {
+      fetchFolderImages(activeFolder, false);
+    }
+  }, [activeFolder]);
+
+  useEffect(() => {
     setDisplayCount(50);
-  }, [searchTerm]);
+  }, [searchTerm, activeFolder]);
 
   const filteredImages = images.filter(
     (img) =>
@@ -182,22 +242,27 @@ function Gallery() {
           </h1>
 
           <button
-            onClick={() => fetchImages(true)}
-            disabled={loading}
+            onClick={() => {
+              fetchFolders(true);
+              if (activeFolder) {
+                fetchFolderImages(activeFolder, true);
+              }
+            }}
+            disabled={loading || imagesLoading}
             className="flex items-center px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-colors"
           >
             <RefreshCw
-              className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`}
+              className={`w-4 h-4 mr-2 ${
+                loading || imagesLoading ? "animate-spin" : ""
+              }`}
             />
             Refresh
           </button>
         </div>
 
         {/* Script & Sync Mode Buttons */}
-        <div className="bg-theme-card rounded-lg p-4 border border-theme-primary">
-          <h3 className="text-sm font-semibold text-theme-muted mb-3">
-            Quick Actions
-          </h3>
+        <div className="">
+          <h3 className="text-sm font-semibold text-theme-muted mb-3"></h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <button
               onClick={() => runScript("normal", "Normal Mode")}
@@ -236,23 +301,48 @@ function Gallery() {
             </button>
           </div>
         </div>
-      </div>
 
-      {/* Search bar */}
-      {images.length > 0 && (
-        <div className="mb-6">
+        {/* Search bar */}
+        {activeFolder && images.length > 0 && (
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
-              placeholder="Search posters..."
+              placeholder={`Search posters in ${activeFolder.name}...`}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-3 bg-theme-card border border-theme-primary rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary"
             />
           </div>
-        </div>
-      )}
+        )}
+
+        {/* Folder Tabs */}
+        {folders.length > 0 && (
+          <div className="bg-theme-card rounded-lg p-2 border border-theme-primary overflow-x-auto">
+            <div className="flex gap-2 min-w-max">
+              {folders
+                .filter((folder) => folder.poster_count > 0)
+                .map((folder) => (
+                  <button
+                    key={folder.path}
+                    onClick={() => setActiveFolder(folder)}
+                    className={`flex items-center px-4 py-2 rounded-lg font-medium transition-all whitespace-nowrap ${
+                      activeFolder?.path === folder.path
+                        ? "bg-theme-primary text-white"
+                        : "bg-theme-hover text-theme-text hover:bg-theme-primary/70"
+                    }`}
+                  >
+                    <Folder className="w-4 h-4 mr-2 flex-shrink-0" />
+                    {folder.name}
+                    <span className="ml-2 px-2 py-0.5 bg-black/20 rounded-full text-xs">
+                      {folder.poster_count}
+                    </span>
+                  </button>
+                ))}
+            </div>
+          </div>
+        )}
+      </div>
 
       {loading ? (
         <div className="flex items-center justify-center py-32">
@@ -266,11 +356,30 @@ function Gallery() {
           </h3>
           <p className="text-red-300 text-sm mb-4">{error}</p>
           <button
-            onClick={() => fetchImages(true)}
+            onClick={() => {
+              fetchFolders(true);
+              if (activeFolder) {
+                fetchFolderImages(activeFolder, true);
+              }
+            }}
             className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg font-medium transition-colors"
           >
             Try Again
           </button>
+        </div>
+      ) : !activeFolder ? (
+        <div className="bg-theme-card border border-theme-primary rounded-lg p-12 text-center">
+          <Folder className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-theme-muted mb-2">
+            No Folders Found
+          </h3>
+          <p className="text-theme-muted text-sm">
+            No folders found in assets directory
+          </p>
+        </div>
+      ) : imagesLoading ? (
+        <div className="flex items-center justify-center py-32">
+          <RefreshCw className="w-12 h-12 animate-spin text-theme-primary" />
         </div>
       ) : filteredImages.length === 0 ? (
         <div className="bg-theme-card border border-theme-primary rounded-lg p-12 text-center">
@@ -281,13 +390,14 @@ function Gallery() {
           <p className="text-theme-muted text-sm">
             {searchTerm
               ? "Try adjusting your search terms"
-              : "Run the script to generate posters"}
+              : `No posters found in ${activeFolder.name}`}
           </p>
         </div>
       ) : (
         <>
           <div className="mb-4 text-sm text-theme-muted">
             Showing {displayedImages.length} of {filteredImages.length} posters
+            in {activeFolder.name}
             {images.length !== filteredImages.length && (
               <span className="ml-2 text-theme-primary">
                 (filtered from {images.length} total)

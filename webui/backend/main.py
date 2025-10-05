@@ -105,9 +105,9 @@ def is_background_file(filename: str) -> bool:
     return False
 
 
-def is_titlecard_file(filename: str) -> bool:
+def is_season_file(filename: str) -> bool:
     """
-    Check if file is a title card (SeasonXX.jpg with capital S):
+    Check if file is a season poster (SeasonXX.jpg with capital S):
     - Season01.jpg, Season02.jpg, Season12.jpg (folder-based)
     - Show Name (Year) [tvdb-xxxxx]_Season01.jpg (file-based)
 
@@ -128,9 +128,9 @@ def is_titlecard_file(filename: str) -> bool:
     return False
 
 
-def is_episode_file(filename: str) -> bool:
+def is_titlecard_file(filename: str) -> bool:
     """
-    Check if file is an episode (SxxExx.jpg with capital S and E):
+    Check if file is a title card / episode (SxxExx.jpg with capital S and E):
     - S01E01.jpg, S02E05.jpg, S12E10.jpg (folder-based)
     - Show Name (Year) [tvdb-xxxxx]_S01E01.jpg (file-based)
 
@@ -796,9 +796,14 @@ async def delete_background(path: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/api/titlecards-gallery")
-async def get_titlecards_gallery():
-    """Get titlecards gallery from assets directory (only SeasonXX.jpg)"""
+# ============================================================================
+# CORRECTED ENDPOINTS - Swapped functionality
+# ============================================================================
+
+
+@app.get("/api/seasons-gallery")
+async def get_seasons_gallery():
+    """Get seasons gallery from assets directory (only SeasonXX.jpg)"""
     if not ASSETS_DIR.exists():
         return {"images": []}
 
@@ -809,6 +814,78 @@ async def get_titlecards_gallery():
         for image_path in ASSETS_DIR.rglob("*"):
             if image_path.suffix.lower() in image_extensions:
                 # Filter: Only include SeasonXX.jpg
+                if is_season_file(image_path.name):
+                    try:
+                        relative_path = image_path.relative_to(ASSETS_DIR)
+                        # Create URL path with forward slashes
+                        url_path = str(relative_path).replace("\\", "/")
+                        images.append(
+                            {
+                                "path": str(relative_path),
+                                "name": image_path.name,
+                                "size": image_path.stat().st_size,
+                                "url": f"/assets/{url_path}",
+                            }
+                        )
+                    except Exception as e:
+                        logger.error(f"Error processing season {image_path}: {e}")
+                        continue
+
+        # Sort by name and limit
+        images.sort(key=lambda x: x["name"])
+        return {"images": images[:200]}  # Limit to 200 for performance
+    except Exception as e:
+        logger.error(f"Error scanning seasons gallery: {e}")
+        return {"images": []}
+
+
+@app.delete("/api/seasons/{path:path}")
+async def delete_season(path: str):
+    """Delete a season from the assets directory"""
+    try:
+        # Construct the full file path
+        file_path = ASSETS_DIR / path
+
+        # Security check: Ensure the path is within ASSETS_DIR
+        try:
+            file_path = file_path.resolve()
+            file_path.relative_to(ASSETS_DIR.resolve())
+        except ValueError:
+            raise HTTPException(status_code=403, detail="Access denied: Invalid path")
+
+        # Check if file exists
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail="Season not found")
+
+        # Check if it's a file (not a directory)
+        if not file_path.is_file():
+            raise HTTPException(status_code=400, detail="Path is not a file")
+
+        # Delete the file
+        file_path.unlink()
+        logger.info(f"Deleted season: {file_path}")
+
+        return {"success": True, "message": f"Season '{path}' deleted successfully"}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting season {path}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/titlecards-gallery")
+async def get_titlecards_gallery():
+    """Get title cards gallery from assets directory (only SxxExx.jpg - episodes)"""
+    if not ASSETS_DIR.exists():
+        return {"images": []}
+
+    images = []
+    image_extensions = {".jpg", ".jpeg", ".png", ".webp"}
+
+    try:
+        for image_path in ASSETS_DIR.rglob("*"):
+            if image_path.suffix.lower() in image_extensions:
+                # Filter: Only include SxxExx.jpg (title cards / episodes)
                 if is_titlecard_file(image_path.name):
                     try:
                         relative_path = image_path.relative_to(ASSETS_DIR)
@@ -868,23 +945,108 @@ async def delete_titlecard(path: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/api/episodes-gallery")
-async def get_episodes_gallery():
-    """Get episodes gallery from assets directory (only SxxExx.jpg)"""
+# ============================================================================
+
+
+@app.get("/api/assets-folders")
+async def get_assets_folders():
+    """Get list of folders in assets directory with image counts per type"""
+    if not ASSETS_DIR.exists():
+        return {"folders": []}
+
+    try:
+        folders = []
+        image_extensions = {".jpg", ".jpeg", ".png", ".webp"}
+
+        for item in ASSETS_DIR.iterdir():
+            if item.is_dir():
+                # Count different image types
+                poster_count = 0
+                background_count = 0
+                season_count = 0
+                titlecard_count = 0
+
+                for image_path in item.rglob("*"):
+                    if image_path.suffix.lower() in image_extensions:
+                        if is_poster_file(image_path.name):
+                            poster_count += 1
+                        elif is_background_file(image_path.name):
+                            background_count += 1
+                        elif is_season_file(image_path.name):
+                            season_count += 1
+                        elif is_titlecard_file(image_path.name):
+                            titlecard_count += 1
+
+                folders.append(
+                    {
+                        "name": item.name,
+                        "path": str(item.relative_to(ASSETS_DIR)),
+                        "poster_count": poster_count,
+                        "background_count": background_count,
+                        "season_count": season_count,
+                        "titlecard_count": titlecard_count,
+                        "total_count": poster_count
+                        + background_count
+                        + season_count
+                        + titlecard_count,
+                    }
+                )
+
+        # Sort folders alphabetically
+        folders.sort(key=lambda x: x["name"])
+        return {"folders": folders}
+    except Exception as e:
+        logger.error(f"Error getting assets folders: {e}")
+        return {"folders": []}
+
+
+@app.get("/api/assets-folder-images/{image_type}/{folder_path:path}")
+async def get_assets_folder_images_filtered(image_type: str, folder_path: str):
+    """Get filtered images from a specific folder"""
     if not ASSETS_DIR.exists():
         return {"images": []}
+
+    folder = ASSETS_DIR / folder_path
+
+    # Security check
+    try:
+        folder = folder.resolve()
+        folder.relative_to(ASSETS_DIR.resolve())
+    except ValueError:
+        raise HTTPException(status_code=403, detail="Access denied: Invalid path")
+
+    if not folder.exists() or not folder.is_dir():
+        raise HTTPException(status_code=404, detail="Folder not found")
+
+    # Validate image_type
+    valid_types = ["posters", "backgrounds", "seasons", "titlecards"]
+    if image_type not in valid_types:
+        raise HTTPException(
+            status_code=400, detail=f"Invalid image type. Must be one of: {valid_types}"
+        )
 
     images = []
     image_extensions = {".jpg", ".jpeg", ".png", ".webp"}
 
     try:
-        for image_path in ASSETS_DIR.rglob("*"):
+        for image_path in folder.rglob("*"):
             if image_path.suffix.lower() in image_extensions:
-                # Filter: Only include SxxExx.jpg
-                if is_episode_file(image_path.name):
+                # Apply filter based on image_type
+                include_image = False
+                if image_type == "posters" and is_poster_file(image_path.name):
+                    include_image = True
+                elif image_type == "backgrounds" and is_background_file(
+                    image_path.name
+                ):
+                    include_image = True
+                elif image_type == "seasons" and is_season_file(image_path.name):
+                    include_image = True
+                elif image_type == "titlecards" and is_titlecard_file(image_path.name):
+                    include_image = True
+
+                if include_image:
                     try:
                         relative_path = image_path.relative_to(ASSETS_DIR)
-                        # Create URL path with forward slashes
                         url_path = str(relative_path).replace("\\", "/")
                         images.append(
                             {
@@ -895,49 +1057,15 @@ async def get_episodes_gallery():
                             }
                         )
                     except Exception as e:
-                        logger.error(f"Error processing episode {image_path}: {e}")
+                        logger.error(f"Error processing image {image_path}: {e}")
                         continue
 
-        # Sort by name and limit
+        # Sort by name
         images.sort(key=lambda x: x["name"])
-        return {"images": images[:200]}  # Limit to 200 for performance
+        return {"images": images}
     except Exception as e:
-        logger.error(f"Error scanning episodes gallery: {e}")
+        logger.error(f"Error scanning folder {folder_path}: {e}")
         return {"images": []}
-
-
-@app.delete("/api/episodes/{path:path}")
-async def delete_episode(path: str):
-    """Delete an episode from the assets directory"""
-    try:
-        # Construct the full file path
-        file_path = ASSETS_DIR / path
-
-        # Security check: Ensure the path is within ASSETS_DIR
-        try:
-            file_path = file_path.resolve()
-            file_path.relative_to(ASSETS_DIR.resolve())
-        except ValueError:
-            raise HTTPException(status_code=403, detail="Access denied: Invalid path")
-
-        # Check if file exists
-        if not file_path.exists():
-            raise HTTPException(status_code=404, detail="Episode not found")
-
-        # Check if it's a file (not a directory)
-        if not file_path.is_file():
-            raise HTTPException(status_code=400, detail="Path is not a file")
-
-        # Delete the file
-        file_path.unlink()
-        logger.info(f"Deleted episode: {file_path}")
-
-        return {"success": True, "message": f"Episode '{path}' deleted successfully"}
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Error deleting episode {path}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/api/version")

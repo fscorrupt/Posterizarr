@@ -8,14 +8,18 @@ import {
   Save,
   Cloud,
   ChevronDown,
+  Folder,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 
 const API_URL = "http://localhost:8000/api";
 
-function EpisodeGallery() {
+function SeasonGallery() {
+  const [folders, setFolders] = useState([]);
+  const [activeFolder, setActiveFolder] = useState(null);
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [imagesLoading, setImagesLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
   const [error, setError] = useState(null);
@@ -27,11 +31,55 @@ function EpisodeGallery() {
     current_mode: null,
   });
 
-  const fetchImages = async (showToast = false) => {
+  const fetchFolders = async (showToast = false) => {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`${API_URL}/episodes-gallery`);
+      const response = await fetch(`${API_URL}/assets-folders`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      setFolders(data.folders || []);
+
+      if (showToast && data.folders && data.folders.length > 0) {
+        toast.success(`Loaded ${data.folders.length} folders`, {
+          duration: 2000,
+          position: "top-right",
+        });
+      }
+
+      // Only auto-select folders that have seasons
+      if (data.folders && data.folders.length > 0 && !activeFolder) {
+        const foldersWithSeasons = data.folders.filter(
+          (f) => f.season_count > 0
+        );
+        if (foldersWithSeasons.length > 0) {
+          setActiveFolder(foldersWithSeasons[0]);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching folders:", error);
+      setError(error.message);
+      setFolders([]);
+      toast.error("Failed to load folders", {
+        duration: 4000,
+        position: "top-right",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchFolderImages = async (folder, showToast = false) => {
+    if (!folder) return;
+
+    setImagesLoading(true);
+    setError(null);
+    try {
+      const response = await fetch(
+        `${API_URL}/assets-folder-images/seasons/${folder.path}`
+      );
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -39,21 +87,24 @@ function EpisodeGallery() {
       setImages(data.images || []);
 
       if (showToast && data.images && data.images.length > 0) {
-        toast.success(`Loaded ${data.images.length} episodes`, {
-          duration: 2000,
-          position: "top-right",
-        });
+        toast.success(
+          `Loaded ${data.images.length} seasons from ${folder.name}`,
+          {
+            duration: 2000,
+            position: "top-right",
+          }
+        );
       }
     } catch (error) {
-      console.error("Error fetching episodes:", error);
+      console.error("Error fetching images:", error);
       setError(error.message);
       setImages([]);
-      toast.error("Failed to load episodes gallery", {
+      toast.error(`Failed to load images from ${folder.name}`, {
         duration: 4000,
         position: "top-right",
       });
     } finally {
-      setLoading(false);
+      setImagesLoading(false);
     }
   };
 
@@ -97,34 +148,32 @@ function EpisodeGallery() {
     }
   };
 
-  const deleteEpisode = async (imagePath, imageName, event) => {
+  const deleteSeason = async (imagePath, imageName, event) => {
     if (event) {
       event.stopPropagation();
     }
 
     if (
-      !window.confirm(
-        `Möchtest du die Episode "${imageName}" wirklich löschen?`
-      )
+      !window.confirm(`Möchtest du die Season "${imageName}" wirklich löschen?`)
     ) {
       return;
     }
 
     setDeletingImage(imagePath);
     try {
-      const response = await fetch(`${API_URL}/episodes/${imagePath}`, {
+      const response = await fetch(`${API_URL}/seasons/${imagePath}`, {
         method: "DELETE",
       });
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.detail || "Failed to delete episode");
+        throw new Error(data.detail || "Failed to delete season");
       }
 
       const data = await response.json();
 
       if (data.success) {
-        toast.success(`Episode "${imageName}" erfolgreich gelöscht`, {
+        toast.success(`Season "${imageName}" erfolgreich gelöscht`, {
           duration: 3000,
           position: "top-right",
         });
@@ -134,11 +183,13 @@ function EpisodeGallery() {
         if (selectedImage && selectedImage.path === imagePath) {
           setSelectedImage(null);
         }
+
+        fetchFolders(false);
       } else {
-        throw new Error(data.message || "Failed to delete episode");
+        throw new Error(data.message || "Failed to delete season");
       }
     } catch (error) {
-      console.error("Error deleting episode:", error);
+      console.error("Error deleting season:", error);
       toast.error(`Fehler beim Löschen: ${error.message}`, {
         duration: 5000,
         position: "top-right",
@@ -153,15 +204,21 @@ function EpisodeGallery() {
   };
 
   useEffect(() => {
-    fetchImages(false);
+    fetchFolders(false);
     fetchStatus();
     const interval = setInterval(fetchStatus, 3000);
     return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
+    if (activeFolder) {
+      fetchFolderImages(activeFolder, false);
+    }
+  }, [activeFolder]);
+
+  useEffect(() => {
     setDisplayCount(50);
-  }, [searchTerm]);
+  }, [searchTerm, activeFolder]);
 
   const filteredImages = images.filter(
     (img) =>
@@ -179,25 +236,30 @@ function EpisodeGallery() {
       <div className="flex flex-col space-y-4 mb-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between space-y-4 md:space-y-0">
           <h1 className="text-3xl font-bold text-theme-primary">
-            Episode Gallery
+            Season Gallery
           </h1>
 
           <button
-            onClick={() => fetchImages(true)}
-            disabled={loading}
+            onClick={() => {
+              fetchFolders(true);
+              if (activeFolder) {
+                fetchFolderImages(activeFolder, true);
+              }
+            }}
+            disabled={loading || imagesLoading}
             className="flex items-center px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-colors"
           >
             <RefreshCw
-              className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`}
+              className={`w-4 h-4 mr-2 ${
+                loading || imagesLoading ? "animate-spin" : ""
+              }`}
             />
             Refresh
           </button>
         </div>
 
-        <div className="bg-theme-card rounded-lg p-4 border border-theme-primary">
-          <h3 className="text-sm font-semibold text-theme-muted mb-3">
-            Quick Actions
-          </h3>
+        <div className="">
+          <h3 className="text-sm font-semibold text-theme-muted mb-3"></h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <button
               onClick={() => runScript("normal", "Normal Mode")}
@@ -236,22 +298,46 @@ function EpisodeGallery() {
             </button>
           </div>
         </div>
-      </div>
 
-      {images.length > 0 && (
-        <div className="mb-6">
+        {activeFolder && images.length > 0 && (
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500" />
             <input
               type="text"
-              placeholder="Search episodes..."
+              placeholder={`Search seasons in ${activeFolder.name}...`}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-theme-card border border-theme-primary rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary"
+              className="w-full pl-10 pr-4 py-2 bg-theme-card border border-theme-primary rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary text-white placeholder-gray-500"
             />
           </div>
-        </div>
-      )}
+        )}
+
+        {folders.length > 0 && (
+          <div className="bg-theme-card rounded-lg p-2 border border-theme-primary overflow-x-auto">
+            <div className="flex gap-2 min-w-max">
+              {folders
+                .filter((folder) => folder.season_count > 0)
+                .map((folder) => (
+                  <button
+                    key={folder.path}
+                    onClick={() => setActiveFolder(folder)}
+                    className={`flex items-center px-4 py-2 rounded-lg font-medium transition-all whitespace-nowrap ${
+                      activeFolder?.path === folder.path
+                        ? "bg-theme-primary text-white"
+                        : "bg-theme-hover text-theme-text hover:bg-theme-primary/70"
+                    }`}
+                  >
+                    <Folder className="w-4 h-4 mr-2 flex-shrink-0" />
+                    {folder.name}
+                    <span className="ml-2 px-2 py-0.5 bg-black/20 rounded-full text-xs">
+                      {folder.season_count}
+                    </span>
+                  </button>
+                ))}
+            </div>
+          </div>
+        )}
+      </div>
 
       {loading ? (
         <div className="flex items-center justify-center py-32">
@@ -261,32 +347,52 @@ function EpisodeGallery() {
         <div className="bg-red-900/30 border border-red-700 rounded-lg p-6 text-center">
           <ImageIcon className="w-16 h-16 text-red-400 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-red-400 mb-2">
-            Error Loading Episode Gallery
+            Error Loading Season Gallery
           </h3>
           <p className="text-red-300 text-sm mb-4">{error}</p>
           <button
-            onClick={() => fetchImages(true)}
+            onClick={() => {
+              fetchFolders(true);
+              if (activeFolder) {
+                fetchFolderImages(activeFolder, true);
+              }
+            }}
             className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg font-medium transition-colors"
           >
             Try Again
           </button>
         </div>
+      ) : !activeFolder ? (
+        <div className="bg-theme-card border border-theme-primary rounded-lg p-12 text-center">
+          <Folder className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-theme-muted mb-2">
+            No Folders Found
+          </h3>
+          <p className="text-theme-muted text-sm">
+            No folders found in assets directory
+          </p>
+        </div>
+      ) : imagesLoading ? (
+        <div className="flex items-center justify-center py-32">
+          <RefreshCw className="w-12 h-12 animate-spin text-theme-primary" />
+        </div>
       ) : filteredImages.length === 0 ? (
         <div className="bg-theme-card border border-theme-primary rounded-lg p-12 text-center">
           <ImageIcon className="w-16 h-16 text-gray-600 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-theme-muted mb-2">
-            {searchTerm ? "No Matching Episodes" : "No Episodes Found"}
+            {searchTerm ? "No Matching Seasons" : "No Seasons Found"}
           </h3>
           <p className="text-theme-muted text-sm">
             {searchTerm
               ? "Try adjusting your search terms"
-              : "Run the script to generate episodes"}
+              : `No seasons found in ${activeFolder.name}`}
           </p>
         </div>
       ) : (
         <>
           <div className="mb-4 text-sm text-theme-muted">
-            Showing {displayedImages.length} of {filteredImages.length} episodes
+            Showing {displayedImages.length} of {filteredImages.length} seasons
+            in {activeFolder.name}
             {images.length !== filteredImages.length && (
               <span className="ml-2 text-theme-primary">
                 (filtered from {images.length} total)
@@ -294,21 +400,21 @@ function EpisodeGallery() {
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {displayedImages.map((image, index) => (
               <div
                 key={index}
                 className="group relative bg-theme-card rounded-lg overflow-hidden border border-theme-primary hover:border-theme-primary transition-all"
               >
                 <button
-                  onClick={(e) => deleteEpisode(image.path, image.name, e)}
+                  onClick={(e) => deleteSeason(image.path, image.name, e)}
                   disabled={deletingImage === image.path}
                   className={`absolute top-2 right-2 z-10 p-2 rounded-lg transition-all ${
                     deletingImage === image.path
                       ? "bg-gray-600 cursor-not-allowed"
                       : "bg-red-600 hover:bg-red-700 opacity-0 group-hover:opacity-100"
                   }`}
-                  title="Episode löschen"
+                  title="Season löschen"
                 >
                   <Trash2
                     className={`w-4 h-4 text-white ${
@@ -318,13 +424,13 @@ function EpisodeGallery() {
                 </button>
 
                 <div
-                  className="aspect-[16/9] bg-theme-dark flex items-center justify-center overflow-hidden cursor-pointer"
+                  className="relative cursor-pointer aspect-[2/3]"
                   onClick={() => setSelectedImage(image)}
                 >
                   <img
                     src={`http://localhost:8000${image.url}`}
                     alt={image.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    className="w-full h-full object-cover"
                     loading="lazy"
                     onError={(e) => {
                       e.target.style.display = "none";
@@ -332,23 +438,21 @@ function EpisodeGallery() {
                     }}
                   />
                   <div
-                    className="hidden flex-col items-center justify-center text-gray-600 p-4"
+                    className="w-full h-full flex items-center justify-center bg-gray-800"
                     style={{ display: "none" }}
                   >
-                    <ImageIcon className="w-12 h-12 mb-2" />
-                    <span className="text-xs text-center">
-                      Preview not available
-                    </span>
+                    <ImageIcon className="w-12 h-12 text-gray-600" />
                   </div>
                 </div>
-                <div className="p-3 border-t-2 border-theme">
-                  <p
-                    className="text-sm text-theme-text truncate"
+
+                <div className="p-3">
+                  <h3
+                    className="font-medium text-white truncate"
                     title={image.path}
                   >
                     {image.path}
-                  </p>
-                  <p className="text-xs text-theme-muted mt-1">
+                  </h3>
+                  <p className="text-xs text-gray-500 mt-1">
                     {(image.size / 1024).toFixed(2)} KB
                   </p>
                 </div>
@@ -357,12 +461,12 @@ function EpisodeGallery() {
           </div>
 
           {hasMore && (
-            <div className="mt-8 flex justify-center">
+            <div className="flex justify-center mt-6">
               <button
                 onClick={loadMore}
-                className="flex items-center gap-2 px-6 py-3 bg-theme-primary hover:bg-theme-primary/90 rounded-lg font-medium transition-all transform hover:scale-105"
+                className="flex items-center px-6 py-3 bg-theme-card hover:bg-theme-hover border border-theme-primary rounded-lg font-medium transition-colors"
               >
-                <ChevronDown className="w-5 h-5" />
+                <ChevronDown className="w-5 h-5 mr-2" />
                 Load More ({filteredImages.length - displayCount} remaining)
               </button>
             </div>
@@ -388,7 +492,7 @@ function EpisodeGallery() {
               </h3>
               <button
                 onClick={(e) =>
-                  deleteEpisode(selectedImage.path, selectedImage.name, e)
+                  deleteSeason(selectedImage.path, selectedImage.name, e)
                 }
                 disabled={deletingImage === selectedImage.path}
                 className={`flex items-center px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex-shrink-0 ${
@@ -422,7 +526,7 @@ function EpisodeGallery() {
                     Image preview not available
                   </p>
                   <p className="text-gray-600 text-xs mt-2">
-                    Use file explorer to view episode
+                    Use file explorer to view season
                   </p>
                 </div>
               </div>
@@ -445,4 +549,4 @@ function EpisodeGallery() {
   );
 }
 
-export default EpisodeGallery;
+export default SeasonGallery;
