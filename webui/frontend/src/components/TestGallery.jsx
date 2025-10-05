@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { RefreshCw, Image as ImageIcon, Search } from "lucide-react";
+import { RefreshCw, Image as ImageIcon, Search, Play } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 
 const API_URL = "http://localhost:8000/api";
@@ -10,6 +10,11 @@ function TestGallery() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
   const [error, setError] = useState(null);
+  const [scriptLoading, setScriptLoading] = useState(false);
+  const [status, setStatus] = useState({
+    running: false,
+    current_mode: null,
+  });
 
   const fetchImages = async (showToast = false) => {
     setLoading(true);
@@ -41,8 +46,51 @@ function TestGallery() {
     }
   };
 
+  const fetchStatus = async () => {
+    try {
+      const response = await fetch(`${API_URL}/status`);
+      const data = await response.json();
+      setStatus(data);
+    } catch (error) {
+      console.error("Error fetching status:", error);
+    }
+  };
+
+  const runTestMode = async () => {
+    setScriptLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/run/testing`, {
+        method: "POST",
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        toast.success("Test Mode gestartet!", {
+          duration: 4000,
+          position: "top-right",
+        });
+        fetchStatus();
+      } else {
+        toast.error(`Error: ${data.message}`, {
+          duration: 5000,
+          position: "top-right",
+        });
+      }
+    } catch (error) {
+      toast.error(`Error: ${error.message}`, {
+        duration: 5000,
+        position: "top-right",
+      });
+    } finally {
+      setScriptLoading(false);
+    }
+  };
+
   useEffect(() => {
-    fetchImages(false); // No toast on initial load
+    fetchImages(false);
+    fetchStatus();
+    const interval = setInterval(fetchStatus, 3000);
+    return () => clearInterval(interval);
   }, []);
 
   const filteredImages = images.filter(
@@ -58,16 +106,29 @@ function TestGallery() {
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 space-y-4 md:space-y-0">
         <h1 className="text-3xl font-bold text-theme-primary">Test Gallery</h1>
 
-        <button
-          onClick={() => fetchImages(true)}
-          disabled={loading}
-          className="flex items-center px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-colors"
-        >
-          <RefreshCw
-            className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`}
-          />
-          Refresh
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() => fetchImages(true)}
+            disabled={loading}
+            className="flex items-center px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-colors"
+          >
+            <RefreshCw
+              className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`}
+            />
+            Refresh
+          </button>
+
+          <button
+            onClick={runTestMode}
+            disabled={scriptLoading || status.running}
+            className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-colors"
+          >
+            <Play
+              className={`w-4 h-4 mr-2 ${scriptLoading ? "animate-spin" : ""}`}
+            />
+            Start Test Mode
+          </button>
+        </div>
       </div>
 
       {/* Search bar */}

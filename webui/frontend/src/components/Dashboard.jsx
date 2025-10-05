@@ -28,6 +28,7 @@ function Dashboard() {
     config_exists: false,
     pid: null,
     current_mode: null,
+    active_log: null,
     already_running_detected: false,
     running_file_exists: false,
   });
@@ -951,14 +952,9 @@ function Dashboard() {
             <h2 className="text-xl font-semibold text-theme-primary">
               Last Log Entries
             </h2>
-            {status.current_mode && (
+            {status.active_log && (
               <p className="text-xs text-theme-muted mt-1">
-                Reading from:{" "}
-                {status.current_mode === "testing"
-                  ? "Testinglog.log"
-                  : status.current_mode === "manual"
-                  ? "Manuallog.log"
-                  : "Scriptlog.log"}
+                Reading from: {status.active_log}
               </p>
             )}
           </div>

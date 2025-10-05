@@ -1,4 +1,5 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
+from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -15,18 +16,7 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="Posterizarr Web UI")
-
-# CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Paths
+# Paths - MUST be defined before lifespan function
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 CONFIG_PATH = BASE_DIR / "config.json"
 CONFIG_EXAMPLE_PATH = BASE_DIR / "config.example.json"
@@ -47,9 +37,10 @@ current_process: Optional[subprocess.Popen] = None
 current_mode: Optional[str] = None  # Track current execution mode
 
 
-@app.on_event("startup")
-async def startup_event():
-    """Log important paths on startup"""
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Lifespan event handler for startup and shutdown"""
+    # Startup
     logger.info("=" * 60)
     logger.info("Posterizarr Web UI - Backend Started")
     logger.info("=" * 60)
@@ -77,6 +68,23 @@ async def startup_event():
     if TEST_DIR.exists():
         app.mount("/test", StaticFiles(directory=str(TEST_DIR)), name="test")
         logger.info(f"Mounted static files at /test for directory: {TEST_DIR}")
+
+    yield
+
+    # Shutdown
+    logger.info("Shutting down Posterizarr Web UI Backend")
+
+
+app = FastAPI(title="Posterizarr Web UI", lifespan=lifespan)
+
+# CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 class ConfigUpdate(BaseModel):
@@ -124,8 +132,8 @@ async def update_config(data: ConfigUpdate):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-def get_last_log_lines(count=25, mode=None):
-    """Get last N lines from log files based on current mode"""
+def get_last_log_lines(count=25, mode=None, log_file=None):
+    """Get last N lines from log files based on current mode or specific log file"""
 
     # Map modes to their log files
     mode_log_map = {
@@ -138,8 +146,11 @@ def get_last_log_lines(count=25, mode=None):
         "reset": "Scriptlog.log",
     }
 
+    # If specific log file is provided, use that
+    if log_file:
+        log_files_to_check = [log_file]
     # If mode is specified, try that log file first
-    if mode and mode in mode_log_map:
+    elif mode and mode in mode_log_map:
         log_files_to_check = [mode_log_map[mode]]
     else:
         # Fallback: check all log files in order
@@ -174,12 +185,43 @@ def get_last_log_lines(count=25, mode=None):
 
 @app.get("/api/status")
 async def get_status():
-    """Get script status with last 10 log lines"""
+    """Get script status with last log lines from appropriate log file"""
     global current_process, current_mode
     is_running = current_process is not None and current_process.poll() is None
 
-    # Get last 25 log lines based on current mode
-    last_logs = get_last_log_lines(25, mode=current_mode)
+    # Determine which log file to use
+    # Map modes to their log files
+    mode_log_map = {
+        "normal": "Scriptlog.log",
+        "testing": "Testinglog.log",
+        "manual": "Manuallog.log",
+        "backup": "Scriptlog.log",
+        "syncjelly": "Scriptlog.log",
+        "syncemby": "Scriptlog.log",
+        "reset": "Scriptlog.log",
+    }
+
+    # If script is running, use current mode
+    if is_running and current_mode:
+        active_log = mode_log_map.get(current_mode, "Scriptlog.log")
+    else:
+        # Find the most recently modified log file
+        log_files = ["Testinglog.log", "Manuallog.log", "Scriptlog.log"]
+        newest_log = None
+        newest_time = 0
+
+        for log_file in log_files:
+            log_path = LOGS_DIR / log_file
+            if log_path.exists():
+                mtime = log_path.stat().st_mtime
+                if mtime > newest_time:
+                    newest_time = mtime
+                    newest_log = log_file
+
+        active_log = newest_log if newest_log else "Scriptlog.log"
+
+    # Get last 25 log lines from the active log file
+    last_logs = get_last_log_lines(25, log_file=active_log)
 
     # Check for "already running" warning
     already_running = False
@@ -197,7 +239,8 @@ async def get_status():
         "script_exists": SCRIPT_PATH.exists(),
         "config_exists": CONFIG_PATH.exists(),
         "pid": current_process.pid if is_running else None,
-        "current_mode": current_mode,  # Add current mode to status
+        "current_mode": current_mode,
+        "active_log": active_log,  # Which log file is being shown
         "already_running_detected": already_running,
         "running_file_exists": running_file_exists,
     }
@@ -456,7 +499,12 @@ async def websocket_logs(websocket: WebSocket):
         last_position = scriptlog_path.stat().st_size if scriptlog_path.exists() else 0
 
         while True:
-            await asyncio.sleep(1)
+            try:
+                await asyncio.sleep(1)
+            except asyncio.CancelledError:
+                # This is expected when the connection is closed
+                logger.info("WebSocket log streaming cancelled (connection closed)")
+                break
 
             if scriptlog_path.exists():
                 current_size = scriptlog_path.stat().st_size
@@ -477,9 +525,14 @@ async def websocket_logs(websocket: WebSocket):
                     last_position = current_size
 
     except WebSocketDisconnect:
-        logger.info("WebSocket disconnected")
+        logger.info("WebSocket disconnected by client")
+    except asyncio.CancelledError:
+        # Handle cancellation during shutdown gracefully
+        logger.info("WebSocket task cancelled during shutdown")
     except Exception as e:
         logger.error(f"WebSocket error: {e}")
+    finally:
+        logger.info("WebSocket connection closed")
 
 
 @app.get("/api/gallery")

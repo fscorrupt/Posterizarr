@@ -15,15 +15,13 @@ function LogViewer() {
   const logContainerRef = useRef(null);
   const wsRef = useRef(null);
   const dropdownRef = useRef(null);
+  const reconnectTimeoutRef = useRef(null);
 
-  // ✅ PERFEKT: Entfernt nur NULL-Bytes, behält alle Leerzeichen
   const parseLogLine = (line) => {
-    // Entferne nur NULL-Bytes (\x00) und trim die Zeile
     const cleanedLine = line.replace(/\x00/g, "").trim();
 
-    // Prüfe ob die Zeile leer ist
     if (!cleanedLine) {
-      return { raw: null }; // Ignoriere leere Zeilen
+      return { raw: null };
     }
 
     const logPattern = /^\[([^\]]+)\]\s*\[([^\]]+)\]\s*\|L\.(\d+)\s*\|\s*(.*)$/;
@@ -40,7 +38,6 @@ function LogViewer() {
     return { raw: cleanedLine };
   };
 
-  // ✅ Farbige Log-Level
   const LogLevel = ({ level }) => {
     const levelLower = (level || "").toLowerCase().trim();
 
@@ -59,7 +56,6 @@ function LogViewer() {
     return <span style={{ color: color, fontWeight: "bold" }}>[{level}]</span>;
   };
 
-  // ✅ Farbe für die ganze Log-Zeile
   const getLogColor = (level) => {
     const levelLower = (level || "").toLowerCase().trim();
 
@@ -85,7 +81,6 @@ function LogViewer() {
     } catch (error) {
       console.error("Error fetching log files:", error);
     } finally {
-      // ✅ Kurze Verzögerung damit die Animation sichtbar ist
       setTimeout(() => setIsRefreshing(false), 500);
     }
   };
@@ -94,62 +89,108 @@ function LogViewer() {
     try {
       const response = await fetch(`${API_URL}/logs/${logName}?tail=500`);
       const data = await response.json();
-      // ✅ Strippe die Zeilen wie der WebSocket es auch macht
       const strippedContent = data.content.map((line) => line.trim());
       setLogs(strippedContent);
-
-      // ✅ WebSocket nur für Scriptlog.log aktiv, sonst trennen
-      if (logName === "Scriptlog.log") {
-        if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
-          connectWebSocket();
-        }
-      } else {
-        // Trenne WebSocket wenn andere Log-Datei ausgewählt
-        if (wsRef.current) {
-          wsRef.current.close();
-        }
-      }
     } catch (error) {
       console.error("Error fetching log:", error);
     }
   };
 
-  const connectWebSocket = () => {
-    if (wsRef.current) {
-      wsRef.current.close();
+  const disconnectWebSocket = () => {
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
     }
 
-    const ws = new WebSocket(WS_URL);
+    if (wsRef.current) {
+      wsRef.current.onopen = null;
+      wsRef.current.onclose = null;
+      wsRef.current.onerror = null;
+      wsRef.current.onmessage = null;
 
-    ws.onopen = () => {
-      setConnected(true);
-    };
-
-    ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      if (data.type === "log") {
-        setLogs((prev) => [...prev, data.content]);
+      if (
+        wsRef.current.readyState === WebSocket.OPEN ||
+        wsRef.current.readyState === WebSocket.CONNECTING
+      ) {
+        wsRef.current.close();
       }
-    };
+      wsRef.current = null;
+    }
+    setConnected(false);
+  };
 
-    ws.onerror = () => setConnected(false);
-    ws.onclose = () => setConnected(false);
+  const connectWebSocket = () => {
+    // Verhindere mehrfache Verbindungen
+    if (
+      wsRef.current &&
+      (wsRef.current.readyState === WebSocket.OPEN ||
+        wsRef.current.readyState === WebSocket.CONNECTING)
+    ) {
+      return;
+    }
 
-    wsRef.current = ws;
+    disconnectWebSocket();
+
+    try {
+      const ws = new WebSocket(WS_URL);
+
+      ws.onopen = () => {
+        console.log("✅ WebSocket connected");
+        setConnected(true);
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === "log") {
+            setLogs((prev) => [...prev, data.content]);
+          }
+        } catch (error) {
+          console.error("Error parsing WebSocket message:", error);
+        }
+      };
+
+      ws.onerror = (error) => {
+        console.warn("⚠️ WebSocket error (attempting reconnect):", error);
+        setConnected(false);
+      };
+
+      ws.onclose = (event) => {
+        console.log("🔌 WebSocket closed:", event.code, event.reason);
+        setConnected(false);
+
+        // Versuche Reconnect nach 3 Sekunden
+        if (!event.wasClean) {
+          reconnectTimeoutRef.current = setTimeout(() => {
+            console.log("🔄 Attempting to reconnect WebSocket...");
+            connectWebSocket();
+          }, 3000);
+        }
+      };
+
+      wsRef.current = ws;
+    } catch (error) {
+      console.error("Failed to create WebSocket:", error);
+      setConnected(false);
+    }
   };
 
   useEffect(() => {
     fetchAvailableLogs();
+    fetchLogFile(selectedLog);
 
-    // ✅ WebSocket nur für Scriptlog.log starten
-    if (selectedLog === "Scriptlog.log") {
-      connectWebSocket();
-    }
+    // Versuche WebSocket-Verbindung für alle Logs
+    connectWebSocket();
 
     return () => {
-      if (wsRef.current) wsRef.current.close();
+      disconnectWebSocket();
     };
   }, []);
+
+  // Bei Log-Wechsel neu laden
+  useEffect(() => {
+    fetchLogFile(selectedLog);
+  }, [selectedLog]);
 
   useEffect(() => {
     if (autoScroll && logContainerRef.current) {
@@ -172,23 +213,17 @@ function LogViewer() {
 
   const clearLogs = () => setLogs([]);
 
-  // ✅ NEUE Download-Funktion: Lädt die KOMPLETTE Log-Datei direkt vom Server als .log herunter
   const downloadLogs = async () => {
     try {
-      // Hole die KOMPLETTE Log-Datei vom Server (ohne tail Parameter = ALLE Zeilen)
-      // WICHTIG: Kein tail Parameter, damit wir die komplette Datei bekommen!
       const response = await fetch(`${API_URL}/logs/${selectedLog}?tail=0`);
       const data = await response.json();
 
-      // Erstelle die komplette Log-Datei als Text
       const logText = data.content.join("\n");
       const blob = new Blob([logText], { type: "text/plain" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
 
-      // ✅ Speichere als .log Datei (nicht .txt)
-      // Entferne die Dateiendung vom selectedLog und füge ein Timestamp hinzu
       const logNameWithoutExt = selectedLog.replace(/\.[^/.]+$/, "");
       a.download = `${logNameWithoutExt}_${new Date()
         .toISOString()
@@ -204,6 +239,23 @@ function LogViewer() {
     }
   };
 
+  // Status-Anzeige
+  const getDisplayStatus = () => {
+    if (connected) {
+      return {
+        color: "bg-green-400 animate-pulse",
+        text: "Live",
+      };
+    } else {
+      return {
+        color: "bg-yellow-400",
+        text: "File View",
+      };
+    }
+  };
+
+  const displayStatus = getDisplayStatus();
+
   return (
     <div className="px-4 py-6">
       {/* Header */}
@@ -213,12 +265,10 @@ function LogViewer() {
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center space-x-2">
             <span
-              className={`w-3 h-3 rounded-full ${
-                connected ? "bg-green-400 animate-pulse" : "bg-red-400"
-              }`}
+              className={`w-3 h-3 rounded-full ${displayStatus.color}`}
             ></span>
             <span className="text-sm text-theme-muted">
-              {connected ? "Live" : "Disconnected"}
+              {displayStatus.text}
             </span>
           </div>
 
@@ -300,7 +350,6 @@ function LogViewer() {
                 key={log.name}
                 onClick={() => {
                   setSelectedLog(log.name);
-                  fetchLogFile(log.name);
                   setDropdownOpen(false);
                 }}
                 className={`w-full px-4 py-2 text-left text-sm transition-colors ${
@@ -332,7 +381,6 @@ function LogViewer() {
               {logs.map((line, index) => {
                 const parsed = parseLogLine(line);
 
-                // Ignoriere leere Zeilen
                 if (parsed.raw === null) {
                   return null;
                 }
@@ -374,6 +422,9 @@ function LogViewer() {
 
       <div className="mt-3 text-[10px] text-gray-600 flex justify-between">
         <span>{logs.length} log entries</span>
+        {connected && (
+          <span className="text-green-400">● Receiving live updates</span>
+        )}
       </div>
     </div>
   );

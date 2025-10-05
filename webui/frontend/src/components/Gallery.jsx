@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { RefreshCw, Image as ImageIcon, Search, Trash2 } from "lucide-react";
+import {
+  RefreshCw,
+  Image as ImageIcon,
+  Search,
+  Trash2,
+  Play,
+  Save,
+  Cloud,
+} from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 
 const API_URL = "http://localhost:8000/api";
@@ -11,6 +19,11 @@ function Gallery() {
   const [selectedImage, setSelectedImage] = useState(null);
   const [error, setError] = useState(null);
   const [deletingImage, setDeletingImage] = useState(null);
+  const [scriptLoading, setScriptLoading] = useState(false);
+  const [status, setStatus] = useState({
+    running: false,
+    current_mode: null,
+  });
 
   const fetchImages = async (showToast = false) => {
     setLoading(true);
@@ -42,13 +55,51 @@ function Gallery() {
     }
   };
 
+  const fetchStatus = async () => {
+    try {
+      const response = await fetch(`${API_URL}/status`);
+      const data = await response.json();
+      setStatus(data);
+    } catch (error) {
+      console.error("Error fetching status:", error);
+    }
+  };
+
+  const runScript = async (mode, modeName) => {
+    setScriptLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/run/${mode}`, {
+        method: "POST",
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        toast.success(`${modeName} gestartet!`, {
+          duration: 4000,
+          position: "top-right",
+        });
+        fetchStatus();
+      } else {
+        toast.error(`Error: ${data.message}`, {
+          duration: 5000,
+          position: "top-right",
+        });
+      }
+    } catch (error) {
+      toast.error(`Error: ${error.message}`, {
+        duration: 5000,
+        position: "top-right",
+      });
+    } finally {
+      setScriptLoading(false);
+    }
+  };
+
   const deletePoster = async (imagePath, imageName, event) => {
-    // Stop event propagation to prevent opening the modal
     if (event) {
       event.stopPropagation();
     }
 
-    // Confirm deletion
     if (
       !window.confirm(`Möchtest du das Poster "${imageName}" wirklich löschen?`)
     ) {
@@ -74,10 +125,8 @@ function Gallery() {
           position: "top-right",
         });
 
-        // Remove from state
         setImages(images.filter((img) => img.path !== imagePath));
 
-        // Close modal if deleted image is selected
         if (selectedImage && selectedImage.path === imagePath) {
           setSelectedImage(null);
         }
@@ -96,7 +145,10 @@ function Gallery() {
   };
 
   useEffect(() => {
-    fetchImages(false); // No toast on initial load
+    fetchImages(false);
+    fetchStatus();
+    const interval = setInterval(fetchStatus, 3000);
+    return () => clearInterval(interval);
   }, []);
 
   const filteredImages = images.filter(
@@ -109,21 +161,68 @@ function Gallery() {
     <div className="px-4 py-6">
       <Toaster />
 
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 space-y-4 md:space-y-0">
-        <h1 className="text-3xl font-bold text-theme-primary">
-          Poster Gallery
-        </h1>
+      <div className="flex flex-col space-y-4 mb-6">
+        {/* Header with Refresh */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between space-y-4 md:space-y-0">
+          <h1 className="text-3xl font-bold text-theme-primary">
+            Poster Gallery
+          </h1>
 
-        <button
-          onClick={() => fetchImages(true)}
-          disabled={loading}
-          className="flex items-center px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-colors"
-        >
-          <RefreshCw
-            className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`}
-          />
-          Refresh
-        </button>
+          <button
+            onClick={() => fetchImages(true)}
+            disabled={loading}
+            className="flex items-center px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-colors"
+          >
+            <RefreshCw
+              className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`}
+            />
+            Refresh
+          </button>
+        </div>
+
+        {/* Script & Sync Mode Buttons */}
+        <div className="bg-theme-card rounded-lg p-4 border border-theme-primary">
+          <h3 className="text-sm font-semibold text-theme-muted mb-3">
+            Quick Actions
+          </h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <button
+              onClick={() => runScript("normal", "Normal Mode")}
+              disabled={scriptLoading || status.running}
+              className="flex items-center justify-center px-3 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-colors text-sm"
+            >
+              <Play className="w-4 h-4 mr-1.5" />
+              Normal
+            </button>
+
+            <button
+              onClick={() => runScript("backup", "Backup Mode")}
+              disabled={scriptLoading || status.running}
+              className="flex items-center justify-center px-3 py-2 bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-colors text-sm"
+            >
+              <Save className="w-4 h-4 mr-1.5" />
+              Backup
+            </button>
+
+            <button
+              onClick={() => runScript("syncjelly", "Sync Jellyfin")}
+              disabled={scriptLoading || status.running}
+              className="flex items-center justify-center px-3 py-2 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-colors text-sm"
+            >
+              <Cloud className="w-4 h-4 mr-1.5" />
+              Sync Jellyfin
+            </button>
+
+            <button
+              onClick={() => runScript("syncemby", "Sync Emby")}
+              disabled={scriptLoading || status.running}
+              className="flex items-center justify-center px-3 py-2 bg-teal-600 hover:bg-teal-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-colors text-sm"
+            >
+              <Cloud className="w-4 h-4 mr-1.5" />
+              Sync Emby
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Search bar */}
@@ -169,7 +268,7 @@ function Gallery() {
           <p className="text-theme-muted text-sm">
             {searchTerm
               ? "Try adjusting your search terms"
-              : "Posters will appear here after running Posterizarr"}
+              : "Run the script to generate posters"}
           </p>
         </div>
       ) : (
@@ -182,18 +281,16 @@ function Gallery() {
             {filteredImages.map((image, index) => (
               <div
                 key={index}
-                className="group relative bg-theme-card rounded-lg overflow-hidden border border-theme-primary hover:border-theme-primary transition-all cursor-pointer"
+                className="group relative bg-theme-card rounded-lg overflow-hidden border border-theme-primary hover:border-theme-primary transition-all"
               >
-                {/* Delete Button */}
                 <button
                   onClick={(e) => deletePoster(image.path, image.name, e)}
                   disabled={deletingImage === image.path}
-                  className={`absolute top-2 right-2 z-10 p-2 rounded-lg transition-all
-                    ${
-                      deletingImage === image.path
-                        ? "bg-gray-600 cursor-not-allowed"
-                        : "bg-red-600 hover:bg-red-700 opacity-0 group-hover:opacity-100"
-                    }`}
+                  className={`absolute top-2 right-2 z-10 p-2 rounded-lg transition-all ${
+                    deletingImage === image.path
+                      ? "bg-gray-600 cursor-not-allowed"
+                      : "bg-red-600 hover:bg-red-700 opacity-0 group-hover:opacity-100"
+                  }`}
                   title="Poster löschen"
                 >
                   <Trash2
@@ -204,7 +301,7 @@ function Gallery() {
                 </button>
 
                 <div
-                  className="aspect-[2/3] bg-theme-dark flex items-center justify-center overflow-hidden"
+                  className="aspect-[2/3] bg-theme-dark flex items-center justify-center overflow-hidden cursor-pointer"
                   onClick={() => setSelectedImage(image)}
                 >
                   <img
@@ -263,12 +360,11 @@ function Gallery() {
                   deletePoster(selectedImage.path, selectedImage.name, e)
                 }
                 disabled={deletingImage === selectedImage.path}
-                className={`flex items-center px-3 py-1.5 rounded-lg text-sm font-medium transition-colors
-                  ${
-                    deletingImage === selectedImage.path
-                      ? "bg-gray-600 cursor-not-allowed"
-                      : "bg-red-600 hover:bg-red-700"
-                  }`}
+                className={`flex items-center px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                  deletingImage === selectedImage.path
+                    ? "bg-gray-600 cursor-not-allowed"
+                    : "bg-red-600 hover:bg-red-700"
+                }`}
               >
                 <Trash2
                   className={`w-4 h-4 mr-1 ${

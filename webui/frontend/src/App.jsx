@@ -103,7 +103,7 @@ function Navigation() {
 
   const navItems = [
     { path: "/", icon: Activity, label: "Dashboard" },
-    { path: "/test-gallery", icon: TestTube, label: "Test Poster" },
+    { path: "/test-gallery", icon: Image, label: "Test Gallery" },
     { path: "/gallery", icon: Image, label: "Poster Gallery" },
     { path: "/config", icon: Settings, label: "Configuration" },
     { path: "/logs", icon: FileText, label: "Logs" },
