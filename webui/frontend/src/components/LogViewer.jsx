@@ -11,8 +11,10 @@ function LogViewer() {
   const [autoScroll, setAutoScroll] = useState(true);
   const [connected, setConnected] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const logContainerRef = useRef(null);
   const wsRef = useRef(null);
+  const dropdownRef = useRef(null);
 
   // ✅ PERFEKT: Entfernt nur NULL-Bytes, behält alle Leerzeichen
   const parseLogLine = (line) => {
@@ -155,6 +157,19 @@ function LogViewer() {
     }
   }, [logs, autoScroll]);
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   const clearLogs = () => setLogs([]);
 
   // ✅ NEUE Download-Funktion: Lädt die KOMPLETTE Log-Datei direkt vom Server als .log herunter
@@ -212,7 +227,7 @@ function LogViewer() {
               type="checkbox"
               checked={autoScroll}
               onChange={(e) => setAutoScroll(e.target.checked)}
-              className="w-4 h-4 rounded bg-theme-card border-theme"
+              className="w-4 h-4 rounded bg-theme-card border border-theme"
             />
             <span className="text-sm text-theme-text">Auto-scroll</span>
           </label>
@@ -246,22 +261,59 @@ function LogViewer() {
         </div>
       </div>
 
-      {/* Log selector */}
-      <div className="mb-4">
-        <select
-          value={selectedLog}
-          onChange={(e) => {
-            setSelectedLog(e.target.value);
-            fetchLogFile(e.target.value);
-          }}
-          className="px-4 py-2 bg-theme-card border border-theme rounded text-white text-sm"
+      {/* Log selector - Custom Dropdown */}
+      <div className="mb-4 relative" ref={dropdownRef}>
+        <button
+          onClick={() => setDropdownOpen(!dropdownOpen)}
+          className="w-full px-4 py-2 bg-theme-card border border-theme-primary rounded text-white text-sm flex items-center justify-between hover:bg-theme-hover transition-colors"
         >
-          {availableLogs.map((log) => (
-            <option key={log.name} value={log.name}>
-              {log.name} ({(log.size / 1024).toFixed(2)} KB)
-            </option>
-          ))}
-        </select>
+          <span>
+            {selectedLog} (
+            {availableLogs.find((l) => l.name === selectedLog)
+              ? (
+                  availableLogs.find((l) => l.name === selectedLog).size / 1024
+                ).toFixed(2)
+              : "0.00"}{" "}
+            KB)
+          </span>
+          <svg
+            className={`w-4 h-4 transition-transform ${
+              dropdownOpen ? "rotate-180" : ""
+            }`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 9l-7 7-7-7"
+            />
+          </svg>
+        </button>
+
+        {dropdownOpen && (
+          <div className="absolute z-10 w-full mt-1 bg-theme-card border border-theme-primary rounded shadow-lg max-h-60 overflow-y-auto">
+            {availableLogs.map((log) => (
+              <button
+                key={log.name}
+                onClick={() => {
+                  setSelectedLog(log.name);
+                  fetchLogFile(log.name);
+                  setDropdownOpen(false);
+                }}
+                className={`w-full px-4 py-2 text-left text-sm transition-colors ${
+                  selectedLog === log.name
+                    ? "bg-theme-primary text-white"
+                    : "text-theme-text hover:bg-theme-primary hover:text-white"
+                }`}
+              >
+                {log.name} ({(log.size / 1024).toFixed(2)} KB)
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Compact Terminal-Style Log Container */}

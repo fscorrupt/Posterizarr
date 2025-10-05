@@ -315,7 +315,7 @@ function Dashboard() {
 
     return (
       <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div className="bg-theme-card border-2 border-theme-primary rounded-xl max-w-2xl w-full shadow-2xl animate-in fade-in duration-200">
+        <div className="bg-theme-card border border-theme-primary rounded-xl max-w-2xl w-full shadow-2xl animate-in fade-in duration-200">
           {/* Header */}
           <div className="bg-gradient-to-r from-theme-primary to-theme-primary/80 px-6 py-4 rounded-t-xl flex items-center justify-between">
             <div className="flex items-center">
@@ -389,7 +389,7 @@ function Dashboard() {
                 </li>
               </ol>
 
-              <div className="bg-theme-bg border-2 border-theme-primary/50 rounded-lg p-4 mt-4">
+              <div className="bg-theme-bg border border-theme-primary/50 rounded-lg p-4 mt-4">
                 <p className="text-sm text-theme-muted mb-2 font-semibold">
                   PowerShell Command:
                 </p>
@@ -421,7 +421,7 @@ function Dashboard() {
           </div>
 
           {/* Footer */}
-          <div className="bg-theme-bg px-6 py-4 rounded-b-xl flex justify-end">
+          <div className="bg-theme-bg px-6 py-4 rounded-b-xl flex justify-end border-t-2 border-theme">
             <button
               onClick={() => setShowManualModal(false)}
               className="px-6 py-2 bg-theme-primary hover:bg-theme-primary/90 rounded-lg font-medium transition-colors"
@@ -445,7 +445,7 @@ function Dashboard() {
 
     return (
       <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div className="bg-theme-card border-2 border-theme-primary rounded-xl max-w-2xl w-full shadow-2xl animate-in fade-in duration-200">
+        <div className="bg-theme-card border border-theme-primary rounded-xl max-w-2xl w-full shadow-2xl animate-in fade-in duration-200">
           {/* Header */}
           <div className="bg-gradient-to-r from-orange-600 to-orange-700 px-6 py-4 rounded-t-xl flex items-center justify-between">
             <div className="flex items-center">
@@ -556,7 +556,7 @@ function Dashboard() {
           </div>
 
           {/* Footer */}
-          <div className="bg-theme-bg px-6 py-4 rounded-b-xl flex justify-between">
+          <div className="bg-theme-bg px-6 py-4 rounded-b-xl flex justify-between border-t-2 border-theme">
             <button
               onClick={() => setShowJellyfinSyncModal(false)}
               className="px-6 py-2 bg-theme-card hover:bg-theme-hover border border-theme rounded-lg font-medium transition-colors"
@@ -588,7 +588,7 @@ function Dashboard() {
 
     return (
       <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div className="bg-theme-card border-2 border-theme-primary rounded-xl max-w-2xl w-full shadow-2xl animate-in fade-in duration-200">
+        <div className="bg-theme-card border border-theme-primary rounded-xl max-w-2xl w-full shadow-2xl animate-in fade-in duration-200">
           {/* Header */}
           <div className="bg-gradient-to-r from-teal-600 to-teal-700 px-6 py-4 rounded-t-xl flex items-center justify-between">
             <div className="flex items-center">
@@ -697,7 +697,7 @@ function Dashboard() {
           </div>
 
           {/* Footer */}
-          <div className="bg-theme-bg px-6 py-4 rounded-b-xl flex justify-between">
+          <div className="bg-theme-bg px-6 py-4 rounded-b-xl flex justify-between border-t-2 border-theme">
             <button
               onClick={() => setShowEmbySyncModal(false)}
               className="px-6 py-2 bg-theme-card hover:bg-theme-hover border border-theme rounded-lg font-medium transition-colors"
@@ -728,7 +728,7 @@ function Dashboard() {
       <h1 className="text-3xl font-bold mb-8 text-theme-primary">Dashboard</h1>
 
       {status.already_running_detected && (
-        <div className="mb-6 bg-yellow-900/30 border-2 border-yellow-600/50 rounded-lg p-4">
+        <div className="mb-6 bg-yellow-900/30 border border-yellow-600/50 rounded-lg p-4">
           <div className="flex items-start">
             <AlertTriangle className="h-6 w-6 text-yellow-400 mr-3 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
@@ -754,7 +754,7 @@ function Dashboard() {
 
       {/* Status Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-theme-card rounded-lg p-6 border border-theme">
+        <div className="bg-theme-card rounded-lg p-6 border border-theme-primary">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-theme-muted text-sm">Script Status</p>
@@ -786,7 +786,7 @@ function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-theme-card rounded-lg p-6 border border-theme">
+        <div className="bg-theme-card rounded-lg p-6 border border-theme-primary">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-theme-muted text-sm">Script File</p>
@@ -806,7 +806,7 @@ function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-theme-card rounded-lg p-6 border border-theme">
+        <div className="bg-theme-card rounded-lg p-6 border border-theme-primary">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-theme-muted text-sm">Config File</p>
@@ -828,7 +828,7 @@ function Dashboard() {
       </div>
 
       {/* Script Execution Controls */}
-      <div className="bg-theme-card rounded-lg p-6 border border-theme mb-6">
+      <div className="bg-theme-card rounded-lg p-6 border border-theme-primary mb-6">
         <h2 className="text-xl font-semibold mb-4 text-theme-primary flex items-center">
           <Play className="w-5 h-5 mr-2" />
           Script Modes
@@ -874,7 +874,7 @@ function Dashboard() {
       </div>
 
       {/* SYNC MODE - Updated with Modals */}
-      <div className="bg-theme-card rounded-lg p-6 border border-theme mb-6">
+      <div className="bg-theme-card rounded-lg p-6 border border-theme-primary mb-6">
         <h2 className="text-xl font-semibold mb-4 text-theme-primary flex items-center">
           <Cloud className="w-5 h-5 mr-2" />
           Sync Mode
@@ -902,7 +902,7 @@ function Dashboard() {
       </div>
 
       {/* Log Viewer */}
-      <div className="bg-theme-card rounded-lg p-6 border border-theme mb-6">
+      <div className="bg-theme-card rounded-lg p-6 border border-theme-primary mb-6">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-xl font-semibold text-theme-primary">
@@ -984,7 +984,7 @@ function Dashboard() {
       </div>
 
       {/* DANGER ZONE */}
-      <div className="bg-gradient-to-br from-red-950/40 to-red-900/20 rounded-lg p-6 border-2 border-red-600/50 mb-8">
+      <div className="bg-gradient-to-br from-red-950/40 to-red-900/20 rounded-lg p-6 border border-red-600/50 mb-8">
         <div className="flex items-center mb-4">
           <AlertTriangle className="w-6 h-6 text-red-400 mr-3" />
           <h2 className="text-xl font-semibold text-red-400">Danger Zone</h2>
@@ -1000,7 +1000,7 @@ function Dashboard() {
           <button
             onClick={stopScript}
             disabled={loading || !status.running}
-            className="flex items-center justify-center px-4 py-3 bg-red-600 hover:bg-red-700 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg font-medium transition-colors border-2 border-red-500"
+            className="flex items-center justify-center px-4 py-3 bg-red-600 hover:bg-red-700 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg font-medium transition-colors border border-red-500"
           >
             <Square className="w-5 h-5 mr-2" />
             Stop Script
@@ -1009,7 +1009,7 @@ function Dashboard() {
           <button
             onClick={forceKillScript}
             disabled={loading || !status.running}
-            className="flex items-center justify-center px-4 py-3 bg-red-800 hover:bg-red-900 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg font-medium transition-colors border-2 border-red-600"
+            className="flex items-center justify-center px-4 py-3 bg-red-800 hover:bg-red-900 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg font-medium transition-colors border border-red-600"
           >
             <Zap className="w-5 h-5 mr-2" />
             Force Kill
@@ -1018,7 +1018,7 @@ function Dashboard() {
           <button
             onClick={deleteRunningFile}
             disabled={loading}
-            className="flex items-center justify-center px-4 py-3 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg font-medium transition-colors border-2 border-orange-500"
+            className="flex items-center justify-center px-4 py-3 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg font-medium transition-colors border border-orange-500"
           >
             <Trash2 className="w-5 h-5 mr-2" />
             Delete Running File
@@ -1046,12 +1046,12 @@ function Dashboard() {
               onChange={(e) => setResetLibrary(e.target.value)}
               placeholder="Enter library name (e.g., Movies, TV Shows)"
               disabled={loading || status.running}
-              className="flex-1 px-4 py-3 bg-theme-card border-2 border-red-500/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex-1 px-4 py-3 bg-theme-card border border-red-500/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
             />
             <button
               onClick={resetPosters}
               disabled={loading || status.running || !resetLibrary.trim()}
-              className="flex items-center justify-center px-6 py-3 bg-red-700 hover:bg-red-800 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg font-medium transition-colors border-2 border-red-600 whitespace-nowrap"
+              className="flex items-center justify-center px-6 py-3 bg-red-700 hover:bg-red-800 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg font-medium transition-colors border border-red-600 whitespace-nowrap"
             >
               <RotateCcw className="w-5 h-5 mr-2" />
               Reset Posters

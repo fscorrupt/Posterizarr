@@ -162,7 +162,7 @@ function ConfigEditor() {
             onChange={(e) =>
               updateValue(section, key, e.target.checked ? "true" : "false")
             }
-            className="w-5 h-5 rounded border-2 border-theme bg-theme-card text-theme-primary focus:ring-2 focus:ring-theme-primary cursor-pointer"
+            className="w-5 h-5 rounded border border-theme bg-theme-card text-theme-primary focus:ring-2 focus:ring-theme-primary cursor-pointer"
             id={`${section}-${key}`}
           />
           <label
@@ -186,7 +186,7 @@ function ConfigEditor() {
           type="number"
           value={stringValue}
           onChange={(e) => updateValue(section, key, e.target.value)}
-          className="w-full px-4 py-2.5 bg-theme-card border-2 border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+          className="w-full px-4 py-2.5 bg-theme-card border border-theme-primary rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
         />
       );
     }
@@ -202,7 +202,7 @@ function ConfigEditor() {
           type="text"
           value={stringValue}
           onChange={(e) => updateValue(section, key, e.target.value)}
-          className="w-full px-4 py-2.5 bg-theme-card border-2 border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono"
+          className="w-full px-4 py-2.5 bg-theme-card border border-theme-primary rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono"
           placeholder="Enter secure value"
         />
       );
@@ -218,7 +218,7 @@ function ConfigEditor() {
           value={stringValue}
           onChange={(e) => updateValue(section, key, e.target.value)}
           rows={3}
-          className="w-full px-4 py-2.5 bg-theme-card border-2 border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all resize-y font-mono text-sm"
+          className="w-full px-4 py-2.5 bg-theme-card border border-theme-primary rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all resize-y font-mono text-sm"
         />
       );
     }
@@ -228,7 +228,7 @@ function ConfigEditor() {
         type="text"
         value={stringValue}
         onChange={(e) => updateValue(section, key, e.target.value)}
-        className="w-full px-4 py-2.5 bg-theme-card border-2 border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+        className="w-full px-4 py-2.5 bg-theme-card border border-theme-primary rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
       />
     );
   };
@@ -246,7 +246,7 @@ function ConfigEditor() {
 
   if (error) {
     return (
-      <div className="bg-red-900/20 border-2 border-red-500 rounded-lg p-6 text-center">
+      <div className="bg-red-900/20 border border-red-500 rounded-lg p-6 text-center">
         <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
         <p className="text-red-300 text-lg font-semibold mb-2">
           Error Loading Configuration
@@ -278,7 +278,7 @@ function ConfigEditor() {
           <button
             onClick={fetchConfig}
             disabled={loading}
-            className="flex items-center px-5 py-2.5 bg-theme-card hover:bg-theme-hover border-2 border-theme rounded-lg font-medium transition-colors disabled:opacity-50"
+            className="flex items-center px-5 py-2.5 bg-theme-card hover:bg-theme-hover border border-theme rounded-lg font-medium transition-colors disabled:opacity-50"
           >
             <RefreshCw
               className={`w-5 h-5 mr-2 ${loading ? "animate-spin" : ""}`}
@@ -297,7 +297,7 @@ function ConfigEditor() {
       </div>
 
       {/* Tab Navigation */}
-      <div className="bg-theme-card rounded-t-lg border-b-2 border-theme p-2">
+      <div className="mb-4">
         <div className="flex gap-2 flex-wrap">
           {Object.keys(tabs).map((tabName) => {
             const sectionsInTab = getSectionsByTab(tabName);
@@ -322,19 +322,19 @@ function ConfigEditor() {
       </div>
 
       {/* Tab Content */}
-      <div className="bg-theme-card rounded-b-lg border-2 border-t-0 border-theme p-6">
+      <div className="bg-theme-card rounded-lg border border-theme-primary p-6">
         {activeTab && (
           <div className="space-y-4">
             {getSectionsByTab(activeTab).map((section) => (
               <div
                 key={section}
-                className="bg-theme-bg rounded-lg border-2 border-theme overflow-hidden"
+                className="bg-theme-bg rounded-lg border border-theme overflow-hidden"
               >
                 <button
                   onClick={() => toggleSection(section)}
                   className="w-full px-6 py-4 flex items-center justify-between hover:bg-theme-hover transition-colors"
                 >
-                  <h3 className="text-lg font-semibold text-theme-text flex items-center">
+                  <h3 className="text-lg font-semibold text-theme-primary flex items-center">
                     {expandedSections[section] ? (
                       <ChevronDown className="w-5 h-5 mr-2 text-theme-primary" />
                     ) : (
@@ -348,12 +348,12 @@ function ConfigEditor() {
                 </button>
 
                 {expandedSections[section] && (
-                  <div className="px-6 pb-6 pt-2 space-y-4 border-t-2 border-theme">
+                  <div className="px-6 pb-6 pt-2 space-y-4 border-t border-theme">
                     {Object.entries(config[section] || {}).map(
                       ([key, value]) => (
                         <div
                           key={key}
-                          className="bg-theme-card rounded-lg p-4 border border-theme/50"
+                          className="bg-theme-card rounded-lg p-4 border border-theme"
                         >
                           <label className="block mb-2">
                             <span className="text-sm font-medium text-theme-primary mb-1 block">

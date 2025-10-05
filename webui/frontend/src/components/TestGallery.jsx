@@ -80,7 +80,7 @@ function TestGallery() {
               placeholder="Search test posters..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-theme-card border border-theme rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className="w-full pl-10 pr-4 py-3 bg-theme-card border border-theme-primary rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary"
             />
           </div>
         </div>
@@ -99,7 +99,7 @@ function TestGallery() {
           <p className="text-red-300 text-sm">{error}</p>
         </div>
       ) : filteredImages.length === 0 ? (
-        <div className="bg-theme-card border border-theme rounded-lg p-12 text-center">
+        <div className="bg-theme-card border border-theme-primary rounded-lg p-12 text-center">
           <ImageIcon className="w-16 h-16 text-gray-600 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-theme-muted mb-2">
             No Test Posters Found
@@ -120,7 +120,7 @@ function TestGallery() {
             {filteredImages.map((image, index) => (
               <div
                 key={index}
-                className="group relative bg-theme-card rounded-lg overflow-hidden border border-theme hover:border-theme-primary transition-all cursor-pointer"
+                className="group relative bg-theme-card rounded-lg overflow-hidden border border-theme-primary hover:border-theme-primary transition-all cursor-pointer"
                 onClick={() => setSelectedImage(image)}
               >
                 <div className="aspect-[2/3] bg-theme-dark flex items-center justify-center overflow-hidden">
@@ -166,10 +166,10 @@ function TestGallery() {
           onClick={() => setSelectedImage(null)}
         >
           <div
-            className="bg-theme-card rounded-lg max-w-6xl w-full max-h-[90vh] flex flex-col"
+            className="bg-theme-card border border-theme-primary rounded-lg max-w-6xl w-full max-h-[90vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-4 border-b border-theme flex items-center justify-between">
+            <div className="p-4 border-b-2 border-theme flex items-center justify-between">
               <h3 className="text-lg font-semibold text-white truncate">
                 {selectedImage.name}
               </h3>
@@ -202,13 +202,13 @@ function TestGallery() {
                 </div>
               </div>
             </div>
-            <div className="p-4 border-t border-theme flex justify-between items-center">
+            <div className="p-4 border-t-2 border-theme flex justify-between items-center">
               <span className="text-sm text-theme-muted">
                 Size: {(selectedImage.size / 1024).toFixed(2)} KB
               </span>
               <button
                 onClick={() => setSelectedImage(null)}
-                className="px-4 py-2 bg-theme-primary hover:bg-theme-primary-hover rounded-lg text-sm font-medium transition-colors text-white"
+                className="px-4 py-2 bg-theme-primary hover:bg-theme-primary/90 rounded-lg text-sm font-medium transition-colors text-white"
               >
                 Close
               </button>
