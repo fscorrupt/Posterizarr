@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Save, RefreshCw, AlertCircle } from "lucide-react";
+import {
+  Save,
+  RefreshCw,
+  AlertCircle,
+  ChevronDown,
+  ChevronRight,
+} from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 
 const API_URL = "http://localhost:8000/api";
@@ -10,10 +16,36 @@ function ConfigEditor() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [expandedSections, setExpandedSections] = useState({});
+  const [activeTab, setActiveTab] = useState(null);
+
+  // Group sections into logical tabs
+  const tabs = {
+    General: ["PrerequisitePart", "PlexUrl", "RadarrUrl", "SonarrUrl"],
+    Overlays: [
+      "PosterOverlayPart",
+      "SeasonPosterOverlayPart",
+      "BackgroundOverlayPart",
+      "TitleCardOverlayPart",
+    ],
+    "Text & Fonts": ["TextDefinitions", "FontPart"],
+    Notifications: ["Notification"],
+    Advanced: [], // Will contain remaining sections
+  };
 
   useEffect(() => {
     fetchConfig();
   }, []);
+
+  useEffect(() => {
+    if (config && !activeTab) {
+      setActiveTab("General");
+      // Expand first section of first tab by default
+      const firstSection = tabs["General"][0];
+      if (firstSection) {
+        setExpandedSections({ [firstSection]: true });
+      }
+    }
+  }, [config]);
 
   const fetchConfig = async () => {
     setLoading(true);
@@ -24,9 +56,6 @@ function ConfigEditor() {
 
       if (data.success) {
         setConfig(data.config);
-        // Expand first section by default
-        const firstSection = Object.keys(data.config)[0];
-        setExpandedSections({ [firstSection]: true });
       } else {
         setError("Failed to load config");
       }
@@ -95,11 +124,32 @@ function ConfigEditor() {
     }));
   };
 
+  const getSectionsByTab = (tabName) => {
+    if (!config) return [];
+
+    const tabSections = tabs[tabName];
+    if (tabName === "Advanced") {
+      // Advanced tab gets all sections not in other tabs
+      const usedSections = Object.values(tabs)
+        .flat()
+        .filter((s) => s); // Remove empty strings
+      return Object.keys(config).filter(
+        (section) => !usedSections.includes(section)
+      );
+    }
+    return tabSections.filter((section) => config[section]);
+  };
+
+  const formatSectionName = (section) => {
+    return section
+      .replace(/Part$/, "")
+      .replace(/([A-Z])/g, " $1")
+      .trim();
+  };
+
   const renderInput = (section, key, value) => {
     const type = typeof value;
     const keyLower = key.toLowerCase();
-
-    // Ensure value is always a string for text inputs
     const stringValue =
       value === null || value === undefined ? "" : String(value);
 
@@ -112,215 +162,217 @@ function ConfigEditor() {
             onChange={(e) =>
               updateValue(section, key, e.target.checked ? "true" : "false")
             }
-            className="w-5 h-5 rounded bg-theme-card border-theme text-purple-600 focus:ring-purple-500"
+            className="w-5 h-5 rounded border-2 border-theme bg-theme-card text-theme-primary focus:ring-2 focus:ring-theme-primary cursor-pointer"
+            id={`${section}-${key}`}
           />
-          <span
-            className={
-              value === "true" || value === true
-                ? "text-green-400"
-                : "text-theme-muted"
-            }
+          <label
+            htmlFor={`${section}-${key}`}
+            className="text-sm text-theme-text cursor-pointer select-none"
           >
             {value === "true" || value === true ? "Enabled" : "Disabled"}
-          </span>
+          </label>
         </div>
       );
     }
 
-    if (Array.isArray(value)) {
-      return (
-        <input
-          type="text"
-          value={value.join(", ")}
-          onChange={(e) =>
-            updateValue(
-              section,
-              key,
-              e.target.value.split(",").map((v) => v.trim())
-            )
-          }
-          className="w-full px-3 py-2 bg-theme-card border border-theme rounded-md text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-          placeholder="Comma-separated values"
-        />
-      );
-    }
-
-    // Determine if this should be a number input
-    const isNumericField =
+    if (
       type === "number" ||
-      (type === "string" &&
-        !isNaN(parseFloat(stringValue)) &&
-        stringValue !== "" &&
-        (keyLower.includes("width") ||
-          keyLower.includes("height") ||
-          keyLower.includes("size") ||
-          keyLower.includes("point") ||
-          keyLower.includes("offset") ||
-          keyLower.includes("spacing") ||
-          keyLower.includes("border") ||
-          keyLower.includes("max") ||
-          keyLower.includes("min") ||
-          keyLower === "loglevel"));
-
-    if (isNumericField) {
-      // For numeric fields, allow +, -, and numbers
-      // Don't clean the + sign - it's valid for offsets!
-
+      keyLower.includes("port") ||
+      keyLower.includes("size") ||
+      keyLower.includes("offset")
+    ) {
       return (
         <input
-          type="text"
-          inputMode="numeric"
+          type="number"
           value={stringValue}
-          onChange={(e) => {
-            const newValue = e.target.value;
-            // Allow +, -, numbers, and empty string
-            // Only allow + or - at the beginning
-            if (newValue === "" || newValue === "+" || newValue === "-") {
-              updateValue(section, key, newValue);
-            } else if (/^[+-]?\d+$/.test(newValue)) {
-              updateValue(section, key, newValue);
-            }
-          }}
-          onBlur={(e) => {
-            // Clean up incomplete values on blur
-            const val = e.target.value;
-            if (val === "+" || val === "-") {
-              updateValue(section, key, "0");
-            }
-          }}
-          className="w-full px-3 py-2 bg-theme-card border border-theme rounded-md text-white focus:outline-none focus:ring-2 focus:ring-purple-500 font-mono"
-          placeholder="e.g., +400, -50, 100"
+          onChange={(e) => updateValue(section, key, e.target.value)}
+          className="w-full px-4 py-2.5 bg-theme-card border-2 border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
         />
       );
     }
 
-    // Determine if this should be a textarea
-    const isPathOrFileField =
-      keyLower.includes("path") ||
-      keyLower.includes("file") ||
-      keyLower.includes("font") ||
-      keyLower.includes("overlay") ||
-      stringValue.includes("\\") ||
-      stringValue.includes("/") ||
-      stringValue.length > 80;
+    if (
+      keyLower.includes("password") ||
+      keyLower.includes("token") ||
+      keyLower.includes("key") ||
+      keyLower.includes("secret")
+    ) {
+      return (
+        <input
+          type="password"
+          value={stringValue}
+          onChange={(e) => updateValue(section, key, e.target.value)}
+          className="w-full px-4 py-2.5 bg-theme-card border-2 border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono"
+          placeholder="Enter secure value"
+        />
+      );
+    }
 
-    if (isPathOrFileField) {
+    if (
+      stringValue.length > 100 ||
+      keyLower.includes("path") ||
+      keyLower.includes("url")
+    ) {
       return (
         <textarea
           value={stringValue}
           onChange={(e) => updateValue(section, key, e.target.value)}
-          rows={2}
-          className="w-full px-3 py-2 bg-theme-card border border-theme rounded-md text-white focus:outline-none focus:ring-2 focus:ring-purple-500 font-mono text-sm resize-y"
+          rows={3}
+          className="w-full px-4 py-2.5 bg-theme-card border-2 border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all resize-y font-mono text-sm"
         />
       );
     }
 
-    // Regular string
     return (
       <input
         type="text"
         value={stringValue}
         onChange={(e) => updateValue(section, key, e.target.value)}
-        className="w-full px-3 py-2 bg-theme-card border border-theme rounded-md text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
-        placeholder={
-          keyLower.includes("color") ? "e.g., white, black, #FF0000" : ""
-        }
+        className="w-full px-4 py-2.5 bg-theme-card border-2 border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
       />
     );
   };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <RefreshCw className="w-8 h-8 animate-spin text-theme-primary" />
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <RefreshCw className="w-12 h-12 animate-spin text-theme-primary mx-auto mb-4" />
+          <p className="text-theme-muted">Loading configuration...</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="px-4 py-6">
-        <Toaster />
-        <div className="bg-red-900/50 border border-red-700 rounded-lg p-4 flex items-center">
-          <AlertCircle className="w-6 h-6 text-red-400 mr-3" />
-          <div>
-            <h3 className="font-semibold text-red-400">Error</h3>
-            <p className="text-red-300">{error}</p>
-          </div>
-        </div>
+      <div className="bg-red-900/20 border-2 border-red-500 rounded-lg p-6 text-center">
+        <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+        <p className="text-red-300 text-lg font-semibold mb-2">
+          Error Loading Configuration
+        </p>
+        <p className="text-red-400">{error}</p>
+        <button
+          onClick={fetchConfig}
+          className="mt-4 px-6 py-2 bg-red-600 hover:bg-red-700 rounded-lg font-medium transition-colors"
+        >
+          Retry
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="px-4 py-6">
+    <div>
       <Toaster />
 
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-3xl font-bold text-theme-primary">Configuration</h1>
-        <div className="flex space-x-3">
+      {/* Header */}
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-theme-primary mb-2">
+            Configuration Editor
+          </h1>
+          <p className="text-theme-muted">Manage your Posterizarr settings</p>
+        </div>
+        <div className="flex gap-3">
           <button
             onClick={fetchConfig}
-            className="flex items-center px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme rounded-lg font-medium transition-colors"
+            disabled={loading}
+            className="flex items-center px-5 py-2.5 bg-theme-card hover:bg-theme-hover border-2 border-theme rounded-lg font-medium transition-colors disabled:opacity-50"
           >
-            <RefreshCw className="w-4 h-4 mr-2" />
+            <RefreshCw
+              className={`w-5 h-5 mr-2 ${loading ? "animate-spin" : ""}`}
+            />
             Reload
           </button>
           <button
             onClick={saveConfig}
             disabled={saving}
-            className="flex items-center px-4 py-2 bg-theme-primary hover:bg-theme-primary-hover disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-colors text-white"
+            className="flex items-center px-6 py-2.5 bg-theme-primary hover:bg-theme-primary/90 rounded-lg font-medium transition-colors disabled:opacity-50 shadow-lg"
           >
-            <Save className="w-4 h-4 mr-2" />
-            {saving ? "Saving..." : "Save Config"}
+            <Save className="w-5 h-5 mr-2" />
+            {saving ? "Saving..." : "Save Changes"}
           </button>
         </div>
       </div>
 
-      <div className="space-y-4">
-        {config &&
-          Object.entries(config).map(([section, values]) => (
-            <div
-              key={section}
-              className="bg-theme-card rounded-lg border border-theme overflow-hidden"
-            >
-              <button
-                onClick={() => toggleSection(section)}
-                className="w-full px-6 py-4 flex items-center justify-between hover:bg-theme-hover transition-colors"
-              >
-                <h2 className="text-xl font-semibold text-theme-primary">
-                  {section}
-                </h2>
-                <span className="text-theme-muted">
-                  {expandedSections[section] ? "−" : "+"}
-                </span>
-              </button>
+      {/* Tab Navigation */}
+      <div className="bg-theme-card rounded-t-lg border-b-2 border-theme p-2">
+        <div className="flex gap-2 flex-wrap">
+          {Object.keys(tabs).map((tabName) => {
+            const sectionsInTab = getSectionsByTab(tabName);
+            if (sectionsInTab.length === 0 && tabName !== "Advanced")
+              return null;
 
-              {expandedSections[section] && (
-                <div className="px-6 py-4 border-t border-theme space-y-4">
-                  {typeof values === "object" && !Array.isArray(values) ? (
-                    Object.entries(values).map(([key, value]) => (
-                      <div
-                        key={key}
-                        className="grid grid-cols-1 md:grid-cols-3 gap-4 items-start"
-                      >
-                        <label className="text-sm font-medium text-theme-text md:col-span-1 pt-2">
-                          {key}
-                        </label>
-                        <div className="md:col-span-2">
-                          {renderInput(section, key, value)}
+            return (
+              <button
+                key={tabName}
+                onClick={() => setActiveTab(tabName)}
+                className={`px-6 py-3 rounded-lg font-medium transition-all ${
+                  activeTab === tabName
+                    ? "bg-theme-primary text-white shadow-md"
+                    : "bg-theme-hover text-theme-muted hover:bg-theme-hover/70"
+                }`}
+              >
+                {tabName}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Tab Content */}
+      <div className="bg-theme-card rounded-b-lg border-2 border-t-0 border-theme p-6">
+        {activeTab && (
+          <div className="space-y-4">
+            {getSectionsByTab(activeTab).map((section) => (
+              <div
+                key={section}
+                className="bg-theme-bg rounded-lg border-2 border-theme overflow-hidden"
+              >
+                <button
+                  onClick={() => toggleSection(section)}
+                  className="w-full px-6 py-4 flex items-center justify-between hover:bg-theme-hover transition-colors"
+                >
+                  <h3 className="text-lg font-semibold text-theme-text flex items-center">
+                    {expandedSections[section] ? (
+                      <ChevronDown className="w-5 h-5 mr-2 text-theme-primary" />
+                    ) : (
+                      <ChevronRight className="w-5 h-5 mr-2 text-theme-muted" />
+                    )}
+                    {formatSectionName(section)}
+                  </h3>
+                  <span className="text-sm text-theme-muted">
+                    {Object.keys(config[section] || {}).length} settings
+                  </span>
+                </button>
+
+                {expandedSections[section] && (
+                  <div className="px-6 pb-6 pt-2 space-y-4 border-t-2 border-theme">
+                    {Object.entries(config[section] || {}).map(
+                      ([key, value]) => (
+                        <div
+                          key={key}
+                          className="bg-theme-card rounded-lg p-4 border border-theme/50"
+                        >
+                          <label className="block mb-2">
+                            <span className="text-sm font-medium text-theme-primary mb-1 block">
+                              {key}
+                            </span>
+                            <span className="text-xs text-theme-muted block mb-2">
+                              Type: {typeof value}
+                            </span>
+                            {renderInput(section, key, value)}
+                          </label>
                         </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="text-theme-muted">
-                      {JSON.stringify(values)}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          ))}
+                      )
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

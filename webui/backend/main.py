@@ -133,6 +133,8 @@ def get_last_log_lines(count=25, mode=None):
         "testing": "Testinglog.log",
         "manual": "Manuallog.log",
         "backup": "Scriptlog.log",
+        "syncjelly": "Scriptlog.log",  # Added for Jellyfin sync
+        "syncemby": "Scriptlog.log",  # Added for Emby sync
         "reset": "Scriptlog.log",
     }
 
@@ -247,6 +249,8 @@ async def run_script(mode: str):
         "testing": [ps_command, "-File", str(SCRIPT_PATH), "-Testing"],
         "manual": [ps_command, "-File", str(SCRIPT_PATH), "-Manual"],
         "backup": [ps_command, "-File", str(SCRIPT_PATH), "-Backup"],
+        "syncjelly": [ps_command, "-File", str(SCRIPT_PATH), "-SyncJelly"],  # Added
+        "syncemby": [ps_command, "-File", str(SCRIPT_PATH), "-SyncEmby"],  # Added
     }
 
     if mode not in commands:

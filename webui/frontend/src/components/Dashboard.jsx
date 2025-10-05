@@ -12,6 +12,9 @@ import {
   AlertTriangle,
   RotateCcw,
   Zap,
+  X,
+  ExternalLink,
+  Cloud,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 
@@ -31,6 +34,7 @@ function Dashboard() {
   const [loading, setLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [resetLibrary, setResetLibrary] = useState("");
+  const [showManualModal, setShowManualModal] = useState(false);
 
   const fetchStatus = async () => {
     setIsRefreshing(true);
@@ -248,30 +252,6 @@ function Dashboard() {
     }
   };
 
-  const showManualModeInfo = () => {
-    const message = `Manual Mode is an interactive mode that can only be run via terminal/command line.
-
-This mode allows you to:
-• Manually select libraries
-• Choose specific items to process
-• Interact with the script step-by-step
-
-To use Manual Mode, open your terminal and run:
-pwsh -File Posterizarr.ps1 -Manual
-
-For detailed instructions, visit:
-https://github.com/fscorrupt/Posterizarr?tab=readme-ov-file#manual-mode-interactive
-
-Would you like to open the documentation?`;
-
-    if (window.confirm(message)) {
-      window.open(
-        "https://github.com/fscorrupt/Posterizarr?tab=readme-ov-file#manual-mode-interactive",
-        "_blank"
-      );
-    }
-  };
-
   const parseLogLine = (line) => {
     const cleanedLine = line.replace(/\x00/g, "").trim();
 
@@ -327,9 +307,135 @@ Would you like to open the documentation?`;
     return colors[levelLower] || colors.default;
   };
 
+  // Manual Mode Modal Component
+  const ManualModeModal = () => {
+    if (!showManualModal) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="bg-theme-card border-2 border-theme-primary rounded-xl max-w-2xl w-full shadow-2xl animate-in fade-in duration-200">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-purple-600 to-purple-700 px-6 py-4 rounded-t-xl flex items-center justify-between">
+            <div className="flex items-center">
+              <Settings className="w-6 h-6 mr-3 text-white" />
+              <h3 className="text-xl font-bold text-white">
+                Manual Mode Instructions
+              </h3>
+            </div>
+            <button
+              onClick={() => setShowManualModal(false)}
+              className="text-white/80 hover:text-white transition-colors p-1 hover:bg-white/10 rounded"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+
+          {/* Content */}
+          <div className="p-6 space-y-4">
+            <div className="bg-purple-900/20 border-l-4 border-purple-500 p-4 rounded">
+              <p className="text-purple-200 font-medium mb-2">
+                📁 Manual Mode allows you to process specific posters from a
+                custom directory.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <h4 className="font-semibold text-theme-primary text-lg">
+                How to use Manual Mode:
+              </h4>
+
+              <ol className="space-y-3 text-theme-text">
+                <li className="flex">
+                  <span className="bg-purple-600 text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0 text-sm font-bold">
+                    1
+                  </span>
+                  <div>
+                    <strong className="text-theme-primary">
+                      Set ManualAssetPath
+                    </strong>{" "}
+                    in your config.json
+                    <code className="block mt-1 bg-theme-bg p-2 rounded text-sm font-mono text-purple-300 border border-theme">
+                      "ManualAssetPath": "/path/to/your/manual/assets"
+                    </code>
+                  </div>
+                </li>
+
+                <li className="flex">
+                  <span className="bg-purple-600 text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0 text-sm font-bold">
+                    2
+                  </span>
+                  <div>
+                    <strong className="text-theme-primary">
+                      Create folder structure
+                    </strong>
+                    <code className="block mt-1 bg-theme-bg p-2 rounded text-sm font-mono text-purple-300 border border-theme">
+                      ManualAssetPath/Movies/Movie Name (Year)/poster.ext
+                    </code>
+                  </div>
+                </li>
+
+                <li className="flex">
+                  <span className="bg-purple-600 text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0 text-sm font-bold">
+                    3
+                  </span>
+                  <div>
+                    <strong className="text-theme-primary">
+                      Run the script
+                    </strong>{" "}
+                    using the PowerShell command below
+                  </div>
+                </li>
+              </ol>
+
+              <div className="bg-theme-bg border-2 border-purple-500/50 rounded-lg p-4 mt-4">
+                <p className="text-sm text-theme-muted mb-2 font-semibold">
+                  PowerShell Command:
+                </p>
+                <code className="block bg-black/40 p-3 rounded font-mono text-sm text-purple-300 border border-purple-500/30">
+                  pwsh -File /path/to/Posterizarr.ps1 -Manual
+                </code>
+              </div>
+
+              <div className="bg-yellow-900/20 border-l-4 border-yellow-500 p-4 rounded mt-4">
+                <p className="text-yellow-200 text-sm">
+                  ⚠️ <strong>Note:</strong> Manual mode must be run from the
+                  command line, not from this web interface.
+                </p>
+              </div>
+            </div>
+
+            {/* Documentation Link */}
+            <div className="pt-4 border-t-2 border-theme">
+              <a
+                href="https://github.com/fscorrupt/Posterizarr?tab=readme-ov-file#manual-mode-interactive"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-center px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg font-medium transition-colors text-white"
+              >
+                <ExternalLink className="w-5 h-5 mr-2" />
+                View Full Documentation
+              </a>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="bg-theme-bg px-6 py-4 rounded-b-xl flex justify-end">
+            <button
+              onClick={() => setShowManualModal(false)}
+              className="px-6 py-2 bg-theme-primary hover:bg-theme-primary/90 rounded-lg font-medium transition-colors"
+            >
+              Got it!
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="px-4 py-6">
       <Toaster />
+      <ManualModeModal />
 
       <h1 className="text-3xl font-bold mb-8 text-theme-primary">Dashboard</h1>
 
@@ -440,7 +546,7 @@ Would you like to open the documentation?`;
           Script Execution
         </h2>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
           <button
             onClick={() => runScript("normal")}
             disabled={loading || status.running}
@@ -460,7 +566,7 @@ Would you like to open the documentation?`;
           </button>
 
           <button
-            onClick={showManualModeInfo}
+            onClick={() => setShowManualModal(true)}
             className="flex items-center justify-center px-4 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg font-medium transition-colors"
           >
             <Settings className="w-5 h-5 mr-2" />
@@ -474,6 +580,24 @@ Would you like to open the documentation?`;
           >
             <Save className="w-5 h-5 mr-2" />
             Backup
+          </button>
+
+          <button
+            onClick={() => runScript("syncjelly")}
+            disabled={loading || status.running}
+            className="flex items-center justify-center px-4 py-3 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-colors"
+          >
+            <Cloud className="w-5 h-5 mr-2" />
+            Sync Jellyfin
+          </button>
+
+          <button
+            onClick={() => runScript("syncemby")}
+            disabled={loading || status.running}
+            className="flex items-center justify-center px-4 py-3 bg-teal-600 hover:bg-teal-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-colors"
+          >
+            <Cloud className="w-5 h-5 mr-2" />
+            Sync Emby
           </button>
         </div>
       </div>
