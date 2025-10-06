@@ -5183,9 +5183,13 @@ function MassDownloadPlexArtwork {
     try {
         $directoryHashtable = @{}
         $allowedExtensions = @(".jpg", ".jpeg", ".png", ".bmp")
+        $totalSize = 0
+        $excludePath = Join-Path -Path $BackupPath -ChildPath 'Collections'
 
         if ($FollowSymlink) {
-            Get-ChildItem -Path $BackupPath -Recurse -Exclude 'Collections' -FollowSymlink | ForEach-Object {
+            Get-ChildItem -Path $BackupPath -Recurse -FollowSymlink | Where-Object {
+                $_.FullName -ne $excludePath -and $_.FullName -notlike "$excludePath/*"
+            } | ForEach-Object {
                 if ($allowedExtensions -contains $_.Extension.ToLower()) {
                     $directory = $_.Directory
                     $basename = $_.BaseName
@@ -5200,7 +5204,9 @@ function MassDownloadPlexArtwork {
             }
         }
         Else {
-            Get-ChildItem -Path $BackupPath -Recurse -Exclude 'Collections'| ForEach-Object {
+            Get-ChildItem -Path $BackupPath -Recurse | Where-Object {
+                $_.FullName -ne $excludePath -and $_.FullName -notlike "$excludePath/*"
+            } | ForEach-Object {
                 if ($allowedExtensions -contains $_.Extension.ToLower()) {
                     $directory = $_.Directory
                     $basename = $_.BaseName
@@ -9754,9 +9760,12 @@ Elseif ($Tautulli) {
         $directoryHashtable = @{}
         $allowedExtensions = @(".jpg", ".jpeg", ".png", ".bmp")
         $totalSize = 0
+        $excludePath = Join-Path -Path $AssetPath -ChildPath 'Collections'
 
         if ($FollowSymlink) {
-            Get-ChildItem -Path $AssetPath -Recurse -Exclude 'Collections' -FollowSymlink | ForEach-Object {
+            Get-ChildItem -Path $AssetPath -Recurse -FollowSymlink | Where-Object {
+                $_.FullName -ne $excludePath -and $_.FullName -notlike "$excludePath/*"
+            } | ForEach-Object {
                 if ($allowedExtensions -contains $_.Extension.ToLower()) {
                     $directory = $_.Directory
                     $basename = $_.BaseName
@@ -9771,7 +9780,9 @@ Elseif ($Tautulli) {
             }
         }
         Else {
-            Get-ChildItem -Path $AssetPath -Recurse -Exclude 'Collections' | ForEach-Object {
+            Get-ChildItem -Path $AssetPath -Recurse | Where-Object {
+                $_.FullName -ne $excludePath -and $_.FullName -notlike "$excludePath/*"
+            } | ForEach-Object {
                 if ($allowedExtensions -contains $_.Extension.ToLower()) {
                     $directory = $_.Directory
                     $basename = $_.BaseName
@@ -14008,9 +14019,13 @@ Elseif ($ArrTrigger) {
         try {
             $directoryHashtable = @{}
             $allowedExtensions = @(".jpg", ".jpeg", ".png", ".bmp")
+            $totalSize = 0
+            $excludePath = Join-Path -Path $AssetPath -ChildPath 'Collections'
 
             if ($FollowSymlink) {
-                Get-ChildItem -Path $AssetPath -Recurse -Exclude 'Collections' -FollowSymlink | ForEach-Object {
+                Get-ChildItem -Path $AssetPath -Recurse -FollowSymlink | Where-Object {
+                    $_.FullName -ne $excludePath -and $_.FullName -notlike "$excludePath/*"
+                } | ForEach-Object {
                     if ($allowedExtensions -contains $_.Extension.ToLower()) {
                         $directory = $_.Directory
                         $basename = $_.BaseName
@@ -14025,7 +14040,9 @@ Elseif ($ArrTrigger) {
                 }
             }
             Else {
-                Get-ChildItem -Path $AssetPath -Recurse -Exclude 'Collections' | ForEach-Object {
+                Get-ChildItem -Path $AssetPath -Recurse | Where-Object {
+                    $_.FullName -ne $excludePath -and $_.FullName -notlike "$excludePath/*"
+                } | ForEach-Object {
                     if ($allowedExtensions -contains $_.Extension.ToLower()) {
                         $directory = $_.Directory
                         $basename = $_.BaseName
@@ -17808,9 +17825,12 @@ Elseif ($ArrTrigger) {
             $directoryHashtable = @{}
             $allowedExtensions = @(".jpg", ".jpeg", ".png", ".bmp")
             $totalSize = 0
+            $excludePath = Join-Path -Path $AssetPath -ChildPath 'Collections'
 
             if ($FollowSymlink) {
-                Get-ChildItem -Path $AssetPath -Recurse -Exclude 'Collections' -FollowSymlink | ForEach-Object {
+                Get-ChildItem -Path $AssetPath -Recurse -FollowSymlink | Where-Object {
+                    $_.FullName -ne $excludePath -and $_.FullName -notlike "$excludePath/*"
+                } | ForEach-Object {
                     if ($allowedExtensions -contains $_.Extension.ToLower()) {
                         $directory = $_.Directory
                         $basename = $_.BaseName
@@ -17825,7 +17845,9 @@ Elseif ($ArrTrigger) {
                 }
             }
             Else {
-                Get-ChildItem -Path $AssetPath -Recurse -Exclude 'Collections' | ForEach-Object {
+                Get-ChildItem -Path $AssetPath -Recurse | Where-Object {
+                    $_.FullName -ne $excludePath -and $_.FullName -notlike "$excludePath/*"
+                } | ForEach-Object {
                     if ($allowedExtensions -contains $_.Extension.ToLower()) {
                         $directory = $_.Directory
                         $basename = $_.BaseName
@@ -23238,9 +23260,13 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
     try {
         $directoryHashtable = @{}
         $allowedExtensions = @(".jpg", ".jpeg", ".png", ".bmp")
+        $totalSize = 0
+        $excludePath = Join-Path -Path $AssetPath -ChildPath 'Collections'
 
         if ($FollowSymlink) {
-            Get-ChildItem -Path $AssetPath -Recurse -Exclude 'Collections' -FollowSymlink | ForEach-Object {
+            Get-ChildItem -Path $AssetPath -Recurse -FollowSymlink | Where-Object {
+                $_.FullName -ne $excludePath -and $_.FullName -notlike "$excludePath/*"
+            } | ForEach-Object {
                 if ($allowedExtensions -contains $_.Extension.ToLower()) {
                     $directory = $_.Directory
                     $basename = $_.BaseName
@@ -23255,7 +23281,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
             }
         }
         Else {
-            Get-ChildItem -Path $AssetPath -Recurse -Exclude 'Collections' | ForEach-Object {
+            Get-ChildItem -Path $AssetPath -Recurse | Where-Object {
+                $_.FullName -ne $excludePath -and $_.FullName -notlike "$excludePath/*"
+            } | ForEach-Object {
                 if ($allowedExtensions -contains $_.Extension.ToLower()) {
                     $directory = $_.Directory
                     $basename = $_.BaseName
@@ -27595,8 +27623,13 @@ else {
     try {
         $directoryHashtable = @{}
         $allowedExtensions = @(".jpg", ".jpeg", ".png", ".bmp")
+        $totalSize = 0
+        $excludePath = Join-Path -Path $AssetPath -ChildPath 'Collections'
+
         if ($FollowSymlink) {
-            Get-ChildItem -Path $AssetPath -Recurse -Exclude 'Collections' -FollowSymlink | ForEach-Object {
+            Get-ChildItem -Path $AssetPath -Recurse -FollowSymlink | Where-Object {
+                $_.FullName -ne $excludePath -and $_.FullName -notlike "$excludePath/*"
+            } | ForEach-Object {
                 if ($allowedExtensions -contains $_.Extension.ToLower()) {
                     $directory = $_.Directory
                     $basename = $_.BaseName
@@ -27611,7 +27644,9 @@ else {
             }
         }
         Else {
-            Get-ChildItem -Path $AssetPath -Recurse -Exclude 'Collections' | ForEach-Object {
+            Get-ChildItem -Path $AssetPath -Recurse | Where-Object {
+                $_.FullName -ne $excludePath -and $_.FullName -notlike "$excludePath/*"
+            } | ForEach-Object {
                 if ($allowedExtensions -contains $_.Extension.ToLower()) {
                     $directory = $_.Directory
                     $basename = $_.BaseName
