@@ -187,20 +187,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount static files in correct order: /assets, /test, then / (frontend)
-if ASSETS_DIR.exists():
-    app.mount("/assets", StaticFiles(directory=str(ASSETS_DIR)), name="assets")
-    logger.info(f"Mounted /assets -> {ASSETS_DIR}")
-
-if TEST_DIR.exists():
-    app.mount("/test", StaticFiles(directory=str(TEST_DIR)), name="test")
-    logger.info(f"Mounted /test -> {TEST_DIR}")
-
-if FRONTEND_DIR.exists():
-    app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
-    logger.info(f"Mounted frontend from {FRONTEND_DIR}")
-
-
 class ConfigUpdate(BaseModel):
     config: dict
 
@@ -672,7 +658,7 @@ async def get_gallery():
                                 "path": str(relative_path),
                                 "name": image_path.name,
                                 "size": image_path.stat().st_size,
-                                "url": f"/assets/{url_path}",
+                                "url": f"/poster_assets/{url_path}",
                             }
                         )
                     except Exception as e:
@@ -744,7 +730,7 @@ async def get_backgrounds_gallery():
                                 "path": str(relative_path),
                                 "name": image_path.name,
                                 "size": image_path.stat().st_size,
-                                "url": f"/assets/{url_path}",
+                                "url": f"/poster_assets/{url_path}",
                             }
                         )
                     except Exception as e:
@@ -821,7 +807,7 @@ async def get_seasons_gallery():
                                 "path": str(relative_path),
                                 "name": image_path.name,
                                 "size": image_path.stat().st_size,
-                                "url": f"/assets/{url_path}",
+                                "url": f"/poster_assets/{url_path}",
                             }
                         )
                     except Exception as e:
@@ -893,7 +879,7 @@ async def get_titlecards_gallery():
                                 "path": str(relative_path),
                                 "name": image_path.name,
                                 "size": image_path.stat().st_size,
-                                "url": f"/assets/{url_path}",
+                                "url": f"/poster_assets/{url_path}",
                             }
                         )
                     except Exception as e:
@@ -1050,7 +1036,7 @@ async def get_assets_folder_images_filtered(image_type: str, folder_path: str):
                                 "path": str(relative_path),
                                 "name": image_path.name,
                                 "size": image_path.stat().st_size,
-                                "url": f"/assets/{url_path}",
+                                "url": f"/poster_assets/{url_path}",
                             }
                         )
                     except Exception as e:
@@ -1136,6 +1122,18 @@ async def get_test_gallery():
         logger.error(f"Error scanning test gallery: {e}")
         return {"images": []}
 
+# Mount static files in correct order: /assets, /test, then / (frontend)
+if ASSETS_DIR.exists():
+    app.mount("/poster_assets", StaticFiles(directory=str(ASSETS_DIR)), name="poster_assets")
+    logger.info(f"Mounted /poster_assets -> {ASSETS_DIR}")
+
+if TEST_DIR.exists():
+    app.mount("/test", StaticFiles(directory=str(TEST_DIR)), name="test")
+    logger.info(f"Mounted /test -> {TEST_DIR}")
+
+if FRONTEND_DIR.exists():
+    app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
+    logger.info(f"Mounted frontend from {FRONTEND_DIR}")
 
 if __name__ == "__main__":
     import uvicorn
