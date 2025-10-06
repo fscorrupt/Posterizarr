@@ -31,6 +31,12 @@ function ThemeSwitcher() {
   const { theme, setTheme, themes } = useTheme();
   const [isOpen, setIsOpen] = useState(false);
 
+  const themeArray = Object.entries(themes).map(([id, config]) => ({
+    id,
+    name: config.name,
+    color: config.variables["--theme-primary"],
+  }));
+
   return (
     <div className="relative">
       <button
@@ -55,7 +61,7 @@ function ThemeSwitcher() {
               <div className="px-3 py-2 text-xs font-semibold text-theme-muted uppercase tracking-wider">
                 Select Theme
               </div>
-              {themes.map((t) => (
+              {themeArray.map((t) => (
                 <button
                   key={t.id}
                   onClick={() => {
