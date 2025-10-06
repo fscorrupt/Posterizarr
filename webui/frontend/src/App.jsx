@@ -10,11 +10,10 @@ import { ThemeProvider, useTheme } from "./context/ThemeContext";
 import ConfigEditor from "./components/ConfigEditor";
 import LogViewer from "./components/LogViewer";
 import Dashboard from "./components/Dashboard";
-import Gallery from "./components/Gallery";
+import GalleryHub from "./components/GalleryHub";
 import TestGallery from "./components/TestGallery";
-import BackgroundsGallery from "./components/BackgroundsGallery";
-import SeasonGallery from "./components/SeasonGallery";
-import TitleCardGallery from "./components/TitleCardGallery";
+import About from "./components/About";
+import VersionBadge from "./components/VersionBadge";
 import {
   Menu,
   Settings,
@@ -23,8 +22,7 @@ import {
   Activity,
   TestTube,
   Palette,
-  Film,
-  Tv,
+  Info,
 } from "lucide-react";
 
 function ThemeSwitcher() {
@@ -96,55 +94,27 @@ function Navigation() {
   const location = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const [uiVersion, setUiVersion] = useState(null);
-
-  // Fetch UI version on mount
-  React.useEffect(() => {
-    const fetchUIVersion = async () => {
-      try {
-        const response = await fetch("http://localhost:8000/api/version-ui");
-        if (response.ok) {
-          const data = await response.json();
-          // FIX: Changed from data.version to data.local
-          if (data.local) {
-            setUiVersion(data.local);
-          }
-        }
-      } catch (error) {
-        console.error("Error fetching UI version:", error);
-      }
-    };
-    fetchUIVersion();
-  }, []);
-
   const navItems = [
     { path: "/", label: "Dashboard", icon: Activity },
-    { path: "/test-gallery", label: "Test Gallery", icon: TestTube },
-    { path: "/gallery", label: "Posters", icon: Image },
-    { path: "/backgrounds", label: "Backgrounds", icon: Image },
-    { path: "/seasons", label: "Seasons", icon: Film },
-    { path: "/titlecards", label: "Title Cards", icon: Tv },
+    { path: "/test-gallery", label: "Test Gallery", icon: Image },
+    { path: "/gallery", label: "Gallery", icon: Image },
     { path: "/config", label: "Config", icon: Settings },
     { path: "/logs", label: "Logs", icon: FileText },
+    { path: "/about", label: "About", icon: Info },
   ];
 
   return (
     <nav className="bg-theme-card border-b border-theme shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Logo */}
+          {/* Logo with Version Badge */}
           <div className="flex-shrink-0 flex items-center">
-            <h1 className="text-2xl font-bold text-theme-primary">
-              Posterizarr
-            </h1>
-            {uiVersion && (
-              <span
-                style={{ marginTop: 0.5 + "em" }}
-                className="ml-2 px-2 py-0.5 text-[10px] font-medium bg-theme-accent text-white rounded-full"
-              >
-                v{uiVersion}
-              </span>
-            )}
+            <Link to="/" className="flex items-center">
+              <h1 className="text-2xl font-bold text-theme-primary">
+                Posterizarr
+              </h1>
+              <VersionBadge />
+            </Link>
           </div>
 
           {/* Desktop menu */}
@@ -235,12 +205,10 @@ function AppContent() {
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/test-gallery" element={<TestGallery />} />
-          <Route path="/gallery" element={<Gallery />} />
-          <Route path="/backgrounds" element={<BackgroundsGallery />} />
-          <Route path="/seasons" element={<SeasonGallery />} />
-          <Route path="/titlecards" element={<TitleCardGallery />} />
+          <Route path="/gallery" element={<GalleryHub />} />
           <Route path="/config" element={<ConfigEditor />} />
           <Route path="/logs" element={<LogViewer />} />
+          <Route path="/about" element={<About />} />
         </Routes>
       </main>
     </div>
