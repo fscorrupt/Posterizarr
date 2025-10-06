@@ -21,6 +21,11 @@ export default defineConfig({
         target: "http://localhost:8000",
         changeOrigin: true,
       },
+      // Assets
+      "/poster_assets": {
+        target: "http://localhost:8000",
+        changeOrigin: true,
+      },
       // Test-Bilder
       "/test": {
         target: "http://localhost:8000",
