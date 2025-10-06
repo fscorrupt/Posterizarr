@@ -24,6 +24,7 @@ IS_DOCKER = os.path.exists("/.dockerenv") or os.environ.get("DOCKER_ENV") == "tr
 
 if IS_DOCKER:
     BASE_DIR = Path("/config")
+    APP_DIR = Path("/app")
     ASSETS_DIR = Path("/assets")
     FRONTEND_DIR = Path("/app/frontend/dist")
     logger.info("Running in DOCKER mode")
@@ -31,6 +32,7 @@ else:
     # Local: webui/backend/main.py -> project root (3 levels up)
     PROJECT_ROOT = Path(__file__).parent.parent.parent
     BASE_DIR = PROJECT_ROOT
+    APP_DIR = PROJECT_ROOT
     ASSETS_DIR = PROJECT_ROOT / "assets"
     FRONTEND_DIR = PROJECT_ROOT / "webui" / "frontend" / "dist"
     ASSETS_DIR.mkdir(exist_ok=True)
@@ -41,7 +43,7 @@ else:
 
 CONFIG_PATH = BASE_DIR / "config.json"
 CONFIG_EXAMPLE_PATH = BASE_DIR / "config.example.json"
-SCRIPT_PATH = BASE_DIR / "Posterizarr.ps1"
+SCRIPT_PATH = APP_DIR / "Posterizarr.ps1"
 LOGS_DIR = BASE_DIR / "Logs"
 TEST_DIR = BASE_DIR / "test"
 TEMP_DIR = BASE_DIR / "temp"
