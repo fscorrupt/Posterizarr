@@ -354,7 +354,7 @@ function ConfigEditor() {
             placeholder="Enter comma-separated values"
           />
           {value.length > 0 && (
-            <div className="flex flex-wrap gap-2 p-3 bg-theme-bg rounded-lg border border-theme">
+            <div className="flex flex-wrap gap-2 p-3 bg-theme-card rounded-lg border border-theme-primary">
               {value.map((item, idx) => (
                 <span
                   key={idx}
@@ -378,7 +378,7 @@ function ConfigEditor() {
     if (type === "boolean" || value === "true" || value === "false") {
       const isEnabled = value === "true" || value === true;
       return (
-        <div className="flex items-center justify-between h-[42px] px-4 bg-theme-bg rounded-lg border border-theme hover:border-theme-primary/30 transition-all">
+        <div className="flex items-center justify-between h-[42px] px-4 bg-theme-card rounded-lg border border-theme-primary hover:border-theme-primary/30 transition-all">
           <div className="text-sm font-medium text-theme-text">
             {displayName}
           </div>
