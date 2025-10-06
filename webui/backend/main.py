@@ -17,26 +17,40 @@ import re
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Paths - MUST be defined before lifespan function
-BASE_DIR = Path("/config")
+# Check if running in Docker
+IS_DOCKER = os.path.exists("/.dockerenv") or os.environ.get("DOCKER_ENV") == "true"
+
+if IS_DOCKER:
+    BASE_DIR = Path("/config")
+    ASSETS_DIR = Path("/assets")
+    FRONTEND_DIR = Path("/app/frontend/dist")
+    logger.info("Running in DOCKER mode")
+else:
+    # Local: webui/backend/main.py -> project root (3 levels up)
+    PROJECT_ROOT = Path(__file__).parent.parent.parent
+    BASE_DIR = PROJECT_ROOT
+    ASSETS_DIR = PROJECT_ROOT / "assets"
+    FRONTEND_DIR = PROJECT_ROOT / "webui" / "frontend" / "dist"
+    ASSETS_DIR.mkdir(exist_ok=True)
+    (BASE_DIR / "Logs").mkdir(exist_ok=True)
+    (BASE_DIR / "temp").mkdir(exist_ok=True)
+    (BASE_DIR / "test").mkdir(exist_ok=True)
+    logger.info(f"Running in LOCAL mode: {BASE_DIR}")
+
 CONFIG_PATH = BASE_DIR / "config.json"
 CONFIG_EXAMPLE_PATH = BASE_DIR / "config.example.json"
 SCRIPT_PATH = BASE_DIR / "Posterizarr.ps1"
 LOGS_DIR = BASE_DIR / "Logs"
-ASSETS_DIR = Path("/assets")
 TEST_DIR = BASE_DIR / "test"
 TEMP_DIR = BASE_DIR / "temp"
 RUNNING_FILE = TEMP_DIR / "Posterizarr.Running"
-FRONTEND_DIR = Path("/app/frontend/dist")  # must match Dockerfile copy
 
-# Use config.example.json if config.json doesn't exist
 if not CONFIG_PATH.exists() and CONFIG_EXAMPLE_PATH.exists():
     logger.warning(f"config.json not found, using config.example.json as fallback")
     CONFIG_PATH = CONFIG_EXAMPLE_PATH
 
-# Global process tracker
 current_process: Optional[subprocess.Popen] = None
-current_mode: Optional[str] = None  # Track current execution mode
+current_mode: Optional[str] = None
 
 
 # ============================================================================
@@ -158,20 +172,7 @@ def is_titlecard_file(filename: str) -> bool:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan event handler for startup and shutdown"""
-
-    # Mount static files for assets after directories are created
-    if ASSETS_DIR.exists():
-        app.mount("/assets", StaticFiles(directory=str(ASSETS_DIR)), name="assets")
-        logger.info(f"Mounted static files at /assets for directory: {ASSETS_DIR}")
-
-    # Mount static files for test directory
-    if TEST_DIR.exists():
-        app.mount("/test", StaticFiles(directory=str(TEST_DIR)), name="test")
-        logger.info(f"Mounted static files at /test for directory: {TEST_DIR}")
-
     yield
-
-    # Shutdown
     logger.info("Shutting down Posterizarr Web UI Backend")
 
 
@@ -186,15 +187,32 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Mount static files in correct order: /assets, /test, then / (frontend)
+if ASSETS_DIR.exists():
+    app.mount("/assets", StaticFiles(directory=str(ASSETS_DIR)), name="assets")
+    logger.info(f"Mounted /assets -> {ASSETS_DIR}")
+
+if TEST_DIR.exists():
+    app.mount("/test", StaticFiles(directory=str(TEST_DIR)), name="test")
+    logger.info(f"Mounted /test -> {TEST_DIR}")
+
+if FRONTEND_DIR.exists():
+    app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
+    logger.info(f"Mounted frontend from {FRONTEND_DIR}")
+
+
 class ConfigUpdate(BaseModel):
     config: dict
+
 
 class ResetPostersRequest(BaseModel):
     library: str
 
+
 @app.get("/api")
 async def api_root():
     return {"message": "Posterizarr Web UI API", "status": "running"}
+
 
 @app.get("/api/config")
 async def get_config():
@@ -1118,8 +1136,6 @@ async def get_test_gallery():
         logger.error(f"Error scanning test gallery: {e}")
         return {"images": []}
 
-if FRONTEND_DIR.exists():
-    app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
 
 if __name__ == "__main__":
     import uvicorn
