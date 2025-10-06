@@ -293,6 +293,7 @@ async def update_config(data: ConfigUpdate):
         logger.error(f"Error updating config: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
 def get_last_log_lines(count=25, mode=None, log_file=None):
     """Get last N lines from log files based on current mode or specific log file"""
 
@@ -1150,14 +1151,66 @@ async def fetch_version(local_filename: str, github_url: str, version_type: str)
     return {"local": local_version, "remote": remote_version}
 
 
+async def get_script_version():
+    """
+    Reads the version from Posterizarr.ps1 and compares with GitHub Release.txt
+    Similar to the PowerShell CompareScriptVersion function
+    """
+    local_version = None
+    remote_version = None
+
+    # --- 1. Get Local Version from Posterizarr.ps1 ---
+    try:
+        # Use the already defined SCRIPT_PATH
+        posterizarr_path = SCRIPT_PATH
+
+        logger.info(f"Looking for Posterizarr.ps1 at: {posterizarr_path}")
+
+        if posterizarr_path.exists():
+            with open(posterizarr_path, "r", encoding="utf-8") as f:
+                content = f.read()
+
+            # Extract version using regex: $CurrentScriptVersion = "1.9.95"
+            match = re.search(r'\$CurrentScriptVersion\s*=\s*"([^"]+)"', content)
+            if match:
+                local_version = match.group(1)
+                logger.info(
+                    f"Local script version from Posterizarr.ps1: {local_version}"
+                )
+            else:
+                logger.warning(
+                    "Could not find $CurrentScriptVersion in Posterizarr.ps1"
+                )
+        else:
+            logger.error(f"Posterizarr.ps1 not found at {posterizarr_path}")
+    except Exception as e:
+        logger.error(f"Error reading version from Posterizarr.ps1: {e}")
+
+    # --- 2. Get Remote Version from GitHub Release.txt ---
+    # Always fetch from GitHub (both Docker and local)
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                "https://raw.githubusercontent.com/fscorrupt/Posterizarr/refs/heads/main/Release.txt",
+                timeout=10.0,
+            )
+            response.raise_for_status()
+            remote_version = response.text.strip()
+            logger.info(f"Remote version from GitHub Release.txt: {remote_version}")
+    except httpx.RequestError as e:
+        logger.warning(f"Could not fetch remote version from GitHub: {e}")
+    except Exception as e:
+        logger.error(f"Error fetching remote version: {e}")
+
+    return {"local": local_version, "remote": remote_version}
+
+
 @app.get("/api/version")
 async def get_version():
-    """Gets local and remote Backend version."""
-    return await fetch_version(
-        local_filename="Release.txt",
-        github_url="https://raw.githubusercontent.com/fscorrupt/Posterizarr/refs/heads/main/Release.txt",
-        version_type="Backend",
-    )
+    """
+    Gets script version from Posterizarr.ps1 and compares with GitHub Release.txt
+    """
+    return await get_script_version()
 
 
 @app.get("/api/version-ui")

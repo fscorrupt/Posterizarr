@@ -855,7 +855,6 @@ function Dashboard() {
                   {/* Backend Version */}
                   {(version.local || version.remote) && (
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-theme-muted">Backend:</span>
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-theme-primary text-white">
                         v{version.local || version.remote}
                       </span>
@@ -864,23 +863,6 @@ function Dashboard() {
                         version.local !== version.remote && (
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500 text-white animate-pulse">
                             v{version.remote} available
-                          </span>
-                        )}
-                    </div>
-                  )}
-
-                  {/* UI Version */}
-                  {(uiVersion.local || uiVersion.remote) && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-theme-muted">WebUI:</span>
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-500 text-white">
-                        v{uiVersion.local || uiVersion.remote}
-                      </span>
-                      {uiVersion.local &&
-                        uiVersion.remote &&
-                        uiVersion.local !== uiVersion.remote && (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500 text-white animate-pulse">
-                            v{uiVersion.remote} available
                           </span>
                         )}
                     </div>
