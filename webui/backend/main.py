@@ -8,13 +8,15 @@ import json
 import subprocess
 import asyncio
 import os
+import httpx
 from pathlib import Path
 from typing import Optional
 import logging
 import re
 
 # Setup logging
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.WARNING)
+logging.getLogger("httpx").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
 # Check if running in Docker
@@ -1050,42 +1052,55 @@ async def get_assets_folder_images_filtered(image_type: str, folder_path: str):
         logger.error(f"Error scanning folder {folder_path}: {e}")
         return {"images": []}
 
+async def fetch_version(local_filename: str, github_url: str, version_type: str):
+    """
+    A reusable function to get a local version from a file and fetch the remote
+    version from GitHub when running in a Docker environment.
+    """
+    local_version = None
+    remote_version = None
+
+    # --- 1. Get Local Version ---
+    try:
+        version_file = BASE_DIR / local_filename
+        if version_file.exists():
+            local_version = version_file.read_text().strip()
+    except Exception as e:
+        logger.error(f"Error reading local {version_type} version file: {e}")
+
+    # --- 2. Get Remote Version (if in Docker) ---
+    if IS_DOCKER:
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(github_url, timeout=10.0)
+                response.raise_for_status()
+                remote_version = response.text.strip()
+                logger.info(f"Successfully fetched remote {version_type} version: {remote_version}")
+        except httpx.RequestError as e:
+            logger.warning(f"Could not fetch remote {version_type} version from GitHub: {e}")
+        except Exception as e:
+            logger.error(f"An unexpected error occurred while fetching remote {version_type} version: {e}")
+
+    return {"local": local_version, "remote": remote_version}
 
 @app.get("/api/version")
 async def get_version():
-    try:
-        # Gehe ZWEI Verzeichnisse nach oben vom webui/backend-Ordner
-        version_file = Path(__file__).parent.parent.parent / "Release.txt"
-
-        if version_file.exists():
-            version = version_file.read_text().strip()
-            logger.info(f"Version loaded: {version} from {version_file}")
-            return {"version": version}
-
-        logger.warning(f"Version file not found at: {version_file}")
-        return {"version": None}
-    except Exception as e:
-        logger.error(f"Error reading version: {e}")
-        return {"version": None}
+    """Gets local and remote Backend version."""
+    return await fetch_version(
+        local_filename="Release.txt",
+        github_url="https://raw.githubusercontent.com/fscorrupt/Posterizarr/refs/heads/main/Release.txt",
+        version_type="Backend"
+    )
 
 
 @app.get("/api/version-ui")
 async def get_version_ui():
-    try:
-        # Gehe ZWEI Verzeichnisse nach oben vom webui/backend-Ordner
-        version_file = Path(__file__).parent.parent.parent / "ReleaseUI.txt"
-
-        if version_file.exists():
-            version = version_file.read_text().strip()
-            logger.info(f"UI Version loaded: {version} from {version_file}")
-            return {"version": version}
-
-        logger.warning(f"UI Version file not found at: {version_file}")
-        return {"version": None}
-    except Exception as e:
-        logger.error(f"Error reading UI version: {e}")
-        return {"version": None}
-
+    """Gets local and remote UI version."""
+    return await fetch_version(
+        local_filename="ReleaseUI.txt",
+        github_url="https://raw.githubusercontent.com/fscorrupt/Posterizarr/refs/heads/main/ReleaseUI.txt",
+        version_type="UI"
+    )
 
 @app.get("/api/test-gallery")
 async def get_test_gallery():
@@ -1138,4 +1153,4 @@ if FRONTEND_DIR.exists():
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="warning")

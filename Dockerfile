@@ -61,6 +61,7 @@ RUN apk add --no-cache --virtual .build-deps build-base python3-dev \
         uvicorn[standard]==0.25.0 \
         python-multipart==0.0.6 \
         websockets==12.0 \
+        httpx==0.28.1 \
         apprise \
     && apk del .build-deps
 
@@ -82,7 +83,7 @@ COPY <<'EOF' /app/start.sh
 set -e
 export PYTHONPATH=/app
 # Start FastAPI backend (serves API and frontend)
-python -m uvicorn backend.main:app --host 0.0.0.0 --port 8000 &
+python -m uvicorn backend.main:app --host 0.0.0.0 --port 8000 --log-level warning &
 # Start Posterizarr PowerShell automation
 exec /usr/bin/catatonit -- pwsh -NoProfile /app/Start.ps1
 EOF
