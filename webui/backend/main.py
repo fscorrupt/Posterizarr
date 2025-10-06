@@ -19,6 +19,25 @@ logging.basicConfig(level=logging.WARNING)
 logging.getLogger("httpx").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
+# Import config mapper for flat/grouped transformations
+import sys
+
+sys.path.insert(0, str(Path(__file__).parent))
+try:
+    from config_mapper import (
+        flatten_config,
+        unflatten_config,
+        UI_GROUPS,
+        DISPLAY_NAMES,
+        get_display_name,
+    )
+
+    CONFIG_MAPPER_AVAILABLE = True
+    logger.info("Config mapper loaded successfully")
+except ImportError as e:
+    CONFIG_MAPPER_AVAILABLE = False
+    logger.warning(f"Config mapper not available: {e}. Using grouped config structure.")
+
 # Check if running in Docker
 IS_DOCKER = os.path.exists("/.dockerenv") or os.environ.get("DOCKER_ENV") == "true"
 
@@ -191,6 +210,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 class ConfigUpdate(BaseModel):
     config: dict
 
@@ -206,7 +226,7 @@ async def api_root():
 
 @app.get("/api/config")
 async def get_config():
-    """Get current config.json"""
+    """Get current config.json - returns FLAT structure for UI when config_mapper available"""
     try:
         if not CONFIG_PATH.exists():
             error_msg = f"Config file not found at: {CONFIG_PATH}\n"
@@ -215,8 +235,31 @@ async def get_config():
             raise HTTPException(status_code=404, detail=error_msg)
 
         with open(CONFIG_PATH, "r", encoding="utf-8") as f:
-            config = json.load(f)
-        return {"success": True, "config": config}
+            grouped_config = json.load(f)
+
+        # If config_mapper is available, transform to flat structure
+        if CONFIG_MAPPER_AVAILABLE:
+            flat_config = flatten_config(grouped_config)
+
+            # Build display names for all keys in the config
+            display_names_dict = {}
+            for key in flat_config.keys():
+                display_names_dict[key] = get_display_name(key)
+
+            return {
+                "success": True,
+                "config": flat_config,
+                "ui_groups": UI_GROUPS,  # Helps frontend organize fields
+                "display_names": display_names_dict,  # Send display names to frontend
+                "using_flat_structure": True,
+            }
+        else:
+            # Fallback: return grouped structure as-is
+            return {
+                "success": True,
+                "config": grouped_config,
+                "using_flat_structure": False,
+            }
     except HTTPException:
         raise
     except Exception as e:
@@ -226,10 +269,25 @@ async def get_config():
 
 @app.post("/api/config")
 async def update_config(data: ConfigUpdate):
-    """Update config.json"""
+    """Update config.json - accepts FLAT structure and saves as GROUPED when config_mapper available"""
     try:
-        with open(CONFIG_PATH, "w", encoding="utf-8") as f:
-            json.dump(data.config, f, indent=2, ensure_ascii=False)
+        # If config_mapper is available, transform flat config back to grouped structure
+        if CONFIG_MAPPER_AVAILABLE:
+            grouped_config = unflatten_config(data.config)
+
+            with open(CONFIG_PATH, "w", encoding="utf-8") as f:
+                json.dump(grouped_config, f, indent=2, ensure_ascii=False)
+
+            logger.info(
+                "Config saved successfully (flat -> grouped transformation applied)"
+            )
+        else:
+            # Fallback: save as-is (assuming grouped structure)
+            with open(CONFIG_PATH, "w", encoding="utf-8") as f:
+                json.dump(data.config, f, indent=2, ensure_ascii=False)
+
+            logger.info("Config saved successfully (grouped structure)")
+
         return {"success": True, "message": "Config updated successfully"}
     except Exception as e:
         logger.error(f"Error updating config: {e}")
@@ -1054,6 +1112,7 @@ async def get_assets_folder_images_filtered(image_type: str, folder_path: str):
         logger.error(f"Error scanning folder {folder_path}: {e}")
         return {"images": []}
 
+
 async def fetch_version(local_filename: str, github_url: str, version_type: str):
     """
     A reusable function to get a local version from a file and fetch the remote
@@ -1077,13 +1136,20 @@ async def fetch_version(local_filename: str, github_url: str, version_type: str)
                 response = await client.get(github_url, timeout=10.0)
                 response.raise_for_status()
                 remote_version = response.text.strip()
-                logger.info(f"Successfully fetched remote {version_type} version: {remote_version}")
+                logger.info(
+                    f"Successfully fetched remote {version_type} version: {remote_version}"
+                )
         except httpx.RequestError as e:
-            logger.warning(f"Could not fetch remote {version_type} version from GitHub: {e}")
+            logger.warning(
+                f"Could not fetch remote {version_type} version from GitHub: {e}"
+            )
         except Exception as e:
-            logger.error(f"An unexpected error occurred while fetching remote {version_type} version: {e}")
+            logger.error(
+                f"An unexpected error occurred while fetching remote {version_type} version: {e}"
+            )
 
     return {"local": local_version, "remote": remote_version}
+
 
 @app.get("/api/version")
 async def get_version():
@@ -1091,7 +1157,7 @@ async def get_version():
     return await fetch_version(
         local_filename="Release.txt",
         github_url="https://raw.githubusercontent.com/fscorrupt/Posterizarr/refs/heads/main/Release.txt",
-        version_type="Backend"
+        version_type="Backend",
     )
 
 
@@ -1101,8 +1167,9 @@ async def get_version_ui():
     return await fetch_version(
         local_filename="ReleaseUI.txt",
         github_url="https://raw.githubusercontent.com/fscorrupt/Posterizarr/refs/heads/main/ReleaseUI.txt",
-        version_type="UI"
+        version_type="UI",
     )
+
 
 @app.get("/api/test-gallery")
 async def get_test_gallery():
@@ -1139,9 +1206,12 @@ async def get_test_gallery():
         logger.error(f"Error scanning test gallery: {e}")
         return {"images": []}
 
+
 # Mount static files in correct order: /assets, /test, then / (frontend)
 if ASSETS_DIR.exists():
-    app.mount("/poster_assets", StaticFiles(directory=str(ASSETS_DIR)), name="poster_assets")
+    app.mount(
+        "/poster_assets", StaticFiles(directory=str(ASSETS_DIR)), name="poster_assets"
+    )
     logger.info(f"Mounted /poster_assets -> {ASSETS_DIR}")
 
 if TEST_DIR.exists():
