@@ -71,7 +71,7 @@ function ThemeSwitcher() {
                   <span className="flex items-center">
                     <div
                       className="w-3 h-3 rounded-full mr-2"
-                      style={{ backgroundColor: t.colors.primary }}
+                      style={{ backgroundColor: t.color }}
                     />
                     {t.name}
                   </span>
