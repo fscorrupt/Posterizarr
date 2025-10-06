@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 
-const API_URL = "http://localhost:8000/api";
+const API_URL = "/api";
 
 function Gallery() {
   const [folders, setFolders] = useState([]);
@@ -443,7 +443,7 @@ function Gallery() {
                   onClick={() => setSelectedImage(image)}
                 >
                   <img
-                    src={`http://localhost:8000${image.url}`}
+                    src={image.url}  // if image.url is already relative
                     alt={image.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     loading="lazy"
@@ -530,7 +530,7 @@ function Gallery() {
             <div className="p-4 flex items-center justify-center">
               <div className="max-h-[70vh] flex items-center justify-center">
                 <img
-                  src={`http://localhost:8000${selectedImage.url}`}
+                  src={selectedImage.url}  // if image.url is already relative
                   alt={selectedImage.name}
                   className="max-w-full max-h-[70vh] object-contain rounded-lg"
                   onError={(e) => {

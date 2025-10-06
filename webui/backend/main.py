@@ -18,15 +18,16 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Paths - MUST be defined before lifespan function
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
+BASE_DIR = Path("/config")
 CONFIG_PATH = BASE_DIR / "config.json"
 CONFIG_EXAMPLE_PATH = BASE_DIR / "config.example.json"
 SCRIPT_PATH = BASE_DIR / "Posterizarr.ps1"
 LOGS_DIR = BASE_DIR / "Logs"
-ASSETS_DIR = BASE_DIR / "assets"
+ASSETS_DIR = Path("/assets")
 TEST_DIR = BASE_DIR / "test"
 TEMP_DIR = BASE_DIR / "temp"
 RUNNING_FILE = TEMP_DIR / "Posterizarr.Running"
+FRONTEND_DIR = Path("/app/frontend/dist")  # must match Dockerfile copy
 
 # Use config.example.json if config.json doesn't exist
 if not CONFIG_PATH.exists() and CONFIG_EXAMPLE_PATH.exists():
@@ -157,24 +158,6 @@ def is_titlecard_file(filename: str) -> bool:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan event handler for startup and shutdown"""
-    # Startup
-    logger.info("=" * 60)
-    logger.info("Posterizarr Web UI - Backend Started")
-    logger.info("=" * 60)
-    logger.info(f"Base Directory: {BASE_DIR}")
-    logger.info(f"Config Path: {CONFIG_PATH} (exists: {CONFIG_PATH.exists()})")
-    logger.info(f"Script Path: {SCRIPT_PATH} (exists: {SCRIPT_PATH.exists()})")
-    logger.info(f"Logs Directory: {LOGS_DIR} (exists: {LOGS_DIR.exists()})")
-    logger.info(f"Assets Directory: {ASSETS_DIR} (exists: {ASSETS_DIR.exists()})")
-    logger.info(f"Test Directory: {TEST_DIR} (exists: {TEST_DIR.exists()})")
-    logger.info(f"Temp Directory: {TEMP_DIR} (exists: {TEMP_DIR.exists()})")
-    logger.info("=" * 60)
-
-    # Create directories if they don't exist
-    LOGS_DIR.mkdir(exist_ok=True)
-    ASSETS_DIR.mkdir(exist_ok=True)
-    TEST_DIR.mkdir(exist_ok=True)
-    TEMP_DIR.mkdir(exist_ok=True)
 
     # Mount static files for assets after directories are created
     if ASSETS_DIR.exists():
@@ -203,19 +186,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
 class ConfigUpdate(BaseModel):
     config: dict
-
 
 class ResetPostersRequest(BaseModel):
     library: str
 
-
-@app.get("/")
-async def root():
+@app.get("/api")
+async def api_root():
     return {"message": "Posterizarr Web UI API", "status": "running"}
-
 
 @app.get("/api/config")
 async def get_config():
@@ -1139,6 +1118,8 @@ async def get_test_gallery():
         logger.error(f"Error scanning test gallery: {e}")
         return {"images": []}
 
+if FRONTEND_DIR.exists():
+    app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
 
 if __name__ == "__main__":
     import uvicorn

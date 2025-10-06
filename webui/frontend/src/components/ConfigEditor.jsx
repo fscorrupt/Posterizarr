@@ -8,7 +8,7 @@ import {
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 
-const API_URL = "http://localhost:8000/api";
+const API_URL = "/api";
 
 function ConfigEditor() {
   const [config, setConfig] = useState(null);

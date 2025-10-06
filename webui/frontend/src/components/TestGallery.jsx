@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 
-const API_URL = "http://localhost:8000/api";
+const API_URL = "/api";
 
 function TestGallery() {
   const [images, setImages] = useState([]);
@@ -203,7 +203,7 @@ function TestGallery() {
                   className={`${aspectRatio} bg-theme-dark flex items-center justify-center overflow-hidden`}
                 >
                   <img
-                    src={`http://localhost:8000${image.url}`}
+                    src={image.url}  // if image.url is already relative
                     alt={image.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     loading="lazy"
@@ -416,7 +416,7 @@ function TestGallery() {
             </div>
             <div className="flex-1 overflow-auto flex items-center justify-center p-4">
               <img
-                src={`http://localhost:8000${selectedImage.url}`}
+                src={selectedImage.url}  // if image.url is already relative
                 alt={selectedImage.name}
                 className="max-w-full max-h-[70vh] object-contain rounded-lg"
                 onError={(e) => {

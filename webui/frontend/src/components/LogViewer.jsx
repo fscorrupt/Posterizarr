@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { RefreshCw, Download, Trash2 } from "lucide-react";
 
-const API_URL = "http://localhost:8000/api";
-const WS_URL = "ws://localhost:8000/ws/logs";
+const API_URL = "/api";
+const WS_URL = "ws://"+window.location.host+"/ws/logs";
 
 function LogViewer() {
   const [logs, setLogs] = useState([]);
