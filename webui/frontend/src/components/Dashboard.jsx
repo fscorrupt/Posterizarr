@@ -39,6 +39,7 @@ function Dashboard() {
   const [showJellyfinSyncModal, setShowJellyfinSyncModal] = useState(false);
   const [showEmbySyncModal, setShowEmbySyncModal] = useState(false);
   const [version, setVersion] = useState({ local: null, remote: null });
+  const [uiVersion, setUiVersion] = useState({ local: null, remote: null });
 
   const fetchStatus = async () => {
     setIsRefreshing(true);
@@ -61,14 +62,13 @@ function Dashboard() {
         return;
       }
 
-      const data = await response.json(); // data is now { local: "...", remote: "..." }
+      const data = await response.json();
       console.log("Version data received:", data);
 
-      // Correctly check for local or remote properties
       if (data.local || data.remote) {
         setVersion({
-          local: data.local || null, // Use data.local or fallback to null
-          remote: data.remote || null, // Use data.remote or fallback to null
+          local: data.local || null,
+          remote: data.remote || null,
         });
       } else {
         console.warn("No version data in response:", data);
@@ -78,9 +78,34 @@ function Dashboard() {
     }
   };
 
+  const fetchUIVersion = async () => {
+    try {
+      const response = await fetch(`${API_URL}/version-ui`);
+      if (!response.ok) {
+        console.warn("UI Version endpoint not available:", response.status);
+        return;
+      }
+
+      const data = await response.json();
+      console.log("UI Version data received:", data);
+
+      if (data.local || data.remote) {
+        setUiVersion({
+          local: data.local || null,
+          remote: data.remote || null,
+        });
+      } else {
+        console.warn("No UI version data in response:", data);
+      }
+    } catch (error) {
+      console.error("Error fetching UI version:", error);
+    }
+  };
+
   useEffect(() => {
     fetchStatus();
     fetchVersion();
+    fetchUIVersion();
     const interval = setInterval(fetchStatus, 3000);
     return () => clearInterval(interval);
   }, []);
@@ -818,23 +843,47 @@ function Dashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-theme-muted text-sm">Script File</p>
-              <p className={`text-2xl font-bold ${status.script_exists ? "text-green-400" : "text-red-400"}`}>
+              <p
+                className={`text-2xl font-bold ${
+                  status.script_exists ? "text-green-400" : "text-red-400"
+                }`}
+              >
                 {status.script_exists ? "Found" : "Missing"}
               </p>
               {status.script_exists && (
-                <div className="mt-2">
-                  {/* Use local version if available, otherwise use remote */}
+                <div className="mt-2 space-y-1">
+                  {/* Backend Version */}
                   {(version.local || version.remote) && (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-theme-primary text-white">
-                      v{version.local || version.remote}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-theme-muted">Backend:</span>
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-theme-primary text-white">
+                        v{version.local || version.remote}
+                      </span>
+                      {version.local &&
+                        version.remote &&
+                        version.local !== version.remote && (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500 text-white animate-pulse">
+                            v{version.remote} available
+                          </span>
+                        )}
+                    </div>
                   )}
 
-                  {/* Show "update available" only if BOTH exist and are different */}
-                  {version.local && version.remote && version.local !== version.remote && (
-                    <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500 text-white animate-pulse">
-                      Update Available: v{version.remote}
-                    </span>
+                  {/* UI Version */}
+                  {(uiVersion.local || uiVersion.remote) && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-theme-muted">WebUI:</span>
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-500 text-white">
+                        v{uiVersion.local || uiVersion.remote}
+                      </span>
+                      {uiVersion.local &&
+                        uiVersion.remote &&
+                        uiVersion.local !== uiVersion.remote && (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500 text-white animate-pulse">
+                            v{uiVersion.remote} available
+                          </span>
+                        )}
+                    </div>
                   )}
                 </div>
               )}
