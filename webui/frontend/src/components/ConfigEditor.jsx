@@ -31,6 +31,14 @@ function ConfigEditor() {
   const [expandedGroups, setExpandedGroups] = useState({});
   const [activeTab, setActiveTab] = useState(null);
 
+  // Auto-resize textarea function
+  const autoResize = (textarea) => {
+    if (textarea) {
+      textarea.style.height = "auto";
+      textarea.style.height = textarea.scrollHeight + "px";
+    }
+  };
+
   // Tab organization - groups fields by logical sections
   // This works with BOTH flat and grouped structure
   const tabs = {
@@ -339,8 +347,10 @@ function ConfigEditor() {
                 .filter((item) => item !== "");
               updateValue(fieldKey, arrayValue);
             }}
-            rows={Math.min(value.length + 2, 8)}
-            className="w-full px-4 py-2.5 bg-theme-card border border-theme-primary rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all resize-y font-mono text-sm"
+            onInput={(e) => autoResize(e.target)}
+            ref={(textarea) => textarea && autoResize(textarea)}
+            rows={1}
+            className="w-full px-4 py-2.5 bg-theme-card border border-theme-primary rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono text-sm resize-none overflow-hidden min-h-[42px]"
             placeholder="Enter comma-separated values"
           />
           {value.length > 0 && (
@@ -368,18 +378,9 @@ function ConfigEditor() {
     if (type === "boolean" || value === "true" || value === "false") {
       const isEnabled = value === "true" || value === true;
       return (
-        <div className="flex items-center justify-between p-4 bg-theme-bg rounded-lg border border-theme hover:border-theme-primary/50 transition-all group">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-theme-primary/10 rounded-lg group-hover:bg-theme-primary/20 transition-colors">
-              {isEnabled ? (
-                <Check className="w-5 h-5 text-theme-primary" />
-              ) : (
-                <X className="w-5 h-5 text-theme-muted" />
-              )}
-            </div>
-            <div className="text-sm font-medium text-theme-text">
-              {displayName}
-            </div>
+        <div className="flex items-center justify-between h-[42px] px-4 bg-theme-bg rounded-lg border border-theme hover:border-theme-primary/30 transition-all">
+          <div className="text-sm font-medium text-theme-text">
+            {displayName}
           </div>
           <label className="relative inline-flex items-center cursor-pointer">
             <input
@@ -391,7 +392,7 @@ function ConfigEditor() {
               className="sr-only peer"
               id={`${groupName}-${key}`}
             />
-            <div className="w-14 h-7 bg-theme-card border-2 border-theme peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-theme-primary rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[4px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-theme-primary"></div>
+            <div className="w-11 h-6 bg-gray-600 rounded-full peer peer-focus:ring-2 peer-focus:ring-theme-primary peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-theme-primary"></div>
           </label>
         </div>
       );
@@ -405,7 +406,7 @@ function ConfigEditor() {
             type="text"
             value={stringValue}
             onChange={(e) => updateValue(fieldKey, e.target.value)}
-            className="w-full px-4 py-2.5 bg-theme-card border border-theme-primary rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono"
+            className="w-full h-[42px] px-4 py-2.5 bg-theme-card border border-theme-primary rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono"
             placeholder="+200 or -150"
           />
           <p className="text-xs text-theme-muted">
@@ -428,7 +429,7 @@ function ConfigEditor() {
             type="number"
             value={stringValue}
             onChange={(e) => updateValue(fieldKey, e.target.value)}
-            className="w-full px-4 py-2.5 bg-theme-card border border-theme-primary rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+            className="w-full h-[42px] px-4 py-2.5 bg-theme-card border border-theme-primary rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
           />
         </div>
       );
@@ -447,7 +448,7 @@ function ConfigEditor() {
               type="text"
               value={stringValue}
               onChange={(e) => updateValue(fieldKey, e.target.value)}
-              className="w-full px-4 py-2.5 bg-theme-card border border-theme-primary rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono pr-10"
+              className="w-full h-[42px] px-4 py-2.5 bg-theme-card border border-theme-primary rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono pr-10"
               placeholder="Enter secure value"
             />
             <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-muted" />
@@ -465,9 +466,14 @@ function ConfigEditor() {
         <div className="space-y-2">
           <textarea
             value={stringValue}
-            onChange={(e) => updateValue(fieldKey, e.target.value)}
-            rows={3}
-            className="w-full px-4 py-2.5 bg-theme-card border border-theme-primary rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all resize-y font-mono text-sm"
+            onChange={(e) => {
+              updateValue(fieldKey, e.target.value);
+              autoResize(e.target);
+            }}
+            onInput={(e) => autoResize(e.target)}
+            ref={(textarea) => textarea && autoResize(textarea)}
+            rows={1}
+            className="w-full px-4 py-2.5 bg-theme-card border border-theme-primary rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono text-sm resize-none overflow-hidden min-h-[42px]"
           />
         </div>
       );
@@ -479,7 +485,7 @@ function ConfigEditor() {
           type="text"
           value={stringValue}
           onChange={(e) => updateValue(fieldKey, e.target.value)}
-          className="w-full px-4 py-2.5 bg-theme-card border border-theme-primary rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+          className="w-full h-[42px] px-4 py-2.5 bg-theme-card border border-theme-primary rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
         />
       </div>
     );
@@ -574,7 +580,7 @@ function ConfigEditor() {
                 <span
                   className={`ml-1 px-2 py-0.5 rounded-full text-xs ${
                     isActive
-                      ? "bg-white/20"
+                      ? "bg-white/30"
                       : "bg-theme-primary/20 text-theme-primary"
                   }`}
                 >

@@ -2,7 +2,10 @@ import React, { useState, useEffect, useRef } from "react";
 import { RefreshCw, Download, Trash2 } from "lucide-react";
 
 const API_URL = "/api";
-const WS_URL = "ws://"+window.location.host+"/ws/logs";
+const isDev = import.meta.env.DEV;
+const WS_URL = isDev
+  ? `ws://localhost:3000/ws/logs` // Development: durch Vite-Proxy
+  : `ws://${window.location.host}/ws/logs`; // Production: direkt
 
 function LogViewer() {
   const [logs, setLogs] = useState([]);
