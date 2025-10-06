@@ -5185,7 +5185,7 @@ function MassDownloadPlexArtwork {
         $allowedExtensions = @(".jpg", ".jpeg", ".png", ".bmp")
 
         if ($FollowSymlink) {
-            Get-ChildItem -Path $BackupPath -Recurse -FollowSymlink | ForEach-Object {
+            Get-ChildItem -Path $BackupPath -Recurse -Exclude 'Collections' -FollowSymlink | ForEach-Object {
                 if ($allowedExtensions -contains $_.Extension.ToLower()) {
                     $directory = $_.Directory
                     $basename = $_.BaseName
@@ -5200,7 +5200,7 @@ function MassDownloadPlexArtwork {
             }
         }
         Else {
-            Get-ChildItem -Path $BackupPath -Recurse | ForEach-Object {
+            Get-ChildItem -Path $BackupPath -Recurse -Exclude 'Collections'| ForEach-Object {
                 if ($allowedExtensions -contains $_.Extension.ToLower()) {
                     $directory = $_.Directory
                     $basename = $_.BaseName
@@ -6169,10 +6169,7 @@ function MassDownloadPlexArtwork {
         Write-Entry -Subtext "Starting Asset Cleanup, this can take some time..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
         Write-Entry -Subtext "Only removing Artwork with posterizarr exif data" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
         $processedDirectories = @()
-        #$uncheckedItems = $directoryHashtable.Keys | Where-Object { $_ -notin $checkedItems }
-        $uncheckedItems = $directoryHashtable.Keys | Where-Object {
-            ($_ -notin $checkedItems) -and ($_ -notlike "$AssetPath\Collections\*")
-        }
+        $uncheckedItems = $directoryHashtable.Keys | Where-Object { $_ -notin $checkedItems }
 
         # Perform deletion of unchecked items
         foreach ($uncheckedItem in $uncheckedItems) {
@@ -9759,7 +9756,7 @@ Elseif ($Tautulli) {
         $totalSize = 0
 
         if ($FollowSymlink) {
-            Get-ChildItem -Path $AssetPath -Recurse -FollowSymlink | ForEach-Object {
+            Get-ChildItem -Path $AssetPath -Recurse -Exclude 'Collections' -FollowSymlink | ForEach-Object {
                 if ($allowedExtensions -contains $_.Extension.ToLower()) {
                     $directory = $_.Directory
                     $basename = $_.BaseName
@@ -9774,7 +9771,7 @@ Elseif ($Tautulli) {
             }
         }
         Else {
-            Get-ChildItem -Path $AssetPath -Recurse | ForEach-Object {
+            Get-ChildItem -Path $AssetPath -Recurse -Exclude 'Collections' | ForEach-Object {
                 if ($allowedExtensions -contains $_.Extension.ToLower()) {
                     $directory = $_.Directory
                     $basename = $_.BaseName
@@ -14013,7 +14010,7 @@ Elseif ($ArrTrigger) {
             $allowedExtensions = @(".jpg", ".jpeg", ".png", ".bmp")
 
             if ($FollowSymlink) {
-                Get-ChildItem -Path $AssetPath -Recurse -FollowSymlink | ForEach-Object {
+                Get-ChildItem -Path $AssetPath -Recurse -Exclude 'Collections' -FollowSymlink | ForEach-Object {
                     if ($allowedExtensions -contains $_.Extension.ToLower()) {
                         $directory = $_.Directory
                         $basename = $_.BaseName
@@ -14028,7 +14025,7 @@ Elseif ($ArrTrigger) {
                 }
             }
             Else {
-                Get-ChildItem -Path $AssetPath -Recurse | ForEach-Object {
+                Get-ChildItem -Path $AssetPath -Recurse -Exclude 'Collections' | ForEach-Object {
                     if ($allowedExtensions -contains $_.Extension.ToLower()) {
                         $directory = $_.Directory
                         $basename = $_.BaseName
@@ -17813,7 +17810,7 @@ Elseif ($ArrTrigger) {
             $totalSize = 0
 
             if ($FollowSymlink) {
-                Get-ChildItem -Path $AssetPath -Recurse -FollowSymlink | ForEach-Object {
+                Get-ChildItem -Path $AssetPath -Recurse -Exclude 'Collections' -FollowSymlink | ForEach-Object {
                     if ($allowedExtensions -contains $_.Extension.ToLower()) {
                         $directory = $_.Directory
                         $basename = $_.BaseName
@@ -17828,7 +17825,7 @@ Elseif ($ArrTrigger) {
                 }
             }
             Else {
-                Get-ChildItem -Path $AssetPath -Recurse | ForEach-Object {
+                Get-ChildItem -Path $AssetPath -Recurse -Exclude 'Collections' | ForEach-Object {
                     if ($allowedExtensions -contains $_.Extension.ToLower()) {
                         $directory = $_.Directory
                         $basename = $_.BaseName
@@ -23243,7 +23240,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
         $allowedExtensions = @(".jpg", ".jpeg", ".png", ".bmp")
 
         if ($FollowSymlink) {
-            Get-ChildItem -Path $AssetPath -Recurse -FollowSymlink | ForEach-Object {
+            Get-ChildItem -Path $AssetPath -Recurse -Exclude 'Collections' -FollowSymlink | ForEach-Object {
                 if ($allowedExtensions -contains $_.Extension.ToLower()) {
                     $directory = $_.Directory
                     $basename = $_.BaseName
@@ -23258,7 +23255,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
             }
         }
         Else {
-            Get-ChildItem -Path $AssetPath -Recurse | ForEach-Object {
+            Get-ChildItem -Path $AssetPath -Recurse -Exclude 'Collections' | ForEach-Object {
                 if ($allowedExtensions -contains $_.Extension.ToLower()) {
                     $directory = $_.Directory
                     $basename = $_.BaseName
@@ -26526,10 +26523,7 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
         Write-Entry -Subtext "Starting Asset Cleanup, this can take some time..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
         Write-Entry -Subtext "Only removing Artwork with posterizarr exif data" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
         $processedDirectories = @()
-        #$uncheckedItems = $directoryHashtable.Keys | Where-Object { $_ -notin $checkedItems }
-        $uncheckedItems = $directoryHashtable.Keys | Where-Object {
-            ($_ -notin $checkedItems) -and ($_ -notlike "$AssetPath\Collections\*")
-        }
+        $uncheckedItems = $directoryHashtable.Keys | Where-Object { $_ -notin $checkedItems }
 
         # Perform deletion of unchecked items
         foreach ($uncheckedItem in $uncheckedItems) {
@@ -27602,7 +27596,7 @@ else {
         $directoryHashtable = @{}
         $allowedExtensions = @(".jpg", ".jpeg", ".png", ".bmp")
         if ($FollowSymlink) {
-            Get-ChildItem -Path $AssetPath -Recurse -FollowSymlink | ForEach-Object {
+            Get-ChildItem -Path $AssetPath -Recurse -Exclude 'Collections' -FollowSymlink | ForEach-Object {
                 if ($allowedExtensions -contains $_.Extension.ToLower()) {
                     $directory = $_.Directory
                     $basename = $_.BaseName
@@ -27617,7 +27611,7 @@ else {
             }
         }
         Else {
-            Get-ChildItem -Path $AssetPath -Recurse | ForEach-Object {
+            Get-ChildItem -Path $AssetPath -Recurse -Exclude 'Collections' | ForEach-Object {
                 if ($allowedExtensions -contains $_.Extension.ToLower()) {
                     $directory = $_.Directory
                     $basename = $_.BaseName
@@ -31499,10 +31493,7 @@ else {
         Write-Entry -Subtext "Starting Asset Cleanup, this can take some time..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
         Write-Entry -Subtext "Only removing Artwork with posterizarr exif data" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
         $processedDirectories = @()
-        #$uncheckedItems = $directoryHashtable.Keys | Where-Object { $_ -notin $checkedItems }
-        $uncheckedItems = $directoryHashtable.Keys | Where-Object {
-            ($_ -notin $checkedItems) -and ($_ -notlike "$AssetPath\Collections\*")
-        }
+        $uncheckedItems = $directoryHashtable.Keys | Where-Object { $_ -notin $checkedItems }
 
         # Perform deletion of unchecked items
         foreach ($uncheckedItem in $uncheckedItems) {
