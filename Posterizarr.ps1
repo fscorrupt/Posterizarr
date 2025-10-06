@@ -35,7 +35,7 @@ for ($i = 0; $i -lt $ExtraArgs.Count; $i++) {
     }
 }
 
-$CurrentScriptVersion = "1.9.96"
+$CurrentScriptVersion = "1.9.97"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 $env:PSMODULE_ANALYSIS_CACHE_PATH = $null
@@ -299,11 +299,24 @@ function Test-PathPermissions {
         [string]$PathToTest
     )
 
+    # Extract drive (if any) from the path (Windows paths like P:\assetsbackup)
+    $driveLetter = ($PathToTest -split ':')[0]
+
+    # If path starts with a drive letter but that drive doesn't exist, log and skip
+    if ($PathToTest -match '^[A-Za-z]:\\' -and -not (Get-PSDrive -Name $driveLetter -ErrorAction SilentlyContinue)) {
+        Write-Entry -Message "Drive '$($driveLetter):' not found. The path '$PathToTest' appears to use a Windows-style default." -Path "$global:ScriptRoot\Logs\Scriptlog.log" -Color Yellow -log Warning
+        Write-Entry -Subtext "Please update this path to a valid mount (e.g., /assetsbackup)." -Path "$global:ScriptRoot\Logs\Scriptlog.log" -Color Cyan -log Info
+        Write-Entry -Message "Refer to the official docker-compose.yml template for correct volume mappings:" -Path "$global:ScriptRoot\Logs\Scriptlog.log" -Color Cyan -log Info
+        Write-Entry -Subtext "https://raw.githubusercontent.com/fscorrupt/Posterizarr/refs/heads/main/docker-compose.yml" -Path "$global:ScriptRoot\Logs\Scriptlog.log" -Color Cyan -log Info
+        return
+    }
+
     # Check if directory exists
     $canRead = Test-Path $PathToTest -PathType Container -ErrorAction SilentlyContinue
 
     # Check write access
     $testFile = Join-Path $PathToTest ".perm_check"
+
     try {
         New-Item -ItemType File -Path $testFile -Force -ErrorAction Stop | Out-Null
         Remove-Item $testFile -Force
@@ -337,6 +350,8 @@ function Test-PathPermissions {
         }
     }
 }
+
+
 function Reset-PlexLibraryPictures {
     param (
         [string]$LibraryName
