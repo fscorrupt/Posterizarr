@@ -38,7 +38,7 @@ function Dashboard() {
   const [showManualModal, setShowManualModal] = useState(false);
   const [showJellyfinSyncModal, setShowJellyfinSyncModal] = useState(false);
   const [showEmbySyncModal, setShowEmbySyncModal] = useState(false);
-  const [version, setVersion] = useState(null);
+  const [version, setVersion] = useState({ local: null, remote: null });
 
   const fetchStatus = async () => {
     setIsRefreshing(true);
@@ -56,34 +56,25 @@ function Dashboard() {
   const fetchVersion = async () => {
     try {
       const response = await fetch(`${API_URL}/version`);
-
-      // Check if endpoint exists
       if (!response.ok) {
         console.warn("Version endpoint not available:", response.status);
         return;
       }
 
-      const data = await response.json();
+      const data = await response.json(); // data is now { local: "...", remote: "..." }
       console.log("Version data received:", data);
 
-      if (data.version) {
-        setVersion(data.version);
+      // Correctly check for local or remote properties
+      if (data.local || data.remote) {
+        setVersion({
+          local: data.local || null, // Use data.local or fallback to null
+          remote: data.remote || null, // Use data.remote or fallback to null
+        });
       } else {
-        console.warn("No version in response:", data);
+        console.warn("No version data in response:", data);
       }
     } catch (error) {
       console.error("Error fetching version:", error);
-      // Fallback: Try to read version from a static file
-      try {
-        const fallbackResponse = await fetch("/RELEASE.txt");
-        if (fallbackResponse.ok) {
-          const versionText = await fallbackResponse.text();
-          setVersion(versionText.trim());
-          console.log("Version loaded from fallback:", versionText.trim());
-        }
-      } catch (fallbackError) {
-        console.warn("Fallback version fetch also failed");
-      }
     }
   };
 
@@ -827,18 +818,24 @@ function Dashboard() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-theme-muted text-sm">Script File</p>
-              <p
-                className={`text-2xl font-bold ${
-                  status.script_exists ? "text-green-400" : "text-red-400"
-                }`}
-              >
+              <p className={`text-2xl font-bold ${status.script_exists ? "text-green-400" : "text-red-400"}`}>
                 {status.script_exists ? "Found" : "Missing"}
               </p>
-              {version && status.script_exists && (
+              {status.script_exists && (
                 <div className="mt-2">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-theme-primary text-white">
-                    v{version}
-                  </span>
+                  {/* Use local version if available, otherwise use remote */}
+                  {(version.local || version.remote) && (
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-theme-primary text-white">
+                      v{version.local || version.remote}
+                    </span>
+                  )}
+
+                  {/* Show "update available" only if BOTH exist and are different */}
+                  {version.local && version.remote && version.local !== version.remote && (
+                    <span className="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500 text-white animate-pulse">
+                      Update Available: v{version.remote}
+                    </span>
+                  )}
                 </div>
               )}
             </div>

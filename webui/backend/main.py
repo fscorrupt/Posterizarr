@@ -293,7 +293,6 @@ async def update_config(data: ConfigUpdate):
         logger.error(f"Error updating config: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
-
 def get_last_log_lines(count=25, mode=None, log_file=None):
     """Get last N lines from log files based on current mode or specific log file"""
 
