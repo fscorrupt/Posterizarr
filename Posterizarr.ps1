@@ -35,7 +35,7 @@ for ($i = 0; $i -lt $ExtraArgs.Count; $i++) {
     }
 }
 
-$CurrentScriptVersion = "1.9.95"
+$CurrentScriptVersion = "1.9.96"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 $env:PSMODULE_ANALYSIS_CACHE_PATH = $null
@@ -6169,7 +6169,10 @@ function MassDownloadPlexArtwork {
         Write-Entry -Subtext "Starting Asset Cleanup, this can take some time..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
         Write-Entry -Subtext "Only removing Artwork with posterizarr exif data" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
         $processedDirectories = @()
-        $uncheckedItems = $directoryHashtable.Keys | Where-Object { $_ -notin $checkedItems }
+        #$uncheckedItems = $directoryHashtable.Keys | Where-Object { $_ -notin $checkedItems }
+        $uncheckedItems = $directoryHashtable.Keys | Where-Object {
+            ($_ -notin $checkedItems) -and ($_ -notlike "$AssetPath\Collections\*")
+        }
 
         # Perform deletion of unchecked items
         foreach ($uncheckedItem in $uncheckedItems) {
@@ -26523,7 +26526,10 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
         Write-Entry -Subtext "Starting Asset Cleanup, this can take some time..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
         Write-Entry -Subtext "Only removing Artwork with posterizarr exif data" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
         $processedDirectories = @()
-        $uncheckedItems = $directoryHashtable.Keys | Where-Object { $_ -notin $checkedItems }
+        #$uncheckedItems = $directoryHashtable.Keys | Where-Object { $_ -notin $checkedItems }
+        $uncheckedItems = $directoryHashtable.Keys | Where-Object {
+            ($_ -notin $checkedItems) -and ($_ -notlike "$AssetPath\Collections\*")
+        }
 
         # Perform deletion of unchecked items
         foreach ($uncheckedItem in $uncheckedItems) {
@@ -31493,7 +31499,10 @@ else {
         Write-Entry -Subtext "Starting Asset Cleanup, this can take some time..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
         Write-Entry -Subtext "Only removing Artwork with posterizarr exif data" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
         $processedDirectories = @()
-        $uncheckedItems = $directoryHashtable.Keys | Where-Object { $_ -notin $checkedItems }
+        #$uncheckedItems = $directoryHashtable.Keys | Where-Object { $_ -notin $checkedItems }
+        $uncheckedItems = $directoryHashtable.Keys | Where-Object {
+            ($_ -notin $checkedItems) -and ($_ -notlike "$AssetPath\Collections\*")
+        }
 
         # Perform deletion of unchecked items
         foreach ($uncheckedItem in $uncheckedItems) {
