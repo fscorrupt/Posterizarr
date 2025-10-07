@@ -1493,13 +1493,17 @@ async def get_assets_stats():
         total_size += sum(img["size"] for img in cache["seasons"])
         total_size += sum(img["size"] for img in cache["titlecards"])
 
+        sorted_folders = sorted(
+            cache["folders"], key=lambda x: x["files"], reverse=True
+        )
+
         stats = {
             "posters": len(cache["posters"]),
             "backgrounds": len(cache["backgrounds"]),
             "seasons": len(cache["seasons"]),
             "titlecards": len(cache["titlecards"]),
             "total_size": total_size,
-            "folders": cache["folders"][:10],  # Top 10 Ordner
+            "folders": sorted_folders[:10],  # Top 10 Ordner nach Dateianzahl
         }
 
         return {"success": True, "stats": stats}
