@@ -14,6 +14,7 @@ from typing import Optional, List
 import logging
 import re
 import time
+import threading
 from datetime import datetime
 
 # Setup logging
@@ -286,7 +287,8 @@ def is_titlecard_file(filename: str) -> bool:
 # ============================================================================
 # DYNAMIC ASSET CACHING SYSTEM
 # ============================================================================
-CACHE_TTL_SECONDS = 300  # Cache data for 5 minutes
+CACHE_TTL_SECONDS = 300  # Cache data for 5 minutes (nur für Statistiken)
+CACHE_REFRESH_INTERVAL = 600  # Refresh cache every 5 minutes (passt für große Assets)
 
 asset_cache = {
     "last_scanned": 0,
@@ -296,6 +298,11 @@ asset_cache = {
     "titlecards": [],
     "folders": [],
 }
+
+# Background refresh control
+cache_refresh_task = None
+cache_refresh_running = False
+cache_scan_in_progress = False  # Verhindert überlappende Scans
 
 
 def process_image_path(image_path: Path):
@@ -316,6 +323,14 @@ def process_image_path(image_path: Path):
 
 def scan_and_cache_assets():
     """Scans the assets directory and populates/refreshes the cache."""
+    global cache_scan_in_progress
+
+    # Verhindere überlappende Scans
+    if cache_scan_in_progress:
+        logger.warning("Asset scan already in progress, skipping this request")
+        return
+
+    cache_scan_in_progress = True
     logger.info("Starting asset scan to refresh cache...")
 
     # Clear old data before re-scanning
@@ -328,6 +343,7 @@ def scan_and_cache_assets():
     if not ASSETS_DIR.exists() or not ASSETS_DIR.is_dir():
         logger.warning("Assets directory not found. Skipping cache population.")
         asset_cache["last_scanned"] = time.time()
+        cache_scan_in_progress = False
         return
 
     try:
@@ -400,6 +416,7 @@ def scan_and_cache_assets():
         logger.error(f"An error occurred during asset scan: {e}")
     finally:
         asset_cache["last_scanned"] = time.time()
+        cache_scan_in_progress = False  # Sperre freigeben
         logger.info(
             f"Asset cache refresh finished. Found {len(asset_cache['posters'])} posters, "
             f"{len(asset_cache['backgrounds'])} backgrounds, "
@@ -409,10 +426,63 @@ def scan_and_cache_assets():
         )
 
 
+def background_cache_refresh():
+    """Background thread that refreshes the cache periodically"""
+    global cache_refresh_running
+
+    logger.info(
+        f"Background cache refresh started (interval: {CACHE_REFRESH_INTERVAL}s)"
+    )
+
+    while cache_refresh_running:
+        try:
+            # Warte bis zum nächsten Refresh
+            time.sleep(CACHE_REFRESH_INTERVAL)
+
+            if cache_refresh_running:  # Check again after sleep
+                logger.info("🔄 Background cache refresh triggered")
+                scan_and_cache_assets()
+                logger.info("✅ Background cache refresh completed")
+        except Exception as e:
+            logger.error(f"Error in background cache refresh: {e}")
+            # Continue running even if there's an error
+            time.sleep(60)  # Wait a bit before retrying
+
+
+def start_cache_refresh_background():
+    """Start the background cache refresh thread"""
+    global cache_refresh_task, cache_refresh_running
+
+    if cache_refresh_task is not None and cache_refresh_task.is_alive():
+        logger.warning("Background cache refresh is already running")
+        return
+
+    cache_refresh_running = True
+    cache_refresh_task = threading.Thread(
+        target=background_cache_refresh, daemon=True, name="CacheRefresh"
+    )
+    cache_refresh_task.start()
+    logger.info("✅ Background cache refresh thread started")
+
+
+def stop_cache_refresh_background():
+    """Stop the background cache refresh thread"""
+    global cache_refresh_running
+
+    if cache_refresh_running:
+        logger.info("Stopping background cache refresh...")
+        cache_refresh_running = False
+        if cache_refresh_task:
+            cache_refresh_task.join(timeout=5)
+        logger.info("Background cache refresh stopped")
+
+
 def get_fresh_assets():
-    """Checks if the cache is stale. If it is, triggers a new scan."""
-    now = time.time()
-    if (now - asset_cache["last_scanned"]) > CACHE_TTL_SECONDS:
+    """Returns the asset cache (always fresh thanks to background refresh)"""
+    # Vertraue vollständig auf Background-Refresh!
+    # Nur bei komplett leerem Cache (erster Start) wird synchron gescannt
+    if asset_cache["last_scanned"] == 0:
+        logger.info("First-time cache population...")
         scan_and_cache_assets()
     return asset_cache
 
@@ -429,6 +499,9 @@ async def lifespan(app: FastAPI):
     logger.info("Starting Posterizarr Web UI Backend")
     scan_and_cache_assets()
 
+    # Start background cache refresh
+    start_cache_refresh_background()
+
     # Initialize and start scheduler if available
     if SCHEDULER_AVAILABLE:
         try:
@@ -444,6 +517,9 @@ async def lifespan(app: FastAPI):
     yield
 
     # Shutdown
+    # Stop background cache refresh
+    stop_cache_refresh_background()
+
     if scheduler:
         try:
             scheduler.stop()
@@ -1529,6 +1605,45 @@ async def refresh_cache():
         }
     except Exception as e:
         logger.error(f"Error refreshing cache: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/cache/status")
+async def get_cache_status():
+    """Get detailed cache status including background refresh info"""
+    try:
+        now = time.time()
+        last_scan = asset_cache.get("last_scanned", 0)
+        age_seconds = now - last_scan if last_scan > 0 else 0
+
+        return {
+            "success": True,
+            "cache": {
+                "last_scanned": (
+                    datetime.fromtimestamp(last_scan).isoformat()
+                    if last_scan > 0
+                    else None
+                ),
+                "age_seconds": int(age_seconds),
+                "ttl_seconds": CACHE_TTL_SECONDS,
+                "refresh_interval": CACHE_REFRESH_INTERVAL,
+                "is_stale": False,  # TTL-Check entfernt, Cache ist immer gültig
+                "posters_count": len(asset_cache["posters"]),
+                "backgrounds_count": len(asset_cache["backgrounds"]),
+                "seasons_count": len(asset_cache["seasons"]),
+                "titlecards_count": len(asset_cache["titlecards"]),
+                "folders_count": len(asset_cache["folders"]),
+            },
+            "background_refresh": {
+                "running": cache_refresh_running,
+                "thread_alive": (
+                    cache_refresh_task.is_alive() if cache_refresh_task else False
+                ),
+                "scan_in_progress": cache_scan_in_progress,
+            },
+        }
+    except Exception as e:
+        logger.error(f"Error getting cache status: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
