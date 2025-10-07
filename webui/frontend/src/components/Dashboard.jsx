@@ -342,9 +342,9 @@ function Dashboard() {
 
     return (
       <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div className="bg-theme-card border  rounded-xl max-w-2xl w-full shadow-2xl animate-in fade-in duration-200">
+        <div className="bg-theme-card border border-theme-primary rounded-xl max-w-2xl w-full shadow-2xl animate-in fade-in duration-200">
           {/* Header */}
-          <div className="bg-gradient-to-r from-theme-primary to-theme-primary/80 px-6 py-4 rounded-t-xl flex items-center justify-between">
+          <div className="bg-theme-primary px-6 py-4 rounded-t-xl flex items-center justify-between">
             <div className="flex items-center">
               <Settings className="w-6 h-6 mr-3 text-white" />
               <h3 className="text-xl font-bold text-white">
@@ -353,7 +353,7 @@ function Dashboard() {
             </div>
             <button
               onClick={() => setShowManualModal(false)}
-              className="text-white/80 hover:text-white transition-colors p-1 hover:bg-white/10 rounded"
+              className="text-white/80 hover:text-white transition-all p-1 hover:bg-white/10 rounded"
             >
               <X className="w-6 h-6" />
             </button>
@@ -416,7 +416,7 @@ function Dashboard() {
                 </li>
               </ol>
 
-              <div className="bg-theme-bg border /50 rounded-lg p-4 mt-4">
+              <div className="bg-theme-bg border border-theme rounded-lg p-4 mt-4">
                 <p className="text-sm text-theme-muted mb-2 font-semibold">
                   PowerShell Command:
                 </p>
@@ -439,7 +439,7 @@ function Dashboard() {
                 href="https://github.com/fscorrupt/Posterizarr?tab=readme-ov-file#manual-mode-interactive"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center px-6 py-3 bg-theme-primary hover:bg-theme-primary/90 rounded-lg font-medium transition-colors text-white"
+                className="flex items-center justify-center px-6 py-3 bg-theme-primary hover:bg-theme-primary/90 rounded-lg font-medium transition-all text-white shadow-lg"
               >
                 <ExternalLink className="w-5 h-5 mr-2" />
                 View Full Documentation
@@ -451,7 +451,7 @@ function Dashboard() {
           <div className="bg-theme-bg px-6 py-4 rounded-b-xl flex justify-end border-t-2 border-theme">
             <button
               onClick={() => setShowManualModal(false)}
-              className="px-6 py-2 bg-theme-primary hover:bg-theme-primary/90 rounded-lg font-medium transition-colors"
+              className="px-6 py-2 bg-theme-primary hover:bg-theme-primary/90 rounded-lg font-medium transition-all"
             >
               Got it!
             </button>
@@ -472,9 +472,9 @@ function Dashboard() {
 
     return (
       <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div className="bg-theme-card border  rounded-xl max-w-2xl w-full shadow-2xl animate-in fade-in duration-200">
+        <div className="bg-theme-card border border-theme-primary rounded-xl max-w-2xl w-full shadow-2xl animate-in fade-in duration-200">
           {/* Header */}
-          <div className="bg-gradient-to-r from-orange-600 to-orange-700 px-6 py-4 rounded-t-xl flex items-center justify-between">
+          <div className="bg-theme-primary px-6 py-4 rounded-t-xl flex items-center justify-between">
             <div className="flex items-center">
               <Cloud className="w-6 h-6 mr-3 text-white" />
               <h3 className="text-xl font-bold text-white">
@@ -483,7 +483,7 @@ function Dashboard() {
             </div>
             <button
               onClick={() => setShowJellyfinSyncModal(false)}
-              className="text-white/80 hover:text-white transition-colors p-1 hover:bg-white/10 rounded"
+              className="text-white/80 hover:text-white transition-all p-1 hover:bg-white/10 rounded"
             >
               <X className="w-6 h-6" />
             </button>
@@ -508,7 +508,7 @@ function Dashboard() {
 
               <ul className="space-y-3 text-theme-text">
                 <li className="flex">
-                  <span className="bg-orange-600 text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0 text-sm font-bold">
+                  <span className="bg-theme-primary text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0 text-sm font-bold">
                     1
                   </span>
                   <div>
@@ -523,7 +523,7 @@ function Dashboard() {
                 </li>
 
                 <li className="flex">
-                  <span className="bg-orange-600 text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0 text-sm font-bold">
+                  <span className="bg-theme-primary text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0 text-sm font-bold">
                     2
                   </span>
                   <div>
@@ -538,7 +538,7 @@ function Dashboard() {
                 </li>
 
                 <li className="flex">
-                  <span className="bg-orange-600 text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0 text-sm font-bold">
+                  <span className="bg-theme-primary text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0 text-sm font-bold">
                     3
                   </span>
                   <div>
@@ -574,7 +574,7 @@ function Dashboard() {
                 href="https://github.com/fscorrupt/Posterizarr?tab=readme-ov-file#sync-modes"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center px-6 py-3 bg-theme-bg hover:bg-theme-hover border border-theme rounded-lg font-medium transition-colors text-theme-text"
+                className="flex items-center justify-center px-6 py-3 bg-theme-bg hover:bg-theme-hover border border-theme rounded-lg font-medium transition-all text-theme-text shadow-lg"
               >
                 <ExternalLink className="w-5 h-5 mr-2" />
                 View Full Documentation
@@ -586,14 +586,14 @@ function Dashboard() {
           <div className="bg-theme-bg px-6 py-4 rounded-b-xl flex justify-between border-t-2 border-theme">
             <button
               onClick={() => setShowJellyfinSyncModal(false)}
-              className="px-6 py-2 bg-theme-card hover:bg-theme-hover border border-theme rounded-lg font-medium transition-colors"
+              className="px-6 py-2 bg-theme-card hover:bg-theme-hover border border-theme rounded-lg font-medium transition-all"
             >
               Cancel
             </button>
             <button
               onClick={startJellyfinSync}
               disabled={loading || status.running}
-              className="px-6 py-2 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-colors text-white flex items-center"
+              className="px-6 py-2 bg-theme-primary hover:bg-theme-primary/90 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-all text-white flex items-center shadow-lg"
             >
               <Cloud className="w-5 h-5 mr-2" />
               Start Jellyfin Sync
@@ -615,16 +615,16 @@ function Dashboard() {
 
     return (
       <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div className="bg-theme-card border  rounded-xl max-w-2xl w-full shadow-2xl animate-in fade-in duration-200">
+        <div className="bg-theme-card border border-theme-primary rounded-xl max-w-2xl w-full shadow-2xl animate-in fade-in duration-200">
           {/* Header */}
-          <div className="bg-gradient-to-r from-teal-600 to-teal-700 px-6 py-4 rounded-t-xl flex items-center justify-between">
+          <div className="bg-theme-primary px-6 py-4 rounded-t-xl flex items-center justify-between">
             <div className="flex items-center">
               <Cloud className="w-6 h-6 mr-3 text-white" />
               <h3 className="text-xl font-bold text-white">Emby Sync Mode</h3>
             </div>
             <button
               onClick={() => setShowEmbySyncModal(false)}
-              className="text-white/80 hover:text-white transition-colors p-1 hover:bg-white/10 rounded"
+              className="text-white/80 hover:text-white transition-all p-1 hover:bg-white/10 rounded"
             >
               <X className="w-6 h-6" />
             </button>
@@ -632,11 +632,11 @@ function Dashboard() {
 
           {/* Content */}
           <div className="p-6 space-y-4">
-            <div className="bg-teal-900/20 border-l-4 border-teal-500 p-4 rounded">
-              <p className="text-teal-200 font-medium mb-2">
+            <div className="bg-orange-900/20 border-l-4 border-orange-500 p-4 rounded">
+              <p className="text-orange-200 font-medium mb-2">
                 🔄 Sync all artwork from Plex to Emby
               </p>
-              <p className="text-teal-100 text-sm">
+              <p className="text-orange-100 text-sm">
                 This mode will synchronize every artwork you have in Plex to
                 your Emby server.
               </p>
@@ -649,7 +649,7 @@ function Dashboard() {
 
               <ul className="space-y-3 text-theme-text">
                 <li className="flex">
-                  <span className="bg-teal-600 text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0 text-sm font-bold">
+                  <span className="bg-theme-primary text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0 text-sm font-bold">
                     1
                   </span>
                   <div>
@@ -664,7 +664,7 @@ function Dashboard() {
                 </li>
 
                 <li className="flex">
-                  <span className="bg-teal-600 text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0 text-sm font-bold">
+                  <span className="bg-theme-primary text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0 text-sm font-bold">
                     2
                   </span>
                   <div>
@@ -679,7 +679,7 @@ function Dashboard() {
                 </li>
 
                 <li className="flex">
-                  <span className="bg-teal-600 text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0 text-sm font-bold">
+                  <span className="bg-theme-primary text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0 text-sm font-bold">
                     3
                   </span>
                   <div>
@@ -715,7 +715,7 @@ function Dashboard() {
                 href="https://github.com/fscorrupt/Posterizarr?tab=readme-ov-file#sync-modes"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center px-6 py-3 bg-theme-bg hover:bg-theme-hover border border-theme rounded-lg font-medium transition-colors text-theme-text"
+                className="flex items-center justify-center px-6 py-3 bg-theme-bg hover:bg-theme-hover border border-theme rounded-lg font-medium transition-all text-theme-text shadow-lg"
               >
                 <ExternalLink className="w-5 h-5 mr-2" />
                 View Full Documentation
@@ -727,14 +727,14 @@ function Dashboard() {
           <div className="bg-theme-bg px-6 py-4 rounded-b-xl flex justify-between border-t-2 border-theme">
             <button
               onClick={() => setShowEmbySyncModal(false)}
-              className="px-6 py-2 bg-theme-card hover:bg-theme-hover border border-theme rounded-lg font-medium transition-colors"
+              className="px-6 py-2 bg-theme-card hover:bg-theme-hover border border-theme rounded-lg font-medium transition-all"
             >
               Cancel
             </button>
             <button
               onClick={startEmbySync}
               disabled={loading || status.running}
-              className="px-6 py-2 bg-teal-600 hover:bg-teal-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-colors text-white flex items-center"
+              className="px-6 py-2 bg-theme-primary hover:bg-theme-primary/90 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-all text-white flex items-center shadow-lg"
             >
               <Cloud className="w-5 h-5 mr-2" />
               Start Emby Sync
@@ -755,7 +755,7 @@ function Dashboard() {
       <h1 className="text-3xl font-bold mb-8 text-theme-primary">Dashboard</h1>
 
       {status.already_running_detected && (
-        <div className="mb-6 bg-yellow-900/30 border border-yellow-600/50 rounded-lg p-4">
+        <div className="mb-6 bg-yellow-900/30 border border-yellow-600/50 rounded-lg p-4 shadow-sm">
           <div className="flex items-start">
             <AlertTriangle className="h-6 w-6 text-yellow-400 mr-3 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
@@ -769,7 +769,7 @@ function Dashboard() {
               <button
                 onClick={deleteRunningFile}
                 disabled={loading}
-                className="flex items-center px-4 py-2 bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-colors text-sm"
+                className="flex items-center px-4 py-2 bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-all text-sm shadow-sm"
               >
                 <Trash2 className="w-4 h-4 mr-2" />
                 Delete Running File
@@ -781,10 +781,10 @@ function Dashboard() {
 
       {/* Status Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-theme-card rounded-lg p-6 border border-theme">
+        <div className="bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-theme-muted text-sm">Script Status</p>
+              <p className="text-theme-muted text-sm mb-1">Script Status</p>
               <p
                 className={`text-2xl font-bold ${
                   status.running ? "text-green-400" : "text-theme-text"
@@ -805,18 +805,20 @@ function Dashboard() {
                 </>
               )}
             </div>
-            {status.running ? (
-              <CheckCircle className="h-12 w-12 text-green-400" />
-            ) : (
-              <Clock className="h-12 w-12 text-gray-500" />
-            )}
+            <div className="p-3 rounded-lg bg-theme-primary/10">
+              {status.running ? (
+                <CheckCircle className="h-12 w-12 text-green-400" />
+              ) : (
+                <Clock className="h-12 w-12 text-gray-500" />
+              )}
+            </div>
           </div>
         </div>
 
-        <div className="bg-theme-card rounded-lg p-6 border border-theme ">
+        <div className="bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-theme-muted text-sm">Script File</p>
+              <p className="text-theme-muted text-sm mb-1">Script File</p>
               <p
                 className={`text-2xl font-bold ${
                   status.script_exists ? "text-green-400" : "text-red-400"
@@ -826,14 +828,12 @@ function Dashboard() {
               </p>
               {status.script_exists && (
                 <div className="mt-2 space-y-1">
-                  {/* Backend Version */}
                   {(version.local || version.remote) && (
-                    <div className="flex items-center gap-2">
-                      {/* This badge for the current version remains non-clickable */}
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-theme-primary text-white">
                         v{version.local || version.remote}
                       </span>
-                      {version.is_update_available && ( // ✅ RICHTIG
+                      {version.is_update_available && (
                         <a
                           href="https://github.com/fscorrupt/Posterizarr/releases/latest"
                           target="_blank"
@@ -850,18 +850,20 @@ function Dashboard() {
                 </div>
               )}
             </div>
-            {status.script_exists ? (
-              <CheckCircle className="h-12 w-12 text-green-400" />
-            ) : (
-              <AlertCircle className="h-12 w-12 text-red-400" />
-            )}
+            <div className="p-3 rounded-lg bg-theme-primary/10">
+              {status.script_exists ? (
+                <CheckCircle className="h-12 w-12 text-green-400" />
+              ) : (
+                <AlertCircle className="h-12 w-12 text-red-400" />
+              )}
+            </div>
           </div>
         </div>
 
-        <div className="bg-theme-card rounded-lg p-6 border border-theme ">
+        <div className="bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-theme-muted text-sm">Config File</p>
+              <p className="text-theme-muted text-sm mb-1">Config File</p>
               <p
                 className={`text-2xl font-bold ${
                   status.config_exists ? "text-green-400" : "text-red-400"
@@ -870,19 +872,23 @@ function Dashboard() {
                 {status.config_exists ? "Found" : "Missing"}
               </p>
             </div>
-            {status.config_exists ? (
-              <CheckCircle className="h-12 w-12 text-green-400" />
-            ) : (
-              <AlertCircle className="h-12 w-12 text-red-400" />
-            )}
+            <div className="p-3 rounded-lg bg-theme-primary/10">
+              {status.config_exists ? (
+                <CheckCircle className="h-12 w-12 text-green-400" />
+              ) : (
+                <AlertCircle className="h-12 w-12 text-red-400" />
+              )}
+            </div>
           </div>
         </div>
       </div>
 
       {/* Script Execution Controls */}
-      <div className="bg-theme-card rounded-lg p-6 border border-theme mb-6">
+      <div className="bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all mb-6 shadow-sm">
         <h2 className="text-xl font-semibold mb-4 text-theme-primary flex items-center">
-          <Play className="w-5 h-5 mr-2" />
+          <div className="p-2 rounded-lg bg-theme-primary/10 mr-3">
+            <Play className="w-5 h-5 text-theme-primary" />
+          </div>
           Script Modes
         </h2>
 
@@ -890,7 +896,7 @@ function Dashboard() {
           <button
             onClick={() => runScript("normal")}
             disabled={loading || status.running}
-            className="flex items-center justify-center px-4 py-3 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-colors"
+            className="flex items-center justify-center px-4 py-3 bg-theme-primary hover:bg-theme-primary/90 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-all shadow-sm"
           >
             <Play className="w-5 h-5 mr-2" />
             Run Normal
@@ -899,7 +905,7 @@ function Dashboard() {
           <button
             onClick={() => runScript("testing")}
             disabled={loading || status.running}
-            className="flex items-center justify-center px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-colors"
+            className="flex items-center justify-center px-4 py-3 bg-theme-primary hover:bg-theme-primary/90 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-all shadow-sm"
           >
             <RefreshCw className="w-5 h-5 mr-2" />
             Testing Mode
@@ -908,7 +914,7 @@ function Dashboard() {
           <button
             onClick={() => setShowManualModal(true)}
             disabled={loading || status.running}
-            className="flex items-center justify-center px-4 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg font-medium transition-colors"
+            className="flex items-center justify-center px-4 py-3 bg-theme-primary hover:bg-theme-primary/90 rounded-lg font-medium transition-all shadow-sm"
           >
             <Settings className="w-5 h-5 mr-2" />
             Manual Mode
@@ -917,7 +923,7 @@ function Dashboard() {
           <button
             onClick={() => runScript("backup")}
             disabled={loading || status.running}
-            className="flex items-center justify-center px-4 py-3 bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-colors"
+            className="flex items-center justify-center px-4 py-3 bg-theme-primary hover:bg-theme-primary/90 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-all shadow-sm"
           >
             <Save className="w-5 h-5 mr-2" />
             Backup Mode
@@ -925,10 +931,12 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* SYNC MODE - Updated with Modals */}
-      <div className="bg-theme-card rounded-lg p-6 border  border-theme mb-6">
+      {/* SYNC MODE */}
+      <div className="bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all mb-6 shadow-sm">
         <h2 className="text-xl font-semibold mb-4 text-theme-primary flex items-center">
-          <Cloud className="w-5 h-5 mr-2" />
+          <div className="p-2 rounded-lg bg-theme-primary/10 mr-3">
+            <Cloud className="w-5 h-5 text-theme-primary" />
+          </div>
           Sync Mode
         </h2>
 
@@ -936,7 +944,7 @@ function Dashboard() {
           <button
             onClick={() => setShowJellyfinSyncModal(true)}
             disabled={loading || status.running}
-            className="flex items-center justify-center px-4 py-3 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-colors"
+            className="flex items-center justify-center px-4 py-3 bg-theme-primary hover:bg-theme-primary/90 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-all shadow-sm"
           >
             <Cloud className="w-5 h-5 mr-2" />
             Sync Jellyfin
@@ -945,7 +953,7 @@ function Dashboard() {
           <button
             onClick={() => setShowEmbySyncModal(true)}
             disabled={loading || status.running}
-            className="flex items-center justify-center px-4 py-3 bg-teal-600 hover:bg-teal-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-colors"
+            className="flex items-center justify-center px-4 py-3 bg-theme-primary hover:bg-theme-primary/90 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-all shadow-sm"
           >
             <Cloud className="w-5 h-5 mr-2" />
             Sync Emby
@@ -954,14 +962,17 @@ function Dashboard() {
       </div>
 
       {/* Log Viewer */}
-      <div className="bg-theme-card rounded-lg p-6 border border-theme  mb-6">
+      <div className="bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all mb-6 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-xl font-semibold text-theme-primary">
+            <h2 className="text-xl font-semibold text-theme-primary flex items-center">
+              <div className="p-2 rounded-lg bg-theme-primary/10 mr-3">
+                <RefreshCw className="w-5 h-5 text-theme-primary" />
+              </div>
               Last Log Entries
             </h2>
             {status.active_log && (
-              <p className="text-xs text-theme-muted mt-1">
+              <p className="text-xs text-theme-muted mt-1 ml-14">
                 Reading from: {status.active_log}
               </p>
             )}
@@ -969,7 +980,7 @@ function Dashboard() {
           <button
             onClick={fetchStatus}
             disabled={isRefreshing}
-            className="text-theme-muted hover:text-white disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="text-theme-muted hover:text-theme-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all p-2 hover:bg-theme-hover rounded-lg"
           >
             <RefreshCw
               className={`w-5 h-5 ${isRefreshing ? "animate-spin" : ""}`}
@@ -977,9 +988,9 @@ function Dashboard() {
           </button>
         </div>
 
-        <div className="bg-black rounded overflow-hidden border border-gray-900">
+        <div className="bg-black rounded-lg overflow-hidden border-2 border-theme shadow-sm">
           {status.last_logs && status.last_logs.length > 0 ? (
-            <div className="font-mono text-[11px] leading-relaxed">
+            <div className="font-mono text-[11px] leading-relaxed max-h-96 overflow-y-auto">
               {status.last_logs.map((line, index) => {
                 const parsed = parseLogLine(line);
 
@@ -991,7 +1002,7 @@ function Dashboard() {
                   return (
                     <div
                       key={index}
-                      className="px-2 py-1 hover:bg-gray-900/50"
+                      className="px-2 py-1 hover:bg-gray-900/50 transition-colors"
                       style={{ color: "#9ca3af" }}
                     >
                       {parsed.raw}
@@ -1004,7 +1015,7 @@ function Dashboard() {
                 return (
                   <div
                     key={index}
-                    className="px-2 py-1 hover:bg-gray-900/50 flex items-center gap-2"
+                    className="px-2 py-1 hover:bg-gray-900/50 transition-colors flex items-center gap-2"
                   >
                     <span style={{ color: "#6b7280" }}>
                       [{parsed.timestamp}]
@@ -1031,9 +1042,11 @@ function Dashboard() {
       </div>
 
       {/* DANGER ZONE */}
-      <div className="bg-gradient-to-br from-red-950/40 to-red-900/20 rounded-lg p-6 border border-red-600/50 mb-8">
+      <div className="bg-red-950/40 rounded-xl p-6 border-2 border-red-600/50 mb-8 shadow-sm">
         <div className="flex items-center mb-4">
-          <AlertTriangle className="w-6 h-6 text-red-400 mr-3" />
+          <div className="p-2 rounded-lg bg-red-600/20 mr-3">
+            <AlertTriangle className="w-6 h-6 text-red-400" />
+          </div>
           <h2 className="text-xl font-semibold text-red-400">Danger Zone</h2>
         </div>
 
@@ -1047,7 +1060,7 @@ function Dashboard() {
           <button
             onClick={stopScript}
             disabled={loading || !status.running}
-            className="flex items-center justify-center px-4 py-3 bg-red-600 hover:bg-red-700 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg font-medium transition-colors border border-red-500"
+            className="flex items-center justify-center px-4 py-3 bg-red-600 hover:bg-red-700 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg font-medium transition-all border border-red-500 shadow-sm"
           >
             <Square className="w-5 h-5 mr-2" />
             Stop Script
@@ -1056,7 +1069,7 @@ function Dashboard() {
           <button
             onClick={forceKillScript}
             disabled={loading || !status.running}
-            className="flex items-center justify-center px-4 py-3 bg-red-800 hover:bg-red-900 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg font-medium transition-colors border border-red-600"
+            className="flex items-center justify-center px-4 py-3 bg-red-800 hover:bg-red-900 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg font-medium transition-all border border-red-600 shadow-sm"
           >
             <Zap className="w-5 h-5 mr-2" />
             Force Kill
@@ -1065,7 +1078,7 @@ function Dashboard() {
           <button
             onClick={deleteRunningFile}
             disabled={loading}
-            className="flex items-center justify-center px-4 py-3 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg font-medium transition-colors border border-orange-500"
+            className="flex items-center justify-center px-4 py-3 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg font-medium transition-all border border-orange-500 shadow-sm"
           >
             <Trash2 className="w-5 h-5 mr-2" />
             Delete Running File
@@ -1075,7 +1088,9 @@ function Dashboard() {
         {/* Reset Posters Section */}
         <div className="border-t-2 border-red-600/30 pt-6">
           <div className="flex items-center mb-4">
-            <RotateCcw className="w-5 h-5 text-red-400 mr-2" />
+            <div className="p-2 rounded-lg bg-red-600/20 mr-3">
+              <RotateCcw className="w-5 h-5 text-red-300" />
+            </div>
             <h3 className="text-lg font-semibold text-red-300">
               Reset Posters
             </h3>
@@ -1093,12 +1108,12 @@ function Dashboard() {
               onChange={(e) => setResetLibrary(e.target.value)}
               placeholder="Enter library name (e.g., Movies, TV Shows)"
               disabled={loading || status.running}
-              className="flex-1 px-4 py-3 bg-theme-card border border-red-500/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex-1 px-4 py-3 bg-theme-card border border-red-500/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 transition-all"
             />
             <button
               onClick={resetPosters}
               disabled={loading || status.running || !resetLibrary.trim()}
-              className="flex items-center justify-center px-6 py-3 bg-red-700 hover:bg-red-800 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg font-medium transition-colors border border-red-600 whitespace-nowrap"
+              className="flex items-center justify-center px-6 py-3 bg-red-700 hover:bg-red-800 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg font-medium transition-all border border-red-600 whitespace-nowrap shadow-sm"
             >
               <RotateCcw className="w-5 h-5 mr-2" />
               Reset Posters

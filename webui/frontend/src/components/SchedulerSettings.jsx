@@ -340,7 +340,6 @@ const SchedulerSettings = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-theme-primary flex items-center gap-2">
-            <Clock className="w-8 h-8" />
             Scheduler Settings
           </h1>
           <p className="text-theme-muted mt-1">
