@@ -111,10 +111,22 @@ function About() {
 
       {/* About Posterizarr Section */}
       <div className="bg-theme-card border border-theme rounded-lg p-6 space-y-6">
-        <h2 className="text-2xl font-bold text-theme-text flex items-center gap-2">
-          <Info className="w-6 h-6 text-theme-primary" />
-          About Posterizarr
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold text-theme-text flex items-center gap-2">
+            <Info className="w-6 h-6 text-theme-primary" />
+            About Posterizarr
+          </h2>
+          <button
+            onClick={fetchVersion}
+            disabled={refreshing}
+            className="flex items-center gap-2 px-3 py-1.5 bg-theme-hover hover:bg-theme-primary/20 border border-theme rounded-lg transition-all disabled:opacity-50"
+          >
+            <RefreshCw
+              className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`}
+            />
+            <span className="text-sm">Refresh</span>
+          </button>
+        </div>
 
         <div className="space-y-4">
           {/* Version */}
@@ -156,18 +168,6 @@ function About() {
             </span>
           </div>
         </div>
-
-        {/* Refresh Button */}
-        <button
-          onClick={fetchVersion}
-          disabled={refreshing}
-          className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-theme-hover hover:bg-theme-primary/20 border border-theme rounded-lg transition-all disabled:opacity-50"
-        >
-          <RefreshCw
-            className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`}
-          />
-          <span>Refresh Version Info</span>
-        </button>
       </div>
 
       {/* Assets Statistics - ÜBER Releases! */}
