@@ -7630,31 +7630,19 @@ else {
 $DoMigration = Get-ChildItem -Path $global:ScriptRoot -File | Where-Object { $_.Extension -in $fileExtensions } -ErrorAction SilentlyContinue
 if ($DoMigration.Count -gt 0) {
     Write-Entry -Message "Migration needed: Found $($DoMigration.Count) files to migrate." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
-}
 
-# Migration block: Only run this when migration is needed
-if ($DoMigration) {
-    try {
-        $filestomigrate = Get-ChildItem -Path $global:ScriptRoot -File | Where-Object { $_.Extension -in $fileExtensions } -ErrorAction SilentlyContinue
-    }
-    catch {
-        Write-Entry -Subtext "Error retrieving files: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-    }
+    foreach ($file in $DoMigration) {
+        try {
+            Write-Entry -Subtext "Trying to migrate '$($file.Name)' from ScriptRoot to OverlayPath..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+            $destinationPath = Join-Path -Path $global:OverlayPath -ChildPath $file.Name
 
-    if ($filestomigrate.Count -gt 0) {
-        foreach ($file in $filestomigrate) {
-            try {
-                Write-Entry -Subtext "Trying to migrate '$($file.Name)' from ScriptRoot to OverlayPath..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
-                $destinationPath = Join-Path -Path $global:OverlayPath -ChildPath $file.Name
-
-                if (!(Test-Path -LiteralPath $destinationPath)) {
-                    Move-Item -Path $file.FullName -Destination $destinationPath -Force -ErrorAction Stop
-                    Write-Entry -Subtext "Migrated File: '$($file.Name)' from ScriptRoot to OverlayPath..." -Path $configLogging -Color Cyan -log Info
-                }
+            if (!(Test-Path -LiteralPath $destinationPath)) {
+                Move-Item -LiteralPath $file.FullName -Destination $destinationPath -Force -ErrorAction Stop
+                Write-Entry -Subtext "Migrated File: '$($file.Name)' from ScriptRoot to OverlayPath..." -Path $configLogging -Color Cyan -log Info
             }
-            catch {
-                Write-Entry -Subtext "Error migrating file '$($file.Name)': $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-            }
+        }
+        catch {
+            Write-Entry -Subtext "Error migrating file '$($file.Name)': $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
         }
     }
 }

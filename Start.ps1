@@ -10,6 +10,7 @@ function ScriptSchedule {
     $NextScriptRun = $env:RUN_TIME -split ',' | Sort-Object
 
     Write-Host "File Watcher Started..."
+    write-host "UI is being initialized... T-60 seconds" -ForegroundColor Green
     # Next Run
     while ($true) {
         $elapsedTime = $(get-date) - $StartTime
@@ -226,7 +227,7 @@ function CopyAssetFiles {
         $dest = Join-Path -Path $overlayDir -ChildPath $file.Name
         try {
             if (-not (Test-Path $dest)) {
-                Move-Item -Path $file.FullName -Destination $dest
+                Move-Item -LiteralPath $file.FullName -Destination $dest -Force
                 $migratedCount++
                 Write-Host "Migrated $($file.Name) to $overlayDir" -ForegroundColor Cyan
             }
