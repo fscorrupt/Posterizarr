@@ -205,15 +205,42 @@ function Test-And-Download {
 function CopyAssetFiles {
     <#
     .SYNOPSIS
-        Copies asset files from APP_ROOT to APP_DATA if they are missing.
+        Copies asset files from APP_ROOT to APP_DATA/Overlayfiles and config to APP_DATA if missing.
+        Migrates any .png, .ttf, .otf files from APP_DATA to Overlayfiles.
     .DESCRIPTION
-        Copies all .png and .ttf files from the APP_ROOT directory to the APP_DATA directory,
-        but only if they do not already exist in APP_DATA.
+        Copies all .png, .ttf, .otf files from the APP_ROOT directory to the APP_DATA/Overlayfiles directory,
+        but only if they do not already exist in Overlayfiles.
         Special rule: config.example.json is only copied if config.json does not exist in APP_DATA.
+        Also moves any .png, .ttf, .otf files found in APP_DATA to Overlayfiles.
     #>
 
-    # Get all asset files - using wildcard in path to make -Include work correctly
-    $assetFiles = Get-ChildItem -Path "$env:APP_ROOT/*" -Include "*.png", "*.ttf", "config.example.json" -File
+    $overlayDir = "$env:APP_DATA/Overlayfiles"
+    if (-not (Test-Path $overlayDir)) {
+        $null = New-Item -Path $overlayDir -ItemType Directory -ErrorAction SilentlyContinue
+    }
+
+    # Migrate .png, .ttf, .otf files from APP_DATA to Overlayfiles
+    $migrateFiles = Get-ChildItem -Path $env:APP_DATA -Include "*.png", "*.ttf", "*.otf" -File
+    $migratedCount = 0
+    foreach ($file in $migrateFiles) {
+        $dest = Join-Path -Path $overlayDir -ChildPath $file.Name
+        try {
+            if (-not (Test-Path $dest)) {
+                Move-Item -Path $file.FullName -Destination $dest
+                $migratedCount++
+                Write-Host "Migrated $($file.Name) to $overlayDir" -ForegroundColor Cyan
+            }
+        }
+        catch {
+            Write-Host "Failed to migrate $($file.Name): $($_.Exception.Message)" -ForegroundColor Red
+        }
+    }
+    if ($migratedCount -gt 0) {
+        Write-Host "Migrated $migratedCount files from APP_DATA to Overlayfiles." -ForegroundColor Green
+    }
+
+    # Get all asset files from APP_ROOT
+    $assetFiles = Get-ChildItem -Path "$env:APP_ROOT/*" -Include "*.png", "*.ttf", "*.otf", "config.example.json" -File
     $fileCount = $assetFiles.Count
 
     if ($fileCount -eq 0) {
@@ -226,10 +253,9 @@ function CopyAssetFiles {
 
         $assetFiles | ForEach-Object {
             try {
-                $destinationPath = Join-Path -Path $env:APP_DATA -ChildPath $_.Name
-
                 if ($_.Name -eq "config.example.json") {
                     $configJsonPath = Join-Path -Path $env:APP_DATA -ChildPath "config.json"
+                    $destinationPath = Join-Path -Path $env:APP_DATA -ChildPath $_.Name
 
                     if (-Not (Test-Path -Path $configJsonPath)) {
                         if (-Not (Test-Path -Path $destinationPath)) {
@@ -245,6 +271,7 @@ function CopyAssetFiles {
                     }
                 }
                 else {
+                    $destinationPath = Join-Path -Path $overlayDir -ChildPath $_.Name
                     if (-Not (Test-Path -Path $destinationPath)) {
                         Copy-Item -Path $_.FullName -Destination $destinationPath -Force
                         $copiedCount++
@@ -261,7 +288,7 @@ function CopyAssetFiles {
         }
 
         # Summary
-        Write-Host "Copied $copiedCount new asset files to $env:APP_DATA" -ForegroundColor Cyan
+        Write-Host "Copied $copiedCount new asset files" -ForegroundColor Cyan
         Write-Host "Skipped $skippedCount files (already exist or not needed)" -ForegroundColor Gray
 
         if ($errorCount -gt 0) {
@@ -305,11 +332,8 @@ $ProgressPreference = 'Continue'
 # Check script version
 CompareScriptVersion
 
-# Move assets to APP_DATA
-CopyAssetFiles
-
 # Creating Folder structure
-$folders = @("$env:APP_DATA/Logs", "$env:APP_DATA/temp", "$env:APP_DATA/watcher", "$env:APP_DATA/test")
+$folders = @("$env:APP_DATA/Logs", "$env:APP_DATA/temp", "$env:APP_DATA/watcher", "$env:APP_DATA/test", "$env:APP_DATA/Overlayfiles")
 $createdFolders = @()
 $allPresent = $true
 
@@ -330,6 +354,9 @@ else {
         Write-Host "    - $createdFolder" -ForegroundColor Yellow
     }
 }
+
+# Move assets to APP_DATA
+CopyAssetFiles
 
 # Checking Config file
 if (-not (test-path "$env:APP_DATA/config.json")) {

@@ -35,7 +35,7 @@ for ($i = 0; $i -lt $ExtraArgs.Count; $i++) {
     }
 }
 
-$CurrentScriptVersion = "1.9.97"
+$CurrentScriptVersion = "2.0.0"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 $env:PSMODULE_ANALYSIS_CACHE_PATH = $null
@@ -7482,6 +7482,7 @@ $SeasonRatingkeys = $null
 $LogsPath = Join-Path $global:ScriptRoot 'Logs'
 $TempPath = Join-Path $global:ScriptRoot 'temp'
 $TestPath = Join-Path $global:ScriptRoot 'test'
+$global:OverlayPath = Join-Path $global:ScriptRoot 'Overlayfiles'
 $configLogging = Join-Path $LogsPath 'Scriptlog.log'
 
 if ($Manual) {
@@ -7522,7 +7523,6 @@ if (!(Test-Path $AssetPath)) {
 Test-PathPermissions -PathToTest $AssetPath
 Test-PathPermissions -PathToTest $BackupPath
 Test-PathPermissions -PathToTest $ManualAssetPath
-
 
 if ($ForceRunningDeletion -eq 'true') {
     if (Test-Path $CurrentlyRunning) {
@@ -7584,22 +7584,22 @@ if ($Testing) {
 
 # Test and download files if they don't exist
 if ($config.PrerequisitePart.overlayfile -eq 'overlay.png' -or $config.PrerequisitePart.seasonoverlayfile -eq 'overlay.png') {
-    Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/overlay.png" -destination (Join-Path $global:ScriptRoot 'overlay.png')
+    Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/overlay.png" -destination (Join-Path $global:OverlayPath 'overlay.png')
 }
 if ($config.PrerequisitePart.overlayfile -eq 'overlay-innerglow.png' -or $config.PrerequisitePart.seasonoverlayfile -eq 'overlay-innerglow.png') {
-    Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/overlay-innerglow.png" -destination (Join-Path $global:ScriptRoot 'overlay-innerglow.png')
+    Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/overlay-innerglow.png" -destination (Join-Path $global:OverlayPath 'overlay-innerglow.png')
 }
 if ($config.PrerequisitePart.backgroundoverlayfile -eq 'backgroundoverlay.png' -or $config.PrerequisitePart.titlecardoverlayfile -eq 'backgroundoverlay.png') {
-    Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/backgroundoverlay.png" -destination (Join-Path $global:ScriptRoot 'backgroundoverlay.png')
+    Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/backgroundoverlay.png" -destination (Join-Path $global:OverlayPath 'backgroundoverlay.png')
 }
 if ($config.PrerequisitePart.backgroundoverlayfile -eq 'backgroundoverlay-innerglow.png' -or $config.PrerequisitePart.titlecardoverlayfile -eq 'backgroundoverlay-innerglow.png') {
-    Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/backgroundoverlay-innerglow.png" -destination (Join-Path $global:ScriptRoot 'backgroundoverlay-innerglow.png')
+    Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/backgroundoverlay-innerglow.png" -destination (Join-Path $global:OverlayPath 'backgroundoverlay-innerglow.png')
 }
 if ($config.PrerequisitePart.font -eq 'Rocky.ttf' -or $config.PrerequisitePart.backgroundfont -eq 'Rocky.ttf' -or $config.PrerequisitePart.titlecardfont -eq 'Rocky.ttf' -or $config.PrerequisitePart.RTLFont -eq 'Rocky.ttf') {
-    Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/Rocky.ttf" -destination (Join-Path $global:ScriptRoot 'Rocky.ttf')
+    Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/Rocky.ttf" -destination (Join-Path $global:OverlayPath 'Rocky.ttf')
 }
 if ($config.PrerequisitePart.font -eq 'Colus-Regular.ttf' -or $config.PrerequisitePart.backgroundfont -eq 'Colus-Regular.ttf' -or $config.PrerequisitePart.titlecardfont -eq 'Colus-Regular.ttf' -or $config.PrerequisitePart.RTLFont -eq 'Colus-Regular.ttf') {
-    Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/Colus-Regular.ttf" -destination (Join-Path $global:ScriptRoot 'Colus-Regular.ttf')
+    Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/Colus-Regular.ttf" -destination (Join-Path $global:OverlayPath 'Colus-Regular.ttf')
 }
 
 # Write log message
@@ -7626,42 +7626,66 @@ else {
     $BackupPath = $BackupPath.Replace('/', '\')
 }
 
-# Get files in script root with specified extensions
-try {
-    $files = Get-ChildItem -Path $global:ScriptRoot -File | Where-Object { $_.Extension -in $fileExtensions } -ErrorAction SilentlyContinue
-}
-catch {
-    Write-Entry -Subtext "Error retrieving files: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+# Migration block: Only run this when migration is needed
+$DoMigration = Get-ChildItem -Path $global:ScriptRoot -File | Where-Object { $_.Extension -in $fileExtensions } -ErrorAction SilentlyContinue
+if ($DoMigration.Count -gt 0) {
+    Write-Entry -Message "Migration needed: Found $($DoMigration.Count) files to migrate." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
 }
 
-# Copy files to the destination directory
+# Migration block: Only run this when migration is needed
+if ($DoMigration) {
+    try {
+        $filestomigrate = Get-ChildItem -Path $global:ScriptRoot -File | Where-Object { $_.Extension -in $fileExtensions } -ErrorAction SilentlyContinue
+    }
+    catch {
+        Write-Entry -Subtext "Error retrieving files: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+    }
+
+    if ($filestomigrate.Count -gt 0) {
+        foreach ($file in $filestomigrate) {
+            try {
+                Write-Entry -Subtext "Trying to migrate '$($file.Name)' from ScriptRoot to OverlayPath..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+                $destinationPath = Join-Path -Path $global:OverlayPath -ChildPath $file.Name
+
+                if (!(Test-Path -LiteralPath $destinationPath)) {
+                    Move-Item -Path $file.FullName -Destination $destinationPath -Force -ErrorAction Stop
+                    Write-Entry -Subtext "Migrated File: '$($file.Name)' from ScriptRoot to OverlayPath..." -Path $configLogging -Color Cyan -log Info
+                }
+            }
+            catch {
+                Write-Entry -Subtext "Error migrating file '$($file.Name)': $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            }
+        }
+    }
+}
+
+# Always copy files from OverlayPath to temp folder
+$files = Get-ChildItem -Path $global:OverlayPath -File | Where-Object { $_.Extension -in $fileExtensions } -ErrorAction SilentlyContinue
 foreach ($file in $files) {
     try {
-        Write-Entry -Subtext "Trying to copy '$file' into temp dir..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+        Write-Entry -Subtext "Trying to copy '$($file.Name)' into temp dir..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
         $destinationPath = Join-Path -Path (Join-Path -Path $global:ScriptRoot -ChildPath 'temp') -ChildPath $file.Name
 
         if (!(Test-Path -LiteralPath $destinationPath)) {
             Copy-Item -Path $file.FullName -Destination $destinationPath -Force -ErrorAction Stop
-            Write-Entry -Subtext "Found File: '$($file.Name)' in ScriptRoot - copying it into temp folder..." -Path $configLogging -Color Cyan -log Info
+            Write-Entry -Subtext "Found File: '$($file.Name)' in OverlayPath - copying it into temp folder..." -Path $configLogging -Color Cyan -log Info
         }
 
-        # Check if the file is a font (.ttf or .otf)
+        # Font handling...
         if ($file.Extension -match "\.(ttf|otf)$" -and $env:POSTERIZARR_NON_ROOT -eq 'TRUE') {
             $fontDestination = Join-Path -Path $Font_Cache -ChildPath $file.Name
-
             Write-Entry -Subtext "Copying font '$($file.Name)' to ImageMagick cache..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
             Copy-Item -Path $file.FullName -Destination $fontDestination -Force -ErrorAction Stop
-
-            # Ensure font cache directory exists
             if (!(Test-Path -Path $IM_Font_Cache)) {
                 New-Item -ItemType Directory -Path $IM_Font_Cache -Force | Out-Null
             }
         }
     }
     catch {
-        Write-Entry -Subtext "Error copying file '$file': $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        Write-Entry -Subtext "Error copying file '$($file.Name)': $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
     }
 }
+
 
 # Refresh font cache if any fonts were copied
 if ($files.Extension -match "\.(ttf|otf)$" -and $env:POSTERIZARR_NON_ROOT -eq 'TRUE') {
