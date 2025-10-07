@@ -9,8 +9,8 @@ function ScriptSchedule {
 
     $NextScriptRun = $env:RUN_TIME -split ',' | Sort-Object
 
+    write-host "UI is being initialized this can take a minute..."
     Write-Host "File Watcher Started..."
-    write-host "UI is being initialized this can take a minute..." -ForegroundColor Green
     # Next Run
     while ($true) {
         $elapsedTime = $(get-date) - $StartTime

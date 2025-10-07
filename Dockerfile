@@ -55,7 +55,7 @@ RUN echo @edge http://dl-cdn.alpinelinux.org/alpine/edge/community >> /etc/apk/r
     && chmod -R 777 /usr/share/fonts/custom /var/cache/fontconfig
 
 # Set up Python dependencies for FastAPI backend
-RUN apk add --no-cache --virtual .build-deps build-base python3-dev \
+RUN apk add --no-cache --virtual .build-deps build-base python3-dev linux-headers \
     && pip install --no-cache-dir \
         fastapi==0.108.0 \
         uvicorn[standard]==0.25.0 \
