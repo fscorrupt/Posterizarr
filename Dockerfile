@@ -62,6 +62,9 @@ RUN apk add --no-cache --virtual .build-deps build-base python3-dev \
         python-multipart==0.0.6 \
         websockets==12.0 \
         httpx==0.28.1 \
+        apscheduler==3.10.4 \
+        pytz==2024.1 \
+        psutil>=5.9.0 \
         apprise \
     && apk del .build-deps
 

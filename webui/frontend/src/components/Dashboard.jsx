@@ -342,7 +342,7 @@ function Dashboard() {
 
     return (
       <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div className="bg-theme-card border border-theme-primary rounded-xl max-w-2xl w-full shadow-2xl animate-in fade-in duration-200">
+        <div className="bg-theme-card border  rounded-xl max-w-2xl w-full shadow-2xl animate-in fade-in duration-200">
           {/* Header */}
           <div className="bg-gradient-to-r from-theme-primary to-theme-primary/80 px-6 py-4 rounded-t-xl flex items-center justify-between">
             <div className="flex items-center">
@@ -416,11 +416,11 @@ function Dashboard() {
                 </li>
               </ol>
 
-              <div className="bg-theme-bg border border-theme-primary/50 rounded-lg p-4 mt-4">
+              <div className="bg-theme-bg border /50 rounded-lg p-4 mt-4">
                 <p className="text-sm text-theme-muted mb-2 font-semibold">
                   PowerShell Command:
                 </p>
-                <code className="block bg-black/40 p-3 rounded font-mono text-sm text-theme-text border border-theme-primary/30">
+                <code className="block bg-black/40 p-3 rounded font-mono text-sm text-theme-text border border-theme/30">
                   pwsh -File /path/to/Posterizarr.ps1 -Manual
                 </code>
               </div>
@@ -472,7 +472,7 @@ function Dashboard() {
 
     return (
       <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div className="bg-theme-card border border-theme-primary rounded-xl max-w-2xl w-full shadow-2xl animate-in fade-in duration-200">
+        <div className="bg-theme-card border  rounded-xl max-w-2xl w-full shadow-2xl animate-in fade-in duration-200">
           {/* Header */}
           <div className="bg-gradient-to-r from-orange-600 to-orange-700 px-6 py-4 rounded-t-xl flex items-center justify-between">
             <div className="flex items-center">
@@ -615,7 +615,7 @@ function Dashboard() {
 
     return (
       <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div className="bg-theme-card border border-theme-primary rounded-xl max-w-2xl w-full shadow-2xl animate-in fade-in duration-200">
+        <div className="bg-theme-card border  rounded-xl max-w-2xl w-full shadow-2xl animate-in fade-in duration-200">
           {/* Header */}
           <div className="bg-gradient-to-r from-teal-600 to-teal-700 px-6 py-4 rounded-t-xl flex items-center justify-between">
             <div className="flex items-center">
@@ -781,7 +781,7 @@ function Dashboard() {
 
       {/* Status Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-theme-card rounded-lg p-6 border border-theme-primary">
+        <div className="bg-theme-card rounded-lg p-6 border border-theme">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-theme-muted text-sm">Script Status</p>
@@ -813,7 +813,7 @@ function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-theme-card rounded-lg p-6 border border-theme-primary">
+        <div className="bg-theme-card rounded-lg p-6 border border-theme ">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-theme-muted text-sm">Script File</p>
@@ -858,7 +858,7 @@ function Dashboard() {
           </div>
         </div>
 
-        <div className="bg-theme-card rounded-lg p-6 border border-theme-primary">
+        <div className="bg-theme-card rounded-lg p-6 border border-theme ">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-theme-muted text-sm">Config File</p>
@@ -880,7 +880,7 @@ function Dashboard() {
       </div>
 
       {/* Script Execution Controls */}
-      <div className="bg-theme-card rounded-lg p-6 border border-theme-primary mb-6">
+      <div className="bg-theme-card rounded-lg p-6 border border-theme mb-6">
         <h2 className="text-xl font-semibold mb-4 text-theme-primary flex items-center">
           <Play className="w-5 h-5 mr-2" />
           Script Modes
@@ -926,7 +926,7 @@ function Dashboard() {
       </div>
 
       {/* SYNC MODE - Updated with Modals */}
-      <div className="bg-theme-card rounded-lg p-6 border border-theme-primary mb-6">
+      <div className="bg-theme-card rounded-lg p-6 border  border-theme mb-6">
         <h2 className="text-xl font-semibold mb-4 text-theme-primary flex items-center">
           <Cloud className="w-5 h-5 mr-2" />
           Sync Mode
@@ -954,7 +954,7 @@ function Dashboard() {
       </div>
 
       {/* Log Viewer */}
-      <div className="bg-theme-card rounded-lg p-6 border border-theme-primary mb-6">
+      <div className="bg-theme-card rounded-lg p-6 border border-theme  mb-6">
         <div className="flex items-center justify-between mb-4">
           <div>
             <h2 className="text-xl font-semibold text-theme-primary">

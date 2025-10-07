@@ -33,16 +33,7 @@ if errorlevel 1 (
 )
 echo ✅ Node.js found
 
-REM Check for PowerShell
-pwsh --version >nul 2>&1
-if errorlevel 1 (
-    echo ⚠️  PowerShell not found - needed to run Posterizarr
-    echo Continue anyway? (Y/N)
-    choice /C YN /N
-    if errorlevel 2 exit /b 1
-) else (
-    echo ✅ PowerShell found
-)
+
 
 echo.
 echo 📦 Installing Backend Dependencies...

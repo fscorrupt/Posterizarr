@@ -169,7 +169,7 @@ function TestGallery() {
       <div className="mb-6">
         <button
           onClick={() => toggleCategory(categoryKey)}
-          className="w-full flex items-center justify-between p-4 bg-theme-card border border-theme-primary rounded-lg hover:bg-theme-hover transition-colors"
+          className="w-full flex items-center justify-between p-4 bg-theme-card border border-theme rounded-lg hover:bg-theme-hover transition-colors"
         >
           <div className="flex items-center gap-3">
             <div className="flex items-center justify-center w-8 h-8 bg-theme-primary rounded-full text-sm font-bold">
@@ -196,7 +196,7 @@ function TestGallery() {
             {images.map((image, index) => (
               <div
                 key={index}
-                className="group relative bg-theme-card rounded-lg overflow-hidden border border-theme-primary hover:border-theme-primary transition-all cursor-pointer"
+                className="group relative bg-theme-card rounded-lg overflow-hidden border border-theme hover:border-theme-primary transition-all cursor-pointer"
                 onClick={() => setSelectedImage(image)}
               >
                 <div
@@ -303,7 +303,7 @@ function TestGallery() {
           <p className="text-red-300 text-sm">{error}</p>
         </div>
       ) : filteredImages.length === 0 ? (
-        <div className="bg-theme-card border border-theme-primary rounded-lg p-12 text-center">
+        <div className="bg-theme-card border border-theme rounded-lg p-12 text-center">
           <ImageIcon className="w-16 h-16 text-gray-600 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-theme-muted mb-2">
             No Test Files Found
@@ -317,7 +317,7 @@ function TestGallery() {
       ) : (
         <>
           {/* Gesamtanzahl */}
-          <div className="mb-6 p-4 bg-theme-card border border-theme-primary rounded-lg">
+          <div className="mb-6 p-4 bg-theme-card border border-theme rounded-lg">
             <div className="flex items-center justify-between">
               <span className="text-theme-text">
                 Total:{" "}
@@ -431,7 +431,7 @@ function TestGallery() {
                 </p>
               </div>
             </div>
-            <div className="p-4 border-t-2 border-theme flex justify-between items-center">
+            <div className="p-4 border-t-2 border-theme-primary flex justify-between items-center">
               <span className="text-sm text-theme-muted">
                 Size: {(selectedImage.size / 1024).toFixed(2)} KB
               </span>

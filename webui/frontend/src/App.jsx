@@ -13,6 +13,7 @@ import Dashboard from "./components/Dashboard";
 import GalleryHub from "./components/GalleryHub";
 import TestGallery from "./components/TestGallery";
 import About from "./components/About";
+import SchedulerSettings from "./components/SchedulerSettings";
 import VersionBadge from "./components/VersionBadge";
 import {
   Menu,
@@ -23,6 +24,7 @@ import {
   TestTube,
   Palette,
   Info,
+  Clock,
 } from "lucide-react";
 
 function ThemeSwitcher() {
@@ -99,12 +101,13 @@ function Navigation() {
     { path: "/test-gallery", label: "Test Gallery", icon: Image },
     { path: "/gallery", label: "Gallery", icon: Image },
     { path: "/config", label: "Config", icon: Settings },
+    { path: "/scheduler", label: "Scheduler", icon: Clock },
     { path: "/logs", label: "Logs", icon: FileText },
     { path: "/about", label: "About", icon: Info },
   ];
 
   return (
-    <nav className="bg-theme-card border-b border-theme shadow-lg">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-theme-card border-b border-theme shadow-lg">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo with Version Badge */}
@@ -201,12 +204,13 @@ function AppContent() {
   return (
     <div className="min-h-screen bg-theme-dark text-theme-text">
       <Navigation />
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 pt-24">
         <Routes>
           <Route path="/" element={<Dashboard />} />
           <Route path="/test-gallery" element={<TestGallery />} />
           <Route path="/gallery" element={<GalleryHub />} />
           <Route path="/config" element={<ConfigEditor />} />
+          <Route path="/scheduler" element={<SchedulerSettings />} />
           <Route path="/logs" element={<LogViewer />} />
           <Route path="/about" element={<About />} />
         </Routes>
