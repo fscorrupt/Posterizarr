@@ -855,15 +855,19 @@ function Dashboard() {
                   {/* Backend Version */}
                   {(version.local || version.remote) && (
                     <div className="flex items-center gap-2">
+                      {/* This badge for the current version remains non-clickable */}
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-theme-primary text-white">
                         v{version.local || version.remote}
                       </span>
                       {version.local &&
                         version.remote &&
                         version.local !== version.remote && (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500 text-white animate-pulse">
-                            v{version.remote} available
-                          </span>
+                          // This "update available" badge is now a clickable link
+                          <a href="https://github.com/fscorrupt/Posterizarr/releases/latest" target="_blank" rel="noopener noreferrer">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500 text-white animate-pulse">
+                              v{version.remote} available
+                            </span>
+                          </a>
                         )}
                     </div>
                   )}

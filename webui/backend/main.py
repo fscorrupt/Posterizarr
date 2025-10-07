@@ -1212,17 +1212,6 @@ async def get_version():
     """
     return await get_script_version()
 
-
-@app.get("/api/version-ui")
-async def get_version_ui():
-    """Gets local and remote UI version."""
-    return await fetch_version(
-        local_filename="ReleaseUI.txt",
-        github_url="https://raw.githubusercontent.com/fscorrupt/Posterizarr/refs/heads/main/ReleaseUI.txt",
-        version_type="UI",
-    )
-
-
 @app.get("/api/test-gallery")
 async def get_test_gallery():
     """Get poster gallery from test directory with image URLs"""

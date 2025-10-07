@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 
 const API_URL = "/api";
+const REPO_URL = "https://github.com/fscorrupt/Posterizarr/releases/latest";
 
 function About() {
   const [version, setVersion] = useState({
@@ -69,10 +70,13 @@ function About() {
           {version.local || "Unknown"}
         </span>
         {outOfDate && version.remote && (
-          <span className="px-3 py-1 bg-orange-500/20 text-orange-400 rounded-full text-xs font-medium border border-orange-500/30 flex items-center gap-1">
-            <AlertCircle className="w-3 h-3" />
-            Out of Date
-          </span>
+          // CHANGE #1: Wrapped the "Out of Date" badge in a link
+          <a href={REPO_URL} target="_blank" rel="noopener noreferrer">
+            <span className="px-3 py-1 bg-orange-500/20 text-orange-400 rounded-full text-xs font-medium border border-orange-500/30 flex items-center gap-1">
+              <AlertCircle className="w-3 h-3" />
+              Out of Date
+            </span>
+          </a>
         )}
         {!outOfDate && version.remote && (
           <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-xs font-medium border border-green-500/30 flex items-center gap-1">
@@ -115,9 +119,15 @@ function About() {
               <span className="text-theme-muted font-medium">
                 Latest Available
               </span>
-              <span className="text-green-400 font-medium">
-                {version.remote}
-              </span>
+              {/* CHANGE #2: Wrapped the version number in a link */}
+              <a
+                href={REPO_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-green-400 font-medium hover:underline"
+              >
+                <span>{version.remote}</span>
+              </a>
             </div>
           )}
 
