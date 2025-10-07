@@ -39,7 +39,6 @@ function Dashboard() {
   const [showJellyfinSyncModal, setShowJellyfinSyncModal] = useState(false);
   const [showEmbySyncModal, setShowEmbySyncModal] = useState(false);
   const [version, setVersion] = useState({ local: null, remote: null });
-  const [uiVersion, setUiVersion] = useState({ local: null, remote: null });
 
   const fetchStatus = async () => {
     setIsRefreshing(true);
@@ -78,34 +77,9 @@ function Dashboard() {
     }
   };
 
-  const fetchUIVersion = async () => {
-    try {
-      const response = await fetch(`${API_URL}/version-ui`);
-      if (!response.ok) {
-        console.warn("UI Version endpoint not available:", response.status);
-        return;
-      }
-
-      const data = await response.json();
-      console.log("UI Version data received:", data);
-
-      if (data.local || data.remote) {
-        setUiVersion({
-          local: data.local || null,
-          remote: data.remote || null,
-        });
-      } else {
-        console.warn("No UI version data in response:", data);
-      }
-    } catch (error) {
-      console.error("Error fetching UI version:", error);
-    }
-  };
-
   useEffect(() => {
     fetchStatus();
     fetchVersion();
-    fetchUIVersion();
     const interval = setInterval(fetchStatus, 3000);
     return () => clearInterval(interval);
   }, []);
@@ -863,7 +837,12 @@ function Dashboard() {
                         version.remote &&
                         version.local !== version.remote && (
                           // This "update available" badge is now a clickable link
-                          <a href="https://github.com/fscorrupt/Posterizarr/releases/latest" target="_blank" rel="noopener noreferrer">
+                          <a
+                            href="https://github.com/fscorrupt/Posterizarr/releases/latest"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center"
+                          >
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500 text-white animate-pulse">
                               v{version.remote} available
                             </span>
