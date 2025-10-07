@@ -226,11 +226,9 @@ function CopyAssetFiles {
     foreach ($file in $migrateFiles) {
         $dest = Join-Path -Path $overlayDir -ChildPath $file.Name
         try {
-            if (-not (Test-Path $dest)) {
-                Move-Item -LiteralPath $file.FullName -Destination $dest -Force
-                $migratedCount++
-                Write-Host "Migrated $($file.Name) to $overlayDir" -ForegroundColor Cyan
-            }
+            Move-Item -LiteralPath $file.FullName -Destination $dest -Force
+            $migratedCount++
+            Write-Host "Migrated $($file.Name) to $overlayDir" -ForegroundColor Cyan
         }
         catch {
             Write-Host "Failed to migrate $($file.Name): $($_.Exception.Message)" -ForegroundColor Red

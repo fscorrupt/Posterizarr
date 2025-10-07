@@ -7636,10 +7636,8 @@ if ($DoMigration.Count -gt 0) {
             Write-Entry -Subtext "Trying to migrate '$($file.Name)' from ScriptRoot to OverlayPath..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
             $destinationPath = Join-Path -Path $global:OverlayPath -ChildPath $file.Name
 
-            if (!(Test-Path -LiteralPath $destinationPath)) {
-                Move-Item -LiteralPath $file.FullName -Destination $destinationPath -Force -ErrorAction Stop
-                Write-Entry -Subtext "Migrated File: '$($file.Name)' from ScriptRoot to OverlayPath..." -Path $configLogging -Color Cyan -log Info
-            }
+            Move-Item -LiteralPath $file.FullName -Destination $destinationPath -Force -ErrorAction Stop
+            Write-Entry -Subtext "Migrated File: '$($file.Name)' from ScriptRoot to OverlayPath..." -Path $configLogging -Color Cyan -log Info
         }
         catch {
             Write-Entry -Subtext "Error migrating file '$($file.Name)': $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
