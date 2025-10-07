@@ -91,6 +91,11 @@ current_process: Optional[subprocess.Popen] = None
 current_mode: Optional[str] = None
 scheduler: Optional["PosterizarrScheduler"] = None
 
+# Initialize cache variables early to prevent race conditions
+cache_refresh_task = None
+cache_refresh_running = False
+cache_scan_in_progress = False
+
 
 def parse_version(version_str: str) -> tuple:
     """
@@ -299,10 +304,7 @@ asset_cache = {
     "folders": [],
 }
 
-# Background refresh control
-cache_refresh_task = None
-cache_refresh_running = False
-cache_scan_in_progress = False  # Verhindert überlappende Scans
+# Background refresh control (already initialized above, see global variables)
 
 
 def process_image_path(image_path: Path):
@@ -1616,6 +1618,14 @@ async def get_cache_status():
         last_scan = asset_cache.get("last_scanned", 0)
         age_seconds = now - last_scan if last_scan > 0 else 0
 
+        # Robustes Thread-Checking
+        thread_alive = False
+        try:
+            if cache_refresh_task is not None:
+                thread_alive = cache_refresh_task.is_alive()
+        except Exception:
+            thread_alive = False
+
         return {
             "success": True,
             "cache": {
@@ -1628,23 +1638,37 @@ async def get_cache_status():
                 "ttl_seconds": CACHE_TTL_SECONDS,
                 "refresh_interval": CACHE_REFRESH_INTERVAL,
                 "is_stale": False,  # TTL-Check entfernt, Cache ist immer gültig
-                "posters_count": len(asset_cache["posters"]),
-                "backgrounds_count": len(asset_cache["backgrounds"]),
-                "seasons_count": len(asset_cache["seasons"]),
-                "titlecards_count": len(asset_cache["titlecards"]),
-                "folders_count": len(asset_cache["folders"]),
+                "posters_count": len(asset_cache.get("posters", [])),
+                "backgrounds_count": len(asset_cache.get("backgrounds", [])),
+                "seasons_count": len(asset_cache.get("seasons", [])),
+                "titlecards_count": len(asset_cache.get("titlecards", [])),
+                "folders_count": len(asset_cache.get("folders", [])),
             },
             "background_refresh": {
                 "running": cache_refresh_running,
-                "thread_alive": (
-                    cache_refresh_task.is_alive() if cache_refresh_task else False
-                ),
+                "thread_alive": thread_alive,
                 "scan_in_progress": cache_scan_in_progress,
             },
         }
     except Exception as e:
         logger.error(f"Error getting cache status: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        # Gib trotzdem eine gültige Response zurück
+        return {
+            "success": False,
+            "error": str(e),
+            "cache": {
+                "posters_count": 0,
+                "backgrounds_count": 0,
+                "seasons_count": 0,
+                "titlecards_count": 0,
+                "folders_count": 0,
+            },
+            "background_refresh": {
+                "running": False,
+                "thread_alive": False,
+                "scan_in_progress": False,
+            },
+        }
 
 
 @app.get("/api/test-gallery")
