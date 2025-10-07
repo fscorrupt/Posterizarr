@@ -249,6 +249,24 @@ function About() {
           </div>
         </a>
       </div>
+
+      {/* WebUI Developer Credit */}
+      <div className="bg-theme-card border border-theme rounded-lg p-4">
+        <p className="text-theme-muted text-sm text-center flex items-center justify-center gap-2">
+          WebUI developed with
+          <Heart className="w-4 h-4 text-red-400 inline" />
+          by
+          <a
+            href="https://github.com/cyb3rgh05t"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-theme-primary hover:underline font-medium"
+          >
+            cyb3rgh05t
+          </a>
+          for the community
+        </p>
+      </div>
     </div>
   );
 }
