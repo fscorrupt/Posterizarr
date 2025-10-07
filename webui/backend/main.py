@@ -14,7 +14,7 @@ from typing import Optional
 import logging
 import re
 import time
-import time
+from datetime import datetime
 
 # Setup logging
 logging.basicConfig(level=logging.WARNING)
@@ -1187,6 +1187,113 @@ async def get_version():
     Gets script version from Posterizarr.ps1 and compares with GitHub Release.txt
     """
     return await get_script_version()
+
+
+@app.get("/api/releases")
+async def get_github_releases():
+    """
+    Holt alle Releases von GitHub und gibt sie formatiert zurück
+    """
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                "https://api.github.com/repos/fscorrupt/Posterizarr/releases",
+                headers={"Accept": "application/vnd.github.v3+json"},
+                timeout=10.0,
+            )
+            response.raise_for_status()
+            releases = response.json()
+
+            # Formatiere die Releases für die Frontend-Anzeige
+            formatted_releases = []
+            for release in releases[:10]:  # Nur die letzten 10 Releases
+                published_date = datetime.fromisoformat(
+                    release["published_at"].replace("Z", "+00:00")
+                )
+                days_ago = (datetime.now(published_date.tzinfo) - published_date).days
+
+                formatted_releases.append(
+                    {
+                        "version": release["tag_name"],
+                        "name": release["name"],
+                        "published_at": release["published_at"],
+                        "days_ago": days_ago,
+                        "is_prerelease": release["prerelease"],
+                        "is_draft": release["draft"],
+                        "html_url": release["html_url"],
+                        "body": release["body"],  # Changelog-Text
+                    }
+                )
+
+            return {"success": True, "releases": formatted_releases}
+
+    except httpx.RequestError as e:
+        logger.error(f"Could not fetch releases from GitHub: {e}")
+        return {
+            "success": False,
+            "error": "Could not fetch releases from GitHub",
+            "releases": [],
+        }
+    except Exception as e:
+        logger.error(f"Error fetching releases: {e}")
+        return {"success": False, "error": str(e), "releases": []}
+
+
+@app.get("/api/assets/stats")
+async def get_assets_stats():
+    """
+    Gibt Statistiken über die erstellten Assets zurück
+    """
+    try:
+        stats = {
+            "posters": 0,
+            "backgrounds": 0,
+            "seasons": 0,
+            "titlecards": 0,
+            "total_size": 0,
+            "folders": [],
+        }
+
+        if not ASSETS_DIR.exists():
+            return {"success": True, "stats": stats}
+
+        # Zähle verschiedene Asset-Typen
+        image_extensions = {".jpg", ".jpeg", ".png", ".webp"}
+
+        for item_path in ASSETS_DIR.rglob("*"):
+            if item_path.is_file() and item_path.suffix.lower() in image_extensions:
+                stats["total_size"] += item_path.stat().st_size
+
+                filename = item_path.name.lower()
+                if "poster" in filename or filename == "poster.jpg":
+                    stats["posters"] += 1
+                elif "background" in filename or filename == "background.jpg":
+                    stats["backgrounds"] += 1
+                elif "season" in filename or re.match(r"season\d+", filename):
+                    stats["seasons"] += 1
+                elif re.match(r"s\d+e\d+", filename):
+                    stats["titlecards"] += 1
+
+        # Hole Top-Level Ordner
+        folders = []
+        for folder in ASSETS_DIR.iterdir():
+            if folder.is_dir():
+                folder_stats = {
+                    "name": folder.name,
+                    "files": len(list(folder.rglob("*.*"))),
+                    "size": sum(
+                        f.stat().st_size for f in folder.rglob("*") if f.is_file()
+                    ),
+                }
+                folders.append(folder_stats)
+
+        stats["folders"] = sorted(folders, key=lambda x: x["files"], reverse=True)[:10]
+
+        return {"success": True, "stats": stats}
+
+    except Exception as e:
+        logger.error(f"Error getting asset stats: {e}")
+        return {"success": False, "error": str(e), "stats": {}}
 
 
 @app.post("/api/refresh-cache")
