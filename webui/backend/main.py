@@ -10,7 +10,7 @@ import asyncio
 import os
 import httpx
 from pathlib import Path
-from typing import Optional
+from typing import Optional, List
 import logging
 import re
 import time
@@ -39,6 +39,18 @@ try:
 except ImportError as e:
     CONFIG_MAPPER_AVAILABLE = False
     logger.warning(f"Config mapper not available: {e}. Using grouped config structure.")
+
+# Import scheduler module
+try:
+    from scheduler import PosterizarrScheduler
+
+    SCHEDULER_AVAILABLE = True
+    logger.info("Scheduler module loaded successfully")
+except ImportError as e:
+    SCHEDULER_AVAILABLE = False
+    logger.warning(
+        f"Scheduler not available: {e}. Scheduler features will be disabled."
+    )
 
 # Check if running in Docker
 IS_DOCKER = os.path.exists("/.dockerenv") or os.environ.get("DOCKER_ENV") == "true"
@@ -76,6 +88,7 @@ if not CONFIG_PATH.exists() and CONFIG_EXAMPLE_PATH.exists():
 
 current_process: Optional[subprocess.Popen] = None
 current_mode: Optional[str] = None
+scheduler: Optional["PosterizarrScheduler"] = None
 
 
 def parse_version(version_str: str) -> tuple:
@@ -346,7 +359,13 @@ def scan_and_cache_assets():
                     "background_count": 0,
                     "season_count": 0,
                     "titlecard_count": 0,
+                    "files": 0,
+                    "size": 0,
                 }
+
+            # Zähle Dateien und Größe für den Ordner
+            temp_folders[folder_name]["files"] += 1
+            temp_folders[folder_name]["size"] += image_data["size"]
 
             if is_poster_file(image_path.name):
                 asset_cache["posters"].append(image_data)
@@ -404,10 +423,34 @@ def get_fresh_assets():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan event handler for startup and shutdown"""
+    global scheduler
+
     # Startup: Pre-populate asset cache
     logger.info("Starting Posterizarr Web UI Backend")
     scan_and_cache_assets()
+
+    # Initialize and start scheduler if available
+    if SCHEDULER_AVAILABLE:
+        try:
+            scheduler = PosterizarrScheduler(BASE_DIR, SCRIPT_PATH)
+            scheduler.start()
+            logger.info("Scheduler initialized and started")
+        except Exception as e:
+            logger.error(f"Failed to initialize scheduler: {e}")
+            scheduler = None
+    else:
+        logger.info("Scheduler module not available, skipping scheduler initialization")
+
     yield
+
+    # Shutdown
+    if scheduler:
+        try:
+            scheduler.stop()
+            logger.info("Scheduler stopped")
+        except Exception as e:
+            logger.error(f"Error stopping scheduler: {e}")
+
     logger.info("Shutting down Posterizarr Web UI Backend")
 
 
@@ -429,6 +472,18 @@ class ConfigUpdate(BaseModel):
 
 class ResetPostersRequest(BaseModel):
     library: str
+
+
+class ScheduleCreate(BaseModel):
+    time: str  # Format: "HH:MM"
+    description: Optional[str] = ""
+
+
+class ScheduleUpdate(BaseModel):
+    enabled: Optional[bool] = None
+    schedules: Optional[List[dict]] = None
+    timezone: Optional[str] = None
+    skip_if_running: Optional[bool] = None
 
 
 @app.get("/api")
@@ -1319,52 +1374,26 @@ async def get_github_releases():
 @app.get("/api/assets/stats")
 async def get_assets_stats():
     """
-    Gibt Statistiken über die erstellten Assets zurück
+    Gibt Statistiken über die erstellten Assets zurück - verwendet Cache
     """
     try:
+        # Nutze den vorhandenen Cache statt neu zu scannen
+        cache = get_fresh_assets()
+
+        # Berechne Gesamtgröße aus Cache
+        total_size = sum(img["size"] for img in cache["posters"])
+        total_size += sum(img["size"] for img in cache["backgrounds"])
+        total_size += sum(img["size"] for img in cache["seasons"])
+        total_size += sum(img["size"] for img in cache["titlecards"])
+
         stats = {
-            "posters": 0,
-            "backgrounds": 0,
-            "seasons": 0,
-            "titlecards": 0,
-            "total_size": 0,
-            "folders": [],
+            "posters": len(cache["posters"]),
+            "backgrounds": len(cache["backgrounds"]),
+            "seasons": len(cache["seasons"]),
+            "titlecards": len(cache["titlecards"]),
+            "total_size": total_size,
+            "folders": cache["folders"][:10],  # Top 10 Ordner
         }
-
-        if not ASSETS_DIR.exists():
-            return {"success": True, "stats": stats}
-
-        # Zähle verschiedene Asset-Typen
-        image_extensions = {".jpg", ".jpeg", ".png", ".webp"}
-
-        for item_path in ASSETS_DIR.rglob("*"):
-            if item_path.is_file() and item_path.suffix.lower() in image_extensions:
-                stats["total_size"] += item_path.stat().st_size
-
-                filename = item_path.name.lower()
-                if "poster" in filename or filename == "poster.jpg":
-                    stats["posters"] += 1
-                elif "background" in filename or filename == "background.jpg":
-                    stats["backgrounds"] += 1
-                elif "season" in filename or re.match(r"season\d+", filename):
-                    stats["seasons"] += 1
-                elif re.match(r"s\d+e\d+", filename):
-                    stats["titlecards"] += 1
-
-        # Hole Top-Level Ordner
-        folders = []
-        for folder in ASSETS_DIR.iterdir():
-            if folder.is_dir():
-                folder_stats = {
-                    "name": folder.name,
-                    "files": len(list(folder.rglob("*.*"))),
-                    "size": sum(
-                        f.stat().st_size for f in folder.rglob("*") if f.is_file()
-                    ),
-                }
-                folders.append(folder_stats)
-
-        stats["folders"] = sorted(folders, key=lambda x: x["files"], reverse=True)[:10]
 
         return {"success": True, "stats": stats}
 
@@ -1450,7 +1479,195 @@ if FRONTEND_DIR.exists():
     app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
     logger.info(f"Mounted frontend from {FRONTEND_DIR}")
 
+# ============================================================================
+# SCHEDULER API ENDPOINTS
+# ============================================================================
+
+
+@app.get("/api/scheduler/status")
+async def get_scheduler_status():
+    """Get current scheduler status and configuration"""
+    if not SCHEDULER_AVAILABLE or not scheduler:
+        raise HTTPException(status_code=503, detail="Scheduler not available")
+
+    try:
+        status = scheduler.get_status()
+        return {"success": True, **status}
+    except Exception as e:
+        logger.error(f"Error getting scheduler status: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/scheduler/config")
+async def get_scheduler_config():
+    """Get scheduler configuration"""
+    if not SCHEDULER_AVAILABLE or not scheduler:
+        raise HTTPException(status_code=503, detail="Scheduler not available")
+
+    try:
+        config = scheduler.load_config()
+        return {"success": True, "config": config}
+    except Exception as e:
+        logger.error(f"Error loading scheduler config: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/scheduler/config")
+async def update_scheduler_config(data: ScheduleUpdate):
+    """Update scheduler configuration"""
+    if not SCHEDULER_AVAILABLE or not scheduler:
+        raise HTTPException(status_code=503, detail="Scheduler not available")
+
+    try:
+        updates = {}
+        if data.enabled is not None:
+            updates["enabled"] = data.enabled
+        if data.schedules is not None:
+            updates["schedules"] = data.schedules
+        if data.timezone is not None:
+            updates["timezone"] = data.timezone
+        if data.skip_if_running is not None:
+            updates["skip_if_running"] = data.skip_if_running
+
+        config = scheduler.update_config(updates)
+
+        # Restart scheduler if enabled
+        if config.get("enabled", False):
+            scheduler.restart()
+        else:
+            scheduler.stop()
+
+        return {
+            "success": True,
+            "message": "Scheduler configuration updated",
+            "config": config,
+        }
+    except Exception as e:
+        logger.error(f"Error updating scheduler config: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/scheduler/schedule")
+async def add_schedule(data: ScheduleCreate):
+    """Add a new schedule"""
+    if not SCHEDULER_AVAILABLE or not scheduler:
+        raise HTTPException(status_code=503, detail="Scheduler not available")
+
+    try:
+        success = scheduler.add_schedule(data.time, data.description)
+        if success:
+            return {"success": True, "message": f"Schedule added: {data.time}"}
+        else:
+            raise HTTPException(
+                status_code=400, detail="Invalid time format or schedule already exists"
+            )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error adding schedule: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/api/scheduler/schedule/{time}")
+async def remove_schedule(time: str):
+    """Remove a schedule by time"""
+    if not SCHEDULER_AVAILABLE or not scheduler:
+        raise HTTPException(status_code=503, detail="Scheduler not available")
+
+    try:
+        # Replace URL encoded colon if needed
+        time = time.replace("%3A", ":")
+
+        success = scheduler.remove_schedule(time)
+        if success:
+            return {"success": True, "message": f"Schedule removed: {time}"}
+        else:
+            raise HTTPException(status_code=404, detail="Schedule not found")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error removing schedule: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/api/scheduler/schedules")
+async def clear_all_schedules():
+    """Remove all schedules"""
+    if not SCHEDULER_AVAILABLE or not scheduler:
+        raise HTTPException(status_code=503, detail="Scheduler not available")
+
+    try:
+        scheduler.clear_schedules()
+        return {"success": True, "message": "All schedules cleared"}
+    except Exception as e:
+        logger.error(f"Error clearing schedules: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/scheduler/enable")
+async def enable_scheduler():
+    """Enable the scheduler"""
+    if not SCHEDULER_AVAILABLE or not scheduler:
+        raise HTTPException(status_code=503, detail="Scheduler not available")
+
+    try:
+        config = scheduler.update_config({"enabled": True})
+        scheduler.restart()
+        return {"success": True, "message": "Scheduler enabled", "config": config}
+    except Exception as e:
+        logger.error(f"Error enabling scheduler: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/scheduler/disable")
+async def disable_scheduler():
+    """Disable the scheduler"""
+    if not SCHEDULER_AVAILABLE or not scheduler:
+        raise HTTPException(status_code=503, detail="Scheduler not available")
+
+    try:
+        config = scheduler.update_config({"enabled": False})
+        scheduler.stop()
+        return {"success": True, "message": "Scheduler disabled", "config": config}
+    except Exception as e:
+        logger.error(f"Error disabling scheduler: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/scheduler/restart")
+async def restart_scheduler():
+    """Restart the scheduler with current configuration"""
+    if not SCHEDULER_AVAILABLE or not scheduler:
+        raise HTTPException(status_code=503, detail="Scheduler not available")
+
+    try:
+        scheduler.restart()
+        status = scheduler.get_status()
+        return {"success": True, "message": "Scheduler restarted", **status}
+    except Exception as e:
+        logger.error(f"Error restarting scheduler: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/scheduler/run-now")
+async def run_scheduler_now():
+    """Manually trigger a scheduled run immediately"""
+    if not SCHEDULER_AVAILABLE or not scheduler:
+        raise HTTPException(status_code=503, detail="Scheduler not available")
+
+    try:
+        # Run in background without waiting
+        asyncio.create_task(scheduler.run_script())
+        return {"success": True, "message": "Scheduled run triggered"}
+    except Exception as e:
+        logger.error(f"Error triggering scheduled run: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================================================
+
+
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="warning")
+    uvicorn.run(app, host="0.0.0.0", port=8000, log_level="info")
