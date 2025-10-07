@@ -326,7 +326,7 @@ function BackgroundsGallery() {
         {folders.length > 0 && (
           <div className="">
             <h3 className="text-m font-semibold text-theme-muted mb-3"></h3>
-            <div className="flex gap-2 min-w-max">
+            <div className="flex flex-wrap gap-2">
               {folders
                 .filter((folder) => folder.background_count > 0)
                 .map((folder) => (
@@ -440,7 +440,7 @@ function BackgroundsGallery() {
                   onClick={() => setSelectedImage(image)}
                 >
                   <img
-                    src={image.url}  // if image.url is already relative
+                    src={image.url} // if image.url is already relative
                     alt={image.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     loading="lazy"
@@ -526,7 +526,7 @@ function BackgroundsGallery() {
             <div className="p-4 flex items-center justify-center">
               <div className="max-h-[70vh] flex items-center justify-center">
                 <img
-                  src={selectedImage.url}  // if image.url is already relative
+                  src={selectedImage.url} // if image.url is already relative
                   alt={selectedImage.name}
                   className="max-w-full max-h-[70vh] object-contain rounded-lg"
                   onError={(e) => {
