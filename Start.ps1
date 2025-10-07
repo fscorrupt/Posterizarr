@@ -10,7 +10,7 @@ function ScriptSchedule {
     $NextScriptRun = $env:RUN_TIME -split ',' | Sort-Object
 
     Write-Host "File Watcher Started..."
-    write-host "UI is being initialized... T-60 seconds" -ForegroundColor Green
+    write-host "UI is being initialized this can take a minute..." -ForegroundColor Green
     # Next Run
     while ($true) {
         $elapsedTime = $(get-date) - $StartTime
@@ -193,16 +193,6 @@ function CompareScriptVersion {
         Write-Host "Error checking script version: $($_.Exception.Message)" -ForegroundColor Red
     }
 }
-function Test-And-Download {
-    param(
-        [string]$url,
-        [string]$destination
-    )
-
-    if (!(Test-Path $destination)) {
-        Invoke-WebRequest -Uri $url -OutFile $destination
-    }
-}
 function CopyAssetFiles {
     <#
     .SYNOPSIS
@@ -239,11 +229,11 @@ function CopyAssetFiles {
     }
 
     # Get all asset files from APP_ROOT
-    $assetFiles = Get-ChildItem -Path "$env:APP_ROOT/*" -Include "*.png", "*.ttf", "*.otf", "config.example.json" -File
+    $assetFiles = Get-ChildItem -Path "$env:APP_ROOT/Overlayfiles/*" -Include "*.png", "*.ttf", "*.otf", "config.example.json" -File
     $fileCount = $assetFiles.Count
 
     if ($fileCount -eq 0) {
-        Write-Host "No asset files found in $env:APP_ROOT" -ForegroundColor Yellow
+        Write-Host "No asset files found in $env:APP_ROOT/Overlayfiles/" -ForegroundColor Yellow
     }
     else {
         $copiedCount = 0
