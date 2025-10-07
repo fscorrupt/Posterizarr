@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { Image, FolderOpen, HardDrive, Layers } from "lucide-react";
+import { Image, FolderOpen, HardDrive, Layers, RefreshCw } from "lucide-react";
+import toast from "react-hot-toast";
 
 const API_URL = "/api";
 
 function AssetsStats() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
 
   useEffect(() => {
@@ -29,6 +31,39 @@ function AssetsStats() {
       setError("Failed to connect to API");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // ✅ NEU: Funktion zum Refresh des Asset-Cache
+  const refreshCache = async () => {
+    setRefreshing(true);
+    try {
+      const response = await fetch(`${API_URL}/refresh-cache`, {
+        method: "POST",
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        toast.success("Asset cache refreshed successfully!", {
+          duration: 3000,
+          position: "top-right",
+        });
+        // Lade Stats neu nach dem Refresh
+        await fetchStats();
+      } else {
+        toast.error(`Failed to refresh cache: ${data.error}`, {
+          duration: 4000,
+          position: "top-right",
+        });
+      }
+    } catch (err) {
+      console.error("Error refreshing cache:", err);
+      toast.error("Failed to refresh cache", {
+        duration: 4000,
+        position: "top-right",
+      });
+    } finally {
+      setRefreshing(false);
     }
   };
 
@@ -71,10 +106,24 @@ function AssetsStats() {
 
   return (
     <div className="bg-theme-card border border-theme rounded-lg p-6 space-y-4">
-      <h2 className="text-2xl font-bold text-theme-text flex items-center gap-2">
-        <Image className="w-6 h-6 text-theme-primary" />
-        Assets Overview
-      </h2>
+      {/* ✅ NEU: Header mit Refresh-Button */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-2xl font-bold text-theme-text flex items-center gap-2">
+          <Image className="w-6 h-6 text-theme-primary" />
+          Assets Overview
+        </h2>
+        <button
+          onClick={refreshCache}
+          disabled={refreshing}
+          className="flex items-center gap-2 px-3 py-1.5 bg-theme-hover hover:bg-theme-primary/20 border border-theme rounded-lg transition-all disabled:opacity-50 text-sm"
+          title="Refresh asset cache"
+        >
+          <RefreshCw
+            className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`}
+          />
+          <span className="text-theme-text">Refresh</span>
+        </button>
+      </div>
 
       {/* Asset Type Statistics Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
