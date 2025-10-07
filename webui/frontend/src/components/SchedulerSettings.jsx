@@ -82,9 +82,6 @@ const SchedulerSettings = () => {
       const data = await response.json();
 
       if (data.success) {
-        toast.success(
-          config.enabled ? "Scheduler disabled" : "Scheduler enabled"
-        );
         // Wait a bit for the backend to fully process
         await new Promise((resolve) => setTimeout(resolve, 500));
         await fetchSchedulerData();
