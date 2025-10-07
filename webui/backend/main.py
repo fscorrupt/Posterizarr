@@ -616,7 +616,25 @@ def get_last_log_lines(count=25, mode=None, log_file=None):
 async def get_status():
     """Get script status with last log lines from appropriate log file"""
     global current_process, current_mode
-    is_running = current_process is not None and current_process.poll() is None
+
+    # Check if manual process is running
+    manual_is_running = current_process is not None and current_process.poll() is None
+
+    # Check if scheduler process is running
+    scheduler_is_running = False
+    scheduler_pid = None
+    if SCHEDULER_AVAILABLE and scheduler:
+        scheduler_is_running = scheduler.is_running
+        if scheduler_is_running and scheduler.current_process:
+            scheduler_pid = scheduler.current_process.pid
+
+    # Combined running status
+    is_running = manual_is_running or scheduler_is_running
+
+    # Determine current mode
+    effective_mode = current_mode
+    if scheduler_is_running and not manual_is_running:
+        effective_mode = "scheduled"  # Special mode for scheduler runs
 
     # Determine which log file to use
     # Map modes to their log files
@@ -628,11 +646,12 @@ async def get_status():
         "syncjelly": "Scriptlog.log",
         "syncemby": "Scriptlog.log",
         "reset": "Scriptlog.log",
+        "scheduled": "Scriptlog.log",  # Scheduler runs use Scriptlog
     }
 
     # If script is running, use current mode
-    if is_running and current_mode:
-        active_log = mode_log_map.get(current_mode, "Scriptlog.log")
+    if is_running and effective_mode:
+        active_log = mode_log_map.get(effective_mode, "Scriptlog.log")
     else:
         # Find the most recently modified log file
         log_files = ["Testinglog.log", "Manuallog.log", "Scriptlog.log"]
@@ -662,13 +681,20 @@ async def get_status():
     # Check if running file exists
     running_file_exists = RUNNING_FILE.exists()
 
+    # Determine PID to show
+    display_pid = None
+    if manual_is_running:
+        display_pid = current_process.pid
+    elif scheduler_is_running:
+        display_pid = scheduler_pid
+
     return {
         "running": is_running,
         "last_logs": last_logs,
         "script_exists": SCRIPT_PATH.exists(),
         "config_exists": CONFIG_PATH.exists(),
-        "pid": current_process.pid if is_running else None,
-        "current_mode": current_mode,
+        "pid": display_pid,
+        "current_mode": effective_mode,
         "active_log": active_log,  # Which log file is being shown
         "already_running_detected": already_running,
         "running_file_exists": running_file_exists,
@@ -830,23 +856,60 @@ async def reset_posters(request: ResetPostersRequest):
 
 @app.post("/api/stop")
 async def stop_script():
-    """Stop running script gracefully"""
+    """Stop running script gracefully - works for both manual and scheduled runs"""
     global current_process, current_mode
 
-    if not current_process or current_process.poll() is not None:
+    # Check if manual process is running
+    manual_running = current_process and current_process.poll() is None
+
+    # Check if scheduler process is running
+    scheduler_running = False
+    if SCHEDULER_AVAILABLE and scheduler:
+        scheduler_running = scheduler.is_running and scheduler.current_process
+
+    # If nothing is running
+    if not manual_running and not scheduler_running:
         return {"success": False, "message": "No script is running"}
 
     try:
-        current_process.terminate()
-        current_process.wait(timeout=5)
-        current_process = None
-        current_mode = None  # Reset mode when script stops
-        return {"success": True, "message": "Script stopped"}
-    except subprocess.TimeoutExpired:
-        current_process.kill()
-        current_process = None
-        current_mode = None  # Reset mode when script stops
-        return {"success": True, "message": "Script force killed after timeout"}
+        stopped_processes = []
+
+        # Stop manual process if running
+        if manual_running:
+            try:
+                current_process.terminate()
+                current_process.wait(timeout=5)
+                current_process = None
+                current_mode = None
+                stopped_processes.append("manual")
+            except subprocess.TimeoutExpired:
+                current_process.kill()
+                current_process = None
+                current_mode = None
+                stopped_processes.append("manual (force killed after timeout)")
+
+        # Stop scheduler process if running
+        if scheduler_running:
+            try:
+                scheduler.current_process.terminate()
+                scheduler.current_process.wait(timeout=5)
+                scheduler.current_process = None
+                scheduler.is_running = False
+                stopped_processes.append("scheduled")
+            except subprocess.TimeoutExpired:
+                scheduler.current_process.kill()
+                scheduler.current_process = None
+                scheduler.is_running = False
+                stopped_processes.append("scheduled (force killed after timeout)")
+            except Exception as e:
+                logger.error(f"Error stopping scheduler process: {e}")
+
+        if stopped_processes:
+            message = f"Stopped: {', '.join(stopped_processes)}"
+            return {"success": True, "message": message}
+        else:
+            return {"success": False, "message": "Failed to stop processes"}
+
     except Exception as e:
         logger.error(f"Error stopping script: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -854,24 +917,68 @@ async def stop_script():
 
 @app.post("/api/force-kill")
 async def force_kill_script():
-    """Force kill running script immediately"""
+    """Force kill running script immediately - works for both manual and scheduled runs"""
     global current_process, current_mode
 
-    if not current_process or current_process.poll() is not None:
+    # Check if manual process is running
+    manual_running = current_process and current_process.poll() is None
+
+    # Check if scheduler process is running
+    scheduler_running = False
+    if SCHEDULER_AVAILABLE and scheduler:
+        scheduler_running = scheduler.is_running and scheduler.current_process
+
+    # If nothing is running
+    if not manual_running and not scheduler_running:
         return {"success": False, "message": "No script is running"}
 
     try:
-        current_process.kill()
-        current_process.wait(timeout=2)
-        current_process = None
-        current_mode = None  # Reset mode when script is killed
-        logger.warning("Script was force killed")
-        return {"success": True, "message": "Script force killed"}
+        killed_processes = []
+
+        # Kill manual process if running
+        if manual_running:
+            try:
+                current_process.kill()
+                current_process.wait(timeout=2)
+                current_process = None
+                current_mode = None
+                killed_processes.append("manual")
+                logger.warning("Manual script was force killed")
+            except Exception as e:
+                logger.error(f"Error force killing manual process: {e}")
+                current_process = None
+                current_mode = None
+                killed_processes.append("manual (cleared)")
+
+        # Kill scheduler process if running
+        if scheduler_running:
+            try:
+                scheduler.current_process.kill()
+                scheduler.current_process.wait(timeout=2)
+                scheduler.current_process = None
+                scheduler.is_running = False
+                killed_processes.append("scheduled")
+                logger.warning("Scheduled script was force killed")
+            except Exception as e:
+                logger.error(f"Error force killing scheduler process: {e}")
+                scheduler.current_process = None
+                scheduler.is_running = False
+                killed_processes.append("scheduled (cleared)")
+
+        if killed_processes:
+            message = f"Force killed: {', '.join(killed_processes)}"
+            return {"success": True, "message": message}
+        else:
+            return {"success": False, "message": "Failed to kill processes"}
+
     except Exception as e:
         logger.error(f"Error force killing script: {e}")
         # Try to set to None anyway
         current_process = None
-        current_mode = None  # Reset mode when script is killed
+        current_mode = None
+        if SCHEDULER_AVAILABLE and scheduler:
+            scheduler.current_process = None
+            scheduler.is_running = False
         return {"success": True, "message": "Script process cleared"}
 
 

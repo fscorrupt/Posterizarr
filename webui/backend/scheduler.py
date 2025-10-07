@@ -205,25 +205,23 @@ class PosterizarrScheduler:
                     process = subprocess.Popen(
                         command,
                         cwd=str(self.base_dir),
-                        stdout=subprocess.PIPE,
-                        stderr=subprocess.PIPE,
+                        stdout=None,  # ✅ FIX: Keine Ausgabe lesen (verhindert Unicode-Error)
+                        stderr=None,  # ✅ FIX: Keine Fehler lesen (verhindert Unicode-Error)
                         text=True,
                     )
                     self.current_process = process
 
-                    # Wait for completion
-                    stdout, stderr = process.communicate()
+                    # Wait for completion (ohne Ausgabe zu lesen)
+                    returncode = process.wait()
 
-                    if process.returncode == 0:
+                    if returncode == 0:
                         logger.info("Scheduled script execution completed successfully")
                     else:
-                        logger.error(
-                            f"Scheduled script execution failed with code {process.returncode}"
+                        logger.warning(
+                            f"Scheduled script execution finished with code {returncode}"
                         )
-                        if stderr:
-                            logger.error(f"Error output: {stderr[:500]}")
 
-                    return process.returncode
+                    return returncode
                 except Exception as e:
                     logger.error(f"Error in subprocess thread: {e}", exc_info=True)
                     return -1
