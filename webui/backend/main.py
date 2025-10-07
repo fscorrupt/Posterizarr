@@ -13,6 +13,8 @@ from pathlib import Path
 from typing import Optional
 import logging
 import re
+import time
+import time
 
 # Setup logging
 logging.basicConfig(level=logging.WARNING)
@@ -74,6 +76,22 @@ if not CONFIG_PATH.exists() and CONFIG_EXAMPLE_PATH.exists():
 
 current_process: Optional[subprocess.Popen] = None
 current_mode: Optional[str] = None
+
+
+# ============================================================================
+# Custom StaticFiles with caching for better performance
+# ============================================================================
+class CachedStaticFiles(StaticFiles):
+    """StaticFiles with Cache-Control headers for browser caching"""
+
+    def __init__(self, *args, max_age: int = 3600, **kwargs):
+        self.max_age = max_age
+        super().__init__(*args, **kwargs)
+
+    def file_response(self, *args, **kwargs):
+        response = super().file_response(*args, **kwargs)
+        response.headers["Cache-Control"] = f"public, max-age={self.max_age}"
+        return response
 
 
 # ============================================================================
@@ -190,11 +208,142 @@ def is_titlecard_file(filename: str) -> bool:
 
 
 # ============================================================================
+# DYNAMIC ASSET CACHING SYSTEM
+# ============================================================================
+CACHE_TTL_SECONDS = 300  # Cache data for 5 minutes
+
+asset_cache = {
+    "last_scanned": 0,
+    "posters": [],
+    "backgrounds": [],
+    "seasons": [],
+    "titlecards": [],
+    "folders": [],
+}
+
+
+def process_image_path(image_path: Path):
+    """Helper function to process a Path object into a dictionary."""
+    try:
+        relative_path = image_path.relative_to(ASSETS_DIR)
+        url_path = str(relative_path).replace("\\", "/")
+        return {
+            "path": str(relative_path),
+            "name": image_path.name,
+            "size": image_path.stat().st_size,
+            "url": f"/poster_assets/{url_path}",
+        }
+    except Exception as e:
+        logger.error(f"Error processing image path {image_path}: {e}")
+        return None
+
+
+def scan_and_cache_assets():
+    """Scans the assets directory and populates/refreshes the cache."""
+    logger.info("Starting asset scan to refresh cache...")
+
+    # Clear old data before re-scanning
+    asset_cache["posters"].clear()
+    asset_cache["backgrounds"].clear()
+    asset_cache["seasons"].clear()
+    asset_cache["titlecards"].clear()
+    asset_cache["folders"].clear()
+
+    if not ASSETS_DIR.exists() or not ASSETS_DIR.is_dir():
+        logger.warning("Assets directory not found. Skipping cache population.")
+        asset_cache["last_scanned"] = time.time()
+        return
+
+    try:
+        all_images = (
+            list(ASSETS_DIR.rglob("*.jpg"))
+            + list(ASSETS_DIR.rglob("*.jpeg"))
+            + list(ASSETS_DIR.rglob("*.png"))
+            + list(ASSETS_DIR.rglob("*.webp"))
+        )
+
+        temp_folders = {}
+
+        for image_path in all_images:
+            image_data = process_image_path(image_path)
+            if not image_data:
+                continue
+
+            folder_name = (
+                Path(image_data["path"]).parts[0]
+                if len(Path(image_data["path"]).parts) > 0
+                else "root"
+            )
+
+            if folder_name not in temp_folders:
+                temp_folders[folder_name] = {
+                    "name": folder_name,
+                    "path": folder_name,
+                    "poster_count": 0,
+                    "background_count": 0,
+                    "season_count": 0,
+                    "titlecard_count": 0,
+                }
+
+            if is_poster_file(image_path.name):
+                asset_cache["posters"].append(image_data)
+                temp_folders[folder_name]["poster_count"] += 1
+            elif is_background_file(image_path.name):
+                asset_cache["backgrounds"].append(image_data)
+                temp_folders[folder_name]["background_count"] += 1
+            elif is_season_file(image_path.name):
+                asset_cache["seasons"].append(image_data)
+                temp_folders[folder_name]["season_count"] += 1
+            elif is_titlecard_file(image_path.name):
+                asset_cache["titlecards"].append(image_data)
+                temp_folders[folder_name]["titlecard_count"] += 1
+
+        # Sort the image lists once by path
+        for key in ["posters", "backgrounds", "seasons", "titlecards"]:
+            asset_cache[key].sort(key=lambda x: x["path"])
+
+        # Finalize folder data
+        folder_list = list(temp_folders.values())
+        for folder in folder_list:
+            folder["total_count"] = (
+                folder["poster_count"]
+                + folder["background_count"]
+                + folder["season_count"]
+                + folder["titlecard_count"]
+            )
+        folder_list.sort(key=lambda x: x["name"])
+        asset_cache["folders"] = folder_list
+
+    except Exception as e:
+        logger.error(f"An error occurred during asset scan: {e}")
+    finally:
+        asset_cache["last_scanned"] = time.time()
+        logger.info(
+            f"Asset cache refresh finished. Found {len(asset_cache['posters'])} posters, "
+            f"{len(asset_cache['backgrounds'])} backgrounds, "
+            f"{len(asset_cache['seasons'])} seasons, "
+            f"{len(asset_cache['titlecards'])} titlecards, "
+            f"{len(asset_cache['folders'])} folders."
+        )
+
+
+def get_fresh_assets():
+    """Checks if the cache is stale. If it is, triggers a new scan."""
+    now = time.time()
+    if (now - asset_cache["last_scanned"]) > CACHE_TTL_SECONDS:
+        scan_and_cache_assets()
+    return asset_cache
+
+
+# ============================================================================
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan event handler for startup and shutdown"""
+    # Startup: Pre-populate asset cache
+    logger.info("Starting Posterizarr Web UI Backend")
+    scan_and_cache_assets()
     yield
     logger.info("Shutting down Posterizarr Web UI Backend")
 
@@ -699,39 +848,13 @@ async def websocket_logs(websocket: WebSocket):
 
 @app.get("/api/gallery")
 async def get_gallery():
-    """Get poster gallery from assets directory (only poster.jpg)"""
-    if not ASSETS_DIR.exists():
-        return {"images": []}
-
-    images = []
-    image_extensions = {".jpg", ".jpeg", ".png", ".webp"}
-
+    """Get poster gallery from assets directory (only poster.jpg) - uses cache"""
     try:
-        for image_path in ASSETS_DIR.rglob("*"):
-            if image_path.suffix.lower() in image_extensions:
-                # Filter: Only include poster.jpg
-                if is_poster_file(image_path.name):
-                    try:
-                        relative_path = image_path.relative_to(ASSETS_DIR)
-                        # Create URL path with forward slashes
-                        url_path = str(relative_path).replace("\\", "/")
-                        images.append(
-                            {
-                                "path": str(relative_path),
-                                "name": image_path.name,
-                                "size": image_path.stat().st_size,
-                                "url": f"/poster_assets/{url_path}",
-                            }
-                        )
-                    except Exception as e:
-                        logger.error(f"Error processing image {image_path}: {e}")
-                        continue
-
-        # Sort by name and limit
-        images.sort(key=lambda x: x["name"])
-        return {"images": images[:200]}  # Limit to 200 for performance
+        cache = get_fresh_assets()
+        # Return cached posters, limit to 200 for performance
+        return {"images": cache["posters"][:200]}
     except Exception as e:
-        logger.error(f"Error scanning gallery: {e}")
+        logger.error(f"Error getting gallery from cache: {e}")
         return {"images": []}
 
 
@@ -761,6 +884,9 @@ async def delete_poster(path: str):
         file_path.unlink()
         logger.info(f"Deleted poster: {file_path}")
 
+        # Invalidate cache to reflect changes immediately
+        asset_cache["last_scanned"] = 0
+
         return {"success": True, "message": f"Poster '{path}' deleted successfully"}
     except HTTPException:
         raise
@@ -771,39 +897,12 @@ async def delete_poster(path: str):
 
 @app.get("/api/backgrounds-gallery")
 async def get_backgrounds_gallery():
-    """Get backgrounds gallery from assets directory (only background.jpg)"""
-    if not ASSETS_DIR.exists():
-        return {"images": []}
-
-    images = []
-    image_extensions = {".jpg", ".jpeg", ".png", ".webp"}
-
+    """Get backgrounds gallery from assets directory (only background.jpg) - uses cache"""
     try:
-        for image_path in ASSETS_DIR.rglob("*"):
-            if image_path.suffix.lower() in image_extensions:
-                # Filter: Only include background.jpg
-                if is_background_file(image_path.name):
-                    try:
-                        relative_path = image_path.relative_to(ASSETS_DIR)
-                        # Create URL path with forward slashes
-                        url_path = str(relative_path).replace("\\", "/")
-                        images.append(
-                            {
-                                "path": str(relative_path),
-                                "name": image_path.name,
-                                "size": image_path.stat().st_size,
-                                "url": f"/poster_assets/{url_path}",
-                            }
-                        )
-                    except Exception as e:
-                        logger.error(f"Error processing background {image_path}: {e}")
-                        continue
-
-        # Sort by name and limit
-        images.sort(key=lambda x: x["name"])
-        return {"images": images[:200]}  # Limit to 200 for performance
+        cache = get_fresh_assets()
+        return {"images": cache["backgrounds"][:200]}
     except Exception as e:
-        logger.error(f"Error scanning backgrounds gallery: {e}")
+        logger.error(f"Error getting backgrounds from cache: {e}")
         return {"images": []}
 
 
@@ -833,6 +932,9 @@ async def delete_background(path: str):
         file_path.unlink()
         logger.info(f"Deleted background: {file_path}")
 
+        # Invalidate cache to reflect changes immediately
+        asset_cache["last_scanned"] = 0
+
         return {"success": True, "message": f"Background '{path}' deleted successfully"}
     except HTTPException:
         raise
@@ -848,39 +950,12 @@ async def delete_background(path: str):
 
 @app.get("/api/seasons-gallery")
 async def get_seasons_gallery():
-    """Get seasons gallery from assets directory (only SeasonXX.jpg)"""
-    if not ASSETS_DIR.exists():
-        return {"images": []}
-
-    images = []
-    image_extensions = {".jpg", ".jpeg", ".png", ".webp"}
-
+    """Get seasons gallery from assets directory (only SeasonXX.jpg) - uses cache"""
     try:
-        for image_path in ASSETS_DIR.rglob("*"):
-            if image_path.suffix.lower() in image_extensions:
-                # Filter: Only include SeasonXX.jpg
-                if is_season_file(image_path.name):
-                    try:
-                        relative_path = image_path.relative_to(ASSETS_DIR)
-                        # Create URL path with forward slashes
-                        url_path = str(relative_path).replace("\\", "/")
-                        images.append(
-                            {
-                                "path": str(relative_path),
-                                "name": image_path.name,
-                                "size": image_path.stat().st_size,
-                                "url": f"/poster_assets/{url_path}",
-                            }
-                        )
-                    except Exception as e:
-                        logger.error(f"Error processing season {image_path}: {e}")
-                        continue
-
-        # Sort by name and limit
-        images.sort(key=lambda x: x["name"])
-        return {"images": images[:200]}  # Limit to 200 for performance
+        cache = get_fresh_assets()
+        return {"images": cache["seasons"][:200]}
     except Exception as e:
-        logger.error(f"Error scanning seasons gallery: {e}")
+        logger.error(f"Error getting seasons from cache: {e}")
         return {"images": []}
 
 
@@ -910,6 +985,9 @@ async def delete_season(path: str):
         file_path.unlink()
         logger.info(f"Deleted season: {file_path}")
 
+        # Invalidate cache to reflect changes immediately
+        asset_cache["last_scanned"] = 0
+
         return {"success": True, "message": f"Season '{path}' deleted successfully"}
     except HTTPException:
         raise
@@ -920,39 +998,12 @@ async def delete_season(path: str):
 
 @app.get("/api/titlecards-gallery")
 async def get_titlecards_gallery():
-    """Get title cards gallery from assets directory (only SxxExx.jpg - episodes)"""
-    if not ASSETS_DIR.exists():
-        return {"images": []}
-
-    images = []
-    image_extensions = {".jpg", ".jpeg", ".png", ".webp"}
-
+    """Get title cards gallery from assets directory (only SxxExx.jpg - episodes) - uses cache"""
     try:
-        for image_path in ASSETS_DIR.rglob("*"):
-            if image_path.suffix.lower() in image_extensions:
-                # Filter: Only include SxxExx.jpg (title cards / episodes)
-                if is_titlecard_file(image_path.name):
-                    try:
-                        relative_path = image_path.relative_to(ASSETS_DIR)
-                        # Create URL path with forward slashes
-                        url_path = str(relative_path).replace("\\", "/")
-                        images.append(
-                            {
-                                "path": str(relative_path),
-                                "name": image_path.name,
-                                "size": image_path.stat().st_size,
-                                "url": f"/poster_assets/{url_path}",
-                            }
-                        )
-                    except Exception as e:
-                        logger.error(f"Error processing titlecard {image_path}: {e}")
-                        continue
-
-        # Sort by name and limit
-        images.sort(key=lambda x: x["name"])
-        return {"images": images[:200]}  # Limit to 200 for performance
+        cache = get_fresh_assets()
+        return {"images": cache["titlecards"][:200]}
     except Exception as e:
-        logger.error(f"Error scanning titlecards gallery: {e}")
+        logger.error(f"Error getting titlecards from cache: {e}")
         return {"images": []}
 
 
@@ -982,6 +1033,9 @@ async def delete_titlecard(path: str):
         file_path.unlink()
         logger.info(f"Deleted titlecard: {file_path}")
 
+        # Invalidate cache to reflect changes immediately
+        asset_cache["last_scanned"] = 0
+
         return {"success": True, "message": f"TitleCard '{path}' deleted successfully"}
     except HTTPException:
         raise
@@ -995,74 +1049,18 @@ async def delete_titlecard(path: str):
 
 @app.get("/api/assets-folders")
 async def get_assets_folders():
-    """Get list of folders in assets directory with image counts per type"""
-    if not ASSETS_DIR.exists():
-        return {"folders": []}
-
+    """Get list of folders in assets directory with image counts per type - uses cache"""
     try:
-        folders = []
-        image_extensions = {".jpg", ".jpeg", ".png", ".webp"}
-
-        for item in ASSETS_DIR.iterdir():
-            if item.is_dir():
-                # Count different image types
-                poster_count = 0
-                background_count = 0
-                season_count = 0
-                titlecard_count = 0
-
-                for image_path in item.rglob("*"):
-                    if image_path.suffix.lower() in image_extensions:
-                        if is_poster_file(image_path.name):
-                            poster_count += 1
-                        elif is_background_file(image_path.name):
-                            background_count += 1
-                        elif is_season_file(image_path.name):
-                            season_count += 1
-                        elif is_titlecard_file(image_path.name):
-                            titlecard_count += 1
-
-                folders.append(
-                    {
-                        "name": item.name,
-                        "path": str(item.relative_to(ASSETS_DIR)),
-                        "poster_count": poster_count,
-                        "background_count": background_count,
-                        "season_count": season_count,
-                        "titlecard_count": titlecard_count,
-                        "total_count": poster_count
-                        + background_count
-                        + season_count
-                        + titlecard_count,
-                    }
-                )
-
-        # Sort folders alphabetically
-        folders.sort(key=lambda x: x["name"])
-        return {"folders": folders}
+        cache = get_fresh_assets()
+        return {"folders": cache["folders"]}
     except Exception as e:
-        logger.error(f"Error getting assets folders: {e}")
+        logger.error(f"Error getting folders from cache: {e}")
         return {"folders": []}
 
 
 @app.get("/api/assets-folder-images/{image_type}/{folder_path:path}")
 async def get_assets_folder_images_filtered(image_type: str, folder_path: str):
-    """Get filtered images from a specific folder"""
-    if not ASSETS_DIR.exists():
-        return {"images": []}
-
-    folder = ASSETS_DIR / folder_path
-
-    # Security check
-    try:
-        folder = folder.resolve()
-        folder.relative_to(ASSETS_DIR.resolve())
-    except ValueError:
-        raise HTTPException(status_code=403, detail="Access denied: Invalid path")
-
-    if not folder.exists() or not folder.is_dir():
-        raise HTTPException(status_code=404, detail="Folder not found")
-
+    """Get filtered images from a specific folder - uses cache"""
     # Validate image_type
     valid_types = ["posters", "backgrounds", "seasons", "titlecards"]
     if image_type not in valid_types:
@@ -1070,46 +1068,24 @@ async def get_assets_folder_images_filtered(image_type: str, folder_path: str):
             status_code=400, detail=f"Invalid image type. Must be one of: {valid_types}"
         )
 
-    images = []
-    image_extensions = {".jpg", ".jpeg", ".png", ".webp"}
-
     try:
-        for image_path in folder.rglob("*"):
-            if image_path.suffix.lower() in image_extensions:
-                # Apply filter based on image_type
-                include_image = False
-                if image_type == "posters" and is_poster_file(image_path.name):
-                    include_image = True
-                elif image_type == "backgrounds" and is_background_file(
-                    image_path.name
-                ):
-                    include_image = True
-                elif image_type == "seasons" and is_season_file(image_path.name):
-                    include_image = True
-                elif image_type == "titlecards" and is_titlecard_file(image_path.name):
-                    include_image = True
+        cache = get_fresh_assets()
 
-                if include_image:
-                    try:
-                        relative_path = image_path.relative_to(ASSETS_DIR)
-                        url_path = str(relative_path).replace("\\", "/")
-                        images.append(
-                            {
-                                "path": str(relative_path),
-                                "name": image_path.name,
-                                "size": image_path.stat().st_size,
-                                "url": f"/poster_assets/{url_path}",
-                            }
-                        )
-                    except Exception as e:
-                        logger.error(f"Error processing image {image_path}: {e}")
-                        continue
+        # Get the appropriate image list from cache
+        all_images = cache[image_type]
 
-        # Sort by name
-        images.sort(key=lambda x: x["name"])
-        return {"images": images}
+        # Filter images that belong to the specified folder
+        # folder_path is like "4K" or "Movies/ActionMovies"
+        filtered_images = [
+            img
+            for img in all_images
+            if img["path"].startswith(folder_path + "/")
+            or img["path"].startswith(folder_path + "\\")
+        ]
+
+        return {"images": filtered_images}
     except Exception as e:
-        logger.error(f"Error scanning folder {folder_path}: {e}")
+        logger.error(f"Error getting folder images from cache: {e}")
         return {"images": []}
 
 
@@ -1212,6 +1188,26 @@ async def get_version():
     """
     return await get_script_version()
 
+
+@app.post("/api/refresh-cache")
+async def refresh_cache():
+    """Manually refresh the asset cache"""
+    try:
+        scan_and_cache_assets()
+        return {
+            "success": True,
+            "message": "Cache refreshed successfully",
+            "posters": len(asset_cache["posters"]),
+            "backgrounds": len(asset_cache["backgrounds"]),
+            "seasons": len(asset_cache["seasons"]),
+            "titlecards": len(asset_cache["titlecards"]),
+            "folders": len(asset_cache["folders"]),
+        }
+    except Exception as e:
+        logger.error(f"Error refreshing cache: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.get("/api/test-gallery")
 async def get_test_gallery():
     """Get poster gallery from test directory with image URLs"""
@@ -1249,15 +1245,22 @@ async def get_test_gallery():
 
 
 # Mount static files in correct order: /assets, /test, then / (frontend)
+# Using CachedStaticFiles for better performance with browser caching
 if ASSETS_DIR.exists():
     app.mount(
-        "/poster_assets", StaticFiles(directory=str(ASSETS_DIR)), name="poster_assets"
+        "/poster_assets",
+        CachedStaticFiles(directory=str(ASSETS_DIR), max_age=86400),  # 24h Cache
+        name="poster_assets",
     )
-    logger.info(f"Mounted /poster_assets -> {ASSETS_DIR}")
+    logger.info(f"Mounted /poster_assets -> {ASSETS_DIR} (with 24h cache)")
 
 if TEST_DIR.exists():
-    app.mount("/test", StaticFiles(directory=str(TEST_DIR)), name="test")
-    logger.info(f"Mounted /test -> {TEST_DIR}")
+    app.mount(
+        "/test",
+        CachedStaticFiles(directory=str(TEST_DIR), max_age=86400),  # 24h Cache
+        name="test",
+    )
+    logger.info(f"Mounted /test -> {TEST_DIR} (with 24h cache)")
 
 if FRONTEND_DIR.exists():
     app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
