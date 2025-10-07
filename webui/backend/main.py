@@ -78,6 +78,69 @@ current_process: Optional[subprocess.Popen] = None
 current_mode: Optional[str] = None
 
 
+def parse_version(version_str: str) -> tuple:
+    """
+    Parse a semantic version string into a tuple of integers for comparison.
+    Handles versions like "1.9.97", "2.0.0", "1.10.5", etc.
+
+    Returns tuple of (major, minor, patch) or None if parsing fails
+    """
+    if not version_str:
+        return None
+
+    try:
+        # Remove 'v' prefix if present
+        version_str = version_str.strip().lstrip("v")
+
+        # Split by '.' and convert to integers
+        parts = version_str.split(".")
+
+        # Pad with zeros if necessary (e.g., "2.0" becomes "2.0.0")
+        while len(parts) < 3:
+            parts.append("0")
+
+        # Convert to integers
+        major = int(parts[0])
+        minor = int(parts[1])
+        patch = int(parts[2])
+
+        return (major, minor, patch)
+    except (ValueError, IndexError) as e:
+        logger.error(f"Failed to parse version '{version_str}': {e}")
+        return None
+
+
+def is_version_newer(current: str, remote: str) -> bool:
+    """
+    Compare two semantic versions.
+    Returns True if remote version is newer than current version.
+
+    Examples:
+        is_version_newer("2.0.0", "1.9.97") -> False (2.0.0 is newer)
+        is_version_newer("1.9.97", "2.0.0") -> True (2.0.0 is newer)
+        is_version_newer("1.9.5", "1.9.97") -> True (1.9.97 is newer)
+    """
+    current_parsed = parse_version(current)
+    remote_parsed = parse_version(remote)
+
+    # If we can't parse either version, fall back to string comparison
+    if current_parsed is None or remote_parsed is None:
+        logger.warning(
+            f"Version parsing failed, using string comparison: {current} vs {remote}"
+        )
+        return current != remote
+
+    # Compare tuples (Python does lexicographic comparison)
+    # (2, 0, 0) > (1, 9, 97) returns True
+    is_newer = remote_parsed > current_parsed
+
+    logger.info(
+        f"Version comparison: {current} {current_parsed} vs {remote} {remote_parsed} -> newer: {is_newer}"
+    )
+
+    return is_newer
+
+
 # ============================================================================
 # Custom StaticFiles with caching for better performance
 # ============================================================================
@@ -1131,6 +1194,8 @@ async def get_script_version():
     """
     Reads the version from Posterizarr.ps1 and compares with GitHub Release.txt
     Similar to the PowerShell CompareScriptVersion function
+
+    NOW WITH SEMANTIC VERSION COMPARISON!
     """
     local_version = None
     remote_version = None
@@ -1178,7 +1243,19 @@ async def get_script_version():
     except Exception as e:
         logger.error(f"Error fetching remote version: {e}")
 
-    return {"local": local_version, "remote": remote_version}
+    # --- 3. SEMANTIC VERSION COMPARISON ---
+    is_update_available = False
+    if local_version and remote_version:
+        is_update_available = is_version_newer(local_version, remote_version)
+        logger.info(
+            f"Update available: {is_update_available} (local: {local_version}, remote: {remote_version})"
+        )
+
+    return {
+        "local": local_version,
+        "remote": remote_version,
+        "is_update_available": is_update_available,  # NEU: Boolean für Update-Verfügbarkeit
+    }
 
 
 @app.get("/api/version")

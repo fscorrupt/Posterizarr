@@ -203,7 +203,7 @@ function TestGallery() {
                   className={`${aspectRatio} bg-theme-dark flex items-center justify-center overflow-hidden`}
                 >
                   <img
-                    src={image.url}  // if image.url is already relative
+                    src={image.url} // if image.url is already relative
                     alt={image.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     loading="lazy"
@@ -324,7 +324,7 @@ function TestGallery() {
                 <span className="font-bold text-theme-primary">
                   {filteredImages.length}
                 </span>{" "}
-                test files
+                Test files
                 {images.length !== filteredImages.length && (
                   <span className="ml-2 text-theme-muted text-sm">
                     (filtered from {images.length} total)
@@ -416,7 +416,7 @@ function TestGallery() {
             </div>
             <div className="flex-1 overflow-auto flex items-center justify-center p-4">
               <img
-                src={selectedImage.url}  // if image.url is already relative
+                src={selectedImage.url} // if image.url is already relative
                 alt={selectedImage.name}
                 className="max-w-full max-h-[70vh] object-contain rounded-lg"
                 onError={(e) => {

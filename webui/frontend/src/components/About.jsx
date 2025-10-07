@@ -18,6 +18,7 @@ function About() {
   const [version, setVersion] = useState({
     local: null,
     remote: null,
+    is_update_available: false, // NEU: Flag hinzufügen
     loading: true,
   });
   const [refreshing, setRefreshing] = useState(false);
@@ -35,6 +36,7 @@ function About() {
       setVersion({
         local: data.local,
         remote: data.remote,
+        is_update_available: data.is_update_available || false, // NEU: Backend-Flag speichern
         loading: false,
       });
     } catch (error) {
@@ -42,6 +44,7 @@ function About() {
       setVersion({
         local: null,
         remote: null,
+        is_update_available: false,
         loading: false,
       });
     } finally {
@@ -49,7 +52,13 @@ function About() {
     }
   };
 
+  // ✅ KORRIGIERTE FUNKTION mit semantic versioning
   const isOutOfDate = () => {
+    // Verwende das Backend-Flag, wenn verfügbar
+    if (version.is_update_available !== undefined) {
+      return version.is_update_available;
+    }
+    // Fallback für ältere Backend-Versionen
     if (!version.local || !version.remote) return false;
     return version.local !== version.remote;
   };

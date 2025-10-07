@@ -20,9 +20,9 @@ function VersionBadge() {
       const response = await fetch(`${API_URL}/version`);
       const data = await response.json();
 
-      if (data.local && data.remote) {
+      if (data.local) {
         setVersion(data.local);
-        setIsOutOfDate(data.local !== data.remote);
+        setIsOutOfDate(data.is_update_available || false); // ✅ RICHTIG
       }
     } catch (error) {
       console.error("Error checking version:", error);
