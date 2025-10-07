@@ -139,13 +139,9 @@ function InvokeIMChecks {
     }
 
     # Auto Update Magick
-    if ($AutoUpdateIM -eq 'true' -and $global:OSType -ne "Docker" -and $global:LatestImagemagickversion -gt $global:CurrentImagemagickversion -and $global:OSarch -ne "Arm64") {
-        if ($global:OSType -eq "Win32NT") {
-            Remove-Item -LiteralPath $magickinstalllocation -Recurse -Force
-        }
-        Else {
-            Remove-Item -LiteralPath "$global:ScriptRoot/magick" -Force
-        }
+    if ($AutoUpdateIM -eq 'true' -and $global:OSType -ne "Docker" -and $global:OSType -eq "Win32NT" -and $global:LatestImagemagickversion -gt $global:CurrentImagemagickversion -and $global:OSarch -ne "Arm64") {
+        Remove-Item -LiteralPath "$global:ScriptRoot/magick" -Force
+
         if ($global:OSType -ne "Win32NT") {
             if ($global:OSType -ne "Docker") {
                 Write-Entry -Subtext "Downloading the latest Imagemagick portable version for you..." -Path $configLogging -Color Cyan -log Info
@@ -153,23 +149,6 @@ function InvokeIMChecks {
                 Invoke-WebRequest -Uri $magickUrl -OutFile "$global:ScriptRoot/magick"
                 chmod +x "$global:ScriptRoot/magick"
                 Write-Entry -Subtext "Made the portable Magick executable..." -Path $configLogging -Color Green -log Info
-            }
-        }
-        else {
-            Write-Entry -Subtext "Downloading the latest Imagemagick portable version for you..." -Path $configLogging -Color Cyan -log Info
-            $LatestRelease = "https://imagemagick.org/archive/binaries/ImageMagick-$($global:LatestImagemagickversiontemp)-portable-Q16-HDRI-x64.zip"
-            $DownloadPath = Join-Path -Path $global:ScriptRoot -ChildPath (Join-Path -Path 'temp' -ChildPath $global:LatestImagemagickversion)
-            Invoke-WebRequest $LatestRelease -OutFile $DownloadPath
-            Expand-Archive -Path $DownloadPath -DestinationPath $magickinstalllocation -Force
-            if ((Get-ChildItem -Directory -LiteralPath $magickinstalllocation).name -eq $($LatestRelease.replace('.zip', ''))) {
-                Copy-item -Force -Recurse "$magickinstalllocation\$((Get-ChildItem -Directory -LiteralPath $magickinstalllocation).name)\*" $magickinstalllocation
-                Remove-Item -Recurse -LiteralPath "$magickinstalllocation\$((Get-ChildItem -Directory -LiteralPath $magickinstalllocation).name)" -Force
-            }
-            if (Test-Path -LiteralPath $magickinstalllocation\magick.exe) {
-                Write-Entry -Subtext "Placed Portable ImageMagick here: $magickinstalllocation" -Path $configLogging -Color Green -log Info
-            }
-            Else {
-                Write-Entry -Subtext "Error During extraction, please manually install/copy portable Imagemagick from here: $LatestRelease" -Path $configLogging -Color Red -log Error
             }
         }
     }
@@ -4223,36 +4202,13 @@ function CheckImageMagick {
             }
         }
         else {
-            Write-Entry -Message "ImageMagick missing, downloading it for you..." -Path $configLogging -Color Red -log Error
-            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-            $errorCount++
+
             $result = Invoke-WebRequest "https://imagemagick.org/archive/binaries/?C=M;O=D"
-            $LatestRelease = ($result.links.href | Where-Object { $_ -like '*portable-Q16-HDRI-x64.zip' } | Sort-Object -Descending)[0]
-            $DownloadPath = Join-Path -Path $global:ScriptRoot -ChildPath (Join-Path -Path 'temp' -ChildPath $LatestRelease)
+            $LatestRelease = ($result.links.href | Where-Object { $_ -like '*portable-Q16-HDRI-x64.7z.zip' } | Sort-Object -Descending)[0]
 
-            # Ensure the $temp directory exists
-            if (-not (Test-Path -LiteralPath $global:ScriptRoot\temp)) {
-                New-Item -ItemType Directory -Path $global:ScriptRoot\temp | Out-Null
-            }
-
-            Invoke-WebRequest "https://imagemagick.org/archive/binaries/$LatestRelease" -OutFile $DownloadPath
-
-            # Ensure the $magickinstalllocation directory exists
-            if (-not (Test-Path -LiteralPath $magickinstalllocation)) {
-                New-Item -ItemType Directory -Path $magickinstalllocation | Out-Null
-            }
-
-            Expand-Archive -Path $DownloadPath -DestinationPath $magickinstalllocation -Force
-            if ((Get-ChildItem -Directory -LiteralPath $magickinstalllocation).name -eq $($LatestRelease.replace('.zip', ''))) {
-                Copy-item -Force -Recurse "$magickinstalllocation\$((Get-ChildItem -Directory -LiteralPath $magickinstalllocation).name)\*" $magickinstalllocation
-                Remove-Item -Recurse -LiteralPath "$magickinstalllocation\$((Get-ChildItem -Directory -LiteralPath $magickinstalllocation).name)" -Force
-            }
-            if (Test-Path -LiteralPath $magickinstalllocation\magick.exe) {
-                Write-Entry -Subtext "Placed Portable ImageMagick here: $magickinstalllocation" -Path $configLogging -Color Green -log Info
-            }
-            Else {
-                Write-Entry -Subtext "Error During extraction, please manually install/copy portable Imagemagick from here: https://imagemagick.org/archive/binaries/$LatestRelease" -Path $configLogging -Color Red -log Error
-            }
+            Write-Entry -Message "ImageMagick missing, please manually install/copy portable Imagemagick from here: https://imagemagick.org/archive/binaries/$LatestRelease" -Path $configLogging -Color Red -log Error
+            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Exit
         }
     }
 }
