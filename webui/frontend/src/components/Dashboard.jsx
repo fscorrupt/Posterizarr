@@ -46,61 +46,86 @@ const getWebSocketURL = (logFile) => {
   return `${baseURL}?log_file=${encodeURIComponent(logFile)}`;
 };
 
+// 🎯 PERSISTENT STATE - survives component remounts (tab switches)
+let cachedStatus = null;
+let cachedVersion = null;
+
 function Dashboard() {
-  const [status, setStatus] = useState({
-    running: false,
-    last_logs: [],
-    script_exists: false,
-    config_exists: false,
-    pid: null,
-    current_mode: null,
-    active_log: null,
-    already_running_detected: false,
-    running_file_exists: false,
-  });
+  const [status, setStatus] = useState(
+    cachedStatus || {
+      running: false,
+      last_logs: [],
+      script_exists: false,
+      config_exists: false,
+      pid: null,
+      current_mode: null,
+      active_log: null,
+      already_running_detected: false,
+      running_file_exists: false,
+    }
+  );
   const [loading, setLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [version, setVersion] = useState({ local: null, remote: null });
+  const [version, setVersion] = useState(
+    cachedVersion || { local: null, remote: null }
+  );
   const [wsConnected, setWsConnected] = useState(false); // ✨ NEW: WebSocket status
   const [autoScroll, setAutoScroll] = useState(true); // ✨ NEW: Auto-scroll toggle
   const wsRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
   const logContainerRef = useRef(null); // ✨ NEW: Log container reference for auto-scroll
 
-  const fetchStatus = async () => {
-    setIsRefreshing(true);
+  const fetchStatus = async (silent = false) => {
+    // 🎯 Silent mode = keine UI-Störung (für Background-Updates)
+    if (!silent) {
+      setIsRefreshing(true);
+    }
+
     try {
       const response = await fetch(`${API_URL}/status`);
       const data = await response.json();
+      cachedStatus = data; // 🎯 Save to persistent cache
       setStatus(data);
     } catch (error) {
       console.error("Error fetching status:", error);
     } finally {
-      setTimeout(() => setIsRefreshing(false), 500);
+      if (!silent) {
+        setTimeout(() => setIsRefreshing(false), 500);
+      }
     }
   };
 
-  const fetchVersion = async () => {
+  const fetchVersion = async (silent = false) => {
     try {
       const response = await fetch(`${API_URL}/version`);
       if (!response.ok) {
-        console.warn("Version endpoint not available:", response.status);
+        if (!silent) {
+          console.warn("Version endpoint not available:", response.status);
+        }
         return;
       }
 
       const data = await response.json();
-      console.log("Version data received:", data);
+      if (!silent) {
+        console.log("Version data received:", data);
+      }
 
       if (data.local || data.remote) {
-        setVersion({
+        const versionData = {
           local: data.local || null,
           remote: data.remote || null,
-        });
+        };
+        cachedVersion = versionData; // 🎯 Save to persistent cache
+        setVersion(versionData);
       } else {
-        console.warn("No version data in response:", data);
+        if (!silent) {
+          console.warn("No version data in response:", data);
+        }
       }
     } catch (error) {
-      console.error("Error fetching version:", error);
+      if (!silent) {
+        console.error("Error fetching version:", error);
+      }
     }
   };
 
@@ -183,13 +208,18 @@ function Dashboard() {
   };
 
   useEffect(() => {
-    fetchStatus();
-    fetchVersion();
-    // ⚡ IMPROVED: Faster polling - 1.5s instead of 3s
-    const interval = setInterval(fetchStatus, 1500);
+    // 🎯 Immer beim Mount fetchen (silent mode = kein Refresh-Spinner)
+    fetchStatus(true);
+    fetchVersion(true);
+
+    // 🎯 Version Check - nur alle 12 Stunden
+    const versionInterval = setInterval(
+      () => fetchVersion(true),
+      12 * 60 * 60 * 1000
+    );
 
     return () => {
-      clearInterval(interval);
+      clearInterval(versionInterval);
       disconnectDashboardWebSocket();
     };
   }, []);

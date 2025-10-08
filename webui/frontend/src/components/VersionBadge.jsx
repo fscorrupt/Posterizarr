@@ -5,13 +5,19 @@ const API_URL = "/api";
 // Change: Add "/releases/latest" to the end of the URL
 const REPO_URL = "https://github.com/fscorrupt/Posterizarr/releases/latest";
 
+// 🎯 PERSISTENT STATE - survives component remounts (tab switches)
+let cachedVersionData = { version: null, isOutOfDate: false };
+
 function VersionBadge() {
-  const [isOutOfDate, setIsOutOfDate] = useState(false);
-  const [version, setVersion] = useState(null);
+  const [isOutOfDate, setIsOutOfDate] = useState(cachedVersionData.isOutOfDate);
+  const [version, setVersion] = useState(cachedVersionData.version);
 
   useEffect(() => {
+    // 🎯 Immer beim Mount checken (ohne UI-Störung)
     checkVersion();
-    const interval = setInterval(checkVersion, 5 * 60 * 1000);
+
+    // 🎯 Version Check - nur alle 12 Stunden im Hintergrund
+    const interval = setInterval(checkVersion, 12 * 60 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
 
@@ -21,6 +27,11 @@ function VersionBadge() {
       const data = await response.json();
 
       if (data.local) {
+        // 🎯 Save to persistent cache
+        cachedVersionData = {
+          version: data.local,
+          isOutOfDate: data.is_update_available || false,
+        };
         setVersion(data.local);
         setIsOutOfDate(data.is_update_available || false); // ✅ RICHTIG
       }

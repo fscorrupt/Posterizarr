@@ -5,22 +5,30 @@ import { Cpu, HardDrive, Server, RefreshCw, Monitor } from "lucide-react";
 
 const API_URL = "/api";
 
+// 🎯 PERSISTENT STATE - survives component remounts (tab switches)
+let cachedSystemInfo = null;
+
 function SystemInfo() {
-  const [systemInfo, setSystemInfo] = useState({
-    platform: "Loading...",
-    os_version: "Loading...",
-    cpu_model: "Loading...",
-    cpu_cores: 0,
-    total_memory: "Loading...",
-    used_memory: "Loading...",
-    free_memory: "Loading...",
-    memory_percent: 0,
-  });
-  const [loading, setLoading] = useState(true);
+  const [systemInfo, setSystemInfo] = useState(
+    cachedSystemInfo || {
+      platform: "Loading...",
+      os_version: "Loading...",
+      cpu_model: "Loading...",
+      cpu_cores: 0,
+      total_memory: "Loading...",
+      used_memory: "Loading...",
+      free_memory: "Loading...",
+      memory_percent: 0,
+    }
+  );
+  const [loading, setLoading] = useState(false); // No initial loading
   const [refreshing, setRefreshing] = useState(false);
 
-  const fetchSystemInfo = async () => {
-    setRefreshing(true);
+  const fetchSystemInfo = async (silent = false) => {
+    if (!silent) {
+      setRefreshing(true);
+    }
+
     try {
       const response = await fetch(`${API_URL}/system-info`);
       if (!response.ok) {
@@ -28,19 +36,25 @@ function SystemInfo() {
         return;
       }
       const data = await response.json();
+      cachedSystemInfo = data; // 🎯 Save to persistent cache
       setSystemInfo(data);
     } catch (error) {
       console.error("Error fetching system info:", error);
     } finally {
       setLoading(false);
-      setTimeout(() => setRefreshing(false), 500);
+      if (!silent) {
+        setTimeout(() => setRefreshing(false), 500);
+      }
     }
   };
 
   useEffect(() => {
-    fetchSystemInfo();
-    // Auto-refresh every 10 seconds
-    const interval = setInterval(fetchSystemInfo, 10000);
+    // 🎯 Immer beim Mount fetchen (silent mode = kein Refresh-Spinner)
+    fetchSystemInfo(true);
+
+    // 🎯 Optional: Alle 5 Minuten im Hintergrund aktualisieren (silent)
+    const interval = setInterval(() => fetchSystemInfo(true), 5 * 60 * 1000);
+
     return () => clearInterval(interval);
   }, []);
 
@@ -85,7 +99,7 @@ function SystemInfo() {
           System Information
         </h2>
         <button
-          onClick={fetchSystemInfo}
+          onClick={() => fetchSystemInfo()}
           disabled={refreshing}
           className="flex items-center gap-2 px-4 py-2 text-theme-muted hover:text-theme-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:bg-theme-hover rounded-lg"
           title="Refresh system info"
