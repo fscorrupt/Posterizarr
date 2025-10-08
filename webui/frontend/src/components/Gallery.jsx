@@ -240,196 +240,236 @@ function Gallery() {
   const hasMore = filteredImages.length > displayCount;
 
   return (
-    <div className="px-4 py-6">
+    <div className="space-y-6">
       <Toaster />
 
-      <div className="flex flex-col space-y-4 mb-6">
-        {/* Header with Refresh */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between space-y-4 md:space-y-0">
-          <h1 className="text-3xl font-bold text-theme-primary">
+      {/* Header with Refresh */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-theme-text flex items-center gap-3">
+            <ImageIcon className="w-8 h-8 text-theme-primary" />
             Poster Gallery
           </h1>
+          <p className="text-theme-muted mt-2">
+            Browse and manage your poster collection
+          </p>
+        </div>
+
+        <button
+          onClick={() => {
+            fetchFolders(true);
+            if (activeFolder) {
+              fetchFolderImages(activeFolder, true);
+            }
+          }}
+          disabled={loading || imagesLoading}
+          className="flex items-center gap-2 px-4 py-2 bg-theme-primary hover:bg-theme-primary/90 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-all shadow-lg"
+        >
+          <RefreshCw
+            className={`w-5 h-5 ${
+              loading || imagesLoading ? "animate-spin" : ""
+            }`}
+          />
+          Refresh
+        </button>
+      </div>
+
+      {/* Script & Sync Mode Buttons */}
+      <div className="bg-theme-card rounded-xl p-6 border border-theme">
+        <h2 className="text-xl font-semibold text-theme-text mb-4 flex items-center gap-2">
+          <Play className="w-5 h-5 text-theme-primary" />
+          Quick Actions
+        </h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+          <button
+            onClick={() => runScript("normal", "Normal Mode")}
+            disabled={scriptLoading || status.running}
+            className="flex flex-col items-center justify-center p-4 bg-theme-hover hover:bg-green-600/20 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg border border-theme-primary/30 hover:border-green-600 transition-all group"
+          >
+            <Play className="w-6 h-6 text-green-400 mb-2 group-hover:scale-110 transition-transform" />
+            <span className="font-medium text-theme-text text-sm">
+              Normal Mode
+            </span>
+          </button>
 
           <button
-            onClick={() => {
-              fetchFolders(true);
-              if (activeFolder) {
-                fetchFolderImages(activeFolder, true);
-              }
-            }}
-            disabled={loading || imagesLoading}
-            className="flex items-center px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-colors"
+            onClick={() => runScript("backup", "Backup Mode")}
+            disabled={scriptLoading || status.running}
+            className="flex flex-col items-center justify-center p-4 bg-theme-hover hover:bg-yellow-600/20 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg border border-theme-primary/30 hover:border-yellow-600 transition-all group"
           >
-            <RefreshCw
-              className={`w-4 h-4 mr-2 ${
-                loading || imagesLoading ? "animate-spin" : ""
-              }`}
-            />
-            Refresh
+            <Save className="w-6 h-6 text-orange-400 mb-2 group-hover:scale-110 transition-transform" />
+            <span className="font-medium text-theme-text text-sm">
+              Backup Mode
+            </span>
+          </button>
+
+          <button
+            onClick={() => runScript("syncjelly", "Sync Jellyfin")}
+            disabled={scriptLoading || status.running}
+            className="flex flex-col items-center justify-center p-4 bg-theme-hover hover:bg-orange-600/20 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg border border-theme-primary/30 hover:border-orange-600 transition-all group"
+          >
+            <RefreshCw className="w-6 h-6 text-purple-400 mb-2 group-hover:scale-110 transition-transform" />
+            <span className="font-medium text-theme-text text-sm">
+              Sync Jellyfin
+            </span>
+          </button>
+
+          <button
+            onClick={() => runScript("syncemby", "Sync Emby")}
+            disabled={scriptLoading || status.running}
+            className="flex flex-col items-center justify-center p-4 bg-theme-hover hover:bg-teal-600/20 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg border border-theme-primary/30 hover:border-teal-600 transition-all group"
+          >
+            <RefreshCw className="w-6 h-6 text-green-400 mb-2 group-hover:scale-110 transition-transform" />
+            <span className="font-medium text-theme-text text-sm">
+              Sync Emby
+            </span>
           </button>
         </div>
+      </div>
 
-        {/* Script & Sync Mode Buttons */}
-        <div className="">
-          <h3 className="text-sm font-semibold text-theme-muted mb-3"></h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <button
-              onClick={() => runScript("normal", "Normal Mode")}
-              disabled={scriptLoading || status.running}
-              className="flex items-center justify-center px-3 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-colors text-sm"
-            >
-              <Play className="w-4 h-4 mr-1.5" />
-              Normal Mode
-            </button>
-
-            <button
-              onClick={() => runScript("backup", "Backup Mode")}
-              disabled={scriptLoading || status.running}
-              className="flex items-center justify-center px-3 py-2 bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-colors text-sm"
-            >
-              <Save className="w-4 h-4 mr-1.5" />
-              Backup Mode
-            </button>
-
-            <button
-              onClick={() => runScript("syncjelly", "Sync Jellyfin")}
-              disabled={scriptLoading || status.running}
-              className="flex items-center justify-center px-3 py-2 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-colors text-sm"
-            >
-              <Cloud className="w-4 h-4 mr-1.5" />
-              Sync Jellyfin
-            </button>
-
-            <button
-              onClick={() => runScript("syncemby", "Sync Emby")}
-              disabled={scriptLoading || status.running}
-              className="flex items-center justify-center px-3 py-2 bg-teal-600 hover:bg-teal-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-colors text-sm"
-            >
-              <Cloud className="w-4 h-4 mr-1.5" />
-              Sync Emby
-            </button>
-          </div>
-        </div>
-
-        {/* Search bar */}
-        {activeFolder && images.length > 0 && (
+      {/* Search bar */}
+      {activeFolder && images.length > 0 && (
+        <div className="bg-theme-card rounded-xl p-4 border border-theme">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
               placeholder={`Search posters in ${activeFolder.name}...`}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-theme-card border border-theme-primary rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary"
+              className="w-full pl-12 pr-4 py-3 bg-theme-bg border border-theme-primary/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
             />
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Folder Tabs */}
-        {folders.length > 0 && (
-          <div className="">
-            <h3 className="text-m font-semibold text-theme-muted mb-3"></h3>
-            <div className="flex flex-wrap gap-2">
-              {folders
-                .filter((folder) => folder.poster_count > 0)
-                .map((folder) => (
-                  <button
-                    key={folder.path}
-                    onClick={() => setActiveFolder(folder)}
-                    className={`flex items-center px-4 py-2 rounded-lg font-medium transition-all whitespace-nowrap ${
-                      activeFolder?.path === folder.path
-                        ? "bg-theme-primary text-white"
-                        : "bg-theme-hover text-theme-text hover:bg-theme-primary/70"
-                    }`}
-                  >
-                    <Folder className="w-4 h-4 mr-2 flex-shrink-0" />
-                    {folder.name}
-                    <span className="ml-2 px-2 py-0.5 bg-black/20 rounded-full text-xs">
-                      {folder.poster_count}
-                    </span>
-                  </button>
-                ))}
-            </div>
+      {/* Folder Tabs */}
+      {folders.length > 0 && (
+        <div className="bg-theme-card rounded-xl p-6 border border-theme">
+          <h2 className="text-xl font-semibold text-theme-text mb-4 flex items-center gap-2">
+            <Folder className="w-5 h-5 text-theme-primary" />
+            Folders
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            {folders
+              .filter((folder) => folder.poster_count > 0)
+              .map((folder) => (
+                <button
+                  key={folder.path}
+                  onClick={() => setActiveFolder(folder)}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-all whitespace-nowrap shadow-sm ${
+                    activeFolder?.path === folder.path
+                      ? "bg-theme-primary text-white scale-105"
+                      : "bg-theme-hover text-theme-text hover:bg-theme-primary/70 hover:scale-105"
+                  }`}
+                >
+                  <Folder className="w-4 h-4 flex-shrink-0" />
+                  {folder.name}
+                  <span className="ml-1 px-2 py-0.5 bg-black/20 rounded-full text-xs font-semibold">
+                    {folder.poster_count}
+                  </span>
+                </button>
+              ))}
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {loading ? (
-        <div className="flex items-center justify-center py-32">
-          <RefreshCw className="w-12 h-12 animate-spin text-theme-primary" />
+        <div className="flex flex-col items-center justify-center py-32 bg-theme-card rounded-xl border border-theme">
+          <RefreshCw className="w-12 h-12 animate-spin text-theme-primary mb-4" />
+          <p className="text-theme-muted">Loading folders...</p>
         </div>
       ) : error ? (
-        <div className="bg-red-900/30 border border-red-700 rounded-lg p-6 text-center">
-          <ImageIcon className="w-16 h-16 text-red-400 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-red-400 mb-2">
-            Error Loading Gallery
-          </h3>
-          <p className="text-red-300 text-sm mb-4">{error}</p>
-          <button
-            onClick={() => {
-              fetchFolders(true);
-              if (activeFolder) {
-                fetchFolderImages(activeFolder, true);
-              }
-            }}
-            className="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg font-medium transition-colors"
-          >
-            Try Again
-          </button>
+        <div className="bg-red-950/40 rounded-xl p-8 border-2 border-red-600/50 text-center">
+          <div className="flex flex-col items-center">
+            <div className="p-4 rounded-full bg-red-600/20 mb-4">
+              <ImageIcon className="w-12 h-12 text-red-400" />
+            </div>
+            <h3 className="text-2xl font-semibold text-red-300 mb-2">
+              Error Loading Gallery
+            </h3>
+            <p className="text-red-200 text-sm mb-6 max-w-md">{error}</p>
+            <button
+              onClick={() => {
+                fetchFolders(true);
+                if (activeFolder) {
+                  fetchFolderImages(activeFolder, true);
+                }
+              }}
+              className="flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 rounded-lg font-medium transition-all shadow-lg hover:scale-105"
+            >
+              <RefreshCw className="w-5 h-5" />
+              Try Again
+            </button>
+          </div>
         </div>
       ) : !activeFolder ? (
-        <div className="bg-theme-card border border-theme-primary rounded-lg p-12 text-center">
-          <Folder className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-theme-muted mb-2">
-            No Folders Found
-          </h3>
-          <p className="text-theme-muted text-sm">
-            No folders found in assets directory
-          </p>
+        <div className="bg-theme-card rounded-xl p-12 border border-theme text-center">
+          <div className="flex flex-col items-center">
+            <div className="p-4 rounded-full bg-theme-primary/20 mb-4">
+              <Folder className="w-12 h-12 text-theme-primary" />
+            </div>
+            <h3 className="text-2xl font-semibold text-theme-text mb-2">
+              No Folders Found
+            </h3>
+            <p className="text-theme-muted max-w-md">
+              No folders found in assets directory. Please check your
+              configuration.
+            </p>
+          </div>
         </div>
       ) : imagesLoading ? (
-        <div className="flex items-center justify-center py-32">
-          <RefreshCw className="w-12 h-12 animate-spin text-theme-primary" />
+        <div className="flex flex-col items-center justify-center py-32 bg-theme-card rounded-xl border border-theme">
+          <RefreshCw className="w-12 h-12 animate-spin text-theme-primary mb-4" />
+          <p className="text-theme-muted">Loading posters...</p>
         </div>
       ) : filteredImages.length === 0 ? (
-        <div className="bg-theme-card border border-theme-primary rounded-lg p-12 text-center">
-          <ImageIcon className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-theme-muted mb-2">
-            {searchTerm ? "No Matching Posters" : "No Posters Found"}
-          </h3>
-          <p className="text-theme-muted text-sm">
-            {searchTerm
-              ? "Try adjusting your search terms"
-              : `No posters found in ${activeFolder.name}`}
-          </p>
+        <div className="bg-theme-card rounded-xl p-12 border border-theme text-center">
+          <div className="flex flex-col items-center">
+            <div className="p-4 rounded-full bg-theme-primary/20 mb-4">
+              <ImageIcon className="w-12 h-12 text-theme-primary" />
+            </div>
+            <h3 className="text-2xl font-semibold text-theme-text mb-2">
+              {searchTerm ? "No Matching Posters" : "No Posters Found"}
+            </h3>
+            <p className="text-theme-muted max-w-md">
+              {searchTerm
+                ? "Try adjusting your search terms to find what you're looking for"
+                : `No posters found in ${activeFolder.name}`}
+            </p>
+          </div>
         </div>
       ) : (
         <>
-          <div className="mb-4 text-sm text-theme-muted">
-            Showing {displayedImages.length} of {filteredImages.length} posters
-            in {activeFolder.name}
-            {images.length !== filteredImages.length && (
-              <span className="ml-2 text-theme-primary">
-                (filtered from {images.length} total)
+          <div className="bg-theme-card rounded-xl p-4 border border-theme">
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-theme-text font-medium">
+                Showing {displayedImages.length} of {filteredImages.length}{" "}
+                posters in {activeFolder.name}
               </span>
-            )}
+              {images.length !== filteredImages.length && (
+                <span className="text-theme-primary font-semibold">
+                  Filtered from {images.length} total
+                </span>
+              )}
+            </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
             {displayedImages.map((image, index) => (
               <div
                 key={index}
-                className="group relative bg-theme-card rounded-lg overflow-hidden border border-theme-primary hover:border-theme-primary transition-all"
+                className="group relative bg-theme-card rounded-xl overflow-hidden border-2 border-theme-primary/30 hover:border-theme-primary transition-all duration-300 shadow-lg hover:shadow-2xl hover:scale-105"
               >
                 <button
                   onClick={(e) => deletePoster(image.path, image.name, e)}
                   disabled={deletingImage === image.path}
-                  className={`absolute top-2 right-2 z-10 p-2 rounded-lg transition-all ${
+                  className={`absolute top-3 right-3 z-10 p-2.5 rounded-lg transition-all shadow-lg ${
                     deletingImage === image.path
                       ? "bg-gray-600 cursor-not-allowed"
-                      : "bg-red-600 hover:bg-red-700 opacity-0 group-hover:opacity-100"
+                      : "bg-red-600 hover:bg-red-700 opacity-0 group-hover:opacity-100 hover:scale-110"
                   }`}
-                  title="Poster löschen"
+                  title="Delete poster"
                 >
                   <Trash2
                     className={`w-4 h-4 text-white ${
@@ -443,9 +483,9 @@ function Gallery() {
                   onClick={() => setSelectedImage(image)}
                 >
                   <img
-                    src={image.url} // if image.url is already relative
+                    src={image.url}
                     alt={image.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                     loading="lazy"
                     onError={(e) => {
                       e.target.style.display = "none";
@@ -456,20 +496,21 @@ function Gallery() {
                     className="hidden flex-col items-center justify-center text-gray-600 p-4"
                     style={{ display: "none" }}
                   >
-                    <ImageIcon className="w-12 h-12 mb-2" />
-                    <span className="text-xs text-center">
+                    <ImageIcon className="w-12 h-12 mb-2 text-theme-primary" />
+                    <span className="text-xs text-center text-theme-muted">
                       Preview not available
                     </span>
                   </div>
                 </div>
-                <div className="p-3 border-t-2 border-theme">
+                <div className="p-4 border-t-2 border-theme bg-theme-bg">
                   <p
-                    className="text-sm text-theme-text truncate"
+                    className="text-sm text-theme-text truncate font-medium"
                     title={formatDisplayPath(image.path)}
                   >
                     {formatDisplayPath(image.path)}
                   </p>
-                  <p className="text-xs text-theme-muted mt-1">
+                  <p className="text-xs text-theme-muted mt-1.5 flex items-center gap-1">
+                    <span className="inline-block w-2 h-2 bg-theme-primary rounded-full"></span>
                     {(image.size / 1024).toFixed(2)} KB
                   </p>
                 </div>
@@ -481,10 +522,13 @@ function Gallery() {
             <div className="mt-8 flex justify-center">
               <button
                 onClick={loadMore}
-                className="flex items-center gap-2 px-6 py-3 bg-theme-primary hover:bg-theme-primary/90 rounded-lg font-medium transition-all transform hover:scale-105"
+                className="flex items-center gap-3 px-8 py-4 bg-theme-primary hover:bg-theme-primary/90 rounded-xl font-semibold transition-all transform hover:scale-105 shadow-lg hover:shadow-xl"
               >
                 <ChevronDown className="w-5 h-5" />
-                Load More ({filteredImages.length - displayCount} remaining)
+                Load More
+                <span className="ml-1 px-2 py-0.5 bg-white/20 rounded-full text-sm">
+                  {filteredImages.length - displayCount} remaining
+                </span>
               </button>
             </div>
           )}
@@ -494,16 +538,16 @@ function Gallery() {
       {/* Image Modal */}
       {selectedImage && (
         <div
-          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200"
           onClick={() => setSelectedImage(null)}
         >
           <div
-            className="bg-theme-card border border-theme-primary rounded-lg max-w-6xl w-full overflow-hidden"
+            className="bg-theme-card border-2 border-theme-primary rounded-2xl max-w-6xl w-full overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-4 border-b-2 border-theme flex justify-between items-center">
+            <div className="bg-theme-primary px-6 py-4 flex justify-between items-center">
               <h3
-                className="text-lg font-semibold text-white truncate mr-4"
+                className="text-lg font-bold text-white truncate mr-4"
                 title={formatDisplayPath(selectedImage.path)}
               >
                 {formatDisplayPath(selectedImage.path)}
@@ -513,51 +557,53 @@ function Gallery() {
                   deletePoster(selectedImage.path, selectedImage.name, e)
                 }
                 disabled={deletingImage === selectedImage.path}
-                className={`flex items-center px-3 py-1.5 rounded-lg text-sm font-medium transition-colors flex-shrink-0 ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all flex-shrink-0 shadow-lg ${
                   deletingImage === selectedImage.path
                     ? "bg-gray-600 cursor-not-allowed"
-                    : "bg-red-600 hover:bg-red-700"
+                    : "bg-red-600 hover:bg-red-700 hover:scale-105"
                 }`}
               >
                 <Trash2
-                  className={`w-4 h-4 mr-1 ${
+                  className={`w-4 h-4 ${
                     deletingImage === selectedImage.path ? "animate-spin" : ""
                   }`}
                 />
-                Löschen
+                Delete
               </button>
             </div>
-            <div className="p-4 flex items-center justify-center">
+            <div className="p-6 bg-theme-bg flex items-center justify-center">
               <div className="max-h-[70vh] flex items-center justify-center">
                 <img
-                  src={selectedImage.url} // if image.url is already relative
+                  src={selectedImage.url}
                   alt={selectedImage.name}
-                  className="max-w-full max-h-[70vh] object-contain rounded-lg"
+                  className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-2xl"
                   onError={(e) => {
                     e.target.style.display = "none";
                     e.target.nextSibling.style.display = "block";
                   }}
                 />
                 <div className="text-center" style={{ display: "none" }}>
-                  <ImageIcon className="w-24 h-24 text-gray-700 mx-auto mb-4" />
-                  <p className="text-gray-500 text-sm">
+                  <div className="p-4 rounded-full bg-theme-primary/20 inline-block mb-4">
+                    <ImageIcon className="w-16 h-16 text-theme-primary" />
+                  </div>
+                  <p className="text-theme-text text-lg font-semibold mb-2">
                     Image preview not available
                   </p>
-                  <p className="text-gray-600 text-xs mt-2">
+                  <p className="text-theme-muted text-sm">
                     Use file explorer to view poster
                   </p>
                 </div>
               </div>
             </div>
-            <div className="p-4 border-t-2 border-theme flex justify-between items-center">
-              <span className="text-sm text-theme-muted">
-                Größe: {(selectedImage.size / 1024).toFixed(2)} KB
+            <div className="px-6 py-4 border-t-2 border-theme flex justify-between items-center bg-theme-card">
+              <span className="text-sm text-theme-muted font-medium">
+                Size: {(selectedImage.size / 1024).toFixed(2)} KB
               </span>
               <button
                 onClick={() => setSelectedImage(null)}
-                className="px-4 py-2 bg-theme-primary hover:bg-theme-primary/90 rounded-lg text-sm font-medium transition-colors text-white"
+                className="px-6 py-2 bg-theme-primary hover:bg-theme-primary/90 rounded-lg text-sm font-medium transition-all text-white shadow-lg hover:scale-105"
               >
-                Schließen
+                Close
               </button>
             </div>
           </div>

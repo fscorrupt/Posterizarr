@@ -15,15 +15,16 @@ import {
   List,
   Lock,
   Hash,
+  Loader2,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 
 const API_URL = "/api";
 
 function ConfigEditor() {
-  const [config, setConfig] = useState(null); // Flat config structure
-  const [uiGroups, setUiGroups] = useState(null); // UI grouping info from backend
-  const [displayNames, setDisplayNames] = useState({}); // Display names from backend
+  const [config, setConfig] = useState(null);
+  const [uiGroups, setUiGroups] = useState(null);
+  const [displayNames, setDisplayNames] = useState({});
   const [usingFlatStructure, setUsingFlatStructure] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -39,14 +40,10 @@ function ConfigEditor() {
     }
   };
 
-  // Tab organization - groups fields by logical sections
-  // This works with BOTH flat and grouped structure
+  // Tab organization
   const tabs = {
     General: {
-      groups: [
-        "General Settings",
-        "PrerequisitePart", // Fallback for grouped structure
-      ],
+      groups: ["General Settings", "PrerequisitePart"],
       icon: Settings,
     },
     Services: {
@@ -54,17 +51,14 @@ function ConfigEditor() {
         "Plex Settings",
         "Jellyfin Settings",
         "Emby Settings",
-        "PlexPart", // Fallback
-        "JellyfinPart", // Fallback
-        "EmbyPart", // Fallback
+        "PlexPart",
+        "JellyfinPart",
+        "EmbyPart",
       ],
       icon: Database,
     },
     API: {
-      groups: [
-        "API Keys & Tokens",
-        "ApiPart", // Fallback
-      ],
+      groups: ["API Keys & Tokens", "ApiPart"],
       icon: Settings,
     },
     Languages: {
@@ -79,7 +73,7 @@ function ConfigEditor() {
         "Overlay Files",
         "Resolution Overlays",
         "Image Processing",
-        "OverlayPart", // Fallback
+        "OverlayPart",
       ],
       icon: Palette,
     },
@@ -92,13 +86,13 @@ function ConfigEditor() {
         "Title Card Title Text",
         "Title Card Episode Text",
         "Show Title on Season",
-        "PosterOverlayPart", // Fallback
-        "SeasonPosterOverlayPart", // Fallback
-        "BackgroundOverlayPart", // Fallback
-        "TitleCardOverlayPart", // Fallback
-        "TitleCardTitleTextPart", // Fallback
-        "TitleCardEPTextPart", // Fallback
-        "ShowTitleOnSeasonPosterPart", // Fallback
+        "PosterOverlayPart",
+        "SeasonPosterOverlayPart",
+        "BackgroundOverlayPart",
+        "TitleCardOverlayPart",
+        "TitleCardTitleTextPart",
+        "TitleCardEPTextPart",
+        "ShowTitleOnSeasonPosterPart",
       ],
       icon: Palette,
     },
@@ -106,16 +100,13 @@ function ConfigEditor() {
       groups: [
         "Collection Title",
         "Collection Poster",
-        "CollectionTitlePosterPart", // Fallback
-        "CollectionPosterOverlayPart", // Fallback
+        "CollectionTitlePosterPart",
+        "CollectionPosterOverlayPart",
       ],
       icon: Type,
     },
     Notifications: {
-      groups: [
-        "Notifications",
-        "Notification", // Fallback
-      ],
+      groups: ["Notifications", "Notification"],
       icon: Bell,
     },
   };
@@ -127,7 +118,6 @@ function ConfigEditor() {
   useEffect(() => {
     if (config && !activeTab) {
       setActiveTab("General");
-      // Expand first group of first tab by default
       const firstGroup = tabs["General"].groups[0];
       if (firstGroup) {
         setExpandedGroups({ [firstGroup]: true });
@@ -148,7 +138,6 @@ function ConfigEditor() {
         setDisplayNames(data.display_names || {});
         setUsingFlatStructure(data.using_flat_structure || false);
 
-        // Log structure info for debugging
         console.log(
           "Config structure:",
           data.using_flat_structure ? "FLAT" : "GROUPED"
@@ -180,7 +169,7 @@ function ConfigEditor() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ config }), // Send flat config directly
+        body: JSON.stringify({ config }),
       });
 
       const data = await response.json();
@@ -216,14 +205,12 @@ function ConfigEditor() {
   };
 
   const updateValue = (key, value) => {
-    // For flat structure
     if (usingFlatStructure) {
       setConfig((prev) => ({
         ...prev,
         [key]: value,
       }));
     } else {
-      // For grouped structure - key is "section.field"
       const [section, field] = key.includes(".") ? key.split(".") : [null, key];
       if (section) {
         setConfig((prev) => ({
@@ -238,11 +225,9 @@ function ConfigEditor() {
   };
 
   const getDisplayName = (key) => {
-    // Use display name from backend if available, otherwise format the key
     if (displayNames[key]) {
       return displayNames[key];
     }
-    // Fallback: format key nicely
     return key
       .replace(/_/g, " ")
       .replace(/([A-Z])/g, " $1")
@@ -255,13 +240,11 @@ function ConfigEditor() {
     const tabGroups = tabs[tabName]?.groups || [];
 
     if (usingFlatStructure && uiGroups) {
-      // Using flat structure with UI_GROUPS
       return tabGroups.filter((groupName) => {
         const groupKeys = uiGroups[groupName] || [];
         return groupKeys.some((key) => key in config);
       });
     } else {
-      // Using grouped structure - return sections that exist in config
       return tabGroups.filter((groupName) => config[groupName]);
     }
   };
@@ -270,21 +253,17 @@ function ConfigEditor() {
     if (!config) return [];
 
     if (usingFlatStructure && uiGroups) {
-      // Flat structure: get keys from UI_GROUPS
       const groupKeys = uiGroups[groupName] || [];
       return groupKeys.filter((key) => key in config);
     } else {
-      // Grouped structure: get fields from section
       return Object.keys(config[groupName] || {});
     }
   };
 
   const formatGroupName = (groupName) => {
-    // If it's a UI group name, use it as-is
     if (groupName.includes(" ")) {
       return groupName;
     }
-    // Otherwise format section name
     return groupName
       .replace(/Part$/, "")
       .replace(/([A-Z])/g, " $1")
@@ -350,11 +329,11 @@ function ConfigEditor() {
             onInput={(e) => autoResize(e.target)}
             ref={(textarea) => textarea && autoResize(textarea)}
             rows={1}
-            className="w-full px-4 py-2.5 bg-theme-card border border-theme-primary rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono text-sm resize-none overflow-hidden min-h-[42px]"
+            className="w-full px-4 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono text-sm resize-none overflow-hidden min-h-[42px]"
             placeholder="Enter comma-separated values"
           />
           {value.length > 0 && (
-            <div className="flex flex-wrap gap-2 p-3 bg-theme-card rounded-lg border border-theme-primary">
+            <div className="flex flex-wrap gap-2 p-3 bg-theme-bg rounded-lg border border-theme">
               {value.map((item, idx) => (
                 <span
                   key={idx}
@@ -374,11 +353,11 @@ function ConfigEditor() {
     const stringValue =
       value === null || value === undefined ? "" : String(value);
 
-    // Enhanced boolean toggle switch - handles both boolean type and "true"/"false" strings
+    // Enhanced boolean toggle switch
     if (type === "boolean" || value === "true" || value === "false") {
       const isEnabled = value === "true" || value === true;
       return (
-        <div className="flex items-center justify-between h-[42px] px-4 bg-theme-card rounded-lg border border-theme-primary hover:border-theme-primary/30 transition-all">
+        <div className="flex items-center justify-between h-[42px] px-4 bg-theme-bg rounded-lg border border-theme hover:border-theme-primary/30 transition-all">
           <div className="text-sm font-medium text-theme-text">
             {displayName}
           </div>
@@ -406,7 +385,7 @@ function ConfigEditor() {
             type="text"
             value={stringValue}
             onChange={(e) => updateValue(fieldKey, e.target.value)}
-            className="w-full h-[42px] px-4 py-2.5 bg-theme-card border border-theme-primary rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono"
+            className="w-full h-[42px] px-4 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono"
             placeholder="+200 or -150"
           />
           <p className="text-xs text-theme-muted">
@@ -429,7 +408,7 @@ function ConfigEditor() {
             type="number"
             value={stringValue}
             onChange={(e) => updateValue(fieldKey, e.target.value)}
-            className="w-full h-[42px] px-4 py-2.5 bg-theme-card border border-theme-primary rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+            className="w-full h-[42px] px-4 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
           />
         </div>
       );
@@ -448,7 +427,7 @@ function ConfigEditor() {
               type="text"
               value={stringValue}
               onChange={(e) => updateValue(fieldKey, e.target.value)}
-              className="w-full h-[42px] px-4 py-2.5 bg-theme-card border border-theme-primary rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono pr-10"
+              className="w-full h-[42px] px-4 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono pr-10"
               placeholder="Enter secure value"
             />
             <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-muted" />
@@ -473,7 +452,7 @@ function ConfigEditor() {
             onInput={(e) => autoResize(e.target)}
             ref={(textarea) => textarea && autoResize(textarea)}
             rows={1}
-            className="w-full px-4 py-2.5 bg-theme-card border border-theme-primary rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono text-sm resize-none overflow-hidden min-h-[42px]"
+            className="w-full px-4 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono text-sm resize-none overflow-hidden min-h-[42px]"
           />
         </div>
       );
@@ -485,7 +464,7 @@ function ConfigEditor() {
           type="text"
           value={stringValue}
           onChange={(e) => updateValue(fieldKey, e.target.value)}
-          className="w-full h-[42px] px-4 py-2.5 bg-theme-card border border-theme-primary rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+          className="w-full h-[42px] px-4 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
         />
       </div>
     );
@@ -495,7 +474,7 @@ function ConfigEditor() {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
-          <RefreshCw className="w-12 h-12 animate-spin text-theme-primary mx-auto mb-4" />
+          <Loader2 className="w-12 h-12 animate-spin text-theme-primary mx-auto mb-4" />
           <p className="text-theme-muted">Loading configuration...</p>
         </div>
       </div>
@@ -504,16 +483,17 @@ function ConfigEditor() {
 
   if (error) {
     return (
-      <div className="bg-red-900/20 border border-red-500 rounded-lg p-6 text-center">
-        <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+      <div className="bg-red-950/40 rounded-xl p-6 border-2 border-red-600/50 text-center">
+        <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
         <p className="text-red-300 text-lg font-semibold mb-2">
           Error Loading Configuration
         </p>
-        <p className="text-red-400">{error}</p>
+        <p className="text-red-200 mb-4">{error}</p>
         <button
           onClick={fetchConfig}
-          className="mt-4 px-6 py-2 bg-red-600 hover:bg-red-700 rounded-lg font-medium transition-colors"
+          className="px-6 py-2.5 bg-red-600 hover:bg-red-700 rounded-lg font-medium transition-all shadow-lg hover:scale-105"
         >
+          <RefreshCw className="w-5 h-5 inline mr-2" />
           Retry
         </button>
       </div>
@@ -521,42 +501,47 @@ function ConfigEditor() {
   }
 
   return (
-    <div>
+    <div className="space-y-6">
       <Toaster />
 
-      {/* Header */}
-      <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      {/* Header - Modernized to match RunModes */}
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-theme-primary mb-2">
+          <h1 className="text-3xl font-bold text-theme-text flex items-center gap-3">
+            <Settings className="w-8 h-8 text-theme-primary" />
             Configuration Editor
           </h1>
-          <p className="text-theme-muted">Manage your Posterizarr settings</p>
+          <p className="text-theme-muted mt-2">
+            Manage your Posterizarr settings
+          </p>
         </div>
         <div className="flex gap-3">
           <button
             onClick={fetchConfig}
             disabled={loading}
-            className="flex items-center px-5 py-2.5 bg-theme-card hover:bg-theme-hover border border-theme rounded-lg font-medium transition-all disabled:opacity-50 hover:scale-105"
+            className="flex items-center gap-2 px-5 py-2.5 bg-theme-card hover:bg-theme-hover border border-theme rounded-lg font-medium transition-all disabled:opacity-50 hover:scale-105 shadow-sm"
           >
-            <RefreshCw
-              className={`w-5 h-5 mr-2 ${loading ? "animate-spin" : ""}`}
-            />
+            <RefreshCw className={`w-5 h-5 ${loading ? "animate-spin" : ""}`} />
             Reload
           </button>
           <button
             onClick={saveConfig}
             disabled={saving}
-            className="flex items-center px-6 py-2.5 bg-theme-primary hover:bg-theme-primary/90 rounded-lg font-medium transition-all disabled:opacity-50 shadow-lg hover:scale-105"
+            className="flex items-center gap-2 px-6 py-2.5 bg-theme-primary hover:bg-theme-primary/90 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg font-medium transition-all shadow-lg hover:scale-105"
           >
-            <Save className="w-5 h-5 mr-2" />
+            {saving ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <Save className="w-5 h-5" />
+            )}
             {saving ? "Saving..." : "Save Changes"}
           </button>
         </div>
       </div>
 
-      {/* Tab Navigation - Enhanced with icons and badges */}
-      <div className="mb-6">
-        <div className="flex gap-2 flex-wrap overflow-x-auto pb-2">
+      {/* Tab Navigation - Enhanced */}
+      <div className="bg-theme-card rounded-xl p-4 border border-theme shadow-sm">
+        <div className="flex gap-2 flex-wrap">
           {Object.keys(tabs).map((tabName) => {
             const sectionsInTab = getGroupsByTab(tabName);
             if (sectionsInTab.length === 0 && tabName !== "Advanced")
@@ -569,16 +554,16 @@ function ConfigEditor() {
               <button
                 key={tabName}
                 onClick={() => setActiveTab(tabName)}
-                className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all whitespace-nowrap ${
+                className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all whitespace-nowrap ${
                   isActive
                     ? "bg-theme-primary text-white shadow-lg scale-105"
-                    : "bg-theme-card text-theme-muted hover:bg-theme-hover hover:text-theme-text border border-theme"
+                    : "bg-theme-hover text-theme-muted hover:bg-theme-primary/20 hover:text-theme-text border border-theme"
                 }`}
               >
                 <TabIcon className="w-5 h-5" />
                 {tabName}
                 <span
-                  className={`ml-1 px-2 py-0.5 rounded-full text-xs ${
+                  className={`ml-1 px-2 py-0.5 rounded-full text-xs font-semibold ${
                     isActive
                       ? "bg-white/30"
                       : "bg-theme-primary/20 text-theme-primary"
@@ -592,7 +577,7 @@ function ConfigEditor() {
         </div>
       </div>
 
-      {/* Tab Content */}
+      {/* Tab Content - Enhanced Cards */}
       <div className="space-y-4">
         {activeTab && (
           <>
@@ -646,10 +631,9 @@ function ConfigEditor() {
 
                   {/* Group Content - Grid Layout */}
                   {isExpanded && (
-                    <div className="px-6 pb-6 border-t border-theme">
+                    <div className="px-6 pb-6 border-t border-theme bg-theme-bg/30">
                       <div className="pt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
                         {fields.map((key) => {
-                          // Get value from config - works for both flat and grouped
                           const value = usingFlatStructure
                             ? config[key]
                             : config[groupName]?.[key];
@@ -664,7 +648,7 @@ function ConfigEditor() {
                                     {displayName}
                                   </span>
                                   {key !== displayName && (
-                                    <span className="text-xs text-theme-muted font-mono">
+                                    <span className="text-xs text-theme-muted font-mono bg-theme-bg px-2 py-1 rounded">
                                       {key}
                                     </span>
                                   )}

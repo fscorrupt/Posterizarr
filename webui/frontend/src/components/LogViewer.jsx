@@ -1,11 +1,21 @@
 import React, { useState, useEffect, useRef } from "react";
-import { RefreshCw, Download, Trash2 } from "lucide-react";
+import {
+  RefreshCw,
+  Download,
+  Trash2,
+  FileText,
+  CheckCircle,
+  Wifi,
+  WifiOff,
+  ChevronDown,
+} from "lucide-react";
+import toast, { Toaster } from "react-hot-toast";
 
 const API_URL = "/api";
 const isDev = import.meta.env.DEV;
 const WS_URL = isDev
-  ? `ws://localhost:3000/ws/logs` // Development: durch Vite-Proxy
-  : `ws://${window.location.host}/ws/logs`; // Production: direkt
+  ? `ws://localhost:3000/ws/logs`
+  : `ws://${window.location.host}/ws/logs`;
 
 function LogViewer() {
   const [logs, setLogs] = useState([]);
@@ -75,14 +85,27 @@ function LogViewer() {
     return colors[levelLower] || colors.default;
   };
 
-  const fetchAvailableLogs = async () => {
+  const fetchAvailableLogs = async (showToast = false) => {
     setIsRefreshing(true);
     try {
       const response = await fetch(`${API_URL}/logs`);
       const data = await response.json();
       setAvailableLogs(data.logs);
+
+      if (showToast) {
+        toast.success("Log files refreshed", {
+          duration: 2000,
+          position: "top-right",
+        });
+      }
     } catch (error) {
       console.error("Error fetching log files:", error);
+      if (showToast) {
+        toast.error("Failed to refresh log files", {
+          duration: 3000,
+          position: "top-right",
+        });
+      }
     } finally {
       setTimeout(() => setIsRefreshing(false), 500);
     }
@@ -96,6 +119,10 @@ function LogViewer() {
       setLogs(strippedContent);
     } catch (error) {
       console.error("Error fetching log:", error);
+      toast.error(`Failed to load ${logName}`, {
+        duration: 3000,
+        position: "top-right",
+      });
     }
   };
 
@@ -123,7 +150,6 @@ function LogViewer() {
   };
 
   const connectWebSocket = () => {
-    // Verhindere mehrfache Verbindungen
     if (
       wsRef.current &&
       (wsRef.current.readyState === WebSocket.OPEN ||
@@ -162,7 +188,6 @@ function LogViewer() {
         console.log("🔌 WebSocket closed:", event.code, event.reason);
         setConnected(false);
 
-        // Versuche Reconnect nach 3 Sekunden
         if (!event.wasClean) {
           reconnectTimeoutRef.current = setTimeout(() => {
             console.log("🔄 Attempting to reconnect WebSocket...");
@@ -181,8 +206,6 @@ function LogViewer() {
   useEffect(() => {
     fetchAvailableLogs();
     fetchLogFile(selectedLog);
-
-    // Versuche WebSocket-Verbindung für alle Logs
     connectWebSocket();
 
     return () => {
@@ -190,7 +213,6 @@ function LogViewer() {
     };
   }, []);
 
-  // Bei Log-Wechsel neu laden
   useEffect(() => {
     fetchLogFile(selectedLog);
   }, [selectedLog]);
@@ -214,7 +236,13 @@ function LogViewer() {
     };
   }, []);
 
-  const clearLogs = () => setLogs([]);
+  const clearLogs = () => {
+    setLogs([]);
+    toast.success("Logs cleared", {
+      duration: 2000,
+      position: "top-right",
+    });
+  };
 
   const downloadLogs = async () => {
     try {
@@ -234,150 +262,239 @@ function LogViewer() {
 
       a.click();
       URL.revokeObjectURL(url);
+
+      toast.success("Log file downloaded", {
+        duration: 2000,
+        position: "top-right",
+      });
     } catch (error) {
       console.error("Error downloading complete log file:", error);
-      alert(
-        "Fehler beim Herunterladen der Log-Datei. Bitte versuche es erneut."
-      );
+      toast.error("Failed to download log file", {
+        duration: 3000,
+        position: "top-right",
+      });
     }
   };
 
-  // Status-Anzeige
   const getDisplayStatus = () => {
     if (connected) {
       return {
-        color: "bg-green-400 animate-pulse",
+        color: "bg-green-400",
+        icon: Wifi,
         text: "Live",
+        ringColor: "ring-green-400/30",
       };
     } else {
       return {
         color: "bg-yellow-400",
+        icon: WifiOff,
         text: "File View",
+        ringColor: "ring-yellow-400/30",
       };
     }
   };
 
   const displayStatus = getDisplayStatus();
+  const StatusIcon = displayStatus.icon;
 
   return (
-    <div className="px-4 py-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
-        <h1 className="text-3xl font-bold text-theme-primary">Logs</h1>
+    <div className="space-y-6">
+      <Toaster />
 
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center space-x-2">
-            <span
-              className={`w-3 h-3 rounded-full ${displayStatus.color}`}
-            ></span>
-            <span className="text-sm text-theme-muted">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-theme-text flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-theme-primary/10">
+              <FileText className="w-8 h-8 text-theme-primary" />
+            </div>
+            Log Viewer
+          </h1>
+          <p className="text-theme-muted mt-2">
+            View and monitor your Posterizarr logs in real-time
+          </p>
+        </div>
+
+        {/* Connection Status Badge */}
+        <div
+          className={`flex items-center gap-3 px-4 py-2 rounded-lg bg-theme-card border ${
+            connected ? "border-green-500/50" : "border-yellow-500/50"
+          } shadow-sm`}
+        >
+          <div className="relative">
+            <div
+              className={`w-3 h-3 rounded-full ${displayStatus.color} ${
+                connected ? "animate-pulse" : ""
+              }`}
+            ></div>
+            <div
+              className={`absolute inset-0 w-3 h-3 rounded-full ${
+                displayStatus.color
+              } ${connected ? "animate-ping" : ""}`}
+            ></div>
+          </div>
+          <div className="flex items-center gap-2">
+            <StatusIcon className="w-4 h-4 text-theme-muted" />
+            <span className="text-sm font-medium text-theme-text">
               {displayStatus.text}
             </span>
           </div>
-
-          <label className="flex items-center space-x-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={autoScroll}
-              onChange={(e) => setAutoScroll(e.target.checked)}
-              className="w-4 h-4 rounded bg-theme-card border border-theme"
-            />
-            <span className="text-sm text-theme-text">Auto-scroll</span>
-          </label>
-
-          <button
-            onClick={fetchAvailableLogs}
-            disabled={isRefreshing}
-            className="px-3 py-2 bg-theme-card hover:bg-theme-hover border border-theme disabled:opacity-50 disabled:cursor-not-allowed rounded text-sm flex items-center gap-2 transition-colors"
-          >
-            <RefreshCw
-              className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`}
-            />
-            Refresh
-          </button>
-
-          <button
-            onClick={downloadLogs}
-            className="px-3 py-2 bg-theme-primary hover:bg-theme-primary/90 rounded text-sm flex items-center gap-2"
-          >
-            <Download className="w-4 h-4" />
-            Download
-          </button>
-
-          <button
-            onClick={clearLogs}
-            className="px-3 py-2 bg-red-600 hover:bg-red-700 rounded text-sm flex items-center gap-2"
-          >
-            <Trash2 className="w-4 h-4" />
-            Clear
-          </button>
         </div>
       </div>
 
-      {/* Log selector - Custom Dropdown */}
-      <div className="mb-4 relative" ref={dropdownRef}>
-        <button
-          onClick={() => setDropdownOpen(!dropdownOpen)}
-          className="w-full px-4 py-2 bg-theme-card border border-theme-primary rounded text-white text-sm flex items-center justify-between hover:bg-theme-hover transition-colors"
-        >
-          <span>
-            {selectedLog} (
-            {availableLogs.find((l) => l.name === selectedLog)
-              ? (
-                  availableLogs.find((l) => l.name === selectedLog).size / 1024
-                ).toFixed(2)
-              : "0.00"}{" "}
-            KB)
-          </span>
-          <svg
-            className={`w-4 h-4 transition-transform ${
-              dropdownOpen ? "rotate-180" : ""
-            }`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M19 9l-7 7-7-7"
-            />
-          </svg>
-        </button>
-
-        {dropdownOpen && (
-          <div className="absolute z-10 w-full mt-1 bg-theme-card border border-theme-primary rounded shadow-lg max-h-60 overflow-y-auto">
-            {availableLogs.map((log) => (
+      {/* Controls Section */}
+      <div className="bg-theme-card rounded-xl p-6 border border-theme shadow-sm">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+          {/* Log Selector */}
+          <div className="flex-1 w-full lg:max-w-md">
+            <label className="block text-sm font-medium text-theme-text mb-2">
+              Select Log File
+            </label>
+            <div className="relative" ref={dropdownRef}>
               <button
-                key={log.name}
-                onClick={() => {
-                  setSelectedLog(log.name);
-                  setDropdownOpen(false);
-                }}
-                className={`w-full px-4 py-2 text-left text-sm transition-colors ${
-                  selectedLog === log.name
-                    ? "bg-theme-primary text-white"
-                    : "text-theme-text hover:bg-theme-primary hover:text-white"
-                }`}
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className="w-full px-4 py-3 bg-theme-bg border border-theme rounded-lg text-theme-text text-sm flex items-center justify-between hover:bg-theme-hover hover:border-theme-primary/50 transition-all shadow-sm"
               >
-                {log.name} ({(log.size / 1024).toFixed(2)} KB)
+                <div className="flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-theme-primary" />
+                  <span className="font-medium">{selectedLog}</span>
+                  <span className="text-theme-muted text-xs">
+                    (
+                    {availableLogs.find((l) => l.name === selectedLog)
+                      ? (
+                          availableLogs.find((l) => l.name === selectedLog)
+                            .size / 1024
+                        ).toFixed(2)
+                      : "0.00"}{" "}
+                    KB)
+                  </span>
+                </div>
+                <ChevronDown
+                  className={`w-4 h-4 transition-transform ${
+                    dropdownOpen ? "rotate-180" : ""
+                  }`}
+                />
               </button>
-            ))}
+
+              {dropdownOpen && (
+                <div className="absolute z-10 w-full mt-2 bg-theme-card border border-theme-primary rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                  {availableLogs.map((log) => (
+                    <button
+                      key={log.name}
+                      onClick={() => {
+                        setSelectedLog(log.name);
+                        setDropdownOpen(false);
+                      }}
+                      className={`w-full px-4 py-3 text-left text-sm transition-all ${
+                        selectedLog === log.name
+                          ? "bg-theme-primary text-white"
+                          : "text-theme-text hover:bg-theme-primary/20"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium">{log.name}</span>
+                        <span className="text-xs opacity-80">
+                          {(log.size / 1024).toFixed(2)} KB
+                        </span>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
-        )}
+
+          {/* Action Buttons */}
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Auto-scroll Toggle */}
+            <label className="flex items-center gap-2 px-4 py-2 bg-theme-bg border border-theme rounded-lg cursor-pointer hover:bg-theme-hover transition-all">
+              <input
+                type="checkbox"
+                checked={autoScroll}
+                onChange={(e) => setAutoScroll(e.target.checked)}
+                className="w-4 h-4 rounded bg-theme-card border border-theme accent-theme-primary"
+              />
+              <span className="text-sm text-theme-text font-medium">
+                Auto-scroll
+              </span>
+            </label>
+
+            {/* Refresh Button */}
+            <button
+              onClick={() => fetchAvailableLogs(true)}
+              disabled={isRefreshing}
+              className="flex items-center gap-2 px-4 py-2 bg-theme-bg hover:bg-theme-hover border border-theme disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-sm font-medium transition-all hover:scale-[1.02] shadow-sm"
+            >
+              <RefreshCw
+                className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`}
+              />
+              Refresh
+            </button>
+
+            {/* Download Button */}
+            <button
+              onClick={downloadLogs}
+              className="flex items-center gap-2 px-4 py-2 bg-theme-primary hover:bg-theme-primary/90 rounded-lg text-sm font-medium transition-all hover:scale-[1.02] shadow-sm"
+            >
+              <Download className="w-4 h-4" />
+              Download
+            </button>
+
+            {/* Clear Button */}
+            <button
+              onClick={clearLogs}
+              className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm font-medium transition-all hover:scale-[1.02] shadow-sm"
+            >
+              <Trash2 className="w-4 h-4" />
+              Clear
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* Compact Terminal-Style Log Container */}
-      <div className="bg-theme-card rounded-lg border border-theme overflow-hidden">
+      {/* Log Display Section */}
+      <div className="bg-theme-card rounded-xl border border-theme shadow-sm overflow-hidden">
+        {/* Log Container Header */}
+        <div className="bg-theme-bg px-6 py-3 border-b border-theme flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-1.5 rounded bg-theme-primary/10">
+              <FileText className="w-4 h-4 text-theme-primary" />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-theme-text">
+                {selectedLog}
+              </h3>
+              <p className="text-xs text-theme-muted">
+                Showing last 500 entries
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 text-xs text-theme-muted">
+            <span className="font-mono">{logs.length} entries</span>
+            {connected && (
+              <div className="flex items-center gap-1.5 px-2 py-1 bg-green-500/10 border border-green-500/30 rounded text-green-400">
+                <CheckCircle className="w-3 h-3" />
+                <span>Live</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Terminal-Style Log Container */}
         <div
           ref={logContainerRef}
-          className="h-[700px] overflow-y-auto bg-black p-2"
+          className="h-[700px] overflow-y-auto bg-black p-4"
           style={{ scrollbarWidth: "thin" }}
         >
           {logs.length === 0 ? (
-            <div className="text-center py-12 text-gray-600 text-xs">
-              No logs to display
+            <div className="flex flex-col items-center justify-center h-full text-center">
+              <FileText className="w-16 h-16 text-gray-700 mb-4" />
+              <p className="text-gray-500 font-medium mb-2">
+                No logs to display
+              </p>
+              <p className="text-gray-600 text-sm">
+                Start a script or select a different log file
+              </p>
             </div>
           ) : (
             <div className="font-mono text-[11px] leading-relaxed">
@@ -392,7 +509,7 @@ function LogViewer() {
                   return (
                     <div
                       key={index}
-                      className="px-1 py-1 hover:bg-gray-900/50"
+                      className="px-2 py-1 hover:bg-gray-900/50 transition-colors rounded border-l-2 border-transparent hover:border-theme-primary/50"
                       style={{ color: "#9ca3af" }}
                     >
                       {parsed.raw}
@@ -405,13 +522,13 @@ function LogViewer() {
                 return (
                   <div
                     key={index}
-                    className="px-1 py-1 hover:bg-gray-900/50 flex items-center gap-2"
+                    className="px-2 py-1 hover:bg-gray-900/50 transition-colors flex items-center gap-2 rounded border-l-2 border-transparent hover:border-theme-primary/50"
                   >
-                    <span style={{ color: "#6b7280" }}>
+                    <span style={{ color: "#6b7280" }} className="text-[10px]">
                       [{parsed.timestamp}]
                     </span>
                     <LogLevel level={parsed.level} />
-                    <span style={{ color: "#4b5563" }}>
+                    <span style={{ color: "#4b5563" }} className="text-[10px]">
                       |L.{parsed.lineNum}|
                     </span>
                     <span style={{ color: logColor }}>{parsed.message}</span>
@@ -421,13 +538,21 @@ function LogViewer() {
             </div>
           )}
         </div>
-      </div>
 
-      <div className="mt-3 text-[10px] text-gray-600 flex justify-between">
-        <span>{logs.length} log entries</span>
-        {connected && (
-          <span className="text-green-400">● Receiving live updates</span>
-        )}
+        {/* Footer */}
+        <div className="bg-theme-bg px-6 py-3 border-t border-theme flex items-center justify-between text-xs text-theme-muted">
+          <div className="flex items-center gap-4">
+            <span className="font-mono">{logs.length} log entries</span>
+            <span>•</span>
+            <span>Auto-scroll: {autoScroll ? "On" : "Off"}</span>
+          </div>
+          {connected && (
+            <div className="flex items-center gap-2 text-green-400">
+              <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
+              <span>Receiving live updates</span>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

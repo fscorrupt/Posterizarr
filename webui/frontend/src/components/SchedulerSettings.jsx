@@ -8,8 +8,11 @@ import {
   Play,
   Calendar,
   AlertCircle,
+  Loader2,
+  Settings,
+  Zap,
 } from "lucide-react";
-import toast from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
 
 const API_URL = "/api";
 
@@ -38,7 +41,6 @@ const SchedulerSettings = () => {
 
   useEffect(() => {
     fetchSchedulerData();
-    // Refresh status every 30 seconds
     const interval = setInterval(fetchSchedulerData, 30000);
     return () => clearInterval(interval);
   }, []);
@@ -63,7 +65,10 @@ const SchedulerSettings = () => {
       }
     } catch (error) {
       console.error("Error fetching scheduler data:", error);
-      toast.error("Failed to load scheduler data");
+      toast.error("Failed to load scheduler data", {
+        duration: 4000,
+        position: "top-right",
+      });
     } finally {
       setLoading(false);
     }
@@ -82,15 +87,24 @@ const SchedulerSettings = () => {
       const data = await response.json();
 
       if (data.success) {
-        // Wait a bit for the backend to fully process
+        toast.success(`Scheduler ${config.enabled ? "disabled" : "enabled"}`, {
+          duration: 3000,
+          position: "top-right",
+        });
         await new Promise((resolve) => setTimeout(resolve, 500));
         await fetchSchedulerData();
       } else {
-        toast.error(data.detail || "Failed to toggle scheduler");
+        toast.error(data.detail || "Failed to toggle scheduler", {
+          duration: 4000,
+          position: "top-right",
+        });
       }
     } catch (error) {
       console.error("Error toggling scheduler:", error);
-      toast.error("Failed to toggle scheduler");
+      toast.error("Failed to toggle scheduler", {
+        duration: 4000,
+        position: "top-right",
+      });
     } finally {
       setIsUpdating(false);
     }
@@ -100,14 +114,19 @@ const SchedulerSettings = () => {
     e.preventDefault();
 
     if (!newTime) {
-      toast.error("Please enter a time");
+      toast.error("Please enter a time", {
+        duration: 3000,
+        position: "top-right",
+      });
       return;
     }
 
-    // Validate time format (HH:MM)
     const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
     if (!timeRegex.test(newTime)) {
-      toast.error("Invalid time format. Use HH:MM (e.g., 14:30)");
+      toast.error("Invalid time format. Use HH:MM (e.g., 14:30)", {
+        duration: 3000,
+        position: "top-right",
+      });
       return;
     }
 
@@ -127,18 +146,26 @@ const SchedulerSettings = () => {
       const data = await response.json();
 
       if (data.success) {
-        toast.success(`Schedule added: ${newTime}`);
+        toast.success(`Schedule added: ${newTime}`, {
+          duration: 3000,
+          position: "top-right",
+        });
         setNewTime("");
         setNewDescription("");
-        // Wait a bit for the backend to fully process
         await new Promise((resolve) => setTimeout(resolve, 500));
         await fetchSchedulerData();
       } else {
-        toast.error(data.detail || "Failed to add schedule");
+        toast.error(data.detail || "Failed to add schedule", {
+          duration: 4000,
+          position: "top-right",
+        });
       }
     } catch (error) {
       console.error("Error adding schedule:", error);
-      toast.error("Failed to add schedule");
+      toast.error("Failed to add schedule", {
+        duration: 4000,
+        position: "top-right",
+      });
     } finally {
       setIsUpdating(false);
     }
@@ -159,16 +186,24 @@ const SchedulerSettings = () => {
       const data = await response.json();
 
       if (data.success) {
-        toast.success(`Schedule removed: ${time}`);
-        // Wait a bit for the backend to fully process
+        toast.success(`Schedule removed: ${time}`, {
+          duration: 3000,
+          position: "top-right",
+        });
         await new Promise((resolve) => setTimeout(resolve, 500));
         await fetchSchedulerData();
       } else {
-        toast.error(data.detail || "Failed to remove schedule");
+        toast.error(data.detail || "Failed to remove schedule", {
+          duration: 4000,
+          position: "top-right",
+        });
       }
     } catch (error) {
       console.error("Error removing schedule:", error);
-      toast.error("Failed to remove schedule");
+      toast.error("Failed to remove schedule", {
+        duration: 4000,
+        position: "top-right",
+      });
     } finally {
       setIsUpdating(false);
     }
@@ -190,16 +225,24 @@ const SchedulerSettings = () => {
       const data = await response.json();
 
       if (data.success) {
-        toast.success("All schedules cleared");
-        // Wait a bit for the backend to fully process
+        toast.success("All schedules cleared", {
+          duration: 3000,
+          position: "top-right",
+        });
         await new Promise((resolve) => setTimeout(resolve, 500));
         await fetchSchedulerData();
       } else {
-        toast.error(data.detail || "Failed to clear schedules");
+        toast.error(data.detail || "Failed to clear schedules", {
+          duration: 4000,
+          position: "top-right",
+        });
       }
     } catch (error) {
       console.error("Error clearing schedules:", error);
-      toast.error("Failed to clear schedules");
+      toast.error("Failed to clear schedules", {
+        duration: 4000,
+        position: "top-right",
+      });
     } finally {
       setIsUpdating(false);
     }
@@ -219,17 +262,25 @@ const SchedulerSettings = () => {
       const data = await response.json();
 
       if (data.success) {
-        toast.success("Timezone updated");
+        toast.success("Timezone updated", {
+          duration: 3000,
+          position: "top-right",
+        });
         setTimezone(newTimezone);
-        // Wait a bit for the backend to fully process
         await new Promise((resolve) => setTimeout(resolve, 500));
         await fetchSchedulerData();
       } else {
-        toast.error(data.detail || "Failed to update timezone");
+        toast.error(data.detail || "Failed to update timezone", {
+          duration: 4000,
+          position: "top-right",
+        });
       }
     } catch (error) {
       console.error("Error updating timezone:", error);
-      toast.error("Failed to update timezone");
+      toast.error("Failed to update timezone", {
+        duration: 4000,
+        position: "top-right",
+      });
     } finally {
       setIsUpdating(false);
     }
@@ -250,15 +301,25 @@ const SchedulerSettings = () => {
 
       if (data.success) {
         toast.success(
-          value ? "Will skip if already running" : "Will allow concurrent runs"
+          value ? "Will skip if already running" : "Will allow concurrent runs",
+          {
+            duration: 3000,
+            position: "top-right",
+          }
         );
         await fetchSchedulerData();
       } else {
-        toast.error(data.detail || "Failed to update configuration");
+        toast.error(data.detail || "Failed to update configuration", {
+          duration: 4000,
+          position: "top-right",
+        });
       }
     } catch (error) {
       console.error("Error updating config:", error);
-      toast.error("Failed to update configuration");
+      toast.error("Failed to update configuration", {
+        duration: 4000,
+        position: "top-right",
+      });
     } finally {
       setIsUpdating(false);
     }
@@ -276,15 +337,23 @@ const SchedulerSettings = () => {
       const data = await response.json();
 
       if (data.success) {
-        toast.success("Manual run triggered");
-        // Refresh status to show execution
+        toast.success("Manual run triggered", {
+          duration: 3000,
+          position: "top-right",
+        });
         setTimeout(() => fetchSchedulerData(), 1000);
       } else {
-        toast.error(data.detail || "Failed to trigger run");
+        toast.error(data.detail || "Failed to trigger run", {
+          duration: 4000,
+          position: "top-right",
+        });
       }
     } catch (error) {
       console.error("Error triggering run:", error);
-      toast.error("Failed to trigger run");
+      toast.error("Failed to trigger run", {
+        duration: 4000,
+        position: "top-right",
+      });
     } finally {
       setIsUpdating(false);
     }
@@ -302,16 +371,24 @@ const SchedulerSettings = () => {
       const data = await response.json();
 
       if (data.success) {
-        toast.success("Scheduler restarted");
-        // Wait a bit for the backend to fully process
+        toast.success("Scheduler restarted", {
+          duration: 3000,
+          position: "top-right",
+        });
         await new Promise((resolve) => setTimeout(resolve, 500));
         await fetchSchedulerData();
       } else {
-        toast.error(data.detail || "Failed to restart scheduler");
+        toast.error(data.detail || "Failed to restart scheduler", {
+          duration: 4000,
+          position: "top-right",
+        });
       }
     } catch (error) {
       console.error("Error restarting scheduler:", error);
-      toast.error("Failed to restart scheduler");
+      toast.error("Failed to restart scheduler", {
+        duration: 4000,
+        position: "top-right",
+      });
     } finally {
       setIsUpdating(false);
     }
@@ -328,21 +405,27 @@ const SchedulerSettings = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-theme-primary"></div>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <Loader2 className="w-12 h-12 animate-spin text-theme-primary mx-auto mb-4" />
+          <p className="text-theme-muted">Loading scheduler settings...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-6">
-      {/* Header */}
+    <div className="space-y-6">
+      <Toaster />
+
+      {/* Header - Modernized to match other views */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-theme-primary flex items-center gap-2">
+          <h1 className="text-3xl font-bold text-theme-text flex items-center gap-3">
+            <Clock className="w-8 h-8 text-theme-primary" />
             Scheduler Settings
           </h1>
-          <p className="text-theme-muted mt-1">
+          <p className="text-theme-muted mt-2">
             Automate Posterizarr runs in normal mode
           </p>
         </div>
@@ -351,13 +434,17 @@ const SchedulerSettings = () => {
         <button
           onClick={toggleScheduler}
           disabled={isUpdating}
-          className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all ${
+          className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all shadow-lg hover:scale-105 ${
             config?.enabled
-              ? "bg-green-500 hover:bg-green-600 text-white shadow-lg"
+              ? "bg-green-600 hover:bg-green-700 text-white"
               : "bg-theme-card hover:bg-theme-hover text-theme-text border border-theme"
           } ${isUpdating ? "opacity-50 cursor-not-allowed" : ""}`}
         >
-          <Power className={`w-5 h-5 ${isUpdating ? "animate-spin" : ""}`} />
+          {isUpdating ? (
+            <Loader2 className="w-5 h-5 animate-spin" />
+          ) : (
+            <Power className="w-5 h-5" />
+          )}
           {isUpdating
             ? "Updating..."
             : config?.enabled
@@ -367,26 +454,26 @@ const SchedulerSettings = () => {
       </div>
 
       {/* Container Users Info */}
-      <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-4">
+      <div className="bg-blue-900/20 border-l-4 border-blue-500 rounded-lg p-4 shadow-sm">
         <div className="flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+          <AlertCircle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
           <div className="flex-1">
-            <h3 className="text-sm font-semibold text-blue-500 mb-1">
+            <h3 className="text-sm font-semibold text-blue-300 mb-2">
               Container Users Only
             </h3>
-            <p className="text-sm text-theme-text leading-relaxed">
+            <p className="text-sm text-blue-200 leading-relaxed">
               Please use only one scheduling option. Either use the runtime
               environment variable{" "}
-              <code className="px-1.5 py-0.5 bg-theme-hover rounded text-xs font-mono">
+              <code className="px-1.5 py-0.5 bg-theme-card rounded text-xs font-mono border border-theme">
                 RUN_TIME
               </code>{" "}
               for scheduling, or use the UI schedules. If you prefer to use the
               UI schedules, set the environment variable to{" "}
-              <code className="px-1.5 py-0.5 bg-theme-hover rounded text-xs font-mono">
+              <code className="px-1.5 py-0.5 bg-theme-card rounded text-xs font-mono border border-theme">
                 disabled
               </code>
               . By default, the container uses the{" "}
-              <code className="px-1.5 py-0.5 bg-theme-hover rounded text-xs font-mono">
+              <code className="px-1.5 py-0.5 bg-theme-card rounded text-xs font-mono border border-theme">
                 RUN_TIME
               </code>{" "}
               variable for scheduling.
@@ -397,34 +484,34 @@ const SchedulerSettings = () => {
 
       {/* Status Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-theme-card rounded-lg shadow-sm border border-theme p-4">
-          <div className="flex items-center gap-2 text-sm text-theme-muted mb-1">
+        <div className="bg-theme-card rounded-xl shadow-sm border border-theme p-5 hover:border-theme-primary/50 transition-all">
+          <div className="flex items-center gap-2 text-sm text-theme-muted mb-2">
             <Calendar className="w-4 h-4" />
             Last Run
           </div>
-          <div className="text-lg font-semibold text-theme-text">
+          <div className="text-xl font-semibold text-theme-text">
             {formatDateTime(status?.last_run)}
           </div>
         </div>
 
-        <div className="bg-theme-card rounded-lg shadow-sm border border-theme p-4">
-          <div className="flex items-center gap-2 text-sm text-theme-muted mb-1">
+        <div className="bg-theme-card rounded-xl shadow-sm border border-theme p-5 hover:border-theme-primary/50 transition-all">
+          <div className="flex items-center gap-2 text-sm text-theme-muted mb-2">
             <Clock className="w-4 h-4" />
             Next Run
           </div>
-          <div className="text-lg font-semibold text-theme-text">
+          <div className="text-xl font-semibold text-theme-text">
             {formatDateTime(status?.next_run)}
           </div>
         </div>
 
-        <div className="bg-theme-card rounded-lg shadow-sm border border-theme p-4">
-          <div className="flex items-center gap-2 text-sm text-theme-muted mb-1">
-            <AlertCircle className="w-4 h-4" />
+        <div className="bg-theme-card rounded-xl shadow-sm border border-theme p-5 hover:border-theme-primary/50 transition-all">
+          <div className="flex items-center gap-2 text-sm text-theme-muted mb-2">
+            <Zap className="w-4 h-4" />
             Status
           </div>
           <div className="flex items-center gap-2">
             <div
-              className={`w-2 h-2 rounded-full ${
+              className={`w-3 h-3 rounded-full ${
                 status?.is_executing
                   ? "bg-yellow-500 animate-pulse"
                   : status?.running
@@ -432,7 +519,7 @@ const SchedulerSettings = () => {
                   : "bg-theme-muted"
               }`}
             />
-            <span className="text-lg font-semibold text-theme-text">
+            <span className="text-xl font-semibold text-theme-text">
               {status?.is_executing
                 ? "Running"
                 : status?.running
@@ -444,10 +531,15 @@ const SchedulerSettings = () => {
       </div>
 
       {/* Configuration */}
-      <div className="bg-theme-card rounded-lg shadow-sm border border-theme p-6 space-y-4">
-        <h2 className="text-xl font-semibold text-theme-primary">
-          Configuration
-        </h2>
+      <div className="bg-theme-card rounded-xl shadow-sm border border-theme p-6 space-y-6">
+        <div className="flex items-center gap-3">
+          <div className="p-2 rounded-lg bg-theme-primary/10">
+            <Settings className="w-6 h-6 text-theme-primary" />
+          </div>
+          <h2 className="text-xl font-semibold text-theme-primary">
+            Configuration
+          </h2>
+        </div>
 
         {/* Timezone */}
         <div>
@@ -458,7 +550,7 @@ const SchedulerSettings = () => {
             value={timezone}
             onChange={(e) => updateTimezone(e.target.value)}
             disabled={isUpdating}
-            className="w-full px-4 py-2 bg-theme-card border border-theme-primary rounded-lg text-theme-text focus:ring-2 focus:ring-theme-primary focus:border-transparent disabled:opacity-50"
+            className="w-full px-4 py-3 bg-theme-bg border border-theme rounded-lg text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           >
             {timezones.map((tz) => (
               <option key={tz} value={tz}>
@@ -469,64 +561,72 @@ const SchedulerSettings = () => {
         </div>
 
         {/* Skip if running */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between p-4 bg-theme-bg rounded-lg border border-theme">
           <div>
             <label className="block text-sm font-medium text-theme-text">
               Skip scheduled runs if already running
             </label>
-            <p className="text-sm text-theme-muted">
+            <p className="text-sm text-theme-muted mt-1">
               Prevents overlapping executions
             </p>
           </div>
-          <button
-            onClick={() => updateSkipIfRunning(!config?.skip_if_running)}
-            disabled={isUpdating}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-              config?.skip_if_running ? "bg-theme-primary" : "bg-theme-muted"
-            } ${isUpdating ? "opacity-50 cursor-not-allowed" : ""}`}
-          >
-            <span
-              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                config?.skip_if_running ? "translate-x-6" : "translate-x-1"
-              }`}
+          <label className="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={config?.skip_if_running || false}
+              onChange={(e) => updateSkipIfRunning(e.target.checked)}
+              disabled={isUpdating}
+              className="sr-only peer"
             />
-          </button>
+            <div className="w-11 h-6 bg-gray-600 rounded-full peer peer-focus:ring-2 peer-focus:ring-theme-primary peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-theme-primary peer-disabled:opacity-50 peer-disabled:cursor-not-allowed"></div>
+          </label>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-2 pt-2">
+        <div className="flex gap-3 pt-2">
           <button
             onClick={restartScheduler}
             disabled={isUpdating || !config?.enabled}
-            className="flex items-center gap-2 px-4 py-2 bg-theme-primary hover:bg-theme-primary/90 text-white rounded-lg transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-5 py-2.5 bg-theme-primary hover:bg-theme-primary/90 text-white rounded-lg transition-all shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
           >
-            <RefreshCw
-              className={`w-4 h-4 ${isUpdating ? "animate-spin" : ""}`}
-            />
+            {isUpdating ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <RefreshCw className="w-5 h-5" />
+            )}
             Restart Scheduler
           </button>
           <button
             onClick={triggerNow}
             disabled={isUpdating || status?.is_executing || !config?.enabled}
-            className="flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+            className="flex items-center gap-2 px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-all shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
           >
-            <Play className="w-4 h-4" />
+            {isUpdating ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <Play className="w-5 h-5" />
+            )}
             Run Now
           </button>
         </div>
       </div>
 
       {/* Schedules */}
-      <div className="bg-theme-card rounded-lg shadow-sm border border-theme p-6 space-y-4">
+      <div className="bg-theme-card rounded-xl shadow-sm border border-theme p-6 space-y-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-theme-primary">
-            Schedules
-          </h2>
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-theme-primary/10">
+              <Clock className="w-6 h-6 text-theme-primary" />
+            </div>
+            <h2 className="text-xl font-semibold text-theme-primary">
+              Schedules
+            </h2>
+          </div>
           {config?.schedules?.length > 0 && (
             <button
               onClick={clearAllSchedules}
               disabled={isUpdating}
-              className="text-sm text-red-500 hover:text-red-600 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              className="text-sm text-red-400 hover:text-red-300 font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               Clear All
             </button>
@@ -534,14 +634,17 @@ const SchedulerSettings = () => {
         </div>
 
         {/* Add Schedule Form */}
-        <form onSubmit={addSchedule} className="flex gap-2">
+        <form
+          onSubmit={addSchedule}
+          className="flex flex-col md:flex-row gap-3"
+        >
           <input
             type="text"
             value={newTime}
             onChange={(e) => setNewTime(e.target.value)}
             placeholder="HH:MM (e.g., 14:30)"
             disabled={isUpdating}
-            className="flex-1 px-4 py-2 bg-theme-card border border-theme-primary rounded-lg text-theme-text placeholder-theme-muted focus:ring-2 focus:ring-theme-primary focus:border-transparent disabled:opacity-50"
+            className="flex-1 px-4 py-3 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             pattern="[0-2]?[0-9]:[0-5][0-9]"
           />
           <input
@@ -550,34 +653,40 @@ const SchedulerSettings = () => {
             onChange={(e) => setNewDescription(e.target.value)}
             placeholder="Description (optional)"
             disabled={isUpdating}
-            className="flex-1 px-4 py-2 bg-theme-card border border-theme-primary rounded-lg text-theme-text placeholder-theme-muted focus:ring-2 focus:ring-theme-primary focus:border-transparent disabled:opacity-50"
+            className="flex-1 px-4 py-3 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           />
           <button
             type="submit"
             disabled={isUpdating}
-            className="flex items-center gap-2 px-4 py-2 bg-theme-primary hover:bg-theme-primary/90 text-white rounded-lg transition-colors shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center justify-center gap-2 px-6 py-3 bg-theme-primary hover:bg-theme-primary/90 text-white rounded-lg transition-all shadow-lg hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
           >
-            <Plus className="w-4 h-4" />
+            {isUpdating ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <Plus className="w-5 h-5" />
+            )}
             Add
           </button>
         </form>
 
         {/* Schedule List */}
         {config?.schedules?.length > 0 ? (
-          <div className="space-y-2">
+          <div className="space-y-3">
             {config.schedules.map((schedule, index) => (
               <div
                 key={index}
-                className="flex items-center justify-between p-4 bg-theme-hover rounded-lg hover:bg-theme-hover/80 transition-colors border border-theme"
+                className="flex items-center justify-between p-4 bg-theme-bg rounded-lg hover:bg-theme-hover transition-all border border-theme hover:border-theme-primary/50 group"
               >
-                <div className="flex items-center gap-3">
-                  <Clock className="w-5 h-5 text-theme-primary" />
+                <div className="flex items-center gap-4">
+                  <div className="p-2 rounded-lg bg-theme-primary/10 group-hover:bg-theme-primary/20 transition-all">
+                    <Clock className="w-5 h-5 text-theme-primary" />
+                  </div>
                   <div>
-                    <div className="font-medium text-theme-text">
+                    <div className="font-semibold text-theme-text text-lg">
                       {schedule.time}
                     </div>
                     {schedule.description && (
-                      <div className="text-sm text-theme-muted">
+                      <div className="text-sm text-theme-muted mt-0.5">
                         {schedule.description}
                       </div>
                     )}
@@ -586,33 +695,47 @@ const SchedulerSettings = () => {
                 <button
                   onClick={() => removeSchedule(schedule.time)}
                   disabled={isUpdating}
-                  className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   title="Remove schedule"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-5 h-5" />
                 </button>
               </div>
             ))}
           </div>
         ) : (
-          <div className="text-center py-8 text-theme-muted">
-            <Clock className="w-12 h-12 mx-auto mb-2 text-theme-muted opacity-30" />
-            <p className="font-medium">No schedules configured</p>
-            <p className="text-sm">Add a schedule above to get started</p>
+          <div className="text-center py-12 bg-theme-bg rounded-lg border border-theme">
+            <Clock className="w-16 h-16 mx-auto mb-3 text-theme-muted opacity-30" />
+            <p className="font-semibold text-theme-text mb-1">
+              No schedules configured
+            </p>
+            <p className="text-sm text-theme-muted">
+              Add a schedule above to get started
+            </p>
           </div>
         )}
       </div>
 
       {/* Active Jobs (Debug Info) */}
       {status?.active_jobs?.length > 0 && (
-        <div className="bg-theme-primary/10 rounded-lg border border-theme-primary/30 p-4">
-          <h3 className="text-sm font-medium text-theme-primary mb-2">
-            Active Jobs
-          </h3>
-          <div className="space-y-1">
+        <div className="bg-theme-primary/10 rounded-xl border border-theme-primary/30 p-5 shadow-sm">
+          <div className="flex items-center gap-2 mb-3">
+            <Zap className="w-5 h-5 text-theme-primary" />
+            <h3 className="text-sm font-semibold text-theme-primary">
+              Active Jobs
+            </h3>
+          </div>
+          <div className="space-y-2">
             {status.active_jobs.map((job, index) => (
-              <div key={index} className="text-sm text-theme-text">
-                {job.name} - Next: {formatDateTime(job.next_run)}
+              <div
+                key={index}
+                className="text-sm text-theme-text bg-theme-card px-3 py-2 rounded-lg border border-theme"
+              >
+                <span className="font-medium">{job.name}</span>
+                <span className="text-theme-muted"> - Next: </span>
+                <span className="text-theme-primary font-medium">
+                  {formatDateTime(job.next_run)}
+                </span>
               </div>
             ))}
           </div>

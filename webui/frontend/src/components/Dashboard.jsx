@@ -6,15 +6,12 @@ import {
   AlertCircle,
   CheckCircle,
   Clock,
-  Settings,
-  Save,
   Trash2,
   AlertTriangle,
-  RotateCcw,
   Zap,
-  X,
+  Activity,
   ExternalLink,
-  Cloud,
+  FileText,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 
@@ -34,10 +31,6 @@ function Dashboard() {
   });
   const [loading, setLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [resetLibrary, setResetLibrary] = useState("");
-  const [showManualModal, setShowManualModal] = useState(false);
-  const [showJellyfinSyncModal, setShowJellyfinSyncModal] = useState(false);
-  const [showEmbySyncModal, setShowEmbySyncModal] = useState(false);
   const [version, setVersion] = useState({ local: null, remote: null });
 
   const fetchStatus = async () => {
@@ -83,36 +76,6 @@ function Dashboard() {
     const interval = setInterval(fetchStatus, 3000);
     return () => clearInterval(interval);
   }, []);
-
-  const runScript = async (mode) => {
-    setLoading(true);
-    try {
-      const response = await fetch(`${API_URL}/run/${mode}`, {
-        method: "POST",
-      });
-      const data = await response.json();
-
-      if (data.success) {
-        toast.success(`Script started in ${mode} mode!`, {
-          duration: 4000,
-          position: "top-right",
-        });
-        fetchStatus();
-      } else {
-        toast.error(`Error: ${data.message}`, {
-          duration: 5000,
-          position: "top-right",
-        });
-      }
-    } catch (error) {
-      toast.error(`Error: ${error.message}`, {
-        duration: 5000,
-        position: "top-right",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const stopScript = async () => {
     setLoading(true);
@@ -230,57 +193,6 @@ function Dashboard() {
     }
   };
 
-  const resetPosters = async () => {
-    if (!resetLibrary.trim()) {
-      toast.error("Please enter a library name", {
-        duration: 3000,
-        position: "top-right",
-      });
-      return;
-    }
-
-    if (
-      !window.confirm(
-        `⚠️ WARNING: This will reset ALL posters in library "${resetLibrary}"!\n\nThis action CANNOT be undone. Are you absolutely sure?`
-      )
-    ) {
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const response = await fetch(`${API_URL}/reset-posters`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ library: resetLibrary }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        toast.success(data.message, {
-          duration: 4000,
-          position: "top-right",
-        });
-        setResetLibrary(""); // Clear input after success
-      } else {
-        toast.error(`Error: ${data.message}`, {
-          duration: 5000,
-          position: "top-right",
-        });
-      }
-    } catch (error) {
-      toast.error(`Error: ${error.message}`, {
-        duration: 5000,
-        position: "top-right",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const parseLogLine = (line) => {
     const cleanedLine = line.replace(/\x00/g, "").trim();
 
@@ -336,442 +248,53 @@ function Dashboard() {
     return colors[levelLower] || colors.default;
   };
 
-  // Manual Mode Modal Component
-  const ManualModeModal = () => {
-    if (!showManualModal) return null;
-
-    return (
-      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div className="bg-theme-card border border-theme-primary rounded-xl max-w-2xl w-full shadow-2xl animate-in fade-in duration-200">
-          {/* Header */}
-          <div className="bg-theme-primary px-6 py-4 rounded-t-xl flex items-center justify-between">
-            <div className="flex items-center">
-              <Settings className="w-6 h-6 mr-3 text-white" />
-              <h3 className="text-xl font-bold text-white">
-                Manual Mode Instructions
-              </h3>
-            </div>
-            <button
-              onClick={() => setShowManualModal(false)}
-              className="text-white/80 hover:text-white transition-all p-1 hover:bg-white/10 rounded"
-            >
-              <X className="w-6 h-6" />
-            </button>
-          </div>
-
-          {/* Content */}
-          <div className="p-6 space-y-4">
-            <div className="bg-orange-900/20 border-l-4 border-orange-500 p-4 rounded">
-              <p className="text-orange-200 font-medium mb-2">
-                📁 Manual Mode allows you to process specific posters from a
-                custom directory.
-              </p>
-            </div>
-
-            <div className="space-y-3">
-              <h4 className="font-semibold text-theme-primary text-lg">
-                How to use Manual Mode:
-              </h4>
-
-              <ol className="space-y-3 text-theme-text">
-                <li className="flex">
-                  <span className="bg-theme-primary text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0 text-sm font-bold">
-                    1
-                  </span>
-                  <div>
-                    <strong className="text-theme-primary">
-                      Set ManualAssetPath
-                    </strong>{" "}
-                    in your config.json
-                    <code className="block mt-1 bg-theme-bg p-2 rounded text-sm font-mono text-theme-text border border-theme">
-                      "ManualAssetPath": "/path/to/your/manual/assets"
-                    </code>
-                  </div>
-                </li>
-
-                <li className="flex">
-                  <span className="bg-theme-primary text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0 text-sm font-bold">
-                    2
-                  </span>
-                  <div>
-                    <strong className="text-theme-primary">
-                      Create folder structure
-                    </strong>
-                    <code className="block mt-1 bg-theme-bg p-2 rounded text-sm font-mono text-theme-text border border-theme">
-                      ManualAssetPath/Movies/Movie Name (Year)/poster.ext
-                    </code>
-                  </div>
-                </li>
-
-                <li className="flex">
-                  <span className="bg-theme-primary text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0 text-sm font-bold">
-                    3
-                  </span>
-                  <div>
-                    <strong className="text-theme-primary">
-                      Run the script
-                    </strong>{" "}
-                    using the PowerShell command below
-                  </div>
-                </li>
-              </ol>
-
-              <div className="bg-theme-bg border border-theme rounded-lg p-4 mt-4">
-                <p className="text-sm text-theme-muted mb-2 font-semibold">
-                  PowerShell Command:
-                </p>
-                <code className="block bg-black/40 p-3 rounded font-mono text-sm text-theme-text border border-theme/30">
-                  pwsh -File /path/to/Posterizarr.ps1 -Manual
-                </code>
-              </div>
-
-              <div className="bg-yellow-900/20 border-l-4 border-yellow-500 p-4 rounded mt-4">
-                <p className="text-yellow-200 text-sm">
-                  ⚠️ <strong>Note:</strong> Manual mode must be run from the
-                  command line, not from this web interface.
-                </p>
-              </div>
-            </div>
-
-            {/* Documentation Link */}
-            <div className="pt-4 border-t-2 border-theme">
-              <a
-                href="https://github.com/fscorrupt/Posterizarr?tab=readme-ov-file#manual-mode-interactive"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center px-6 py-3 bg-theme-primary hover:bg-theme-primary/90 rounded-lg font-medium transition-all text-white shadow-lg"
-              >
-                <ExternalLink className="w-5 h-5 mr-2" />
-                View Full Documentation
-              </a>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div className="bg-theme-bg px-6 py-4 rounded-b-xl flex justify-end border-t-2 border-theme">
-            <button
-              onClick={() => setShowManualModal(false)}
-              className="px-6 py-2 bg-theme-primary hover:bg-theme-primary/90 rounded-lg font-medium transition-all"
-            >
-              Got it!
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // Jellyfin Sync Modal Component
-  const JellyfinSyncModal = () => {
-    if (!showJellyfinSyncModal) return null;
-
-    const startJellyfinSync = () => {
-      setShowJellyfinSyncModal(false);
-      runScript("syncjelly");
-    };
-
-    return (
-      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div className="bg-theme-card border border-theme-primary rounded-xl max-w-2xl w-full shadow-2xl animate-in fade-in duration-200">
-          {/* Header */}
-          <div className="bg-theme-primary px-6 py-4 rounded-t-xl flex items-center justify-between">
-            <div className="flex items-center">
-              <Cloud className="w-6 h-6 mr-3 text-white" />
-              <h3 className="text-xl font-bold text-white">
-                Jellyfin Sync Mode
-              </h3>
-            </div>
-            <button
-              onClick={() => setShowJellyfinSyncModal(false)}
-              className="text-white/80 hover:text-white transition-all p-1 hover:bg-white/10 rounded"
-            >
-              <X className="w-6 h-6" />
-            </button>
-          </div>
-
-          {/* Content */}
-          <div className="p-6 space-y-4">
-            <div className="bg-orange-900/20 border-l-4 border-orange-500 p-4 rounded">
-              <p className="text-orange-200 font-medium mb-2">
-                🔄 Sync all artwork from Plex to Jellyfin
-              </p>
-              <p className="text-orange-100 text-sm">
-                This mode will synchronize every artwork you have in Plex to
-                your Jellyfin server.
-              </p>
-            </div>
-
-            <div className="space-y-3">
-              <h4 className="font-semibold text-theme-primary text-lg">
-                How Jellyfin Sync works:
-              </h4>
-
-              <ul className="space-y-3 text-theme-text">
-                <li className="flex">
-                  <span className="bg-theme-primary text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0 text-sm font-bold">
-                    1
-                  </span>
-                  <div>
-                    <strong className="text-theme-primary">
-                      Library Names Must Match
-                    </strong>
-                    <p className="text-sm text-theme-muted mt-1">
-                      The script requires that library names in Plex and
-                      Jellyfin match exactly for the sync to work.
-                    </p>
-                  </div>
-                </li>
-
-                <li className="flex">
-                  <span className="bg-theme-primary text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0 text-sm font-bold">
-                    2
-                  </span>
-                  <div>
-                    <strong className="text-theme-primary">
-                      Hash Calculation
-                    </strong>
-                    <p className="text-sm text-theme-muted mt-1">
-                      The script calculates the hash of artwork from both
-                      servers to determine if there are differences.
-                    </p>
-                  </div>
-                </li>
-
-                <li className="flex">
-                  <span className="bg-theme-primary text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0 text-sm font-bold">
-                    3
-                  </span>
-                  <div>
-                    <strong className="text-theme-primary">Smart Sync</strong>
-                    <p className="text-sm text-theme-muted mt-1">
-                      Only syncs artwork if the hashes don't match, saving time
-                      and bandwidth.
-                    </p>
-                  </div>
-                </li>
-              </ul>
-
-              <div className="bg-blue-900/20 border-l-4 border-blue-500 p-4 rounded mt-4">
-                <p className="text-blue-200 text-sm">
-                  💡 <strong>Tip:</strong> This is handy if you want to run the
-                  sync after a Kometa run, so you have Kometa overlayed images
-                  in Jellyfin.
-                </p>
-              </div>
-
-              <div className="bg-yellow-900/20 border-l-4 border-yellow-500 p-4 rounded mt-4">
-                <p className="text-yellow-200 text-sm">
-                  ⚠️ <strong>Important:</strong> Make sure both UseJellyfin and
-                  UsePlex are set to true in your config.json, and that library
-                  names match exactly.
-                </p>
-              </div>
-            </div>
-
-            {/* Documentation Link */}
-            <div className="pt-4 border-t-2 border-theme">
-              <a
-                href="https://github.com/fscorrupt/Posterizarr?tab=readme-ov-file#sync-modes"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center px-6 py-3 bg-theme-bg hover:bg-theme-hover border border-theme rounded-lg font-medium transition-all text-theme-text shadow-lg"
-              >
-                <ExternalLink className="w-5 h-5 mr-2" />
-                View Full Documentation
-              </a>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div className="bg-theme-bg px-6 py-4 rounded-b-xl flex justify-between border-t-2 border-theme">
-            <button
-              onClick={() => setShowJellyfinSyncModal(false)}
-              className="px-6 py-2 bg-theme-card hover:bg-theme-hover border border-theme rounded-lg font-medium transition-all"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={startJellyfinSync}
-              disabled={loading || status.running}
-              className="px-6 py-2 bg-theme-primary hover:bg-theme-primary/90 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-all text-white flex items-center shadow-lg"
-            >
-              <Cloud className="w-5 h-5 mr-2" />
-              Start Jellyfin Sync
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // Emby Sync Modal Component
-  const EmbySyncModal = () => {
-    if (!showEmbySyncModal) return null;
-
-    const startEmbySync = () => {
-      setShowEmbySyncModal(false);
-      runScript("syncemby");
-    };
-
-    return (
-      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-        <div className="bg-theme-card border border-theme-primary rounded-xl max-w-2xl w-full shadow-2xl animate-in fade-in duration-200">
-          {/* Header */}
-          <div className="bg-theme-primary px-6 py-4 rounded-t-xl flex items-center justify-between">
-            <div className="flex items-center">
-              <Cloud className="w-6 h-6 mr-3 text-white" />
-              <h3 className="text-xl font-bold text-white">Emby Sync Mode</h3>
-            </div>
-            <button
-              onClick={() => setShowEmbySyncModal(false)}
-              className="text-white/80 hover:text-white transition-all p-1 hover:bg-white/10 rounded"
-            >
-              <X className="w-6 h-6" />
-            </button>
-          </div>
-
-          {/* Content */}
-          <div className="p-6 space-y-4">
-            <div className="bg-orange-900/20 border-l-4 border-orange-500 p-4 rounded">
-              <p className="text-orange-200 font-medium mb-2">
-                🔄 Sync all artwork from Plex to Emby
-              </p>
-              <p className="text-orange-100 text-sm">
-                This mode will synchronize every artwork you have in Plex to
-                your Emby server.
-              </p>
-            </div>
-
-            <div className="space-y-3">
-              <h4 className="font-semibold text-theme-primary text-lg">
-                How Emby Sync works:
-              </h4>
-
-              <ul className="space-y-3 text-theme-text">
-                <li className="flex">
-                  <span className="bg-theme-primary text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0 text-sm font-bold">
-                    1
-                  </span>
-                  <div>
-                    <strong className="text-theme-primary">
-                      Library Names Must Match
-                    </strong>
-                    <p className="text-sm text-theme-muted mt-1">
-                      The script requires that library names in Plex and Emby
-                      match exactly for the sync to work.
-                    </p>
-                  </div>
-                </li>
-
-                <li className="flex">
-                  <span className="bg-theme-primary text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0 text-sm font-bold">
-                    2
-                  </span>
-                  <div>
-                    <strong className="text-theme-primary">
-                      Hash Calculation
-                    </strong>
-                    <p className="text-sm text-theme-muted mt-1">
-                      The script calculates the hash of artwork from both
-                      servers to determine if there are differences.
-                    </p>
-                  </div>
-                </li>
-
-                <li className="flex">
-                  <span className="bg-theme-primary text-white rounded-full w-6 h-6 flex items-center justify-center mr-3 flex-shrink-0 text-sm font-bold">
-                    3
-                  </span>
-                  <div>
-                    <strong className="text-theme-primary">Smart Sync</strong>
-                    <p className="text-sm text-theme-muted mt-1">
-                      Only syncs artwork if the hashes don't match, saving time
-                      and bandwidth.
-                    </p>
-                  </div>
-                </li>
-              </ul>
-
-              <div className="bg-blue-900/20 border-l-4 border-blue-500 p-4 rounded mt-4">
-                <p className="text-blue-200 text-sm">
-                  💡 <strong>Tip:</strong> This is handy if you want to run the
-                  sync after a Kometa run, so you have Kometa overlayed images
-                  in Emby.
-                </p>
-              </div>
-
-              <div className="bg-yellow-900/20 border-l-4 border-yellow-500 p-4 rounded mt-4">
-                <p className="text-yellow-200 text-sm">
-                  ⚠️ <strong>Important:</strong> Make sure both UseEmby and
-                  UsePlex are set to true in your config.json, and that library
-                  names match exactly.
-                </p>
-              </div>
-            </div>
-
-            {/* Documentation Link */}
-            <div className="pt-4 border-t-2 border-theme">
-              <a
-                href="https://github.com/fscorrupt/Posterizarr?tab=readme-ov-file#sync-modes"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center px-6 py-3 bg-theme-bg hover:bg-theme-hover border border-theme rounded-lg font-medium transition-all text-theme-text shadow-lg"
-              >
-                <ExternalLink className="w-5 h-5 mr-2" />
-                View Full Documentation
-              </a>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div className="bg-theme-bg px-6 py-4 rounded-b-xl flex justify-between border-t-2 border-theme">
-            <button
-              onClick={() => setShowEmbySyncModal(false)}
-              className="px-6 py-2 bg-theme-card hover:bg-theme-hover border border-theme rounded-lg font-medium transition-all"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={startEmbySync}
-              disabled={loading || status.running}
-              className="px-6 py-2 bg-theme-primary hover:bg-theme-primary/90 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-all text-white flex items-center shadow-lg"
-            >
-              <Cloud className="w-5 h-5 mr-2" />
-              Start Emby Sync
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   return (
-    <div className="px-4 py-6">
+    <div className="space-y-6">
       <Toaster />
-      <ManualModeModal />
-      <JellyfinSyncModal />
-      <EmbySyncModal />
 
-      <h1 className="text-3xl font-bold mb-8 text-theme-primary">Dashboard</h1>
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-theme-text flex items-center gap-3">
+            <Activity className="w-8 h-8 text-theme-primary" />
+            Dashboard
+          </h1>
+          <p className="text-theme-muted mt-2">
+            Monitor your Posterizarr instance
+          </p>
+        </div>
 
+        {/* Quick Action: Go to Run Modes */}
+        {!status.running && (
+          <a
+            href="/run-modes"
+            className="flex items-center gap-2 px-4 py-2 bg-theme-primary hover:bg-theme-primary/90 rounded-lg font-medium transition-all shadow-lg hover:scale-[1.02]"
+          >
+            <Play className="w-5 h-5" />
+            Run Script
+          </a>
+        )}
+      </div>
+
+      {/* Already Running Warning */}
       {status.already_running_detected && (
-        <div className="mb-6 bg-yellow-900/30 border border-yellow-600/50 rounded-lg p-4 shadow-sm">
-          <div className="flex items-start">
-            <AlertTriangle className="h-6 w-6 text-yellow-400 mr-3 flex-shrink-0 mt-0.5" />
+        <div className="bg-yellow-900/30 border-l-4 border-yellow-500 rounded-lg p-6 shadow-sm">
+          <div className="flex items-start gap-4">
+            <AlertTriangle className="w-6 h-6 text-yellow-400 flex-shrink-0 mt-1" />
             <div className="flex-1">
               <h3 className="text-lg font-semibold text-yellow-400 mb-2">
                 Another Posterizarr Instance Already Running
               </h3>
-              <p className="text-yellow-200 text-sm mb-3">
+              <p className="text-yellow-200 text-sm mb-4">
                 The script detected another instance. If this is a false
-                positive, delete the running file.
+                positive, delete the running file below.
               </p>
               <button
                 onClick={deleteRunningFile}
                 disabled={loading}
-                className="flex items-center px-4 py-2 bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-all text-sm shadow-sm"
+                className="flex items-center gap-2 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-all text-sm shadow-sm"
               >
-                <Trash2 className="w-4 h-4 mr-2" />
+                <Trash2 className="w-4 h-4" />
                 Delete Running File
               </button>
             </div>
@@ -780,90 +303,97 @@ function Dashboard() {
       )}
 
       {/* Status Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Script Status Card */}
         <div className="bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-theme-muted text-sm mb-1">Script Status</p>
+            <div className="flex-1">
+              <p className="text-theme-muted text-sm mb-1 font-medium">
+                Script Status
+              </p>
               <p
-                className={`text-2xl font-bold ${
+                className={`text-2xl font-bold mb-2 ${
                   status.running ? "text-green-400" : "text-theme-text"
                 }`}
               >
                 {status.running ? "Running" : "Stopped"}
               </p>
-              {status.running && status.pid && (
-                <>
-                  <p className="text-sm text-theme-muted mt-1">
-                    PID: {status.pid}
-                  </p>
-                  {status.current_mode && (
-                    <p className="text-xs text-blue-400 mt-1 capitalize">
-                      Mode: {status.current_mode}
+              {status.running && (
+                <div className="space-y-1">
+                  {status.pid && (
+                    <p className="text-sm text-theme-muted">
+                      PID: <span className="font-mono">{status.pid}</span>
                     </p>
                   )}
-                </>
-              )}
-            </div>
-            <div className="p-3 rounded-lg bg-theme-primary/10">
-              {status.running ? (
-                <CheckCircle className="h-12 w-12 text-green-400" />
-              ) : (
-                <Clock className="h-12 w-12 text-gray-500" />
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-theme-muted text-sm mb-1">Script File</p>
-              <p
-                className={`text-2xl font-bold ${
-                  status.script_exists ? "text-green-400" : "text-red-400"
-                }`}
-              >
-                {status.script_exists ? "Found" : "Missing"}
-              </p>
-              {status.script_exists && (
-                <div className="mt-2 space-y-1">
-                  {(version.local || version.remote) && (
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-theme-primary text-white">
-                        v{version.local || version.remote}
-                      </span>
-                      {version.is_update_available && (
-                        <a
-                          href="https://github.com/fscorrupt/Posterizarr/releases/latest"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center"
-                        >
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500 text-white animate-pulse">
-                            v{version.remote} available
-                          </span>
-                        </a>
-                      )}
+                  {status.current_mode && (
+                    <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                      Mode: {status.current_mode}
                     </div>
                   )}
                 </div>
               )}
             </div>
             <div className="p-3 rounded-lg bg-theme-primary/10">
-              {status.script_exists ? (
-                <CheckCircle className="h-12 w-12 text-green-400" />
+              {status.running ? (
+                <CheckCircle className="w-12 h-12 text-green-400" />
               ) : (
-                <AlertCircle className="h-12 w-12 text-red-400" />
+                <Clock className="w-12 h-12 text-gray-500" />
               )}
             </div>
           </div>
         </div>
 
+        {/* Script File Card */}
         <div className="bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
           <div className="flex items-center justify-between">
-            <div>
-              <p className="text-theme-muted text-sm mb-1">Config File</p>
+            <div className="flex-1">
+              <p className="text-theme-muted text-sm mb-1 font-medium">
+                Script File
+              </p>
+              <p
+                className={`text-2xl font-bold mb-2 ${
+                  status.script_exists ? "text-green-400" : "text-red-400"
+                }`}
+              >
+                {status.script_exists ? "Found" : "Missing"}
+              </p>
+              {status.script_exists && (version.local || version.remote) && (
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-theme-primary text-white">
+                    v{version.local || version.remote}
+                  </span>
+                  {version.is_update_available && (
+                    <a
+                      href="https://github.com/fscorrupt/Posterizarr/releases/latest"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center"
+                    >
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500 text-white animate-pulse hover:scale-105 transition-transform">
+                        v{version.remote} available
+                      </span>
+                    </a>
+                  )}
+                </div>
+              )}
+            </div>
+            <div className="p-3 rounded-lg bg-theme-primary/10">
+              {status.script_exists ? (
+                <CheckCircle className="w-12 h-12 text-green-400" />
+              ) : (
+                <AlertCircle className="w-12 h-12 text-red-400" />
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Config File Card */}
+        <div className="bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <p className="text-theme-muted text-sm mb-1 font-medium">
+                Config File
+              </p>
               <p
                 className={`text-2xl font-bold ${
                   status.config_exists ? "text-green-400" : "text-red-400"
@@ -874,117 +404,71 @@ function Dashboard() {
             </div>
             <div className="p-3 rounded-lg bg-theme-primary/10">
               {status.config_exists ? (
-                <CheckCircle className="h-12 w-12 text-green-400" />
+                <CheckCircle className="w-12 h-12 text-green-400" />
               ) : (
-                <AlertCircle className="h-12 w-12 text-red-400" />
+                <AlertCircle className="w-12 h-12 text-red-400" />
               )}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Script Execution Controls */}
-      <div className="bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all mb-6 shadow-sm">
-        <h2 className="text-xl font-semibold mb-4 text-theme-primary flex items-center">
-          <div className="p-2 rounded-lg bg-theme-primary/10 mr-3">
-            <Play className="w-5 h-5 text-theme-primary" />
+      {/* Running Script Controls - Only show when running */}
+      {status.running && (
+        <div className="bg-orange-950/40 rounded-xl p-6 border border-orange-600/50">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-orange-600/20">
+                <AlertCircle className="w-6 h-6 text-orange-400" />
+              </div>
+              <div>
+                <p className="font-medium text-orange-200 text-lg">
+                  Script is running
+                </p>
+                <p className="text-sm text-orange-300/80">
+                  Monitor progress in logs below or stop the script
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={stopScript}
+              disabled={loading}
+              className="flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 disabled:bg-gray-700 disabled:cursor-not-allowed rounded-lg font-medium transition-all shadow-lg hover:scale-[1.02]"
+            >
+              <Square className="w-5 h-5" />
+              Stop Script
+            </button>
           </div>
-          Script Modes
-        </h2>
-
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <button
-            onClick={() => runScript("normal")}
-            disabled={loading || status.running}
-            className="flex items-center justify-center px-4 py-3 bg-theme-primary hover:bg-theme-primary/90 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-all shadow-sm"
-          >
-            <Play className="w-5 h-5 mr-2" />
-            Run Normal
-          </button>
-
-          <button
-            onClick={() => runScript("testing")}
-            disabled={loading || status.running}
-            className="flex items-center justify-center px-4 py-3 bg-theme-primary hover:bg-theme-primary/90 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-all shadow-sm"
-          >
-            <RefreshCw className="w-5 h-5 mr-2" />
-            Testing Mode
-          </button>
-
-          <button
-            onClick={() => setShowManualModal(true)}
-            disabled={loading || status.running}
-            className="flex items-center justify-center px-4 py-3 bg-theme-primary hover:bg-theme-primary/90 rounded-lg font-medium transition-all shadow-sm"
-          >
-            <Settings className="w-5 h-5 mr-2" />
-            Manual Mode
-          </button>
-
-          <button
-            onClick={() => runScript("backup")}
-            disabled={loading || status.running}
-            className="flex items-center justify-center px-4 py-3 bg-theme-primary hover:bg-theme-primary/90 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-all shadow-sm"
-          >
-            <Save className="w-5 h-5 mr-2" />
-            Backup Mode
-          </button>
         </div>
-      </div>
-
-      {/* SYNC MODE */}
-      <div className="bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all mb-6 shadow-sm">
-        <h2 className="text-xl font-semibold mb-4 text-theme-primary flex items-center">
-          <div className="p-2 rounded-lg bg-theme-primary/10 mr-3">
-            <Cloud className="w-5 h-5 text-theme-primary" />
-          </div>
-          Sync Mode
-        </h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <button
-            onClick={() => setShowJellyfinSyncModal(true)}
-            disabled={loading || status.running}
-            className="flex items-center justify-center px-4 py-3 bg-theme-primary hover:bg-theme-primary/90 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-all shadow-sm"
-          >
-            <Cloud className="w-5 h-5 mr-2" />
-            Sync Jellyfin
-          </button>
-
-          <button
-            onClick={() => setShowEmbySyncModal(true)}
-            disabled={loading || status.running}
-            className="flex items-center justify-center px-4 py-3 bg-theme-primary hover:bg-theme-primary/90 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-all shadow-sm"
-          >
-            <Cloud className="w-5 h-5 mr-2" />
-            Sync Emby
-          </button>
-        </div>
-      </div>
+      )}
 
       {/* Log Viewer */}
-      <div className="bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all mb-6 shadow-sm">
+      <div className="bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-xl font-semibold text-theme-primary flex items-center">
-              <div className="p-2 rounded-lg bg-theme-primary/10 mr-3">
-                <RefreshCw className="w-5 h-5 text-theme-primary" />
+            <h2 className="text-xl font-semibold text-theme-text flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-theme-primary/10">
+                <FileText className="w-5 h-5 text-theme-primary" />
               </div>
-              Last Log Entries
+              Live Log Feed
             </h2>
             {status.active_log && (
-              <p className="text-xs text-theme-muted mt-1 ml-14">
-                Reading from: {status.active_log}
+              <p className="text-xs text-theme-muted mt-2 ml-14">
+                Reading from:{" "}
+                <span className="font-mono">{status.active_log}</span>
               </p>
             )}
           </div>
           <button
             onClick={fetchStatus}
             disabled={isRefreshing}
-            className="text-theme-muted hover:text-theme-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all p-2 hover:bg-theme-hover rounded-lg"
+            className="flex items-center gap-2 px-4 py-2 text-theme-muted hover:text-theme-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:bg-theme-hover rounded-lg"
+            title="Refresh logs"
           >
             <RefreshCw
               className={`w-5 h-5 ${isRefreshing ? "animate-spin" : ""}`}
             />
+            <span className="text-sm font-medium">Refresh</span>
           </button>
         </div>
 
@@ -1002,7 +486,7 @@ function Dashboard() {
                   return (
                     <div
                       key={index}
-                      className="px-2 py-1 hover:bg-gray-900/50 transition-colors"
+                      className="px-3 py-1.5 hover:bg-gray-900/50 transition-colors border-l-2 border-transparent hover:border-theme-primary/50"
                       style={{ color: "#9ca3af" }}
                     >
                       {parsed.raw}
@@ -1015,13 +499,13 @@ function Dashboard() {
                 return (
                   <div
                     key={index}
-                    className="px-2 py-1 hover:bg-gray-900/50 transition-colors flex items-center gap-2"
+                    className="px-3 py-1.5 hover:bg-gray-900/50 transition-colors flex items-center gap-2 border-l-2 border-transparent hover:border-theme-primary/50"
                   >
-                    <span style={{ color: "#6b7280" }}>
+                    <span style={{ color: "#6b7280" }} className="text-[10px]">
                       [{parsed.timestamp}]
                     </span>
                     <LogLevel level={parsed.level} />
-                    <span style={{ color: "#4b5563" }}>
+                    <span style={{ color: "#4b5563" }} className="text-[10px]">
                       |L.{parsed.lineNum}|
                     </span>
                     <span style={{ color: logColor }}>{parsed.message}</span>
@@ -1030,101 +514,71 @@ function Dashboard() {
               })}
             </div>
           ) : (
-            <div className="px-3 py-8 text-center text-gray-600 text-xs">
-              No logs - start a script to see output
+            <div className="px-4 py-12 text-center">
+              <FileText className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+              <p className="text-gray-500 text-sm font-medium">
+                No logs available
+              </p>
+              <p className="text-gray-600 text-xs mt-1">
+                Start a script to see output here
+              </p>
             </div>
           )}
         </div>
 
-        <div className="mt-2 text-[10px] text-gray-600 flex justify-between">
-          <span>Auto-refresh: 3s</span>
+        <div className="mt-3 flex items-center justify-between text-xs text-gray-600">
+          <span className="flex items-center gap-2">
+            <Clock className="w-3 h-3" />
+            Auto-refresh: 3s
+          </span>
+          <span className="text-gray-500">
+            Last 25 entries • {status.active_log || "No active log"}
+          </span>
         </div>
       </div>
 
-      {/* DANGER ZONE */}
-      <div className="bg-red-950/40 rounded-xl p-6 border-2 border-red-600/50 mb-8 shadow-sm">
-        <div className="flex items-center mb-4">
-          <div className="p-2 rounded-lg bg-red-600/20 mr-3">
+      {/* Danger Zone */}
+      <div className="bg-red-950/40 rounded-xl p-6 border-2 border-red-600/50 shadow-sm">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-2 rounded-lg bg-red-600/20">
             <AlertTriangle className="w-6 h-6 text-red-400" />
           </div>
-          <h2 className="text-xl font-semibold text-red-400">Danger Zone</h2>
+          <div>
+            <h2 className="text-xl font-semibold text-red-400">Danger Zone</h2>
+            <p className="text-red-200 text-sm mt-1">
+              These actions are potentially destructive
+            </p>
+          </div>
         </div>
 
-        <p className="text-red-200 text-sm mb-6">
-          These actions are potentially destructive and should be used with
-          caution.
-        </p>
-
-        {/* Stop and Force Kill */}
+        {/* Control Buttons */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <button
             onClick={stopScript}
             disabled={loading || !status.running}
-            className="flex items-center justify-center px-4 py-3 bg-red-600 hover:bg-red-700 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg font-medium transition-all border border-red-500 shadow-sm"
+            className="flex items-center justify-center gap-2 px-4 py-3 bg-red-600 hover:bg-red-700 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg font-medium transition-all border border-red-500 shadow-sm hover:scale-[1.02]"
           >
-            <Square className="w-5 h-5 mr-2" />
+            <Square className="w-5 h-5" />
             Stop Script
           </button>
 
           <button
             onClick={forceKillScript}
             disabled={loading || !status.running}
-            className="flex items-center justify-center px-4 py-3 bg-red-800 hover:bg-red-900 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg font-medium transition-all border border-red-600 shadow-sm"
+            className="flex items-center justify-center gap-2 px-4 py-3 bg-red-800 hover:bg-red-900 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg font-medium transition-all border border-red-600 shadow-sm hover:scale-[1.02]"
           >
-            <Zap className="w-5 h-5 mr-2" />
+            <Zap className="w-5 h-5" />
             Force Kill
           </button>
 
           <button
             onClick={deleteRunningFile}
             disabled={loading}
-            className="flex items-center justify-center px-4 py-3 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg font-medium transition-all border border-orange-500 shadow-sm"
+            className="flex items-center justify-center gap-2 px-4 py-3 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg font-medium transition-all border border-orange-500 shadow-sm hover:scale-[1.02]"
           >
-            <Trash2 className="w-5 h-5 mr-2" />
+            <Trash2 className="w-5 h-5" />
             Delete Running File
           </button>
-        </div>
-
-        {/* Reset Posters Section */}
-        <div className="border-t-2 border-red-600/30 pt-6">
-          <div className="flex items-center mb-4">
-            <div className="p-2 rounded-lg bg-red-600/20 mr-3">
-              <RotateCcw className="w-5 h-5 text-red-300" />
-            </div>
-            <h3 className="text-lg font-semibold text-red-300">
-              Reset Posters
-            </h3>
-          </div>
-
-          <p className="text-red-200 text-sm mb-4">
-            ⚠️ This will reset ALL posters in the specified Plex library. This
-            action CANNOT be undone!
-          </p>
-
-          <div className="flex flex-col md:flex-row gap-4">
-            <input
-              type="text"
-              value={resetLibrary}
-              onChange={(e) => setResetLibrary(e.target.value)}
-              placeholder="Enter library name (e.g., Movies, TV Shows)"
-              disabled={loading || status.running}
-              className="flex-1 px-4 py-3 bg-theme-card border border-red-500/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 transition-all"
-            />
-            <button
-              onClick={resetPosters}
-              disabled={loading || status.running || !resetLibrary.trim()}
-              className="flex items-center justify-center px-6 py-3 bg-red-700 hover:bg-red-800 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg font-medium transition-all border border-red-600 whitespace-nowrap shadow-sm"
-            >
-              <RotateCcw className="w-5 h-5 mr-2" />
-              Reset Posters
-            </button>
-          </div>
-
-          <div className="mt-3 text-xs text-red-300/70">
-            <strong>Note:</strong> The script must be stopped before resetting
-            posters. Make sure you have entered the exact library name as it
-            appears in Plex.
-          </div>
         </div>
       </div>
     </div>

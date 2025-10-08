@@ -14,6 +14,7 @@ import GalleryHub from "./components/GalleryHub";
 import TestGallery from "./components/TestGallery";
 import About from "./components/About";
 import SchedulerSettings from "./components/SchedulerSettings";
+import RunModes from "./components/RunModes";
 import VersionBadge from "./components/VersionBadge";
 import {
   Menu,
@@ -25,6 +26,7 @@ import {
   Palette,
   Info,
   Clock,
+  Play,
 } from "lucide-react";
 
 function ThemeSwitcher() {
@@ -71,17 +73,14 @@ function ThemeSwitcher() {
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors ${
                     theme === t.id
                       ? "bg-theme-primary text-white"
-                      : "text-gray-300 hover:bg-theme-hover hover:text-white"
+                      : "text-gray-300 hover:bg-theme-hover"
                   }`}
                 >
-                  <span className="flex items-center">
-                    <div
-                      className="w-3 h-3 rounded-full mr-2"
-                      style={{ backgroundColor: t.color }}
-                    />
-                    {t.name}
-                  </span>
-                  {theme === t.id && <span className="text-xs">✓</span>}
+                  <span>{t.name}</span>
+                  <div
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: t.color }}
+                  />
                 </button>
               ))}
             </div>
@@ -98,8 +97,9 @@ function Navigation() {
 
   const navItems = [
     { path: "/", label: "Dashboard", icon: Activity },
-    { path: "/test-gallery", label: "Test Gallery", icon: Image },
-    { path: "/gallery", label: "Gallery", icon: Image },
+    { path: "/run-modes", label: "Run Modes", icon: Play },
+    { path: "/gallery", label: "Assets", icon: Image },
+    { path: "/test-gallery", label: "Test Gallery", icon: TestTube },
     { path: "/config", label: "Config", icon: Settings },
     { path: "/scheduler", label: "Scheduler", icon: Clock },
     { path: "/logs", label: "Logs", icon: FileText },
@@ -107,23 +107,20 @@ function Navigation() {
   ];
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-theme-card border-b border-theme shadow-lg">
+    <nav className="bg-theme-card border-b border-theme shadow-lg fixed top-0 left-0 right-0 z-30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo with Version Badge */}
-          <div className="flex-shrink-0 flex items-center">
-            <Link to="/" className="flex items-center">
-              <h1 className="text-2xl font-bold text-theme-primary">
+        <div className="flex justify-between h-16">
+          <div className="flex items-center">
+            <div className="flex-shrink-0 flex items-center">
+              <span className="text-2xl font-bold text-theme-primary">
                 Posterizarr
-              </h1>
+              </span>
               <VersionBadge />
-            </Link>
-          </div>
+            </div>
 
-          {/* Desktop menu */}
-          <div className="hidden md:block">
-            <div className="flex items-center space-x-1">
-              <div className="flex items-baseline space-x-1">
+            {/* Desktop Navigation */}
+            <div className="hidden md:ml-10 md:flex md:space-x-2">
+              <div className="flex space-x-1">
                 {navItems.map((item) => {
                   const Icon = item.icon;
                   const isActive = location.pathname === item.path;
@@ -131,7 +128,7 @@ function Navigation() {
                     <Link
                       key={item.path}
                       to={item.path}
-                      className={`flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      className={`inline-flex items-center px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                         isActive
                           ? "bg-theme-primary text-white"
                           : "text-gray-300 hover:bg-theme-hover hover:text-white"
@@ -207,6 +204,7 @@ function AppContent() {
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8 pt-24">
         <Routes>
           <Route path="/" element={<Dashboard />} />
+          <Route path="/run-modes" element={<RunModes />} />
           <Route path="/test-gallery" element={<TestGallery />} />
           <Route path="/gallery" element={<GalleryHub />} />
           <Route path="/config" element={<ConfigEditor />} />

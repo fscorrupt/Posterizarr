@@ -6,6 +6,11 @@ import {
   Play,
   ChevronDown,
   ChevronUp,
+  Loader2,
+  X,
+  TestTube,
+  Expand,
+  Minimize,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 
@@ -103,6 +108,14 @@ function TestGallery() {
   };
 
   const runTestMode = async () => {
+    if (status.running) {
+      toast.error("Script is already running! Please stop it first.", {
+        duration: 4000,
+        position: "top-right",
+      });
+      return;
+    }
+
     setScriptLoading(true);
     try {
       const response = await fetch(`${API_URL}/run/testing`, {
@@ -111,7 +124,7 @@ function TestGallery() {
       const data = await response.json();
 
       if (data.success) {
-        toast.success("Test Mode gestartet!", {
+        toast.success("Test Mode started successfully!", {
           duration: 4000,
           position: "top-right",
         });
@@ -156,8 +169,6 @@ function TestGallery() {
     const isExpanded = expandedCategories[categoryKey];
 
     // Aspect Ratio basierend auf Kategorie
-    // Posters & Season Posters: Hochformat (2:3)
-    // Backgrounds & Title Cards: Querformat (16:9)
     const isPortrait =
       categoryKey === "posters" || categoryKey === "seasonPosters";
     const aspectRatio = isPortrait ? "aspect-[2/3]" : "aspect-[16/9]";
@@ -169,10 +180,10 @@ function TestGallery() {
       <div className="mb-6">
         <button
           onClick={() => toggleCategory(categoryKey)}
-          className="w-full flex items-center justify-between p-4 bg-theme-card border border-theme rounded-lg hover:bg-theme-hover transition-colors"
+          className="w-full flex items-center justify-between p-5 bg-theme-card border border-theme rounded-xl hover:bg-theme-hover hover:border-theme-primary/50 transition-all group shadow-sm"
         >
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-8 h-8 bg-theme-primary rounded-full text-sm font-bold">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center justify-center w-10 h-10 bg-theme-primary/10 group-hover:bg-theme-primary/20 rounded-lg text-sm font-bold text-theme-primary transition-all group-hover:scale-110">
               {images.length}
             </div>
             <div className="text-left">
@@ -180,15 +191,26 @@ function TestGallery() {
                 {title}
               </h3>
               {description && (
-                <p className="text-xs text-theme-muted">{description}</p>
+                <p className="text-xs text-theme-muted mt-1">{description}</p>
               )}
             </div>
           </div>
-          {isExpanded ? (
-            <ChevronUp className="w-5 h-5 text-theme-muted" />
-          ) : (
-            <ChevronDown className="w-5 h-5 text-theme-muted" />
-          )}
+          <div className="flex items-center gap-3">
+            <span
+              className={`px-3 py-1 rounded-full text-xs font-medium ${
+                isExpanded
+                  ? "bg-theme-primary/20 text-theme-primary border border-theme-primary/30"
+                  : "bg-theme-bg text-theme-muted border border-theme"
+              }`}
+            >
+              {isExpanded ? "Open" : "Closed"}
+            </span>
+            {isExpanded ? (
+              <ChevronUp className="w-6 h-6 text-theme-primary transition-transform" />
+            ) : (
+              <ChevronDown className="w-6 h-6 text-theme-muted transition-transform" />
+            )}
+          </div>
         </button>
 
         {isExpanded && (
@@ -196,14 +218,14 @@ function TestGallery() {
             {images.map((image, index) => (
               <div
                 key={index}
-                className="group relative bg-theme-card rounded-lg overflow-hidden border border-theme hover:border-theme-primary transition-all cursor-pointer"
+                className="group relative bg-theme-card rounded-xl overflow-hidden border border-theme hover:border-theme-primary hover:shadow-lg transition-all cursor-pointer"
                 onClick={() => setSelectedImage(image)}
               >
                 <div
-                  className={`${aspectRatio} bg-theme-dark flex items-center justify-center overflow-hidden`}
+                  className={`${aspectRatio} bg-theme-bg flex items-center justify-center overflow-hidden`}
                 >
                   <img
-                    src={image.url} // if image.url is already relative
+                    src={image.url}
                     alt={image.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     loading="lazy"
@@ -213,7 +235,7 @@ function TestGallery() {
                     }}
                   />
                   <div
-                    className="hidden flex-col items-center justify-center text-gray-600 p-4"
+                    className="hidden flex-col items-center justify-center text-theme-muted p-4"
                     style={{ display: "none" }}
                   >
                     <ImageIcon className="w-12 h-12 mb-2" />
@@ -223,9 +245,9 @@ function TestGallery() {
                   </div>
                 </div>
 
-                <div className="p-3 border-t-2 border-theme">
+                <div className="p-3 border-t border-theme">
                   <p
-                    className="text-xs text-theme-text truncate"
+                    className="text-xs text-theme-text truncate font-medium"
                     title={image.name}
                   >
                     {image.name}
@@ -243,48 +265,72 @@ function TestGallery() {
   };
 
   return (
-    <div className="px-4 py-6">
+    <div className="space-y-6">
       <Toaster />
 
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 space-y-4 md:space-y-0">
-        <h1 className="text-3xl font-bold text-theme-primary">Test Gallery</h1>
+      {/* Header - Modernized to match RunModes & ConfigEditor */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-theme-text flex items-center gap-3">
+            <TestTube className="w-8 h-8 text-theme-primary" />
+            Test Gallery
+          </h1>
+          <p className="text-theme-muted mt-2">
+            View and manage test mode output files
+          </p>
+        </div>
 
         <div className="flex gap-3">
           <button
             onClick={() => fetchImages(true)}
             disabled={loading}
-            className="flex items-center px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-colors"
+            className="flex items-center gap-2 px-5 py-2.5 bg-theme-card hover:bg-theme-hover border border-theme disabled:opacity-50 disabled:cursor-not-allowed rounded-lg font-medium transition-all hover:scale-105 shadow-sm"
           >
-            <RefreshCw
-              className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`}
-            />
+            <RefreshCw className={`w-5 h-5 ${loading ? "animate-spin" : ""}`} />
             Refresh
           </button>
 
           <button
             onClick={runTestMode}
             disabled={scriptLoading || status.running}
-            className="flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-colors"
+            className="flex items-center gap-2 px-6 py-2.5 bg-theme-primary hover:bg-theme-primary/90 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg font-medium transition-all shadow-lg hover:scale-105"
           >
-            <Play
-              className={`w-4 h-4 mr-2 ${scriptLoading ? "animate-spin" : ""}`}
-            />
+            {scriptLoading ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <Play className="w-5 h-5" />
+            )}
             Start Test Mode
           </button>
         </div>
       </div>
 
+      {/* Running Status */}
+      {status.running && (
+        <div className="bg-orange-950/40 rounded-xl p-4 border border-orange-600/50 shadow-sm">
+          <div className="flex items-center gap-3">
+            <Loader2 className="w-5 h-5 text-orange-400 animate-spin" />
+            <div>
+              <p className="font-medium text-orange-200">Script is running</p>
+              <p className="text-sm text-orange-300/80">
+                Mode: {status.current_mode || "Unknown"}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Search bar */}
       {images.length > 0 && (
-        <div className="mb-6">
+        <div className="bg-theme-card rounded-xl p-4 border border-theme shadow-sm">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-theme-muted" />
             <input
               type="text"
               placeholder="Search test files..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-theme-card border border-theme-primary rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary"
+              className="w-full pl-10 pr-4 py-3 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
             />
           </div>
         </div>
@@ -292,20 +338,23 @@ function TestGallery() {
 
       {loading ? (
         <div className="flex items-center justify-center py-32">
-          <RefreshCw className="w-12 h-12 animate-spin text-theme-primary" />
+          <div className="text-center">
+            <Loader2 className="w-12 h-12 animate-spin text-theme-primary mx-auto mb-4" />
+            <p className="text-theme-muted">Loading test gallery...</p>
+          </div>
         </div>
       ) : error ? (
-        <div className="bg-red-900/30 border border-red-700 rounded-lg p-6 text-center">
+        <div className="bg-red-950/40 rounded-xl p-6 border-2 border-red-600/50 text-center shadow-sm">
           <ImageIcon className="w-16 h-16 text-red-400 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-red-400 mb-2">
+          <h3 className="text-xl font-semibold text-red-300 mb-2">
             Error Loading Test Gallery
           </h3>
-          <p className="text-red-300 text-sm">{error}</p>
+          <p className="text-red-200">{error}</p>
         </div>
       ) : filteredImages.length === 0 ? (
-        <div className="bg-theme-card border border-theme rounded-lg p-12 text-center">
-          <ImageIcon className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-          <h3 className="text-xl font-semibold text-theme-muted mb-2">
+        <div className="bg-theme-card border border-theme rounded-xl p-12 text-center shadow-sm">
+          <ImageIcon className="w-16 h-16 text-theme-muted mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-theme-text mb-2">
             No Test Files Found
           </h3>
           <p className="text-theme-muted text-sm">
@@ -316,21 +365,23 @@ function TestGallery() {
         </div>
       ) : (
         <>
-          {/* Gesamtanzahl */}
-          <div className="mb-6 p-4 bg-theme-card border border-theme rounded-lg">
+          {/* Gesamtanzahl & Controls */}
+          <div className="bg-theme-card border border-theme rounded-xl p-5 shadow-sm">
             <div className="flex items-center justify-between">
-              <span className="text-theme-text">
-                Total:{" "}
-                <span className="font-bold text-theme-primary">
-                  {filteredImages.length}
-                </span>{" "}
-                Test files
+              <div className="flex items-center gap-2">
+                <span className="text-theme-text">
+                  Total:{" "}
+                  <span className="font-bold text-theme-primary text-lg">
+                    {filteredImages.length}
+                  </span>{" "}
+                  Test files
+                </span>
                 {images.length !== filteredImages.length && (
-                  <span className="ml-2 text-theme-muted text-sm">
+                  <span className="ml-2 text-theme-muted text-sm bg-theme-bg px-2 py-1 rounded">
                     (filtered from {images.length} total)
                   </span>
                 )}
-              </span>
+              </div>
               <div className="flex gap-2">
                 <button
                   onClick={() =>
@@ -341,8 +392,9 @@ function TestGallery() {
                       titleCards: true,
                     })
                   }
-                  className="px-3 py-1 text-xs bg-theme-hover hover:bg-theme-primary rounded transition-colors"
+                  className="flex items-center gap-1 px-3 py-2 text-sm bg-theme-hover hover:bg-theme-primary/20 border border-theme hover:border-theme-primary rounded-lg transition-all font-medium"
                 >
+                  <Expand className="w-4 h-4" />
                   Expand All
                 </button>
                 <button
@@ -354,8 +406,9 @@ function TestGallery() {
                       titleCards: false,
                     })
                   }
-                  className="px-3 py-1 text-xs bg-theme-hover hover:bg-theme-primary rounded transition-colors"
+                  className="flex items-center gap-1 px-3 py-2 text-sm bg-theme-hover hover:bg-theme-primary/20 border border-theme hover:border-theme-primary rounded-lg transition-all font-medium"
                 >
+                  <Minimize className="w-4 h-4" />
                   Collapse All
                 </button>
               </div>
@@ -393,51 +446,62 @@ function TestGallery() {
         </>
       )}
 
-      {/* Image Modal */}
+      {/* Image Modal - Enhanced */}
       {selectedImage && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200"
           onClick={() => setSelectedImage(null)}
         >
           <div
-            className="bg-theme-card border border-theme-primary rounded-lg max-w-6xl w-full max-h-[90vh] flex flex-col"
+            className="bg-theme-card border border-theme-primary rounded-xl max-w-6xl w-full max-h-[90vh] flex flex-col shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="p-4 border-b-2 border-theme flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-white truncate">
-                {selectedImage.name}
-              </h3>
+            {/* Modal Header */}
+            <div className="bg-theme-primary px-6 py-4 rounded-t-xl flex items-center justify-between">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <ImageIcon className="w-6 h-6 text-white flex-shrink-0" />
+                <h3 className="text-lg font-semibold text-white truncate">
+                  {selectedImage.name}
+                </h3>
+              </div>
               <button
                 onClick={() => setSelectedImage(null)}
-                className="text-theme-muted hover:text-white transition-colors text-2xl leading-none"
+                className="text-white/80 hover:text-white transition-all p-1 hover:bg-white/10 rounded flex-shrink-0"
               >
-                ×
+                <X className="w-6 h-6" />
               </button>
             </div>
-            <div className="flex-1 overflow-auto flex items-center justify-center p-4">
+
+            {/* Modal Content */}
+            <div className="flex-1 overflow-auto flex items-center justify-center p-6 bg-theme-bg/30">
               <img
-                src={selectedImage.url} // if image.url is already relative
+                src={selectedImage.url}
                 alt={selectedImage.name}
-                className="max-w-full max-h-[70vh] object-contain rounded-lg"
+                className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-lg"
                 onError={(e) => {
                   e.target.style.display = "none";
-                  e.target.nextSibling.style.display = "block";
+                  e.target.nextSibling.style.display = "flex";
                 }}
               />
-              <div className="text-center" style={{ display: "none" }}>
-                <ImageIcon className="w-24 h-24 text-gray-700 mx-auto mb-4" />
-                <p className="text-gray-500 text-sm">
+              <div
+                className="text-center flex-col items-center justify-center"
+                style={{ display: "none" }}
+              >
+                <ImageIcon className="w-24 h-24 text-theme-muted mx-auto mb-4" />
+                <p className="text-theme-muted text-sm">
                   Image preview not available
                 </p>
               </div>
             </div>
-            <div className="p-4 border-t-2 border-theme-primary flex justify-between items-center">
-              <span className="text-sm text-theme-muted">
+
+            {/* Modal Footer */}
+            <div className="bg-theme-bg px-6 py-4 rounded-b-xl flex justify-between items-center border-t-2 border-theme">
+              <span className="text-sm text-theme-muted font-medium">
                 Size: {(selectedImage.size / 1024).toFixed(2)} KB
               </span>
               <button
                 onClick={() => setSelectedImage(null)}
-                className="px-4 py-2 bg-theme-primary hover:bg-theme-primary/90 rounded-lg text-sm font-medium transition-colors text-white"
+                className="px-6 py-2 bg-theme-primary hover:bg-theme-primary/90 rounded-lg text-sm font-medium transition-all text-white shadow-lg"
               >
                 Close
               </button>
