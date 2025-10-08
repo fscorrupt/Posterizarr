@@ -6774,6 +6774,7 @@ if ($dev) {
 Else {
     $Branch = 'main'
 }
+$Branch = 'dev'
 # Set some global vars
 Set-OSTypeAndScriptRoot
 # Get platform
