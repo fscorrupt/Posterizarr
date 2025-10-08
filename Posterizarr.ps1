@@ -7852,6 +7852,11 @@ if ($Manual) {
         $LibraryName = $LibraryName.replace('"', '')
 
         $PosterImageoriginal = "$AssetPath\$LibraryName\$FolderName\poster.jpg"
+
+        # Create Folder if Missing
+        $TargetFolder = Join-Path -Path "$AssetPath\$LibraryName" -ChildPath $FolderName
+        New-Item -ItemType Directory -Path $TargetFolder -Force | Out-Null
+
         if ($SeasonPoster) {
             if ([string]::IsNullOrEmpty($SeasonPosterName)) {
                 $SeasonPosterName = Read-Host "Enter Season Name"
@@ -7876,6 +7881,9 @@ if ($Manual) {
                 }
             }
             $PosterImageoriginal = "$AssetPath\$LibraryName\$FolderName\$global:seasontmp.jpg"
+            # Create Folder if Missing
+            $TargetFolder = Join-Path -Path "$AssetPath\$LibraryName" -ChildPath $FolderName
+            New-Item -ItemType Directory -Path $TargetFolder -Force | Out-Null
         }
         if ($CollectionCard) {
             $PosterImageoriginal = "$AssetPath\Collections\$LibraryName\$FolderName\poster.jpg"
@@ -7908,6 +7916,9 @@ if ($Manual) {
                 $global:episode = "E" + $global:EpisodeNumber.PadLeft(2, '0')
             }
             $PosterImageoriginal = "$AssetPath\$LibraryName\$FolderName\$global:seasontmp$global:episode.jpg"
+            # Create Folder if Missing
+            $TargetFolder = Join-Path -Path "$AssetPath\$LibraryName" -ChildPath $FolderName
+            New-Item -ItemType Directory -Path $TargetFolder -Force | Out-Null
         }
     }
     Else {
