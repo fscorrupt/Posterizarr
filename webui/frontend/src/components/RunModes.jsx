@@ -15,6 +15,7 @@ import {
   Film,
   Tv,
   FolderHeart,
+  Clapperboard,
   Image as ImageIcon,
   Cloud,
   X,
@@ -37,8 +38,11 @@ function RunModes() {
     titletext: "",
     folderName: "",
     libraryName: "",
-    posterType: "standard", // standard, season, collection
+    posterType: "standard", // standard, season, collection, titlecard
     seasonPosterName: "",
+    // Episode Title Card fields
+    epTitleName: "",
+    episodeNumber: "",
   });
 
   // Reset Posters Form State
@@ -121,7 +125,8 @@ function RunModes() {
       return;
     }
 
-    if (!manualForm.titletext.trim()) {
+    // Title text is only required for non-titlecard types
+    if (manualForm.posterType !== "titlecard" && !manualForm.titletext.trim()) {
       toast.error("Title Text is required!", {
         duration: 3000,
         position: "top-right",
@@ -156,6 +161,31 @@ function RunModes() {
       return;
     }
 
+    // Title card validation
+    if (manualForm.posterType === "titlecard") {
+      if (!manualForm.epTitleName.trim()) {
+        toast.error("Episode Title is required for title cards!", {
+          duration: 3000,
+          position: "top-right",
+        });
+        return;
+      }
+      if (!manualForm.seasonPosterName.trim()) {
+        toast.error("Season Name is required for title cards!", {
+          duration: 3000,
+          position: "top-right",
+        });
+        return;
+      }
+      if (!manualForm.episodeNumber.trim()) {
+        toast.error("Episode Number is required for title cards!", {
+          duration: 3000,
+          position: "top-right",
+        });
+        return;
+      }
+    }
+
     setLoading(true);
     try {
       const response = await fetch(`${API_URL}/run-manual`, {
@@ -181,6 +211,8 @@ function RunModes() {
           libraryName: "",
           posterType: "standard",
           seasonPosterName: "",
+          epTitleName: "",
+          episodeNumber: "",
         });
         fetchStatus();
       } else {
@@ -746,25 +778,27 @@ function RunModes() {
             </p>
           </div>
 
-          {/* Title Text */}
-          <div>
-            <label className="block text-sm font-medium text-theme-text mb-2">
-              Title Text <span className="text-red-400">*</span>
-            </label>
-            <input
-              type="text"
-              value={manualForm.titletext}
-              onChange={(e) =>
-                setManualForm({ ...manualForm, titletext: e.target.value })
-              }
-              placeholder="The Martian"
-              disabled={loading || status.running}
-              className="w-full px-4 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary disabled:opacity-50 disabled:cursor-not-allowed"
-            />
-            <p className="text-xs text-theme-muted mt-1">
-              Title to display on the poster
-            </p>
-          </div>
+          {/* Title Text - Hidden for title cards */}
+          {manualForm.posterType !== "titlecard" && (
+            <div>
+              <label className="block text-sm font-medium text-theme-text mb-2">
+                Title Text <span className="text-red-400">*</span>
+              </label>
+              <input
+                type="text"
+                value={manualForm.titletext}
+                onChange={(e) =>
+                  setManualForm({ ...manualForm, titletext: e.target.value })
+                }
+                placeholder="The Martian"
+                disabled={loading || status.running}
+                className="w-full px-4 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary disabled:opacity-50 disabled:cursor-not-allowed"
+              />
+              <p className="text-xs text-theme-muted mt-1">
+                Title to display on the poster
+              </p>
+            </div>
+          )}
 
           {/* Folder Name */}
           <div>
@@ -811,7 +845,7 @@ function RunModes() {
             <label className="block text-sm font-medium text-theme-text mb-2">
               Poster Type
             </label>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <button
                 onClick={() =>
                   setManualForm({ ...manualForm, posterType: "standard" })
@@ -839,6 +873,20 @@ function RunModes() {
               >
                 <Tv className="w-5 h-5" />
                 Season
+              </button>
+              <button
+                onClick={() =>
+                  setManualForm({ ...manualForm, posterType: "titlecard" })
+                }
+                disabled={loading || status.running}
+                className={`flex items-center justify-center gap-2 px-4 py-3 rounded-lg border-2 transition-all ${
+                  manualForm.posterType === "titlecard"
+                    ? "bg-theme-primary border-theme-primary text-white"
+                    : "bg-theme-hover border-theme hover:border-theme-primary text-theme-text"
+                } disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                <Clapperboard className="w-5 h-5" />
+                Title Card
               </button>
               <button
                 onClick={() =>
@@ -880,6 +928,80 @@ function RunModes() {
                 Season name (e.g., "Season 1", "Staffel 2", "Specials")
               </p>
             </div>
+          )}
+
+          {/* Episode Title Card Fields (only shown for titlecard type) */}
+          {manualForm.posterType === "titlecard" && (
+            <>
+              {/* Episode Title Name */}
+              <div>
+                <label className="block text-sm font-medium text-theme-text mb-2">
+                  Episode Title <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={manualForm.epTitleName}
+                  onChange={(e) =>
+                    setManualForm({
+                      ...manualForm,
+                      epTitleName: e.target.value,
+                    })
+                  }
+                  placeholder="Ozymandias"
+                  disabled={loading || status.running}
+                  className="w-full px-4 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+                <p className="text-xs text-theme-muted mt-1">
+                  Episode title name (e.g., "Ozymandias", "Pilot")
+                </p>
+              </div>
+
+              {/* Season Name */}
+              <div>
+                <label className="block text-sm font-medium text-theme-text mb-2">
+                  Season Name <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={manualForm.seasonPosterName}
+                  onChange={(e) =>
+                    setManualForm({
+                      ...manualForm,
+                      seasonPosterName: e.target.value,
+                    })
+                  }
+                  placeholder="Season 5"
+                  disabled={loading || status.running}
+                  className="w-full px-4 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+                <p className="text-xs text-theme-muted mt-1">
+                  Season name (e.g., "Season 5", "Staffel 1")
+                </p>
+              </div>
+
+              {/* Episode Number */}
+              <div>
+                <label className="block text-sm font-medium text-theme-text mb-2">
+                  Episode Number <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={manualForm.episodeNumber}
+                  onChange={(e) =>
+                    setManualForm({
+                      ...manualForm,
+                      episodeNumber: e.target.value,
+                    })
+                  }
+                  placeholder="14"
+                  disabled={loading || status.running}
+                  className="w-full px-4 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+                <p className="text-xs text-theme-muted mt-1">
+                  Episode number (e.g., "14", "1")
+                </p>
+              </div>
+            </>
           )}
 
           {/* Run Button */}

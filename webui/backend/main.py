@@ -557,8 +557,10 @@ class ManualModeRequest(BaseModel):
     titletext: str
     folderName: str
     libraryName: str
-    posterType: Literal["standard", "season", "collection"] = "standard"
+    posterType: Literal["standard", "season", "collection", "titlecard"] = "standard"
     seasonPosterName: str = ""
+    epTitleName: str = ""
+    episodeNumber: str = ""
 
 
 class ScheduleCreate(BaseModel):
@@ -1308,14 +1310,14 @@ async def reset_posters(request: ResetPostersRequest):
 
 @app.post("/api/run-manual")
 async def run_manual_mode(request: ManualModeRequest):
-    """Run Posterizarr in manual mode with custom parameters"""
+    """Run manual mode with custom parameters"""
     global current_process, current_mode
 
-    # Check if script is running
+    # Check if already running
     if current_process and current_process.poll() is None:
         raise HTTPException(
             status_code=400,
-            detail="Cannot run manual mode while script is running. Please stop the script first.",
+            detail="Script is already running. Please stop the script first.",
         )
 
     if not SCRIPT_PATH.exists():
@@ -1334,12 +1336,28 @@ async def run_manual_mode(request: ManualModeRequest):
     if not request.libraryName or not request.libraryName.strip():
         raise HTTPException(status_code=400, detail="Library name is required")
 
+    # Validate season poster
     if request.posterType == "season" and (
         not request.seasonPosterName or not request.seasonPosterName.strip()
     ):
         raise HTTPException(
             status_code=400, detail="Season poster name is required for season posters"
         )
+
+    # Validate title card
+    if request.posterType == "titlecard":
+        if not request.epTitleName or not request.epTitleName.strip():
+            raise HTTPException(
+                status_code=400, detail="Episode title name is required for title cards"
+            )
+        if not request.episodeNumber or not request.episodeNumber.strip():
+            raise HTTPException(
+                status_code=400, detail="Episode number is required for title cards"
+            )
+        if not request.seasonPosterName or not request.seasonPosterName.strip():
+            raise HTTPException(
+                status_code=400, detail="Season name is required for title cards"
+            )
 
     # Determine PowerShell command
     import platform
@@ -1362,30 +1380,83 @@ async def run_manual_mode(request: ManualModeRequest):
         "-Manual",
         "-PicturePath",
         request.picturePath.strip(),
-        "-Titletext",
-        request.titletext.strip(),
-        "-FolderName",
-        request.folderName.strip(),
-        "-LibraryName",
-        request.libraryName.strip(),
     ]
 
-    # Add poster type specific switches
+    # Add poster type specific switches and parameters
     if request.posterType == "season":
-        command.append("-SeasonPoster")
-        command.extend(["-SeasonPosterName", request.seasonPosterName.strip()])
+        command.extend(
+            [
+                "-SeasonPoster",
+                "-Titletext",
+                request.titletext.strip(),
+                "-FolderName",
+                request.folderName.strip(),
+                "-LibraryName",
+                request.libraryName.strip(),
+                "-SeasonPosterName",
+                request.seasonPosterName.strip(),
+            ]
+        )
     elif request.posterType == "collection":
-        command.append("-CollectionCard")
+        command.extend(
+            [
+                "-CollectionCard",
+                "-Titletext",
+                request.titletext.strip(),
+                "-LibraryName",
+                request.libraryName.strip(),
+            ]
+        )
+    elif request.posterType == "titlecard":
+        command.extend(
+            [
+                "-TitleCard",
+                "-FolderName",
+                request.folderName.strip(),
+                "-LibraryName",
+                request.libraryName.strip(),
+                "-EPTitleName",
+                request.epTitleName.strip(),
+                "-SeasonPosterName",
+                request.seasonPosterName.strip(),
+                "-EpisodeNumber",
+                request.episodeNumber.strip(),
+            ]
+        )
+    else:  # standard
+        command.extend(
+            [
+                "-Titletext",
+                request.titletext.strip(),
+                "-FolderName",
+                request.folderName.strip(),
+                "-LibraryName",
+                request.libraryName.strip(),
+            ]
+        )
 
     try:
         logger.info(f"Running manual mode with parameters:")
         logger.info(f"  Picture Path: {request.picturePath}")
-        logger.info(f"  Title: {request.titletext}")
-        logger.info(f"  Folder: {request.folderName}")
-        logger.info(f"  Library: {request.libraryName}")
         logger.info(f"  Type: {request.posterType}")
-        if request.posterType == "season":
+        if request.posterType == "titlecard":
+            logger.info(f"  Folder: {request.folderName}")
+            logger.info(f"  Library: {request.libraryName}")
+            logger.info(f"  Episode Title: {request.epTitleName}")
             logger.info(f"  Season: {request.seasonPosterName}")
+            logger.info(f"  Episode Number: {request.episodeNumber}")
+        elif request.posterType == "season":
+            logger.info(f"  Title: {request.titletext}")
+            logger.info(f"  Folder: {request.folderName}")
+            logger.info(f"  Library: {request.libraryName}")
+            logger.info(f"  Season: {request.seasonPosterName}")
+        elif request.posterType == "collection":
+            logger.info(f"  Title: {request.titletext}")
+            logger.info(f"  Library: {request.libraryName}")
+        else:
+            logger.info(f"  Title: {request.titletext}")
+            logger.info(f"  Folder: {request.folderName}")
+            logger.info(f"  Library: {request.libraryName}")
         logger.info(f"Running command: {' '.join(command)}")
 
         # Run the manual mode command
@@ -1400,13 +1471,20 @@ async def run_manual_mode(request: ManualModeRequest):
 
         logger.info(f"Started manual mode with PID {current_process.pid}")
 
+        poster_type_display = {
+            "standard": "standard poster",
+            "season": "season poster",
+            "collection": "collection poster",
+            "titlecard": "episode title card",
+        }
+
         return {
             "success": True,
-            "message": f"Started manual mode for '{request.titletext}'",
+            "message": f"Started manual mode for {poster_type_display.get(request.posterType, 'poster')}",
             "pid": current_process.pid,
         }
     except FileNotFoundError as e:
-        error_msg = f"PowerShell not found. Please install PowerShell 7+ (pwsh) or ensure Windows PowerShell is in PATH. Error: {str(e)}"
+        error_msg = f"PowerShell not found. Please install PowerShell 7+ (pwsh) or ensure Windows PowerShell is in PATH."
         logger.error(error_msg)
         raise HTTPException(status_code=500, detail=error_msg)
     except Exception as e:
