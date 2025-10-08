@@ -16,7 +16,7 @@
     <a href="https://github.com/fscorrupt/Posterizarr/issues">Request Feature</a>
     ·
     <a href="https://discord.gg/fYyJQSGt54">Discord</a>
-    
+
   </p>
 </div>
 <p align="center">
@@ -759,7 +759,69 @@ Follow the prompts to enter the source picture path (Container needs Access to i
 ```Enter Plex Library Name:```
 - Enter the name of the Plex (or Jellyfin) library, e.g., "Movies" or "TV Shows".
 
-All inputs are entered step-by-step interactively, simply type or paste each value and press Enter to continue.
+### Manual Mode (Semi Automnated)
+
+> [!IMPORTANT]
+>
+> The source picture is moved (if local) or downloaded (if a URL - and moved), then edited and placed in the desired asset location.
+> The -PicturePath parameter can accept either a local file path or a direct URL to an image.
+```
+Example on Windows:
+  -PicturePath "C:\path\to\movie_bg.jpg"
+
+Example on Docker:
+  -PicturePath "/path/to/movie_bg.jpg"
+
+Example with URL:
+  -PicturePath "https://posterurl.here/movie_bg.jpg"
+```
+
+**Movie or Show Poster**
+
+To create a standard poster for a movie or a TV show's main entry:
+```powershell
+.\Posterizarr.ps1 -Manual -PicturePath "C:\path\to\movie_bg.jpg" -Titletext "The Martian" -FolderName "The Martian (2015)" -LibraryName "Movies"
+```
+On [docker](#docker) this way:
+```sh
+docker exec -it posterizarr pwsh /app/Posterizarr.ps1 -Manual -PicturePath "/path/to/movie_bg.jpg" -Titletext "The Martian" -FolderName "The Martian (2015)" -LibraryName "Movies"
+```
+
+**Season Poster**
+>[!NOTE]
+>
+>Any season name ending in 0 or 00 (e.g., "Season 0", "Staffel 00") or matching a keyword like "Specials" will be handled as a Specials season.
+
+To create a poster for a specific season of a TV show, use the -SeasonPoster switch and provide the season name:
+```powershell
+.\Posterizarr.ps1 -Manual -SeasonPoster -PicturePath "C:\path\to\show_bg.jpg" -Titletext "The Mandalorian" -FolderName "The Mandalorian (2019)" -LibraryName "TV Shows" -SeasonPosterName "Season 1"
+```
+On [docker](#docker) this way:
+```sh
+docker exec -it posterizarr pwsh /app/Posterizarr.ps1 -Manual -SeasonPoster -PicturePath "/path/to/show_bg.jpg" -Titletext "The Mandalorian" -FolderName "The Mandalorian (2019)" -LibraryName "TV Shows" -SeasonPosterName "Season 1"
+```
+
+**Collection Poster**
+
+To create a poster for a media collection, use the -CollectionCard switch. The script will use the -Titletext for both the poster text and the folder name.
+```powershell
+.\Posterizarr.ps1 -Manual -CollectionCard -PicturePath "C:\path\to\collection_bg.jpg" -Titletext "James Bond" -LibraryName "Movies"
+```
+On [docker](#docker) this way:
+```sh
+docker exec -it posterizarr pwsh /app/Posterizarr.ps1 -Manual -CollectionCard -PicturePath "/path/to/collection_bg.jpg" -Titletext "James Bond" -LibraryName "Movies"
+```
+
+**Episode Title Card**
+
+To create a 16:9 title card for a specific episode, use the -TitleCard switch and provide episode details:
+```powershell
+.\Posterizarr.ps1 -Manual -TitleCard -PicturePath "C:\path\to\episode_bg.jpg" -FolderName "Breaking Bad (2008)" -LibraryName "TV Shows" -EPTitleName "Ozymandias" -SeasonPosterName "Season 5" -EpisodeNumber "14"
+```
+On [docker](#docker) this way:
+```sh
+docker exec -it posterizarr pwsh /app/Posterizarr.ps1 -Manual -TitleCard -PicturePath "/path/to/episode_bg.jpg" -FolderName "Breaking Bad (2008)" -LibraryName "TV Shows" -EPTitleName "Ozymandias" -SeasonPosterName "Season 5" -EpisodeNumber "14"
+```
 
 ### Backup Mode
 
