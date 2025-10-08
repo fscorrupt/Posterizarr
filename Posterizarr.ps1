@@ -7806,20 +7806,20 @@ if ($Manual) {
     if ([string]::IsNullOrEmpty($PicturePath)) {
         $PicturePath = Read-Host "Enter local path or url to source picture"
     }
-
-    if (-not $PSBoundParameters.ContainsKey('SeasonPoster')) {
-        $response = Read-Host "Create Season Poster? (y/n)"
-        if ($response.ToLower() -eq 'y') { $SeasonPoster = $true }
+    if ([string]::IsNullOrEmpty($PicturePath)) {
+        if (-not $PSBoundParameters.ContainsKey('SeasonPoster')) {
+            $response = Read-Host "Create Season Poster? (y/n)"
+            if ($response.ToLower() -eq 'y') { $SeasonPoster = $true }
+        }
+        if (-not $PSBoundParameters.ContainsKey('TitleCard')) {
+            $response = Read-Host "Create TitleCard? (y/n)"
+            if ($response.ToLower() -eq 'y') { $TitleCard = $true }
+        }
+        if (-not $PSBoundParameters.ContainsKey('CollectionCard')) {
+            $response = Read-Host "Create Collection? (y/n)"
+            if ($response.ToLower() -eq 'y') { $CollectionCard = $true }
+        }
     }
-    if (-not $PSBoundParameters.ContainsKey('TitleCard')) {
-        $response = Read-Host "Create TitleCard? (y/n)"
-        if ($response.ToLower() -eq 'y') { $TitleCard = $true }
-    }
-    if (-not $PSBoundParameters.ContainsKey('CollectionCard')) {
-        $response = Read-Host "Create Collection? (y/n)"
-        if ($response.ToLower() -eq 'y') { $CollectionCard = $true }
-    }
-
     if ($CollectionCard) {
         if ([string]::IsNullOrEmpty($Titletext)) {
             $Titletext = Read-Host "Enter Movie/Show/Collection Title"
