@@ -14,6 +14,7 @@ import {
   FileText,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
+import SystemInfo from "./SystemInfo";
 
 const API_URL = "/api";
 
@@ -412,6 +413,9 @@ function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* ✅ SYSTEM INFORMATION - NEU */}
+      <SystemInfo />
 
       {/* Running Script Controls - Only show when running */}
       {status.running && (

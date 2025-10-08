@@ -699,6 +699,371 @@ def get_last_log_lines(count=25, mode=None, log_file=None):
     return []
 
 
+@app.get("/api/system-info")
+async def get_system_info():
+    """Get system information (CPU, RAM, OS, Platform) - Windows Optimized"""
+    import platform
+    import os
+
+    system_info = {
+        "platform": platform.system(),
+        "os_version": "Unknown",
+        "cpu_model": "Unknown",
+        "cpu_cores": 0,
+        "total_memory": "Unknown",
+        "used_memory": "Unknown",
+        "free_memory": "Unknown",
+        "memory_percent": 0,
+    }
+
+    try:
+        # Get OS Version
+        try:
+            if platform.system() == "Linux":
+                if Path("/etc/os-release").exists():
+                    with open("/etc/os-release", "r") as f:
+                        for line in f:
+                            if line.startswith("PRETTY_NAME="):
+                                system_info["os_version"] = (
+                                    line.split("=")[1].strip().strip('"')
+                                )
+                                break
+
+            elif platform.system() == "Windows":
+                # Method 1: Try ctypes (most reliable)
+                try:
+                    import ctypes
+
+                    class OSVERSIONINFOEXW(ctypes.Structure):
+                        _fields_ = [
+                            ("dwOSVersionInfoSize", ctypes.c_ulong),
+                            ("dwMajorVersion", ctypes.c_ulong),
+                            ("dwMinorVersion", ctypes.c_ulong),
+                            ("dwBuildNumber", ctypes.c_ulong),
+                            ("dwPlatformId", ctypes.c_ulong),
+                            ("szCSDVersion", ctypes.c_wchar * 128),
+                        ]
+
+                    os_version = OSVERSIONINFOEXW()
+                    os_version.dwOSVersionInfoSize = ctypes.sizeof(os_version)
+                    retcode = ctypes.windll.Ntdll.RtlGetVersion(
+                        ctypes.byref(os_version)
+                    )
+                    if retcode == 0:
+                        system_info["os_version"] = (
+                            f"Windows {os_version.dwMajorVersion}.{os_version.dwMinorVersion} Build {os_version.dwBuildNumber}"
+                        )
+                except Exception as e:
+                    logger.debug(f"ctypes method failed: {e}")
+                    # Method 2: Try platform
+                    try:
+                        system_info["os_version"] = (
+                            f"{platform.system()} {platform.release()} {platform.version()}"
+                        )
+                    except Exception:
+                        system_info["os_version"] = (
+                            f"{platform.system()} {platform.release()}"
+                        )
+
+            elif platform.system() == "Darwin":
+                system_info["os_version"] = f"macOS {platform.mac_ver()[0]}"
+        except Exception as e:
+            logger.error(f"Error getting OS version: {e}")
+            system_info["os_version"] = f"{platform.system()} {platform.release()}"
+
+        # Get CPU Model - Multiple Methods for Windows
+        try:
+            if platform.system() == "Linux":
+                with open("/proc/cpuinfo", "r") as f:
+                    for line in f:
+                        if "model name" in line:
+                            system_info["cpu_model"] = line.split(":")[1].strip()
+                            break
+
+            elif platform.system() == "Windows":
+                cpu_found = False
+
+                # Method 1: Try wmic (old but reliable)
+                try:
+                    result = subprocess.run(
+                        ["wmic", "cpu", "get", "name"],
+                        capture_output=True,
+                        text=True,
+                        timeout=5,
+                        creationflags=(
+                            subprocess.CREATE_NO_WINDOW
+                            if hasattr(subprocess, "CREATE_NO_WINDOW")
+                            else 0
+                        ),
+                    )
+                    lines = result.stdout.strip().split("\n")
+                    if len(lines) > 1 and lines[1].strip():
+                        system_info["cpu_model"] = lines[1].strip()
+                        cpu_found = True
+                except Exception as e:
+                    logger.debug(f"wmic method failed: {e}")
+
+                # Method 2: Try PowerShell (modern Windows)
+                if not cpu_found:
+                    try:
+                        result = subprocess.run(
+                            [
+                                "powershell",
+                                "-Command",
+                                "Get-CimInstance -ClassName Win32_Processor | Select-Object -ExpandProperty Name",
+                            ],
+                            capture_output=True,
+                            text=True,
+                            timeout=5,
+                            creationflags=(
+                                subprocess.CREATE_NO_WINDOW
+                                if hasattr(subprocess, "CREATE_NO_WINDOW")
+                                else 0
+                            ),
+                        )
+                        cpu_name = result.stdout.strip()
+                        if cpu_name:
+                            system_info["cpu_model"] = cpu_name
+                            cpu_found = True
+                    except Exception as e:
+                        logger.debug(f"PowerShell method failed: {e}")
+
+                # Method 3: Try platform.processor() (fallback)
+                if not cpu_found:
+                    try:
+                        cpu_name = platform.processor()
+                        if cpu_name:
+                            system_info["cpu_model"] = cpu_name
+                            cpu_found = True
+                    except Exception as e:
+                        logger.debug(f"platform.processor failed: {e}")
+
+                # Method 4: Try registry (last resort)
+                if not cpu_found:
+                    try:
+                        import winreg
+
+                        key = winreg.OpenKey(
+                            winreg.HKEY_LOCAL_MACHINE,
+                            r"HARDWARE\DESCRIPTION\System\CentralProcessor\0",
+                        )
+                        cpu_name = winreg.QueryValueEx(key, "ProcessorNameString")[0]
+                        winreg.CloseKey(key)
+                        if cpu_name:
+                            system_info["cpu_model"] = cpu_name.strip()
+                    except Exception as e:
+                        logger.debug(f"Registry method failed: {e}")
+
+            elif platform.system() == "Darwin":
+                result = subprocess.run(
+                    ["sysctl", "-n", "machdep.cpu.brand_string"],
+                    capture_output=True,
+                    text=True,
+                    timeout=5,
+                )
+                system_info["cpu_model"] = result.stdout.strip()
+        except Exception as e:
+            logger.error(f"Error getting CPU model: {e}")
+
+        # Get CPU Cores
+        try:
+            system_info["cpu_cores"] = os.cpu_count() or 0
+        except Exception as e:
+            logger.error(f"Error getting CPU cores: {e}")
+
+        # Get Memory Information - Multiple Methods
+        try:
+            if platform.system() == "Linux":
+                with open("/proc/meminfo", "r") as f:
+                    meminfo = f.readlines()
+                    mem_total = 0
+                    mem_available = 0
+                    for line in meminfo:
+                        if "MemTotal:" in line:
+                            mem_total = int(line.split()[1])
+                        elif "MemAvailable:" in line:
+                            mem_available = int(line.split()[1])
+
+                    if mem_total > 0:
+                        mem_total_mb = mem_total // 1024
+                        mem_available_mb = mem_available // 1024
+                        mem_used_mb = mem_total_mb - mem_available_mb
+
+                        system_info["total_memory"] = f"{mem_total_mb} MB"
+                        system_info["used_memory"] = f"{mem_used_mb} MB"
+                        system_info["free_memory"] = f"{mem_available_mb} MB"
+                        system_info["memory_percent"] = round(
+                            (mem_used_mb / mem_total_mb) * 100, 1
+                        )
+
+            elif platform.system() == "Windows":
+                mem_found = False
+
+                # Method 1: Try wmic
+                try:
+                    result = subprocess.run(
+                        [
+                            "wmic",
+                            "OS",
+                            "get",
+                            "TotalVisibleMemorySize,FreePhysicalMemory",
+                            "/VALUE",
+                        ],
+                        capture_output=True,
+                        text=True,
+                        timeout=5,
+                        creationflags=(
+                            subprocess.CREATE_NO_WINDOW
+                            if hasattr(subprocess, "CREATE_NO_WINDOW")
+                            else 0
+                        ),
+                    )
+
+                    total_kb = 0
+                    free_kb = 0
+                    for line in result.stdout.split("\n"):
+                        if "TotalVisibleMemorySize=" in line:
+                            total_kb = int(line.split("=")[1].strip())
+                        elif "FreePhysicalMemory=" in line:
+                            free_kb = int(line.split("=")[1].strip())
+
+                    if total_kb > 0:
+                        used_kb = total_kb - free_kb
+                        total_mb = total_kb // 1024
+                        used_mb = used_kb // 1024
+                        free_mb = free_kb // 1024
+
+                        system_info["total_memory"] = f"{total_mb} MB"
+                        system_info["used_memory"] = f"{used_mb} MB"
+                        system_info["free_memory"] = f"{free_mb} MB"
+                        system_info["memory_percent"] = round(
+                            (used_mb / total_mb) * 100, 1
+                        )
+                        mem_found = True
+                except Exception as e:
+                    logger.debug(f"wmic memory method failed: {e}")
+
+                # Method 2: Try PowerShell (modern Windows)
+                if not mem_found:
+                    try:
+                        ps_script = """
+                        $os = Get-CimInstance Win32_OperatingSystem
+                        $total = [math]::Round($os.TotalVisibleMemorySize / 1024)
+                        $free = [math]::Round($os.FreePhysicalMemory / 1024)
+                        $used = $total - $free
+                        Write-Output "$total|$used|$free"
+                        """
+                        result = subprocess.run(
+                            ["powershell", "-Command", ps_script],
+                            capture_output=True,
+                            text=True,
+                            timeout=5,
+                            creationflags=(
+                                subprocess.CREATE_NO_WINDOW
+                                if hasattr(subprocess, "CREATE_NO_WINDOW")
+                                else 0
+                            ),
+                        )
+
+                        values = result.stdout.strip().split("|")
+                        if len(values) == 3:
+                            total_mb = int(values[0])
+                            used_mb = int(values[1])
+                            free_mb = int(values[2])
+
+                            system_info["total_memory"] = f"{total_mb} MB"
+                            system_info["used_memory"] = f"{used_mb} MB"
+                            system_info["free_memory"] = f"{free_mb} MB"
+                            system_info["memory_percent"] = round(
+                                (used_mb / total_mb) * 100, 1
+                            )
+                            mem_found = True
+                    except Exception as e:
+                        logger.debug(f"PowerShell memory method failed: {e}")
+
+                # Method 3: Try ctypes (most reliable for modern Windows)
+                if not mem_found:
+                    try:
+                        import ctypes
+
+                        class MEMORYSTATUSEX(ctypes.Structure):
+                            _fields_ = [
+                                ("dwLength", ctypes.c_ulong),
+                                ("dwMemoryLoad", ctypes.c_ulong),
+                                ("ullTotalPhys", ctypes.c_ulonglong),
+                                ("ullAvailPhys", ctypes.c_ulonglong),
+                                ("ullTotalPageFile", ctypes.c_ulonglong),
+                                ("ullAvailPageFile", ctypes.c_ulonglong),
+                                ("ullTotalVirtual", ctypes.c_ulonglong),
+                                ("ullAvailVirtual", ctypes.c_ulonglong),
+                                ("ullAvailExtendedVirtual", ctypes.c_ulonglong),
+                            ]
+
+                        meminfo = MEMORYSTATUSEX()
+                        meminfo.dwLength = ctypes.sizeof(MEMORYSTATUSEX)
+                        ctypes.windll.kernel32.GlobalMemoryStatusEx(
+                            ctypes.byref(meminfo)
+                        )
+
+                        total_mb = meminfo.ullTotalPhys // (1024 * 1024)
+                        avail_mb = meminfo.ullAvailPhys // (1024 * 1024)
+                        used_mb = total_mb - avail_mb
+
+                        system_info["total_memory"] = f"{total_mb} MB"
+                        system_info["used_memory"] = f"{used_mb} MB"
+                        system_info["free_memory"] = f"{avail_mb} MB"
+                        system_info["memory_percent"] = round(
+                            (used_mb / total_mb) * 100, 1
+                        )
+                    except Exception as e:
+                        logger.error(f"ctypes memory method failed: {e}")
+
+            elif platform.system() == "Darwin":
+                # macOS memory info
+                try:
+                    result = subprocess.run(
+                        ["sysctl", "-n", "hw.memsize"],
+                        capture_output=True,
+                        text=True,
+                        timeout=5,
+                    )
+                    total_bytes = int(result.stdout.strip())
+                    total_mb = total_bytes // (1024 * 1024)
+                    system_info["total_memory"] = f"{total_mb} MB"
+
+                    result = subprocess.run(
+                        ["vm_stat"], capture_output=True, text=True, timeout=5
+                    )
+                    vm_lines = result.stdout.split("\n")
+                    page_size = 4096
+                    pages_free = 0
+                    pages_inactive = 0
+
+                    for line in vm_lines:
+                        if "Pages free:" in line:
+                            pages_free = int(line.split(":")[1].strip().rstrip("."))
+                        elif "Pages inactive:" in line:
+                            pages_inactive = int(line.split(":")[1].strip().rstrip("."))
+
+                    free_bytes = (pages_free + pages_inactive) * page_size
+                    free_mb = free_bytes // (1024 * 1024)
+                    used_mb = total_mb - free_mb
+
+                    system_info["used_memory"] = f"{used_mb} MB"
+                    system_info["free_memory"] = f"{free_mb} MB"
+                    system_info["memory_percent"] = round((used_mb / total_mb) * 100, 1)
+                except Exception as e:
+                    logger.error(f"Error getting macOS memory: {e}")
+
+        except Exception as e:
+            logger.error(f"Error getting memory info: {e}")
+
+    except Exception as e:
+        logger.error(f"Error getting system info: {e}")
+
+    return system_info
+
+
 @app.get("/api/status")
 async def get_status():
     """Get script status with last log lines from appropriate log file"""
