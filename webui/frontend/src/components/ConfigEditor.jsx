@@ -26,7 +26,8 @@ function ConfigEditor() {
   const [uiGroups, setUiGroups] = useState(null);
   const [displayNames, setDisplayNames] = useState({});
   const [usingFlatStructure, setUsingFlatStructure] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [expandedGroups, setExpandedGroups] = useState({});
@@ -112,7 +113,7 @@ function ConfigEditor() {
   };
 
   useEffect(() => {
-    fetchConfig();
+    fetchConfig(true);
   }, []);
 
   useEffect(() => {
@@ -125,9 +126,14 @@ function ConfigEditor() {
     }
   }, [config]);
 
-  const fetchConfig = async () => {
-    setLoading(true);
+  const fetchConfig = async (isInitial = false) => {
+    if (isInitial) {
+      setInitialLoading(true);
+    } else {
+      setLoading(true);
+    }
     setError(null);
+    const startTime = Date.now();
     try {
       const response = await fetch(`${API_URL}/config`);
       const data = await response.json();
@@ -156,7 +162,16 @@ function ConfigEditor() {
         position: "top-right",
       });
     } finally {
-      setLoading(false);
+      const elapsedTime = Date.now() - startTime;
+      const minDisplayTime = 500;
+      const remainingTime = Math.max(0, minDisplayTime - elapsedTime);
+      setTimeout(() => {
+        if (isInitial) {
+          setInitialLoading(false);
+        } else {
+          setLoading(false);
+        }
+      }, remainingTime);
     }
   };
 
@@ -470,7 +485,7 @@ function ConfigEditor() {
     );
   };
 
-  if (loading) {
+  if (initialLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
@@ -481,7 +496,7 @@ function ConfigEditor() {
     );
   }
 
-  if (error) {
+  if (error && !config) {
     return (
       <div className="bg-red-950/40 rounded-xl p-6 border-2 border-red-600/50 text-center">
         <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
@@ -490,7 +505,7 @@ function ConfigEditor() {
         </p>
         <p className="text-red-200 mb-4">{error}</p>
         <button
-          onClick={fetchConfig}
+          onClick={() => fetchConfig(false)}
           className="px-6 py-2.5 bg-red-600 hover:bg-red-700 rounded-lg font-medium transition-all shadow-lg hover:scale-105"
         >
           <RefreshCw className="w-5 h-5 inline mr-2" />
@@ -501,8 +516,20 @@ function ConfigEditor() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 relative">
       <Toaster />
+
+      {/* Loading Overlay */}
+      {loading && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 animate-in fade-in duration-200">
+          <div className="bg-theme-card border border-theme-primary rounded-xl p-8 shadow-2xl">
+            <Loader2 className="w-12 h-12 animate-spin text-theme-primary mx-auto mb-4" />
+            <p className="text-theme-text font-medium">
+              Reloading configuration...
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Header - Modernized to match RunModes */}
       <div className="flex items-center justify-between">
@@ -517,7 +544,7 @@ function ConfigEditor() {
         </div>
         <div className="flex gap-3">
           <button
-            onClick={fetchConfig}
+            onClick={() => fetchConfig(false)}
             disabled={loading}
             className="flex items-center gap-2 px-5 py-2.5 bg-theme-card hover:bg-theme-hover border border-theme rounded-lg font-medium transition-all disabled:opacity-50 hover:scale-105 shadow-sm"
           >

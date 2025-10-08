@@ -35,6 +35,7 @@ function SeasonGallery() {
   const fetchFolders = async (showToast = false) => {
     setLoading(true);
     setError(null);
+    const startTime = Date.now();
     try {
       const response = await fetch(`${API_URL}/assets-folders`);
       if (!response.ok) {
@@ -67,7 +68,10 @@ function SeasonGallery() {
         position: "top-right",
       });
     } finally {
-      setLoading(false);
+      const elapsedTime = Date.now() - startTime;
+      const minDisplayTime = 500;
+      const remainingTime = Math.max(0, minDisplayTime - elapsedTime);
+      setTimeout(() => setLoading(false), remainingTime);
     }
   };
 
@@ -76,6 +80,7 @@ function SeasonGallery() {
 
     setImagesLoading(true);
     setError(null);
+    const startTime = Date.now();
     try {
       const response = await fetch(
         `${API_URL}/assets-folder-images/seasons/${folder.path}`
@@ -104,7 +109,10 @@ function SeasonGallery() {
         position: "top-right",
       });
     } finally {
-      setImagesLoading(false);
+      const elapsedTime = Date.now() - startTime;
+      const minDisplayTime = 500;
+      const remainingTime = Math.max(0, minDisplayTime - elapsedTime);
+      setTimeout(() => setImagesLoading(false), remainingTime);
     }
   };
 

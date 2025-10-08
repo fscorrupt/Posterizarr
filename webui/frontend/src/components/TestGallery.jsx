@@ -70,6 +70,7 @@ function TestGallery() {
   const fetchImages = async (showToast = false) => {
     setLoading(true);
     setError(null);
+    const startTime = Date.now();
     try {
       const response = await fetch(`${API_URL}/test-gallery`);
       if (!response.ok) {
@@ -93,7 +94,10 @@ function TestGallery() {
         position: "top-right",
       });
     } finally {
-      setLoading(false);
+      const elapsedTime = Date.now() - startTime;
+      const minDisplayTime = 500;
+      const remainingTime = Math.max(0, minDisplayTime - elapsedTime);
+      setTimeout(() => setLoading(false), remainingTime);
     }
   };
 
