@@ -142,7 +142,10 @@ function RunModes() {
       return;
     }
 
-    if (!manualForm.libraryName.trim()) {
+    if (
+      manualForm.posterType !== "collection" &&
+      !manualForm.libraryName.trim()
+    ) {
       toast.error("Library Name is required!", {
         duration: 3000,
         position: "top-right",
@@ -605,6 +608,51 @@ function RunModes() {
     );
   };
 
+  // Dynamic hints based on poster type
+  const getHints = (type) => {
+    switch (type) {
+      case "season":
+      case "titlecard": // Title Card uses the same hints as Season
+        return {
+          folderName: {
+            label: "Folder Name",
+            placeholder: "Breaking Bad (2008)",
+            description:
+              'Show folder name as seen by Plex (e.g., "Breaking Bad (2008)")',
+          },
+          libraryName: {
+            placeholder: "TV Shows",
+            description: 'Plex library for shows (e.g., "TV Shows")',
+          },
+        };
+      case "collection":
+        return {
+          folderName: {
+            label: "Collection Name",
+            placeholder: "James Bond Collection",
+            description: "The name of the collection in Plex",
+          },
+          // No libraryName needed for collections
+          libraryName: {},
+        };
+      default: // for "standard"
+        return {
+          folderName: {
+            label: "Folder Name",
+            placeholder: "The Martian (2015)",
+            description:
+              'Media folder name as seen by Plex (e.g., "The Martian (2015)")',
+          },
+          libraryName: {
+            placeholder: "Movies",
+            description: 'Plex library for movies (e.g., "Movies")',
+          },
+        };
+    }
+  };
+
+  const hints = getHints(manualForm.posterType);
+
   return (
     <div className="space-y-6">
       <Toaster />
@@ -743,6 +791,7 @@ function RunModes() {
 
       {/* Manual Mode */}
       <div className="bg-theme-card rounded-xl p-6 border border-theme">
+        {/* --- Header --- */}
         <div className="flex items-center mb-4">
           <div className="p-2 rounded-lg bg-theme-primary/20 mr-3">
             <Wrench className="w-6 h-6 text-theme-primary" />
@@ -757,90 +806,9 @@ function RunModes() {
           </div>
         </div>
 
+        {/* --- Form Fields --- */}
         <div className="space-y-4 mt-6">
-          {/* Picture Path */}
-          <div>
-            <label className="block text-sm font-medium text-theme-text mb-2">
-              Picture Path <span className="text-red-400">*</span>
-            </label>
-            <input
-              type="text"
-              value={manualForm.picturePath}
-              onChange={(e) =>
-                setManualForm({ ...manualForm, picturePath: e.target.value })
-              }
-              placeholder="C:\path\to\image.jpg or https://url.to/image.jpg"
-              disabled={loading || status.running}
-              className="w-full px-4 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary disabled:opacity-50 disabled:cursor-not-allowed"
-            />
-            <p className="text-xs text-theme-muted mt-1">
-              Local file path or direct URL to the source image
-            </p>
-          </div>
-
-          {/* Title Text - Hidden for title cards */}
-          {manualForm.posterType !== "titlecard" && (
-            <div>
-              <label className="block text-sm font-medium text-theme-text mb-2">
-                Title Text <span className="text-red-400">*</span>
-              </label>
-              <input
-                type="text"
-                value={manualForm.titletext}
-                onChange={(e) =>
-                  setManualForm({ ...manualForm, titletext: e.target.value })
-                }
-                placeholder="The Martian"
-                disabled={loading || status.running}
-                className="w-full px-4 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary disabled:opacity-50 disabled:cursor-not-allowed"
-              />
-              <p className="text-xs text-theme-muted mt-1">
-                Title to display on the poster
-              </p>
-            </div>
-          )}
-
-          {/* Folder Name */}
-          <div>
-            <label className="block text-sm font-medium text-theme-text mb-2">
-              Folder Name <span className="text-red-400">*</span>
-            </label>
-            <input
-              type="text"
-              value={manualForm.folderName}
-              onChange={(e) =>
-                setManualForm({ ...manualForm, folderName: e.target.value })
-              }
-              placeholder="The Martian (2015)"
-              disabled={loading || status.running}
-              className="w-full px-4 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary disabled:opacity-50 disabled:cursor-not-allowed"
-            />
-            <p className="text-xs text-theme-muted mt-1">
-              Media folder name as seen by Plex
-            </p>
-          </div>
-
-          {/* Library Name */}
-          <div>
-            <label className="block text-sm font-medium text-theme-text mb-2">
-              Library Name <span className="text-red-400">*</span>
-            </label>
-            <input
-              type="text"
-              value={manualForm.libraryName}
-              onChange={(e) =>
-                setManualForm({ ...manualForm, libraryName: e.target.value })
-              }
-              placeholder="Movies"
-              disabled={loading || status.running}
-              className="w-full px-4 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary disabled:opacity-50 disabled:cursor-not-allowed"
-            />
-            <p className="text-xs text-theme-muted mt-1">
-              Plex library name (e.g., "Movies", "TV Shows")
-            </p>
-          </div>
-
-          {/* Poster Type */}
+          {/*CORRECT PLACEMENT: Buttons are the first item in the form*/}
           <div>
             <label className="block text-sm font-medium text-theme-text mb-2">
               Poster Type
@@ -905,6 +873,91 @@ function RunModes() {
             </div>
           </div>
 
+          {/* Picture Path */}
+          <div>
+            <label className="block text-sm font-medium text-theme-text mb-2">
+              Picture Path <span className="text-red-400">*</span>
+            </label>
+            <input
+              type="text"
+              value={manualForm.picturePath}
+              onChange={(e) =>
+                setManualForm({ ...manualForm, picturePath: e.target.value })
+              }
+              placeholder="C:\path\to\image.jpg or https://url.to/image.jpg"
+              disabled={loading || status.running}
+              className="w-full px-4 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary disabled:opacity-50 disabled:cursor-not-allowed"
+            />
+            <p className="text-xs text-theme-muted mt-1">
+              Local file path or direct URL to the source image
+            </p>
+          </div>
+
+          {/* Title Text - Hidden for title cards */}
+          {manualForm.posterType !== "titlecard" && (
+            <div>
+              <label className="block text-sm font-medium text-theme-text mb-2">
+                Title Text <span className="text-red-400">*</span>
+              </label>
+              <input
+                type="text"
+                value={manualForm.titletext}
+                onChange={(e) =>
+                  setManualForm({ ...manualForm, titletext: e.target.value })
+                }
+                placeholder="The Martian"
+                disabled={loading || status.running}
+                className="w-full px-4 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary disabled:opacity-50 disabled:cursor-not-allowed"
+              />
+              <p className="text-xs text-theme-muted mt-1">
+                Title to display on the poster
+              </p>
+            </div>
+          )}
+
+          {/* DYNAMIC Folder/Collection Name Field */}
+          <div>
+            <label className="block text-sm font-medium text-theme-text mb-2">
+              {hints.folderName.label} <span className="text-red-400">*</span>
+            </label>
+            <input
+              type="text"
+              value={manualForm.folderName}
+              onChange={(e) =>
+                setManualForm({ ...manualForm, folderName: e.target.value })
+              }
+              placeholder={hints.folderName.placeholder}
+              disabled={loading || status.running}
+              className="w-full px-4 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary disabled:opacity-50 disabled:cursor-not-allowed"
+            />
+            <p className="text-xs text-theme-muted mt-1">
+              {hints.folderName.description}
+            </p>
+          </div>
+
+          {/* DYNAMIC & CONDITIONAL Library Name Field */}
+          {manualForm.posterType !== "collection" && (
+            <div>
+              <label className="block text-sm font-medium text-theme-text mb-2">
+                Library Name <span className="text-red-400">*</span>
+              </label>
+              <input
+                type="text"
+                value={manualForm.libraryName}
+                onChange={(e) =>
+                  setManualForm({ ...manualForm, libraryName: e.target.value })
+                }
+                placeholder={hints.libraryName.placeholder}
+                disabled={loading || status.running}
+                className="w-full px-4 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary disabled:opacity-50 disabled:cursor-not-allowed"
+              />
+              <p className="text-xs text-theme-muted mt-1">
+                {hints.libraryName.description}
+              </p>
+            </div>
+          )}
+
+          {/* CONDITIONAL FIELDS MOVED HERE FOR BETTER UX */}
           {/* Season Poster Name (only shown for season type) */}
           {manualForm.posterType === "season" && (
             <div>
@@ -933,7 +986,6 @@ function RunModes() {
           {/* Episode Title Card Fields (only shown for titlecard type) */}
           {manualForm.posterType === "titlecard" && (
             <>
-              {/* Episode Title Name */}
               <div>
                 <label className="block text-sm font-medium text-theme-text mb-2">
                   Episode Title <span className="text-red-400">*</span>
@@ -955,8 +1007,6 @@ function RunModes() {
                   Episode title name (e.g., "Ozymandias", "Pilot")
                 </p>
               </div>
-
-              {/* Season Name */}
               <div>
                 <label className="block text-sm font-medium text-theme-text mb-2">
                   Season Name <span className="text-red-400">*</span>
@@ -978,8 +1028,6 @@ function RunModes() {
                   Season name (e.g., "Season 5", "Staffel 1")
                 </p>
               </div>
-
-              {/* Episode Number */}
               <div>
                 <label className="block text-sm font-medium text-theme-text mb-2">
                   Episode Number <span className="text-red-400">*</span>
@@ -1004,7 +1052,7 @@ function RunModes() {
             </>
           )}
 
-          {/* Run Button */}
+          {/* --- Run Button & Info Box --- */}
           <button
             onClick={runManualMode}
             disabled={loading || status.running}
