@@ -99,7 +99,7 @@ function Navigation() {
     { path: "/", label: "Dashboard", icon: Activity },
     { path: "/run-modes", label: "Run Modes", icon: Play },
     { path: "/gallery", label: "Assets", icon: Image },
-    { path: "/test-gallery", label: "Test Gallery", icon: TestTube },
+    { path: "/test-gallery", label: "Test Assets", icon: Image },
     { path: "/config", label: "Config", icon: Settings },
     { path: "/scheduler", label: "Scheduler", icon: Clock },
     { path: "/logs", label: "Logs", icon: FileText },
