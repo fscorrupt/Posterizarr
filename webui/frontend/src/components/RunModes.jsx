@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Play,
   Square,
@@ -26,6 +27,7 @@ import toast, { Toaster } from "react-hot-toast";
 const API_URL = "/api";
 
 function RunModes() {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState({
     running: false,
@@ -91,6 +93,11 @@ function RunModes() {
           position: "top-right",
         });
         fetchStatus();
+
+        // ✨ Weiterleitung zum LogViewer
+        setTimeout(() => {
+          navigate("/logs");
+        }, 500);
       } else {
         toast.error(`Error: ${data.message}`, {
           duration: 5000,
@@ -218,6 +225,11 @@ function RunModes() {
           episodeNumber: "",
         });
         fetchStatus();
+
+        // ✨ Weiterleitung zum LogViewer
+        setTimeout(() => {
+          navigate("/logs");
+        }, 500);
       } else {
         toast.error(`Error: ${data.message}`, {
           duration: 5000,

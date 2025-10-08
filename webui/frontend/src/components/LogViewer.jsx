@@ -13,9 +13,16 @@ import toast, { Toaster } from "react-hot-toast";
 
 const API_URL = "/api";
 const isDev = import.meta.env.DEV;
-const WS_URL = isDev
-  ? `ws://localhost:3000/ws/logs`
-  : `ws://${window.location.host}/ws/logs`;
+
+// ⚡ FIX: Make WS_URL a function that accepts log_file parameter
+const getWebSocketURL = (logFile) => {
+  const baseURL = isDev
+    ? `ws://localhost:3000/ws/logs`
+    : `ws://${window.location.host}/ws/logs`;
+
+  // Add log_file as query parameter
+  return `${baseURL}?log_file=${encodeURIComponent(logFile)}`;
+};
 
 function LogViewer() {
   const [logs, setLogs] = useState([]);
@@ -23,12 +30,14 @@ function LogViewer() {
   const [selectedLog, setSelectedLog] = useState("Scriptlog.log");
   const [autoScroll, setAutoScroll] = useState(true);
   const [connected, setConnected] = useState(false);
+  const [isReconnecting, setIsReconnecting] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const logContainerRef = useRef(null);
   const wsRef = useRef(null);
   const dropdownRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
+  const currentLogFileRef = useRef("Scriptlog.log"); // ✨ NEW: Track which log file WebSocket is watching
 
   const parseLogLine = (line) => {
     const cleanedLine = line.replace(/\x00/g, "").trim();
@@ -113,7 +122,7 @@ function LogViewer() {
 
   const fetchLogFile = async (logName) => {
     try {
-      const response = await fetch(`${API_URL}/logs/${logName}?tail=500`);
+      const response = await fetch(`${API_URL}/logs/${logName}?tail=1000`);
       const data = await response.json();
       const strippedContent = data.content.map((line) => line.trim());
       setLogs(strippedContent);
@@ -147,32 +156,76 @@ function LogViewer() {
       wsRef.current = null;
     }
     setConnected(false);
+    setIsReconnecting(false);
   };
 
-  const connectWebSocket = () => {
+  // ⚡ FIX: Accept logFile parameter to connect to specific log
+  const connectWebSocket = (logFile = selectedLog) => {
     if (
       wsRef.current &&
       (wsRef.current.readyState === WebSocket.OPEN ||
         wsRef.current.readyState === WebSocket.CONNECTING)
     ) {
-      return;
+      // If already connected to the correct log file, don't reconnect
+      if (currentLogFileRef.current === logFile) {
+        console.log(`Already connected to ${logFile}`);
+        return;
+      }
     }
 
     disconnectWebSocket();
 
     try {
-      const ws = new WebSocket(WS_URL);
+      // ⚡ FIX: Use dynamic WebSocket URL with log_file parameter
+      const wsURL = getWebSocketURL(logFile);
+      console.log(`Connecting to WebSocket: ${wsURL}`);
+
+      const ws = new WebSocket(wsURL);
+      currentLogFileRef.current = logFile; // Track which log we're watching
 
       ws.onopen = () => {
-        console.log("✅ WebSocket connected");
+        console.log(`✅ WebSocket connected to ${logFile}`);
         setConnected(true);
+        setIsReconnecting(false);
+
+        toast.success(`Live feed: ${logFile}`, {
+          duration: 2000,
+          position: "top-right",
+        });
       };
 
       ws.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
+
           if (data.type === "log") {
             setLogs((prev) => [...prev, data.content]);
+          } else if (data.type === "log_file_changed") {
+            // ⚠️ IMPORTANT: Backend changed log file (due to mode change)
+            // Only accept this if we're NOT manually viewing a specific log
+            console.log(`📄 Backend wants to switch to: ${data.log_file}`);
+
+            // Update selectedLog only if user hasn't manually selected a different one
+            // This prevents the backend from overriding user's manual selection
+            if (selectedLog === currentLogFileRef.current) {
+              console.log(`Accepting backend log switch to: ${data.log_file}`);
+              setSelectedLog(data.log_file);
+              currentLogFileRef.current = data.log_file;
+              toast.info(`Switched to ${data.log_file}`, {
+                duration: 2000,
+                position: "top-right",
+              });
+            } else {
+              console.log(
+                `Ignoring backend log switch - user manually selected ${selectedLog}`
+              );
+            }
+          } else if (data.type === "error") {
+            console.error("WebSocket error message:", data.message);
+            toast.error(data.message, {
+              duration: 3000,
+              position: "top-right",
+            });
           }
         } catch (error) {
           console.error("Error parsing WebSocket message:", error);
@@ -180,19 +233,26 @@ function LogViewer() {
       };
 
       ws.onerror = (error) => {
-        console.warn("⚠️ WebSocket error (attempting reconnect):", error);
+        console.warn("⚠️ WebSocket error:", error);
         setConnected(false);
       };
 
       ws.onclose = (event) => {
-        console.log("🔌 WebSocket closed:", event.code, event.reason);
+        console.log("🔌 WebSocket closed:", event.code);
         setConnected(false);
 
         if (!event.wasClean) {
+          setIsReconnecting(true);
+
+          toast.error("Live feed disconnected. Reconnecting...", {
+            duration: 2000,
+            position: "top-right",
+          });
+
           reconnectTimeoutRef.current = setTimeout(() => {
-            console.log("🔄 Attempting to reconnect WebSocket...");
-            connectWebSocket();
-          }, 3000);
+            console.log(`🔄 Reconnecting to ${currentLogFileRef.current}...`);
+            connectWebSocket(currentLogFileRef.current); // Reconnect to the same log file
+          }, 2000);
         }
       };
 
@@ -200,21 +260,36 @@ function LogViewer() {
     } catch (error) {
       console.error("Failed to create WebSocket:", error);
       setConnected(false);
+      setIsReconnecting(true);
+
+      reconnectTimeoutRef.current = setTimeout(() => {
+        connectWebSocket(logFile);
+      }, 3000);
     }
   };
 
   useEffect(() => {
     fetchAvailableLogs();
     fetchLogFile(selectedLog);
-    connectWebSocket();
+    connectWebSocket(selectedLog);
 
     return () => {
       disconnectWebSocket();
     };
   }, []);
 
+  // ⚡ FIX: When selectedLog changes, reconnect to new log file
   useEffect(() => {
+    console.log(`Selected log changed to: ${selectedLog}`);
     fetchLogFile(selectedLog);
+
+    // Always reconnect when user manually changes log file
+    if (wsRef.current) {
+      disconnectWebSocket();
+      setTimeout(() => {
+        connectWebSocket(selectedLog);
+      }, 300);
+    }
   }, [selectedLog]);
 
   useEffect(() => {
@@ -284,12 +359,19 @@ function LogViewer() {
         text: "Live",
         ringColor: "ring-green-400/30",
       };
-    } else {
+    } else if (isReconnecting) {
       return {
         color: "bg-yellow-400",
-        icon: WifiOff,
-        text: "File View",
+        icon: Wifi,
+        text: "Reconnecting...",
         ringColor: "ring-yellow-400/30",
+      };
+    } else {
+      return {
+        color: "bg-red-400",
+        icon: WifiOff,
+        text: "Disconnected",
+        ringColor: "ring-red-400/30",
       };
     }
   };
@@ -318,20 +400,26 @@ function LogViewer() {
         {/* Connection Status Badge */}
         <div
           className={`flex items-center gap-3 px-4 py-2 rounded-lg bg-theme-card border ${
-            connected ? "border-green-500/50" : "border-yellow-500/50"
+            connected
+              ? "border-green-500/50"
+              : isReconnecting
+              ? "border-yellow-500/50"
+              : "border-red-500/50"
           } shadow-sm`}
         >
           <div className="relative">
             <div
               className={`w-3 h-3 rounded-full ${displayStatus.color} ${
-                connected ? "animate-pulse" : ""
+                connected || isReconnecting ? "animate-pulse" : ""
               }`}
             ></div>
-            <div
-              className={`absolute inset-0 w-3 h-3 rounded-full ${
-                displayStatus.color
-              } ${connected ? "animate-ping" : ""}`}
-            ></div>
+            {(connected || isReconnecting) && (
+              <div
+                className={`absolute inset-0 w-3 h-3 rounded-full ${
+                  displayStatus.color
+                } ${connected || isReconnecting ? "animate-ping" : ""}`}
+              ></div>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <StatusIcon className="w-4 h-4 text-theme-muted" />
@@ -382,6 +470,7 @@ function LogViewer() {
                     <button
                       key={log.name}
                       onClick={() => {
+                        console.log(`User selected log: ${log.name}`);
                         setSelectedLog(log.name);
                         setDropdownOpen(false);
                       }}
@@ -465,7 +554,7 @@ function LogViewer() {
                 {selectedLog}
               </h3>
               <p className="text-xs text-theme-muted">
-                Showing last 500 entries
+                Showing last 1000 entries
               </p>
             </div>
           </div>
@@ -475,6 +564,12 @@ function LogViewer() {
               <div className="flex items-center gap-1.5 px-2 py-1 bg-green-500/10 border border-green-500/30 rounded text-green-400">
                 <CheckCircle className="w-3 h-3" />
                 <span>Live</span>
+              </div>
+            )}
+            {isReconnecting && (
+              <div className="flex items-center gap-1.5 px-2 py-1 bg-yellow-500/10 border border-yellow-500/30 rounded text-yellow-400 animate-pulse">
+                <RefreshCw className="w-3 h-3 animate-spin" />
+                <span>Reconnecting</span>
               </div>
             )}
           </div>
@@ -550,6 +645,12 @@ function LogViewer() {
             <div className="flex items-center gap-2 text-green-400">
               <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
               <span>Receiving live updates</span>
+            </div>
+          )}
+          {isReconnecting && (
+            <div className="flex items-center gap-2 text-yellow-400">
+              <RefreshCw className="w-3 h-3 animate-spin" />
+              <span>Reconnecting...</span>
             </div>
           )}
         </div>

@@ -1,4 +1,4 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Query
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
@@ -1654,57 +1654,141 @@ async def get_log_content(log_name: str, tail: int = 100):
 
 
 @app.websocket("/ws/logs")
-async def websocket_logs(websocket: WebSocket):
-    """WebSocket endpoint for real-time log streaming"""
-    await websocket.accept()
-    logger.info("WebSocket connection established")
+async def websocket_logs(
+    websocket: WebSocket, log_file: Optional[str] = Query("Scriptlog.log")
+):
+    """
+    WebSocket endpoint for REAL-TIME log streaming
 
-    scriptlog_path = LOGS_DIR / "Scriptlog.log"
+    FIXED: Now properly accepts and respects the log_file query parameter
+    - Frontend can specify which log file to watch
+    - Backend won't override user's manual selection
+    - Only auto-switches if user is watching the "active" log for current mode
+    """
+    await websocket.accept()
+    logger.info(f"WebSocket connection established for log: {log_file}")
+
+    # Determine which log file to monitor
+    log_path = LOGS_DIR / log_file
+
+    # ✨ NEW: Track if user explicitly requested a specific log file
+    user_requested_log = log_file != "Scriptlog.log"  # User manually selected a log
+
+    # Map modes to their log files for dynamic switching
+    mode_log_map = {
+        "normal": "Scriptlog.log",
+        "testing": "Testinglog.log",
+        "manual": "Manuallog.log",
+        "backup": "Scriptlog.log",
+        "syncjelly": "Scriptlog.log",
+        "syncemby": "Scriptlog.log",
+        "reset": "Scriptlog.log",
+        "scheduled": "Scriptlog.log",
+    }
 
     try:
-        # Send initial logs
-        if scriptlog_path.exists():
-            with open(scriptlog_path, "r", encoding="utf-8", errors="ignore") as f:
-                lines = f.readlines()[-50:]
+        # Send initial logs (increased to 100 lines)
+        if log_path.exists():
+            with open(log_path, "r", encoding="utf-8", errors="ignore") as f:
+                lines = f.readlines()[-100:]
                 for line in lines:
-                    await websocket.send_json({"type": "log", "content": line.strip()})
+                    stripped = line.strip()
+                    if stripped:  # Only send non-empty lines
+                        await websocket.send_json({"type": "log", "content": stripped})
 
-        # Monitor log file for changes
-        last_position = scriptlog_path.stat().st_size if scriptlog_path.exists() else 0
+        # Monitor log file for changes with dynamic log file switching
+        last_position = log_path.stat().st_size if log_path.exists() else 0
+        last_mode = current_mode
+        current_log_file = log_file  # Track current log file being watched
 
         while True:
             try:
-                await asyncio.sleep(1)
+                # ⚡ FASTER POLLING: 0.3s instead of 1s
+                await asyncio.sleep(0.3)
             except asyncio.CancelledError:
-                # This is expected when the connection is closed
                 logger.info("WebSocket log streaming cancelled (connection closed)")
                 break
 
-            if scriptlog_path.exists():
-                current_size = scriptlog_path.stat().st_size
+            # ⚡ FIX: Only auto-switch if user didn't manually request a specific log
+            # AND the current mode changed
+            if (
+                not user_requested_log
+                and current_mode != last_mode
+                and current_mode in mode_log_map
+            ):
+                new_log_file = mode_log_map[current_mode]
 
-                if current_size > last_position:
-                    with open(
-                        scriptlog_path,
-                        "r",
-                        encoding="utf-8",
-                        errors="ignore",
-                    ) as f:
-                        f.seek(last_position)
-                        new_lines = f.readlines()
-                        for line in new_lines:
-                            await websocket.send_json(
-                                {"type": "log", "content": line.strip()}
-                            )
-                    last_position = current_size
+                # Only switch if it's actually a different file
+                if new_log_file != current_log_file:
+                    logger.info(
+                        f"WebSocket auto-switching from {current_log_file} to {new_log_file} (mode: {current_mode})"
+                    )
+
+                    current_log_file = new_log_file
+                    log_path = LOGS_DIR / new_log_file
+                    last_position = log_path.stat().st_size if log_path.exists() else 0
+
+                    # Notify client about log file change
+                    await websocket.send_json(
+                        {
+                            "type": "log_file_changed",
+                            "log_file": new_log_file,
+                            "mode": current_mode,
+                        }
+                    )
+
+                last_mode = current_mode
+            elif user_requested_log and current_mode != last_mode:
+                # User manually requested a log, just update last_mode without switching
+                last_mode = current_mode
+                logger.debug(
+                    f"Mode changed to {current_mode}, but user manually selected {log_file}, not auto-switching"
+                )
+
+            # Monitor current log file
+            if log_path.exists():
+                try:
+                    current_size = log_path.stat().st_size
+
+                    # Handle log file truncation/rotation
+                    if current_size < last_position:
+                        last_position = 0
+                        logger.info(
+                            f"Log file {log_path.name} was truncated or rotated"
+                        )
+
+                    if current_size > last_position:
+                        with open(
+                            log_path, "r", encoding="utf-8", errors="ignore"
+                        ) as f:
+                            f.seek(last_position)
+                            new_lines = f.readlines()
+
+                            # Send new lines immediately as they come
+                            for line in new_lines:
+                                stripped = line.strip()
+                                if stripped:  # Only send non-empty lines
+                                    await websocket.send_json(
+                                        {"type": "log", "content": stripped}
+                                    )
+
+                        last_position = current_size
+                except OSError as e:
+                    logger.warning(f"Error reading log file: {e}")
+                    await asyncio.sleep(1)  # Wait longer on file errors
 
     except WebSocketDisconnect:
         logger.info("WebSocket disconnected by client")
     except asyncio.CancelledError:
-        # Handle cancellation during shutdown gracefully
         logger.info("WebSocket task cancelled during shutdown")
     except Exception as e:
         logger.error(f"WebSocket error: {e}")
+        try:
+            await websocket.send_json(
+                {"type": "error", "message": f"WebSocket error: {str(e)}"}
+            )
+        except:
+            pass
     finally:
         logger.info("WebSocket connection closed")
 
