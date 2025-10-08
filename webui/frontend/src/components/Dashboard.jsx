@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import {
   Play,
   Square,
@@ -12,6 +13,7 @@ import {
   Activity,
   ExternalLink,
   FileText,
+  Settings,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import SystemInfo from "./SystemInfo";
@@ -388,7 +390,7 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* Config File Card */}
+        {/* Config File Card - MIT EDIT BUTTON */}
         <div className="bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
           <div className="flex items-center justify-between">
             <div className="flex-1">
@@ -396,12 +398,22 @@ function Dashboard() {
                 Config File
               </p>
               <p
-                className={`text-2xl font-bold ${
+                className={`text-2xl font-bold mb-2 ${
                   status.config_exists ? "text-green-400" : "text-red-400"
                 }`}
               >
                 {status.config_exists ? "Found" : "Missing"}
               </p>
+              {/* EDIT BUTTON - Nur anzeigen wenn Config existiert */}
+              {status.config_exists && (
+                <Link
+                  to="/config"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-theme-primary/20 hover:bg-theme-primary text-theme-primary hover:text-white border border-theme-primary/30 rounded-lg text-sm font-medium transition-all hover:scale-105 shadow-sm"
+                >
+                  <Settings className="w-4 h-4" />
+                  EDIT
+                </Link>
+              )}
             </div>
             <div className="p-3 rounded-lg bg-theme-primary/10">
               {status.config_exists ? (

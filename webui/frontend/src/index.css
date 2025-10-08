@@ -174,36 +174,196 @@
   --plex-poster-unwatched: #52b54b;
 }
 
-/* Organizr Theme */
-[data-theme="organizr"] {
-  --theme-primary: #2cabe3;
-  --theme-primary-hover: #298fbc;
-  --theme-accent: #2cabe3;
-  --theme-bg: #1f1f1f;
-  --theme-bg-dark: #1f1f1f;
-  --theme-bg-card: #1b1b1b;
-  --theme-bg-hover: #252525;
-  --theme-border: #333333;
-  --theme-text: #96a2b4;
+/* Mind Stone Theme */
+[data-theme="mind"] {
+  --theme-primary: #e1d500;
+  --theme-primary-hover: #c3b900;
+  --theme-accent: #fff200;
+  --theme-bg: #0d0400;
+  --theme-bg-dark: #000000;
+  --theme-bg-card: #1a1800;
+  --theme-bg-hover: rgba(51, 49, 0, 0.5);
+  --theme-border: rgba(228, 216, 0, 0.3);
+  --theme-text: #dddddd;
   --theme-text-muted: #999999;
   --theme-text-hover: #ffffff;
 
   /* Extended Variables */
-  --button-color: #2cabe3;
-  --button-color-hover: #298fbc;
+  --button-color: #e1d500;
+  --button-color-hover: #c3b900;
   --button-text: #000000;
   --button-text-hover: #000000;
-  --link-color: #2cabe3;
-  --link-color-hover: #3cc5ff;
+  --link-color: #fff200;
+  --link-color-hover: #fff200cc;
+  --label-text-color: #000000;
+  --modal-bg-color: #1a1800;
+  --modal-header-color: #1a1800;
+  --modal-footer-color: #1a1800;
+  --drop-down-menu-bg: #1a1800;
+  --accent-color: 228, 216, 0;
+  --accent-color-hover: rgba(228, 216, 0, 0.8);
+  --arr-queue-color: #e1d500;
+  --plex-poster-unwatched: #e1d500;
+}
+
+/* Power Stone Theme */
+[data-theme="power"] {
+  --theme-primary: #a6288c;
+  --theme-primary-hover: #85096b;
+  --theme-accent: #df15b3;
+  --theme-bg: #0b0833;
+  --theme-bg-dark: #000000;
+  --theme-bg-card: #1a0028;
+  --theme-bg-hover: rgba(35, 0, 57, 0.5);
+  --theme-border: rgba(166, 40, 140, 0.3);
+  --theme-text: #dddddd;
+  --theme-text-muted: #999999;
+  --theme-text-hover: #ffffff;
+
+  /* Extended Variables */
+  --button-color: #85096b;
+  --button-color-hover: #85096bcc;
+  --button-text: #eeeeee;
+  --button-text-hover: #ffffff;
+  --link-color: #df15b3;
+  --link-color-hover: #ff00c8;
   --label-text-color: #ffffff;
-  --modal-bg-color: #333333;
-  --modal-header-color: #232323;
-  --modal-footer-color: #232323;
-  --drop-down-menu-bg: #1b1b1b;
-  --accent-color: 44, 171, 227;
-  --accent-color-hover: rgba(44, 171, 227, 0.8);
-  --arr-queue-color: #2cabe3;
-  --plex-poster-unwatched: #2cabe3;
+  --modal-bg-color: #1a0028;
+  --modal-header-color: #1a0028;
+  --modal-footer-color: #1a0028;
+  --drop-down-menu-bg: #1a0028;
+  --accent-color: 166, 40, 140;
+  --accent-color-hover: rgba(166, 40, 140, 0.8);
+  --arr-queue-color: #d816ae;
+  --plex-poster-unwatched: #d816ae;
+}
+
+/* Reality Stone Theme */
+[data-theme="reality"] {
+  --theme-primary: #e80c0b;
+  --theme-primary-hover: #e80c0bcc;
+  --theme-accent: #e80c0b;
+  --theme-bg: #08000d;
+  --theme-bg-dark: #000000;
+  --theme-bg-card: #2a0000;
+  --theme-bg-hover: rgba(102, 5, 5, 0.5);
+  --theme-border: rgba(232, 12, 11, 0.3);
+  --theme-text: #dddddd;
+  --theme-text-muted: #999999;
+  --theme-text-hover: #ffffff;
+
+  /* Extended Variables */
+  --button-color: #e80c0b;
+  --button-color-hover: #e80c0bcc;
+  --button-text: #eeeeee;
+  --button-text-hover: #ffffff;
+  --link-color: #e80c0b;
+  --link-color-hover: rgba(232, 12, 11, 0.8);
+  --label-text-color: #ffffff;
+  --modal-bg-color: #2a0000;
+  --modal-header-color: #2a0000;
+  --modal-footer-color: #2a0000;
+  --drop-down-menu-bg: #2a0000;
+  --accent-color: 232, 12, 11;
+  --accent-color-hover: rgba(232, 12, 11, 0.8);
+  --arr-queue-color: #e80c0b;
+  --plex-poster-unwatched: #e80c0b;
+}
+
+/* Soul Stone Theme */
+[data-theme="soul"] {
+  --theme-primary: #ff9900;
+  --theme-primary-hover: #ff99cc;
+  --theme-accent: #ff9900;
+  --theme-bg: #3c0015;
+  --theme-bg-dark: #000000;
+  --theme-bg-card: #2a1000;
+  --theme-bg-hover: rgba(140, 64, 2, 0.5);
+  --theme-border: rgba(255, 153, 0, 0.3);
+  --theme-text: #dddddd;
+  --theme-text-muted: #999999;
+  --theme-text-hover: #ffffff;
+
+  /* Extended Variables */
+  --button-color: #ff9900;
+  --button-color-hover: #ff99cc;
+  --button-text: #eeeeee;
+  --button-text-hover: #ffffff;
+  --link-color: #ff9900;
+  --link-color-hover: rgba(255, 153, 0, 0.8);
+  --label-text-color: #ffffff;
+  --modal-bg-color: #2a1000;
+  --modal-header-color: #2a1000;
+  --modal-footer-color: #2a1000;
+  --drop-down-menu-bg: #2a1000;
+  --accent-color: 255, 153, 0;
+  --accent-color-hover: rgba(255, 153, 0, 0.8);
+  --arr-queue-color: #ff9900;
+  --plex-poster-unwatched: #880030;
+}
+
+/* Space Stone Theme */
+[data-theme="space"] {
+  --theme-primary: #0062ff;
+  --theme-primary-hover: #0062ffcc;
+  --theme-accent: #3d7eff;
+  --theme-bg: #020013;
+  --theme-bg-dark: #000000;
+  --theme-bg-card: #001a3d;
+  --theme-bg-hover: rgba(0, 57, 148, 0.5);
+  --theme-border: rgba(0, 98, 255, 0.3);
+  --theme-text: #dddddd;
+  --theme-text-muted: #999999;
+  --theme-text-hover: #ffffff;
+
+  /* Extended Variables */
+  --button-color: #0062ff;
+  --button-color-hover: #0062ffcc;
+  --button-text: #eeeeee;
+  --button-text-hover: #ffffff;
+  --link-color: #3d7eff;
+  --link-color-hover: #0062ff;
+  --label-text-color: #ffffff;
+  --modal-bg-color: #001a3d;
+  --modal-header-color: #001a3d;
+  --modal-footer-color: #001a3d;
+  --drop-down-menu-bg: #001a3d;
+  --accent-color: 0, 98, 255;
+  --accent-color-hover: rgba(0, 98, 255, 0.8);
+  --arr-queue-color: #0062ffcc;
+  --plex-poster-unwatched: #0062ff;
+}
+
+/* Time Stone Theme */
+[data-theme="time"] {
+  --theme-primary: #6df751;
+  --theme-primary-hover: #04a800;
+  --theme-accent: #6df751;
+  --theme-bg: #00130c;
+  --theme-bg-dark: #000000;
+  --theme-bg-card: #001a00;
+  --theme-bg-hover: rgba(2, 77, 0, 0.5);
+  --theme-border: rgba(109, 247, 81, 0.3);
+  --theme-text: #dddddd;
+  --theme-text-muted: #999999;
+  --theme-text-hover: #ffffff;
+
+  /* Extended Variables */
+  --button-color: #04a800;
+  --button-color-hover: rgba(4, 168, 0, 0.8);
+  --button-text: #000000;
+  --button-text-hover: #000000;
+  --link-color: #6df751;
+  --link-color-hover: rgba(109, 247, 81, 0.8);
+  --label-text-color: #000000;
+  --modal-bg-color: #001a00;
+  --modal-header-color: #001a00;
+  --modal-footer-color: #001a00;
+  --drop-down-menu-bg: #001a00;
+  --accent-color: 109, 247, 81;
+  --accent-color-hover: rgba(109, 247, 81, 0.8);
+  --arr-queue-color: #6df751cc;
+  --plex-poster-unwatched: #6df751;
 }
 
 /* Overseerr Theme */
@@ -288,8 +448,34 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: var(--theme-bg-dark);
+  background: var(--theme-bg);
   color: var(--theme-text);
+}
+
+/* Plex Theme Body with Gradient */
+html[data-theme="plex"] body {
+  background: radial-gradient(
+      circle farthest-side at 0% 100%,
+      rgb(47, 47, 47) 0%,
+      rgba(47, 47, 47, 0) 100%
+    ),
+    radial-gradient(
+      circle farthest-side at 100% 100%,
+      rgb(63, 63, 63) 0%,
+      rgba(63, 63, 63, 0) 100%
+    ),
+    radial-gradient(
+      circle farthest-side at 100% 0%,
+      rgb(76, 76, 76) 0%,
+      rgba(76, 76, 76, 0) 100%
+    ),
+    radial-gradient(
+      circle farthest-side at 0% 0%,
+      rgb(58, 58, 58) 0%,
+      rgba(58, 58, 58, 0) 100%
+    ),
+    black;
+  background-attachment: fixed;
 }
 
 code {
@@ -325,11 +511,11 @@ code {
 
 /* Background Colors */
 .bg-theme-bg {
-  background-color: var(--theme-bg);
+  background: var(--theme-bg);
 }
 
 .bg-theme-dark {
-  background-color: var(--theme-bg-dark);
+  background: var(--theme-bg-dark);
 }
 
 .bg-theme-card {
