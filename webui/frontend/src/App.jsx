@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -28,6 +28,11 @@ import {
   Clock,
   Play,
 } from "lucide-react";
+
+// ============================================================================
+// UI-LOGGER IMPORT - Erfasst alle Console-Logs und speichert sie in UIlog.log
+// ============================================================================
+import uiLogger from "./utils/uiLogger";
 
 function ThemeSwitcher() {
   const { theme, setTheme, themes } = useTheme();
@@ -198,6 +203,20 @@ function Navigation() {
 }
 
 function AppContent() {
+  // ============================================================================
+  // UI-LOGGER INITIALISIERUNG
+  // Alle console.log/error/warn werden automatisch in UIlog.log gespeichert
+  // ============================================================================
+  useEffect(() => {
+    console.log("✅ Posterizarr UI started - UI-Logger active");
+    console.info("📊 UI logs will be saved to UIlog.log");
+
+    // Cleanup (optional, nur bei App-Unmount)
+    return () => {
+      // uiLogger.destroy(); // Nur aktivieren wenn wirklich nötig
+    };
+  }, []);
+
   return (
     <div className="min-h-screen bg-theme-dark text-theme-text">
       <Navigation />

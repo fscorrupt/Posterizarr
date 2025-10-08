@@ -26,6 +26,23 @@ import toast, { Toaster } from "react-hot-toast";
 
 const API_URL = "/api";
 
+// ============================================================================
+// LOG FILE MAPPING - Maps run modes to their respective log files
+// ============================================================================
+const getLogFileForMode = (mode) => {
+  const logMapping = {
+    testing: "Testinglog.log",
+    manual: "Manuallog.log",
+    normal: "Scriptlog.log",
+    backup: "Scriptlog.log",
+    syncjelly: "Scriptlog.log",
+    syncemby: "Scriptlog.log",
+    reset: "Scriptlog.log",
+    scheduled: "Scriptlog.log",
+  };
+  return logMapping[mode] || "Scriptlog.log";
+};
+
 function RunModes() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -94,9 +111,12 @@ function RunModes() {
         });
         fetchStatus();
 
-        // ✨ Weiterleitung zum LogViewer
+        // ✨ Weiterleitung zum LogViewer mit der richtigen Log-Datei
+        const logFile = getLogFileForMode(mode);
+        console.log(`🎯 Redirecting to LogViewer with log: ${logFile}`);
+
         setTimeout(() => {
-          navigate("/logs");
+          navigate("/logs", { state: { logFile: logFile } });
         }, 500);
       } else {
         toast.error(`Error: ${data.message}`, {
@@ -226,9 +246,10 @@ function RunModes() {
         });
         fetchStatus();
 
-        // ✨ Weiterleitung zum LogViewer
+        // ✨ Weiterleitung zum LogViewer mit Manuallog.log
+        console.log("🎯 Redirecting to LogViewer with log: Manuallog.log");
         setTimeout(() => {
-          navigate("/logs");
+          navigate("/logs", { state: { logFile: "Manuallog.log" } });
         }, 500);
       } else {
         toast.error(`Error: ${data.message}`, {

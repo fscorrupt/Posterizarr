@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useLocation } from "react-router-dom";
 import {
   RefreshCw,
   Download,
@@ -8,6 +9,8 @@ import {
   Wifi,
   WifiOff,
   ChevronDown,
+  Activity,
+  Square,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 
@@ -25,19 +28,32 @@ const getWebSocketURL = (logFile) => {
 };
 
 function LogViewer() {
+  const location = useLocation();
   const [logs, setLogs] = useState([]);
   const [availableLogs, setAvailableLogs] = useState([]);
-  const [selectedLog, setSelectedLog] = useState("Scriptlog.log");
+
+  // 🎯 Check if a specific log file was passed via navigation state
+  const initialLogFile = location.state?.logFile || "Scriptlog.log";
+  const [selectedLog, setSelectedLog] = useState(initialLogFile);
+
   const [autoScroll, setAutoScroll] = useState(true);
   const [connected, setConnected] = useState(false);
   const [isReconnecting, setIsReconnecting] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [loading, setLoading] = useState(false); // ✨ NEW: Loading state for stop button
+
+  // ✨ NEW: Script status state
+  const [status, setStatus] = useState({
+    running: false,
+    current_mode: null,
+  });
+
   const logContainerRef = useRef(null);
   const wsRef = useRef(null);
   const dropdownRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
-  const currentLogFileRef = useRef("Scriptlog.log"); // ✨ NEW: Track which log file WebSocket is watching
+  const currentLogFileRef = useRef(initialLogFile); // ✨ Initialize with passed log file
 
   const parseLogLine = (line) => {
     const cleanedLine = line.replace(/\x00/g, "").trim();
@@ -58,6 +74,51 @@ function LogViewer() {
       };
     }
     return { raw: cleanedLine };
+  };
+
+  // ✨ NEW: Fetch script status
+  const fetchStatus = async () => {
+    try {
+      const response = await fetch(`${API_URL}/status`);
+      const data = await response.json();
+      setStatus({
+        running: data.running || false,
+        current_mode: data.current_mode || null,
+      });
+    } catch (error) {
+      console.error("Error fetching status:", error);
+    }
+  };
+
+  // ✨ NEW: Stop script function
+  const stopScript = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_URL}/stop`, {
+        method: "POST",
+      });
+      const data = await response.json();
+
+      if (data.success) {
+        toast.success("Script stopped successfully", {
+          duration: 3000,
+          position: "top-right",
+        });
+        fetchStatus(); // Refresh status
+      } else {
+        toast.error(`Error: ${data.message}`, {
+          duration: 4000,
+          position: "top-right",
+        });
+      }
+    } catch (error) {
+      toast.error(`Error: ${error.message}`, {
+        duration: 5000,
+        position: "top-right",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const LogLevel = ({ level }) => {
@@ -278,6 +339,27 @@ function LogViewer() {
     };
   }, []);
 
+  useEffect(() => {
+    fetchStatus(); // Initial fetch
+    const interval = setInterval(fetchStatus, 3000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
+    if (location.state?.logFile && location.state.logFile !== selectedLog) {
+      console.log(
+        `🎯 LogViewer received log file from navigation: ${location.state.logFile}`
+      );
+      setSelectedLog(location.state.logFile);
+
+      toast.success(`Switched to ${location.state.logFile}`, {
+        duration: 2000,
+        position: "top-right",
+      });
+    }
+  }, [location.state?.logFile]);
+
   // ⚡ FIX: When selectedLog changes, reconnect to new log file
   useEffect(() => {
     console.log(`Selected log changed to: ${selectedLog}`);
@@ -429,6 +511,41 @@ function LogViewer() {
           </div>
         </div>
       </div>
+
+      {status.running && (
+        <div className="bg-orange-950/40 rounded-xl p-4 border border-orange-600/50">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-orange-600/20">
+                <Activity className="w-5 h-5 text-orange-400" />
+              </div>
+              <div>
+                <p className="font-medium text-orange-200">Script is running</p>
+                <p className="text-sm text-orange-300/80">
+                  {status.current_mode && (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-500/20 text-orange-200 mr-2">
+                      Mode: {status.current_mode}
+                    </span>
+                  )}
+                  Stop the script before running another mode
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={stopScript}
+              disabled={loading}
+              className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg font-medium transition-all shadow-sm"
+            >
+              {loading ? (
+                <RefreshCw className="w-4 h-4 animate-spin" />
+              ) : (
+                <Square className="w-4 h-4" />
+              )}
+              Stop Script
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Controls Section */}
       <div className="bg-theme-card rounded-xl p-6 border border-theme shadow-sm">

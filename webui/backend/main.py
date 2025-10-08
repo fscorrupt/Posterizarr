@@ -563,6 +563,17 @@ class ManualModeRequest(BaseModel):
     episodeNumber: str = ""
 
 
+class UILogEntry(BaseModel):
+    level: str  # "log", "warn", "error", "info", "debug"
+    message: str
+    timestamp: str
+    source: str = "ui"
+
+
+class UILogBatch(BaseModel):
+    logs: list[UILogEntry]
+
+
 class ScheduleCreate(BaseModel):
     time: str  # Format: "HH:MM"
     description: Optional[str] = ""
@@ -699,6 +710,62 @@ def get_last_log_lines(count=25, mode=None, log_file=None):
                 continue
 
     return []
+
+
+@app.post("/api/logs/ui")
+async def receive_ui_log(log_entry: UILogEntry):
+    """
+    Empfängt UI/Frontend-Logs und schreibt sie in UIlog.log
+    """
+    try:
+        ui_log_path = LOGS_DIR / "UIlog.log"
+
+        # Erstelle Log-Eintrag im gleichen Format wie Backend-Logs
+        timestamp = log_entry.timestamp
+        level = log_entry.level.upper()
+        message = log_entry.message
+        source = log_entry.source if log_entry.source else "UI"
+
+        # Format: [TIMESTAMP] [LEVEL] |L.0| MESSAGE
+        log_line = f"[{timestamp}] [{level:8}] |UI| {message}\n"
+
+        # Schreibe in UIlog.log
+        with open(ui_log_path, "a", encoding="utf-8") as f:
+            f.write(log_line)
+
+        return {"success": True}
+
+    except Exception as e:
+        logger.error(f"Error writing UI log: {e}")
+        return {"success": False, "error": str(e)}
+
+
+@app.post("/api/logs/ui/batch")
+async def receive_ui_logs_batch(batch: UILogBatch):
+    """
+    Empfängt mehrere UI-Logs auf einmal (bessere Performance)
+    """
+    try:
+        ui_log_path = LOGS_DIR / "UIlog.log"
+
+        log_lines = []
+        for log_entry in batch.logs:
+            timestamp = log_entry.timestamp
+            level = log_entry.level.upper()
+            message = log_entry.message
+
+            log_line = f"[{timestamp}] [{level:8}] |UI| {message}\n"
+            log_lines.append(log_line)
+
+        # Batch-Write für bessere Performance
+        with open(ui_log_path, "a", encoding="utf-8") as f:
+            f.writelines(log_lines)
+
+        return {"success": True, "count": len(batch.logs)}
+
+    except Exception as e:
+        logger.error(f"Error writing UI logs batch: {e}")
+        return {"success": False, "error": str(e)}
 
 
 @app.get("/api/system-info")

@@ -21,9 +21,30 @@ import SystemInfo from "./SystemInfo";
 
 const API_URL = "/api";
 const isDev = import.meta.env.DEV;
-const WS_URL = isDev
-  ? `ws://localhost:3000/ws/logs`
-  : `ws://${window.location.host}/ws/logs`;
+
+// ============================================================================
+// LOG FILE MAPPING - Maps run modes to their respective log files
+// ============================================================================
+const getLogFileForMode = (mode) => {
+  const logMapping = {
+    testing: "Testinglog.log",
+    manual: "Manuallog.log",
+    normal: "Scriptlog.log",
+    backup: "Scriptlog.log",
+    syncjelly: "Scriptlog.log",
+    syncemby: "Scriptlog.log",
+    reset: "Scriptlog.log",
+    scheduled: "Scriptlog.log",
+  };
+  return logMapping[mode] || "Scriptlog.log";
+};
+
+const getWebSocketURL = (logFile) => {
+  const baseURL = isDev
+    ? `ws://localhost:3000/ws/logs`
+    : `ws://${window.location.host}/ws/logs`;
+  return `${baseURL}?log_file=${encodeURIComponent(logFile)}`;
+};
 
 function Dashboard() {
   const [status, setStatus] = useState({
@@ -90,10 +111,18 @@ function Dashboard() {
     }
 
     try {
-      const ws = new WebSocket(WS_URL);
+      // 🎯 Dynamische Log-Datei basierend auf current_mode
+      const logFile = status.current_mode
+        ? getLogFileForMode(status.current_mode)
+        : "Scriptlog.log";
+
+      const wsURL = getWebSocketURL(logFile);
+      console.log(`📡 Dashboard connecting to: ${wsURL}`);
+
+      const ws = new WebSocket(wsURL);
 
       ws.onopen = () => {
-        console.log("✅ Dashboard WebSocket connected");
+        console.log(`✅ Dashboard WebSocket connected to ${logFile}`);
         setWsConnected(true);
       };
 
@@ -106,6 +135,11 @@ function Dashboard() {
               ...prev,
               last_logs: [...prev.last_logs.slice(-24), data.content], // Keep last 25 lines
             }));
+          } else if (data.type === "log_file_changed") {
+            // Backend switched log file - reconnect to new log
+            console.log(`📄 Backend switched to: ${data.log_file}`);
+            disconnectDashboardWebSocket();
+            setTimeout(() => connectDashboardWebSocket(), 300);
           }
         } catch (error) {
           console.error("WebSocket message error:", error);
@@ -168,6 +202,20 @@ function Dashboard() {
       disconnectDashboardWebSocket();
     }
   }, [status.running]);
+
+  // 🎯 NEW: Reconnect WebSocket when mode changes (different log file)
+  useEffect(() => {
+    if (status.running && status.current_mode && wsRef.current) {
+      const expectedLogFile = getLogFileForMode(status.current_mode);
+      console.log(
+        `🔄 Mode changed to ${status.current_mode}, expected log: ${expectedLogFile}`
+      );
+
+      // Reconnect to the correct log file
+      disconnectDashboardWebSocket();
+      setTimeout(() => connectDashboardWebSocket(), 300);
+    }
+  }, [status.current_mode]);
 
   // ✨ NEW: Auto-scroll to bottom when logs update
   useEffect(() => {
@@ -582,7 +630,9 @@ function Dashboard() {
               >
                 Reading from:{" "}
                 <span className="font-mono text-theme-primary">
-                  {status.active_log}
+                  {status.current_mode
+                    ? getLogFileForMode(status.current_mode)
+                    : status.active_log}
                 </span>
               </p>
             )}
@@ -667,7 +717,10 @@ function Dashboard() {
             Auto-refresh: {wsConnected ? "Live" : "1.5s"}
           </span>
           <span className="text-gray-500">
-            Last 25 entries • {status.active_log || "No active log"}
+            Last 25 entries •{" "}
+            {status.current_mode
+              ? getLogFileForMode(status.current_mode)
+              : status.active_log || "No active log"}
           </span>
         </div>
       </div>
