@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import {
   Play,
@@ -14,11 +14,16 @@ import {
   ExternalLink,
   FileText,
   Settings,
+  Wifi,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import SystemInfo from "./SystemInfo";
 
 const API_URL = "/api";
+const isDev = import.meta.env.DEV;
+const WS_URL = isDev
+  ? `ws://localhost:3000/ws/logs`
+  : `ws://${window.location.host}/ws/logs`;
 
 function Dashboard() {
   const [status, setStatus] = useState({
@@ -35,6 +40,11 @@ function Dashboard() {
   const [loading, setLoading] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [version, setVersion] = useState({ local: null, remote: null });
+  const [wsConnected, setWsConnected] = useState(false); // ✨ NEW: WebSocket status
+  const [autoScroll, setAutoScroll] = useState(true); // ✨ NEW: Auto-scroll toggle
+  const wsRef = useRef(null);
+  const reconnectTimeoutRef = useRef(null);
+  const logContainerRef = useRef(null); // ✨ NEW: Log container reference for auto-scroll
 
   const fetchStatus = async () => {
     setIsRefreshing(true);
@@ -73,12 +83,98 @@ function Dashboard() {
     }
   };
 
+  // ✨ NEW: WebSocket connection for real-time log updates
+  const connectDashboardWebSocket = () => {
+    if (wsRef.current) {
+      return; // Already connected
+    }
+
+    try {
+      const ws = new WebSocket(WS_URL);
+
+      ws.onopen = () => {
+        console.log("✅ Dashboard WebSocket connected");
+        setWsConnected(true);
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data.type === "log") {
+            // Update logs in real-time
+            setStatus((prev) => ({
+              ...prev,
+              last_logs: [...prev.last_logs.slice(-24), data.content], // Keep last 25 lines
+            }));
+          }
+        } catch (error) {
+          console.error("WebSocket message error:", error);
+        }
+      };
+
+      ws.onerror = () => {
+        setWsConnected(false);
+      };
+
+      ws.onclose = () => {
+        setWsConnected(false);
+        wsRef.current = null;
+
+        // Auto-reconnect after 3 seconds if script is still running
+        reconnectTimeoutRef.current = setTimeout(() => {
+          if (status.running) {
+            connectDashboardWebSocket();
+          }
+        }, 3000);
+      };
+
+      wsRef.current = ws;
+    } catch (error) {
+      console.error("Failed to create WebSocket:", error);
+      setWsConnected(false);
+    }
+  };
+
+  const disconnectDashboardWebSocket = () => {
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
+
+    if (wsRef.current) {
+      wsRef.current.close();
+      wsRef.current = null;
+      setWsConnected(false);
+    }
+  };
+
   useEffect(() => {
     fetchStatus();
     fetchVersion();
-    const interval = setInterval(fetchStatus, 3000);
-    return () => clearInterval(interval);
+    // ⚡ IMPROVED: Faster polling - 1.5s instead of 3s
+    const interval = setInterval(fetchStatus, 1500);
+
+    return () => {
+      clearInterval(interval);
+      disconnectDashboardWebSocket();
+    };
   }, []);
+
+  // ✨ NEW: Connect/disconnect WebSocket based on running status
+  useEffect(() => {
+    if (status.running && !wsRef.current) {
+      connectDashboardWebSocket();
+    } else if (!status.running && wsRef.current) {
+      disconnectDashboardWebSocket();
+    }
+  }, [status.running]);
+
+  // ✨ NEW: Auto-scroll to bottom when logs update
+  useEffect(() => {
+    if (autoScroll && logContainerRef.current) {
+      logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
+    }
+  }, [status.last_logs, autoScroll]);
 
   const stopScript = async () => {
     setLoading(true);
@@ -461,36 +557,59 @@ function Dashboard() {
       {/* Log Viewer */}
       <div className="bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
         <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-xl font-semibold text-theme-text flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-theme-primary/10">
-                <FileText className="w-5 h-5 text-theme-primary" />
-              </div>
-              Live Log Feed
-            </h2>
+          <div className="flex-1">
+            <div className="flex items-center gap-3">
+              <h2 className="text-xl font-semibold text-theme-text flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-theme-primary/10">
+                  <FileText className="w-5 h-5 text-theme-primary" />
+                </div>
+                Live Log Feed
+              </h2>
+
+              {wsConnected && (
+                <span className="flex items-center gap-1.5 px-2 py-1 bg-green-500/10 border border-green-500/30 rounded text-xs text-green-400">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  <Wifi className="w-3 h-3" />
+                  Live
+                </span>
+              )}
+            </div>
+
             {status.active_log && (
-              <p className="text-xs text-theme-muted mt-2 ml-14">
+              <p
+                className="text-xs text-theme-muted mt-2"
+                style={{ marginLeft: "calc(2.25rem + 0.75rem)" }}
+              >
                 Reading from:{" "}
-                <span className="font-mono">{status.active_log}</span>
+                <span className="font-mono text-theme-primary">
+                  {status.active_log}
+                </span>
               </p>
             )}
           </div>
-          <button
-            onClick={fetchStatus}
-            disabled={isRefreshing}
-            className="flex items-center gap-2 px-4 py-2 text-theme-muted hover:text-theme-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:bg-theme-hover rounded-lg"
-            title="Refresh logs"
-          >
-            <RefreshCw
-              className={`w-5 h-5 ${isRefreshing ? "animate-spin" : ""}`}
-            />
-            <span className="text-sm font-medium">Refresh</span>
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setAutoScroll(!autoScroll)}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                autoScroll
+                  ? "bg-theme-primary/20 text-theme-primary border border-theme-primary/30"
+                  : "bg-theme-hover text-theme-muted border border-theme"
+              }`}
+              title={
+                autoScroll ? "Auto-scroll enabled" : "Auto-scroll disabled"
+              }
+            >
+              <span>Auto-scroll</span>
+            </button>
+          </div>
         </div>
 
         <div className="bg-black rounded-lg overflow-hidden border-2 border-theme shadow-sm">
           {status.last_logs && status.last_logs.length > 0 ? (
-            <div className="font-mono text-[11px] leading-relaxed max-h-96 overflow-y-auto">
+            <div
+              ref={logContainerRef}
+              className="font-mono text-[11px] leading-relaxed max-h-96 overflow-y-auto"
+            >
               {status.last_logs.map((line, index) => {
                 const parsed = parseLogLine(line);
 
@@ -545,7 +664,7 @@ function Dashboard() {
         <div className="mt-3 flex items-center justify-between text-xs text-gray-600">
           <span className="flex items-center gap-2">
             <Clock className="w-3 h-3" />
-            Auto-refresh: 3s
+            Auto-refresh: {wsConnected ? "Live" : "1.5s"}
           </span>
           <span className="text-gray-500">
             Last 25 entries • {status.active_log || "No active log"}
