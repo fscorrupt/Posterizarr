@@ -10,7 +10,7 @@ import asyncio
 import os
 import httpx
 from pathlib import Path
-from typing import Optional, List
+from typing import Optional, List, Literal
 import logging
 import re
 import time
@@ -293,7 +293,7 @@ def is_titlecard_file(filename: str) -> bool:
 # DYNAMIC ASSET CACHING SYSTEM
 # ============================================================================
 CACHE_TTL_SECONDS = 300  # Cache data for 5 minutes (nur für Statistiken)
-CACHE_REFRESH_INTERVAL = 600  # Refresh cache every 5 minutes (passt für große Assets)
+CACHE_REFRESH_INTERVAL = 600  # Refresh cache every 10 minutes (passt für große Assets)
 
 asset_cache = {
     "last_scanned": 0,
@@ -550,6 +550,15 @@ class ConfigUpdate(BaseModel):
 
 class ResetPostersRequest(BaseModel):
     library: str
+
+
+class ManualModeRequest(BaseModel):
+    picturePath: str
+    titletext: str
+    folderName: str
+    libraryName: str
+    posterType: Literal["standard", "season", "collection"] = "standard"
+    seasonPosterName: str = ""
 
 
 class ScheduleCreate(BaseModel):
@@ -929,6 +938,114 @@ async def reset_posters(request: ResetPostersRequest):
         raise HTTPException(status_code=500, detail=error_msg)
     except Exception as e:
         logger.error(f"Error resetting posters: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/run-manual")
+async def run_manual_mode(request: ManualModeRequest):
+    """Run Posterizarr in manual mode with custom parameters"""
+    global current_process, current_mode
+
+    # Check if script is running
+    if current_process and current_process.poll() is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot run manual mode while script is running. Please stop the script first.",
+        )
+
+    if not SCRIPT_PATH.exists():
+        raise HTTPException(status_code=404, detail="Posterizarr.ps1 not found")
+
+    # Validate required fields
+    if not request.picturePath or not request.picturePath.strip():
+        raise HTTPException(status_code=400, detail="Picture path is required")
+
+    if not request.titletext or not request.titletext.strip():
+        raise HTTPException(status_code=400, detail="Title text is required")
+
+    if not request.folderName or not request.folderName.strip():
+        raise HTTPException(status_code=400, detail="Folder name is required")
+
+    if not request.libraryName or not request.libraryName.strip():
+        raise HTTPException(status_code=400, detail="Library name is required")
+
+    if request.posterType == "season" and (
+        not request.seasonPosterName or not request.seasonPosterName.strip()
+    ):
+        raise HTTPException(
+            status_code=400, detail="Season poster name is required for season posters"
+        )
+
+    # Determine PowerShell command
+    import platform
+
+    if platform.system() == "Windows":
+        ps_command = "pwsh"
+        try:
+            subprocess.run([ps_command, "-v"], capture_output=True, check=True)
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            ps_command = "powershell"
+            logger.info("pwsh not found, using powershell instead")
+    else:
+        ps_command = "pwsh"
+
+    # Build command based on poster type
+    command = [
+        ps_command,
+        "-File",
+        str(SCRIPT_PATH),
+        "-Manual",
+        "-PicturePath",
+        request.picturePath.strip(),
+        "-Titletext",
+        request.titletext.strip(),
+        "-FolderName",
+        request.folderName.strip(),
+        "-LibraryName",
+        request.libraryName.strip(),
+    ]
+
+    # Add poster type specific switches
+    if request.posterType == "season":
+        command.append("-SeasonPoster")
+        command.extend(["-SeasonPosterName", request.seasonPosterName.strip()])
+    elif request.posterType == "collection":
+        command.append("-CollectionCard")
+
+    try:
+        logger.info(f"Running manual mode with parameters:")
+        logger.info(f"  Picture Path: {request.picturePath}")
+        logger.info(f"  Title: {request.titletext}")
+        logger.info(f"  Folder: {request.folderName}")
+        logger.info(f"  Library: {request.libraryName}")
+        logger.info(f"  Type: {request.posterType}")
+        if request.posterType == "season":
+            logger.info(f"  Season: {request.seasonPosterName}")
+        logger.info(f"Running command: {' '.join(command)}")
+
+        # Run the manual mode command
+        current_process = subprocess.Popen(
+            command,
+            cwd=str(BASE_DIR),
+            stdout=None,
+            stderr=None,
+            text=True,
+        )
+        current_mode = "manual"  # Set current mode to manual
+
+        logger.info(f"Started manual mode with PID {current_process.pid}")
+
+        return {
+            "success": True,
+            "message": f"Started manual mode for '{request.titletext}'",
+            "pid": current_process.pid,
+        }
+    except FileNotFoundError as e:
+        error_msg = f"PowerShell not found. Please install PowerShell 7+ (pwsh) or ensure Windows PowerShell is in PATH. Error: {str(e)}"
+        logger.error(error_msg)
+        raise HTTPException(status_code=500, detail=error_msg)
+    except Exception as e:
+        logger.error(f"Error running manual mode: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
