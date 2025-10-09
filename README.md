@@ -71,7 +71,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpin
 >- Movie/Show Backgrounds
 >- Season Posters
 >- TitleCards
->- Collections are **NOT** supported
+>- Collections are **NOT** supported (but you can create them through manual mode)
 
 ## 🧰 What You Need
 
@@ -90,7 +90,7 @@ Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpin
 >- **ImageMagick (already integrated in container)**
 >   - **Version 7.x is required** - The script handles downloading and using a portable version of ImageMagick for all platforms. **(You may need to run the Script as Admin on first run)**. If you prefer to reference your own installation or prefer to download and install it yourself, goto: [Download ImageMagick](https://imagemagick.org/script/download.php)
 >- **Powershell Version (already integrated in container)**
->   - 5.x or higher.
+>   - 7.x or higher.
 >- **FanartTv Powershell Module (already integrated in container)**
 >   - This module is required, goto: [Install Module](https://github.com/Celerium/FanartTV-PowerShellWrapper)
 
@@ -729,7 +729,7 @@ This guide is for users on **Windows** and **Linux** who are not using Docker an
 Before you begin, ensure you have the following software installed and accessible from your system's command line (PATH):
 * ✅ **Python 3:** Required for the backend server.
 * ✅ **Node.js (with npm):** Required for the frontend interface.
-* ✅ **PowerShell:** Required to run the main `Posterizarr.ps1` script.
+* ✅ **PowerShell Core:** Required to run the main `Posterizarr.ps1` script.
 
 **Setup Instructions**
 
