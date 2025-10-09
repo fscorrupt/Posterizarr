@@ -54,18 +54,12 @@ RUN echo @edge http://dl-cdn.alpinelinux.org/alpine/edge/community >> /etc/apk/r
     && chmod -R 755 /app /usr/local/share/powershell \
     && chmod -R 777 /usr/share/fonts/custom /var/cache/fontconfig
 
+# Copy backend requirements file first to leverage Docker cache
+COPY webui/backend/requirements.txt /app/requirements.txt
+
 # Set up Python dependencies for FastAPI backend
 RUN apk add --no-cache --virtual .build-deps build-base python3-dev linux-headers \
-    && pip install --no-cache-dir \
-        fastapi==0.108.0 \
-        uvicorn[standard]==0.25.0 \
-        python-multipart==0.0.6 \
-        websockets==12.0 \
-        httpx==0.28.1 \
-        apscheduler==3.10.4 \
-        pytz==2024.1 \
-        psutil>=5.9.0 \
-        apprise \
+    && pip install --no-cache-dir -r /app/requirements.txt apprise \
     && apk del .build-deps
 
 # Copy Posterizarr main app
