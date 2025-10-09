@@ -366,8 +366,8 @@
   --plex-poster-unwatched: #6df751;
 }
 
-/* Overseerr Theme */
-[data-theme="overseerr"] {
+/* Seerr Theme */
+[data-theme="seerr"] {
   --theme-primary: #6366f1;
   --theme-primary-hover: #4f46e5;
   --theme-accent: #a78bfa;
