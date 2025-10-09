@@ -215,8 +215,8 @@ function RunModes() {
     folderName: "",
     libraryName: "",
     posterType: "standard", // standard, season, collection, titlecard
+    mediaTypeSelection: "movie", // "movie" or "tv" - for standard posters only
     seasonPosterName: "",
-    // Episode Title Card fields
     epTitleName: "",
     episodeNumber: "",
   });
@@ -418,13 +418,13 @@ function RunModes() {
           folderName: "",
           libraryName: "",
           posterType: "standard",
+          mediaTypeSelection: "movie",
           seasonPosterName: "",
           epTitleName: "",
           episodeNumber: "",
         });
         fetchStatus();
 
-        // ✨ Weiterleitung zum LogViewer mit Manuallog.log
         console.log("🎯 Redirecting to LogViewer with log: Manuallog.log");
         setTimeout(() => {
           navigate("/logs", { state: { logFile: "Manuallog.log" } });
@@ -577,13 +577,21 @@ function RunModes() {
     setTmdbSearch({ ...tmdbSearch, searching: true });
 
     try {
-      // Determine media type from posterType
-      let mediaType = "movie";
-      if (
+      // Determine media type based on posterType and mediaTypeSelection
+      let mediaType;
+
+      if (manualForm.posterType === "standard") {
+        // For standard posters, use the user's selection
+        mediaType = manualForm.mediaTypeSelection; // "movie" or "tv"
+      } else if (
         manualForm.posterType === "season" ||
         manualForm.posterType === "titlecard"
       ) {
+        // Season and titlecard are always TV
         mediaType = "tv";
+      } else {
+        // Collection defaults to movie
+        mediaType = "movie";
       }
 
       const requestBody = {
@@ -959,7 +967,36 @@ function RunModes() {
           // No libraryName needed for collections
           libraryName: {},
         };
-      default: // for "standard"
+      case "standard":
+        // Different hints for movies vs TV shows
+        if (manualForm.mediaTypeSelection === "tv") {
+          return {
+            folderName: {
+              label: "Folder Name",
+              placeholder: "Breaking Bad (2008)",
+              description:
+                'Show folder name as seen by Plex (e.g., "Breaking Bad (2008)")',
+            },
+            libraryName: {
+              placeholder: "TV Shows",
+              description: 'Plex library for shows (e.g., "TV Shows")',
+            },
+          };
+        } else {
+          return {
+            folderName: {
+              label: "Folder Name",
+              placeholder: "The Martian (2015)",
+              description:
+                'Movie folder name as seen by Plex (e.g., "The Martian (2015)")',
+            },
+            libraryName: {
+              placeholder: "Movies",
+              description: 'Plex library for movies (e.g., "Movies")',
+            },
+          };
+        }
+      default:
         return {
           folderName: {
             label: "Folder Name",
@@ -1205,7 +1242,52 @@ function RunModes() {
             </div>
           </div>
 
-          {/* TMDB Poster Search - ERWEITERTE VERSION */}
+          {/* Movie/TV Show Toggle - Only for Standard Poster Type */}
+          {manualForm.posterType === "standard" && (
+            <div>
+              <label className="block text-sm font-medium text-theme-text mb-2">
+                Media Type
+              </label>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={() =>
+                    setManualForm({
+                      ...manualForm,
+                      mediaTypeSelection: "movie",
+                    })
+                  }
+                  disabled={loading || status.running}
+                  className={`flex items-center justify-center gap-2 px-4 py-3 rounded-lg border-2 transition-all ${
+                    manualForm.mediaTypeSelection === "movie"
+                      ? "bg-theme-primary border-theme-primary text-white"
+                      : "bg-theme-hover border-theme hover:border-theme-primary text-theme-text"
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  <Film className="w-5 h-5" />
+                  Movie
+                </button>
+                <button
+                  onClick={() =>
+                    setManualForm({ ...manualForm, mediaTypeSelection: "tv" })
+                  }
+                  disabled={loading || status.running}
+                  className={`flex items-center justify-center gap-2 px-4 py-3 rounded-lg border-2 transition-all ${
+                    manualForm.mediaTypeSelection === "tv"
+                      ? "bg-theme-primary border-theme-primary text-white"
+                      : "bg-theme-hover border-theme hover:border-theme-primary text-theme-text"
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  <Tv className="w-5 h-5" />
+                  TV Show
+                </button>
+              </div>
+              <p className="text-xs text-theme-muted mt-1">
+                Select whether you're searching for a movie or TV show poster
+              </p>
+            </div>
+          )}
+
+          {/* TMDB Poster Search*/}
           <div className="bg-theme-hover border border-theme rounded-lg p-4">
             <div className="flex items-center mb-3">
               <Cloud className="w-5 h-5 text-theme-primary mr-2" />
@@ -1215,6 +1297,12 @@ function RunModes() {
                   ? "Season Posters"
                   : manualForm.posterType === "titlecard"
                   ? "Episode Images"
+                  : manualForm.posterType === "standard"
+                  ? `${
+                      manualForm.mediaTypeSelection === "tv"
+                        ? "TV Show"
+                        : "Movie"
+                    } Posters`
                   : "Posters"}
               </h3>
             </div>
