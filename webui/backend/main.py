@@ -1844,20 +1844,35 @@ async def websocket_logs(
                     logger.warning(f"Error reading log file: {e}")
                     await asyncio.sleep(1)  # Wait longer on file errors
 
-    except WebSocketDisconnect:
-        logger.info("WebSocket disconnected by client")
+    except WebSocketDisconnect as e:
+        # Normal disconnect - check close code
+        close_code = e.code if hasattr(e, 'code') else None
+
+
+        if close_code in [1000, 1001, 1005]:
+            logger.info(f"WebSocket disconnected normally (code: {close_code})")
+        else:
+            logger.warning(f"WebSocket disconnected unexpectedly (code: {close_code})")
+
     except asyncio.CancelledError:
-        logger.info("WebSocket task cancelled during shutdown")
+        logger.debug("WebSocket task cancelled during shutdown")
+
     except Exception as e:
-        logger.error(f"WebSocket error: {e}")
-        try:
-            await websocket.send_json(
-                {"type": "error", "message": f"WebSocket error: {str(e)}"}
-            )
-        except:
-            pass
+        error_msg = str(e)
+
+
+        if "1001" in error_msg or "1005" in error_msg or "going away" in error_msg:
+            logger.info(f"WebSocket closed normally: {error_msg}")
+        else:
+            logger.error(f"WebSocket error: {e}")
+            try:
+                await websocket.send_json(
+                    {"type": "error", "message": f"WebSocket error: {str(e)}"}
+                )
+            except:
+                pass
     finally:
-        logger.info("WebSocket connection closed")
+        logger.debug("WebSocket connection closed")
 
 
 @app.get("/api/gallery")

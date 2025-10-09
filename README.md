@@ -40,6 +40,29 @@
 ## Introduction
 This PowerShell script automates generating images for your Plex, Jellyfin, or Emby library by using media info like titles, seasons, and episodes. It fetches artwork from Fanart.tv, TMDB, TVDB, Plex, and IMDb, focusing on specific languages - **defaulting to textless** images and falling back to English if unavailable. Users can choose between textless or text posters. The script supports both automatic bulk downloads and manual mode (interactive) for custom artwork that can’t be retrieved automatically.
 
+## Introducing the Posterizarr Web UI 🌐
+
+Exciting news! Posterizarr now features a user-friendly web interface to make configuration and management easier than ever.
+
+From the UI, you can:
+* Adjust all your settings directly in the browser
+* Monitor real-time script activity
+* View your created assets
+* Set and manage script schedules
+* Trigger runs with the click of a button
+* ...and much more!
+
+By default (Docker Only), the UI is accessible at `http://localhost:8000`.
+
+The web UI comes pre-integrated in the Docker container. For other platforms like Windows or Linux, please see the [Manual Installation how-to](#ui-installation-(manual)).
+
+<p align="center">
+  <a href="https://github.com/fscorrupt/Posterizarr">
+    <img alt="Web UI Preview" width="80%" src="/images/PosterizarrUI.png">
+  </a>
+</p>
+
+
 > [!NOTE]
 Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpine Base Image)](#docker), [unRAID](#unraid) and on Windows operating systems.
 >
@@ -697,7 +720,60 @@ To use it we need to configure a script in Sonarr/Radarr, please follow these in
 9. Posterizarr monitors this directory for files ending in `.posterizarr`.
     - When such a file is detected, it **waits** up to `5 minutes`(based on fileage), then reads the file and triggers a Posterizarr run for the corresponding item.
 
+### UI Installation (Manual)
 
+This guide is for users on **Windows** and **Linux** who are not using Docker and wish to run the web UI from the source.
+
+### Prerequisites
+
+Before you begin, ensure you have the following software installed and accessible from your system's command line (PATH):
+* ✅ **Python 3:** Required for the backend server.
+* ✅ **Node.js (with npm):** Required for the frontend interface.
+* ✅ **PowerShell:** Required to run the main `Posterizarr.ps1` script.
+
+### 🚀 Setup Instructions
+
+The setup process is handled by a simple script that installs all necessary dependencies.
+
+1.  Open a terminal or command prompt.
+2.  Navigate into the `webui` directory located in the project's root folder.
+    ```bash
+    cd path/to/Posterizarr/webui
+    ```
+3.  Run the appropriate setup script for your operating system:
+    * **On Windows:**
+        ```batch
+        setup.bat
+        ```
+    * **On Linux or macOS:**
+        ```bash
+        sh setup.sh
+        ```
+    The script will verify your prerequisites and install all required backend (Python) and frontend (Node.js) packages.
+
+### ▶️ Running the UI
+
+After the setup is complete, you need to start the backend and frontend processes in **two separate terminals**.
+
+#### Terminal 1: Start the Backend
+```bash
+# Navigate to the backend directory
+cd webui/backend
+
+# Run the Python server
+python main.py
+```
+
+#### Terminal 2: Start the Frontend
+```bash
+# Navigate to the frontend directory
+cd webui/frontend
+
+# Run the development server
+npm run dev
+```
+
+Once both services are running, you can access the Posterizarr Web UI by opening your browser and navigating to: http://localhost:3000
 
 ### Testing Mode
 

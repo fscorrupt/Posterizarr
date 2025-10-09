@@ -9,7 +9,33 @@ function ScriptSchedule {
 
     $NextScriptRun = $env:RUN_TIME -split ',' | Sort-Object
 
-    write-host "UI is being initialized this can take a minute..."
+    # Define the URL you want to check and the timeout settings.
+    Write-Host "UI is being initialized this can take a minute..."
+    $websiteUrl = "http://localhost:8000/"
+    $retryIntervalSeconds = 5
+    $maxWaitSeconds = 60
+    $UIstartTime = Get-Date
+    $isOnline = $false
+
+    # Loop until the website is online or the timeout is reached.
+    while (((Get-Date) - $UIstartTime).TotalSeconds -lt $maxWaitSeconds) {
+        try {
+            $response = Invoke-WebRequest -Uri $websiteUrl -UseBasicParsing -TimeoutSec $retryIntervalSeconds -ErrorAction Stop
+            if ($response.StatusCode -eq 200) {
+                $isOnline = $true
+                break # Exit the loop since the website is online.
+            }
+        }
+        catch {
+        }
+        Start-Sleep -Seconds $retryIntervalSeconds
+    }
+
+    # Final status message after the loop exits.
+    if ($isOnline) {
+        Write-Host "UI & Cache is now builded and online."
+    }
+
     Write-Host "File Watcher Started..."
     # Next Run
     while ($true) {
