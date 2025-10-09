@@ -16,6 +16,7 @@ import {
   Lock,
   Hash,
   Loader2,
+  Search,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 
@@ -31,6 +32,7 @@ function ConfigEditor() {
   const [error, setError] = useState(null);
   const [expandedGroups, setExpandedGroups] = useState({});
   const [activeTab, setActiveTab] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Auto-resize textarea function
   const autoResize = (textarea) => {
@@ -124,6 +126,18 @@ function ConfigEditor() {
       }
     }
   }, [config]);
+
+  // Auto-expand groups when searching
+  useEffect(() => {
+    if (searchQuery && activeTab) {
+      const filteredGroups = getFilteredGroupsByTab(activeTab);
+      const newExpandedState = {};
+      filteredGroups.forEach((groupName) => {
+        newExpandedState[groupName] = true;
+      });
+      setExpandedGroups(newExpandedState);
+    }
+  }, [searchQuery, activeTab]);
 
   const fetchConfig = async () => {
     setLoading(true);
@@ -306,6 +320,50 @@ function ConfigEditor() {
       return Lock;
     if (typeof value === "number") return Hash;
     return Type;
+  };
+
+  // Filter functions for search
+  const matchesSearch = (text) => {
+    if (!searchQuery.trim()) return true;
+    return text.toLowerCase().includes(searchQuery.toLowerCase());
+  };
+
+  const getFilteredFieldsForGroup = (groupName) => {
+    const allFields = getFieldsForGroup(groupName);
+    if (!searchQuery.trim()) return allFields;
+
+    return allFields.filter((key) => {
+      const displayName = getDisplayName(key);
+      const value = usingFlatStructure ? config[key] : config[groupName]?.[key];
+      const stringValue =
+        value === null || value === undefined ? "" : String(value);
+
+      // Search in key name, display name, and value
+      return (
+        matchesSearch(key) ||
+        matchesSearch(displayName) ||
+        matchesSearch(stringValue)
+      );
+    });
+  };
+
+  const getFilteredGroupsByTab = (tabName) => {
+    const groups = getGroupsByTab(tabName);
+    if (!searchQuery.trim()) return groups;
+
+    return groups.filter((groupName) => {
+      // Check if group name matches
+      if (
+        matchesSearch(groupName) ||
+        matchesSearch(formatGroupName(groupName))
+      ) {
+        return true;
+      }
+
+      // Check if any field in the group matches
+      const fieldsInGroup = getFilteredFieldsForGroup(groupName);
+      return fieldsInGroup.length > 0;
+    });
   };
 
   const renderInput = (groupName, key, value) => {
@@ -539,11 +597,38 @@ function ConfigEditor() {
         </div>
       </div>
 
+      {/* Search Bar */}
+      <div className="bg-theme-card rounded-xl p-4 border border-theme shadow-sm">
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-theme-muted" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search settings by name or value..."
+            className="w-full pl-12 pr-4 py-3 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-theme-muted hover:text-theme-text transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
+        </div>
+        {searchQuery && (
+          <p className="text-sm text-theme-muted mt-2">
+            Filtering settings matching "{searchQuery}"
+          </p>
+        )}
+      </div>
+
       {/* Tab Navigation - Enhanced */}
       <div className="bg-theme-card rounded-xl p-4 border border-theme shadow-sm">
         <div className="flex gap-2 flex-wrap">
           {Object.keys(tabs).map((tabName) => {
-            const sectionsInTab = getGroupsByTab(tabName);
+            const sectionsInTab = getFilteredGroupsByTab(tabName);
             if (sectionsInTab.length === 0 && tabName !== "Advanced")
               return null;
 
@@ -581,11 +666,14 @@ function ConfigEditor() {
       <div className="space-y-4">
         {activeTab && (
           <>
-            {getGroupsByTab(activeTab).map((groupName) => {
+            {getFilteredGroupsByTab(activeTab).map((groupName) => {
               const GroupIcon = getGroupIcon(groupName);
               const isExpanded = expandedGroups[groupName];
-              const fields = getFieldsForGroup(groupName);
+              const fields = getFilteredFieldsForGroup(groupName);
               const settingsCount = fields.length;
+
+              // Don't show groups with no matching fields when searching
+              if (searchQuery && settingsCount === 0) return null;
 
               return (
                 <div
@@ -608,6 +696,7 @@ function ConfigEditor() {
                         <p className="text-sm text-theme-muted mt-1">
                           {settingsCount} setting
                           {settingsCount !== 1 ? "s" : ""}
+                          {searchQuery && " (filtered)"}
                         </p>
                       </div>
                     </div>
@@ -664,6 +753,26 @@ function ConfigEditor() {
                 </div>
               );
             })}
+
+            {/* No Results Message */}
+            {searchQuery && getFilteredGroupsByTab(activeTab).length === 0 && (
+              <div className="bg-theme-card rounded-xl p-12 border border-theme text-center">
+                <Search className="w-12 h-12 text-theme-muted mx-auto mb-4 opacity-50" />
+                <h3 className="text-xl font-semibold text-theme-text mb-2">
+                  No settings found
+                </h3>
+                <p className="text-theme-muted mb-4">
+                  No settings match your search "{searchQuery}" in the{" "}
+                  {activeTab} tab
+                </p>
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="px-4 py-2 bg-theme-primary hover:bg-theme-primary/90 rounded-lg font-medium transition-all"
+                >
+                  Clear Search
+                </button>
+              </div>
+            )}
           </>
         )}
       </div>
