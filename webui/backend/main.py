@@ -327,7 +327,7 @@ def scan_and_cache_assets():
     """Scans the assets directory and populates/refreshes the cache."""
     global cache_scan_in_progress
 
-    # Verhindere überlappende Scans
+    # Prevent overlapping scans (thread-safe)
     if cache_scan_in_progress:
         logger.warning("Asset scan already in progress, skipping this request")
         return
@@ -381,7 +381,7 @@ def scan_and_cache_assets():
                     "size": 0,
                 }
 
-            # Zähle Dateien und Größe für den Ordner
+            # Count files and size for the folder
             temp_folders[folder_name]["files"] += 1
             temp_folders[folder_name]["size"] += image_data["size"]
 
@@ -418,7 +418,7 @@ def scan_and_cache_assets():
         logger.error(f"An error occurred during asset scan: {e}")
     finally:
         asset_cache["last_scanned"] = time.time()
-        cache_scan_in_progress = False  # Sperre freigeben
+        cache_scan_in_progress = False  # Release lock
         logger.info(
             f"Asset cache refresh finished. Found {len(asset_cache['posters'])} posters, "
             f"{len(asset_cache['backgrounds'])} backgrounds, "
@@ -438,7 +438,7 @@ def background_cache_refresh():
 
     while cache_refresh_running:
         try:
-            # Warte bis zum nächsten Refresh
+            # Wait until the next refresh
             time.sleep(CACHE_REFRESH_INTERVAL)
 
             if cache_refresh_running:  # Check again after sleep
@@ -481,8 +481,8 @@ def stop_cache_refresh_background():
 
 def get_fresh_assets():
     """Returns the asset cache (always fresh thanks to background refresh)"""
-    # Vertraue vollständig auf Background-Refresh!
-    # Nur bei komplett leerem Cache (erster Start) wird synchron gescannt
+    # Fully rely on background refresh!
+    # Only perform a synchronous scan if the cache is completely empty (first startup)
     if asset_cache["last_scanned"] == 0:
         logger.info("First-time cache population...")
         scan_and_cache_assets()
@@ -720,7 +720,7 @@ async def receive_ui_log(log_entry: UILogEntry):
     try:
         ui_log_path = LOGS_DIR / "UIlog.log"
 
-        # Erstelle Log-Eintrag im gleichen Format wie Backend-Logs
+        # Create log entry in the same format as backend logs
         timestamp = log_entry.timestamp
         level = log_entry.level.upper()
         message = log_entry.message
@@ -729,7 +729,7 @@ async def receive_ui_log(log_entry: UILogEntry):
         # Format: [TIMESTAMP] [LEVEL] |L.0| MESSAGE
         log_line = f"[{timestamp}] [{level:8}] |UI| {message}\n"
 
-        # Schreibe in UIlog.log
+        # Write into UIlog.log
         with open(ui_log_path, "a", encoding="utf-8") as f:
             f.write(log_line)
 
@@ -757,7 +757,7 @@ async def receive_ui_logs_batch(batch: UILogBatch):
             log_line = f"[{timestamp}] [{level:8}] |UI| {message}\n"
             log_lines.append(log_line)
 
-        # Batch-Write für bessere Performance
+        # Batch-Write for better performance
         with open(ui_log_path, "a", encoding="utf-8") as f:
             f.writelines(log_lines)
 
@@ -1268,8 +1268,8 @@ async def run_script(mode: str):
         "testing": [ps_command, "-File", str(SCRIPT_PATH), "-Testing"],
         "manual": [ps_command, "-File", str(SCRIPT_PATH), "-Manual"],
         "backup": [ps_command, "-File", str(SCRIPT_PATH), "-Backup"],
-        "syncjelly": [ps_command, "-File", str(SCRIPT_PATH), "-SyncJelly"],  # Added
-        "syncemby": [ps_command, "-File", str(SCRIPT_PATH), "-SyncEmby"],  # Added
+        "syncjelly": [ps_command, "-File", str(SCRIPT_PATH), "-SyncJelly"],
+        "syncemby": [ps_command, "-File", str(SCRIPT_PATH), "-SyncEmby"],
     }
 
     if mode not in commands:
@@ -1738,7 +1738,7 @@ async def websocket_logs(
     # Determine which log file to monitor
     log_path = LOGS_DIR / log_file
 
-    # ✨ NEW: Track if user explicitly requested a specific log file
+    # Track if user explicitly requested a specific log file
     user_requested_log = log_file != "Scriptlog.log"  # User manually selected a log
 
     # Map modes to their log files for dynamic switching
@@ -1770,13 +1770,13 @@ async def websocket_logs(
 
         while True:
             try:
-                # ⚡ FASTER POLLING: 0.3s instead of 1s
+                # FASTER POLLING: 0.3s instead of 1s
                 await asyncio.sleep(0.3)
             except asyncio.CancelledError:
                 logger.info("WebSocket log streaming cancelled (connection closed)")
                 break
 
-            # ⚡ FIX: Only auto-switch if user didn't manually request a specific log
+            # Only auto-switch if user didn't manually request a specific log
             # AND the current mode changed
             if (
                 not user_requested_log
@@ -2111,7 +2111,7 @@ async def fetch_version(local_filename: str, github_url: str, version_type: str)
     local_version = None
     remote_version = None
 
-    # --- 1. Get Local Version ---
+    # Get Local Version
     try:
         version_file = BASE_DIR / local_filename
         if version_file.exists():
@@ -2119,7 +2119,7 @@ async def fetch_version(local_filename: str, github_url: str, version_type: str)
     except Exception as e:
         logger.error(f"Error reading local {version_type} version file: {e}")
 
-    # --- 2. Get Remote Version (if in Docker) ---
+    # Get Remote Version (if in Docker)
     if IS_DOCKER:
         try:
             async with httpx.AsyncClient() as client:
@@ -2151,7 +2151,7 @@ async def get_script_version():
     local_version = None
     remote_version = None
 
-    # --- 1. Get Local Version from Posterizarr.ps1 ---
+    # Get Local Version from Posterizarr.ps1
     try:
         # Use the already defined SCRIPT_PATH
         posterizarr_path = SCRIPT_PATH
@@ -2178,7 +2178,7 @@ async def get_script_version():
     except Exception as e:
         logger.error(f"Error reading version from Posterizarr.ps1: {e}")
 
-    # --- 2. Get Remote Version from GitHub Release.txt ---
+    # Get Remote Version from GitHub Release.txt
     # Always fetch from GitHub (both Docker and local)
     try:
         async with httpx.AsyncClient() as client:
@@ -2194,7 +2194,7 @@ async def get_script_version():
     except Exception as e:
         logger.error(f"Error fetching remote version: {e}")
 
-    # --- 3. SEMANTIC VERSION COMPARISON ---
+    # SEMANTIC VERSION COMPARISON
     is_update_available = False
     if local_version and remote_version:
         is_update_available = is_version_newer(local_version, remote_version)
@@ -2205,7 +2205,7 @@ async def get_script_version():
     return {
         "local": local_version,
         "remote": remote_version,
-        "is_update_available": is_update_available,  # NEU: Boolean für Update-Verfügbarkeit
+        "is_update_available": is_update_available,  # Boolean for update availability
     }
 
 
@@ -2232,9 +2232,9 @@ async def get_github_releases():
             response.raise_for_status()
             releases = response.json()
 
-            # Formatiere die Releases für die Frontend-Anzeige
+            # Format the releases for frontend display
             formatted_releases = []
-            for release in releases[:10]:  # Nur die letzten 10 Releases
+            for release in releases[:10]:  # Only last 10 releases
                 published_date = datetime.fromisoformat(
                     release["published_at"].replace("Z", "+00:00")
                 )
@@ -2273,10 +2273,10 @@ async def get_assets_stats():
     Gibt Statistiken über die erstellten Assets zurück - verwendet Cache
     """
     try:
-        # Nutze den vorhandenen Cache statt neu zu scannen
+        # Use the existing cache instead of rescanning
         cache = get_fresh_assets()
 
-        # Berechne Gesamtgröße aus Cache
+        # Calculate total size from cache
         total_size = sum(img["size"] for img in cache["posters"])
         total_size += sum(img["size"] for img in cache["backgrounds"])
         total_size += sum(img["size"] for img in cache["seasons"])
@@ -2292,7 +2292,7 @@ async def get_assets_stats():
             "seasons": len(cache["seasons"]),
             "titlecards": len(cache["titlecards"]),
             "total_size": total_size,
-            "folders": sorted_folders[:10],  # Top 10 Ordner nach Dateianzahl
+            "folders": sorted_folders[:10],  # Top 10 folders by file count
         }
 
         return {"success": True, "stats": stats}
@@ -2329,7 +2329,7 @@ async def get_cache_status():
         last_scan = asset_cache.get("last_scanned", 0)
         age_seconds = now - last_scan if last_scan > 0 else 0
 
-        # Robustes Thread-Checking
+        # Robust thread checking
         thread_alive = False
         try:
             if cache_refresh_task is not None:
@@ -2348,7 +2348,7 @@ async def get_cache_status():
                 "age_seconds": int(age_seconds),
                 "ttl_seconds": CACHE_TTL_SECONDS,
                 "refresh_interval": CACHE_REFRESH_INTERVAL,
-                "is_stale": False,  # TTL-Check entfernt, Cache ist immer gültig
+                "is_stale": False,  # TTL check removed, cache is always valid
                 "posters_count": len(asset_cache.get("posters", [])),
                 "backgrounds_count": len(asset_cache.get("backgrounds", [])),
                 "seasons_count": len(asset_cache.get("seasons", [])),
@@ -2363,7 +2363,7 @@ async def get_cache_status():
         }
     except Exception as e:
         logger.error(f"Error getting cache status: {e}")
-        # Gib trotzdem eine gültige Response zurück
+        # Still return a valid response
         return {
             "success": False,
             "error": str(e),
