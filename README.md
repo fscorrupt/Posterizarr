@@ -724,14 +724,14 @@ To use it we need to configure a script in Sonarr/Radarr, please follow these in
 
 This guide is for users on **Windows** and **Linux** who are not using Docker and wish to run the web UI from the source.
 
-### Prerequisites
+**Prerequisites**
 
 Before you begin, ensure you have the following software installed and accessible from your system's command line (PATH):
 * ✅ **Python 3:** Required for the backend server.
 * ✅ **Node.js (with npm):** Required for the frontend interface.
 * ✅ **PowerShell:** Required to run the main `Posterizarr.ps1` script.
 
-### 🚀 Setup Instructions
+**Setup Instructions**
 
 The setup process is handled by a simple script that installs all necessary dependencies.
 
@@ -751,11 +751,11 @@ The setup process is handled by a simple script that installs all necessary depe
         ```
     The script will verify your prerequisites and install all required backend (Python) and frontend (Node.js) packages.
 
-### ▶️ Running the UI
+**Running the UI**
 
 After the setup is complete, you need to start the backend and frontend processes in **two separate terminals**.
 
-#### Terminal 1: Start the Backend
+**Terminal 1: Start the Backend**
 ```bash
 # Navigate to the backend directory
 cd webui/backend
@@ -764,7 +764,7 @@ cd webui/backend
 python main.py
 ```
 
-#### Terminal 2: Start the Frontend
+**Terminal 2: Start the Frontend**
 ```bash
 # Navigate to the frontend directory
 cd webui/frontend
@@ -835,7 +835,7 @@ Follow the prompts to enter the source picture path (Container needs Access to i
 ```Enter Plex Library Name:```
 - Enter the name of the Plex (or Jellyfin) library, e.g., "Movies" or "TV Shows".
 
-### Manual Mode (Semi Automnated)
+### Manual Mode (Semi Automated)
 
 > [!IMPORTANT]
 >
