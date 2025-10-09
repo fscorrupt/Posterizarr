@@ -1616,7 +1616,7 @@ function RunModes() {
         <div className="mt-6 bg-blue-900/20 border-l-4 border-blue-500 p-4 rounded">
           <div className="flex items-start">
             <AlertCircle className="w-5 h-5 text-blue-400 mr-3 mt-0.5 flex-shrink-0" />
-            <div className="text-sm text-blue-200">
+            <div className="text-sm text-blue-200 w-full">
               <p className="font-semibold mb-1">How Manual Mode works:</p>
               <ul className="list-disc list-inside space-y-1 text-blue-300/90">
                 <li>
@@ -1626,6 +1626,19 @@ function RunModes() {
                 <li>Final poster is placed in the asset location</li>
                 <li>Poster is synced to your media server</li>
               </ul>
+
+              {/* Documentation Link */}
+              <div className="mt-4 pt-4 border-t border-blue-500/30">
+                <a
+                  href="https://github.com/fscorrupt/Posterizarr#manual-mode-semi-automated"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600/30 hover:bg-blue-600/50 border border-blue-500/50 rounded-lg font-medium transition-all text-blue-100 hover:text-white"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  View Full Documentation
+                </a>
+              </div>
             </div>
           </div>
         </div>
