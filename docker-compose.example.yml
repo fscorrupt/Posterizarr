@@ -10,6 +10,8 @@ services:
     image: "ghcr.io/fscorrupt/posterizarr:latest"
     restart: "unless-stopped"
     user: "1000:1000"
+    ports:
+      - "8000:8000"
     networks:
       - "proxy"
     volumes:

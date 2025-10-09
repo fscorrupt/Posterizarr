@@ -13,12 +13,14 @@ services:
     env_file:
       - .env.dev
     user: "1000:140"
+    ports:
+      - "8000:8000"
     volumes:
       - "./config/posterizarr:/config:rw" # Map local config for easier access during dev
       - "./config/assets:/assets:rw"
       - "./config/posterizarr/manualassets:/manualassets:rw" # Map local manualassets
       - "./config/posterizarr/assetsbackup:/assetsbackup:rw" # Map local assetsbackup
-    
+
   tautulli:
     hostname: tautulli-dev
     container_name: "tautulli-dev"
