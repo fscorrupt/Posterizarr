@@ -2,18 +2,28 @@ param (
     [switch]$Manual,
     [switch]$Testing,
     [switch]$Tautulli,
-    [string]$RatingKey,
-    [string]$parentratingkey,
-    [string]$grandparentratingkey,
-    [string]$mediatype,
     [switch]$Backup,
     [switch]$dev,
     [switch]$SyncJelly,
     [switch]$SyncEmby,
     [switch]$PosterReset,
+    [switch]$SeasonPoster,
+    [switch]$TitleCard,
+    [switch]$CollectionCard,
+    [string]$PicturePath,
+    [string]$Titletext,
+    [string]$FolderName,
+    [string]$LibraryName,
+    [string]$SeasonPosterName,
+    [string]$EPTitleName,
+    [string]$EpisodeNumber,
+    [string]$RatingKey,
+    [string]$parentratingkey,
+    [string]$grandparentratingkey,
+    [string]$mediatype,
     [string]$LibraryToReset,
     [Parameter(ValueFromRemainingArguments = $true)]
-    [string[]]$ExtraArgs
+    [string[]]$ExtraArgs # Required for Arrtrigger
 )
 Set-PSReadLineOption -HistorySaveStyle SaveNothing
 
@@ -35,7 +45,7 @@ for ($i = 0; $i -lt $ExtraArgs.Count; $i++) {
     }
 }
 
-$CurrentScriptVersion = "1.9.97"
+$CurrentScriptVersion = "2.0.0"
 $global:HeaderWritten = $false
 $ProgressPreference = 'SilentlyContinue'
 $env:PSMODULE_ANALYSIS_CACHE_PATH = $null
@@ -139,13 +149,9 @@ function InvokeIMChecks {
     }
 
     # Auto Update Magick
-    if ($AutoUpdateIM -eq 'true' -and $global:OSType -ne "Docker" -and $global:LatestImagemagickversion -gt $global:CurrentImagemagickversion -and $global:OSarch -ne "Arm64") {
-        if ($global:OSType -eq "Win32NT") {
-            Remove-Item -LiteralPath $magickinstalllocation -Recurse -Force
-        }
-        Else {
-            Remove-Item -LiteralPath "$global:ScriptRoot/magick" -Force
-        }
+    if ($AutoUpdateIM -eq 'true' -and $global:OSType -ne "Docker" -and $global:OSType -eq "Win32NT" -and $global:LatestImagemagickversion -gt $global:CurrentImagemagickversion -and $global:OSarch -ne "Arm64") {
+        Remove-Item -LiteralPath "$global:ScriptRoot/magick" -Force
+
         if ($global:OSType -ne "Win32NT") {
             if ($global:OSType -ne "Docker") {
                 Write-Entry -Subtext "Downloading the latest Imagemagick portable version for you..." -Path $configLogging -Color Cyan -log Info
@@ -153,23 +159,6 @@ function InvokeIMChecks {
                 Invoke-WebRequest -Uri $magickUrl -OutFile "$global:ScriptRoot/magick"
                 chmod +x "$global:ScriptRoot/magick"
                 Write-Entry -Subtext "Made the portable Magick executable..." -Path $configLogging -Color Green -log Info
-            }
-        }
-        else {
-            Write-Entry -Subtext "Downloading the latest Imagemagick portable version for you..." -Path $configLogging -Color Cyan -log Info
-            $LatestRelease = "https://imagemagick.org/archive/binaries/ImageMagick-$($global:LatestImagemagickversiontemp)-portable-Q16-HDRI-x64.zip"
-            $DownloadPath = Join-Path -Path $global:ScriptRoot -ChildPath (Join-Path -Path 'temp' -ChildPath $global:LatestImagemagickversion)
-            Invoke-WebRequest $LatestRelease -OutFile $DownloadPath
-            Expand-Archive -Path $DownloadPath -DestinationPath $magickinstalllocation -Force
-            if ((Get-ChildItem -Directory -LiteralPath $magickinstalllocation).name -eq $($LatestRelease.replace('.zip', ''))) {
-                Copy-item -Force -Recurse "$magickinstalllocation\$((Get-ChildItem -Directory -LiteralPath $magickinstalllocation).name)\*" $magickinstalllocation
-                Remove-Item -Recurse -LiteralPath "$magickinstalllocation\$((Get-ChildItem -Directory -LiteralPath $magickinstalllocation).name)" -Force
-            }
-            if (Test-Path -LiteralPath $magickinstalllocation\magick.exe) {
-                Write-Entry -Subtext "Placed Portable ImageMagick here: $magickinstalllocation" -Path $configLogging -Color Green -log Info
-            }
-            Else {
-                Write-Entry -Subtext "Error During extraction, please manually install/copy portable Imagemagick from here: $LatestRelease" -Path $configLogging -Color Red -log Error
             }
         }
     }
@@ -4223,36 +4212,13 @@ function CheckImageMagick {
             }
         }
         else {
-            Write-Entry -Message "ImageMagick missing, downloading it for you..." -Path $configLogging -Color Red -log Error
-            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
-            $errorCount++
+
             $result = Invoke-WebRequest "https://imagemagick.org/archive/binaries/?C=M;O=D"
-            $LatestRelease = ($result.links.href | Where-Object { $_ -like '*portable-Q16-HDRI-x64.zip' } | Sort-Object -Descending)[0]
-            $DownloadPath = Join-Path -Path $global:ScriptRoot -ChildPath (Join-Path -Path 'temp' -ChildPath $LatestRelease)
+            $LatestRelease = ($result.links.href | Where-Object { $_ -like '*portable-Q16-HDRI-x64.7z.zip' } | Sort-Object -Descending)[0]
 
-            # Ensure the $temp directory exists
-            if (-not (Test-Path -LiteralPath $global:ScriptRoot\temp)) {
-                New-Item -ItemType Directory -Path $global:ScriptRoot\temp | Out-Null
-            }
-
-            Invoke-WebRequest "https://imagemagick.org/archive/binaries/$LatestRelease" -OutFile $DownloadPath
-
-            # Ensure the $magickinstalllocation directory exists
-            if (-not (Test-Path -LiteralPath $magickinstalllocation)) {
-                New-Item -ItemType Directory -Path $magickinstalllocation | Out-Null
-            }
-
-            Expand-Archive -Path $DownloadPath -DestinationPath $magickinstalllocation -Force
-            if ((Get-ChildItem -Directory -LiteralPath $magickinstalllocation).name -eq $($LatestRelease.replace('.zip', ''))) {
-                Copy-item -Force -Recurse "$magickinstalllocation\$((Get-ChildItem -Directory -LiteralPath $magickinstalllocation).name)\*" $magickinstalllocation
-                Remove-Item -Recurse -LiteralPath "$magickinstalllocation\$((Get-ChildItem -Directory -LiteralPath $magickinstalllocation).name)" -Force
-            }
-            if (Test-Path -LiteralPath $magickinstalllocation\magick.exe) {
-                Write-Entry -Subtext "Placed Portable ImageMagick here: $magickinstalllocation" -Path $configLogging -Color Green -log Info
-            }
-            Else {
-                Write-Entry -Subtext "Error During extraction, please manually install/copy portable Imagemagick from here: https://imagemagick.org/archive/binaries/$LatestRelease" -Path $configLogging -Color Red -log Error
-            }
+            Write-Entry -Message "ImageMagick missing, please manually install/copy portable Imagemagick from here: https://imagemagick.org/archive/binaries/$LatestRelease" -Path $configLogging -Color Red -log Error
+            Write-Entry -Subtext "[ERROR-HERE] See above. ^^^" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+            Exit
         }
     }
 }
@@ -6808,6 +6774,7 @@ if ($dev) {
 Else {
     $Branch = 'main'
 }
+$Branch = 'dev'
 # Set some global vars
 Set-OSTypeAndScriptRoot
 # Get platform
@@ -7482,6 +7449,7 @@ $SeasonRatingkeys = $null
 $LogsPath = Join-Path $global:ScriptRoot 'Logs'
 $TempPath = Join-Path $global:ScriptRoot 'temp'
 $TestPath = Join-Path $global:ScriptRoot 'test'
+$global:OverlayPath = Join-Path $global:ScriptRoot 'Overlayfiles'
 $configLogging = Join-Path $LogsPath 'Scriptlog.log'
 
 if ($Manual) {
@@ -7522,7 +7490,6 @@ if (!(Test-Path $AssetPath)) {
 Test-PathPermissions -PathToTest $AssetPath
 Test-PathPermissions -PathToTest $BackupPath
 Test-PathPermissions -PathToTest $ManualAssetPath
-
 
 if ($ForceRunningDeletion -eq 'true') {
     if (Test-Path $CurrentlyRunning) {
@@ -7584,22 +7551,22 @@ if ($Testing) {
 
 # Test and download files if they don't exist
 if ($config.PrerequisitePart.overlayfile -eq 'overlay.png' -or $config.PrerequisitePart.seasonoverlayfile -eq 'overlay.png') {
-    Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/overlay.png" -destination (Join-Path $global:ScriptRoot 'overlay.png')
+    Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/Overlayfiles/overlay.png" -destination (Join-Path $global:OverlayPath 'overlay.png')
 }
 if ($config.PrerequisitePart.overlayfile -eq 'overlay-innerglow.png' -or $config.PrerequisitePart.seasonoverlayfile -eq 'overlay-innerglow.png') {
-    Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/overlay-innerglow.png" -destination (Join-Path $global:ScriptRoot 'overlay-innerglow.png')
+    Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/Overlayfiles/overlay-innerglow.png" -destination (Join-Path $global:OverlayPath 'overlay-innerglow.png')
 }
 if ($config.PrerequisitePart.backgroundoverlayfile -eq 'backgroundoverlay.png' -or $config.PrerequisitePart.titlecardoverlayfile -eq 'backgroundoverlay.png') {
-    Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/backgroundoverlay.png" -destination (Join-Path $global:ScriptRoot 'backgroundoverlay.png')
+    Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/Overlayfiles/backgroundoverlay.png" -destination (Join-Path $global:OverlayPath 'backgroundoverlay.png')
 }
 if ($config.PrerequisitePart.backgroundoverlayfile -eq 'backgroundoverlay-innerglow.png' -or $config.PrerequisitePart.titlecardoverlayfile -eq 'backgroundoverlay-innerglow.png') {
-    Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/backgroundoverlay-innerglow.png" -destination (Join-Path $global:ScriptRoot 'backgroundoverlay-innerglow.png')
+    Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/Overlayfiles/backgroundoverlay-innerglow.png" -destination (Join-Path $global:OverlayPath 'backgroundoverlay-innerglow.png')
 }
 if ($config.PrerequisitePart.font -eq 'Rocky.ttf' -or $config.PrerequisitePart.backgroundfont -eq 'Rocky.ttf' -or $config.PrerequisitePart.titlecardfont -eq 'Rocky.ttf' -or $config.PrerequisitePart.RTLFont -eq 'Rocky.ttf') {
-    Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/Rocky.ttf" -destination (Join-Path $global:ScriptRoot 'Rocky.ttf')
+    Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/Overlayfiles/Rocky.ttf" -destination (Join-Path $global:OverlayPath 'Rocky.ttf')
 }
 if ($config.PrerequisitePart.font -eq 'Colus-Regular.ttf' -or $config.PrerequisitePart.backgroundfont -eq 'Colus-Regular.ttf' -or $config.PrerequisitePart.titlecardfont -eq 'Colus-Regular.ttf' -or $config.PrerequisitePart.RTLFont -eq 'Colus-Regular.ttf') {
-    Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/Colus-Regular.ttf" -destination (Join-Path $global:ScriptRoot 'Colus-Regular.ttf')
+    Test-And-Download -url "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/Overlayfiles/Colus-Regular.ttf" -destination (Join-Path $global:OverlayPath 'Colus-Regular.ttf')
 }
 
 # Write log message
@@ -7626,42 +7593,52 @@ else {
     $BackupPath = $BackupPath.Replace('/', '\')
 }
 
-# Get files in script root with specified extensions
-try {
-    $files = Get-ChildItem -Path $global:ScriptRoot -File | Where-Object { $_.Extension -in $fileExtensions } -ErrorAction SilentlyContinue
-}
-catch {
-    Write-Entry -Subtext "Error retrieving files: $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+# Migration block: Only run this when migration is needed
+$DoMigration = Get-ChildItem -Path $global:ScriptRoot -File | Where-Object { $_.Extension -in $fileExtensions } -ErrorAction SilentlyContinue
+if ($DoMigration.Count -gt 0) {
+    Write-Entry -Message "Migration needed: Found $($DoMigration.Count) files to migrate." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+
+    foreach ($file in $DoMigration) {
+        try {
+            Write-Entry -Subtext "Trying to migrate '$($file.Name)' from ScriptRoot to OverlayPath..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+            $destinationPath = Join-Path -Path $global:OverlayPath -ChildPath $file.Name
+
+            Move-Item -LiteralPath $file.FullName -Destination $destinationPath -Force -ErrorAction Stop
+            Write-Entry -Subtext "Migrated File: '$($file.Name)' from ScriptRoot to OverlayPath..." -Path $configLogging -Color Cyan -log Info
+        }
+        catch {
+            Write-Entry -Subtext "Error migrating file '$($file.Name)': $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        }
+    }
 }
 
-# Copy files to the destination directory
+# Always copy files from OverlayPath to temp folder
+$files = Get-ChildItem -Path $global:OverlayPath -File | Where-Object { $_.Extension -in $fileExtensions } -ErrorAction SilentlyContinue
 foreach ($file in $files) {
     try {
-        Write-Entry -Subtext "Trying to copy '$file' into temp dir..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
+        Write-Entry -Subtext "Trying to copy '$($file.Name)' into temp dir..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
         $destinationPath = Join-Path -Path (Join-Path -Path $global:ScriptRoot -ChildPath 'temp') -ChildPath $file.Name
 
         if (!(Test-Path -LiteralPath $destinationPath)) {
             Copy-Item -Path $file.FullName -Destination $destinationPath -Force -ErrorAction Stop
-            Write-Entry -Subtext "Found File: '$($file.Name)' in ScriptRoot - copying it into temp folder..." -Path $configLogging -Color Cyan -log Info
+            Write-Entry -Subtext "Found File: '$($file.Name)' in OverlayPath - copying it into temp folder..." -Path $configLogging -Color Cyan -log Info
         }
 
-        # Check if the file is a font (.ttf or .otf)
+        # Font handling...
         if ($file.Extension -match "\.(ttf|otf)$" -and $env:POSTERIZARR_NON_ROOT -eq 'TRUE') {
             $fontDestination = Join-Path -Path $Font_Cache -ChildPath $file.Name
-
             Write-Entry -Subtext "Copying font '$($file.Name)' to ImageMagick cache..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Info
             Copy-Item -Path $file.FullName -Destination $fontDestination -Force -ErrorAction Stop
-
-            # Ensure font cache directory exists
             if (!(Test-Path -Path $IM_Font_Cache)) {
                 New-Item -ItemType Directory -Path $IM_Font_Cache -Force | Out-Null
             }
         }
     }
     catch {
-        Write-Entry -Subtext "Error copying file '$file': $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
+        Write-Entry -Subtext "Error copying file '$($file.Name)': $_" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Red -log Error
     }
 }
+
 
 # Refresh font cache if any fonts were copied
 if ($files.Extension -match "\.(ttf|otf)$" -and $env:POSTERIZARR_NON_ROOT -eq 'TRUE') {
@@ -7821,17 +7798,42 @@ $extraPlexHeaders = @{
 #region Manual Mode
 if ($Manual) {
     Write-Entry -Message "Manual Poster Creation Started" -Path $global:ScriptRoot\Logs\Manuallog.log -Color DarkMagenta -log Info
-    $PicturePath = Read-Host "Enter local path or url to source picture"
-    $CreateSeasonPoster = Read-Host "Create Season Poster? (y/n)"
-    $CreateTitleCard = Read-Host "Create TitleCard? (y/n)"
-    $CreateCollectionCard = Read-Host "Create Collection? (y/n)"
-    if ($CreateCollectionCard -eq 'y') {
-        $Titletext = Read-Host "Enter Movie/Show/Collection Title"
+    # Regex to find a positive number (1 or greater) at the end of the string
+    $seasonNumberPattern = '([1-9]\d*)$'
+
+    # Regex to find "Specials" keywords or the numbers 0/00
+    $specialsPattern = '(?:^Specials$|^Extras$|^Spéciaux$|^0{1,2}$)' # Add any other language keywords here
+
+    if ([string]::IsNullOrEmpty($PicturePath)) {
+        $PicturePath = Read-Host "Enter local path or url to source picture"
+    }
+    if ([string]::IsNullOrEmpty($PicturePath)) {
+        if (-not $PSBoundParameters.ContainsKey('SeasonPoster')) {
+            $response = Read-Host "Create Season Poster? (y/n)"
+            if ($response.ToLower() -eq 'y') { $SeasonPoster = $true }
+        }
+        if (-not $PSBoundParameters.ContainsKey('TitleCard')) {
+            $response = Read-Host "Create TitleCard? (y/n)"
+            if ($response.ToLower() -eq 'y') { $TitleCard = $true }
+        }
+        if (-not $PSBoundParameters.ContainsKey('CollectionCard')) {
+            $response = Read-Host "Create Collection? (y/n)"
+            if ($response.ToLower() -eq 'y') { $CollectionCard = $true }
+        }
+    }
+    if ($CollectionCard) {
+        if ([string]::IsNullOrEmpty($Titletext)) {
+            $Titletext = Read-Host "Enter Movie/Show/Collection Title"
+        }
         $FolderName = $Titletext
     }
     else {
-        $FolderName = Read-Host "Enter Media Foldername (how plex sees it)"
-        $Titletext = Read-Host "Enter Movie/Show/Collection Title"
+        if ([string]::IsNullOrEmpty($FolderName)) {
+            $FolderName = Read-Host "Enter Media Foldername (how plex sees it)"
+        }
+        if ([string]::IsNullOrEmpty($Titletext)) {
+            $Titletext = Read-Host "Enter Movie/Show/Collection Title"
+        }
     }
 
     if ($PicturePath -like 'http*') {
@@ -7845,23 +7847,32 @@ if ($Manual) {
     $Titletext = $Titletext.replace('"', '')
 
     if ($LibraryFolders -eq 'true') {
-        $LibraryName = Read-Host "Enter Plex Library Name"
+        if ([string]::IsNullOrEmpty($LibraryName)) {
+            $LibraryName = Read-Host "Enter Plex Library Name"
+        }
         $LibraryName = $LibraryName.replace('"', '')
 
         $PosterImageoriginal = "$AssetPath\$LibraryName\$FolderName\poster.jpg"
-        if ($CreateSeasonPoster -eq 'y') {
-            $SeasonPosterName = Read-Host "Enter Season Name"
-            if ($SeasonPosterName -match 'Season\s+(\d+)') {
+
+        # Create Folder if Missing
+        $TargetFolder = Join-Path -Path "$AssetPath\$LibraryName" -ChildPath $FolderName
+        New-Item -ItemType Directory -Path $TargetFolder -Force | Out-Null
+
+        if ($SeasonPoster) {
+            if ([string]::IsNullOrEmpty($SeasonPosterName)) {
+                $SeasonPosterName = Read-Host "Enter Season Name"
+            }
+            if ($SeasonPosterName -match $seasonNumberPattern) {
                 $global:SeasonNumber = $Matches[1]
                 $global:seasontmp = "Season" + $global:SeasonNumber.PadLeft(2, '0')
             }
-            Elseif ($SeasonPosterName -eq 'Specials') {
+            Elseif ($SeasonPosterName -eq $specialsPattern) {
                 $global:seasontmp = "Season00"
             }
             Else {
                 Write-Entry -Subtext "Could not match Season name..." -Path $global:ScriptRoot\Logs\Manuallog.log -Color Yellow -log Warning
-                $seasontemp = Read-Host "Please enter Season Name for the local file (eq. Season00 or Season01....)"
-                if ($seasontemp -match '^Season(\d{2})$') {
+                $seasontemp = Read-Host "Please enter Season Name for the local file (eq. Season 0 or Season 1....)"
+                if ($seasontemp -match $seasonNumberPattern) {
                     $global:SeasonNumber = $Matches[1]
                     $global:seasontmp = "Season" + $global:SeasonNumber.PadLeft(2, '0')
                 }
@@ -7871,8 +7882,11 @@ if ($Manual) {
                 }
             }
             $PosterImageoriginal = "$AssetPath\$LibraryName\$FolderName\$global:seasontmp.jpg"
+            # Create Folder if Missing
+            $TargetFolder = Join-Path -Path "$AssetPath\$LibraryName" -ChildPath $FolderName
+            New-Item -ItemType Directory -Path $TargetFolder -Force | Out-Null
         }
-        if ($CreateCollectionCard -eq 'y') {
+        if ($CollectionCard) {
             $PosterImageoriginal = "$AssetPath\Collections\$LibraryName\$FolderName\poster.jpg"
             $CollectionPath = "$AssetPath\Collections\$LibraryName\$FolderName"
             # Ensure the Collection directory exists
@@ -7887,15 +7901,15 @@ if ($Manual) {
                 }
             }
         }
-        if ($CreateTitleCard -eq 'y') {
-            $EPTitleName = Read-Host "Enter Episode Title Name"
-            $EpisodeNumber = Read-Host "Enter Episode Number (eq. 1)"
-            $SeasonName = Read-Host "Enter Season Number (eq. 1)"
-            if ($SeasonName -match '(\d+)') {
+        if ($TitleCard) {
+            if ([string]::IsNullOrEmpty($EPTitleName)) { $EPTitleName = Read-Host "Enter Episode Title Name" }
+            if ([string]::IsNullOrEmpty($EpisodeNumber)) { $EpisodeNumber = Read-Host "Enter Episode Number (eq. 1)" }
+            if ([string]::IsNullOrEmpty($SeasonPosterName)) { $SeasonPosterName = Read-Host "Enter Season Number (eq. 1)" }
+            if ($SeasonPosterName -match $seasonNumberPattern) {
                 $global:SeasonNumber = $Matches[1]
                 $global:seasontmp = "S" + $global:SeasonNumber.PadLeft(2, '0')
             }
-            if ($SeasonName -eq 'Specials') {
+            if ($SeasonPosterName -eq $specialsPattern) {
                 $global:seasontmp = "S00"
             }
             if ($EpisodeNumber -match '(\d+)') {
@@ -7903,22 +7917,27 @@ if ($Manual) {
                 $global:episode = "E" + $global:EpisodeNumber.PadLeft(2, '0')
             }
             $PosterImageoriginal = "$AssetPath\$LibraryName\$FolderName\$global:seasontmp$global:episode.jpg"
+            # Create Folder if Missing
+            $TargetFolder = Join-Path -Path "$AssetPath\$LibraryName" -ChildPath $FolderName
+            New-Item -ItemType Directory -Path $TargetFolder -Force | Out-Null
         }
     }
     Else {
-        if ($CreateSeasonPoster -eq 'y') {
-            $SeasonPosterName = Read-Host "Enter Season Name"
-            if ($SeasonPosterName -match 'Season\s+(\d+)') {
+        if ($SeasonPoster) {
+            if ([string]::IsNullOrEmpty($SeasonPosterName)) {
+                $SeasonPosterName = Read-Host "Enter Season Name"
+            }
+            if ($SeasonPosterName -match $seasonNumberPattern) {
                 $global:SeasonNumber = $Matches[1]
                 $global:seasontmp = "Season" + $global:SeasonNumber.PadLeft(2, '0')
             }
-            Elseif ($SeasonPosterName -eq 'Specials') {
+            Elseif ($SeasonPosterName -eq $specialsPattern) {
                 $global:seasontmp = "Season00"
             }
             Else {
                 Write-Entry -Subtext "Could not match Season name..." -Path $global:ScriptRoot\Logs\Manuallog.log -Color Yellow -log Warning
-                $seasontemp = Read-Host "Please enter Season Name for the local file (eq. Season00 or Season01....)"
-                if ($seasontemp -match '^Season(\d{2})$') {
+                $seasontemp = Read-Host "Please enter Season Name for the local file (eq. Season 0 or Season 1....)"
+                if ($seasontemp -match $seasonNumberPattern) {
                     $global:SeasonNumber = $Matches[1]
                     $global:seasontmp = "Season" + $global:SeasonNumber.PadLeft(2, '0')
                 }
@@ -7929,7 +7948,7 @@ if ($Manual) {
             }
             $PosterImageoriginal = "$AssetPath\$($FolderName)_$global:seasontmp.jpg"
         }
-        if ($CreateCollectionCard -eq 'y') {
+        if ($CollectionCard) {
             $PosterImageoriginal = "$AssetPath\Collections\$($FolderName)_poster.jpg"
             $CollectionPath = "$AssetPath\Collections"
             # Ensure the Collection directory exists
@@ -7944,15 +7963,15 @@ if ($Manual) {
                 }
             }
         }
-        if ($CreateTitleCard -eq 'y') {
-            $EPTitleName = Read-Host "Enter Episode Title Name"
-            $EpisodeNumber = Read-Host "Enter Episode Number (eq. 1)"
-            $SeasonName = Read-Host "Enter Season Number (eq. 1)"
-            if ($SeasonName -match '(\d+)') {
+        if ($TitleCard) {
+            if ([string]::IsNullOrEmpty($EPTitleName)) { $EPTitleName = Read-Host "Enter Episode Title Name" }
+            if ([string]::IsNullOrEmpty($EpisodeNumber)) { $EpisodeNumber = Read-Host "Enter Episode Number (eq. 1)" }
+            if ([string]::IsNullOrEmpty($SeasonPosterName)) { $SeasonPosterName = Read-Host "Enter Season Number (eq. 1)" }
+            if ($SeasonPosterName -match $seasonNumberPattern) {
                 $global:SeasonNumber = $Matches[1]
                 $global:seasontmp = "S" + $global:SeasonNumber.PadLeft(2, '0')
             }
-            if ($SeasonName -eq 'Specials') {
+            if ($SeasonPosterName -eq $specialsPattern) {
                 $global:seasontmp = "S00"
             }
             if ($EpisodeNumber -match '(\d+)') {
@@ -7966,7 +7985,7 @@ if ($Manual) {
     $PosterImage = Join-Path -Path $global:ScriptRoot -ChildPath "temp\$FolderName.jpg"
     $PosterImage = $PosterImage.Replace('[', '_').Replace(']', '_').Replace('{', '_').Replace('}', '_')
     if ($global:ImageProcessing -eq 'true') {
-        if ($CreateSeasonPoster -eq 'y') {
+        if ($SeasonPoster) {
             $Posteroverlay = $Seasonoverlay
             if ($AddShowTitletoSeason -eq 'true') {
                 if ($fontAllCaps -eq 'true') {
@@ -7992,7 +8011,7 @@ if ($Manual) {
                 }
             }
         }
-        elseif ($CreateCollectionCard -eq 'y') {
+        elseif ($CollectionCard) {
             $Posteroverlay = $Collectionoverlay
             if ($AddCollectionTitle -eq 'true') {
                 if ($CollectionTitleAllCaps -eq 'true') {
@@ -8018,7 +8037,7 @@ if ($Manual) {
                 }
             }
         }
-        elseif ($CreateTitleCard -eq 'y') {
+        elseif ($TitleCard) {
             $Posteroverlay = $titlecardoverlay
             if ($AddTitleCardEPTitleText -eq 'true') {
                 if ($TitleCardEPTitlefontAllCaps -eq 'true') {
@@ -8063,7 +8082,7 @@ if ($Manual) {
         $CommentlogEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
         InvokeMagickCommand -Command $magick -Arguments $CommentArguments
         if (!$global:ImageMagickError -eq 'true') {
-            if ($CreateSeasonPoster -eq 'y') {
+            if ($SeasonPoster) {
                 if ($AddSeasonBorder -eq 'true' -and $AddSeasonOverlay -eq 'true') {
                     $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Seasonoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Seasonborderwidthsecond`"  -bordercolor `"$Seasonbordercolor`" -border `"$Seasonborderwidth`" `"$PosterImage`""
                     Write-Entry -Subtext "Resizing it | Adding Borders | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -8081,7 +8100,7 @@ if ($Manual) {
                     Write-Entry -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                 }
             }
-            elseif ($CreateCollectionCard -eq 'y') {
+            elseif ($CollectionCard) {
                 if ($AddCollectionBorder -eq 'true' -and $AddCollectionOverlay -eq 'true') {
                     $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$Collectionoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Collectionborderwidthsecond`"  -bordercolor `"$Collectionbordercolor`" -border `"$Collectionborderwidth`" `"$PosterImage`""
                     Write-Entry -Subtext "Resizing it | Adding Borders | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -8099,7 +8118,7 @@ if ($Manual) {
                     Write-Entry -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                 }
             }
-            elseif ($CreateTitleCard -eq 'y') {
+            elseif ($TitleCard) {
                 if ($AddTitleCardBorder -eq 'true' -and $AddTitleCardOverlay -eq 'true') {
                     $Arguments = "`"$PosterImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$titlecardoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$TitleCardborderwidthsecond`"  -bordercolor `"$TitleCardbordercolor`" -border `"$TitleCardborderwidth`" `"$PosterImage`""
                     Write-Entry -Subtext "Resizing it | Adding Borders | Adding Overlay" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -8142,7 +8161,7 @@ if ($Manual) {
 
             if ($AddText -eq 'true' -or $AddSeasonText -eq 'true' -or $AddTitleCardEPTitleText -eq 'true' -or $AddTitleCardEPText -eq 'true' -or $AddCollectionText -eq 'true') {
                 $joinedTitle = $joinedTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
-                if ($AddShowTitletoSeason -eq 'true' -and $CreateSeasonPoster -eq 'y') {
+                if ($AddShowTitletoSeason -eq 'true' -and $SeasonPoster) {
                     $ShowjoinedTitle = $ShowjoinedTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
                     # Loop through each symbol and replace it with a newline
                     if ($NewLineOnSpecificSymbols -eq 'true') {
@@ -8155,7 +8174,7 @@ if ($Manual) {
                     Write-Entry -Subtext "Optimal show font size set to: '$showoptimalFontSize'" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
 
                 }
-                if ($AddCollectionTitle -eq 'true' -and $CreateCollectionCard -eq 'y') {
+                if ($AddCollectionTitle -eq 'true' -and $CollectionCard) {
                     $CollectionjoinedTitle = $CollectionjoinedTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
                     # Loop through each symbol and replace it with a newline
                     if ($NewLineOnSpecificSymbols -eq 'true') {
@@ -8168,7 +8187,7 @@ if ($Manual) {
                     Write-Entry -Subtext "Optimal Collection Title font size set to: '$CollectionTitleoptimalFontSize'" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
 
                 }
-                if ($AddTitleCardEPText -eq 'true' -and $CreateTitleCard -eq 'y') {
+                if ($AddTitleCardEPText -eq 'true' -and $TitleCard) {
                     $EPNumberjoinedTitle = $EPNumberTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
                     $EPNumberjoinedTitlePointSize = $EPNumberjoinedTitle -replace '""', '""""'
                     $EPNumberoptimalFontSize = Get-OptimalPointSize -text $EPNumberjoinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPMaxWidth  -box_height $TitleCardEPMaxHeight -min_pointsize $TitleCardEPminPointSize -max_pointsize $TitleCardEPmaxPointSize -lineSpacing $TitleCardEPlineSpacing
@@ -8183,20 +8202,20 @@ if ($Manual) {
                 }
 
                 $joinedTitlePointSize = $joinedTitle -replace '""', '""""'
-                if ($CreateSeasonPoster -eq 'y') {
+                if ($SeasonPoster) {
                     $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize -lineSpacing $SeasonlineSpacing
                 }
-                elseif ($CreateCollectionCard -eq 'y') {
+                elseif ($CollectionCard) {
                     $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $CollectionfontImagemagick -box_width $CollectionMaxWidth  -box_height $CollectionMaxHeight -min_pointsize $CollectionminPointSize -max_pointsize $CollectionmaxPointSize -lineSpacing $CollectionlineSpacing
                 }
-                elseif ($CreateTitleCard -eq 'y') {
+                elseif ($TitleCard) {
                     $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize -lineSpacing $TitleCardEPTitlelineSpacing
                 }
                 Else {
                     $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize -lineSpacing $lineSpacing
                 }
                 Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
-                if ($CreateSeasonPoster -eq 'y') {
+                if ($SeasonPoster) {
                     # Add Stroke
                     if ($AddSeasonTextStroke -eq 'true') {
                         $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Seasonfontcolor`" -stroke `"$Seasonstrokecolor`" -strokewidth `"$Seasonstrokewidth`" -size `"$Seasonboxsize`" -background none -interline-spacing `"$SeasonlineSpacing`" -gravity `"$Seasontextgravity`" caption:`"$joinedTitle`" -trim +repage -extent `"$Seasonboxsize`" `) -gravity south -geometry +0`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
@@ -8215,7 +8234,7 @@ if ($Manual) {
                         }
                     }
                 }
-                elseif ($CreateCollectionCard -eq 'y') {
+                elseif ($CollectionCard) {
                     # Add Stroke
                     if ($AddCollectionTextStroke -eq 'true') {
                         $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$CollectionfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Collectionfontcolor`" -stroke `"$Collectionstrokecolor`" -strokewidth `"$Collectionstrokewidth`" -size `"$Collectionboxsize`" -background none -interline-spacing `"$CollectionlineSpacing`" -gravity `"$Collectiontextgravity`" caption:`"$joinedTitle`" -trim +repage -extent `"$Collectionboxsize`" `) -gravity south -geometry +0`"$Collectiontext_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
@@ -8234,7 +8253,7 @@ if ($Manual) {
                         }
                     }
                 }
-                Elseif ($CreateTitleCard -eq 'y') {
+                Elseif ($TitleCard) {
                     # Add Stroke
                     if ($AddTitleCardEPTitleTextStroke -eq 'true') {
                         $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background none -interline-spacing `"$TitleCardEPTitlelineSpacing`" -gravity `"$TitleCardEPTitletextgravity`" caption:`"$joinedTitle`" -trim +repage -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
@@ -8262,7 +8281,7 @@ if ($Manual) {
                         $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none -interline-spacing `"$lineSpacing`" -gravity `"$textgravity`" caption:`"$joinedTitle`" -trim +repage -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
                     }
                 }
-                if ($CreateSeasonPoster -eq 'y') {
+                if ($SeasonPoster) {
                     Write-Entry -Subtext "    Applying Season Poster text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
                     $logEntry = "`"$magick`" $Arguments"
                     $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
@@ -8274,7 +8293,7 @@ if ($Manual) {
                         InvokeMagickCommand -Command $magick -Arguments $ShowOnSeasonArguments
                     }
                 }
-                elseif ($CreateCollectionCard -eq 'y') {
+                elseif ($CollectionCard) {
                     Write-Entry -Subtext "    Applying Collection Poster text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
                     $logEntry = "`"$magick`" $Arguments"
                     $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
@@ -8286,7 +8305,7 @@ if ($Manual) {
                         InvokeMagickCommand -Command $magick -Arguments $CollectionTitleArguments
                     }
                 }
-                elseif ($CreateTitleCard -eq 'y') {
+                elseif ($TitleCard) {
                     Write-Entry -Subtext "    Applying TitleCard Poster text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
                     $logEntry = "`"$magick`" $Arguments"
                     $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
