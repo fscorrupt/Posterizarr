@@ -742,8 +742,8 @@ The setup process is handled by a simple script that installs all necessary depe
     ```
 3.  Run the appropriate setup script for your operating system:
     * **On Windows:**
-        ```batch
-        setup.bat
+        ```bash
+        setup.ps1
         ```
     * **On Linux or macOS:**
         ```bash
