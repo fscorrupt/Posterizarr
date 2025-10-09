@@ -14,6 +14,7 @@ from typing import Optional, List, Literal
 import logging
 import re
 import time
+import requests
 import threading
 from datetime import datetime
 
@@ -584,6 +585,14 @@ class ScheduleUpdate(BaseModel):
     schedules: Optional[List[dict]] = None
     timezone: Optional[str] = None
     skip_if_running: Optional[bool] = None
+
+
+class TMDBSearchRequest(BaseModel):
+    query: str  # Can be title or TMDB ID
+    media_type: str = "movie"  # "movie" or "tv"
+    poster_type: str = "standard"  # "standard", "season", "titlecard"
+    season_number: Optional[int] = None  # For season posters and titlecards
+    episode_number: Optional[int] = None  # For titlecards only
 
 
 @app.get("/api")
@@ -1237,6 +1246,368 @@ async def delete_running_file():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.post("/api/tmdb/search-posters")
+async def search_tmdb_posters(request: TMDBSearchRequest):
+    """
+    Search TMDB for images by title or ID
+    - Standard: Returns show/movie posters (filtered by PreferredLanguageOrder)
+    - Season: Returns season-specific posters (filtered by PreferredSeasonLanguageOrder)
+    - Titlecard: Returns episode stills (only 'xx' - no language/international)
+    """
+
+    def filter_and_sort_posters_by_language(posters_list, preferred_languages):
+        """
+        Filter and sort posters based on preferred language order.
+
+        Args:
+            posters_list: List of poster dicts from TMDB
+            preferred_languages: List of language codes in order of preference (e.g., ['de', 'en', 'xx'])
+
+        Returns:
+            Filtered and sorted list of posters
+        """
+        if not preferred_languages:
+            return posters_list
+
+        # Normalize language codes to lowercase
+        preferred_languages = [
+            lang.lower().strip() for lang in preferred_languages if lang
+        ]
+
+        # Group posters by language
+        language_groups = {lang: [] for lang in preferred_languages}
+        language_groups["other"] = []  # For languages not in preferences
+
+        for poster in posters_list:
+            poster_lang = (poster.get("iso_639_1") or "xx").lower()
+
+            # Check if poster language matches any preferred language
+            if poster_lang in preferred_languages:
+                language_groups[poster_lang].append(poster)
+            else:
+                language_groups["other"].append(poster)
+
+        # Build result list in order of preference
+        result = []
+        for lang in preferred_languages:
+            result.extend(language_groups[lang])
+
+        # Optionally add other languages at the end (commented out to only show preferred)
+        # result.extend(language_groups['other'])
+
+        return result
+
+    try:
+        # Load config to get TMDB token
+        if not CONFIG_PATH.exists():
+            raise HTTPException(status_code=404, detail="Config file not found")
+
+        with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+            grouped_config = json.load(f)
+
+        # Konvertiere gruppierte Config zu flacher Struktur
+        if CONFIG_MAPPER_AVAILABLE:
+            flat_config = flatten_config(grouped_config)
+            tmdb_token = flat_config.get("tmdbtoken")
+            preferred_language_order = flat_config.get("PreferredLanguageOrder", "")
+            preferred_season_language_order = flat_config.get(
+                "PreferredSeasonLanguageOrder", ""
+            )
+        else:
+            # Fallback: Versuche beide Strukturen
+            tmdb_token = grouped_config.get("tmdbtoken")
+            if not tmdb_token and isinstance(grouped_config.get("ApiPart"), dict):
+                tmdb_token = grouped_config["ApiPart"].get("tmdbtoken")
+
+            # Try to get language preferences from different possible locations
+            preferred_language_order = grouped_config.get("PreferredLanguageOrder", "")
+            preferred_season_language_order = grouped_config.get(
+                "PreferredSeasonLanguageOrder", ""
+            )
+
+            # If not found at root, try in ApiPart
+            if not preferred_language_order and isinstance(
+                grouped_config.get("ApiPart"), dict
+            ):
+                preferred_language_order = grouped_config["ApiPart"].get(
+                    "PreferredLanguageOrder", ""
+                )
+            if not preferred_season_language_order and isinstance(
+                grouped_config.get("ApiPart"), dict
+            ):
+                preferred_season_language_order = grouped_config["ApiPart"].get(
+                    "PreferredSeasonLanguageOrder", ""
+                )
+
+        # Parse language preferences (handle both string and list formats)
+        def parse_language_order(value):
+            """Convert language order to list, handling both string and list inputs"""
+            if not value:
+                return []
+            if isinstance(value, list):
+                # Already a list, just clean up entries
+                return [lang.strip() for lang in value if lang and str(lang).strip()]
+            if isinstance(value, str):
+                # String format, split by comma
+                return [lang.strip() for lang in value.split(",") if lang.strip()]
+            return []
+
+        language_order_list = parse_language_order(preferred_language_order)
+        season_language_order_list = parse_language_order(
+            preferred_season_language_order
+        )
+
+        logger.info(
+            f"Language preferences - Standard: {language_order_list}, Season: {season_language_order_list}"
+        )
+
+        if not tmdb_token:
+            logger.error("TMDB token not found in config")
+            logger.error(f"Config structure: {list(grouped_config.keys())}")
+            raise HTTPException(status_code=400, detail="TMDB API token not configured")
+
+        headers = {
+            "Authorization": f"Bearer {tmdb_token}",
+            "Content-Type": "application/json",
+        }
+
+        results = []
+        tmdb_id = None
+
+        # Step 1: Get TMDB ID (if not already provided)
+        if request.query.isdigit():
+            tmdb_id = request.query
+        else:
+            # Search by title to get TMDB ID
+            search_url = f"https://api.themoviedb.org/3/search/{request.media_type}"
+            search_params = {"query": request.query, "page": 1}
+            search_response = requests.get(
+                search_url, headers=headers, params=search_params, timeout=10
+            )
+
+            if search_response.status_code == 200:
+                search_data = search_response.json()
+                search_results = search_data.get("results", [])
+                if search_results:
+                    tmdb_id = search_results[0].get("id")
+                else:
+                    return {
+                        "success": True,
+                        "posters": [],
+                        "count": 0,
+                        "message": "No results found",
+                    }
+            else:
+                logger.error(f"TMDB search error: {search_response.status_code}")
+                raise HTTPException(status_code=500, detail="TMDB search failed")
+
+        if not tmdb_id:
+            return {
+                "success": True,
+                "posters": [],
+                "count": 0,
+                "message": "No TMDB ID found",
+            }
+
+        # Step 2: Get item details (for title)
+        media_endpoint = "movie" if request.media_type == "movie" else "tv"
+        details_url = f"https://api.themoviedb.org/3/{media_endpoint}/{tmdb_id}"
+        details_response = requests.get(details_url, headers=headers, timeout=10)
+        details = details_response.json() if details_response.status_code == 200 else {}
+
+        base_title = (
+            details.get("title") or details.get("name") or f"TMDB ID: {tmdb_id}"
+        )
+
+        # Step 3: Fetch appropriate images based on poster_type
+        if request.poster_type == "titlecard":
+            # ========== TITLE CARDS (Episode Stills) ==========
+            if not request.season_number or not request.episode_number:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Season and episode numbers required for titlecards",
+                )
+
+            # Get episode stills
+            episode_url = f"https://api.themoviedb.org/3/tv/{tmdb_id}/season/{request.season_number}/episode/{request.episode_number}/images"
+            episode_response = requests.get(episode_url, headers=headers, timeout=10)
+
+            if episode_response.status_code == 200:
+                episode_data = episode_response.json()
+                stills = episode_data.get("stills", [])
+
+                # Also get episode details for title
+                ep_details_url = f"https://api.themoviedb.org/3/tv/{tmdb_id}/season/{request.season_number}/episode/{request.episode_number}"
+                ep_details_response = requests.get(
+                    ep_details_url, headers=headers, timeout=10
+                )
+                ep_details = (
+                    ep_details_response.json()
+                    if ep_details_response.status_code == 200
+                    else {}
+                )
+                episode_title = ep_details.get(
+                    "name", f"Episode {request.episode_number}"
+                )
+
+                title = f"{base_title} - S{request.season_number:02d}E{request.episode_number:02d}: {episode_title}"
+
+                # Filter: Only 'xx' (no language/international) for title cards
+                filtered_stills = [
+                    still
+                    for still in stills
+                    if (still.get("iso_639_1") or "xx").lower() == "xx"
+                ]
+
+                logger.info(
+                    f"Title cards: {len(stills)} total, {len(filtered_stills)} after filtering (xx only)"
+                )
+
+                for still in filtered_stills:  # Load all stills
+                    results.append(
+                        {
+                            "tmdb_id": tmdb_id,
+                            "title": title,
+                            "poster_path": still.get("file_path"),
+                            "poster_url": f"https://image.tmdb.org/t/p/w500{still.get('file_path')}",
+                            "original_url": f"https://image.tmdb.org/t/p/original{still.get('file_path')}",
+                            "language": still.get("iso_639_1"),
+                            "vote_average": still.get("vote_average", 0),
+                            "width": still.get("width", 0),
+                            "height": still.get("height", 0),
+                            "type": "episode_still",
+                        }
+                    )
+            else:
+                logger.warning(
+                    f"No episode stills found for S{request.season_number}E{request.episode_number}"
+                )
+
+        elif request.poster_type == "season":
+            # ========== SEASON POSTERS ==========
+            if not request.season_number:
+                raise HTTPException(
+                    status_code=400, detail="Season number required for season posters"
+                )
+
+            # Get season posters
+            season_url = f"https://api.themoviedb.org/3/tv/{tmdb_id}/season/{request.season_number}/images"
+            season_response = requests.get(season_url, headers=headers, timeout=10)
+
+            if season_response.status_code == 200:
+                season_data = season_response.json()
+                posters = season_data.get("posters", [])
+
+                # Get season details for title
+                season_details_url = f"https://api.themoviedb.org/3/tv/{tmdb_id}/season/{request.season_number}"
+                season_details_response = requests.get(
+                    season_details_url, headers=headers, timeout=10
+                )
+                season_details = (
+                    season_details_response.json()
+                    if season_details_response.status_code == 200
+                    else {}
+                )
+                season_name = season_details.get(
+                    "name", f"Season {request.season_number}"
+                )
+
+                title = f"{base_title} - {season_name}"
+
+                # Filter and sort by PreferredSeasonLanguageOrder
+                filtered_posters = filter_and_sort_posters_by_language(
+                    posters, season_language_order_list
+                )
+
+                logger.info(
+                    f"Season posters: {len(posters)} total, {len(filtered_posters)} after filtering by language preferences"
+                )
+
+                for poster in filtered_posters:  # Load all posters
+                    results.append(
+                        {
+                            "tmdb_id": tmdb_id,
+                            "title": title,
+                            "poster_path": poster.get("file_path"),
+                            "poster_url": f"https://image.tmdb.org/t/p/w500{poster.get('file_path')}",
+                            "original_url": f"https://image.tmdb.org/t/p/original{poster.get('file_path')}",
+                            "language": poster.get("iso_639_1"),
+                            "vote_average": poster.get("vote_average", 0),
+                            "width": poster.get("width", 0),
+                            "height": poster.get("height", 0),
+                            "type": "season_poster",
+                        }
+                    )
+            else:
+                logger.warning(
+                    f"No season posters found for Season {request.season_number}"
+                )
+
+        else:
+            # ========== STANDARD POSTERS (Show/Movie) ==========
+            images_url = (
+                f"https://api.themoviedb.org/3/{media_endpoint}/{tmdb_id}/images"
+            )
+            images_response = requests.get(images_url, headers=headers, timeout=10)
+
+            if images_response.status_code == 200:
+                images_data = images_response.json()
+                posters = images_data.get("posters", [])
+
+                # Different filtering based on poster type
+                if request.poster_type == "collection":
+                    # Collections: Only 'xx' (no language/international)
+                    filtered_posters = [
+                        p
+                        for p in posters
+                        if (p.get("iso_639_1") or "xx").lower() == "xx"
+                    ]
+                    logger.info(
+                        f"Collection posters: {len(posters)} total, {len(filtered_posters)} after filtering (xx only)"
+                    )
+                else:
+                    # Standard posters: Filter and sort by PreferredLanguageOrder
+                    filtered_posters = filter_and_sort_posters_by_language(
+                        posters, language_order_list
+                    )
+                    logger.info(
+                        f"Standard posters: {len(posters)} total, {len(filtered_posters)} after filtering by language preferences"
+                    )
+
+                for poster in filtered_posters:  # Load all posters
+                    results.append(
+                        {
+                            "tmdb_id": tmdb_id,
+                            "title": base_title,
+                            "poster_path": poster.get("file_path"),
+                            "poster_url": f"https://image.tmdb.org/t/p/w500{poster.get('file_path')}",
+                            "original_url": f"https://image.tmdb.org/t/p/original{poster.get('file_path')}",
+                            "language": poster.get("iso_639_1"),
+                            "vote_average": poster.get("vote_average", 0),
+                            "width": poster.get("width", 0),
+                            "height": poster.get("height", 0),
+                            "type": "show_poster",
+                        }
+                    )
+
+        logger.info(
+            f"TMDB search for '{request.query}' ({request.poster_type}) returned {len(results)} images"
+        )
+        return {"success": True, "posters": results, "count": len(results)}
+
+    except requests.RequestException as e:
+        logger.error(f"TMDB API error: {e}")
+        raise HTTPException(status_code=500, detail=f"TMDB API error: {str(e)}")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error searching TMDB posters: {e}")
+        import traceback
+
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.post("/api/run/{mode}")
 async def run_script(mode: str):
     """Run Posterizarr script in different modes"""
@@ -1846,8 +2217,7 @@ async def websocket_logs(
 
     except WebSocketDisconnect as e:
         # Normal disconnect - check close code
-        close_code = e.code if hasattr(e, 'code') else None
-
+        close_code = e.code if hasattr(e, "code") else None
 
         if close_code in [1000, 1001, 1005]:
             logger.info(f"WebSocket disconnected normally (code: {close_code})")
@@ -1859,7 +2229,6 @@ async def websocket_logs(
 
     except Exception as e:
         error_msg = str(e)
-
 
         if "1001" in error_msg or "1005" in error_msg or "going away" in error_msg:
             logger.info(f"WebSocket closed normally: {error_msg}")

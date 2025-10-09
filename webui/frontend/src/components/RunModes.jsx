@@ -43,6 +43,163 @@ const getLogFileForMode = (mode) => {
   return logMapping[mode] || "Scriptlog.log";
 };
 
+// ============================================================================
+// TMDB POSTER SEARCH MODAL - Defined OUTSIDE component to prevent re-renders
+// ============================================================================
+const TMDBPosterSearchModal = React.memo(
+  ({ tmdbSearch, setTmdbSearch, manualForm, setManualForm }) => {
+    const scrollRef = React.useRef(null);
+    const [localDisplayedCount, setLocalDisplayedCount] = React.useState(10);
+
+    // Reset displayed count only when modal opens (not on every render)
+    React.useEffect(() => {
+      if (tmdbSearch.showModal) {
+        setLocalDisplayedCount(10);
+      }
+    }, [tmdbSearch.showModal]);
+
+    const handleLoadMore = () => {
+      setLocalDisplayedCount((prev) => prev + 10);
+    };
+
+    const handleClose = () => {
+      setTmdbSearch({
+        ...tmdbSearch,
+        showModal: false,
+        query: "",
+        seasonNumber: "",
+        episodeNumber: "",
+        displayedCount: 10,
+      });
+    };
+
+    const handleSelectPoster = (posterUrl) => {
+      setManualForm({ ...manualForm, picturePath: posterUrl });
+      setTmdbSearch({
+        ...tmdbSearch,
+        showModal: false,
+        query: "",
+        seasonNumber: "",
+        episodeNumber: "",
+        displayedCount: 10,
+      });
+      toast.success("Poster URL set! 🎨", {
+        duration: 2000,
+        position: "top-right",
+      });
+    };
+
+    if (!tmdbSearch.showModal) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="bg-theme-card border border-theme-primary rounded-xl max-w-6xl w-full max-h-[90vh] shadow-2xl animate-in fade-in duration-200 flex flex-col">
+          {/* Header */}
+          <div className="bg-theme-primary px-6 py-4 rounded-t-xl flex items-center justify-between flex-shrink-0">
+            <div className="flex items-center">
+              <ImageIcon className="w-6 h-6 mr-3 text-white" />
+              <h3 className="text-xl font-bold text-white">
+                {manualForm.posterType === "season"
+                  ? `Season ${tmdbSearch.seasonNumber} Posters (${tmdbSearch.results.length})`
+                  : manualForm.posterType === "titlecard"
+                  ? `Episode ${tmdbSearch.seasonNumber}x${tmdbSearch.episodeNumber} Images (${tmdbSearch.results.length})`
+                  : `TMDB Poster Results (${tmdbSearch.results.length})`}
+              </h3>
+            </div>
+            <button
+              onClick={handleClose}
+              className="text-white/80 hover:text-white transition-colors p-1 hover:bg-white/10 rounded"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+
+          {/* Content - Scrollable */}
+          <div ref={scrollRef} className="p-6 overflow-y-auto flex-1">
+            {tmdbSearch.results.length === 0 ? (
+              <div className="text-center py-12 text-theme-muted">
+                <ImageIcon className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                <p>No posters found. Try a different search term.</p>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                  {tmdbSearch.results
+                    .slice(0, localDisplayedCount)
+                    .map((poster, index) => (
+                      <div
+                        key={poster.poster_path || poster.original_url || index}
+                        className="group relative bg-theme-hover rounded-lg overflow-hidden border border-theme hover:border-theme-primary transition-all cursor-pointer"
+                        onClick={() => handleSelectPoster(poster.original_url)}
+                      >
+                        {/* Poster Image */}
+                        <img
+                          src={poster.poster_url}
+                          alt={poster.title}
+                          className="w-full h-auto object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+
+                        {/* Overlay on Hover */}
+                        <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-4 text-center">
+                          <CheckCircle className="w-8 h-8 text-green-400 mb-2" />
+                          <p className="text-white text-sm font-semibold mb-1">
+                            {poster.title}
+                          </p>
+                          <p className="text-white/80 text-xs mb-2">
+                            {poster.width} × {poster.height}
+                          </p>
+                          <div className="flex flex-wrap gap-1 justify-center">
+                            {poster.language && (
+                              <span className="bg-theme-primary px-2 py-1 rounded text-xs text-white">
+                                {poster.language.toUpperCase()}
+                              </span>
+                            )}
+                            {poster.type === "episode_still" && (
+                              <span className="bg-purple-600 px-2 py-1 rounded text-xs text-white">
+                                EPISODE STILL
+                              </span>
+                            )}
+                            {poster.type === "season_poster" && (
+                              <span className="bg-green-600 px-2 py-1 rounded text-xs text-white">
+                                SEASON POSTER
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                </div>
+
+                {/* Load More Button */}
+                {localDisplayedCount < tmdbSearch.results.length && (
+                  <div className="mt-6 text-center">
+                    <button
+                      onClick={handleLoadMore}
+                      className="px-6 py-3 bg-theme-primary hover:bg-theme-primary/90 text-white rounded-lg font-medium transition-all shadow-lg flex items-center gap-2 mx-auto"
+                    >
+                      <RefreshCw className="w-5 h-5" />
+                      Load More (
+                      {tmdbSearch.results.length - localDisplayedCount}{" "}
+                      remaining)
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
+          {/* Footer */}
+          <div className="bg-theme-bg px-6 py-4 rounded-b-xl border-t border-theme flex-shrink-0">
+            <p className="text-sm text-theme-muted text-center">
+              Click on a poster to select it for your manual poster creation
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+);
+
 function RunModes() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -71,6 +228,20 @@ function RunModes() {
   const [showJellyfinSyncModal, setShowJellyfinSyncModal] = useState(false);
   const [showEmbySyncModal, setShowEmbySyncModal] = useState(false);
 
+  // TMDB Poster Search State
+  const [tmdbSearch, setTmdbSearch] = useState({
+    query: "",
+    mediaType: "standard",
+    searching: false,
+    results: [],
+    showModal: false,
+    // NEU: Season und Episode Felder
+    seasonNumber: "",
+    episodeNumber: "",
+    // Pagination
+    displayedCount: 10, // Start with 10 items
+  });
+
   useEffect(() => {
     fetchStatus();
     const interval = setInterval(fetchStatus, 3000);
@@ -81,7 +252,14 @@ function RunModes() {
     try {
       const response = await fetch(`${API_URL}/status`);
       const data = await response.json();
-      setStatus(data);
+
+      // Only update state if something actually changed (prevents unnecessary re-renders)
+      setStatus((prevStatus) => {
+        if (JSON.stringify(prevStatus) === JSON.stringify(data)) {
+          return prevStatus; // No re-render
+        }
+        return data;
+      });
     } catch (error) {
       console.error("Error fetching status:", error);
     }
@@ -354,6 +532,119 @@ function RunModes() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  // ============================================================================
+  // TMDB POSTER SEARCH FUNCTIONS
+  // ============================================================================
+  const searchTMDBPosters = async () => {
+    if (!tmdbSearch.query.trim()) {
+      toast.error("Please enter a title or TMDB ID!", {
+        duration: 3000,
+        position: "top-right",
+      });
+      return;
+    }
+
+    // Validierung für Season Poster
+    if (manualForm.posterType === "season" && !tmdbSearch.seasonNumber) {
+      toast.error("Please enter a season number!", {
+        duration: 3000,
+        position: "top-right",
+      });
+      return;
+    }
+
+    // Validierung für Title Cards
+    if (manualForm.posterType === "titlecard") {
+      if (!tmdbSearch.seasonNumber) {
+        toast.error("Please enter a season number!", {
+          duration: 3000,
+          position: "top-right",
+        });
+        return;
+      }
+      if (!tmdbSearch.episodeNumber) {
+        toast.error("Please enter an episode number!", {
+          duration: 3000,
+          position: "top-right",
+        });
+        return;
+      }
+    }
+
+    setTmdbSearch({ ...tmdbSearch, searching: true });
+
+    try {
+      // Determine media type from posterType
+      let mediaType = "movie";
+      if (
+        manualForm.posterType === "season" ||
+        manualForm.posterType === "titlecard"
+      ) {
+        mediaType = "tv";
+      }
+
+      const requestBody = {
+        query: tmdbSearch.query,
+        media_type: mediaType,
+        poster_type: manualForm.posterType,
+      };
+
+      // Füge Season/Episode hinzu wenn vorhanden
+      if (tmdbSearch.seasonNumber) {
+        requestBody.season_number = parseInt(tmdbSearch.seasonNumber);
+      }
+      if (tmdbSearch.episodeNumber) {
+        requestBody.episode_number = parseInt(tmdbSearch.episodeNumber);
+      }
+
+      const response = await fetch(`${API_URL}/tmdb/search-posters`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setTmdbSearch({
+          ...tmdbSearch,
+          searching: false,
+          results: data.posters,
+          showModal: true,
+          displayedCount: 10, // Reset to show first 10
+        });
+
+        if (data.posters.length === 0) {
+          let message = "No images found for this search";
+          if (manualForm.posterType === "season") {
+            message = `No season ${tmdbSearch.seasonNumber} posters found`;
+          } else if (manualForm.posterType === "titlecard") {
+            message = `No images found for S${tmdbSearch.seasonNumber}E${tmdbSearch.episodeNumber}`;
+          }
+          toast(message, {
+            duration: 3000,
+            position: "top-right",
+            icon: "ℹ️",
+          });
+        }
+      } else {
+        toast.error(`Error: ${data.message || "Failed to search TMDB"}`, {
+          duration: 5000,
+          position: "top-right",
+        });
+        setTmdbSearch({ ...tmdbSearch, searching: false });
+      }
+    } catch (error) {
+      toast.error(`Error: ${error.message}`, {
+        duration: 5000,
+        position: "top-right",
+      });
+      setTmdbSearch({ ...tmdbSearch, searching: false });
     }
   };
 
@@ -692,6 +983,14 @@ function RunModes() {
       <JellyfinSyncModal />
       <EmbySyncModal />
 
+      {/* TMDB Modal - Now with stable props */}
+      <TMDBPosterSearchModal
+        tmdbSearch={tmdbSearch}
+        setTmdbSearch={setTmdbSearch}
+        manualForm={manualForm}
+        setManualForm={setManualForm}
+      />
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -904,6 +1203,131 @@ function RunModes() {
                 Collection
               </button>
             </div>
+          </div>
+
+          {/* TMDB Poster Search - ERWEITERTE VERSION */}
+          <div className="bg-theme-hover border border-theme rounded-lg p-4">
+            <div className="flex items-center mb-3">
+              <Cloud className="w-5 h-5 text-theme-primary mr-2" />
+              <h3 className="font-semibold text-theme-text">
+                Search TMDB for{" "}
+                {manualForm.posterType === "season"
+                  ? "Season Posters"
+                  : manualForm.posterType === "titlecard"
+                  ? "Episode Images"
+                  : "Posters"}
+              </h3>
+            </div>
+            <p className="text-xs text-theme-muted mb-3">
+              {manualForm.posterType === "season"
+                ? "Search for season-specific posters from TMDB"
+                : manualForm.posterType === "titlecard"
+                ? "Search for episode stills/screenshots from TMDB"
+                : "Search by title or TMDB ID to find posters directly from TMDB"}
+            </p>
+
+            {/* Hauptsuche */}
+            <div className="flex gap-2 mb-3">
+              <input
+                type="text"
+                value={tmdbSearch.query}
+                onChange={(e) =>
+                  setTmdbSearch({ ...tmdbSearch, query: e.target.value })
+                }
+                onKeyPress={(e) => {
+                  if (e.key === "Enter") searchTMDBPosters();
+                }}
+                placeholder="Enter movie/show title or TMDB ID..."
+                disabled={loading || status.running || tmdbSearch.searching}
+                className="flex-1 px-4 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary disabled:opacity-50 disabled:cursor-not-allowed"
+              />
+              <button
+                onClick={searchTMDBPosters}
+                disabled={loading || status.running || tmdbSearch.searching}
+                className="flex items-center gap-2 px-4 py-2 bg-theme-primary hover:bg-theme-primary/90 disabled:bg-gray-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {tmdbSearch.searching ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Searching...
+                  </>
+                ) : (
+                  <>
+                    <ImageIcon className="w-4 h-4" />
+                    Search
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Season/Episode Eingaben (nur wenn relevant) */}
+            {(manualForm.posterType === "season" ||
+              manualForm.posterType === "titlecard") && (
+              <div className="grid grid-cols-2 gap-2">
+                {/* Season Number */}
+                <div>
+                  <label className="block text-xs font-medium text-theme-text mb-1">
+                    Season Number <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={tmdbSearch.seasonNumber}
+                    onChange={(e) =>
+                      setTmdbSearch({
+                        ...tmdbSearch,
+                        seasonNumber: e.target.value,
+                      })
+                    }
+                    placeholder="1"
+                    disabled={loading || status.running || tmdbSearch.searching}
+                    className="w-full px-3 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                  />
+                </div>
+
+                {/* Episode Number (nur für Title Cards) */}
+                {manualForm.posterType === "titlecard" && (
+                  <div>
+                    <label className="block text-xs font-medium text-theme-text mb-1">
+                      Episode Number <span className="text-red-400">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={tmdbSearch.episodeNumber}
+                      onChange={(e) =>
+                        setTmdbSearch({
+                          ...tmdbSearch,
+                          episodeNumber: e.target.value,
+                        })
+                      }
+                      placeholder="1"
+                      disabled={
+                        loading || status.running || tmdbSearch.searching
+                      }
+                      className="w-full px-3 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Hilfetext */}
+            {(manualForm.posterType === "season" ||
+              manualForm.posterType === "titlecard") && (
+              <div className="mt-2 text-xs text-theme-muted">
+                {manualForm.posterType === "season" && (
+                  <p>
+                    💡 Enter the season number to find season-specific posters
+                  </p>
+                )}
+                {manualForm.posterType === "titlecard" && (
+                  <p>
+                    💡 Enter season and episode numbers to find episode stills
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Picture Path */}
