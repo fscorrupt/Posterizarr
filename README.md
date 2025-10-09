@@ -58,7 +58,7 @@ The web UI comes pre-integrated in the Docker container. For other platforms lik
 
 <p align="center">
   <a href="https://github.com/fscorrupt/Posterizarr">
-    <img alt="Web UI Preview" width="80%" src="/images/PosterizarrUI.png">
+    <img alt="Web UI Preview" width="100%" src="/images/PosterizarrUI.png">
   </a>
 </p>
 
