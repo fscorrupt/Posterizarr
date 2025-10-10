@@ -311,6 +311,55 @@ function CopyAssetFiles {
         }
     }
 }
+function Ensure-WebUIConfig {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [string]$jsonFilePath
+    )
+
+    try {
+        # Define the default WebUI configuration object
+        $defaultWebUI = [PSCustomObject]@{
+            basicAuthEnabled = $false
+            basicAuthUsername = "admin"
+            basicAuthPassword = "posterizarr"
+        }
+
+        # Read the existing configuration file
+        $config = Get-Content -Path $jsonFilePath -Raw | ConvertFrom-Json
+
+        $configChanged = $false
+
+        # Ensure the 'WebUI' top-level attribute exists
+        if (-not $config.PSObject.Properties.Name.Contains('WebUI')) {
+            $config | Add-Member -MemberType NoteProperty -Name 'WebUI' -Value $defaultWebUI
+            $configChanged = $true
+        }
+        # If 'WebUI' exists, ensure all its sub-attributes are present
+        else {
+            foreach ($key in $defaultWebUI.PSObject.Properties.Name) {
+                if (-not $config.WebUI.PSObject.Properties.Name.Contains($key)) {
+                    # Add the specific missing sub-attribute and its default value
+                    $config.WebUI | Add-Member -MemberType NoteProperty -Name $key -Value $defaultWebUI.$key
+                    $configChanged = $true
+                }
+            }
+        }
+
+        # If changes were made, convert the object back to JSON and save it
+        if ($configChanged) {
+            $config | ConvertTo-Json -Depth 10 | Set-Content -Path $jsonFilePath -Force
+        }
+        else {
+            Write-Host "WebUI configuration is already complete. No changes needed."
+        }
+    }
+    catch {
+        Write-Error "An unexpected error occurred while processing '$jsonFilePath': $($_.Exception.Message)"
+    }
+}
 
 Set-PSReadLineOption -HistorySaveStyle SaveNothing
 
@@ -386,6 +435,9 @@ if (-not (test-path "$env:APP_DATA/config.json")) {
         test-path "$env:APP_DATA/config.json"
     )
 }
+# Ensure WebUI config
+$configFile = "$env:APP_DATA/config.json"
+Ensure-WebUIConfig -jsonFilePath $configFile
 
 # Check temp dir if there is a Currently running file present
 $CurrentlyRunning = "$env:APP_DATA/temp/Posterizarr.Running"
