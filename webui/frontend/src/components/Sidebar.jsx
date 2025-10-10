@@ -22,10 +22,11 @@ import {
   Lock,
 } from "lucide-react";
 import VersionBadge from "./VersionBadge";
+import { useSidebar } from "../context/SidebarContext";
 
 const Sidebar = () => {
   const location = useLocation();
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const { isCollapsed, setIsCollapsed } = useSidebar();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   // ✅ CHANGED: Initial state to false (collapsed)
   const [isAssetsExpanded, setIsAssetsExpanded] = useState(false);

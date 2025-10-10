@@ -6,6 +6,7 @@ import {
   Navigate,
 } from "react-router-dom";
 import { ThemeProvider } from "./context/ThemeContext";
+import { SidebarProvider, useSidebar } from "./context/SidebarContext";
 import ConfigEditor from "./components/ConfigEditor";
 import LogViewer from "./components/LogViewer";
 import Dashboard from "./components/Dashboard";
@@ -17,23 +18,17 @@ import RunModes from "./components/RunModes";
 import Sidebar from "./components/Sidebar";
 import TopNavbar from "./components/TopNavbar";
 
-// ============================================================================
-// UI-LOGGER IMPORT - Erfasst alle Console-Logs und speichert sie in UIlog.log
-// ============================================================================
 import uiLogger from "./utils/uiLogger";
 
 function AppContent() {
-  // ============================================================================
-  // UI-LOGGER INITIALISIERUNG
-  // Alle console.log/error/warn werden automatisch in UIlog.log gespeichert
-  // ============================================================================
+  const { isCollapsed } = useSidebar();
+
   useEffect(() => {
     console.log("✅ Posterizarr UI started - UI-Logger active");
     console.info("📊 UI logs will be saved to UIlog.log");
 
-    // Cleanup (optional, nur bei App-Unmount)
     return () => {
-      // uiLogger.destroy(); // Nur aktivieren wenn wirklich nötig
+      // uiLogger.destroy();
     };
   }, []);
 
@@ -42,17 +37,18 @@ function AppContent() {
       <TopNavbar />
       <Sidebar />
 
-      <main className="pt-16 md:ml-64 transition-all duration-300">
-        {/* Mobile: pt-30 (top-navbar + sidebar-header), Desktop: pt-16 (nur top-navbar) + ml-64 (sidebar) */}
+      <main
+        className={`pt-16 transition-all duration-300 ${
+          isCollapsed ? "md:ml-20" : "md:ml-64"
+        }`}
+      >
         <div className="md:pt-0 pt-14">
-          {/* Content ohne max-width, damit es linksbündig ist */}
           <div className="py-6 px-4 sm:px-6 lg:px-8">
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/run-modes" element={<RunModes />} />
               <Route path="/test-gallery" element={<TestGallery />} />
 
-              {/* Gallery Routes mit Subtabs */}
               <Route
                 path="/gallery"
                 element={<Navigate to="/gallery/posters" replace />}
@@ -62,20 +58,43 @@ function AppContent() {
               <Route path="/gallery/seasons" element={<GalleryHub />} />
               <Route path="/gallery/titlecards" element={<GalleryHub />} />
 
-              {/* Config Routes mit Subtabs */}
               <Route
                 path="/config"
-                element={<Navigate to="/config/webui" replace />}
+                element={<Navigate to="/config/general" replace />}
               />
-              <Route path="/config/webui" element={<ConfigEditor />} />
-              <Route path="/config/general" element={<ConfigEditor />} />
-              <Route path="/config/services" element={<ConfigEditor />} />
-              <Route path="/config/api" element={<ConfigEditor />} />
-              <Route path="/config/languages" element={<ConfigEditor />} />
-              <Route path="/config/visuals" element={<ConfigEditor />} />
-              <Route path="/config/overlays" element={<ConfigEditor />} />
-              <Route path="/config/collections" element={<ConfigEditor />} />
-              <Route path="/config/notifications" element={<ConfigEditor />} />
+              <Route
+                path="/config/webui"
+                element={<ConfigEditor tab="WebUI" />}
+              />
+              <Route
+                path="/config/general"
+                element={<ConfigEditor tab="General" />}
+              />
+              <Route
+                path="/config/services"
+                element={<ConfigEditor tab="Services" />}
+              />
+              <Route path="/config/api" element={<ConfigEditor tab="API" />} />
+              <Route
+                path="/config/languages"
+                element={<ConfigEditor tab="Languages" />}
+              />
+              <Route
+                path="/config/visuals"
+                element={<ConfigEditor tab="Visuals" />}
+              />
+              <Route
+                path="/config/overlays"
+                element={<ConfigEditor tab="Overlays" />}
+              />
+              <Route
+                path="/config/collections"
+                element={<ConfigEditor tab="Collections" />}
+              />
+              <Route
+                path="/config/notifications"
+                element={<ConfigEditor tab="Notifications" />}
+              />
 
               <Route path="/scheduler" element={<SchedulerSettings />} />
               <Route path="/logs" element={<LogViewer />} />
@@ -90,11 +109,13 @@ function AppContent() {
 
 function App() {
   return (
-    <ThemeProvider>
-      <Router>
-        <AppContent />
-      </Router>
-    </ThemeProvider>
+    <Router>
+      <ThemeProvider>
+        <SidebarProvider>
+          <AppContent />
+        </SidebarProvider>
+      </ThemeProvider>
+    </Router>
   );
 }
 
