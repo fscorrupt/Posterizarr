@@ -34,12 +34,17 @@ try:
         UI_GROUPS,
         DISPLAY_NAMES,
         get_display_name,
+        get_tooltip,
     )
+
+    # Import tooltips
+    from config_tooltips import CONFIG_TOOLTIPS
 
     CONFIG_MAPPER_AVAILABLE = True
     logger.info("Config mapper loaded successfully")
 except ImportError as e:
     CONFIG_MAPPER_AVAILABLE = False
+    CONFIG_TOOLTIPS = {}  # Fallback if config_tooltips not available
     logger.warning(f"Config mapper not available: {e}. Using grouped config structure.")
 
 # Import scheduler module
@@ -627,6 +632,7 @@ async def get_config():
                 "config": flat_config,
                 "ui_groups": UI_GROUPS,  # Helps frontend organize fields
                 "display_names": display_names_dict,  # Send display names to frontend
+                "tooltips": CONFIG_TOOLTIPS,  # Send tooltips to frontend
                 "using_flat_structure": True,
             }
         else:
@@ -634,6 +640,7 @@ async def get_config():
             return {
                 "success": True,
                 "config": grouped_config,
+                "tooltips": {},  # Empty object as fallback
                 "using_flat_structure": False,
             }
     except HTTPException:

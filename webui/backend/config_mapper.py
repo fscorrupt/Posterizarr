@@ -3,7 +3,7 @@ Config Mapper - Transforms between grouped and flat config structures
 Author: Posterizarr
 
 Usage in Backend:
-    from config_mapper import flatten_config, unflatten_config
+    from config_mapper import flatten_config, unflatten_config, get_display_name, get_tooltip
 
     # When loading config
     grouped_config = json.load(f)
@@ -12,7 +12,17 @@ Usage in Backend:
     # When saving config
     grouped_config = unflatten_config(flat_config)
     json.dump(grouped_config, f)
+
+    # Get tooltip for a config key
+    tooltip = get_tooltip("tmdbtoken")
 """
+
+# Import tooltips from separate file
+try:
+    from config_tooltips import CONFIG_TOOLTIPS
+except ImportError:
+    # Fallback if config_tooltips.py is not available
+    CONFIG_TOOLTIPS = {}
 
 # Complete mapping of all config variables to their groups
 CONFIG_GROUPS = {
@@ -950,3 +960,8 @@ DISPLAY_NAMES = {
 def get_display_name(key):
     """Get friendly display name for a config key"""
     return DISPLAY_NAMES.get(key, key.replace("_", " ").title())
+
+
+def get_tooltip(key):
+    """Get tooltip description for a config key"""
+    return CONFIG_TOOLTIPS.get(key, "")
