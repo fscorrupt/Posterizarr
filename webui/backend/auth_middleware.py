@@ -120,8 +120,6 @@ class BasicAuthMiddleware(BaseHTTPMiddleware):
 
 def load_auth_config(config_path) -> dict:
     """
-    Lädt Auth-Konfiguration aus config.json
-
     Returns:
         dict mit 'enabled', 'username', 'password'
     """
@@ -140,8 +138,23 @@ def load_auth_config(config_path) -> dict:
         # Suche nach WebUI-Section
         webui_config = config.get("WebUI", {})
 
+        # Hole enabled Wert und konvertiere String-Booleans korrekt
+        enabled_value = webui_config.get("basicAuthEnabled", False)
+
+        # Behandle String-Werte explizit (für Rückwärtskompatibilität mit älteren Configs)
+        if isinstance(enabled_value, str):
+            # "true", "True", "1", "yes" -> True
+            # "false", "False", "0", "no", "" -> False
+            enabled = enabled_value.lower() in ["true", "1", "yes"]
+            auth_logger.info(
+                f"Converted string value '{enabled_value}' to boolean: {enabled}"
+            )
+        else:
+            # Bereits ein Boolean oder anderer Typ
+            enabled = bool(enabled_value)
+
         return {
-            "enabled": webui_config.get("basicAuthEnabled", False),
+            "enabled": enabled,  # Garantiert ein Boolean-Wert
             "username": webui_config.get("basicAuthUsername", "admin"),
             "password": webui_config.get("basicAuthPassword", "posterizarr"),
         }

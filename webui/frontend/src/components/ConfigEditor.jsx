@@ -843,9 +843,104 @@ function ConfigEditor() {
     const stringValue =
       value === null || value === undefined ? "" : String(value);
 
-    // Enhanced boolean toggle switch
-    if (type === "boolean" || value === "true" || value === "false") {
-      const isEnabled = value === "true" || value === true;
+    // Enhanced boolean toggle switch - supports 3 types: Boolean, "true"/"false", "True"/"False"
+    if (
+      type === "boolean" ||
+      value === "true" ||
+      value === "false" ||
+      value === "True" ||
+      value === "False"
+    ) {
+      // Liste der Felder die als echte Booleans (true/false) gespeichert werden
+      const booleanFields = ["basicAuthEnabled"];
+
+      // Liste der Felder die als String "true"/"false" (klein) gespeichert werden
+      const lowercaseStringBooleanFields = [
+        "UsePlex",
+        "UseJellyfin",
+        "UseEmby",
+        "WidthHeightFilter",
+        "PlexUploadExistingAssets",
+        "JellyfinUploadExistingAssets",
+        "JellyfinReplaceThumbwithBackdrop",
+        "EmbyUploadExistingAssets",
+        "EmbyReplaceThumbwithBackdrop",
+        "show_skipped",
+        "AssetCleanup",
+        "FollowSymlink",
+        "SkipTBA",
+        "SkipJapTitle",
+        "SkipAddText",
+        "DisableOnlineAssetFetch",
+        "AutoUpdateIM",
+        "AutoUpdatePosterizarr",
+        "ForceRunningDeletion",
+        "DisableHashValidation",
+        "ImageProcessing",
+        "NewLineOnSpecificSymbols",
+        "Posters",
+        "SeasonPosters",
+        "BackgroundPosters",
+        "TitleCards",
+        "LibraryFolders",
+        "PlexUpload",
+        "PosterFontAllCaps",
+        "PosterAddBorder",
+        "PosterAddText",
+        "PosterAddOverlay",
+        "PosterAddTextStroke",
+        "BackgroundFontAllCaps",
+        "BackgroundAddOverlay",
+        "BackgroundAddBorder",
+        "BackgroundAddText",
+        "BackgroundAddTextStroke",
+        "TitleCardUseBackgroundAsTitleCard",
+        "TitleCardAddOverlay",
+        "TitleCardAddBorder",
+        "TitleCardBackgroundFallback",
+        "TitleCardTitleFontAllCaps",
+        "TitleCardTitleAddEPTitleText",
+        "TitleCardTitleAddTextStroke",
+        "TitleCardEPFontAllCaps",
+        "TitleCardEPAddEPText",
+        "TitleCardEPAddTextStroke",
+        "SeasonPosterFontAllCaps",
+        "SeasonPosterAddBorder",
+        "SeasonPosterAddText",
+        "SeasonPosterAddOverlay",
+        "SeasonPosterAddTextStroke",
+        "SeasonPosterShowFallback",
+        "ShowTitleAddShowTitletoSeason",
+        "ShowTitleFontAllCaps",
+        "ShowTitleAddTextStroke",
+        "CollectionTitleAddCollectionTitle",
+        "CollectionTitleFontAllCaps",
+        "CollectionTitleAddTextStroke",
+        "CollectionPosterFontAllCaps",
+        "CollectionPosterAddBorder",
+        "CollectionPosterAddText",
+        "CollectionPosterAddTextStroke",
+        "CollectionPosterAddOverlay",
+        "UsePosterResolutionOverlays",
+        "UseBackgroundResolutionOverlays",
+        "UseTCResolutionOverlays",
+      ];
+
+      // Liste der Felder die als String "True"/"False" (GROSS) gespeichert werden
+      const capitalizedStringBooleanFields = [
+        "SendNotification",
+        "UseUptimeKuma",
+      ];
+
+      // Bestimme welcher Typ verwendet werden soll
+      const isBoolean = booleanFields.includes(key);
+      const isCapitalizedString = capitalizedStringBooleanFields.includes(key);
+      const isLowercaseString = lowercaseStringBooleanFields.includes(key);
+
+      // Bestimme den aktuellen Zustand (enabled/disabled)
+      const isEnabled =
+        value === "true" || value === true || value === "True" || value === 1;
+
       return (
         <div className="flex items-center justify-between h-[42px] px-4 bg-theme-bg rounded-lg border border-theme hover:border-theme-primary/30 transition-all">
           <div className="text-sm font-medium text-theme-text">
@@ -855,9 +950,23 @@ function ConfigEditor() {
             <input
               type="checkbox"
               checked={isEnabled}
-              onChange={(e) =>
-                updateValue(fieldKey, e.target.checked ? "true" : "false")
-              }
+              onChange={(e) => {
+                // Entscheide basierend auf dem Feld-Typ welcher Wert gespeichert wird
+                let newValue;
+
+                if (isBoolean) {
+                  // Echte Booleans für Auth
+                  newValue = e.target.checked;
+                } else if (isCapitalizedString) {
+                  // String mit Großbuchstaben für Notifications
+                  newValue = e.target.checked ? "True" : "False";
+                } else {
+                  // String mit Kleinbuchstaben für alles andere (Standard)
+                  newValue = e.target.checked ? "true" : "false";
+                }
+
+                updateValue(fieldKey, newValue);
+              }}
               className="sr-only peer"
               id={`${groupName}-${key}`}
             />
