@@ -2684,6 +2684,18 @@ async def get_version():
     return await get_script_version()
 
 
+@app.get("/api/version-ui")
+async def get_version_ui():
+    """
+    Gets UI version
+    """
+    return await fetch_version(
+        local_filename="ReleaseUI.txt",
+        github_url="https://raw.githubusercontent.com/fscorrupt/Posterizarr/refs/heads/main/ReleaseUI.txt",
+        version_type="UI",
+    )
+
+
 @app.get("/api/releases")
 async def get_github_releases():
     """
@@ -2885,33 +2897,6 @@ async def get_test_gallery():
         return {"images": []}
 
 
-# Mount static files in correct order: /assets, /test, then / (frontend)
-# Using CachedStaticFiles for better performance with browser caching
-if ASSETS_DIR.exists():
-    app.mount(
-        "/poster_assets",
-        CachedStaticFiles(directory=str(ASSETS_DIR), max_age=86400),  # 24h Cache
-        name="poster_assets",
-    )
-    logger.info(f"Mounted /poster_assets -> {ASSETS_DIR} (with 24h cache)")
-
-if TEST_DIR.exists():
-    app.mount(
-        "/test",
-        CachedStaticFiles(directory=str(TEST_DIR), max_age=86400),  # 24h Cache
-        name="test",
-    )
-    logger.info(f"Mounted /test -> {TEST_DIR} (with 24h cache)")
-
-if FRONTEND_DIR.exists():
-    app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
-    logger.info(f"Mounted frontend from {FRONTEND_DIR}")
-
-# ============================================================================
-# SCHEDULER API ENDPOINTS
-# ============================================================================
-
-
 @app.get("/api/scheduler/status")
 async def get_scheduler_status():
     """Get current scheduler status and configuration"""
@@ -3094,6 +3079,27 @@ async def run_scheduler_now():
     except Exception as e:
         logger.error(f"Error triggering scheduled run: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+if ASSETS_DIR.exists():
+    app.mount(
+        "/poster_assets",
+        CachedStaticFiles(directory=str(ASSETS_DIR), max_age=86400),  # 24h Cache
+        name="poster_assets",
+    )
+    logger.info(f"Mounted /poster_assets -> {ASSETS_DIR} (with 24h cache)")
+
+if TEST_DIR.exists():
+    app.mount(
+        "/test",
+        CachedStaticFiles(directory=str(TEST_DIR), max_age=86400),  # 24h Cache
+        name="test",
+    )
+    logger.info(f"Mounted /test -> {TEST_DIR} (with 24h cache)")
+
+if FRONTEND_DIR.exists():
+    app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
+    logger.info(f"Mounted frontend from {FRONTEND_DIR}")
 
 
 # ============================================================================
