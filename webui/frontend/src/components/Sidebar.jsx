@@ -47,7 +47,6 @@ const Sidebar = () => {
       ],
     },
     { path: "/test-gallery", label: "Test Assets", icon: Image },
-    // Config mit Subtabs
     {
       path: "/config",
       label: "Config",
@@ -78,13 +77,11 @@ const Sidebar = () => {
 
   return (
     <>
-      {/* Desktop Sidebar - ÜBER TopNavbar (z-50) */}
       <div
         className={`hidden md:flex flex-col fixed left-0 top-0 h-screen bg-theme-card border-r border-theme transition-all duration-300 z-50 ${
           isCollapsed ? "w-20" : "w-64"
         }`}
       >
-        {/* Header with Hamburger */}
         <div className="flex items-center p-4 h-16">
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
@@ -207,7 +204,6 @@ const Sidebar = () => {
           </div>
         </nav>
 
-        {/* Version Badge at Bottom - OHNE BORDER */}
         <div className="p-4">
           {!isCollapsed ? (
             <VersionBadge />
@@ -335,7 +331,7 @@ const Sidebar = () => {
               </div>
             </nav>
 
-            {/* Mobile Version Badge - OHNE BORDER */}
+            {/* Mobile Version Badge*/}
             <div className="p-4">
               <VersionBadge />
             </div>

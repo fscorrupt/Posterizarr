@@ -4,7 +4,7 @@ import { AlertCircle, Info } from "lucide-react";
 const API_URL = "/api";
 const REPO_URL = "https://github.com/fscorrupt/Posterizarr/releases/latest";
 
-// 🎯 PERSISTENT STATE - survives component remounts (tab switches)
+//PERSISTENT STATE - survives component remounts (tab switches)
 let cachedVersionData = { version: null, isOutOfDate: false };
 
 function VersionBadge() {
@@ -13,10 +13,8 @@ function VersionBadge() {
   const [showTooltip, setShowTooltip] = useState(false);
 
   useEffect(() => {
-    // 🎯 Immer beim Mount checken (ohne UI-Störung)
     checkVersion();
 
-    // 🎯 Version Check - nur alle 12 Stunden im Hintergrund
     const interval = setInterval(checkVersion, 12 * 60 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
@@ -27,7 +25,7 @@ function VersionBadge() {
       const data = await response.json();
 
       if (data.local) {
-        // 🎯 Save to persistent cache
+        // Save to persistent cache
         cachedVersionData = {
           version: data.local,
           isOutOfDate: data.is_update_available || false,
@@ -97,16 +95,16 @@ function VersionBadge() {
           {isOutOfDate && (
             <>
               <p className="text-xs text-orange-300 mb-2">
-                ⚠️ Update verfügbar!
+                ⚠️ Update available!
               </p>
               <p className="text-xs text-theme-muted">
-                Klicke hier um zum GitHub Release zu gelangen.
+                Click here to get to the Github Releases.
               </p>
             </>
           )}
           {!isOutOfDate && (
             <p className="text-xs text-green-400">
-              ✓ Aktuelle Version installiert
+              ✓ Current version installed
             </p>
           )}
         </div>

@@ -22,9 +22,6 @@ import SystemInfo from "./SystemInfo";
 const API_URL = "/api";
 const isDev = import.meta.env.DEV;
 
-// ============================================================================
-// LOG FILE MAPPING - Maps run modes to their respective log files
-// ============================================================================
 const getLogFileForMode = (mode) => {
   const logMapping = {
     testing: "Testinglog.log",
@@ -46,7 +43,6 @@ const getWebSocketURL = (logFile) => {
   return `${baseURL}?log_file=${encodeURIComponent(logFile)}`;
 };
 
-// 🎯 PERSISTENT STATE - survives component remounts (tab switches)
 let cachedStatus = null;
 let cachedVersion = null;
 
@@ -73,10 +69,11 @@ function Dashboard() {
   const [autoScroll, setAutoScroll] = useState(true); // ✨ NEW: Auto-scroll toggle
   const wsRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
-  const logContainerRef = useRef(null); // ✨ NEW: Log container reference for auto-scroll
+  const logContainerRef = useRef(null);
+  const userHasScrolled = useRef(false);
+  const lastScrollTop = useRef(0);
 
   const fetchStatus = async (silent = false) => {
-    // 🎯 Silent mode = keine UI-Störung (für Background-Updates)
     if (!silent) {
       setIsRefreshing(true);
     }
@@ -115,7 +112,8 @@ function Dashboard() {
           local: data.local || null,
           remote: data.remote || null,
         };
-        cachedVersion = versionData; // 🎯 Save to persistent cache
+        cachedVersion = versionData;
+
         setVersion(versionData);
       } else {
         if (!silent) {
@@ -129,14 +127,12 @@ function Dashboard() {
     }
   };
 
-  // ✨ NEW: WebSocket connection for real-time log updates
   const connectDashboardWebSocket = () => {
     if (wsRef.current) {
       return; // Already connected
     }
 
     try {
-      // 🎯 Dynamische Log-Datei basierend auf current_mode
       const logFile = status.current_mode
         ? getLogFileForMode(status.current_mode)
         : "Scriptlog.log";
@@ -208,11 +204,9 @@ function Dashboard() {
   };
 
   useEffect(() => {
-    // 🎯 Immer beim Mount fetchen (silent mode = kein Refresh-Spinner)
     fetchStatus(true);
     fetchVersion(true);
 
-    // 🎯 Version Check - nur alle 12 Stunden
     const versionInterval = setInterval(
       () => fetchVersion(true),
       12 * 60 * 60 * 1000
@@ -224,7 +218,6 @@ function Dashboard() {
     };
   }, []);
 
-  // ✨ NEW: Connect/disconnect WebSocket based on running status
   useEffect(() => {
     if (status.running && !wsRef.current) {
       connectDashboardWebSocket();
@@ -233,7 +226,6 @@ function Dashboard() {
     }
   }, [status.running]);
 
-  // 🎯 NEW: Reconnect WebSocket when mode changes (different log file)
   useEffect(() => {
     if (status.running && status.current_mode && wsRef.current) {
       const expectedLogFile = getLogFileForMode(status.current_mode);
@@ -247,12 +239,44 @@ function Dashboard() {
     }
   }, [status.current_mode]);
 
-  // ✨ NEW: Auto-scroll to bottom when logs update
+  // ✅ FIX 2: Verbesserter Auto-Scroll useEffect
   useEffect(() => {
-    if (autoScroll && logContainerRef.current) {
-      logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
+    if (!autoScroll || !logContainerRef.current) return;
+
+    // Nur scrollen wenn User nicht manuell nach oben gescrollt hat
+    if (!userHasScrolled.current) {
+      const container = logContainerRef.current;
+      container.scrollTop = container.scrollHeight;
     }
   }, [status.last_logs, autoScroll]);
+
+  // ✅ FIX 3: Scroll-Detection useEffect
+  useEffect(() => {
+    const logContainer = logContainerRef.current;
+    if (!logContainer) return;
+
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = logContainer;
+      const currentScrollTop = scrollTop;
+
+      // Wenn User nach oben scrollt → markiere als manuelles Scrollen
+      if (currentScrollTop < lastScrollTop.current - 5) {
+        // 5px Toleranz
+        userHasScrolled.current = true;
+      }
+
+      // Wenn User wieder ganz unten ist → auto-scroll wieder aktivieren
+      const isAtBottom = scrollHeight - scrollTop - clientHeight < 20; // 20px Toleranz
+      if (isAtBottom) {
+        userHasScrolled.current = false;
+      }
+
+      lastScrollTop.current = currentScrollTop;
+    };
+
+    logContainer.addEventListener("scroll", handleScroll);
+    return () => logContainer.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const stopScript = async () => {
     setLoading(true);
@@ -666,7 +690,21 @@ function Dashboard() {
           </div>
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setAutoScroll(!autoScroll)}
+              onClick={() => {
+                const newAutoScrollState = !autoScroll;
+                setAutoScroll(newAutoScrollState);
+                userHasScrolled.current = false; // Reset manual scroll tracking
+
+                // Wenn Auto-Scroll aktiviert wird, sofort nach unten scrollen
+                if (newAutoScrollState && logContainerRef.current) {
+                  setTimeout(() => {
+                    if (logContainerRef.current) {
+                      logContainerRef.current.scrollTop =
+                        logContainerRef.current.scrollHeight;
+                    }
+                  }, 100);
+                }
+              }}
               className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                 autoScroll
                   ? "bg-theme-primary/20 text-theme-primary border border-theme-primary/30"

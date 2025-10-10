@@ -14,15 +14,9 @@ const TopNavbar = () => {
 
   return (
     <div className="fixed top-0 left-0 right-0 bg-theme-card border-b border-theme z-40 h-16 md:pl-64 shadow-lg">
-      {/* md:pl-64 = Platz für Sidebar auf Desktop */}
-      {/* bg-[#0f1117] ist ein fester, undurchsichtiger dunkler Hintergrund */}
       <div className="flex items-center justify-between h-full px-6">
-        {/* Left side - can be used for breadcrumbs or page title */}
-        <div className="flex items-center">
-          {/* Empty for now, can be used for dynamic content */}
-        </div>
+        <div className="flex items-center"></div>
 
-        {/* Right side - Theme Switcher & User Icon */}
         <div className="flex items-center gap-3">
           {/* Theme Switcher */}
           <div className="relative">

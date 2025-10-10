@@ -18,7 +18,7 @@ function About() {
   const [version, setVersion] = useState({
     local: null,
     remote: null,
-    is_update_available: false, // NEU: Flag hinzufügen
+    is_update_available: false,
     loading: true,
   });
   const [refreshing, setRefreshing] = useState(false);
@@ -36,7 +36,7 @@ function About() {
       setVersion({
         local: data.local,
         remote: data.remote,
-        is_update_available: data.is_update_available || false, // NEU: Backend-Flag speichern
+        is_update_available: data.is_update_available || false,
         loading: false,
       });
     } catch (error) {
@@ -52,13 +52,10 @@ function About() {
     }
   };
 
-  // ✅ KORRIGIERTE FUNKTION mit semantic versioning
   const isOutOfDate = () => {
-    // Verwende das Backend-Flag, wenn verfügbar
     if (version.is_update_available !== undefined) {
       return version.is_update_available;
     }
-    // Fallback für ältere Backend-Versionen
     if (!version.local || !version.remote) return false;
     return version.local !== version.remote;
   };
@@ -170,13 +167,13 @@ function About() {
         </div>
       </div>
 
-      {/* Assets Statistics - ÜBER Releases! */}
+      {/* Assets Statistics */}
       <AssetsStats />
 
       {/* Releases Section */}
       <ReleasesSection />
 
-      {/* Getting Support Section - Nur Discord & GitHub */}
+      {/* Getting Support Section*/}
       <div className="bg-theme-card border border-theme rounded-lg p-6 space-y-4">
         <h2 className="text-2xl font-bold text-theme-text flex items-center gap-2">
           <ExternalLink className="w-6 h-6 text-theme-primary" />
@@ -220,7 +217,7 @@ function About() {
         </div>
       </div>
 
-      {/* Support Posterizarr Section - NEUE Karte */}
+      {/* Support Posterizarr Section*/}
       <div className="bg-theme-card border border-theme rounded-lg p-6 space-y-4">
         <h2 className="text-2xl font-bold text-theme-text flex items-center gap-2">
           <Heart className="w-6 h-6 text-red-400" />

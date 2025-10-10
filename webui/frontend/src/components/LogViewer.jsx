@@ -17,7 +17,6 @@ import toast, { Toaster } from "react-hot-toast";
 const API_URL = "/api";
 const isDev = import.meta.env.DEV;
 
-// ⚡ FIX: Make WS_URL a function that accepts log_file parameter
 const getWebSocketURL = (logFile) => {
   const baseURL = isDev
     ? `ws://localhost:3000/ws/logs`
@@ -32,7 +31,6 @@ function LogViewer() {
   const [logs, setLogs] = useState([]);
   const [availableLogs, setAvailableLogs] = useState([]);
 
-  // 🎯 Check if a specific log file was passed via navigation state
   const initialLogFile = location.state?.logFile || "Scriptlog.log";
   const [selectedLog, setSelectedLog] = useState(initialLogFile);
 
@@ -42,8 +40,6 @@ function LogViewer() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [loading, setLoading] = useState(false); // ✨ NEW: Loading state for stop button
-
-  // ✨ NEW: Script status state
   const [status, setStatus] = useState({
     running: false,
     current_mode: null,
@@ -76,7 +72,6 @@ function LogViewer() {
     return { raw: cleanedLine };
   };
 
-  // ✨ NEW: Fetch script status
   const fetchStatus = async () => {
     try {
       const response = await fetch(`${API_URL}/status`);
@@ -340,7 +335,7 @@ function LogViewer() {
   useEffect(() => {
     if (location.state?.logFile && location.state.logFile !== selectedLog) {
       console.log(
-        `🎯 LogViewer received log file from navigation: ${location.state.logFile}`
+        ` LogViewer received log file from navigation: ${location.state.logFile}`
       );
       setSelectedLog(location.state.logFile);
 

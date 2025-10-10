@@ -790,7 +790,6 @@ function ConfigEditor() {
   };
 
   const getGroupIconForDisplay = (groupName) => {
-    // Verwende zuerst das Tab-Icon für Konsistenz mit der Sidebar
     const tabIcon = tabs[activeTab]?.icon;
     if (tabIcon) {
       return tabIcon;

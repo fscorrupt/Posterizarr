@@ -8,7 +8,6 @@ import TitleCardGallery from "./TitleCardGallery";
 function GalleryHub() {
   const location = useLocation();
 
-  // Bestimme den aktiven Tab basierend auf der URL
   const getActiveTabFromPath = () => {
     if (location.pathname.includes("/backgrounds")) return "backgrounds";
     if (location.pathname.includes("/seasons")) return "seasons";
@@ -35,7 +34,7 @@ function GalleryHub() {
 
   return (
     <div className="space-y-4">
-      {/* Active Gallery - Tabs sind jetzt in der Sidebar */}
+      {/* Active Gallery*/}
       <div>{renderGallery()}</div>
     </div>
   );

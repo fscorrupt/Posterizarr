@@ -1,6 +1,14 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Query
+from fastapi import (
+    FastAPI,
+    WebSocket,
+    WebSocketDisconnect,
+    HTTPException,
+    Query,
+    Request,
+)
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -505,7 +513,27 @@ def get_fresh_assets():
     return asset_cache
 
 
-# ============================================================================
+class SPAMiddleware(BaseHTTPMiddleware):
+    """
+    Middleware für Single Page Application Support
+    Fängt 404-Fehler ab und gibt index.html zurück für React Router
+    """
+
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+
+        # Wenn 404 und KEINE API-Route und KEIN Static-File
+        if response.status_code == 404:
+            path = request.url.path
+
+            # Nur für HTML-Routes (keine API, keine Assets)
+            if not path.startswith(("/api", "/poster_assets", "/test", "/_assets")):
+                # Gib index.html zurück (React Router übernimmt)
+                index_path = FRONTEND_DIR / "index.html"
+                if index_path.exists():
+                    return FileResponse(index_path)
+
+        return response
 
 
 @asynccontextmanager
@@ -566,7 +594,6 @@ if AUTH_MIDDLEWARE_AVAILABLE:
 else:
     logger.info("Basic Auth middleware not available, skipping")
 
-# CORS middleware (MUST be added AFTER Basic Auth)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -574,6 +601,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.add_middleware(SPAMiddleware)
+logger.info("✅ SPA Middleware enabled - React Router support active")
 
 
 class ConfigUpdate(BaseModel):

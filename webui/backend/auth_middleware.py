@@ -1,6 +1,6 @@
 """
 Basic Authentication Middleware for Posterizarr Web UI
-Einfache, schnelle Basic Auth Implementierung
+
 """
 
 from fastapi import Request, HTTPException, status
@@ -9,16 +9,47 @@ from starlette.middleware.base import BaseHTTPMiddleware
 import base64
 import secrets
 import logging
+from pathlib import Path
 
-logger = logging.getLogger(__name__)
+auth_logger = logging.getLogger("posterizarr.auth")
+auth_logger.setLevel(logging.INFO)
+
+if not auth_logger.handlers:
+    try:
+        if Path("/.dockerenv").exists():
+            LOGS_DIR = Path("/config/Logs")
+        else:
+            LOGS_DIR = Path(__file__).parent.parent.parent / "Logs"
+
+        LOGS_DIR.mkdir(exist_ok=True)
+        auth_log_path = LOGS_DIR / "Auth.log"
+
+        auth_handler = logging.FileHandler(auth_log_path, encoding="utf-8")
+        auth_handler.setFormatter(
+            logging.Formatter(
+                "[%(asctime)s] [%(levelname)-8s] |AUTH| %(message)s",
+                datefmt="%Y-%m-%d %H:%M:%S",
+            )
+        )
+        auth_logger.addHandler(auth_handler)
+
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(logging.WARNING)
+        auth_logger.addHandler(console_handler)
+
+        print(f"✅ Auth logger initialized: {auth_log_path}")
+
+    except Exception as e:
+        print(f"⚠️ Could not initialize auth logger: {e}")
+
+# Fallback logger für Kompatibilität
+logger = auth_logger
 
 
 class BasicAuthMiddleware(BaseHTTPMiddleware):
     """
     Basic Authentication Middleware
 
-    Schützt alle Routen außer /api/auth/check mit Basic Auth.
-    Kann in der config.json aktiviert/deaktiviert werden.
     """
 
     def __init__(self, app, username: str, password: str, enabled: bool = False):
@@ -28,9 +59,9 @@ class BasicAuthMiddleware(BaseHTTPMiddleware):
         self.enabled = enabled
 
         if self.enabled:
-            logger.info("🔒 Basic Auth is ENABLED")
+            auth_logger.info("🔒 Basic Auth ENABLED")
         else:
-            logger.info("🔓 Basic Auth is DISABLED")
+            auth_logger.info("🔓 Basic Auth DISABLED")
 
     async def dispatch(self, request: Request, call_next):
         # Wenn Basic Auth deaktiviert ist, einfach durchlassen
@@ -43,8 +74,12 @@ class BasicAuthMiddleware(BaseHTTPMiddleware):
 
         # Prüfe Authorization Header
         auth_header = request.headers.get("Authorization")
+        client_ip = request.client.host if request.client else "unknown"
 
         if not auth_header or not auth_header.startswith("Basic "):
+            auth_logger.warning(
+                f"⚠️ Unauthorized access attempt | IP: {client_ip} | Path: {request.url.path}"
+            )
             return self._unauthorized_response()
 
         try:
@@ -58,13 +93,20 @@ class BasicAuthMiddleware(BaseHTTPMiddleware):
 
             if username_match and password_match:
                 # Auth erfolgreich
+                auth_logger.info(
+                    f"✅ Successful authentication | User: {username} | IP: {client_ip} | Path: {request.url.path}"
+                )
                 response = await call_next(request)
                 return response
             else:
+                # Auth fehlgeschlagen
+                auth_logger.warning(
+                    f"❌ Failed authentication | User: {username} | IP: {client_ip} | Path: {request.url.path}"
+                )
                 return self._unauthorized_response()
 
         except Exception as e:
-            logger.error(f"Basic Auth error: {e}")
+            auth_logger.error(f"⚠️ Auth error: {e}")
             return self._unauthorized_response()
 
     def _unauthorized_response(self):
@@ -89,7 +131,7 @@ def load_auth_config(config_path) -> dict:
     try:
         config_file = Path(config_path)
         if not config_file.exists():
-            logger.warning("Config file not found, using default auth settings")
+            auth_logger.warning("Config file not found, using default auth settings")
             return {"enabled": False, "username": "admin", "password": "posterizarr"}
 
         with open(config_file, "r", encoding="utf-8") as f:
@@ -105,5 +147,5 @@ def load_auth_config(config_path) -> dict:
         }
 
     except Exception as e:
-        logger.error(f"Error loading auth config: {e}")
+        auth_logger.error(f"Error loading auth config: {e}")
         return {"enabled": False, "username": "admin", "password": "posterizarr"}

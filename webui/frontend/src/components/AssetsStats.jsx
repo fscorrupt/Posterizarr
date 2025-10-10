@@ -34,7 +34,6 @@ function AssetsStats() {
     }
   };
 
-  // ✅ NEU: Funktion zum Refresh des Asset-Cache
   const refreshCache = async () => {
     setRefreshing(true);
     try {
@@ -106,7 +105,6 @@ function AssetsStats() {
 
   return (
     <div className="bg-theme-card border border-theme rounded-lg p-6 space-y-4">
-      {/* ✅ NEU: Header mit Refresh-Button */}
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-theme-text flex items-center gap-2">
           <Image className="w-6 h-6 text-theme-primary" />
