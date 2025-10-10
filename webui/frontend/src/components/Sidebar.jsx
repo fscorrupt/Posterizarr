@@ -27,8 +27,9 @@ const Sidebar = () => {
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isAssetsExpanded, setIsAssetsExpanded] = useState(true);
-  const [isConfigExpanded, setIsConfigExpanded] = useState(true);
+  // ✅ CHANGED: Initial state to false (collapsed)
+  const [isAssetsExpanded, setIsAssetsExpanded] = useState(false);
+  const [isConfigExpanded, setIsConfigExpanded] = useState(false);
 
   const navItems = [
     { path: "/", label: "Dashboard", icon: Activity },
@@ -123,7 +124,9 @@ const Sidebar = () => {
                     {/* Main Button (Assets or Config) */}
                     <button
                       onClick={toggleExpanded}
-                      className={`w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm font-medium transition-all group ${
+                      className={`w-full flex items-center ${
+                        isCollapsed ? "justify-center" : "justify-between px-3"
+                      } py-3 rounded-lg text-sm font-medium transition-all group ${
                         isInSection
                           ? "bg-theme-primary/20 text-theme-primary"
                           : "text-theme-muted hover:bg-theme-hover hover:text-theme-text"
@@ -131,11 +134,7 @@ const Sidebar = () => {
                       title={isCollapsed ? item.label : ""}
                     >
                       <div className="flex items-center">
-                        <Icon
-                          className={`w-5 h-5 flex-shrink-0 ${
-                            isCollapsed ? "mx-auto" : ""
-                          }`}
-                        />
+                        <Icon className="w-5 h-5 flex-shrink-0" />
                         {!isCollapsed && (
                           <span className="ml-3">{item.label}</span>
                         )}
@@ -185,18 +184,16 @@ const Sidebar = () => {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center px-3 py-3 rounded-lg text-sm font-medium transition-all group ${
+                  className={`flex items-center ${
+                    isCollapsed ? "justify-center" : "px-3"
+                  } py-3 rounded-lg text-sm font-medium transition-all group ${
                     isActive
                       ? "bg-theme-primary text-white shadow-lg"
                       : "text-theme-muted hover:bg-theme-hover hover:text-theme-text"
                   }`}
                   title={isCollapsed ? item.label : ""}
                 >
-                  <Icon
-                    className={`w-5 h-5 flex-shrink-0 ${
-                      isCollapsed ? "mx-auto" : ""
-                    }`}
-                  />
+                  <Icon className="w-5 h-5 flex-shrink-0" />
                   {!isCollapsed && <span className="ml-3">{item.label}</span>}
                 </Link>
               );
@@ -208,7 +205,7 @@ const Sidebar = () => {
           {!isCollapsed ? (
             <VersionBadge />
           ) : (
-            <div className="flex justify-center">
+            <div className="flex justify-center items-center">
               <div className="text-xs text-theme-muted font-semibold">v2.0</div>
             </div>
           )}
