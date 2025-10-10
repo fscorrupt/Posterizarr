@@ -90,7 +90,6 @@ function LogViewer() {
     }
   };
 
-  // ✨ NEW: Stop script function
   const stopScript = async () => {
     setLoading(true);
     try {
@@ -220,7 +219,6 @@ function LogViewer() {
     setIsReconnecting(false);
   };
 
-  // ⚡ FIX: Accept logFile parameter to connect to specific log
   const connectWebSocket = (logFile = selectedLog) => {
     if (
       wsRef.current &&
@@ -237,7 +235,6 @@ function LogViewer() {
     disconnectWebSocket();
 
     try {
-      // ⚡ FIX: Use dynamic WebSocket URL with log_file parameter
       const wsURL = getWebSocketURL(logFile);
       console.log(`Connecting to WebSocket: ${wsURL}`);
 
@@ -248,11 +245,6 @@ function LogViewer() {
         console.log(`✅ WebSocket connected to ${logFile}`);
         setConnected(true);
         setIsReconnecting(false);
-
-        toast.success(`Live feed: ${logFile}`, {
-          duration: 2000,
-          position: "top-right",
-        });
       };
 
       ws.onmessage = (event) => {
@@ -262,7 +254,6 @@ function LogViewer() {
           if (data.type === "log") {
             setLogs((prev) => [...prev, data.content]);
           } else if (data.type === "log_file_changed") {
-            // ⚠️ IMPORTANT: Backend changed log file (due to mode change)
             // Only accept this if we're NOT manually viewing a specific log
             console.log(`📄 Backend wants to switch to: ${data.log_file}`);
 
@@ -360,7 +351,6 @@ function LogViewer() {
     }
   }, [location.state?.logFile]);
 
-  // ⚡ FIX: When selectedLog changes, reconnect to new log file
   useEffect(() => {
     console.log(`Selected log changed to: ${selectedLog}`);
     fetchLogFile(selectedLog);
@@ -472,11 +462,8 @@ function LogViewer() {
             <div className="p-2 rounded-lg bg-theme-primary/10">
               <FileText className="w-8 h-8 text-theme-primary" />
             </div>
-            Log Viewer
-          </h1>
-          <p className="text-theme-muted mt-2">
             View and monitor your Posterizarr logs in real-time
-          </p>
+          </h1>
         </div>
 
         {/* Connection Status Badge */}

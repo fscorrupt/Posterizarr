@@ -10,6 +10,16 @@ import {
   Info,
   Menu,
   X,
+  ChevronDown,
+  ChevronRight,
+  Film,
+  Layers,
+  Tv,
+  Database,
+  Palette,
+  Type,
+  Bell,
+  Lock,
 } from "lucide-react";
 import VersionBadge from "./VersionBadge";
 
@@ -17,17 +27,54 @@ const Sidebar = () => {
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isAssetsExpanded, setIsAssetsExpanded] = useState(true);
+  const [isConfigExpanded, setIsConfigExpanded] = useState(true);
 
   const navItems = [
     { path: "/", label: "Dashboard", icon: Activity },
     { path: "/run-modes", label: "Run Modes", icon: Play },
-    { path: "/gallery", label: "Assets", icon: Image },
+    // Assets mit Subtabs
+    {
+      path: "/gallery",
+      label: "Assets",
+      icon: Image,
+      hasSubItems: true,
+      subItems: [
+        { path: "/gallery/posters", label: "Posters", icon: Image },
+        { path: "/gallery/backgrounds", label: "Backgrounds", icon: Layers },
+        { path: "/gallery/seasons", label: "Seasons", icon: Film },
+        { path: "/gallery/titlecards", label: "Title Cards", icon: Tv },
+      ],
+    },
     { path: "/test-gallery", label: "Test Assets", icon: Image },
-    { path: "/config", label: "Config", icon: Settings },
+    // Config mit Subtabs
+    {
+      path: "/config",
+      label: "Config",
+      icon: Settings,
+      hasSubItems: true,
+      subItems: [
+        { path: "/config/webui", label: "WebUI", icon: Lock },
+        { path: "/config/general", label: "General", icon: Settings },
+        { path: "/config/services", label: "Services", icon: Database },
+        { path: "/config/api", label: "API", icon: Settings },
+        { path: "/config/languages", label: "Languages", icon: Type },
+        { path: "/config/visuals", label: "Visuals", icon: Palette },
+        { path: "/config/overlays", label: "Overlays", icon: Palette },
+        { path: "/config/collections", label: "Collections", icon: Type },
+        { path: "/config/notifications", label: "Notifications", icon: Bell },
+      ],
+    },
     { path: "/scheduler", label: "Scheduler", icon: Clock },
     { path: "/logs", label: "Logs", icon: FileText },
     { path: "/about", label: "About", icon: Info },
   ];
+
+  // Check if current path is in Assets section
+  const isInAssetsSection = location.pathname.startsWith("/gallery");
+
+  // Check if current path is in Config section
+  const isInConfigSection = location.pathname.startsWith("/config");
 
   return (
     <>
@@ -59,6 +106,84 @@ const Sidebar = () => {
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
+
+              // Items with Subtabs (Assets or Config)
+              if (item.hasSubItems) {
+                const isAssetsItem = item.path === "/gallery";
+                const isConfigItem = item.path === "/config";
+                const isExpanded = isAssetsItem
+                  ? isAssetsExpanded
+                  : isConfigExpanded;
+                const isInSection = isAssetsItem
+                  ? isInAssetsSection
+                  : isInConfigSection;
+                const toggleExpanded = isAssetsItem
+                  ? () => setIsAssetsExpanded(!isAssetsExpanded)
+                  : () => setIsConfigExpanded(!isConfigExpanded);
+
+                return (
+                  <div key={item.path}>
+                    {/* Main Button (Assets or Config) */}
+                    <button
+                      onClick={toggleExpanded}
+                      className={`w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm font-medium transition-all group ${
+                        isInSection
+                          ? "bg-theme-primary/20 text-theme-primary"
+                          : "text-theme-muted hover:bg-theme-hover hover:text-theme-text"
+                      }`}
+                      title={isCollapsed ? item.label : ""}
+                    >
+                      <div className="flex items-center">
+                        <Icon
+                          className={`w-5 h-5 flex-shrink-0 ${
+                            isCollapsed ? "mx-auto" : ""
+                          }`}
+                        />
+                        {!isCollapsed && (
+                          <span className="ml-3">{item.label}</span>
+                        )}
+                      </div>
+                      {!isCollapsed && (
+                        <div>
+                          {isExpanded ? (
+                            <ChevronDown className="w-4 h-4" />
+                          ) : (
+                            <ChevronRight className="w-4 h-4" />
+                          )}
+                        </div>
+                      )}
+                    </button>
+
+                    {/* Subtabs */}
+                    {isExpanded && !isCollapsed && (
+                      <div className="ml-4 mt-1 space-y-1">
+                        {item.subItems.map((subItem) => {
+                          const SubIcon = subItem.icon;
+                          const isSubActive =
+                            location.pathname === subItem.path;
+
+                          return (
+                            <Link
+                              key={subItem.path}
+                              to={subItem.path}
+                              className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                                isSubActive
+                                  ? "bg-theme-primary text-white shadow-lg"
+                                  : "text-theme-muted hover:bg-theme-hover hover:text-theme-text"
+                              }`}
+                            >
+                              <SubIcon className="w-4 h-4 flex-shrink-0" />
+                              <span className="ml-3">{subItem.label}</span>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
+              // Regular nav items
               return (
                 <Link
                   key={item.path}
@@ -82,8 +207,8 @@ const Sidebar = () => {
           </div>
         </nav>
 
-        {/* Version Badge at Bottom */}
-        <div className="p-4 border-t border-theme">
+        {/* Version Badge at Bottom - OHNE BORDER */}
+        <div className="p-4">
           {!isCollapsed ? (
             <VersionBadge />
           ) : (
@@ -126,6 +251,71 @@ const Sidebar = () => {
                 {navItems.map((item) => {
                   const Icon = item.icon;
                   const isActive = location.pathname === item.path;
+
+                  // Items with Subtabs (Assets or Config) (Mobile)
+                  if (item.hasSubItems) {
+                    const isAssetsItem = item.path === "/gallery";
+                    const isConfigItem = item.path === "/config";
+                    const isExpanded = isAssetsItem
+                      ? isAssetsExpanded
+                      : isConfigExpanded;
+                    const isInSection = isAssetsItem
+                      ? isInAssetsSection
+                      : isInConfigSection;
+                    const toggleExpanded = isAssetsItem
+                      ? () => setIsAssetsExpanded(!isAssetsExpanded)
+                      : () => setIsConfigExpanded(!isConfigExpanded);
+
+                    return (
+                      <div key={item.path}>
+                        <button
+                          onClick={toggleExpanded}
+                          className={`w-full flex items-center justify-between px-3 py-3 rounded-lg text-sm font-medium transition-all ${
+                            isInSection
+                              ? "bg-theme-primary/20 text-theme-primary"
+                              : "text-theme-muted hover:bg-theme-hover hover:text-theme-text"
+                          }`}
+                        >
+                          <div className="flex items-center">
+                            <Icon className="w-5 h-5 mr-3" />
+                            <span>{item.label}</span>
+                          </div>
+                          {isExpanded ? (
+                            <ChevronDown className="w-4 h-4" />
+                          ) : (
+                            <ChevronRight className="w-4 h-4" />
+                          )}
+                        </button>
+
+                        {isExpanded && (
+                          <div className="ml-4 mt-1 space-y-1">
+                            {item.subItems.map((subItem) => {
+                              const SubIcon = subItem.icon;
+                              const isSubActive =
+                                location.pathname === subItem.path;
+
+                              return (
+                                <Link
+                                  key={subItem.path}
+                                  to={subItem.path}
+                                  onClick={() => setIsMobileMenuOpen(false)}
+                                  className={`flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                                    isSubActive
+                                      ? "bg-theme-primary text-white shadow-lg"
+                                      : "text-theme-muted hover:bg-theme-hover hover:text-theme-text"
+                                  }`}
+                                >
+                                  <SubIcon className="w-4 h-4" />
+                                  <span className="ml-3">{subItem.label}</span>
+                                </Link>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }
+
                   return (
                     <Link
                       key={item.path}
@@ -145,8 +335,8 @@ const Sidebar = () => {
               </div>
             </nav>
 
-            {/* Mobile Version Badge */}
-            <div className="p-4 border-t border-theme">
+            {/* Mobile Version Badge - OHNE BORDER */}
+            <div className="p-4">
               <VersionBadge />
             </div>
           </div>

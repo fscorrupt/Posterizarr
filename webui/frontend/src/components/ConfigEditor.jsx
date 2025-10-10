@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import {
   Save,
   RefreshCw,
@@ -17,7 +18,6 @@ import {
   Hash,
   Loader2,
   Search,
-  Info,
   HelpCircle,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
@@ -26,6 +26,13 @@ const API_URL = "/api";
 
 // Comprehensive tooltip descriptions for all config variables
 const CONFIG_TOOLTIPS = {
+  // WebUI Settings
+  basicAuthEnabled:
+    "Enable Basic Authentication to protect the Web UI. Set to true to require username/password login (Default: false)",
+  basicAuthUsername:
+    "Username for Basic Authentication. Change this from the default 'admin' for better security (Default: admin)",
+  basicAuthPassword:
+    "Password for Basic Authentication. IMPORTANT: Change this from the default 'posterizarr' before enabling auth! (Default: posterizarr)",
   // ApiPart
   tvdbapi:
     "Your TVDB Project API key. If you are a TVDB subscriber, you can append your PIN to the end of your API key in the format YourApiKey#YourPin",
@@ -402,6 +409,7 @@ const CONFIG_TOOLTIPS = {
 };
 
 function ConfigEditor() {
+  const location = useLocation();
   const [config, setConfig] = useState(null);
   const [uiGroups, setUiGroups] = useState(null);
   const [displayNames, setDisplayNames] = useState({});
@@ -410,8 +418,24 @@ function ConfigEditor() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
   const [expandedGroups, setExpandedGroups] = useState({});
-  const [activeTab, setActiveTab] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
+
+  // Map URL path to tab name
+  const getActiveTabFromPath = () => {
+    const path = location.pathname;
+    if (path.includes("/config/webui")) return "WebUI";
+    if (path.includes("/config/general")) return "General";
+    if (path.includes("/config/services")) return "Services";
+    if (path.includes("/config/api")) return "API";
+    if (path.includes("/config/languages")) return "Languages";
+    if (path.includes("/config/visuals")) return "Visuals";
+    if (path.includes("/config/overlays")) return "Overlays";
+    if (path.includes("/config/collections")) return "Collections";
+    if (path.includes("/config/notifications")) return "Notifications";
+    return "General"; // Default
+  };
+
+  const activeTab = getActiveTabFromPath();
 
   // Auto-resize textarea function
   const autoResize = (textarea) => {
@@ -423,6 +447,10 @@ function ConfigEditor() {
 
   // Tab organization
   const tabs = {
+    WebUI: {
+      groups: ["WebUI Settings"],
+      icon: Lock,
+    },
     General: {
       groups: ["General Settings", "PrerequisitePart"],
       icon: Settings,
@@ -497,14 +525,13 @@ function ConfigEditor() {
   }, []);
 
   useEffect(() => {
-    if (config && !activeTab) {
-      setActiveTab("General");
-      const firstGroup = tabs["General"].groups[0];
+    if (config && activeTab) {
+      const firstGroup = tabs[activeTab]?.groups[0];
       if (firstGroup) {
         setExpandedGroups({ [firstGroup]: true });
       }
     }
-  }, [config]);
+  }, [config, activeTab]);
 
   // Auto-expand groups when searching
   useEffect(() => {
@@ -762,6 +789,16 @@ function ConfigEditor() {
     );
   };
 
+  const getGroupIconForDisplay = (groupName) => {
+    // Verwende zuerst das Tab-Icon für Konsistenz mit der Sidebar
+    const tabIcon = tabs[activeTab]?.icon;
+    if (tabIcon) {
+      return tabIcon;
+    }
+    // Fallback auf die alte Logik
+    return getGroupIcon(groupName);
+  };
+
   const renderInput = (groupName, key, value) => {
     const Icon = getInputIcon(key, value);
     const fieldKey = usingFlatStructure ? key : `${groupName}.${key}`;
@@ -954,20 +991,19 @@ function ConfigEditor() {
     );
   }
 
+  const TabIcon = tabs[activeTab]?.icon || Settings;
+
   return (
     <div className="space-y-6">
       <Toaster />
 
-      {/* Header - Modernized to match RunModes */}
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-theme-text flex items-center gap-3">
-            <Settings className="w-8 h-8 text-theme-primary" />
-            Configuration Editor
+            <TabIcon className="w-8 h-8 text-theme-primary" />
+            Configure your Posterizarr {activeTab.toLowerCase()} settings
           </h1>
-          <p className="text-theme-muted mt-2">
-            Manage your Posterizarr settings
-          </p>
         </div>
         <div className="flex gap-3">
           <button
@@ -1020,163 +1056,121 @@ function ConfigEditor() {
         )}
       </div>
 
-      {/* Tab Navigation - Enhanced */}
-      <div className="bg-theme-card rounded-xl p-4 border border-theme shadow-sm">
-        <div className="flex gap-2 flex-wrap">
-          {Object.keys(tabs).map((tabName) => {
-            const sectionsInTab = getFilteredGroupsByTab(tabName);
-            if (sectionsInTab.length === 0 && tabName !== "Advanced")
-              return null;
-
-            const { icon: TabIcon } = tabs[tabName];
-            const isActive = activeTab === tabName;
-
-            return (
-              <button
-                key={tabName}
-                onClick={() => setActiveTab(tabName)}
-                className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all whitespace-nowrap ${
-                  isActive
-                    ? "bg-theme-primary text-white shadow-lg scale-105"
-                    : "bg-theme-hover text-theme-muted hover:bg-theme-primary/20 hover:text-theme-text border border-theme"
-                }`}
-              >
-                <TabIcon className="w-5 h-5" />
-                {tabName}
-                <span
-                  className={`ml-1 px-2 py-0.5 rounded-full text-xs font-semibold ${
-                    isActive
-                      ? "bg-white/30"
-                      : "bg-theme-primary/20 text-theme-primary"
-                  }`}
-                >
-                  {sectionsInTab.length}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Tab Content - Enhanced Cards */}
+      {/* Settings Groups */}
       <div className="space-y-4">
-        {activeTab && (
-          <>
-            {getFilteredGroupsByTab(activeTab).map((groupName) => {
-              const GroupIcon = getGroupIcon(groupName);
-              const isExpanded = expandedGroups[groupName];
-              const fields = getFilteredFieldsForGroup(groupName);
-              const settingsCount = fields.length;
+        {getFilteredGroupsByTab(activeTab).map((groupName) => {
+          const GroupIcon = getGroupIconForDisplay(groupName);
+          const isExpanded = expandedGroups[groupName];
+          const fields = getFilteredFieldsForGroup(groupName);
+          const settingsCount = fields.length;
 
-              // Don't show groups with no matching fields when searching
-              if (searchQuery && settingsCount === 0) return null;
+          // Don't show groups with no matching fields when searching
+          if (searchQuery && settingsCount === 0) return null;
 
-              return (
-                <div
-                  key={groupName}
-                  className="bg-theme-card rounded-xl border border-theme overflow-hidden hover:border-theme-primary/50 transition-all shadow-sm"
-                >
-                  {/* Group Header - Enhanced */}
-                  <button
-                    onClick={() => toggleGroup(groupName)}
-                    className="w-full px-6 py-5 flex items-center justify-between hover:bg-theme-hover transition-all group"
+          return (
+            <div
+              key={groupName}
+              className="bg-theme-card rounded-xl border border-theme overflow-hidden hover:border-theme-primary/50 transition-all shadow-sm"
+            >
+              {/* Group Header */}
+              <button
+                onClick={() => toggleGroup(groupName)}
+                className="w-full px-6 py-5 flex items-center justify-between hover:bg-theme-hover transition-all group"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="p-3 rounded-lg bg-theme-primary/10 group-hover:bg-theme-primary/20 group-hover:scale-110 transition-all">
+                    <GroupIcon className="w-6 h-6 text-theme-primary" />
+                  </div>
+                  <div className="text-left">
+                    <h3 className="text-xl font-semibold text-theme-primary">
+                      {formatGroupName(groupName)}
+                    </h3>
+                    <p className="text-sm text-theme-muted mt-1">
+                      {settingsCount} setting
+                      {settingsCount !== 1 ? "s" : ""}
+                      {searchQuery && " (filtered)"}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      isExpanded
+                        ? "bg-theme-primary/20 text-theme-primary border border-theme-primary/30"
+                        : "bg-theme-bg text-theme-muted border border-theme"
+                    }`}
                   >
-                    <div className="flex items-center gap-4">
-                      <div className="p-3 rounded-lg bg-theme-primary/10 group-hover:bg-theme-primary/20 group-hover:scale-110 transition-all">
-                        <GroupIcon className="w-6 h-6 text-theme-primary" />
-                      </div>
-                      <div className="text-left">
-                        <h3 className="text-xl font-semibold text-theme-primary">
-                          {formatGroupName(groupName)}
-                        </h3>
-                        <p className="text-sm text-theme-muted mt-1">
-                          {settingsCount} setting
-                          {settingsCount !== 1 ? "s" : ""}
-                          {searchQuery && " (filtered)"}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-medium ${
-                          isExpanded
-                            ? "bg-theme-primary/20 text-theme-primary border border-theme-primary/30"
-                            : "bg-theme-bg text-theme-muted border border-theme"
-                        }`}
-                      >
-                        {isExpanded ? "Open" : "Closed"}
-                      </span>
-                      {isExpanded ? (
-                        <ChevronDown className="w-6 h-6 text-theme-primary transition-transform" />
-                      ) : (
-                        <ChevronRight className="w-6 h-6 text-theme-muted transition-transform" />
-                      )}
-                    </div>
-                  </button>
-
-                  {/* Group Content - Grid Layout */}
-                  {isExpanded && (
-                    <div className="px-6 pb-6 border-t border-theme bg-theme-bg/30">
-                      <div className="pt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
-                        {fields.map((key) => {
-                          const value = usingFlatStructure
-                            ? config[key]
-                            : config[groupName]?.[key];
-
-                          const displayName = getDisplayName(key);
-
-                          return (
-                            <div key={key} className="space-y-3">
-                              <label className="block">
-                                <div className="flex items-center justify-between mb-3">
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-sm font-semibold text-theme-primary">
-                                      {displayName}
-                                    </span>
-                                    {CONFIG_TOOLTIPS[key] && (
-                                      <Tooltip text={CONFIG_TOOLTIPS[key]}>
-                                        <HelpCircle className="w-4 h-4 text-theme-muted hover:text-theme-primary cursor-help transition-colors" />
-                                      </Tooltip>
-                                    )}
-                                  </div>
-                                  {key !== displayName && (
-                                    <span className="text-xs text-theme-muted font-mono bg-theme-bg px-2 py-1 rounded">
-                                      {key}
-                                    </span>
-                                  )}
-                                </div>
-                                {renderInput(groupName, key, value)}
-                              </label>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
+                    {isExpanded ? "Open" : "Closed"}
+                  </span>
+                  {isExpanded ? (
+                    <ChevronDown className="w-6 h-6 text-theme-primary transition-transform" />
+                  ) : (
+                    <ChevronRight className="w-6 h-6 text-theme-muted transition-transform" />
                   )}
                 </div>
-              );
-            })}
+              </button>
 
-            {/* No Results Message */}
-            {searchQuery && getFilteredGroupsByTab(activeTab).length === 0 && (
-              <div className="bg-theme-card rounded-xl p-12 border border-theme text-center">
-                <Search className="w-12 h-12 text-theme-muted mx-auto mb-4 opacity-50" />
-                <h3 className="text-xl font-semibold text-theme-text mb-2">
-                  No settings found
-                </h3>
-                <p className="text-theme-muted mb-4">
-                  No settings match your search "{searchQuery}" in the{" "}
-                  {activeTab} tab
-                </p>
-                <button
-                  onClick={() => setSearchQuery("")}
-                  className="px-4 py-2 bg-theme-primary hover:bg-theme-primary/90 rounded-lg font-medium transition-all"
-                >
-                  Clear Search
-                </button>
-              </div>
-            )}
-          </>
+              {/* Group Content */}
+              {isExpanded && (
+                <div className="px-6 pb-6 border-t border-theme bg-theme-bg/30">
+                  <div className="pt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {fields.map((key) => {
+                      const value = usingFlatStructure
+                        ? config[key]
+                        : config[groupName]?.[key];
+
+                      const displayName = getDisplayName(key);
+
+                      return (
+                        <div key={key} className="space-y-3">
+                          <label className="block">
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-semibold text-theme-primary">
+                                  {displayName}
+                                </span>
+                                {CONFIG_TOOLTIPS[key] && (
+                                  <Tooltip text={CONFIG_TOOLTIPS[key]}>
+                                    <HelpCircle className="w-4 h-4 text-theme-muted hover:text-theme-primary cursor-help transition-colors" />
+                                  </Tooltip>
+                                )}
+                              </div>
+                              {key !== displayName && (
+                                <span className="text-xs text-theme-muted font-mono bg-theme-bg px-2 py-1 rounded">
+                                  {key}
+                                </span>
+                              )}
+                            </div>
+                            {renderInput(groupName, key, value)}
+                          </label>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+
+        {/* No Results Message */}
+        {searchQuery && getFilteredGroupsByTab(activeTab).length === 0 && (
+          <div className="bg-theme-card rounded-xl p-12 border border-theme text-center">
+            <Search className="w-12 h-12 text-theme-muted mx-auto mb-4 opacity-50" />
+            <h3 className="text-xl font-semibold text-theme-text mb-2">
+              No settings found
+            </h3>
+            <p className="text-theme-muted mb-4">
+              No settings match your search "{searchQuery}" in the {activeTab}{" "}
+              section
+            </p>
+            <button
+              onClick={() => setSearchQuery("")}
+              className="px-4 py-2 bg-theme-primary hover:bg-theme-primary/90 rounded-lg font-medium transition-all"
+            >
+              Clear Search
+            </button>
+          </div>
         )}
       </div>
     </div>

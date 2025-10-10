@@ -5,6 +5,10 @@ Extracted from Posterizarr documentation
 
 # Comprehensive tooltip descriptions for all config variables
 CONFIG_TOOLTIPS = {
+    # WebUI Settings
+    "basicAuthEnabled": "Enable Basic Authentication to protect the Web UI. Set to true to require username/password login (Default: false)",
+    "basicAuthUsername": "Username for Basic Authentication. Change this from the default 'admin' for better security (Default: admin)",
+    "basicAuthPassword": "Password for Basic Authentication. IMPORTANT: Change this from the default 'posterizarr' before enabling auth! (Default: posterizarr)",
     # ApiPart
     "tvdbapi": "Your TVDB Project API key. If you are a TVDB subscriber, you can append your PIN to the end of your API key in the format YourApiKey#YourPin",
     "tmdbtoken": "Your TMDB API Read Access Token (the really long one)",

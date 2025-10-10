@@ -434,11 +434,8 @@ function Dashboard() {
         <div>
           <h1 className="text-3xl font-bold text-theme-text flex items-center gap-3">
             <Activity className="w-8 h-8 text-theme-primary" />
-            Dashboard
-          </h1>
-          <p className="text-theme-muted mt-2">
             Monitor your Posterizarr instance
-          </p>
+          </h1>
         </div>
 
         {/* Quick Action: Go to Run Modes */}

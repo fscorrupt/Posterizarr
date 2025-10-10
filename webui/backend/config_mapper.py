@@ -26,6 +26,10 @@ except ImportError:
 
 # Complete mapping of all config variables to their groups
 CONFIG_GROUPS = {
+    # WebUI Settings
+    "basicAuthEnabled": "WebUI",
+    "basicAuthUsername": "WebUI",
+    "basicAuthPassword": "WebUI",
     # ApiPart
     "tvdbapi": "ApiPart",
     "tmdbtoken": "ApiPart",
@@ -259,6 +263,11 @@ CONFIG_GROUPS = {
 
 # UI Grouping for better organization
 UI_GROUPS = {
+    "WebUI Settings": [
+        "basicAuthEnabled",
+        "basicAuthUsername",
+        "basicAuthPassword",
+    ],
     "General Settings": [
         "AssetPath",
         "BackupPath",
@@ -607,7 +616,7 @@ def flatten_config(grouped_config):
                         else f"CollectionPoster{key}"
                     )
                 else:
-                    # For simple groups (ApiPart, Notification, etc.), use original key
+                    # For simple groups (ApiPart, Notification, WebUI, etc.), use original key
                     flat_key = key
 
             flat[flat_key] = value
@@ -724,6 +733,10 @@ def unflatten_config(flat_config):
 
 # Friendly display names for UI
 DISPLAY_NAMES = {
+    # WebUI Settings
+    "basicAuthEnabled": "Enable Basic Authentication",
+    "basicAuthUsername": "Basic Auth Username",
+    "basicAuthPassword": "Basic Auth Password",
     # API Keys & Tokens
     "tvdbapi": "TVDB API Key",
     "tmdbtoken": "TMDB API Token",

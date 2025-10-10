@@ -418,16 +418,13 @@ const SchedulerSettings = () => {
     <div className="space-y-6">
       <Toaster />
 
-      {/* Header - Modernized to match other views */}
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-theme-text flex items-center gap-3">
             <Clock className="w-8 h-8 text-theme-primary" />
-            Scheduler Settings
+            Automate Posterizarr Runs in Normal Mode
           </h1>
-          <p className="text-theme-muted mt-2">
-            Automate Posterizarr runs in normal mode
-          </p>
         </div>
 
         {/* Master Toggle */}
