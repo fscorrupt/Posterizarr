@@ -352,9 +352,6 @@ function Ensure-WebUIConfig {
         if ($configChanged) {
             $config | ConvertTo-Json -Depth 10 | Set-Content -Path $jsonFilePath -Force
         }
-        else {
-            Write-Host "WebUI configuration is already complete. No changes needed."
-        }
     }
     catch {
         Write-Error "An unexpected error occurred while processing '$jsonFilePath': $($_.Exception.Message)"
