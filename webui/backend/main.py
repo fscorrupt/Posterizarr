@@ -3001,9 +3001,13 @@ async def run_scheduler_now():
         raise HTTPException(status_code=503, detail="Scheduler not available")
 
     try:
-        # Run in background without waiting
-        asyncio.create_task(scheduler.run_script())
-        return {"success": True, "message": "Scheduled run triggered"}
+        # Use force_run=True to bypass "already running" checks for manual runs
+        await scheduler.run_script(force_run=True)
+        return {"success": True, "message": "Manual run triggered successfully"}
+    except RuntimeError as e:
+        # Runtime errors from run_script (e.g., already running, file issues)
+        logger.warning(f"Cannot trigger run: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error(f"Error triggering scheduled run: {e}")
         raise HTTPException(status_code=500, detail=str(e))
