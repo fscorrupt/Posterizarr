@@ -59,6 +59,16 @@ except ImportError as e:
         f"Scheduler not available: {e}. Scheduler features will be disabled."
     )
 
+# Import auth middleware for Basic Authentication
+try:
+    from auth_middleware import BasicAuthMiddleware, load_auth_config
+
+    AUTH_MIDDLEWARE_AVAILABLE = True
+    logger.info("Auth middleware loaded successfully")
+except ImportError as e:
+    AUTH_MIDDLEWARE_AVAILABLE = False
+    logger.warning(f"Auth middleware not available: {e}. Basic Auth will be disabled.")
+
 # Check if running in Docker
 IS_DOCKER = os.path.exists("/.dockerenv") or os.environ.get("DOCKER_ENV") == "true"
 
@@ -540,7 +550,23 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Posterizarr Web UI", lifespan=lifespan)
 
-# CORS middleware
+# Basic Auth Middleware (MUST be added BEFORE CORS)
+if AUTH_MIDDLEWARE_AVAILABLE:
+    try:
+        auth_config = load_auth_config(CONFIG_PATH)
+        app.add_middleware(
+            BasicAuthMiddleware,
+            username=auth_config["username"],
+            password=auth_config["password"],
+            enabled=auth_config["enabled"],
+        )
+        logger.info("Basic Auth middleware registered")
+    except Exception as e:
+        logger.error(f"Failed to initialize Basic Auth: {e}")
+else:
+    logger.info("Basic Auth middleware not available, skipping")
+
+# CORS middleware (MUST be added AFTER Basic Auth)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -603,6 +629,26 @@ class TMDBSearchRequest(BaseModel):
 @app.get("/api")
 async def api_root():
     return {"message": "Posterizarr Web UI API", "status": "running"}
+
+
+@app.get("/api/auth/check")
+async def check_auth():
+    """
+    Check if Basic Auth is enabled and if user is authenticated.
+    This endpoint is always accessible (not protected by auth middleware).
+    """
+    if AUTH_MIDDLEWARE_AVAILABLE:
+        try:
+            auth_config = load_auth_config(CONFIG_PATH)
+            return {
+                "enabled": auth_config["enabled"],
+                "authenticated": True,  # If this endpoint is reached, user is authenticated
+            }
+        except Exception as e:
+            logger.error(f"Error checking auth config: {e}")
+            return {"enabled": False, "authenticated": True, "error": str(e)}
+    else:
+        return {"enabled": False, "authenticated": True}
 
 
 @app.get("/api/config")
