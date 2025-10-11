@@ -57,7 +57,7 @@ function Gallery() {
       setFolders(data.folders || []);
 
       if (showToast && data.folders && data.folders.length > 0) {
-        toast.success(`Gefunden: ${data.folders.length} Ordner`, {
+        toast.success(`Found: ${data.folders.length} folders`, {
           duration: 2000,
           position: "top-right",
         });
@@ -130,9 +130,7 @@ function Gallery() {
       event.stopPropagation();
     }
 
-    if (
-      !window.confirm(`Möchtest du das Poster "${imageName}" wirklich löschen?`)
-    ) {
+    if (!window.confirm(`Do you really want to delete "${imageName}"?`)) {
       return;
     }
 
@@ -150,7 +148,7 @@ function Gallery() {
       const data = await response.json();
 
       if (data.success) {
-        toast.success(`Poster "${imageName}" erfolgreich gelöscht`, {
+        toast.success(`Poster "${imageName}" deleted succesfully`, {
           duration: 3000,
           position: "top-right",
         });
@@ -167,7 +165,7 @@ function Gallery() {
       }
     } catch (error) {
       console.error("Error deleting poster:", error);
-      toast.error(`Fehler beim Löschen: ${error.message}`, {
+      toast.error(`Error while deleting: ${error.message}`, {
         duration: 5000,
         position: "top-right",
       });
