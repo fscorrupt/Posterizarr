@@ -27,48 +27,46 @@ function CompactImageSizeSlider({ value, onChange, storageKey }) {
         max="10"
         value={value}
         onChange={handleChange}
-        className="w-32 h-2 bg-theme-bg rounded-lg appearance-none cursor-pointer slider-thumb"
+        className="w-32 h-2 bg-white rounded-lg appearance-none cursor-pointer slider-thumb"
         style={{
           background: `linear-gradient(to right, var(--theme-primary) 0%, var(--theme-primary) ${
             ((value - 2) / 8) * 100
-          }%, var(--theme-bg) ${
-            ((value - 2) / 8) * 100
-          }%, var(--theme-bg) 100%)`,
+          }%, white ${((value - 2) / 8) * 100}%, white 100%)`,
         }}
       />
 
       <style jsx>{`
         .slider-thumb::-webkit-slider-thumb {
           appearance: none;
-          width: 16px;
-          height: 16px;
+          width: 18px;
+          height: 18px;
           border-radius: 50%;
           background: var(--theme-primary);
           cursor: pointer;
-          border: 2px solid white;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+          border: none;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
           transition: all 0.2s;
         }
 
         .slider-thumb::-webkit-slider-thumb:hover {
           transform: scale(1.2);
-          box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+          box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
         }
 
         .slider-thumb::-moz-range-thumb {
-          width: 16px;
-          height: 16px;
+          width: 18px;
+          height: 18px;
           border-radius: 50%;
           background: var(--theme-primary);
           cursor: pointer;
-          border: 2px solid white;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+          border: none;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
           transition: all 0.2s;
         }
 
         .slider-thumb::-moz-range-thumb:hover {
           transform: scale(1.2);
-          box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+          box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
         }
       `}</style>
     </div>
