@@ -1303,12 +1303,15 @@ async def get_status():
 
     return {
         "running": is_running,
+        "manual_running": manual_is_running,
+        "scheduler_running": scheduler_is_running,
+        "scheduler_is_executing": scheduler_is_running,
         "last_logs": last_logs,
         "script_exists": SCRIPT_PATH.exists(),
         "config_exists": CONFIG_PATH.exists(),
         "pid": display_pid,
         "current_mode": effective_mode,
-        "active_log": active_log,  # Which log file is being shown
+        "active_log": active_log,
         "already_running_detected": already_running,
         "running_file_exists": running_file_exists,
     }
