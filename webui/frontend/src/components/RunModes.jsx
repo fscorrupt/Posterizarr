@@ -23,6 +23,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
+import DangerZone from "./DangerZone";
 
 const API_URL = "/api";
 
@@ -1690,6 +1691,13 @@ function RunModes() {
           </button>
         </div>
       </div>
+
+      {/* Danger Zone */}
+      <DangerZone
+        status={status}
+        loading={loading}
+        onStatusUpdate={fetchStatus}
+      />
     </div>
   );
 }

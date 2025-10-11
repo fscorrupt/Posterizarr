@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import SystemInfo from "./SystemInfo";
+import DangerZone from "./DangerZone";
 
 const API_URL = "/api";
 const isDev = import.meta.env.DEV;
@@ -65,8 +66,8 @@ function Dashboard() {
   const [version, setVersion] = useState(
     cachedVersion || { local: null, remote: null }
   );
-  const [wsConnected, setWsConnected] = useState(false); // ✨ NEW: WebSocket status
-  const [autoScroll, setAutoScroll] = useState(true); // ✨ NEW: Auto-scroll toggle
+  const [wsConnected, setWsConnected] = useState(false);
+  const [autoScroll, setAutoScroll] = useState(true);
   const wsRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
   const logContainerRef = useRef(null);
@@ -81,7 +82,7 @@ function Dashboard() {
     try {
       const response = await fetch(`${API_URL}/status`);
       const data = await response.json();
-      cachedStatus = data; // 🎯 Save to persistent cache
+      cachedStatus = data;
       setStatus(data);
     } catch (error) {
       console.error("Error fetching status:", error);
@@ -129,7 +130,7 @@ function Dashboard() {
 
   const connectDashboardWebSocket = () => {
     if (wsRef.current) {
-      return; // Already connected
+      return;
     }
 
     try {
@@ -138,7 +139,7 @@ function Dashboard() {
         : "Scriptlog.log";
 
       const wsURL = getWebSocketURL(logFile);
-      console.log(`📡 Dashboard connecting to: ${wsURL}`);
+      console.log(`🔡 Dashboard connecting to: ${wsURL}`);
 
       const ws = new WebSocket(wsURL);
 
@@ -151,14 +152,12 @@ function Dashboard() {
         try {
           const data = JSON.parse(event.data);
           if (data.type === "log") {
-            // Update logs in real-time
             setStatus((prev) => ({
               ...prev,
-              last_logs: [...prev.last_logs.slice(-24), data.content], // Keep last 25 lines
+              last_logs: [...prev.last_logs.slice(-24), data.content],
             }));
           } else if (data.type === "log_file_changed") {
-            // Backend switched log file - reconnect to new log
-            console.log(`📄 Backend switched to: ${data.log_file}`);
+            console.log(`🔄 Backend switched to: ${data.log_file}`);
             disconnectDashboardWebSocket();
             setTimeout(() => connectDashboardWebSocket(), 300);
           }
@@ -175,7 +174,6 @@ function Dashboard() {
         setWsConnected(false);
         wsRef.current = null;
 
-        // Auto-reconnect after 3 seconds if script is still running
         reconnectTimeoutRef.current = setTimeout(() => {
           if (status.running) {
             connectDashboardWebSocket();
@@ -233,24 +231,20 @@ function Dashboard() {
         `🔄 Mode changed to ${status.current_mode}, expected log: ${expectedLogFile}`
       );
 
-      // Reconnect to the correct log file
       disconnectDashboardWebSocket();
       setTimeout(() => connectDashboardWebSocket(), 300);
     }
   }, [status.current_mode]);
 
-  // ✅ FIX 2: Verbesserter Auto-Scroll useEffect
   useEffect(() => {
     if (!autoScroll || !logContainerRef.current) return;
 
-    // Nur scrollen wenn User nicht manuell nach oben gescrollt hat
     if (!userHasScrolled.current) {
       const container = logContainerRef.current;
       container.scrollTop = container.scrollHeight;
     }
   }, [status.last_logs, autoScroll]);
 
-  // ✅ FIX 3: Scroll-Detection useEffect
   useEffect(() => {
     const logContainer = logContainerRef.current;
     if (!logContainer) return;
@@ -259,14 +253,11 @@ function Dashboard() {
       const { scrollTop, scrollHeight, clientHeight } = logContainer;
       const currentScrollTop = scrollTop;
 
-      // Wenn User nach oben scrollt → markiere als manuelles Scrollen
       if (currentScrollTop < lastScrollTop.current - 5) {
-        // 5px Toleranz
         userHasScrolled.current = true;
       }
 
-      // Wenn User wieder ganz unten ist → auto-scroll wieder aktivieren
-      const isAtBottom = scrollHeight - scrollTop - clientHeight < 20; // 20px Toleranz
+      const isAtBottom = scrollHeight - scrollTop - clientHeight < 20;
       if (isAtBottom) {
         userHasScrolled.current = false;
       }
@@ -277,74 +268,6 @@ function Dashboard() {
     logContainer.addEventListener("scroll", handleScroll);
     return () => logContainer.removeEventListener("scroll", handleScroll);
   }, []);
-
-  const stopScript = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch(`${API_URL}/stop`, {
-        method: "POST",
-      });
-      const data = await response.json();
-
-      if (data.success) {
-        toast.success(data.message, {
-          duration: 3000,
-          position: "top-right",
-        });
-      } else {
-        toast.error(data.message, {
-          duration: 4000,
-          position: "top-right",
-        });
-      }
-      fetchStatus();
-    } catch (error) {
-      toast.error(`Error: ${error.message}`, {
-        duration: 5000,
-        position: "top-right",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const forceKillScript = async () => {
-    if (
-      !window.confirm(
-        "Force kill the script? This will terminate it immediately without cleanup."
-      )
-    ) {
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const response = await fetch(`${API_URL}/force-kill`, {
-        method: "POST",
-      });
-      const data = await response.json();
-
-      if (data.success) {
-        toast.success(data.message, {
-          duration: 3000,
-          position: "top-right",
-        });
-      } else {
-        toast.error(data.message, {
-          duration: 4000,
-          position: "top-right",
-        });
-      }
-      fetchStatus();
-    } catch (error) {
-      toast.error(`Error: ${error.message}`, {
-        duration: 5000,
-        position: "top-right",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const deleteRunningFile = async () => {
     setLoading(true);
@@ -359,7 +282,7 @@ function Dashboard() {
           const errorData = await response.json();
           errorMessage = errorData.detail || errorData.message || errorMessage;
         } catch {
-          // JSON-Parsing fehlgeschlagen
+          // JSON parsing failed
         }
 
         toast.error(errorMessage, {
@@ -585,7 +508,7 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* Config File Card - MIT EDIT BUTTON */}
+        {/* Config File Card */}
         <div className="bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
           <div className="flex items-center justify-between">
             <div className="flex-1">
@@ -599,7 +522,6 @@ function Dashboard() {
               >
                 {status.config_exists ? "Found" : "Missing"}
               </p>
-              {/* EDIT BUTTON - Nur anzeigen wenn Config existiert */}
               {status.config_exists && (
                 <Link
                   to="/config"
@@ -621,10 +543,10 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* ✅ SYSTEM INFORMATION - NEU */}
+      {/* System Information */}
       <SystemInfo />
 
-      {/* Running Script Controls - Only show when running */}
+      {/* Running Script Controls */}
       {status.running && (
         <div className="bg-orange-950/40 rounded-xl p-6 border border-orange-600/50">
           <div className="flex items-center justify-between">
@@ -641,14 +563,6 @@ function Dashboard() {
                 </p>
               </div>
             </div>
-            <button
-              onClick={stopScript}
-              disabled={loading}
-              className="flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 disabled:bg-gray-700 disabled:cursor-not-allowed rounded-lg font-medium transition-all shadow-lg hover:scale-[1.02]"
-            >
-              <Square className="w-5 h-5" />
-              Stop Script
-            </button>
           </div>
         </div>
       )}
@@ -693,9 +607,8 @@ function Dashboard() {
               onClick={() => {
                 const newAutoScrollState = !autoScroll;
                 setAutoScroll(newAutoScrollState);
-                userHasScrolled.current = false; // Reset manual scroll tracking
+                userHasScrolled.current = false;
 
-                // Wenn Auto-Scroll aktiviert wird, sofort nach unten scrollen
                 if (newAutoScrollState && logContainerRef.current) {
                   setTimeout(() => {
                     if (logContainerRef.current) {
@@ -790,50 +703,12 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* Danger Zone */}
-      <div className="bg-red-950/40 rounded-xl p-6 border-2 border-red-600/50 shadow-sm">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-2 rounded-lg bg-red-600/20">
-            <AlertTriangle className="w-6 h-6 text-red-400" />
-          </div>
-          <div>
-            <h2 className="text-xl font-semibold text-red-400">Danger Zone</h2>
-            <p className="text-red-200 text-sm mt-1">
-              These actions are potentially destructive
-            </p>
-          </div>
-        </div>
-
-        {/* Control Buttons */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <button
-            onClick={stopScript}
-            disabled={loading || !status.running}
-            className="flex items-center justify-center gap-2 px-4 py-3 bg-red-600 hover:bg-red-700 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg font-medium transition-all border border-red-500 shadow-sm hover:scale-[1.02]"
-          >
-            <Square className="w-5 h-5" />
-            Stop Script
-          </button>
-
-          <button
-            onClick={forceKillScript}
-            disabled={loading || !status.running}
-            className="flex items-center justify-center gap-2 px-4 py-3 bg-red-800 hover:bg-red-900 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg font-medium transition-all border border-red-600 shadow-sm hover:scale-[1.02]"
-          >
-            <Zap className="w-5 h-5" />
-            Force Kill
-          </button>
-
-          <button
-            onClick={deleteRunningFile}
-            disabled={loading}
-            className="flex items-center justify-center gap-2 px-4 py-3 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg font-medium transition-all border border-orange-500 shadow-sm hover:scale-[1.02]"
-          >
-            <Trash2 className="w-5 h-5" />
-            Delete Running File
-          </button>
-        </div>
-      </div>
+      {/* Danger Zone - Using DangerZone Component */}
+      <DangerZone
+        status={status}
+        loading={loading}
+        onStatusUpdate={fetchStatus}
+      />
     </div>
   );
 }
