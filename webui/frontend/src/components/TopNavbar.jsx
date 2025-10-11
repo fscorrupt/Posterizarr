@@ -13,7 +13,8 @@ const TopNavbar = () => {
   }));
 
   return (
-    <div className="fixed top-0 left-0 right-0 bg-theme-card border-b border-theme z-40 h-16 md:pl-64 shadow-lg">
+    // FIXED: TopNavbar wird auf Mobile ausgeblendet (hidden md:flex -> hidden md:block)
+    <div className="hidden md:block fixed top-0 left-0 right-0 bg-theme-card border-b border-theme z-40 h-16 md:pl-64 shadow-lg">
       <div className="flex items-center justify-between h-full px-6">
         <div className="flex items-center"></div>
 
