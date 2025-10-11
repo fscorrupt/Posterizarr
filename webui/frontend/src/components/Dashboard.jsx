@@ -93,8 +93,37 @@ function Dashboard() {
     }
   };
 
-  const fetchVersion = async (silent = false) => {
+  const fetchVersion = async (silent = false, forceRefresh = false) => {
     try {
+      // Check localStorage cache first (nur wenn nicht force refresh)
+      if (!forceRefresh) {
+        const cached = localStorage.getItem("posterizarr_version");
+        const cacheTime = localStorage.getItem("posterizarr_version_time");
+
+        if (cached && cacheTime) {
+          const age = Date.now() - parseInt(cacheTime);
+          // Cache ist 24 Stunden gültig
+          if (age < 24 * 60 * 60 * 1000) {
+            const cachedData = JSON.parse(cached);
+            cachedVersion = cachedData;
+            setVersion(cachedData);
+            if (!silent) {
+              console.log(
+                "✅ Using cached version data (age: " +
+                  Math.round(age / 1000 / 60) +
+                  " minutes)"
+              );
+            }
+            return;
+          } else if (!silent) {
+            console.log("🔄 Version cache expired, fetching new data...");
+          }
+        }
+      } else if (!silent) {
+        console.log("🔄 Force refresh version data...");
+      }
+
+      // Fetch from API
       const response = await fetch(`${API_URL}/version`);
       if (!response.ok) {
         if (!silent) {
@@ -105,17 +134,30 @@ function Dashboard() {
 
       const data = await response.json();
       if (!silent) {
-        console.log("Version data received:", data);
+        console.log("📦 Version data received from API:", data);
       }
 
       if (data.local || data.remote) {
         const versionData = {
           local: data.local || null,
           remote: data.remote || null,
+          is_update_available: data.is_update_available || false,
         };
-        cachedVersion = versionData;
 
+        // Cache im Memory
+        cachedVersion = versionData;
         setVersion(versionData);
+
+        // Cache in localStorage speichern
+        localStorage.setItem(
+          "posterizarr_version",
+          JSON.stringify(versionData)
+        );
+        localStorage.setItem("posterizarr_version_time", Date.now().toString());
+
+        if (!silent) {
+          console.log("💾 Version data cached in localStorage");
+        }
       } else {
         if (!silent) {
           console.warn("No version data in response:", data);
@@ -203,11 +245,12 @@ function Dashboard() {
 
   useEffect(() => {
     fetchStatus(true);
-    fetchVersion(true);
+    fetchVersion(true); // Nutzt Cache wenn < 24h alt, fetched neu wenn älter
 
+    // Intervall für force refresh alle 24 Stunden (falls Seite lange offen bleibt)
     const versionInterval = setInterval(
-      () => fetchVersion(true),
-      12 * 60 * 60 * 1000
+      () => fetchVersion(true, true), // forceRefresh = true nach 24h
+      24 * 60 * 60 * 1000
     );
 
     return () => {
