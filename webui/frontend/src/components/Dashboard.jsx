@@ -19,6 +19,7 @@ import {
 import toast, { Toaster } from "react-hot-toast";
 import SystemInfo from "./SystemInfo";
 import DangerZone from "./DangerZone";
+import RecentAssets from "./RecentAssets"; // ✅ NEU: Import hinzugefügt
 
 const API_URL = "/api";
 const isDev = import.meta.env.DEV;
@@ -181,7 +182,7 @@ function Dashboard() {
         : "Scriptlog.log";
 
       const wsURL = getWebSocketURL(logFile);
-      console.log(`🔡 Dashboard connecting to: ${wsURL}`);
+      console.log(`🔌 Dashboard connecting to: ${wsURL}`);
 
       const ws = new WebSocket(wsURL);
 
@@ -588,6 +589,9 @@ function Dashboard() {
 
       {/* System Information */}
       <SystemInfo />
+
+      {/* ✅ NEU: Recently Created Assets */}
+      <RecentAssets />
 
       {/* Running Script Controls */}
       {status.running && (

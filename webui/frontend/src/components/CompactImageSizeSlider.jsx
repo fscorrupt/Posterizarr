@@ -2,36 +2,50 @@ import React from "react";
 
 /**
  * CompactImageSizeSlider - A minimal slider for controlling image grid size
- * Range: 2-10 columns
+ * Flexible range support via min/max props
  * Hidden on mobile devices (mobile always uses 1-2 columns)
  * @param {Object} props
- * @param {number} props.value - Current size value (2-10)
+ * @param {number} props.value - Current size value
  * @param {function} props.onChange - Callback when size changes
- * @param {string} props.storageKey - localStorage key for persistence
+ * @param {string} props.storageKey - localStorage key for persistence (optional)
+ * @param {number} props.min - Minimum value (default: 2)
+ * @param {number} props.max - Maximum value (default: 10)
  */
-function CompactImageSizeSlider({ value, onChange, storageKey }) {
+function CompactImageSizeSlider({
+  value,
+  onChange,
+  storageKey,
+  min = 2,
+  max = 10,
+}) {
   const handleChange = (e) => {
     const newValue = parseInt(e.target.value);
     onChange(newValue);
     // Save to localStorage if key provided
     if (storageKey) {
-      localStorage.setItem(storageKey, newValue.toString());
+      try {
+        localStorage.setItem(storageKey, newValue.toString());
+      } catch (error) {
+        console.warn("Failed to save to localStorage:", error);
+      }
     }
   };
+
+  // Calculate percentage for gradient
+  const range = max - min;
+  const percentage = ((value - min) / range) * 100;
 
   return (
     <div className="hidden md:flex items-center px-3 py-2 bg-theme-card border border-theme rounded-lg shadow-sm">
       <input
         type="range"
-        min="2"
-        max="10"
+        min={min}
+        max={max}
         value={value}
         onChange={handleChange}
         className="w-32 h-2 bg-white rounded-lg appearance-none cursor-pointer slider-thumb"
         style={{
-          background: `linear-gradient(to right, var(--theme-primary) 0%, var(--theme-primary) ${
-            ((value - 2) / 8) * 100
-          }%, white ${((value - 2) / 8) * 100}%, white 100%)`,
+          background: `linear-gradient(to right, var(--theme-primary) 0%, var(--theme-primary) ${percentage}%, white ${percentage}%, white 100%)`,
         }}
       />
 

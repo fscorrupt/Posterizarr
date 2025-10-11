@@ -513,6 +513,182 @@ def get_fresh_assets():
     return asset_cache
 
 
+def find_poster_in_assets(rootfolder: str) -> str:
+    """
+    Search recursively in ASSETS_DIR for a folder matching rootfolder and return poster.jpg URL
+
+    Args:
+        rootfolder: The rootfolder name from ImageChoices.csv (e.g. "1 Million Followers (2024) {tmdb-1117126}")
+
+    Returns:
+        URL path to poster.jpg or None if not found
+    """
+    if not ASSETS_DIR.exists():
+        return None
+
+    try:
+        # Search recursively for the folder
+        for item in ASSETS_DIR.rglob("*"):
+            if item.is_dir() and item.name == rootfolder:
+                # Found the matching folder, now look for poster.jpg
+                poster_file = item / "poster.jpg"
+                if poster_file.exists() and poster_file.is_file():
+                    # Create relative path from ASSETS_DIR
+                    relative_path = poster_file.relative_to(ASSETS_DIR)
+                    # Create URL path with forward slashes
+                    url_path = str(relative_path).replace("\\", "/")
+                    return f"/poster_assets/{url_path}"
+
+        return None
+
+    except Exception as e:
+        logger.error(f"Error searching for poster in assets: {e}")
+        return None
+
+
+def parse_image_choices_csv(csv_path: Path) -> list:
+    """
+    Parse ImageChoices.csv file and return list of assets
+    CSV format: "Title";"Type";"Rootfolder";"LibraryName";"Language";"Fallback";"TextTruncated";"Download Source";"Fav Provider Link"
+    """
+    import csv
+
+    assets = []
+
+    try:
+        with open(csv_path, "r", encoding="utf-8") as f:
+            # CSV uses semicolon as delimiter
+            reader = csv.DictReader(f, delimiter=";")
+
+            for row in reader:
+                # Remove quotes from values if present
+                asset = {
+                    "title": row.get("Title", "").strip('"'),
+                    "type": row.get("Type", "").strip('"'),
+                    "rootfolder": row.get("Rootfolder", "").strip('"'),
+                    "library": row.get("LibraryName", "").strip('"'),
+                    "language": row.get("Language", "").strip('"'),
+                    "fallback": row.get("Fallback", "").strip('"').lower() == "true",
+                    "text_truncated": row.get("TextTruncated", "").strip('"').lower()
+                    == "true",
+                    "download_source": row.get("Download Source", "").strip('"'),
+                    "provider_link": row.get("Fav Provider Link", "").strip('"'),
+                }
+                assets.append(asset)
+
+    except Exception as e:
+        logger.error(f"Error parsing CSV {csv_path}: {e}")
+        raise
+
+    return assets
+
+
+async def fetch_version(local_filename: str, github_url: str, version_type: str):
+    """
+    A reusable function to get a local version from a file and fetch the remote
+    version from GitHub when running in a Docker environment.
+    """
+    local_version = None
+    remote_version = None
+
+    # Get Local Version
+    try:
+        version_file = BASE_DIR / local_filename
+        if version_file.exists():
+            local_version = version_file.read_text().strip()
+    except Exception as e:
+        logger.error(f"Error reading local {version_type} version file: {e}")
+
+    # Get Remote Version (if in Docker)
+    if IS_DOCKER:
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(github_url, timeout=10.0)
+                response.raise_for_status()
+                remote_version = response.text.strip()
+                logger.info(
+                    f"Successfully fetched remote {version_type} version: {remote_version}"
+                )
+        except httpx.RequestError as e:
+            logger.warning(
+                f"Could not fetch remote {version_type} version from GitHub: {e}"
+            )
+        except Exception as e:
+            logger.error(
+                f"An unexpected error occurred while fetching remote {version_type} version: {e}"
+            )
+
+    return {"local": local_version, "remote": remote_version}
+
+
+async def get_script_version():
+    """
+    Reads the version from Posterizarr.ps1 and compares with GitHub Release.txt
+    Similar to the PowerShell CompareScriptVersion function
+
+    NOW WITH SEMANTIC VERSION COMPARISON!
+    """
+    local_version = None
+    remote_version = None
+
+    # Get Local Version from Posterizarr.ps1
+    try:
+        # Use the already defined SCRIPT_PATH
+        posterizarr_path = SCRIPT_PATH
+
+        logger.info(f"Looking for Posterizarr.ps1 at: {posterizarr_path}")
+
+        if posterizarr_path.exists():
+            with open(posterizarr_path, "r", encoding="utf-8") as f:
+                content = f.read()
+
+            # Extract version using regex: $CurrentScriptVersion = "1.9.95"
+            match = re.search(r'\$CurrentScriptVersion\s*=\s*"([^"]+)"', content)
+            if match:
+                local_version = match.group(1)
+                logger.info(
+                    f"Local script version from Posterizarr.ps1: {local_version}"
+                )
+            else:
+                logger.warning(
+                    "Could not find $CurrentScriptVersion in Posterizarr.ps1"
+                )
+        else:
+            logger.error(f"Posterizarr.ps1 not found at {posterizarr_path}")
+    except Exception as e:
+        logger.error(f"Error reading version from Posterizarr.ps1: {e}")
+
+    # Get Remote Version from GitHub Release.txt
+    # Always fetch from GitHub (both Docker and local)
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                "https://raw.githubusercontent.com/fscorrupt/Posterizarr/refs/heads/main/Release.txt",
+                timeout=10.0,
+            )
+            response.raise_for_status()
+            remote_version = response.text.strip()
+            logger.info(f"Remote version from GitHub Release.txt: {remote_version}")
+    except httpx.RequestError as e:
+        logger.warning(f"Could not fetch remote version from GitHub: {e}")
+    except Exception as e:
+        logger.error(f"Error fetching remote version: {e}")
+
+    # SEMANTIC VERSION COMPARISON
+    is_update_available = False
+    if local_version and remote_version:
+        is_update_available = is_version_newer(local_version, remote_version)
+        logger.info(
+            f"Update available: {is_update_available} (local: {local_version}, remote: {remote_version})"
+        )
+
+    return {
+        "local": local_version,
+        "remote": remote_version,
+        "is_update_available": is_update_available,  # Boolean for update availability
+    }
+
+
 class SPAMiddleware(BaseHTTPMiddleware):
     """
     Middleware für Single Page Application Support
@@ -2568,110 +2744,63 @@ async def get_assets_folder_images_filtered(image_type: str, folder_path: str):
         return {"images": []}
 
 
-async def fetch_version(local_filename: str, github_url: str, version_type: str):
+@app.get("/api/recent-assets")
+async def get_recent_assets():
     """
-    A reusable function to get a local version from a file and fetch the remote
-    version from GitHub when running in a Docker environment.
+    Get recently created assets from ImageChoices.csv files in Logs and RotatedLogs folders
+    Returns the most recent 10 assets with their poster images from assets folder
     """
-    local_version = None
-    remote_version = None
-
-    # Get Local Version
     try:
-        version_file = BASE_DIR / local_filename
-        if version_file.exists():
-            local_version = version_file.read_text().strip()
-    except Exception as e:
-        logger.error(f"Error reading local {version_type} version file: {e}")
+        all_assets = []
 
-    # Get Remote Version (if in Docker)
-    if IS_DOCKER:
-        try:
-            async with httpx.AsyncClient() as client:
-                response = await client.get(github_url, timeout=10.0)
-                response.raise_for_status()
-                remote_version = response.text.strip()
-                logger.info(
-                    f"Successfully fetched remote {version_type} version: {remote_version}"
-                )
-        except httpx.RequestError as e:
-            logger.warning(
-                f"Could not fetch remote {version_type} version from GitHub: {e}"
-            )
-        except Exception as e:
-            logger.error(
-                f"An unexpected error occurred while fetching remote {version_type} version: {e}"
-            )
+        # Read from main Logs folder
+        main_csv = LOGS_DIR / "ImageChoices.csv"
+        if main_csv.exists():
+            try:
+                assets = parse_image_choices_csv(main_csv)
+                all_assets.extend(assets)
+                logger.debug(f"Found {len(assets)} assets in main Logs folder")
+            except Exception as e:
+                logger.error(f"Error reading {main_csv}: {e}")
 
-    return {"local": local_version, "remote": remote_version}
+        # Read from RotatedLogs subfolders
+        rotated_logs_dir = LOGS_DIR / "RotatedLogs"
+        if rotated_logs_dir.exists() and rotated_logs_dir.is_dir():
+            # Get all subdirectories in RotatedLogs
+            for subdir in rotated_logs_dir.iterdir():
+                if subdir.is_dir():
+                    csv_file = subdir / "ImageChoices.csv"
+                    if csv_file.exists():
+                        try:
+                            assets = parse_image_choices_csv(csv_file)
+                            # Add source folder info to each asset
+                            for asset in assets:
+                                asset["source_folder"] = subdir.name
+                            all_assets.extend(assets)
+                            logger.debug(f"Found {len(assets)} assets in {subdir.name}")
+                        except Exception as e:
+                            logger.error(f"Error reading {csv_file}: {e}")
 
+        # Get only the last 10 entries (most recent)
+        all_assets = all_assets[-10:]
+        all_assets.reverse()  # Most recent first
 
-async def get_script_version():
-    """
-    Reads the version from Posterizarr.ps1 and compares with GitHub Release.txt
-    Similar to the PowerShell CompareScriptVersion function
-
-    NOW WITH SEMANTIC VERSION COMPARISON!
-    """
-    local_version = None
-    remote_version = None
-
-    # Get Local Version from Posterizarr.ps1
-    try:
-        # Use the already defined SCRIPT_PATH
-        posterizarr_path = SCRIPT_PATH
-
-        logger.info(f"Looking for Posterizarr.ps1 at: {posterizarr_path}")
-
-        if posterizarr_path.exists():
-            with open(posterizarr_path, "r", encoding="utf-8") as f:
-                content = f.read()
-
-            # Extract version using regex: $CurrentScriptVersion = "1.9.95"
-            match = re.search(r'\$CurrentScriptVersion\s*=\s*"([^"]+)"', content)
-            if match:
-                local_version = match.group(1)
-                logger.info(
-                    f"Local script version from Posterizarr.ps1: {local_version}"
-                )
+        # Find poster.jpg for each asset in assets folder
+        for asset in all_assets:
+            poster_path = find_poster_in_assets(asset["rootfolder"])
+            if poster_path:
+                asset["poster_url"] = poster_path
+                asset["has_poster"] = True
             else:
-                logger.warning(
-                    "Could not find $CurrentScriptVersion in Posterizarr.ps1"
-                )
-        else:
-            logger.error(f"Posterizarr.ps1 not found at {posterizarr_path}")
+                asset["poster_url"] = None
+                asset["has_poster"] = False
+                logger.debug(f"No poster found for: {asset['rootfolder']}")
+
+        return {"success": True, "assets": all_assets, "total_count": len(all_assets)}
+
     except Exception as e:
-        logger.error(f"Error reading version from Posterizarr.ps1: {e}")
-
-    # Get Remote Version from GitHub Release.txt
-    # Always fetch from GitHub (both Docker and local)
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                "https://raw.githubusercontent.com/fscorrupt/Posterizarr/refs/heads/main/Release.txt",
-                timeout=10.0,
-            )
-            response.raise_for_status()
-            remote_version = response.text.strip()
-            logger.info(f"Remote version from GitHub Release.txt: {remote_version}")
-    except httpx.RequestError as e:
-        logger.warning(f"Could not fetch remote version from GitHub: {e}")
-    except Exception as e:
-        logger.error(f"Error fetching remote version: {e}")
-
-    # SEMANTIC VERSION COMPARISON
-    is_update_available = False
-    if local_version and remote_version:
-        is_update_available = is_version_newer(local_version, remote_version)
-        logger.info(
-            f"Update available: {is_update_available} (local: {local_version}, remote: {remote_version})"
-        )
-
-    return {
-        "local": local_version,
-        "remote": remote_version,
-        "is_update_available": is_update_available,  # Boolean for update availability
-    }
+        logger.error(f"Error getting recent assets: {e}")
+        return {"success": False, "error": str(e), "assets": [], "total_count": 0}
 
 
 @app.get("/api/version")
