@@ -78,7 +78,7 @@ except ImportError as e:
     logger.warning(f"Auth middleware not available: {e}. Basic Auth will be disabled.")
 
 # Check if running in Docker
-IS_DOCKER = os.path.exists("/.dockerenv") or os.environ.get("DOCKER_ENV") == "true"
+IS_DOCKER = os.path.exists("/.dockerenv") or os.environ.get("DOCKER_ENV") == "true" or os.environ.get("POSTERIZARR_NON_ROOT") == "true"
 
 if IS_DOCKER:
     BASE_DIR = Path("/config")
