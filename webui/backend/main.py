@@ -97,6 +97,7 @@ else:
     (BASE_DIR / "Logs").mkdir(exist_ok=True)
     (BASE_DIR / "temp").mkdir(exist_ok=True)
     (BASE_DIR / "test").mkdir(exist_ok=True)
+    (BASE_DIR / "UILogs").mkdir(exist_ok=True)
     logger.info(f"Running in LOCAL mode: {BASE_DIR}")
 
 CONFIG_PATH = BASE_DIR / "config.json"
@@ -105,6 +106,7 @@ SCRIPT_PATH = APP_DIR / "Posterizarr.ps1"
 LOGS_DIR = BASE_DIR / "Logs"
 TEST_DIR = BASE_DIR / "test"
 TEMP_DIR = BASE_DIR / "temp"
+UI_LOGS_DIR = BASE_DIR / "UILogs"
 RUNNING_FILE = TEMP_DIR / "Posterizarr.Running"
 
 if not CONFIG_PATH.exists() and CONFIG_EXAMPLE_PATH.exists():
@@ -986,7 +988,7 @@ async def receive_ui_log(log_entry: UILogEntry):
     Empfängt UI/Frontend-Logs und schreibt sie in UIlog.log
     """
     try:
-        ui_log_path = LOGS_DIR / "UIlog.log"
+        ui_log_path = UI_LOGS_DIR / "UIlog.log"
 
         # Create log entry in the same format as backend logs
         timestamp = log_entry.timestamp
@@ -1014,7 +1016,7 @@ async def receive_ui_logs_batch(batch: UILogBatch):
     Empfängt mehrere UI-Logs auf einmal (bessere Performance)
     """
     try:
-        ui_log_path = LOGS_DIR / "UIlog.log"
+        ui_log_path = UI_LOGS_DIR / "UIlog.log"
 
         log_lines = []
         for log_entry in batch.logs:

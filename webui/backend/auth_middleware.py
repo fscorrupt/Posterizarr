@@ -17,9 +17,9 @@ auth_logger.setLevel(logging.WARNING)
 if not auth_logger.handlers:
     try:
         if Path("/.dockerenv").exists():
-            LOGS_DIR = Path("/config/Logs")
+            LOGS_DIR = Path("/config/UILogs")
         else:
-            LOGS_DIR = Path(__file__).parent.parent.parent / "Logs"
+            LOGS_DIR = Path(__file__).parent.parent.parent / "UILogs"
 
         LOGS_DIR.mkdir(exist_ok=True)
         auth_log_path = LOGS_DIR / "Auth.log"
