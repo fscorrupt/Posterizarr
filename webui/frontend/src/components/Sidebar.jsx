@@ -28,14 +28,12 @@ const Sidebar = () => {
   const location = useLocation();
   const { isCollapsed, setIsCollapsed } = useSidebar();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  // ✅ CHANGED: Initial state to false (collapsed)
   const [isAssetsExpanded, setIsAssetsExpanded] = useState(false);
   const [isConfigExpanded, setIsConfigExpanded] = useState(false);
 
   const navItems = [
     { path: "/", label: "Dashboard", icon: Activity },
     { path: "/run-modes", label: "Run Modes", icon: Play },
-    // Assets mit Subtabs
     {
       path: "/gallery",
       label: "Assets",
@@ -71,14 +69,12 @@ const Sidebar = () => {
     { path: "/about", label: "About", icon: Info },
   ];
 
-  // Check if current path is in Assets section
   const isInAssetsSection = location.pathname.startsWith("/gallery");
-
-  // Check if current path is in Config section
   const isInConfigSection = location.pathname.startsWith("/config");
 
   return (
     <>
+      {/* Desktop Sidebar */}
       <div
         className={`hidden md:flex flex-col fixed left-0 top-0 h-screen bg-theme-card border-r border-theme transition-all duration-300 z-50 ${
           isCollapsed ? "w-20" : "w-64"
@@ -99,14 +95,13 @@ const Sidebar = () => {
           )}
         </div>
 
-        {/* Navigation Items */}
+        {/* Navigation Items - Desktop */}
         <nav className="flex-1 overflow-y-auto py-4">
           <div className="space-y-1 px-3">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
 
-              // Items with Subtabs (Assets or Config)
               if (item.hasSubItems) {
                 const isAssetsItem = item.path === "/gallery";
                 const isConfigItem = item.path === "/config";
@@ -122,7 +117,6 @@ const Sidebar = () => {
 
                 return (
                   <div key={item.path}>
-                    {/* Main Button (Assets or Config) */}
                     <button
                       onClick={toggleExpanded}
                       className={`w-full flex items-center ${
@@ -151,7 +145,6 @@ const Sidebar = () => {
                       )}
                     </button>
 
-                    {/* Subtabs */}
                     {isExpanded && !isCollapsed && (
                       <div className="ml-4 mt-1 space-y-1">
                         {item.subItems.map((subItem) => {
@@ -180,7 +173,6 @@ const Sidebar = () => {
                 );
               }
 
-              // Regular nav items
               return (
                 <Link
                   key={item.path}
@@ -235,18 +227,21 @@ const Sidebar = () => {
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
         <>
+          {/* Backdrop */}
           <div
-            className="md:hidden fixed inset-0 bg-black/50 z-40 top-30"
+            className="md:hidden fixed inset-0 bg-black/50 z-40 top-[120px]"
             onClick={() => setIsMobileMenuOpen(false)}
           />
-          <div className="md:hidden fixed left-0 top-30 bottom-0 w-64 bg-theme-card border-r border-theme z-50 overflow-y-auto">
-            <nav className="py-4">
+
+          {/* Mobile Sidebar - FIXED: Korrigierte Positionierung und Scroll */}
+          <div className="md:hidden fixed left-0 top-[120px] bottom-0 w-64 bg-theme-card border-r border-theme z-50 flex flex-col">
+            {/* Scrollable Navigation Area */}
+            <nav className="flex-1 overflow-y-auto py-4">
               <div className="space-y-1 px-3">
                 {navItems.map((item) => {
                   const Icon = item.icon;
                   const isActive = location.pathname === item.path;
 
-                  // Items with Subtabs (Assets or Config) (Mobile)
                   if (item.hasSubItems) {
                     const isAssetsItem = item.path === "/gallery";
                     const isConfigItem = item.path === "/config";
@@ -329,8 +324,8 @@ const Sidebar = () => {
               </div>
             </nav>
 
-            {/* Mobile Version Badge*/}
-            <div className="p-4">
+            {/* Mobile Version Badge - Fixed at Bottom */}
+            <div className="p-4 border-t border-theme bg-theme-card">
               <VersionBadge />
             </div>
           </div>
