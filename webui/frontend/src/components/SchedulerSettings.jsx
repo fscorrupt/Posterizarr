@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Clock,
   Plus,
@@ -17,6 +18,7 @@ import toast, { Toaster } from "react-hot-toast";
 const API_URL = "/api";
 
 const SchedulerSettings = () => {
+  const navigate = useNavigate();
   const [config, setConfig] = useState(null);
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -91,17 +93,16 @@ const SchedulerSettings = () => {
           duration: 3000,
           position: "top-right",
         });
-        await new Promise((resolve) => setTimeout(resolve, 500));
         await fetchSchedulerData();
       } else {
-        toast.error(data.detail || "Failed to toggle scheduler", {
+        toast.error(data.detail || "Failed to update scheduler", {
           duration: 4000,
           position: "top-right",
         });
       }
     } catch (error) {
       console.error("Error toggling scheduler:", error);
-      toast.error("Failed to toggle scheduler", {
+      toast.error("Failed to update scheduler", {
         duration: 4000,
         position: "top-right",
       });
@@ -115,15 +116,6 @@ const SchedulerSettings = () => {
 
     if (!newTime) {
       toast.error("Please enter a time", {
-        duration: 3000,
-        position: "top-right",
-      });
-      return;
-    }
-
-    const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
-    if (!timeRegex.test(newTime)) {
-      toast.error("Invalid time format. Use HH:MM (e.g., 14:30)", {
         duration: 3000,
         position: "top-right",
       });
@@ -146,7 +138,7 @@ const SchedulerSettings = () => {
       const data = await response.json();
 
       if (data.success) {
-        toast.success(`Schedule added: ${newTime}`, {
+        toast.success("Schedule added", {
           duration: 3000,
           position: "top-right",
         });
@@ -176,17 +168,14 @@ const SchedulerSettings = () => {
     setIsUpdating(true);
 
     try {
-      const response = await fetch(
-        `${API_URL}/scheduler/schedule/${encodeURIComponent(time)}`,
-        {
-          method: "DELETE",
-        }
-      );
+      const response = await fetch(`${API_URL}/scheduler/schedule/${time}`, {
+        method: "DELETE",
+      });
 
       const data = await response.json();
 
       if (data.success) {
-        toast.success(`Schedule removed: ${time}`, {
+        toast.success("Schedule removed", {
           duration: 3000,
           position: "top-right",
         });
@@ -210,7 +199,11 @@ const SchedulerSettings = () => {
   };
 
   const clearAllSchedules = async () => {
-    if (!confirm("Are you sure you want to remove all schedules?")) {
+    if (
+      !window.confirm(
+        "Are you sure you want to clear all schedules? This cannot be undone."
+      )
+    ) {
       return;
     }
 
@@ -326,35 +319,62 @@ const SchedulerSettings = () => {
   };
 
   const triggerNow = async () => {
+    console.log(
+      "🔥 triggerNow called - isUpdating:",
+      isUpdating,
+      "status?.is_executing:",
+      status?.is_executing,
+      "config?.enabled:",
+      config?.enabled
+    );
+
     if (isUpdating) return;
     setIsUpdating(true);
 
     try {
+      console.log("📡 Sending API request to:", `${API_URL}/scheduler/run-now`);
       const response = await fetch(`${API_URL}/scheduler/run-now`, {
         method: "POST",
       });
 
+      console.log("📥 Response received, status:", response.status);
       const data = await response.json();
+      console.log("📦 Response data:", data);
 
       if (data.success) {
+        console.log("✅ Success! Showing toast and navigating...");
         toast.success("Manual run triggered", {
           duration: 3000,
           position: "top-right",
         });
-        setTimeout(() => fetchSchedulerData(), 1000);
+
+        // Update status
+        fetchSchedulerData();
+
+        // ✨ Weiterleitung zum LogViewer mit der richtigen Log-Datei
+        const logFile = "Scriptlog.log"; // Scheduler runs use the normal script log
+        console.log(`🎯 Redirecting to LogViewer with log: ${logFile}`);
+
+        // Navigate after delay to ensure toast is visible
+        setTimeout(() => {
+          console.log("🚀 Executing navigation now...");
+          navigate("/logs", { state: { logFile: logFile } });
+        }, 1200);
       } else {
+        console.log("❌ Request failed:", data.detail);
         toast.error(data.detail || "Failed to trigger run", {
           duration: 4000,
           position: "top-right",
         });
       }
     } catch (error) {
-      console.error("Error triggering run:", error);
+      console.error("💥 Error in triggerNow:", error);
       toast.error("Failed to trigger run", {
         duration: 4000,
         position: "top-right",
       });
     } finally {
+      console.log("🏁 Finally block - setting isUpdating to false");
       setIsUpdating(false);
     }
   };
@@ -418,16 +438,13 @@ const SchedulerSettings = () => {
     <div className="space-y-6">
       <Toaster />
 
-      {/* Header - Modernized to match other views */}
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-theme-text flex items-center gap-3">
             <Clock className="w-8 h-8 text-theme-primary" />
-            Scheduler Settings
+            Automate Posterizarr Runs in Normal Mode
           </h1>
-          <p className="text-theme-muted mt-2">
-            Automate Posterizarr runs in normal mode
-          </p>
         </div>
 
         {/* Master Toggle */}
@@ -472,11 +489,7 @@ const SchedulerSettings = () => {
               <code className="px-1.5 py-0.5 bg-theme-card rounded text-xs font-mono border border-theme">
                 disabled
               </code>
-              . By default, the container uses the{" "}
-              <code className="px-1.5 py-0.5 bg-theme-card rounded text-xs font-mono border border-theme">
-                RUN_TIME
-              </code>{" "}
-              variable for scheduling.
+              .
             </p>
           </div>
         </div>
@@ -484,6 +497,7 @@ const SchedulerSettings = () => {
 
       {/* Status Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Last Run Card */}
         <div className="bg-theme-card rounded-xl shadow-sm border border-theme p-5 hover:border-theme-primary/50 transition-all">
           <div className="flex items-center gap-2 text-sm text-theme-muted mb-2">
             <Calendar className="w-4 h-4" />
@@ -494,6 +508,7 @@ const SchedulerSettings = () => {
           </div>
         </div>
 
+        {/* Next Run Card */}
         <div className="bg-theme-card rounded-xl shadow-sm border border-theme p-5 hover:border-theme-primary/50 transition-all">
           <div className="flex items-center gap-2 text-sm text-theme-muted mb-2">
             <Clock className="w-4 h-4" />
@@ -504,6 +519,7 @@ const SchedulerSettings = () => {
           </div>
         </div>
 
+        {/* Status Card */}
         <div className="bg-theme-card rounded-xl shadow-sm border border-theme p-5 hover:border-theme-primary/50 transition-all">
           <div className="flex items-center gap-2 text-sm text-theme-muted mb-2">
             <Zap className="w-4 h-4" />

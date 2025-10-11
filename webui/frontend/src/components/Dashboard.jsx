@@ -18,13 +18,12 @@ import {
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import SystemInfo from "./SystemInfo";
+import DangerZone from "./DangerZone";
+import RecentAssets from "./RecentAssets";
 
 const API_URL = "/api";
 const isDev = import.meta.env.DEV;
 
-// ============================================================================
-// LOG FILE MAPPING - Maps run modes to their respective log files
-// ============================================================================
 const getLogFileForMode = (mode) => {
   const logMapping = {
     testing: "Testinglog.log",
@@ -46,7 +45,6 @@ const getWebSocketURL = (logFile) => {
   return `${baseURL}?log_file=${encodeURIComponent(logFile)}`;
 };
 
-// 🎯 PERSISTENT STATE - survives component remounts (tab switches)
 let cachedStatus = null;
 let cachedVersion = null;
 
@@ -69,14 +67,15 @@ function Dashboard() {
   const [version, setVersion] = useState(
     cachedVersion || { local: null, remote: null }
   );
-  const [wsConnected, setWsConnected] = useState(false); // ✨ NEW: WebSocket status
-  const [autoScroll, setAutoScroll] = useState(true); // ✨ NEW: Auto-scroll toggle
+  const [wsConnected, setWsConnected] = useState(false);
+  const [autoScroll, setAutoScroll] = useState(true);
   const wsRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
-  const logContainerRef = useRef(null); // ✨ NEW: Log container reference for auto-scroll
+  const logContainerRef = useRef(null);
+  const userHasScrolled = useRef(false);
+  const lastScrollTop = useRef(0);
 
   const fetchStatus = async (silent = false) => {
-    // 🎯 Silent mode = keine UI-Störung (für Background-Updates)
     if (!silent) {
       setIsRefreshing(true);
     }
@@ -84,7 +83,7 @@ function Dashboard() {
     try {
       const response = await fetch(`${API_URL}/status`);
       const data = await response.json();
-      cachedStatus = data; // 🎯 Save to persistent cache
+      cachedStatus = data;
       setStatus(data);
     } catch (error) {
       console.error("Error fetching status:", error);
@@ -95,8 +94,37 @@ function Dashboard() {
     }
   };
 
-  const fetchVersion = async (silent = false) => {
+  const fetchVersion = async (silent = false, forceRefresh = false) => {
     try {
+      // Check localStorage cache first (nur wenn nicht force refresh)
+      if (!forceRefresh) {
+        const cached = localStorage.getItem("posterizarr_version");
+        const cacheTime = localStorage.getItem("posterizarr_version_time");
+
+        if (cached && cacheTime) {
+          const age = Date.now() - parseInt(cacheTime);
+          // Cache ist 24 Stunden gültig
+          if (age < 24 * 60 * 60 * 1000) {
+            const cachedData = JSON.parse(cached);
+            cachedVersion = cachedData;
+            setVersion(cachedData);
+            if (!silent) {
+              console.log(
+                "✅ Using cached version data (age: " +
+                  Math.round(age / 1000 / 60) +
+                  " minutes)"
+              );
+            }
+            return;
+          } else if (!silent) {
+            console.log("🔄 Version cache expired, fetching new data...");
+          }
+        }
+      } else if (!silent) {
+        console.log("🔄 Force refresh version data...");
+      }
+
+      // Fetch from API
       const response = await fetch(`${API_URL}/version`);
       if (!response.ok) {
         if (!silent) {
@@ -107,16 +135,30 @@ function Dashboard() {
 
       const data = await response.json();
       if (!silent) {
-        console.log("Version data received:", data);
+        console.log("📦 Version data received from API:", data);
       }
 
       if (data.local || data.remote) {
         const versionData = {
           local: data.local || null,
           remote: data.remote || null,
+          is_update_available: data.is_update_available || false,
         };
-        cachedVersion = versionData; // 🎯 Save to persistent cache
+
+        // Cache im Memory
+        cachedVersion = versionData;
         setVersion(versionData);
+
+        // Cache in localStorage speichern
+        localStorage.setItem(
+          "posterizarr_version",
+          JSON.stringify(versionData)
+        );
+        localStorage.setItem("posterizarr_version_time", Date.now().toString());
+
+        if (!silent) {
+          console.log("💾 Version data cached in localStorage");
+        }
       } else {
         if (!silent) {
           console.warn("No version data in response:", data);
@@ -129,20 +171,18 @@ function Dashboard() {
     }
   };
 
-  // ✨ NEW: WebSocket connection for real-time log updates
   const connectDashboardWebSocket = () => {
     if (wsRef.current) {
-      return; // Already connected
+      return;
     }
 
     try {
-      // 🎯 Dynamische Log-Datei basierend auf current_mode
       const logFile = status.current_mode
         ? getLogFileForMode(status.current_mode)
         : "Scriptlog.log";
 
       const wsURL = getWebSocketURL(logFile);
-      console.log(`📡 Dashboard connecting to: ${wsURL}`);
+      console.log(`🔌 Dashboard connecting to: ${wsURL}`);
 
       const ws = new WebSocket(wsURL);
 
@@ -155,14 +195,12 @@ function Dashboard() {
         try {
           const data = JSON.parse(event.data);
           if (data.type === "log") {
-            // Update logs in real-time
             setStatus((prev) => ({
               ...prev,
-              last_logs: [...prev.last_logs.slice(-24), data.content], // Keep last 25 lines
+              last_logs: [...prev.last_logs.slice(-24), data.content],
             }));
           } else if (data.type === "log_file_changed") {
-            // Backend switched log file - reconnect to new log
-            console.log(`📄 Backend switched to: ${data.log_file}`);
+            console.log(`🔄 Backend switched to: ${data.log_file}`);
             disconnectDashboardWebSocket();
             setTimeout(() => connectDashboardWebSocket(), 300);
           }
@@ -179,7 +217,6 @@ function Dashboard() {
         setWsConnected(false);
         wsRef.current = null;
 
-        // Auto-reconnect after 3 seconds if script is still running
         reconnectTimeoutRef.current = setTimeout(() => {
           if (status.running) {
             connectDashboardWebSocket();
@@ -208,14 +245,13 @@ function Dashboard() {
   };
 
   useEffect(() => {
-    // 🎯 Immer beim Mount fetchen (silent mode = kein Refresh-Spinner)
     fetchStatus(true);
-    fetchVersion(true);
+    fetchVersion(true); // Nutzt Cache wenn < 24h alt, fetched neu wenn älter
 
-    // 🎯 Version Check - nur alle 12 Stunden
+    // Intervall für force refresh alle 24 Stunden (falls Seite lange offen bleibt)
     const versionInterval = setInterval(
-      () => fetchVersion(true),
-      12 * 60 * 60 * 1000
+      () => fetchVersion(true, true), // forceRefresh = true nach 24h
+      24 * 60 * 60 * 1000
     );
 
     return () => {
@@ -224,7 +260,6 @@ function Dashboard() {
     };
   }, []);
 
-  // ✨ NEW: Connect/disconnect WebSocket based on running status
   useEffect(() => {
     if (status.running && !wsRef.current) {
       connectDashboardWebSocket();
@@ -233,7 +268,6 @@ function Dashboard() {
     }
   }, [status.running]);
 
-  // 🎯 NEW: Reconnect WebSocket when mode changes (different log file)
   useEffect(() => {
     if (status.running && status.current_mode && wsRef.current) {
       const expectedLogFile = getLogFileForMode(status.current_mode);
@@ -241,86 +275,43 @@ function Dashboard() {
         `🔄 Mode changed to ${status.current_mode}, expected log: ${expectedLogFile}`
       );
 
-      // Reconnect to the correct log file
       disconnectDashboardWebSocket();
       setTimeout(() => connectDashboardWebSocket(), 300);
     }
   }, [status.current_mode]);
 
-  // ✨ NEW: Auto-scroll to bottom when logs update
   useEffect(() => {
-    if (autoScroll && logContainerRef.current) {
-      logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
+    if (!autoScroll || !logContainerRef.current) return;
+
+    if (!userHasScrolled.current) {
+      const container = logContainerRef.current;
+      container.scrollTop = container.scrollHeight;
     }
   }, [status.last_logs, autoScroll]);
 
-  const stopScript = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch(`${API_URL}/stop`, {
-        method: "POST",
-      });
-      const data = await response.json();
+  useEffect(() => {
+    const logContainer = logContainerRef.current;
+    if (!logContainer) return;
 
-      if (data.success) {
-        toast.success(data.message, {
-          duration: 3000,
-          position: "top-right",
-        });
-      } else {
-        toast.error(data.message, {
-          duration: 4000,
-          position: "top-right",
-        });
+    const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = logContainer;
+      const currentScrollTop = scrollTop;
+
+      if (currentScrollTop < lastScrollTop.current - 5) {
+        userHasScrolled.current = true;
       }
-      fetchStatus();
-    } catch (error) {
-      toast.error(`Error: ${error.message}`, {
-        duration: 5000,
-        position: "top-right",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  const forceKillScript = async () => {
-    if (
-      !window.confirm(
-        "Force kill the script? This will terminate it immediately without cleanup."
-      )
-    ) {
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const response = await fetch(`${API_URL}/force-kill`, {
-        method: "POST",
-      });
-      const data = await response.json();
-
-      if (data.success) {
-        toast.success(data.message, {
-          duration: 3000,
-          position: "top-right",
-        });
-      } else {
-        toast.error(data.message, {
-          duration: 4000,
-          position: "top-right",
-        });
+      const isAtBottom = scrollHeight - scrollTop - clientHeight < 20;
+      if (isAtBottom) {
+        userHasScrolled.current = false;
       }
-      fetchStatus();
-    } catch (error) {
-      toast.error(`Error: ${error.message}`, {
-        duration: 5000,
-        position: "top-right",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+
+      lastScrollTop.current = currentScrollTop;
+    };
+
+    logContainer.addEventListener("scroll", handleScroll);
+    return () => logContainer.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const deleteRunningFile = async () => {
     setLoading(true);
@@ -335,7 +326,7 @@ function Dashboard() {
           const errorData = await response.json();
           errorMessage = errorData.detail || errorData.message || errorMessage;
         } catch {
-          // JSON-Parsing fehlgeschlagen
+          // JSON parsing failed
         }
 
         toast.error(errorMessage, {
@@ -434,11 +425,8 @@ function Dashboard() {
         <div>
           <h1 className="text-3xl font-bold text-theme-text flex items-center gap-3">
             <Activity className="w-8 h-8 text-theme-primary" />
-            Dashboard
-          </h1>
-          <p className="text-theme-muted mt-2">
             Monitor your Posterizarr instance
-          </p>
+          </h1>
         </div>
 
         {/* Quick Action: Go to Run Modes */}
@@ -564,7 +552,7 @@ function Dashboard() {
           </div>
         </div>
 
-        {/* Config File Card - MIT EDIT BUTTON */}
+        {/* Config File Card */}
         <div className="bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
           <div className="flex items-center justify-between">
             <div className="flex-1">
@@ -578,7 +566,6 @@ function Dashboard() {
               >
                 {status.config_exists ? "Found" : "Missing"}
               </p>
-              {/* EDIT BUTTON - Nur anzeigen wenn Config existiert */}
               {status.config_exists && (
                 <Link
                   to="/config"
@@ -600,10 +587,13 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* ✅ SYSTEM INFORMATION - NEU */}
+      {/* System Information */}
       <SystemInfo />
 
-      {/* Running Script Controls - Only show when running */}
+      {/* ✅ NEU: Recently Created Assets */}
+      <RecentAssets />
+
+      {/* Running Script Controls */}
       {status.running && (
         <div className="bg-orange-950/40 rounded-xl p-6 border border-orange-600/50">
           <div className="flex items-center justify-between">
@@ -620,14 +610,6 @@ function Dashboard() {
                 </p>
               </div>
             </div>
-            <button
-              onClick={stopScript}
-              disabled={loading}
-              className="flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 disabled:bg-gray-700 disabled:cursor-not-allowed rounded-lg font-medium transition-all shadow-lg hover:scale-[1.02]"
-            >
-              <Square className="w-5 h-5" />
-              Stop Script
-            </button>
           </div>
         </div>
       )}
@@ -669,7 +651,20 @@ function Dashboard() {
           </div>
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setAutoScroll(!autoScroll)}
+              onClick={() => {
+                const newAutoScrollState = !autoScroll;
+                setAutoScroll(newAutoScrollState);
+                userHasScrolled.current = false;
+
+                if (newAutoScrollState && logContainerRef.current) {
+                  setTimeout(() => {
+                    if (logContainerRef.current) {
+                      logContainerRef.current.scrollTop =
+                        logContainerRef.current.scrollHeight;
+                    }
+                  }, 100);
+                }
+              }}
               className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                 autoScroll
                   ? "bg-theme-primary/20 text-theme-primary border border-theme-primary/30"
@@ -755,50 +750,12 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* Danger Zone */}
-      <div className="bg-red-950/40 rounded-xl p-6 border-2 border-red-600/50 shadow-sm">
-        <div className="flex items-center gap-3 mb-6">
-          <div className="p-2 rounded-lg bg-red-600/20">
-            <AlertTriangle className="w-6 h-6 text-red-400" />
-          </div>
-          <div>
-            <h2 className="text-xl font-semibold text-red-400">Danger Zone</h2>
-            <p className="text-red-200 text-sm mt-1">
-              These actions are potentially destructive
-            </p>
-          </div>
-        </div>
-
-        {/* Control Buttons */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <button
-            onClick={stopScript}
-            disabled={loading || !status.running}
-            className="flex items-center justify-center gap-2 px-4 py-3 bg-red-600 hover:bg-red-700 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg font-medium transition-all border border-red-500 shadow-sm hover:scale-[1.02]"
-          >
-            <Square className="w-5 h-5" />
-            Stop Script
-          </button>
-
-          <button
-            onClick={forceKillScript}
-            disabled={loading || !status.running}
-            className="flex items-center justify-center gap-2 px-4 py-3 bg-red-800 hover:bg-red-900 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg font-medium transition-all border border-red-600 shadow-sm hover:scale-[1.02]"
-          >
-            <Zap className="w-5 h-5" />
-            Force Kill
-          </button>
-
-          <button
-            onClick={deleteRunningFile}
-            disabled={loading}
-            className="flex items-center justify-center gap-2 px-4 py-3 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg font-medium transition-all border border-orange-500 shadow-sm hover:scale-[1.02]"
-          >
-            <Trash2 className="w-5 h-5" />
-            Delete Running File
-          </button>
-        </div>
-      </div>
+      {/* Danger Zone - Using DangerZone Component */}
+      <DangerZone
+        status={status}
+        loading={loading}
+        onStatusUpdate={fetchStatus}
+      />
     </div>
   );
 }

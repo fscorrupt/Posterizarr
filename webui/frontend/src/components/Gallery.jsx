@@ -1,16 +1,14 @@
 import React, { useState, useEffect } from "react";
 import {
-  RefreshCw,
-  Image as ImageIcon,
-  Search,
-  Trash2,
-  Play,
-  Save,
-  Cloud,
-  ChevronDown,
+  ImageIcon,
   Folder,
+  Trash2,
+  RefreshCw,
+  Search,
+  ChevronDown,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
+import CompactImageSizeSlider from "./CompactImageSizeSlider";
 
 const API_URL = "/api";
 
@@ -20,20 +18,36 @@ function Gallery() {
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [imagesLoading, setImagesLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedImage, setSelectedImage] = useState(null);
   const [error, setError] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
   const [deletingImage, setDeletingImage] = useState(null);
-  const [scriptLoading, setScriptLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const [displayCount, setDisplayCount] = useState(50);
-  const [status, setStatus] = useState({
-    running: false,
-    current_mode: null,
+
+  // Image size state with localStorage (2-10 range, default 5)
+  const [imageSize, setImageSize] = useState(() => {
+    const saved = localStorage.getItem("gallery-poster-size");
+    return saved ? parseInt(saved) : 5;
   });
 
+  // Grid column classes based on size (2-10 columns)
+  // Mobile always shows 2 columns, desktop shows the selected amount
+  const getGridClass = (size) => {
+    const classes = {
+      2: "grid-cols-2 lg:grid-cols-2",
+      3: "grid-cols-2 lg:grid-cols-3",
+      4: "grid-cols-2 lg:grid-cols-4",
+      5: "grid-cols-2 lg:grid-cols-5",
+      6: "grid-cols-2 lg:grid-cols-6",
+      7: "grid-cols-2 lg:grid-cols-7",
+      8: "grid-cols-2 lg:grid-cols-8",
+      9: "grid-cols-2 lg:grid-cols-9",
+      10: "grid-cols-2 lg:grid-cols-10",
+    };
+    return classes[size] || classes[5];
+  };
+
   const fetchFolders = async (showToast = false) => {
-    setLoading(true);
-    setError(null);
     try {
       const response = await fetch(`${API_URL}/assets-folders`);
       if (!response.ok) {
@@ -43,25 +57,21 @@ function Gallery() {
       setFolders(data.folders || []);
 
       if (showToast && data.folders && data.folders.length > 0) {
-        toast.success(`Loaded ${data.folders.length} folders`, {
+        toast.success(`Found: ${data.folders.length} folders`, {
           duration: 2000,
           position: "top-right",
         });
       }
 
-      // Only auto-select folders that have posters
       if (data.folders && data.folders.length > 0 && !activeFolder) {
-        const foldersWithPosters = data.folders.filter(
-          (f) => f.poster_count > 0
-        );
-        if (foldersWithPosters.length > 0) {
-          setActiveFolder(foldersWithPosters[0]);
+        const folderWithImages = data.folders.find((f) => f.poster_count > 0);
+        if (folderWithImages) {
+          setActiveFolder(folderWithImages);
         }
       }
     } catch (error) {
       console.error("Error fetching folders:", error);
       setError(error.message);
-      setFolders([]);
       toast.error("Failed to load folders", {
         duration: 4000,
         position: "top-right",
@@ -75,7 +85,6 @@ function Gallery() {
     if (!folder) return;
 
     setImagesLoading(true);
-    setError(null);
     try {
       const response = await fetch(
         `${API_URL}/assets-folder-images/posters/${folder.path}`
@@ -108,7 +117,6 @@ function Gallery() {
     }
   };
 
-  // Format path to remove folder prefix (e.g., "4K/Movie Year/file.jpg" -> "Movie Year/file.jpg")
   const formatDisplayPath = (path) => {
     const parts = path.split(/[\\/]/);
     if (parts.length > 1) {
@@ -117,54 +125,12 @@ function Gallery() {
     return path;
   };
 
-  const fetchStatus = async () => {
-    try {
-      const response = await fetch(`${API_URL}/status`);
-      const data = await response.json();
-      setStatus(data);
-    } catch (error) {
-      console.error("Error fetching status:", error);
-    }
-  };
-
-  const runScript = async (mode, modeName) => {
-    setScriptLoading(true);
-    try {
-      const response = await fetch(`${API_URL}/run/${mode}`, {
-        method: "POST",
-      });
-      const data = await response.json();
-
-      if (data.success) {
-        toast.success(`${modeName} gestartet!`, {
-          duration: 4000,
-          position: "top-right",
-        });
-        fetchStatus();
-      } else {
-        toast.error(`Error: ${data.message}`, {
-          duration: 5000,
-          position: "top-right",
-        });
-      }
-    } catch (error) {
-      toast.error(`Error: ${error.message}`, {
-        duration: 5000,
-        position: "top-right",
-      });
-    } finally {
-      setScriptLoading(false);
-    }
-  };
-
   const deletePoster = async (imagePath, imageName, event) => {
     if (event) {
       event.stopPropagation();
     }
 
-    if (
-      !window.confirm(`Möchtest du das Poster "${imageName}" wirklich löschen?`)
-    ) {
+    if (!window.confirm(`Do you really want to delete "${imageName}"?`)) {
       return;
     }
 
@@ -182,7 +148,7 @@ function Gallery() {
       const data = await response.json();
 
       if (data.success) {
-        toast.success(`Poster "${imageName}" erfolgreich gelöscht`, {
+        toast.success(`Poster "${imageName}" deleted succesfully`, {
           duration: 3000,
           position: "top-right",
         });
@@ -193,14 +159,13 @@ function Gallery() {
           setSelectedImage(null);
         }
 
-        // Refresh folders to update counts
         fetchFolders(false);
       } else {
         throw new Error(data.message || "Failed to delete poster");
       }
     } catch (error) {
       console.error("Error deleting poster:", error);
-      toast.error(`Fehler beim Löschen: ${error.message}`, {
+      toast.error(`Error while deleting: ${error.message}`, {
         duration: 5000,
         position: "top-right",
       });
@@ -215,9 +180,6 @@ function Gallery() {
 
   useEffect(() => {
     fetchFolders(false);
-    fetchStatus();
-    const interval = setInterval(fetchStatus, 3000);
-    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -243,113 +205,49 @@ function Gallery() {
     <div className="space-y-6">
       <Toaster />
 
-      {/* Header with Refresh */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-theme-text flex items-center gap-3">
-            <ImageIcon className="w-8 h-8 text-theme-primary" />
-            Poster Gallery
-          </h1>
-          <p className="text-theme-muted mt-2">
-            Browse and manage your poster collection
-          </p>
-        </div>
-
-        <button
-          onClick={() => {
-            fetchFolders(true);
-            if (activeFolder) {
-              fetchFolderImages(activeFolder, true);
-            }
-          }}
-          disabled={loading || imagesLoading}
-          className="flex items-center gap-2 px-4 py-2 bg-theme-primary hover:bg-theme-primary/90 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-all shadow-lg"
-        >
-          <RefreshCw
-            className={`w-5 h-5 ${
-              loading || imagesLoading ? "animate-spin" : ""
-            }`}
-          />
-          Refresh
-        </button>
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold text-theme-text flex items-center gap-3">
+          <ImageIcon className="w-8 h-8 text-theme-primary" />
+          Browse and manage your poster´s
+        </h1>
       </div>
-
-      {/* Script & Sync Mode Buttons */}
-      <div className="bg-theme-card rounded-xl p-6 border border-theme">
-        <h2 className="text-xl font-semibold text-theme-text mb-4 flex items-center gap-2">
-          <Play className="w-5 h-5 text-theme-primary" />
-          Quick Actions
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-          <button
-            onClick={() => runScript("normal", "Normal Mode")}
-            disabled={scriptLoading || status.running}
-            className="flex flex-col items-center justify-center p-4 bg-theme-hover hover:bg-green-600/20 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg border border-theme-primary/30 hover:border-green-600 transition-all group"
-          >
-            <Play className="w-6 h-6 text-green-400 mb-2 group-hover:scale-110 transition-transform" />
-            <span className="font-medium text-theme-text text-sm">
-              Normal Mode
-            </span>
-          </button>
-
-          <button
-            onClick={() => runScript("backup", "Backup Mode")}
-            disabled={scriptLoading || status.running}
-            className="flex flex-col items-center justify-center p-4 bg-theme-hover hover:bg-yellow-600/20 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg border border-theme-primary/30 hover:border-yellow-600 transition-all group"
-          >
-            <Save className="w-6 h-6 text-orange-400 mb-2 group-hover:scale-110 transition-transform" />
-            <span className="font-medium text-theme-text text-sm">
-              Backup Mode
-            </span>
-          </button>
-
-          <button
-            onClick={() => runScript("syncjelly", "Sync Jellyfin")}
-            disabled={scriptLoading || status.running}
-            className="flex flex-col items-center justify-center p-4 bg-theme-hover hover:bg-orange-600/20 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg border border-theme-primary/30 hover:border-orange-600 transition-all group"
-          >
-            <RefreshCw className="w-6 h-6 text-purple-400 mb-2 group-hover:scale-110 transition-transform" />
-            <span className="font-medium text-theme-text text-sm">
-              Sync Jellyfin
-            </span>
-          </button>
-
-          <button
-            onClick={() => runScript("syncemby", "Sync Emby")}
-            disabled={scriptLoading || status.running}
-            className="flex flex-col items-center justify-center p-4 bg-theme-hover hover:bg-teal-600/20 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg border border-theme-primary/30 hover:border-teal-600 transition-all group"
-          >
-            <RefreshCw className="w-6 h-6 text-green-400 mb-2 group-hover:scale-110 transition-transform" />
-            <span className="font-medium text-theme-text text-sm">
-              Sync Emby
-            </span>
-          </button>
-        </div>
-      </div>
-
-      {/* Search bar */}
-      {activeFolder && images.length > 0 && (
-        <div className="bg-theme-card rounded-xl p-4 border border-theme">
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder={`Search posters in ${activeFolder.name}...`}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-theme-bg border border-theme-primary/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
-            />
-          </div>
-        </div>
-      )}
 
       {/* Folder Tabs */}
       {folders.length > 0 && (
-        <div className="bg-theme-card rounded-xl p-6 border border-theme">
-          <h2 className="text-xl font-semibold text-theme-text mb-4 flex items-center gap-2">
-            <Folder className="w-5 h-5 text-theme-primary" />
-            Folders
-          </h2>
+        <div className="">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold text-theme-text flex items-center gap-2">
+              <Folder className="w-5 h-5 text-theme-primary" />
+              Folders
+            </h2>
+            <div className="flex items-center gap-3">
+              {/* Compact Image Size Slider */}
+              <CompactImageSizeSlider
+                value={imageSize}
+                onChange={setImageSize}
+                storageKey="gallery-poster-size"
+              />
+              {/* Refresh Button */}
+              <button
+                onClick={() => {
+                  fetchFolders(true);
+                  if (activeFolder) {
+                    fetchFolderImages(activeFolder, true);
+                  }
+                }}
+                disabled={loading || imagesLoading}
+                className="flex items-center gap-2 px-4 py-2 bg-theme-primary hover:bg-theme-primary/90 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-all shadow-lg"
+              >
+                <RefreshCw
+                  className={`w-5 h-5 ${
+                    loading || imagesLoading ? "animate-spin" : ""
+                  }`}
+                />
+                Refresh
+              </button>
+            </div>
+          </div>
           <div className="flex flex-wrap gap-2">
             {folders
               .filter((folder) => folder.poster_count > 0)
@@ -374,6 +272,22 @@ function Gallery() {
         </div>
       )}
 
+      {/* Search bar */}
+      {activeFolder && images.length > 0 && (
+        <div className="bg-theme-card rounded-xl p-4 border border-theme">
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder={`Search posters in ${activeFolder.name}...`}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-12 pr-4 py-3 bg-theme-bg border border-theme-primary/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+            />
+          </div>
+        </div>
+      )}
+
       {loading ? (
         <div className="flex flex-col items-center justify-center py-32 bg-theme-card rounded-xl border border-theme">
           <RefreshCw className="w-12 h-12 animate-spin text-theme-primary mb-4" />
@@ -386,7 +300,7 @@ function Gallery() {
               <ImageIcon className="w-12 h-12 text-red-400" />
             </div>
             <h3 className="text-2xl font-semibold text-red-300 mb-2">
-              Error Loading Gallery
+              Error Loading Poster Gallery
             </h3>
             <p className="text-red-200 text-sm mb-6 max-w-md">{error}</p>
             <button
@@ -455,7 +369,7 @@ function Gallery() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+          <div className={`grid ${getGridClass(imageSize)} gap-6`}>
             {displayedImages.map((image, index) => (
               <div
                 key={index}
@@ -479,7 +393,7 @@ function Gallery() {
                 </button>
 
                 <div
-                  className="aspect-[2/3] bg-theme-dark flex items-center justify-center overflow-hidden cursor-pointer"
+                  className="relative cursor-pointer aspect-[2/3]"
                   onClick={() => setSelectedImage(image)}
                 >
                   <img
@@ -493,15 +407,13 @@ function Gallery() {
                     }}
                   />
                   <div
-                    className="hidden flex-col items-center justify-center text-gray-600 p-4"
+                    className="w-full h-full flex items-center justify-center bg-gray-800"
                     style={{ display: "none" }}
                   >
-                    <ImageIcon className="w-12 h-12 mb-2 text-theme-primary" />
-                    <span className="text-xs text-center text-theme-muted">
-                      Preview not available
-                    </span>
+                    <ImageIcon className="w-12 h-12 text-theme-primary" />
                   </div>
                 </div>
+
                 <div className="p-4 border-t-2 border-theme bg-theme-bg">
                   <p
                     className="text-sm text-theme-text truncate font-medium"
@@ -535,21 +447,11 @@ function Gallery() {
         </>
       )}
 
-      {/* Image Modal */}
       {selectedImage && (
-        <div
-          className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200"
-          onClick={() => setSelectedImage(null)}
-        >
-          <div
-            className="bg-theme-card border-2 border-theme-primary rounded-2xl max-w-6xl w-full overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="bg-theme-primary px-6 py-4 flex justify-between items-center">
-              <h3
-                className="text-lg font-bold text-white truncate mr-4"
-                title={formatDisplayPath(selectedImage.path)}
-              >
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-theme-card rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden shadow-2xl border-2 border-theme-primary">
+            <div className="px-6 py-4 border-b-2 border-theme flex justify-between items-center bg-theme-card">
+              <h3 className="text-xl font-bold text-theme-text truncate flex-1">
                 {formatDisplayPath(selectedImage.path)}
               </h3>
               <button
@@ -557,7 +459,7 @@ function Gallery() {
                   deletePoster(selectedImage.path, selectedImage.name, e)
                 }
                 disabled={deletingImage === selectedImage.path}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all flex-shrink-0 shadow-lg ${
+                className={`ml-4 flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
                   deletingImage === selectedImage.path
                     ? "bg-gray-600 cursor-not-allowed"
                     : "bg-red-600 hover:bg-red-700 hover:scale-105"

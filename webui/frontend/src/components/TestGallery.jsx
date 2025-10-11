@@ -273,11 +273,8 @@ function TestGallery() {
         <div>
           <h1 className="text-3xl font-bold text-theme-text flex items-center gap-3">
             <TestTube className="w-8 h-8 text-theme-primary" />
-            Test Gallery
+            View and manage Test Mode output files
           </h1>
-          <p className="text-theme-muted mt-2">
-            View and manage test mode output files
-          </p>
         </div>
 
         <div className="flex gap-3">

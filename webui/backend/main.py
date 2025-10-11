@@ -1,6 +1,14 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException, Query
+from fastapi import (
+    FastAPI,
+    WebSocket,
+    WebSocketDisconnect,
+    HTTPException,
+    Query,
+    Request,
+)
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -34,12 +42,17 @@ try:
         UI_GROUPS,
         DISPLAY_NAMES,
         get_display_name,
+        get_tooltip,
     )
+
+    # Import tooltips
+    from config_tooltips import CONFIG_TOOLTIPS
 
     CONFIG_MAPPER_AVAILABLE = True
     logger.info("Config mapper loaded successfully")
 except ImportError as e:
     CONFIG_MAPPER_AVAILABLE = False
+    CONFIG_TOOLTIPS = {}  # Fallback if config_tooltips not available
     logger.warning(f"Config mapper not available: {e}. Using grouped config structure.")
 
 # Import scheduler module
@@ -53,6 +66,16 @@ except ImportError as e:
     logger.warning(
         f"Scheduler not available: {e}. Scheduler features will be disabled."
     )
+
+# Import auth middleware for Basic Authentication
+try:
+    from auth_middleware import BasicAuthMiddleware, load_auth_config
+
+    AUTH_MIDDLEWARE_AVAILABLE = True
+    logger.info("Auth middleware loaded successfully")
+except ImportError as e:
+    AUTH_MIDDLEWARE_AVAILABLE = False
+    logger.warning(f"Auth middleware not available: {e}. Basic Auth will be disabled.")
 
 # Check if running in Docker
 IS_DOCKER = os.path.exists("/.dockerenv") or os.environ.get("DOCKER_ENV") == "true"
@@ -74,6 +97,7 @@ else:
     (BASE_DIR / "Logs").mkdir(exist_ok=True)
     (BASE_DIR / "temp").mkdir(exist_ok=True)
     (BASE_DIR / "test").mkdir(exist_ok=True)
+    (BASE_DIR / "UILogs").mkdir(exist_ok=True)
     logger.info(f"Running in LOCAL mode: {BASE_DIR}")
 
 CONFIG_PATH = BASE_DIR / "config.json"
@@ -82,6 +106,7 @@ SCRIPT_PATH = APP_DIR / "Posterizarr.ps1"
 LOGS_DIR = BASE_DIR / "Logs"
 TEST_DIR = BASE_DIR / "test"
 TEMP_DIR = BASE_DIR / "temp"
+UI_LOGS_DIR = BASE_DIR / "UILogs"
 RUNNING_FILE = TEMP_DIR / "Posterizarr.Running"
 
 if not CONFIG_PATH.exists() and CONFIG_EXAMPLE_PATH.exists():
@@ -490,7 +515,203 @@ def get_fresh_assets():
     return asset_cache
 
 
-# ============================================================================
+def find_poster_in_assets(rootfolder: str) -> str:
+    """
+    Search recursively in ASSETS_DIR for a folder matching rootfolder and return poster.jpg URL
+
+    Args:
+        rootfolder: The rootfolder name from ImageChoices.csv (e.g. "1 Million Followers (2024) {tmdb-1117126}")
+
+    Returns:
+        URL path to poster.jpg or None if not found
+    """
+    if not ASSETS_DIR.exists():
+        return None
+
+    try:
+        # Search recursively for the folder
+        for item in ASSETS_DIR.rglob("*"):
+            if item.is_dir() and item.name == rootfolder:
+                # Found the matching folder, now look for poster.jpg
+                poster_file = item / "poster.jpg"
+                if poster_file.exists() and poster_file.is_file():
+                    # Create relative path from ASSETS_DIR
+                    relative_path = poster_file.relative_to(ASSETS_DIR)
+                    # Create URL path with forward slashes
+                    url_path = str(relative_path).replace("\\", "/")
+                    return f"/poster_assets/{url_path}"
+
+        return None
+
+    except Exception as e:
+        logger.error(f"Error searching for poster in assets: {e}")
+        return None
+
+
+def parse_image_choices_csv(csv_path: Path) -> list:
+    """
+    Parse ImageChoices.csv file and return list of assets
+    CSV format: "Title";"Type";"Rootfolder";"LibraryName";"Language";"Fallback";"TextTruncated";"Download Source";"Fav Provider Link"
+    """
+    import csv
+
+    assets = []
+
+    try:
+        with open(csv_path, "r", encoding="utf-8") as f:
+            # CSV uses semicolon as delimiter
+            reader = csv.DictReader(f, delimiter=";")
+
+            for row in reader:
+                # Remove quotes from values if present
+                asset = {
+                    "title": row.get("Title", "").strip('"'),
+                    "type": row.get("Type", "").strip('"'),
+                    "rootfolder": row.get("Rootfolder", "").strip('"'),
+                    "library": row.get("LibraryName", "").strip('"'),
+                    "language": row.get("Language", "").strip('"'),
+                    "fallback": row.get("Fallback", "").strip('"').lower() == "true",
+                    "text_truncated": row.get("TextTruncated", "").strip('"').lower()
+                    == "true",
+                    "download_source": row.get("Download Source", "").strip('"'),
+                    "provider_link": row.get("Fav Provider Link", "").strip('"'),
+                }
+                assets.append(asset)
+
+    except Exception as e:
+        logger.error(f"Error parsing CSV {csv_path}: {e}")
+        raise
+
+    return assets
+
+
+async def fetch_version(local_filename: str, github_url: str, version_type: str):
+    """
+    A reusable function to get a local version from a file and fetch the remote
+    version from GitHub when running in a Docker environment.
+    """
+    local_version = None
+    remote_version = None
+
+    # Get Local Version
+    try:
+        version_file = BASE_DIR / local_filename
+        if version_file.exists():
+            local_version = version_file.read_text().strip()
+    except Exception as e:
+        logger.error(f"Error reading local {version_type} version file: {e}")
+
+    # Get Remote Version (if in Docker)
+    if IS_DOCKER:
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.get(github_url, timeout=10.0)
+                response.raise_for_status()
+                remote_version = response.text.strip()
+                logger.info(
+                    f"Successfully fetched remote {version_type} version: {remote_version}"
+                )
+        except httpx.RequestError as e:
+            logger.warning(
+                f"Could not fetch remote {version_type} version from GitHub: {e}"
+            )
+        except Exception as e:
+            logger.error(
+                f"An unexpected error occurred while fetching remote {version_type} version: {e}"
+            )
+
+    return {"local": local_version, "remote": remote_version}
+
+
+async def get_script_version():
+    """
+    Reads the version from Posterizarr.ps1 and compares with GitHub Release.txt
+    Similar to the PowerShell CompareScriptVersion function
+
+    NOW WITH SEMANTIC VERSION COMPARISON!
+    """
+    local_version = None
+    remote_version = None
+
+    # Get Local Version from Posterizarr.ps1
+    try:
+        # Use the already defined SCRIPT_PATH
+        posterizarr_path = SCRIPT_PATH
+
+        logger.info(f"Looking for Posterizarr.ps1 at: {posterizarr_path}")
+
+        if posterizarr_path.exists():
+            with open(posterizarr_path, "r", encoding="utf-8") as f:
+                content = f.read()
+
+            # Extract version using regex: $CurrentScriptVersion = "1.9.95"
+            match = re.search(r'\$CurrentScriptVersion\s*=\s*"([^"]+)"', content)
+            if match:
+                local_version = match.group(1)
+                logger.info(
+                    f"Local script version from Posterizarr.ps1: {local_version}"
+                )
+            else:
+                logger.warning(
+                    "Could not find $CurrentScriptVersion in Posterizarr.ps1"
+                )
+        else:
+            logger.error(f"Posterizarr.ps1 not found at {posterizarr_path}")
+    except Exception as e:
+        logger.error(f"Error reading version from Posterizarr.ps1: {e}")
+
+    # Get Remote Version from GitHub Release.txt
+    # Always fetch from GitHub (both Docker and local)
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.get(
+                "https://raw.githubusercontent.com/fscorrupt/Posterizarr/refs/heads/main/Release.txt",
+                timeout=10.0,
+            )
+            response.raise_for_status()
+            remote_version = response.text.strip()
+            logger.info(f"Remote version from GitHub Release.txt: {remote_version}")
+    except httpx.RequestError as e:
+        logger.warning(f"Could not fetch remote version from GitHub: {e}")
+    except Exception as e:
+        logger.error(f"Error fetching remote version: {e}")
+
+    # SEMANTIC VERSION COMPARISON
+    is_update_available = False
+    if local_version and remote_version:
+        is_update_available = is_version_newer(local_version, remote_version)
+        logger.info(
+            f"Update available: {is_update_available} (local: {local_version}, remote: {remote_version})"
+        )
+
+    return {
+        "local": local_version,
+        "remote": remote_version,
+        "is_update_available": is_update_available,  # Boolean for update availability
+    }
+
+
+class SPAMiddleware(BaseHTTPMiddleware):
+    """
+    Middleware für Single Page Application Support
+    Fängt 404-Fehler ab und gibt index.html zurück für React Router
+    """
+
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+
+        # Wenn 404 und KEINE API-Route und KEIN Static-File
+        if response.status_code == 404:
+            path = request.url.path
+
+            # Nur für HTML-Routes (keine API, keine Assets)
+            if not path.startswith(("/api", "/poster_assets", "/test", "/_assets")):
+                # Gib index.html zurück (React Router übernimmt)
+                index_path = FRONTEND_DIR / "index.html"
+                if index_path.exists():
+                    return FileResponse(index_path)
+
+        return response
 
 
 @asynccontextmanager
@@ -535,7 +756,22 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Posterizarr Web UI", lifespan=lifespan)
 
-# CORS middleware
+# Basic Auth Middleware (MUST be added BEFORE CORS)
+if AUTH_MIDDLEWARE_AVAILABLE:
+    try:
+        auth_config = load_auth_config(CONFIG_PATH)
+        app.add_middleware(
+            BasicAuthMiddleware,
+            username=auth_config["username"],
+            password=auth_config["password"],
+            enabled=auth_config["enabled"],
+        )
+        logger.info("Basic Auth middleware registered")
+    except Exception as e:
+        logger.error(f"Failed to initialize Basic Auth: {e}")
+else:
+    logger.info("Basic Auth middleware not available, skipping")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -543,6 +779,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.add_middleware(SPAMiddleware)
+logger.info("✅ SPA Middleware enabled - React Router support active")
 
 
 class ConfigUpdate(BaseModel):
@@ -600,6 +839,26 @@ async def api_root():
     return {"message": "Posterizarr Web UI API", "status": "running"}
 
 
+@app.get("/api/auth/check")
+async def check_auth():
+    """
+    Check if Basic Auth is enabled and if user is authenticated.
+    This endpoint is always accessible (not protected by auth middleware).
+    """
+    if AUTH_MIDDLEWARE_AVAILABLE:
+        try:
+            auth_config = load_auth_config(CONFIG_PATH)
+            return {
+                "enabled": auth_config["enabled"],
+                "authenticated": True,  # If this endpoint is reached, user is authenticated
+            }
+        except Exception as e:
+            logger.error(f"Error checking auth config: {e}")
+            return {"enabled": False, "authenticated": True, "error": str(e)}
+    else:
+        return {"enabled": False, "authenticated": True}
+
+
 @app.get("/api/config")
 async def get_config():
     """Get current config.json - returns FLAT structure for UI when config_mapper available"""
@@ -627,6 +886,7 @@ async def get_config():
                 "config": flat_config,
                 "ui_groups": UI_GROUPS,  # Helps frontend organize fields
                 "display_names": display_names_dict,  # Send display names to frontend
+                "tooltips": CONFIG_TOOLTIPS,  # Send tooltips to frontend
                 "using_flat_structure": True,
             }
         else:
@@ -634,6 +894,7 @@ async def get_config():
             return {
                 "success": True,
                 "config": grouped_config,
+                "tooltips": {},  # Empty object as fallback
                 "using_flat_structure": False,
             }
     except HTTPException:
@@ -727,7 +988,7 @@ async def receive_ui_log(log_entry: UILogEntry):
     Empfängt UI/Frontend-Logs und schreibt sie in UIlog.log
     """
     try:
-        ui_log_path = LOGS_DIR / "UIlog.log"
+        ui_log_path = UI_LOGS_DIR / "UIlog.log"
 
         # Create log entry in the same format as backend logs
         timestamp = log_entry.timestamp
@@ -755,7 +1016,7 @@ async def receive_ui_logs_batch(batch: UILogBatch):
     Empfängt mehrere UI-Logs auf einmal (bessere Performance)
     """
     try:
-        ui_log_path = LOGS_DIR / "UIlog.log"
+        ui_log_path = UI_LOGS_DIR / "UIlog.log"
 
         log_lines = []
         for log_entry in batch.logs:
@@ -1220,12 +1481,15 @@ async def get_status():
 
     return {
         "running": is_running,
+        "manual_running": manual_is_running,
+        "scheduler_running": scheduler_is_running,
+        "scheduler_is_executing": scheduler_is_running,
         "last_logs": last_logs,
         "script_exists": SCRIPT_PATH.exists(),
         "config_exists": CONFIG_PATH.exists(),
         "pid": display_pid,
         "current_mode": effective_mode,
-        "active_log": active_log,  # Which log file is being shown
+        "active_log": active_log,
         "already_running_detected": already_running,
         "running_file_exists": running_file_exists,
     }
@@ -2341,11 +2605,6 @@ async def delete_background(path: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# ============================================================================
-# CORRECTED ENDPOINTS - Swapped functionality
-# ============================================================================
-
-
 @app.get("/api/seasons-gallery")
 async def get_seasons_gallery():
     """Get seasons gallery from assets directory (only SeasonXX.jpg) - uses cache"""
@@ -2487,110 +2746,63 @@ async def get_assets_folder_images_filtered(image_type: str, folder_path: str):
         return {"images": []}
 
 
-async def fetch_version(local_filename: str, github_url: str, version_type: str):
+@app.get("/api/recent-assets")
+async def get_recent_assets():
     """
-    A reusable function to get a local version from a file and fetch the remote
-    version from GitHub when running in a Docker environment.
+    Get recently created assets from ImageChoices.csv files in Logs and RotatedLogs folders
+    Returns the most recent 10 assets with their poster images from assets folder
     """
-    local_version = None
-    remote_version = None
-
-    # Get Local Version
     try:
-        version_file = BASE_DIR / local_filename
-        if version_file.exists():
-            local_version = version_file.read_text().strip()
-    except Exception as e:
-        logger.error(f"Error reading local {version_type} version file: {e}")
+        all_assets = []
 
-    # Get Remote Version (if in Docker)
-    if IS_DOCKER:
-        try:
-            async with httpx.AsyncClient() as client:
-                response = await client.get(github_url, timeout=10.0)
-                response.raise_for_status()
-                remote_version = response.text.strip()
-                logger.info(
-                    f"Successfully fetched remote {version_type} version: {remote_version}"
-                )
-        except httpx.RequestError as e:
-            logger.warning(
-                f"Could not fetch remote {version_type} version from GitHub: {e}"
-            )
-        except Exception as e:
-            logger.error(
-                f"An unexpected error occurred while fetching remote {version_type} version: {e}"
-            )
+        # Read from main Logs folder
+        main_csv = LOGS_DIR / "ImageChoices.csv"
+        if main_csv.exists():
+            try:
+                assets = parse_image_choices_csv(main_csv)
+                all_assets.extend(assets)
+                logger.debug(f"Found {len(assets)} assets in main Logs folder")
+            except Exception as e:
+                logger.error(f"Error reading {main_csv}: {e}")
 
-    return {"local": local_version, "remote": remote_version}
+        # Read from RotatedLogs subfolders
+        rotated_logs_dir = BASE_DIR / "RotatedLogs"
+        if rotated_logs_dir.exists() and rotated_logs_dir.is_dir():
+            # Get all subdirectories in RotatedLogs
+            for subdir in rotated_logs_dir.iterdir():
+                if subdir.is_dir():
+                    csv_file = subdir / "ImageChoices.csv"
+                    if csv_file.exists():
+                        try:
+                            assets = parse_image_choices_csv(csv_file)
+                            # Add source folder info to each asset
+                            for asset in assets:
+                                asset["source_folder"] = subdir.name
+                            all_assets.extend(assets)
+                            logger.debug(f"Found {len(assets)} assets in {subdir.name}")
+                        except Exception as e:
+                            logger.error(f"Error reading {csv_file}: {e}")
 
+        # Get only the last 10 entries (most recent)
+        all_assets = all_assets[-10:]
+        all_assets.reverse()  # Most recent first
 
-async def get_script_version():
-    """
-    Reads the version from Posterizarr.ps1 and compares with GitHub Release.txt
-    Similar to the PowerShell CompareScriptVersion function
-
-    NOW WITH SEMANTIC VERSION COMPARISON!
-    """
-    local_version = None
-    remote_version = None
-
-    # Get Local Version from Posterizarr.ps1
-    try:
-        # Use the already defined SCRIPT_PATH
-        posterizarr_path = SCRIPT_PATH
-
-        logger.info(f"Looking for Posterizarr.ps1 at: {posterizarr_path}")
-
-        if posterizarr_path.exists():
-            with open(posterizarr_path, "r", encoding="utf-8") as f:
-                content = f.read()
-
-            # Extract version using regex: $CurrentScriptVersion = "1.9.95"
-            match = re.search(r'\$CurrentScriptVersion\s*=\s*"([^"]+)"', content)
-            if match:
-                local_version = match.group(1)
-                logger.info(
-                    f"Local script version from Posterizarr.ps1: {local_version}"
-                )
+        # Find poster.jpg for each asset in assets folder
+        for asset in all_assets:
+            poster_path = find_poster_in_assets(asset["rootfolder"])
+            if poster_path:
+                asset["poster_url"] = poster_path
+                asset["has_poster"] = True
             else:
-                logger.warning(
-                    "Could not find $CurrentScriptVersion in Posterizarr.ps1"
-                )
-        else:
-            logger.error(f"Posterizarr.ps1 not found at {posterizarr_path}")
+                asset["poster_url"] = None
+                asset["has_poster"] = False
+                logger.debug(f"No poster found for: {asset['rootfolder']}")
+
+        return {"success": True, "assets": all_assets, "total_count": len(all_assets)}
+
     except Exception as e:
-        logger.error(f"Error reading version from Posterizarr.ps1: {e}")
-
-    # Get Remote Version from GitHub Release.txt
-    # Always fetch from GitHub (both Docker and local)
-    try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(
-                "https://raw.githubusercontent.com/fscorrupt/Posterizarr/refs/heads/main/Release.txt",
-                timeout=10.0,
-            )
-            response.raise_for_status()
-            remote_version = response.text.strip()
-            logger.info(f"Remote version from GitHub Release.txt: {remote_version}")
-    except httpx.RequestError as e:
-        logger.warning(f"Could not fetch remote version from GitHub: {e}")
-    except Exception as e:
-        logger.error(f"Error fetching remote version: {e}")
-
-    # SEMANTIC VERSION COMPARISON
-    is_update_available = False
-    if local_version and remote_version:
-        is_update_available = is_version_newer(local_version, remote_version)
-        logger.info(
-            f"Update available: {is_update_available} (local: {local_version}, remote: {remote_version})"
-        )
-
-    return {
-        "local": local_version,
-        "remote": remote_version,
-        "is_update_available": is_update_available,  # Boolean for update availability
-    }
+        logger.error(f"Error getting recent assets: {e}")
+        return {"success": False, "error": str(e), "assets": [], "total_count": 0}
 
 
 @app.get("/api/version")
@@ -2599,6 +2811,18 @@ async def get_version():
     Gets script version from Posterizarr.ps1 and compares with GitHub Release.txt
     """
     return await get_script_version()
+
+
+@app.get("/api/version-ui")
+async def get_version_ui():
+    """
+    Gets UI version
+    """
+    return await fetch_version(
+        local_filename="ReleaseUI.txt",
+        github_url="https://raw.githubusercontent.com/fscorrupt/Posterizarr/refs/heads/main/ReleaseUI.txt",
+        version_type="UI",
+    )
 
 
 @app.get("/api/releases")
@@ -2802,33 +3026,6 @@ async def get_test_gallery():
         return {"images": []}
 
 
-# Mount static files in correct order: /assets, /test, then / (frontend)
-# Using CachedStaticFiles for better performance with browser caching
-if ASSETS_DIR.exists():
-    app.mount(
-        "/poster_assets",
-        CachedStaticFiles(directory=str(ASSETS_DIR), max_age=86400),  # 24h Cache
-        name="poster_assets",
-    )
-    logger.info(f"Mounted /poster_assets -> {ASSETS_DIR} (with 24h cache)")
-
-if TEST_DIR.exists():
-    app.mount(
-        "/test",
-        CachedStaticFiles(directory=str(TEST_DIR), max_age=86400),  # 24h Cache
-        name="test",
-    )
-    logger.info(f"Mounted /test -> {TEST_DIR} (with 24h cache)")
-
-if FRONTEND_DIR.exists():
-    app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
-    logger.info(f"Mounted frontend from {FRONTEND_DIR}")
-
-# ============================================================================
-# SCHEDULER API ENDPOINTS
-# ============================================================================
-
-
 @app.get("/api/scheduler/status")
 async def get_scheduler_status():
     """Get current scheduler status and configuration"""
@@ -2996,17 +3193,43 @@ async def restart_scheduler():
 
 @app.post("/api/scheduler/run-now")
 async def run_scheduler_now():
-    """Manually trigger a scheduled run immediately"""
+    """Manually trigger a scheduled run immediately (non-blocking)"""
     if not SCHEDULER_AVAILABLE or not scheduler:
         raise HTTPException(status_code=503, detail="Scheduler not available")
 
     try:
-        # Run in background without waiting
-        asyncio.create_task(scheduler.run_script())
-        return {"success": True, "message": "Scheduled run triggered"}
+        # Use asyncio.create_task to run it asynchronously
+        asyncio.create_task(scheduler.run_script(force_run=True))
+
+        return {"success": True, "message": "Manual run triggered successfully"}
+    except RuntimeError as e:
+        # Runtime errors from run_script (e.g., already running, file issues)
+        logger.warning(f"Cannot trigger run: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error(f"Error triggering scheduled run: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+if ASSETS_DIR.exists():
+    app.mount(
+        "/poster_assets",
+        CachedStaticFiles(directory=str(ASSETS_DIR), max_age=86400),  # 24h Cache
+        name="poster_assets",
+    )
+    logger.info(f"Mounted /poster_assets -> {ASSETS_DIR} (with 24h cache)")
+
+if TEST_DIR.exists():
+    app.mount(
+        "/test",
+        CachedStaticFiles(directory=str(TEST_DIR), max_age=86400),  # 24h Cache
+        name="test",
+    )
+    logger.info(f"Mounted /test -> {TEST_DIR} (with 24h cache)")
+
+if FRONTEND_DIR.exists():
+    app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")
+    logger.info(f"Mounted frontend from {FRONTEND_DIR}")
 
 
 # ============================================================================
