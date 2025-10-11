@@ -23,6 +23,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
+import DangerZone from "./DangerZone";
 
 const API_URL = "/api";
 
@@ -1033,11 +1034,8 @@ function RunModes() {
         <div>
           <h1 className="text-3xl font-bold text-theme-text flex items-center gap-3">
             <Play className="w-8 h-8 text-theme-primary" />
-            Run Modes
+            Execute Posterizarr in different Modes
           </h1>
-          <p className="text-theme-muted mt-2">
-            Execute Posterizarr in different modes
-          </p>
         </div>
 
         {/* Status Badge */}
@@ -1693,6 +1691,13 @@ function RunModes() {
           </button>
         </div>
       </div>
+
+      {/* Danger Zone */}
+      <DangerZone
+        status={status}
+        loading={loading}
+        onStatusUpdate={fetchStatus}
+      />
     </div>
   );
 }

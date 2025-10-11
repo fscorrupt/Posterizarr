@@ -3,7 +3,7 @@ Config Mapper - Transforms between grouped and flat config structures
 Author: Posterizarr
 
 Usage in Backend:
-    from config_mapper import flatten_config, unflatten_config
+    from config_mapper import flatten_config, unflatten_config, get_display_name, get_tooltip
 
     # When loading config
     grouped_config = json.load(f)
@@ -12,10 +12,24 @@ Usage in Backend:
     # When saving config
     grouped_config = unflatten_config(flat_config)
     json.dump(grouped_config, f)
+
+    # Get tooltip for a config key
+    tooltip = get_tooltip("tmdbtoken")
 """
+
+# Import tooltips from separate file
+try:
+    from config_tooltips import CONFIG_TOOLTIPS
+except ImportError:
+    # Fallback if config_tooltips.py is not available
+    CONFIG_TOOLTIPS = {}
 
 # Complete mapping of all config variables to their groups
 CONFIG_GROUPS = {
+    # WebUI Settings
+    "basicAuthEnabled": "WebUI",
+    "basicAuthUsername": "WebUI",
+    "basicAuthPassword": "WebUI",
     # ApiPart
     "tvdbapi": "ApiPart",
     "tmdbtoken": "ApiPart",
@@ -249,6 +263,11 @@ CONFIG_GROUPS = {
 
 # UI Grouping for better organization
 UI_GROUPS = {
+    "WebUI Settings": [
+        "basicAuthEnabled",
+        "basicAuthUsername",
+        "basicAuthPassword",
+    ],
     "General Settings": [
         "AssetPath",
         "BackupPath",
@@ -597,7 +616,7 @@ def flatten_config(grouped_config):
                         else f"CollectionPoster{key}"
                     )
                 else:
-                    # For simple groups (ApiPart, Notification, etc.), use original key
+                    # For simple groups (ApiPart, Notification, WebUI, etc.), use original key
                     flat_key = key
 
             flat[flat_key] = value
@@ -714,6 +733,10 @@ def unflatten_config(flat_config):
 
 # Friendly display names for UI
 DISPLAY_NAMES = {
+    # WebUI Settings
+    "basicAuthEnabled": "Enable Basic Authentication",
+    "basicAuthUsername": "Basic Auth Username",
+    "basicAuthPassword": "Basic Auth Password",
     # API Keys & Tokens
     "tvdbapi": "TVDB API Key",
     "tmdbtoken": "TMDB API Token",
@@ -950,3 +973,8 @@ DISPLAY_NAMES = {
 def get_display_name(key):
     """Get friendly display name for a config key"""
     return DISPLAY_NAMES.get(key, key.replace("_", " ").title())
+
+
+def get_tooltip(key):
+    """Get tooltip description for a config key"""
+    return CONFIG_TOOLTIPS.get(key, "")

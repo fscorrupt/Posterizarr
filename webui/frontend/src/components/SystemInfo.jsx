@@ -1,11 +1,8 @@
-// SystemInfo.jsx - IMPROVED VERSION
-// Besseres Layout für lange/fehlende CPU-Namen und bessere Fehlerbehandlung
 import React, { useState, useEffect } from "react";
 import { Cpu, HardDrive, Server, RefreshCw, Monitor } from "lucide-react";
 
 const API_URL = "/api";
 
-// 🎯 PERSISTENT STATE - survives component remounts (tab switches)
 let cachedSystemInfo = null;
 
 function SystemInfo() {

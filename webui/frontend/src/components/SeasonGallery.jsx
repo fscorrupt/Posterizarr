@@ -1,17 +1,15 @@
 import React, { useState, useEffect } from "react";
 import {
-  RefreshCw,
-  Image as ImageIcon,
-  Search,
-  Trash2,
-  Play,
-  Save,
-  Cloud,
-  ChevronDown,
-  Folder,
   Film,
+  Folder,
+  Trash2,
+  RefreshCw,
+  Search,
+  ChevronDown,
+  ImageIcon,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
+import CompactImageSizeSlider from "./CompactImageSizeSlider";
 
 const API_URL = "/api";
 
@@ -21,20 +19,36 @@ function SeasonGallery() {
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [imagesLoading, setImagesLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedImage, setSelectedImage] = useState(null);
   const [error, setError] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
   const [deletingImage, setDeletingImage] = useState(null);
-  const [scriptLoading, setScriptLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const [displayCount, setDisplayCount] = useState(50);
-  const [status, setStatus] = useState({
-    running: false,
-    current_mode: null,
+
+  // Image size state with localStorage (2-10 range, default 5)
+  const [imageSize, setImageSize] = useState(() => {
+    const saved = localStorage.getItem("gallery-season-size");
+    return saved ? parseInt(saved) : 5;
   });
 
+  // Grid column classes based on size (2-10 columns)
+  // Mobile always shows 2 columns, desktop shows the selected amount
+  const getGridClass = (size) => {
+    const classes = {
+      2: "grid-cols-2 lg:grid-cols-2",
+      3: "grid-cols-2 lg:grid-cols-3",
+      4: "grid-cols-2 lg:grid-cols-4",
+      5: "grid-cols-2 lg:grid-cols-5",
+      6: "grid-cols-2 lg:grid-cols-6",
+      7: "grid-cols-2 lg:grid-cols-7",
+      8: "grid-cols-2 lg:grid-cols-8",
+      9: "grid-cols-2 lg:grid-cols-9",
+      10: "grid-cols-2 lg:grid-cols-10",
+    };
+    return classes[size] || classes[5];
+  };
+
   const fetchFolders = async (showToast = false) => {
-    setLoading(true);
-    setError(null);
     try {
       const response = await fetch(`${API_URL}/assets-folders`);
       if (!response.ok) {
@@ -44,24 +58,21 @@ function SeasonGallery() {
       setFolders(data.folders || []);
 
       if (showToast && data.folders && data.folders.length > 0) {
-        toast.success(`Loaded ${data.folders.length} folders`, {
+        toast.success(`Found: ${data.folders.length} folders`, {
           duration: 2000,
           position: "top-right",
         });
       }
 
       if (data.folders && data.folders.length > 0 && !activeFolder) {
-        const foldersWithSeasons = data.folders.filter(
-          (f) => f.season_count > 0
-        );
-        if (foldersWithSeasons.length > 0) {
-          setActiveFolder(foldersWithSeasons[0]);
+        const folderWithImages = data.folders.find((f) => f.season_count > 0);
+        if (folderWithImages) {
+          setActiveFolder(folderWithImages);
         }
       }
     } catch (error) {
       console.error("Error fetching folders:", error);
       setError(error.message);
-      setFolders([]);
       toast.error("Failed to load folders", {
         duration: 4000,
         position: "top-right",
@@ -75,7 +86,6 @@ function SeasonGallery() {
     if (!folder) return;
 
     setImagesLoading(true);
-    setError(null);
     try {
       const response = await fetch(
         `${API_URL}/assets-folder-images/seasons/${folder.path}`
@@ -116,54 +126,12 @@ function SeasonGallery() {
     return path;
   };
 
-  const fetchStatus = async () => {
-    try {
-      const response = await fetch(`${API_URL}/status`);
-      const data = await response.json();
-      setStatus(data);
-    } catch (error) {
-      console.error("Error fetching status:", error);
-    }
-  };
-
-  const runScript = async (mode, modeName) => {
-    setScriptLoading(true);
-    try {
-      const response = await fetch(`${API_URL}/run/${mode}`, {
-        method: "POST",
-      });
-      const data = await response.json();
-
-      if (data.success) {
-        toast.success(`${modeName} gestartet!`, {
-          duration: 4000,
-          position: "top-right",
-        });
-        fetchStatus();
-      } else {
-        toast.error(`Error: ${data.message}`, {
-          duration: 5000,
-          position: "top-right",
-        });
-      }
-    } catch (error) {
-      toast.error(`Error: ${error.message}`, {
-        duration: 5000,
-        position: "top-right",
-      });
-    } finally {
-      setScriptLoading(false);
-    }
-  };
-
   const deleteSeason = async (imagePath, imageName, event) => {
     if (event) {
       event.stopPropagation();
     }
 
-    if (
-      !window.confirm(`Do you really want to delete the season "${imageName}"?`)
-    ) {
+    if (!window.confirm(`Do you really want to delete "${imageName}"?`)) {
       return;
     }
 
@@ -181,7 +149,7 @@ function SeasonGallery() {
       const data = await response.json();
 
       if (data.success) {
-        toast.success(`Season "${imageName}" successfully deleted`, {
+        toast.success(`Season "${imageName}" deleted successfully`, {
           duration: 3000,
           position: "top-right",
         });
@@ -198,7 +166,7 @@ function SeasonGallery() {
       }
     } catch (error) {
       console.error("Error deleting season:", error);
-      toast.error(`Error deleting: ${error.message}`, {
+      toast.error(`Error while deleting: ${error.message}`, {
         duration: 5000,
         position: "top-right",
       });
@@ -213,9 +181,6 @@ function SeasonGallery() {
 
   useEffect(() => {
     fetchFolders(false);
-    fetchStatus();
-    const interval = setInterval(fetchStatus, 3000);
-    return () => clearInterval(interval);
   }, []);
 
   useEffect(() => {
@@ -241,113 +206,49 @@ function SeasonGallery() {
     <div className="space-y-6">
       <Toaster />
 
-      {/* Header with Refresh */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-theme-text flex items-center gap-3">
-            <Film className="w-8 h-8 text-theme-primary" />
-            Season Gallery
-          </h1>
-          <p className="text-theme-muted mt-2">
-            Browse and manage your season poster collection
-          </p>
-        </div>
-
-        <button
-          onClick={() => {
-            fetchFolders(true);
-            if (activeFolder) {
-              fetchFolderImages(activeFolder, true);
-            }
-          }}
-          disabled={loading || imagesLoading}
-          className="flex items-center gap-2 px-4 py-2 bg-theme-primary hover:bg-theme-primary/90 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-all shadow-lg"
-        >
-          <RefreshCw
-            className={`w-5 h-5 ${
-              loading || imagesLoading ? "animate-spin" : ""
-            }`}
-          />
-          Refresh
-        </button>
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold text-theme-text flex items-center gap-3">
+          <Film className="w-8 h-8 text-theme-primary" />
+          Browse and manage your season poster's
+        </h1>
       </div>
-
-      {/* Script & Sync Mode Buttons */}
-      <div className="bg-theme-card rounded-xl p-6 border border-theme">
-        <h2 className="text-xl font-semibold text-theme-text mb-4 flex items-center gap-2">
-          <Play className="w-5 h-5 text-theme-primary" />
-          Quick Actions
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-          <button
-            onClick={() => runScript("normal", "Normal Mode")}
-            disabled={scriptLoading || status.running}
-            className="flex flex-col items-center justify-center p-4 bg-theme-hover hover:bg-green-600/20 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg border border-theme-primary/30 hover:border-green-600 transition-all group"
-          >
-            <Play className="w-6 h-6 text-green-400 mb-2 group-hover:scale-110 transition-transform" />
-            <span className="font-medium text-theme-text text-sm">
-              Normal Mode
-            </span>
-          </button>
-
-          <button
-            onClick={() => runScript("backup", "Backup Mode")}
-            disabled={scriptLoading || status.running}
-            className="flex flex-col items-center justify-center p-4 bg-theme-hover hover:bg-yellow-600/20 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg border border-theme-primary/30 hover:border-yellow-600 transition-all group"
-          >
-            <Save className="w-6 h-6 text-orange-400 mb-2 group-hover:scale-110 transition-transform" />
-            <span className="font-medium text-theme-text text-sm">
-              Backup Mode
-            </span>
-          </button>
-
-          <button
-            onClick={() => runScript("syncjelly", "Sync Jellyfin")}
-            disabled={scriptLoading || status.running}
-            className="flex flex-col items-center justify-center p-4 bg-theme-hover hover:bg-orange-600/20 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg border border-theme-primary/30 hover:border-orange-600 transition-all group"
-          >
-            <RefreshCw className="w-6 h-6 text-purple-400 mb-2 group-hover:scale-110 transition-transform" />
-            <span className="font-medium text-theme-text text-sm">
-              Sync Jellyfin
-            </span>
-          </button>
-
-          <button
-            onClick={() => runScript("syncemby", "Sync Emby")}
-            disabled={scriptLoading || status.running}
-            className="flex flex-col items-center justify-center p-4 bg-theme-hover hover:bg-teal-600/20 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg border border-theme-primary/30 hover:border-teal-600 transition-all group"
-          >
-            <RefreshCw className="w-6 h-6 text-green-400 mb-2 group-hover:scale-110 transition-transform" />
-            <span className="font-medium text-theme-text text-sm">
-              Sync Emby
-            </span>
-          </button>
-        </div>
-      </div>
-
-      {/* Search bar */}
-      {activeFolder && images.length > 0 && (
-        <div className="bg-theme-card rounded-xl p-4 border border-theme">
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder={`Search seasons in ${activeFolder.name}...`}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-theme-bg border border-theme-primary/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
-            />
-          </div>
-        </div>
-      )}
 
       {/* Folder Tabs */}
       {folders.length > 0 && (
-        <div className="bg-theme-card rounded-xl p-6 border border-theme">
-          <h2 className="text-xl font-semibold text-theme-text mb-4 flex items-center gap-2">
-            <Folder className="w-5 h-5 text-theme-primary" />
-            Folders
-          </h2>
+        <div className="">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold text-theme-text flex items-center gap-2">
+              <Folder className="w-5 h-5 text-theme-primary" />
+              Folders
+            </h2>
+            <div className="flex items-center gap-3">
+              {/* Compact Image Size Slider */}
+              <CompactImageSizeSlider
+                value={imageSize}
+                onChange={setImageSize}
+                storageKey="gallery-season-size"
+              />
+              {/* Refresh Button */}
+              <button
+                onClick={() => {
+                  fetchFolders(true);
+                  if (activeFolder) {
+                    fetchFolderImages(activeFolder, true);
+                  }
+                }}
+                disabled={loading || imagesLoading}
+                className="flex items-center gap-2 px-4 py-2 bg-theme-primary hover:bg-theme-primary/90 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-all shadow-lg"
+              >
+                <RefreshCw
+                  className={`w-5 h-5 ${
+                    loading || imagesLoading ? "animate-spin" : ""
+                  }`}
+                />
+                Refresh
+              </button>
+            </div>
+          </div>
           <div className="flex flex-wrap gap-2">
             {folders
               .filter((folder) => folder.season_count > 0)
@@ -368,6 +269,22 @@ function SeasonGallery() {
                   </span>
                 </button>
               ))}
+          </div>
+        </div>
+      )}
+
+      {/* Search bar */}
+      {activeFolder && images.length > 0 && (
+        <div className="bg-theme-card rounded-xl p-4 border border-theme">
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              type="text"
+              placeholder={`Search seasons in ${activeFolder.name}...`}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-12 pr-4 py-3 bg-theme-bg border border-theme-primary/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+            />
           </div>
         </div>
       )}
@@ -453,7 +370,7 @@ function SeasonGallery() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+          <div className={`grid ${getGridClass(imageSize)} gap-6`}>
             {displayedImages.map((image, index) => (
               <div
                 key={index}
@@ -532,19 +449,10 @@ function SeasonGallery() {
       )}
 
       {selectedImage && (
-        <div
-          className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200"
-          onClick={() => setSelectedImage(null)}
-        >
-          <div
-            className="bg-theme-card border-2 border-theme-primary rounded-2xl max-w-6xl w-full overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="bg-theme-primary px-6 py-4 flex justify-between items-center">
-              <h3
-                className="text-lg font-bold text-white truncate mr-4"
-                title={formatDisplayPath(selectedImage.path)}
-              >
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-theme-card rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden shadow-2xl border-2 border-theme-primary">
+            <div className="px-6 py-4 border-b-2 border-theme flex justify-between items-center bg-theme-card">
+              <h3 className="text-xl font-bold text-theme-text truncate flex-1">
                 {formatDisplayPath(selectedImage.path)}
               </h3>
               <button
@@ -552,7 +460,7 @@ function SeasonGallery() {
                   deleteSeason(selectedImage.path, selectedImage.name, e)
                 }
                 disabled={deletingImage === selectedImage.path}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all flex-shrink-0 shadow-lg ${
+                className={`ml-4 flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
                   deletingImage === selectedImage.path
                     ? "bg-gray-600 cursor-not-allowed"
                     : "bg-red-600 hover:bg-red-700 hover:scale-105"

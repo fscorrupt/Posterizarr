@@ -17,7 +17,6 @@ import toast, { Toaster } from "react-hot-toast";
 const API_URL = "/api";
 const isDev = import.meta.env.DEV;
 
-// ⚡ FIX: Make WS_URL a function that accepts log_file parameter
 const getWebSocketURL = (logFile) => {
   const baseURL = isDev
     ? `ws://localhost:3000/ws/logs`
@@ -32,7 +31,6 @@ function LogViewer() {
   const [logs, setLogs] = useState([]);
   const [availableLogs, setAvailableLogs] = useState([]);
 
-  // 🎯 Check if a specific log file was passed via navigation state
   const initialLogFile = location.state?.logFile || "Scriptlog.log";
   const [selectedLog, setSelectedLog] = useState(initialLogFile);
 
@@ -42,8 +40,6 @@ function LogViewer() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [loading, setLoading] = useState(false); // ✨ NEW: Loading state for stop button
-
-  // ✨ NEW: Script status state
   const [status, setStatus] = useState({
     running: false,
     current_mode: null,
@@ -76,7 +72,6 @@ function LogViewer() {
     return { raw: cleanedLine };
   };
 
-  // ✨ NEW: Fetch script status
   const fetchStatus = async () => {
     try {
       const response = await fetch(`${API_URL}/status`);
@@ -90,7 +85,6 @@ function LogViewer() {
     }
   };
 
-  // ✨ NEW: Stop script function
   const stopScript = async () => {
     setLoading(true);
     try {
@@ -220,7 +214,6 @@ function LogViewer() {
     setIsReconnecting(false);
   };
 
-  // ⚡ FIX: Accept logFile parameter to connect to specific log
   const connectWebSocket = (logFile = selectedLog) => {
     if (
       wsRef.current &&
@@ -237,7 +230,6 @@ function LogViewer() {
     disconnectWebSocket();
 
     try {
-      // ⚡ FIX: Use dynamic WebSocket URL with log_file parameter
       const wsURL = getWebSocketURL(logFile);
       console.log(`Connecting to WebSocket: ${wsURL}`);
 
@@ -248,11 +240,6 @@ function LogViewer() {
         console.log(`✅ WebSocket connected to ${logFile}`);
         setConnected(true);
         setIsReconnecting(false);
-
-        toast.success(`Live feed: ${logFile}`, {
-          duration: 2000,
-          position: "top-right",
-        });
       };
 
       ws.onmessage = (event) => {
@@ -262,7 +249,6 @@ function LogViewer() {
           if (data.type === "log") {
             setLogs((prev) => [...prev, data.content]);
           } else if (data.type === "log_file_changed") {
-            // ⚠️ IMPORTANT: Backend changed log file (due to mode change)
             // Only accept this if we're NOT manually viewing a specific log
             console.log(`📄 Backend wants to switch to: ${data.log_file}`);
 
@@ -349,7 +335,7 @@ function LogViewer() {
   useEffect(() => {
     if (location.state?.logFile && location.state.logFile !== selectedLog) {
       console.log(
-        `🎯 LogViewer received log file from navigation: ${location.state.logFile}`
+        ` LogViewer received log file from navigation: ${location.state.logFile}`
       );
       setSelectedLog(location.state.logFile);
 
@@ -360,7 +346,6 @@ function LogViewer() {
     }
   }, [location.state?.logFile]);
 
-  // ⚡ FIX: When selectedLog changes, reconnect to new log file
   useEffect(() => {
     console.log(`Selected log changed to: ${selectedLog}`);
     fetchLogFile(selectedLog);
@@ -472,11 +457,8 @@ function LogViewer() {
             <div className="p-2 rounded-lg bg-theme-primary/10">
               <FileText className="w-8 h-8 text-theme-primary" />
             </div>
-            Log Viewer
-          </h1>
-          <p className="text-theme-muted mt-2">
             View and monitor your Posterizarr logs in real-time
-          </p>
+          </h1>
         </div>
 
         {/* Connection Status Badge */}

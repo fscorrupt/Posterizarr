@@ -141,28 +141,35 @@ class PosterizarrScheduler:
             # If we can't check, assume it might be running to be safe
             return True
 
-    async def run_script(self):
-        """Execute Posterizarr script in normal mode (non-blocking)"""
+    async def run_script(self, force_run: bool = False):
+        """
+        Execute Posterizarr script in normal mode (non-blocking)
+
+        Args:
+            force_run: If True, bypass "already running" checks for manual runs
+        """
         config = self.load_config()
 
-        # Check if script should be skipped when already running
-        if config.get("skip_if_running", True) and self.is_running:
-            logger.warning("Script is already running, skipping scheduled execution")
-            return
+        # Check if script should be skipped when already running (skip check for manual runs)
+        if not force_run and config.get("skip_if_running", True) and self.is_running:
+            error_msg = "Script is already running, skipping scheduled execution"
+            logger.warning(error_msg)
+            raise RuntimeError(error_msg)
 
-        # Check if another process is running
+        # Check if another process is running (skip check for manual runs)
         running_file = self.base_dir / "temp" / "Posterizarr.Running"
-        if running_file.exists():
+        if not force_run and running_file.exists():
             logger.warning(
                 "Posterizarr.Running file exists, checking if process is actually running..."
             )
 
             # Check if Posterizarr is actually running
             if self._is_posterizarr_actually_running():
-                logger.warning(
-                    "Posterizarr process is running, skipping scheduled execution"
+                error_msg = (
+                    "Posterizarr process is running, cannot start another instance"
                 )
-                return
+                logger.warning(error_msg)
+                raise RuntimeError(error_msg)
             else:
                 # File exists but no process is running - force delete
                 logger.warning(
@@ -172,8 +179,9 @@ class PosterizarrScheduler:
                     running_file.unlink()
                     logger.info("Successfully deleted stale Posterizarr.Running file")
                 except Exception as e:
-                    logger.error(f"Failed to delete stale running file: {e}")
-                    return
+                    error_msg = f"Failed to delete stale running file: {e}"
+                    logger.error(error_msg)
+                    raise RuntimeError(error_msg)
 
         try:
             self.is_running = True
@@ -197,8 +205,6 @@ class PosterizarrScheduler:
 
             logger.info(f"Executing scheduled run: {' '.join(command)}")
 
-            # FIX: Use subprocess.Popen in a thread instead of asyncio.create_subprocess_exec
-            # This fixes the NotImplementedError on Windows with asyncio
             def run_in_thread():
                 """Run subprocess in a separate thread to avoid blocking"""
                 try:
@@ -300,7 +306,6 @@ class PosterizarrScheduler:
 
             logger.info(f"Added schedule: {time_str} (Job ID: {job_id})")
 
-        # FIX 2: Update next_run immediately instead of with delay
         self.update_next_run()
 
     def update_next_run(self):
@@ -494,7 +499,6 @@ class PosterizarrScheduler:
 
         logger.info(f"Added new schedule: {time_str}")
 
-        # FIX 3: If scheduler is running and enabled, reapply schedules immediately
         if config.get("enabled", False) and self.scheduler.running:
             logger.info("Scheduler is running, reapplying schedules...")
             self.apply_schedules()
@@ -527,7 +531,6 @@ class PosterizarrScheduler:
             # Save config first
             self.save_config(config)
 
-            # FIX 4: If scheduler is running and enabled, reapply schedules immediately
             if config.get("enabled", False) and self.scheduler.running:
                 logger.info("Scheduler is running, reapplying schedules...")
                 self.apply_schedules()
