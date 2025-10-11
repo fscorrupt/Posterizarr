@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import {
   Save,
@@ -419,6 +419,7 @@ function ConfigEditor() {
   const [error, setError] = useState(null);
   const [expandedGroups, setExpandedGroups] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
+  const hasInitializedGroups = useRef(false);
 
   // Map URL path to tab name
   const getActiveTabFromPath = () => {
@@ -525,13 +526,18 @@ function ConfigEditor() {
   }, []);
 
   useEffect(() => {
-    if (config && activeTab) {
-      const firstGroup = tabs[activeTab]?.groups[0];
-      if (firstGroup) {
-        setExpandedGroups({ [firstGroup]: true });
+    if (config && !activeTab) {
+      setActiveTab("General");
+      // Expand first group of first tab by default - NUR beim ersten Laden!
+      if (!hasInitializedGroups.current) {
+        const firstGroup = tabs["General"].groups[0];
+        if (firstGroup) {
+          setExpandedGroups({ [firstGroup]: true });
+          hasInitializedGroups.current = true;
+        }
       }
     }
-  }, [config, activeTab]);
+  }, [config]);
 
   // Auto-expand groups when searching
   useEffect(() => {
