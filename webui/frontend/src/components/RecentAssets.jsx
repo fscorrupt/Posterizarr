@@ -256,7 +256,7 @@ function RecentAssets() {
                       )}
                     </div>
 
-                    {/* Source Folder (if from RotatedLogs) */}
+                    {/* Source Folder (if from RotatedLogs)
                     {asset.source_folder && (
                       <p
                         className="text-xs text-theme-muted mt-2 truncate"
@@ -264,7 +264,7 @@ function RecentAssets() {
                       >
                         📂 {asset.source_folder}
                       </p>
-                    )}
+                    )} */}
                   </div>
                 </div>
               ))}

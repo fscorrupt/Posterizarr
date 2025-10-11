@@ -19,7 +19,7 @@ import {
 import toast, { Toaster } from "react-hot-toast";
 import SystemInfo from "./SystemInfo";
 import DangerZone from "./DangerZone";
-import RecentAssets from "./RecentAssets"; // ✅ NEU: Import hinzugefügt
+import RecentAssets from "./RecentAssets";
 
 const API_URL = "/api";
 const isDev = import.meta.env.DEV;
