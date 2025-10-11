@@ -49,7 +49,7 @@ function CompactImageSizeSlider({
         }}
       />
 
-      <style jsx>{`
+      <style>{`
         .slider-thumb::-webkit-slider-thumb {
           appearance: none;
           width: 18px;
