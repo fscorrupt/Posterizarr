@@ -1,9 +1,10 @@
 // RecentAssets.jsx - Improved Version
 // - CompactImageSizeSlider (5-10 Assets)
-// - Dynamic poster sizing based on slider value
-// - Single horizontal row
+// - Dynamic poster sizing with CSS Grid
+// - Single horizontal row, all posters visible
 // - Theme-compatible
 // - All badges at bottom (no overlay)
+// - Cached data with silent background refresh (every 2 minutes)
 
 import React, { useState, useEffect } from "react";
 import { FileImage, ExternalLink, RefreshCw, ImageOff } from "lucide-react";
@@ -12,10 +13,13 @@ import CompactImageSizeSlider from "./CompactImageSizeSlider";
 
 const API_URL = "/api";
 
+let cachedAssets = null;
+
 function RecentAssets() {
-  const [assets, setAssets] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [assets, setAssets] = useState(cachedAssets || []);
+  const [loading, setLoading] = useState(false); // No initial loading if cached
   const [error, setError] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
 
   // Asset count state with localStorage (5-10 range, default 10)
   const [assetCount, setAssetCount] = useState(() => {
@@ -25,8 +29,10 @@ function RecentAssets() {
     return Math.min(Math.max(count, 5), 10);
   });
 
-  const fetchRecentAssets = async () => {
-    setLoading(true);
+  const fetchRecentAssets = async (silent = false) => {
+    if (!silent) {
+      setRefreshing(true);
+    }
     setError(null);
 
     try {
@@ -34,22 +40,36 @@ function RecentAssets() {
       const data = await response.json();
 
       if (data.success) {
+        cachedAssets = data.assets; // 🎯 Save to persistent cache
         setAssets(data.assets);
       } else {
         setError(data.error || "Failed to load recent assets");
-        toast.error("Failed to load recent assets");
+        if (!silent) {
+          toast.error("Failed to load recent assets");
+        }
       }
     } catch (err) {
       setError(err.message);
       console.error("Error fetching recent assets:", err);
-      toast.error("Error loading recent assets");
+      if (!silent) {
+        toast.error("Error loading recent assets");
+      }
     } finally {
       setLoading(false);
+      if (!silent) {
+        setTimeout(() => setRefreshing(false), 500);
+      }
     }
   };
 
   useEffect(() => {
-    fetchRecentAssets();
+    // 🎯 Always fetch on mount (silent mode = no loading spinner)
+    fetchRecentAssets(true);
+
+    // 🎯 Background refresh every 2 minutes (silent)
+    const interval = setInterval(() => fetchRecentAssets(true), 2 * 60 * 1000);
+
+    return () => clearInterval(interval);
   }, []);
 
   const handleAssetCountChange = (newCount) => {
@@ -103,12 +123,14 @@ function RecentAssets() {
 
           {/* Refresh Button - SystemInfo Style */}
           <button
-            onClick={fetchRecentAssets}
-            disabled={loading}
+            onClick={() => fetchRecentAssets()}
+            disabled={refreshing}
             className="flex items-center gap-2 px-4 py-2 text-theme-muted hover:text-theme-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:bg-theme-hover rounded-lg"
             title="Refresh recent assets"
           >
-            <RefreshCw className={`w-5 h-5 ${loading ? "animate-spin" : ""}`} />
+            <RefreshCw
+              className={`w-5 h-5 ${refreshing ? "animate-spin" : ""}`}
+            />
             <span className="text-sm font-medium">Refresh</span>
           </button>
         </div>
@@ -123,7 +145,7 @@ function RecentAssets() {
         <div className="text-center py-8 text-red-400">
           <p>Error: {error}</p>
           <button
-            onClick={fetchRecentAssets}
+            onClick={() => fetchRecentAssets()}
             className="mt-4 px-4 py-2 bg-theme-primary/20 hover:bg-theme-primary/30 rounded-lg transition-colors"
           >
             Retry
