@@ -2424,11 +2424,6 @@ async def delete_background(path: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# ============================================================================
-# CORRECTED ENDPOINTS - Swapped functionality
-# ============================================================================
-
-
 @app.get("/api/seasons-gallery")
 async def get_seasons_gallery():
     """Get seasons gallery from assets directory (only SeasonXX.jpg) - uses cache"""
@@ -3064,13 +3059,14 @@ async def restart_scheduler():
 
 @app.post("/api/scheduler/run-now")
 async def run_scheduler_now():
-    """Manually trigger a scheduled run immediately"""
+    """Manually trigger a scheduled run immediately (non-blocking)"""
     if not SCHEDULER_AVAILABLE or not scheduler:
         raise HTTPException(status_code=503, detail="Scheduler not available")
 
     try:
-        # Use force_run=True to bypass "already running" checks for manual runs
-        await scheduler.run_script(force_run=True)
+        # Use asyncio.create_task to run it asynchronously
+        asyncio.create_task(scheduler.run_script(force_run=True))
+
         return {"success": True, "message": "Manual run triggered successfully"}
     except RuntimeError as e:
         # Runtime errors from run_script (e.g., already running, file issues)
