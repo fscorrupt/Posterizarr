@@ -58,7 +58,7 @@ function TitleCardGallery() {
       setFolders(data.folders || []);
 
       if (showToast && data.folders && data.folders.length > 0) {
-        toast.success(`Gefunden: ${data.folders.length} Ordner`, {
+        toast.success(`Found: ${data.folders.length} folders`, {
           duration: 2000,
           position: "top-right",
         });
@@ -133,11 +133,7 @@ function TitleCardGallery() {
       event.stopPropagation();
     }
 
-    if (
-      !window.confirm(
-        `Möchtest du die TitleCard "${imageName}" wirklich löschen?`
-      )
-    ) {
+    if (!window.confirm(`Do you really want to delete "${imageName}"?`)) {
       return;
     }
 
@@ -155,7 +151,7 @@ function TitleCardGallery() {
       const data = await response.json();
 
       if (data.success) {
-        toast.success(`TitleCard "${imageName}" erfolgreich gelöscht`, {
+        toast.success(`TitleCard "${imageName}" deleted successfully`, {
           duration: 3000,
           position: "top-right",
         });
@@ -172,7 +168,7 @@ function TitleCardGallery() {
       }
     } catch (error) {
       console.error("Error deleting title card:", error);
-      toast.error(`Fehler beim Löschen: ${error.message}`, {
+      toast.error(`Error while deleting: ${error.message}`, {
         duration: 5000,
         position: "top-right",
       });

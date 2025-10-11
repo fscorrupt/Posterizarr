@@ -57,7 +57,7 @@ function BackgroundsGallery() {
       setFolders(data.folders || []);
 
       if (showToast && data.folders && data.folders.length > 0) {
-        toast.success(`Gefunden: ${data.folders.length} Ordner`, {
+        toast.success(`Found: ${data.folders.length} folders`, {
           duration: 2000,
           position: "top-right",
         });
@@ -132,11 +132,7 @@ function BackgroundsGallery() {
       event.stopPropagation();
     }
 
-    if (
-      !window.confirm(
-        `Möchtest du den Background "${imageName}" wirklich löschen?`
-      )
-    ) {
+    if (!window.confirm(`Do you really want to delete  "${imageName}"?`)) {
       return;
     }
 
@@ -154,7 +150,7 @@ function BackgroundsGallery() {
       const data = await response.json();
 
       if (data.success) {
-        toast.success(`Background "${imageName}" erfolgreich gelöscht`, {
+        toast.success(`Background "${imageName}" deleted successfully`, {
           duration: 3000,
           position: "top-right",
         });
@@ -171,7 +167,7 @@ function BackgroundsGallery() {
       }
     } catch (error) {
       console.error("Error deleting background:", error);
-      toast.error(`Fehler beim Löschen: ${error.message}`, {
+      toast.error(`Error while deleting: ${error.message}`, {
         duration: 5000,
         position: "top-right",
       });

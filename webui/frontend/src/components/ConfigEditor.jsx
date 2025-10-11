@@ -539,6 +539,18 @@ function ConfigEditor() {
     }
   }, [config]);
 
+  useEffect(() => {
+    if (activeTab && hasInitializedGroups.current) {
+      const firstGroup = getGroupsByTab(activeTab)[0];
+      if (firstGroup) {
+        setExpandedGroups((prev) => ({
+          ...prev,
+          [firstGroup]: true,
+        }));
+      }
+    }
+  }, [activeTab]);
+
   // Auto-expand groups when searching
   useEffect(() => {
     if (searchQuery && activeTab) {
