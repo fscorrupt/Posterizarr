@@ -8,6 +8,8 @@ import {
   Folder,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
+import ImageSizeSlider from "./ImageSizeSlider";
+import { getGridColumns, loadImageSize } from "../utils/imageGridUtils";
 
 const API_URL = "/api";
 
@@ -22,6 +24,14 @@ function Gallery() {
   const [error, setError] = useState(null);
   const [deletingImage, setDeletingImage] = useState(null);
   const [displayCount, setDisplayCount] = useState(50);
+
+  // Image size slider state
+  const [imageSize, setImageSize] = useState(() =>
+    loadImageSize("gallery-poster-size", 3)
+  );
+
+  // Calculate grid columns based on image size (true = Portrait for Posters)
+  const gridColumns = getGridColumns(imageSize, true);
 
   const fetchFolders = async (showToast = false) => {
     setLoading(true);
@@ -100,7 +110,7 @@ function Gallery() {
     }
   };
 
-  // Format path to remove folder prefix (e.g., "4K/Movie Year/file.jpg" -> "Movie Year/file.jpg")
+  // Format path to remove folder prefix
   const formatDisplayPath = (path) => {
     const parts = path.split(/[\\/]/);
     if (parts.length > 1) {
@@ -199,6 +209,13 @@ function Gallery() {
           Browse and manage your poster´s
         </h1>
       </div>
+
+      {/* Image Size Slider */}
+      <ImageSizeSlider
+        value={imageSize}
+        onChange={setImageSize}
+        storageKey="gallery-poster-size"
+      />
 
       {/* Folder Tabs */}
       {folders.length > 0 && (
@@ -302,11 +319,10 @@ function Gallery() {
               <Folder className="w-12 h-12 text-theme-primary" />
             </div>
             <h3 className="text-2xl font-semibold text-theme-text mb-2">
-              No Folders Found
+              Select a Folder
             </h3>
             <p className="text-theme-muted max-w-md">
-              No folders found in assets directory. Please check your
-              configuration.
+              Choose a folder from above to view its posters
             </p>
           </div>
         </div>
@@ -315,7 +331,7 @@ function Gallery() {
           <RefreshCw className="w-12 h-12 animate-spin text-theme-primary mb-4" />
           <p className="text-theme-muted">Loading posters...</p>
         </div>
-      ) : filteredImages.length === 0 ? (
+      ) : displayedImages.length === 0 ? (
         <div className="bg-theme-card rounded-xl p-12 border border-theme text-center">
           <div className="flex flex-col items-center">
             <div className="p-4 rounded-full bg-theme-primary/20 mb-4">
@@ -347,7 +363,8 @@ function Gallery() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+          {/* Dynamic Grid with Image Size Slider */}
+          <div className={`grid ${gridColumns} gap-6`}>
             {displayedImages.map((image, index) => (
               <div
                 key={index}
@@ -427,21 +444,18 @@ function Gallery() {
         </>
       )}
 
-      {/* Image Modal */}
+      {/* Image Preview Modal */}
       {selectedImage && (
         <div
-          className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200"
+          className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 animate-fadeIn"
           onClick={() => setSelectedImage(null)}
         >
           <div
-            className="bg-theme-card border-2 border-theme-primary rounded-2xl max-w-6xl w-full overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300"
+            className="bg-theme-card rounded-2xl max-w-6xl w-full overflow-hidden shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="bg-theme-primary px-6 py-4 flex justify-between items-center">
-              <h3
-                className="text-lg font-bold text-white truncate mr-4"
-                title={formatDisplayPath(selectedImage.path)}
-              >
+            <div className="bg-theme-card px-6 py-4 border-b-2 border-theme flex items-center justify-between">
+              <h3 className="text-xl font-semibold text-theme-primary truncate flex-1 mr-4">
                 {formatDisplayPath(selectedImage.path)}
               </h3>
               <button
@@ -449,7 +463,7 @@ function Gallery() {
                   deletePoster(selectedImage.path, selectedImage.name, e)
                 }
                 disabled={deletingImage === selectedImage.path}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all flex-shrink-0 shadow-lg ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
                   deletingImage === selectedImage.path
                     ? "bg-gray-600 cursor-not-allowed"
                     : "bg-red-600 hover:bg-red-700 hover:scale-105"

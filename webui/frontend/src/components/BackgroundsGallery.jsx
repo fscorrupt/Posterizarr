@@ -9,6 +9,8 @@ import {
   Layers,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
+import ImageSizeSlider from "./ImageSizeSlider";
+import { getGridColumns, loadImageSize } from "../utils/imageGridUtils";
 
 const API_URL = "/api";
 
@@ -23,6 +25,14 @@ function BackgroundsGallery() {
   const [error, setError] = useState(null);
   const [deletingImage, setDeletingImage] = useState(null);
   const [displayCount, setDisplayCount] = useState(50);
+
+  // Image size slider state
+  const [imageSize, setImageSize] = useState(() =>
+    loadImageSize("gallery-background-size", 3)
+  );
+
+  // Calculate grid columns based on image size (false = Landscape for Backgrounds)
+  const gridColumns = getGridColumns(imageSize, false);
 
   const fetchFolders = async (showToast = false) => {
     setLoading(true);
@@ -196,9 +206,16 @@ function BackgroundsGallery() {
       <div>
         <h1 className="text-3xl font-bold text-theme-text flex items-center gap-3">
           <Layers className="w-8 h-8 text-theme-primary" />
-          Browse and manage your background's
+          Browse and manage your backgrounds
         </h1>
       </div>
+
+      {/* Image Size Slider */}
+      <ImageSizeSlider
+        value={imageSize}
+        onChange={setImageSize}
+        storageKey="gallery-background-size"
+      />
 
       {/* Folder Tabs */}
       {folders.length > 0 && (
@@ -278,7 +295,7 @@ function BackgroundsGallery() {
               <ImageIcon className="w-12 h-12 text-red-400" />
             </div>
             <h3 className="text-2xl font-semibold text-red-300 mb-2">
-              Error Loading Backgrounds Gallery
+              Error Loading Gallery
             </h3>
             <p className="text-red-200 text-sm mb-6 max-w-md">{error}</p>
             <button
@@ -302,11 +319,10 @@ function BackgroundsGallery() {
               <Folder className="w-12 h-12 text-theme-primary" />
             </div>
             <h3 className="text-2xl font-semibold text-theme-text mb-2">
-              No Folders Found
+              Select a Folder
             </h3>
             <p className="text-theme-muted max-w-md">
-              No folders found in assets directory. Please check your
-              configuration.
+              Choose a folder from above to view its backgrounds
             </p>
           </div>
         </div>
@@ -315,7 +331,7 @@ function BackgroundsGallery() {
           <RefreshCw className="w-12 h-12 animate-spin text-theme-primary mb-4" />
           <p className="text-theme-muted">Loading backgrounds...</p>
         </div>
-      ) : filteredImages.length === 0 ? (
+      ) : displayedImages.length === 0 ? (
         <div className="bg-theme-card rounded-xl p-12 border border-theme text-center">
           <div className="flex flex-col items-center">
             <div className="p-4 rounded-full bg-theme-primary/20 mb-4">
@@ -347,7 +363,8 @@ function BackgroundsGallery() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {/* Dynamic Grid with Image Size Slider */}
+          <div className={`grid ${gridColumns} gap-6`}>
             {displayedImages.map((image, index) => (
               <div
                 key={index}
@@ -427,6 +444,7 @@ function BackgroundsGallery() {
         </>
       )}
 
+      {/* Image Preview Modal */}
       {selectedImage && (
         <div
           className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200"
