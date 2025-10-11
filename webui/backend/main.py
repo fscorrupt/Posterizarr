@@ -986,7 +986,7 @@ async def receive_ui_log(log_entry: UILogEntry):
     Empfängt UI/Frontend-Logs und schreibt sie in UIlog.log
     """
     try:
-        ui_log_path = LOGS_DIR / "UIlog.log"
+        ui_log_path = BASE_DIR / "UIlog.log"
 
         # Create log entry in the same format as backend logs
         timestamp = log_entry.timestamp
@@ -1014,7 +1014,7 @@ async def receive_ui_logs_batch(batch: UILogBatch):
     Empfängt mehrere UI-Logs auf einmal (bessere Performance)
     """
     try:
-        ui_log_path = LOGS_DIR / "UIlog.log"
+        ui_log_path = BASE_DIR / "UIlog.log"
 
         log_lines = []
         for log_entry in batch.logs:
@@ -2764,7 +2764,7 @@ async def get_recent_assets():
                 logger.error(f"Error reading {main_csv}: {e}")
 
         # Read from RotatedLogs subfolders
-        rotated_logs_dir = LOGS_DIR / "RotatedLogs"
+        rotated_logs_dir = BASE_DIR / "RotatedLogs"
         if rotated_logs_dir.exists() and rotated_logs_dir.is_dir():
             # Get all subdirectories in RotatedLogs
             for subdir in rotated_logs_dir.iterdir():
