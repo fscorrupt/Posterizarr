@@ -1408,16 +1408,37 @@ async def get_status():
     """Get script status with last log lines from appropriate log file"""
     global current_process, current_mode
 
-    # Check if manual process is running
-    manual_is_running = current_process is not None and current_process.poll() is None
+    manual_is_running = False
+    if current_process is not None:
+        poll_result = current_process.poll()
+        if poll_result is None:
+            # Process is still running
+            manual_is_running = True
+        else:
+            logger.info(
+                f"Process finished with exit code {poll_result}, cleaning up..."
+            )
+            current_process = None
+            current_mode = None
+            manual_is_running = False
 
-    # Check if scheduler process is running
     scheduler_is_running = False
     scheduler_pid = None
     if SCHEDULER_AVAILABLE and scheduler:
-        scheduler_is_running = scheduler.is_running
-        if scheduler_is_running and scheduler.current_process:
-            scheduler_pid = scheduler.current_process.pid
+        if scheduler.is_running and scheduler.current_process:
+            poll_result = scheduler.current_process.poll()
+            if poll_result is None:
+                # Scheduler process is still running
+                scheduler_is_running = True
+                scheduler_pid = scheduler.current_process.pid
+            else:
+                # ✅ Scheduler process has finished - clean up!
+                logger.info(
+                    f"Scheduler process finished with exit code {poll_result}, cleaning up..."
+                )
+                scheduler.current_process = None
+                scheduler.is_running = False
+                scheduler_is_running = False
 
     # Combined running status
     is_running = manual_is_running or scheduler_is_running
@@ -1426,6 +1447,8 @@ async def get_status():
     effective_mode = current_mode
     if scheduler_is_running and not manual_is_running:
         effective_mode = "scheduled"  # Special mode for scheduler runs
+    elif not is_running:
+        effective_mode = None
 
     # Determine which log file to use
     # Map modes to their log files
@@ -1487,7 +1510,13 @@ async def get_status():
         "last_logs": last_logs,
         "script_exists": SCRIPT_PATH.exists(),
         "config_exists": CONFIG_PATH.exists(),
-        "pid": display_pid,
+        "pid": (
+            scheduler_pid
+            if scheduler_is_running and scheduler_pid
+            else (
+                current_process.pid if manual_is_running and current_process else None
+            )
+        ),
         "current_mode": effective_mode,
         "active_log": active_log,
         "already_running_detected": already_running,
