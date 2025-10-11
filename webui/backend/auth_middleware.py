@@ -12,7 +12,7 @@ import logging
 from pathlib import Path
 
 auth_logger = logging.getLogger("posterizarr.auth")
-auth_logger.setLevel(logging.INFO)
+auth_logger.setLevel(logging.WARNING)
 
 if not auth_logger.handlers:
     try:
