@@ -1,5 +1,6 @@
 import React from "react";
 import { AlertTriangle, Square, Zap, Trash2 } from "lucide-react";
+import toast from "react-hot-toast";
 
 const API_URL = "/api";
 
@@ -13,10 +14,28 @@ const DangerZone = ({ status, loading, onStatusUpdate }) => {
       const data = await response.json();
 
       if (data.success) {
+        // Benutzerfreundlichere Nachricht anstelle von "Stopped: manual"
+        const message = data.message.includes("Stopped:")
+          ? "Script stopped successfully"
+          : data.message;
+
+        toast.success(message, {
+          duration: 3000,
+          position: "top-right",
+        });
         if (onStatusUpdate) onStatusUpdate();
+      } else {
+        toast.error(data.message || "Failed to stop script", {
+          duration: 4000,
+          position: "top-right",
+        });
       }
     } catch (error) {
       console.error("Error stopping script:", error);
+      toast.error(`Error stopping script: ${error.message}`, {
+        duration: 5000,
+        position: "top-right",
+      });
     }
   };
 
@@ -37,10 +56,28 @@ const DangerZone = ({ status, loading, onStatusUpdate }) => {
       const data = await response.json();
 
       if (data.success) {
+        // Benutzerfreundlichere Nachricht anstelle von "Force killed: manual"
+        const message = data.message.includes("Force killed:")
+          ? "Script force killed successfully"
+          : data.message;
+
+        toast.success(message, {
+          duration: 3000,
+          position: "top-right",
+        });
         if (onStatusUpdate) onStatusUpdate();
+      } else {
+        toast.error(data.message || "Failed to force kill script", {
+          duration: 4000,
+          position: "top-right",
+        });
       }
     } catch (error) {
       console.error("Error force killing script:", error);
+      toast.error(`Error force killing script: ${error.message}`, {
+        duration: 5000,
+        position: "top-right",
+      });
     }
   };
 
@@ -54,17 +91,46 @@ const DangerZone = ({ status, loading, onStatusUpdate }) => {
     }
 
     try {
-      const response = await fetch(`${API_URL}/delete-running-file`, {
-        method: "POST",
+      const response = await fetch(`${API_URL}/running-file`, {
+        method: "DELETE",
       });
+
+      if (!response.ok) {
+        let errorMessage = `HTTP Error ${response.status}: ${response.statusText}`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.detail || errorData.message || errorMessage;
+        } catch {
+          // JSON-Parsing fehlgeschlagen
+        }
+
+        toast.error(errorMessage, {
+          duration: 5000,
+          position: "top-right",
+        });
+        return;
+      }
 
       const data = await response.json();
 
       if (data.success) {
+        toast.success(data.message || "Running file deleted successfully", {
+          duration: 3000,
+          position: "top-right",
+        });
         if (onStatusUpdate) onStatusUpdate();
+      } else {
+        toast.error(data.message || "Failed to delete running file", {
+          duration: 4000,
+          position: "top-right",
+        });
       }
     } catch (error) {
       console.error("Error deleting running file:", error);
+      toast.error(`Error deleting running file: ${error.message}`, {
+        duration: 5000,
+        position: "top-right",
+      });
     }
   };
 
