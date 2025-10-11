@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from "react";
 import {
-  RefreshCw,
-  Image as ImageIcon,
-  Search,
-  Trash2,
-  ChevronDown,
-  Folder,
   Film,
+  Folder,
+  Trash2,
+  RefreshCw,
+  Search,
+  ChevronDown,
+  ImageIcon,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
+import CompactImageSizeSlider from "./CompactImageSizeSlider";
 
 const API_URL = "/api";
 
@@ -18,15 +19,36 @@ function SeasonGallery() {
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [imagesLoading, setImagesLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedImage, setSelectedImage] = useState(null);
   const [error, setError] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
   const [deletingImage, setDeletingImage] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
   const [displayCount, setDisplayCount] = useState(50);
 
+  // Image size state with localStorage (2-10 range, default 5)
+  const [imageSize, setImageSize] = useState(() => {
+    const saved = localStorage.getItem("gallery-season-size");
+    return saved ? parseInt(saved) : 5;
+  });
+
+  // Grid column classes based on size (2-10 columns)
+  // Mobile always shows 2 columns, desktop shows the selected amount
+  const getGridClass = (size) => {
+    const classes = {
+      2: "grid-cols-2 lg:grid-cols-2",
+      3: "grid-cols-2 lg:grid-cols-3",
+      4: "grid-cols-2 lg:grid-cols-4",
+      5: "grid-cols-2 lg:grid-cols-5",
+      6: "grid-cols-2 lg:grid-cols-6",
+      7: "grid-cols-2 lg:grid-cols-7",
+      8: "grid-cols-2 lg:grid-cols-8",
+      9: "grid-cols-2 lg:grid-cols-9",
+      10: "grid-cols-2 lg:grid-cols-10",
+    };
+    return classes[size] || classes[5];
+  };
+
   const fetchFolders = async (showToast = false) => {
-    setLoading(true);
-    setError(null);
     try {
       const response = await fetch(`${API_URL}/assets-folders`);
       if (!response.ok) {
@@ -36,24 +58,21 @@ function SeasonGallery() {
       setFolders(data.folders || []);
 
       if (showToast && data.folders && data.folders.length > 0) {
-        toast.success(`Loaded ${data.folders.length} folders`, {
+        toast.success(`Gefunden: ${data.folders.length} Ordner`, {
           duration: 2000,
           position: "top-right",
         });
       }
 
       if (data.folders && data.folders.length > 0 && !activeFolder) {
-        const foldersWithSeasons = data.folders.filter(
-          (f) => f.season_count > 0
-        );
-        if (foldersWithSeasons.length > 0) {
-          setActiveFolder(foldersWithSeasons[0]);
+        const folderWithImages = data.folders.find((f) => f.season_count > 0);
+        if (folderWithImages) {
+          setActiveFolder(folderWithImages);
         }
       }
     } catch (error) {
       console.error("Error fetching folders:", error);
       setError(error.message);
-      setFolders([]);
       toast.error("Failed to load folders", {
         duration: 4000,
         position: "top-right",
@@ -67,7 +86,6 @@ function SeasonGallery() {
     if (!folder) return;
 
     setImagesLoading(true);
-    setError(null);
     try {
       const response = await fetch(
         `${API_URL}/assets-folder-images/seasons/${folder.path}`
@@ -114,7 +132,7 @@ function SeasonGallery() {
     }
 
     if (
-      !window.confirm(`Do you really want to delete the season "${imageName}"?`)
+      !window.confirm(`Möchtest du das Season "${imageName}" wirklich löschen?`)
     ) {
       return;
     }
@@ -133,7 +151,7 @@ function SeasonGallery() {
       const data = await response.json();
 
       if (data.success) {
-        toast.success(`Season "${imageName}" successfully deleted`, {
+        toast.success(`Season "${imageName}" erfolgreich gelöscht`, {
           duration: 3000,
           position: "top-right",
         });
@@ -150,7 +168,7 @@ function SeasonGallery() {
       }
     } catch (error) {
       console.error("Error deleting season:", error);
-      toast.error(`Error deleting: ${error.message}`, {
+      toast.error(`Fehler beim Löschen: ${error.message}`, {
         duration: 5000,
         position: "top-right",
       });
@@ -206,23 +224,32 @@ function SeasonGallery() {
               <Folder className="w-5 h-5 text-theme-primary" />
               Folders
             </h2>
-            <button
-              onClick={() => {
-                fetchFolders(true);
-                if (activeFolder) {
-                  fetchFolderImages(activeFolder, true);
-                }
-              }}
-              disabled={loading || imagesLoading}
-              className="flex items-center gap-2 px-4 py-2 bg-theme-primary hover:bg-theme-primary/90 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-all shadow-lg"
-            >
-              <RefreshCw
-                className={`w-5 h-5 ${
-                  loading || imagesLoading ? "animate-spin" : ""
-                }`}
+            <div className="flex items-center gap-3">
+              {/* Compact Image Size Slider */}
+              <CompactImageSizeSlider
+                value={imageSize}
+                onChange={setImageSize}
+                storageKey="gallery-season-size"
               />
-              Refresh
-            </button>
+              {/* Refresh Button */}
+              <button
+                onClick={() => {
+                  fetchFolders(true);
+                  if (activeFolder) {
+                    fetchFolderImages(activeFolder, true);
+                  }
+                }}
+                disabled={loading || imagesLoading}
+                className="flex items-center gap-2 px-4 py-2 bg-theme-primary hover:bg-theme-primary/90 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-all shadow-lg"
+              >
+                <RefreshCw
+                  className={`w-5 h-5 ${
+                    loading || imagesLoading ? "animate-spin" : ""
+                  }`}
+                />
+                Refresh
+              </button>
+            </div>
           </div>
           <div className="flex flex-wrap gap-2">
             {folders
@@ -345,7 +372,7 @@ function SeasonGallery() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+          <div className={`grid ${getGridClass(imageSize)} gap-6`}>
             {displayedImages.map((image, index) => (
               <div
                 key={index}
@@ -424,19 +451,10 @@ function SeasonGallery() {
       )}
 
       {selectedImage && (
-        <div
-          className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200"
-          onClick={() => setSelectedImage(null)}
-        >
-          <div
-            className="bg-theme-card border-2 border-theme-primary rounded-2xl max-w-6xl w-full overflow-hidden shadow-2xl animate-in zoom-in-95 duration-300"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="bg-theme-primary px-6 py-4 flex justify-between items-center">
-              <h3
-                className="text-lg font-bold text-white truncate mr-4"
-                title={formatDisplayPath(selectedImage.path)}
-              >
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-theme-card rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden shadow-2xl border-2 border-theme-primary">
+            <div className="px-6 py-4 border-b-2 border-theme flex justify-between items-center bg-theme-card">
+              <h3 className="text-xl font-bold text-theme-text truncate flex-1">
                 {formatDisplayPath(selectedImage.path)}
               </h3>
               <button
@@ -444,7 +462,7 @@ function SeasonGallery() {
                   deleteSeason(selectedImage.path, selectedImage.name, e)
                 }
                 disabled={deletingImage === selectedImage.path}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all flex-shrink-0 shadow-lg ${
+                className={`ml-4 flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
                   deletingImage === selectedImage.path
                     ? "bg-gray-600 cursor-not-allowed"
                     : "bg-red-600 hover:bg-red-700 hover:scale-105"
