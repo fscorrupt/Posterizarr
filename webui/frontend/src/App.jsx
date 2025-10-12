@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -7,6 +7,12 @@ import {
 } from "react-router-dom";
 import { ThemeProvider } from "./context/ThemeContext";
 import { SidebarProvider, useSidebar } from "./context/SidebarContext";
+import { AuthProvider, useAuth } from "./context/AuthContext";
+
+// Setup fetch interceptor BEFORE any other imports that might use fetch
+import { setupFetchInterceptor } from "./utils/fetchInterceptor";
+setupFetchInterceptor();
+
 import ConfigEditor from "./components/ConfigEditor";
 import LogViewer from "./components/LogViewer";
 import Dashboard from "./components/Dashboard";
@@ -17,11 +23,16 @@ import SchedulerSettings from "./components/SchedulerSettings";
 import RunModes from "./components/RunModes";
 import Sidebar from "./components/Sidebar";
 import TopNavbar from "./components/TopNavbar";
+import LoginScreen from "./components/LoginScreen";
+import LoadingScreen from "./components/LoadingScreen";
 
 import uiLogger from "./utils/uiLogger";
 
 function AppContent() {
   const { isCollapsed } = useSidebar();
+  const { isAuthenticated, loading, login } = useAuth();
+  const [showLoadingScreen, setShowLoadingScreen] = useState(false);
+  const [hasLoggedIn, setHasLoggedIn] = useState(false);
 
   useEffect(() => {
     console.log("✅ Posterizarr UI started - UI-Logger active");
@@ -32,8 +43,43 @@ function AppContent() {
     };
   }, []);
 
+  // Handle login success with loading screen
+  const handleLoginSuccess = (credentials) => {
+    setShowLoadingScreen(true);
+    setHasLoggedIn(true);
+    login(credentials);
+
+    // Show loading screen for 2-3 seconds
+    setTimeout(() => {
+      setShowLoadingScreen(false);
+    }, 2500);
+  };
+
+  // Show loading spinner while checking auth status on initial load
+  if (loading && !hasLoggedIn) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-theme-dark via-theme-darker to-theme-dark flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-theme-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-theme-muted">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show loading screen after successful login
+  if (showLoadingScreen) {
+    return <LoadingScreen />;
+  }
+
+  // Show login screen if auth is required and user is not authenticated
+  if (!isAuthenticated) {
+    return <LoginScreen onLoginSuccess={handleLoginSuccess} />;
+  }
+
+  // Show main app if authenticated (or auth is disabled)
   return (
-    <div className="min-h-screen bg-theme-dark text-theme-text">
+    <div className="min-h-screen bg-gradient-to-br from-theme-dark via-theme-darker to-theme-dark text-theme-text">
       <TopNavbar />
       <Sidebar />
 
@@ -111,9 +157,11 @@ function App() {
   return (
     <Router>
       <ThemeProvider>
-        <SidebarProvider>
-          <AppContent />
-        </SidebarProvider>
+        <AuthProvider>
+          <SidebarProvider>
+            <AppContent />
+          </SidebarProvider>
+        </AuthProvider>
       </ThemeProvider>
     </Router>
   );

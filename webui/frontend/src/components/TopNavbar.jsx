@@ -1,10 +1,13 @@
 import React, { useState } from "react";
-import { Palette, User } from "lucide-react";
+import { Palette, User, LogOut } from "lucide-react";
 import { useTheme } from "../context/ThemeContext";
+import { useAuth } from "../context/AuthContext";
 
 const TopNavbar = () => {
   const { theme, setTheme, themes } = useTheme();
+  const { isAuthEnabled, logout } = useAuth();
   const [isThemeDropdownOpen, setIsThemeDropdownOpen] = useState(false);
+  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
 
   const themeArray = Object.entries(themes).map(([id, config]) => ({
     id,
@@ -67,13 +70,49 @@ const TopNavbar = () => {
             )}
           </div>
 
-          {/* User Icon */}
-          <button
-            className="flex items-center justify-center w-10 h-10 rounded-lg hover:bg-theme-hover transition-colors text-theme-text"
-            title="User Profile"
-          >
-            <User className="w-5 h-5" />
-          </button>
+          {/* User Icon with Dropdown (only if auth is enabled) */}
+          {isAuthEnabled ? (
+            <div className="relative">
+              <button
+                onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
+                className="flex items-center justify-center w-10 h-10 rounded-lg hover:bg-theme-hover transition-colors text-theme-text"
+                title="User Menu"
+              >
+                <User className="w-5 h-5" />
+              </button>
+
+              {/* User Dropdown */}
+              {isUserDropdownOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setIsUserDropdownOpen(false)}
+                  />
+                  <div className="absolute right-0 top-full mt-2 w-48 rounded-lg bg-theme-card border border-theme shadow-lg z-50">
+                    <div className="p-2">
+                      <button
+                        onClick={() => {
+                          logout();
+                          setIsUserDropdownOpen(false);
+                        }}
+                        className="w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm text-red-400 hover:bg-red-500/10 transition-colors"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        <span>Sign Out</span>
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          ) : (
+            <button
+              className="flex items-center justify-center w-10 h-10 rounded-lg hover:bg-theme-hover transition-colors text-theme-text"
+              title="User Profile"
+            >
+              <User className="w-5 h-5" />
+            </button>
+          )}
         </div>
       </div>
     </div>

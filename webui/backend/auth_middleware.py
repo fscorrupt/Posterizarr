@@ -138,8 +138,39 @@ class BasicAuthMiddleware(BaseHTTPMiddleware):
         if request.url.path == "/api/auth/check":
             return await call_next(request)
 
-        #  IMPORTANT: Block EVERYTHING - including static files!
-        # No exceptions for HTML, JS, CSS, etc.
+        #  Allow frontend static files (HTML, JS, CSS) so login screen can load
+        # The frontend will show the login screen if auth is required
+        frontend_static_extensions = [
+            ".html",
+            ".js",
+            ".css",
+            ".map",
+            ".ico",
+            ".svg",
+            ".png",
+            ".woff",
+            ".woff2",
+            ".ttf",
+        ]
+        if any(request.url.path.endswith(ext) for ext in frontend_static_extensions):
+            return await call_next(request)
+
+        # Allow root path (/) to load index.html
+        if request.url.path == "/" or request.url.path == "/index.html":
+            return await call_next(request)
+
+        #  Allow static asset paths (images, posters, etc.)
+        # These cannot send Authorization headers via <img> tags
+        static_paths = [
+            "/poster_assets/",  # Poster images
+            "/test/",  # Test images
+            "/assets/",  # General assets
+        ]
+        if any(request.url.path.startswith(path) for path in static_paths):
+            return await call_next(request)
+
+        #  Block API endpoints and other resources without auth
+        # Only API calls need authentication, frontend loads freely to show login
         client_ip = request.client.host if request.client else "unknown"
 
         # Check Authorization Header
@@ -181,14 +212,16 @@ class BasicAuthMiddleware(BaseHTTPMiddleware):
 
     def _unauthorized_response(self):
         """
-        Returns 401 Unauthorized Response
-        Browser automatically shows the login popup
+        Returns 401 Unauthorized Response WITHOUT triggering browser popup
+        We removed WWW-Authenticate header to prevent browser's built-in login dialog
+        Our custom login screen in the frontend handles authentication instead
         """
         return Response(
             content="Unauthorized - Authentication required",
             status_code=status.HTTP_401_UNAUTHORIZED,
             headers={
-                "WWW-Authenticate": 'Basic realm="Posterizarr Web UI"',
+                # REMOVED: "WWW-Authenticate" header to prevent browser popup
+                # The frontend will show our custom login screen instead
                 "Cache-Control": "no-cache, no-store, must-revalidate",
             },
         )

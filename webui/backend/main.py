@@ -589,6 +589,8 @@ def parse_image_choices_csv(csv_path: Path) -> list:
     """
     Parse ImageChoices.csv file and return list of assets
     CSV format: "Title";"Type";"Rootfolder";"LibraryName";"Language";"Fallback";"TextTruncated";"Download Source";"Fav Provider Link"
+
+    Skips empty rows where all fields are empty (no assets created during script run)
     """
     import csv
 
@@ -600,6 +602,14 @@ def parse_image_choices_csv(csv_path: Path) -> list:
             reader = csv.DictReader(f, delimiter=";")
 
             for row in reader:
+                # Skip empty rows (all fields are empty or just semicolons)
+                title = row.get("Title", "").strip('"').strip()
+                rootfolder = row.get("Rootfolder", "").strip('"').strip()
+
+                # If both title and rootfolder are empty, this is an empty row
+                if not title and not rootfolder:
+                    continue
+
                 # Remove quotes from values if present
                 asset = {
                     "title": row.get("Title", "").strip('"'),
