@@ -398,7 +398,7 @@ const OverlayAssets = () => {
                     </div>
                   )}
                   {/* Hover Overlay */}
-                  <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                  <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 z-20">
                     {file.type === "image" && (
                       <button
                         onClick={() => setPreviewFile(file)}
@@ -452,33 +452,82 @@ const OverlayAssets = () => {
       {/* Preview Modal */}
       {previewFile && (
         <div
-          className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
           onClick={() => setPreviewFile(null)}
         >
           <div
-            className="bg-theme-card border border-theme rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden"
+            className="bg-theme-card border border-theme rounded-lg max-w-3xl w-full max-h-[85vh] overflow-y-auto shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="flex items-center justify-between p-4 border-b border-theme">
-              <h3 className="text-lg font-semibold text-theme-text">
-                {previewFile.name}
-              </h3>
+            <div className="flex items-center justify-between p-4 border-b border-theme sticky top-0 bg-theme-card z-10">
+              <div className="flex items-center gap-3">
+                <ImageIcon className="w-5 h-5 text-theme-primary" />
+                <h3 className="text-lg font-semibold text-theme-text">
+                  Image Preview
+                </h3>
+              </div>
               <button
                 onClick={() => setPreviewFile(null)}
-                className="p-2 hover:bg-theme-hover rounded-lg transition-colors"
+                className="p-2 hover:bg-theme-hover rounded-lg transition-all"
               >
                 <X className="w-5 h-5 text-theme-text" />
               </button>
             </div>
 
             {/* Modal Body */}
-            <div className="p-4 overflow-auto max-h-[calc(90vh-80px)]">
-              <img
-                src={`/api/overlayfiles/preview/${previewFile.name}`}
-                alt={previewFile.name}
-                className="w-full h-auto"
-              />
+            <div className="p-6">
+              <div className="mb-4">
+                <p className="text-sm text-theme-muted mb-1">Filename:</p>
+                <p className="text-theme-text font-mono bg-theme-bg px-3 py-2 rounded-lg border border-theme">
+                  {previewFile.name}
+                </p>
+              </div>
+
+              {/* Image Preview with Checkered Background */}
+              <div className="relative bg-theme-bg rounded-lg border border-theme p-4 flex items-center justify-center overflow-hidden">
+                {/* Checkered background for transparency */}
+                <div
+                  className="absolute inset-0 rounded-lg"
+                  style={{
+                    backgroundImage: `
+                      linear-gradient(45deg, #3a3a3a 25%, transparent 25%),
+                      linear-gradient(-45deg, #3a3a3a 25%, transparent 25%),
+                      linear-gradient(45deg, transparent 75%, #3a3a3a 75%),
+                      linear-gradient(-45deg, transparent 75%, #3a3a3a 75%)
+                    `,
+                    backgroundSize: "20px 20px",
+                    backgroundPosition: "0 0, 0 10px, 10px -10px, -10px 0px",
+                  }}
+                ></div>
+                <img
+                  src={`/api/overlayfiles/preview/${previewFile.name}`}
+                  alt={previewFile.name}
+                  className="relative z-10 max-w-full h-auto object-contain rounded-lg shadow-lg"
+                  style={{ maxHeight: "55vh" }}
+                  onError={(e) => {
+                    e.target.style.display = "none";
+                    e.target.nextSibling.style.display = "flex";
+                  }}
+                />
+                <div
+                  className="hidden flex-col items-center gap-3 text-theme-muted relative z-10"
+                  style={{ display: "none" }}
+                >
+                  <AlertCircle className="w-12 h-12" />
+                  <p>Failed to load image</p>
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="mt-4 flex justify-end gap-3">
+                <button
+                  onClick={() => setPreviewFile(null)}
+                  className="px-4 py-2 bg-theme-bg hover:bg-theme-hover border border-theme rounded-lg font-medium transition-all"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         </div>

@@ -640,8 +640,12 @@ function ConfigEditor() {
       const data = await response.json();
 
       if (data.success) {
-        setOverlayFiles(data.files || []);
-        console.log(`Loaded ${data.files.length} overlay files`);
+        // Filter only image files (not fonts)
+        const imageFiles = (data.files || []).filter(
+          (file) => file.type === "image"
+        );
+        setOverlayFiles(imageFiles);
+        console.log(`Loaded ${imageFiles.length} overlay files`);
       }
     } catch (err) {
       console.error("Failed to load overlay files:", err);
@@ -1029,8 +1033,8 @@ function ConfigEditor() {
               >
                 <option value="">-- Select Overlay File --</option>
                 {overlayFiles.map((file) => (
-                  <option key={file} value={file}>
-                    {file}
+                  <option key={file.name} value={file.name}>
+                    {file.name}
                   </option>
                 ))}
               </select>
@@ -1942,7 +1946,7 @@ function ConfigEditor() {
           onClick={() => setPreviewOverlay(null)}
         >
           <div
-            className="bg-theme-card rounded-xl border border-theme shadow-2xl max-w-4xl max-h-[90vh] overflow-auto"
+            className="bg-theme-card rounded-xl border border-theme shadow-2xl max-w-3xl w-full max-h-[85vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
@@ -1970,21 +1974,36 @@ function ConfigEditor() {
                 </p>
               </div>
 
-              {/* Image Preview */}
-              <div className="bg-theme-bg rounded-lg border border-theme p-4 flex items-center justify-center min-h-[300px]">
+              {/* Image Preview with Checkered Background */}
+              <div className="relative bg-theme-bg rounded-lg border border-theme p-4 flex items-center justify-center overflow-hidden">
+                {/* Checkered background for transparency */}
+                <div
+                  className="absolute inset-0 rounded-lg"
+                  style={{
+                    backgroundImage: `
+                      linear-gradient(45deg, #3a3a3a 25%, transparent 25%),
+                      linear-gradient(-45deg, #3a3a3a 25%, transparent 25%),
+                      linear-gradient(45deg, transparent 75%, #3a3a3a 75%),
+                      linear-gradient(-45deg, transparent 75%, #3a3a3a 75%)
+                    `,
+                    backgroundSize: "20px 20px",
+                    backgroundPosition: "0 0, 0 10px, 10px -10px, -10px 0px",
+                  }}
+                ></div>
                 <img
                   src={`${API_URL}/overlayfiles/preview/${encodeURIComponent(
                     previewOverlay
                   )}`}
                   alt={previewOverlay}
-                  className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-lg"
+                  className="relative z-10 max-w-full h-auto object-contain rounded-lg shadow-lg"
+                  style={{ maxHeight: "55vh" }}
                   onError={(e) => {
                     e.target.style.display = "none";
                     e.target.nextSibling.style.display = "flex";
                   }}
                 />
                 <div
-                  className="hidden flex-col items-center gap-3 text-theme-muted"
+                  className="hidden flex-col items-center gap-3 text-theme-muted relative z-10"
                   style={{ display: "none" }}
                 >
                   <AlertCircle className="w-12 h-12" />
