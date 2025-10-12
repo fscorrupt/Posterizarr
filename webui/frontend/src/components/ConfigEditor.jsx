@@ -19,6 +19,9 @@ import {
   Loader2,
   Search,
   HelpCircle,
+  Upload,
+  Image,
+  Eye,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
 import ValidateButton from "./ValidateButton";
@@ -420,7 +423,25 @@ function ConfigEditor() {
   const [error, setError] = useState(null);
   const [expandedGroups, setExpandedGroups] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
+  const [overlayFiles, setOverlayFiles] = useState([]);
+  const [uploadingOverlay, setUploadingOverlay] = useState(false);
+  const [previewOverlay, setPreviewOverlay] = useState(null); // For preview modal
   const hasInitializedGroups = useRef(false);
+
+  // List of overlay file fields
+  const OVERLAY_FILE_FIELDS = [
+    "overlayfile",
+    "seasonoverlayfile",
+    "backgroundoverlayfile",
+    "titlecardoverlayfile",
+    "collectionoverlayfile",
+    "poster4k",
+    "Poster1080p",
+    "Background4k",
+    "Background1080p",
+    "TC4k",
+    "TC1080p",
+  ];
 
   // Map URL path to tab name
   const getActiveTabFromPath = () => {
@@ -524,6 +545,7 @@ function ConfigEditor() {
 
   useEffect(() => {
     fetchConfig();
+    fetchOverlayFiles();
   }, []);
 
   useEffect(() => {
@@ -597,6 +619,59 @@ function ConfigEditor() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchOverlayFiles = async () => {
+    try {
+      const response = await fetch(`${API_URL}/overlayfiles`);
+      const data = await response.json();
+
+      if (data.success) {
+        setOverlayFiles(data.files || []);
+        console.log(`Loaded ${data.files.length} overlay files`);
+      }
+    } catch (err) {
+      console.error("Failed to load overlay files:", err);
+    }
+  };
+
+  const handleOverlayFileUpload = async (file) => {
+    if (!file) return;
+
+    setUploadingOverlay(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch(`${API_URL}/overlayfiles/upload`, {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        toast.success(`File "${data.filename}" uploaded successfully!`, {
+          duration: 3000,
+          position: "top-right",
+        });
+        // Refresh overlay files list
+        await fetchOverlayFiles();
+      } else {
+        toast.error(data.detail || "Upload failed", {
+          duration: 4000,
+          position: "top-right",
+        });
+      }
+    } catch (err) {
+      console.error("Upload error:", err);
+      toast.error("Failed to upload file", {
+        duration: 4000,
+        position: "top-right",
+      });
+    } finally {
+      setUploadingOverlay(false);
     }
   };
 
@@ -871,6 +946,89 @@ function ConfigEditor() {
     const Icon = getInputIcon(key, value);
     const fieldKey = usingFlatStructure ? key : `${groupName}.${key}`;
     const displayName = getDisplayName(key);
+
+    // ============ OVERLAY FILE DROPDOWN WITH UPLOAD ============
+    if (OVERLAY_FILE_FIELDS.includes(key)) {
+      const stringValue =
+        value === null || value === undefined ? "" : String(value);
+
+      return (
+        <div className="space-y-2">
+          <div className="flex gap-2">
+            {/* Dropdown */}
+            <div className="relative flex-1">
+              <select
+                value={stringValue}
+                onChange={(e) => updateValue(fieldKey, e.target.value)}
+                className="w-full h-[42px] px-4 py-2.5 pr-10 bg-theme-bg border border-theme rounded-lg text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all cursor-pointer appearance-none"
+              >
+                <option value="">-- Select Overlay File --</option>
+                {overlayFiles.map((file) => (
+                  <option key={file} value={file}>
+                    {file}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-theme-muted pointer-events-none" />
+            </div>
+
+            {/* Upload Button */}
+            <label
+              className={`flex items-center gap-2 px-4 py-2 bg-theme-primary/20 hover:bg-theme-primary/30 border border-theme-primary/30 rounded-lg font-medium transition-all cursor-pointer ${
+                uploadingOverlay ? "opacity-50 cursor-not-allowed" : ""
+              }`}
+            >
+              <input
+                type="file"
+                accept=".png,.jpg,.jpeg"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    handleOverlayFileUpload(file);
+                    e.target.value = ""; // Reset input
+                  }
+                }}
+                className="hidden"
+                disabled={uploadingOverlay}
+              />
+              {uploadingOverlay ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Upload className="w-4 h-4" />
+              )}
+              <span className="text-sm">Upload</span>
+            </label>
+
+            {/* Preview Button */}
+            {stringValue && (
+              <button
+                onClick={() => setPreviewOverlay(stringValue)}
+                className="flex items-center gap-2 px-4 py-2 bg-theme-bg hover:bg-theme-hover border border-theme rounded-lg font-medium transition-all"
+                title="Preview overlay image"
+              >
+                <Eye className="w-4 h-4 text-theme-primary" />
+                <span className="text-sm">Preview</span>
+              </button>
+            )}
+          </div>
+
+          {/* Current file display */}
+          {stringValue && (
+            <p className="text-xs text-theme-muted">
+              Current:{" "}
+              <span className="font-mono text-theme-primary">
+                {stringValue}
+              </span>
+            </p>
+          )}
+
+          {/* Help text */}
+          <p className="text-xs text-theme-muted">
+            Upload PNG, JPG, or JPEG files to the Overlayfiles directory
+          </p>
+        </div>
+      );
+    }
 
     // Handle arrays with pill-style tags
     if (Array.isArray(value)) {
@@ -1639,6 +1797,77 @@ function ConfigEditor() {
           </div>
         )}
       </div>
+
+      {/* Overlay Preview Modal */}
+      {previewOverlay && (
+        <div
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
+          onClick={() => setPreviewOverlay(null)}
+        >
+          <div
+            className="bg-theme-card rounded-xl border border-theme shadow-2xl max-w-4xl max-h-[90vh] overflow-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-4 border-b border-theme sticky top-0 bg-theme-card z-10">
+              <div className="flex items-center gap-3">
+                <Image className="w-5 h-5 text-theme-primary" />
+                <h3 className="text-lg font-semibold text-theme-text">
+                  Overlay Preview
+                </h3>
+              </div>
+              <button
+                onClick={() => setPreviewOverlay(null)}
+                className="p-2 hover:bg-theme-hover rounded-lg transition-all"
+              >
+                <X className="w-5 h-5 text-theme-text" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6">
+              <div className="mb-4">
+                <p className="text-sm text-theme-muted mb-1">Filename:</p>
+                <p className="text-theme-text font-mono bg-theme-bg px-3 py-2 rounded-lg border border-theme">
+                  {previewOverlay}
+                </p>
+              </div>
+
+              {/* Image Preview */}
+              <div className="bg-theme-bg rounded-lg border border-theme p-4 flex items-center justify-center min-h-[300px]">
+                <img
+                  src={`${API_URL}/overlayfiles/preview/${encodeURIComponent(
+                    previewOverlay
+                  )}`}
+                  alt={previewOverlay}
+                  className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-lg"
+                  onError={(e) => {
+                    e.target.style.display = "none";
+                    e.target.nextSibling.style.display = "flex";
+                  }}
+                />
+                <div
+                  className="hidden flex-col items-center gap-3 text-theme-muted"
+                  style={{ display: "none" }}
+                >
+                  <AlertCircle className="w-12 h-12" />
+                  <p>Failed to load image</p>
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="mt-4 flex justify-end gap-3">
+                <button
+                  onClick={() => setPreviewOverlay(null)}
+                  className="px-4 py-2 bg-theme-bg hover:bg-theme-hover border border-theme rounded-lg font-medium transition-all"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

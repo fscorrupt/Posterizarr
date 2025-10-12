@@ -5,6 +5,8 @@ from fastapi import (
     HTTPException,
     Query,
     Request,
+    UploadFile,
+    File,
 )
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
@@ -112,7 +114,11 @@ LOGS_DIR = BASE_DIR / "Logs"
 TEST_DIR = BASE_DIR / "test"
 TEMP_DIR = BASE_DIR / "temp"
 UI_LOGS_DIR = BASE_DIR / "UILogs"
+OVERLAYFILES_DIR = BASE_DIR / "Overlayfiles"
 RUNNING_FILE = TEMP_DIR / "Posterizarr.Running"
+
+# Create Overlayfiles directory if it doesn't exist
+OVERLAYFILES_DIR.mkdir(exist_ok=True)
 
 if not CONFIG_PATH.exists() and CONFIG_EXAMPLE_PATH.exists():
     logger.warning(f"config.json not found, using config.example.json as fallback")
@@ -1013,6 +1019,158 @@ async def update_config(data: ConfigUpdate):
         return {"success": True, "message": "Config updated successfully"}
     except Exception as e:
         logger.error(f"Error updating config: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================================================
+# OVERLAY FILES ENDPOINTS
+# ============================================================================
+
+
+@app.get("/api/overlayfiles")
+async def get_overlay_files():
+    """Get list of overlay files from Overlayfiles directory"""
+    try:
+        if not OVERLAYFILES_DIR.exists():
+            OVERLAYFILES_DIR.mkdir(exist_ok=True)
+            return {"success": True, "files": []}
+
+        # Get all image files (png, jpg, jpeg)
+        image_extensions = {".png", ".jpg", ".jpeg"}
+        files = [
+            f.name
+            for f in OVERLAYFILES_DIR.iterdir()
+            if f.is_file() and f.suffix.lower() in image_extensions
+        ]
+
+        # Sort alphabetically
+        files.sort()
+
+        logger.info(f"Found {len(files)} overlay files")
+        return {"success": True, "files": files}
+
+    except Exception as e:
+        logger.error(f"Error getting overlay files: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/overlayfiles/upload")
+async def upload_overlay_file(file: UploadFile = File(...)):
+    """Upload a new overlay file to Overlayfiles directory"""
+    try:
+        # Validate file type
+        allowed_extensions = {".png", ".jpg", ".jpeg"}
+        file_ext = Path(file.filename).suffix.lower()
+
+        if file_ext not in allowed_extensions:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid file type. Only PNG, JPG, and JPEG files are allowed.",
+            )
+
+        # Sanitize filename (remove dangerous characters)
+        safe_filename = "".join(
+            c for c in file.filename if c.isalnum() or c in "._- "
+        ).strip()
+
+        if not safe_filename:
+            raise HTTPException(status_code=400, detail="Invalid filename")
+
+        # Save file
+        file_path = OVERLAYFILES_DIR / safe_filename
+
+        # Check if file already exists
+        if file_path.exists():
+            raise HTTPException(
+                status_code=400,
+                detail=f"File '{safe_filename}' already exists. Please rename or delete the existing file first.",
+            )
+
+        # Write file
+        content = await file.read()
+        with open(file_path, "wb") as f:
+            f.write(content)
+
+        logger.info(f"Uploaded overlay file: {safe_filename} ({len(content)} bytes)")
+
+        return {
+            "success": True,
+            "message": f"File '{safe_filename}' uploaded successfully",
+            "filename": safe_filename,
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error uploading overlay file: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/api/overlayfiles/{filename}")
+async def delete_overlay_file(filename: str):
+    """Delete an overlay file from Overlayfiles directory"""
+    try:
+        # Sanitize filename
+        safe_filename = "".join(
+            c for c in filename if c.isalnum() or c in "._- "
+        ).strip()
+
+        if not safe_filename:
+            raise HTTPException(status_code=400, detail="Invalid filename")
+
+        file_path = OVERLAYFILES_DIR / safe_filename
+
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail="File not found")
+
+        # Check if file is in use in config
+        # TODO: Optional - check if file is referenced in config and warn user
+
+        # Delete file
+        file_path.unlink()
+
+        logger.info(f"Deleted overlay file: {safe_filename}")
+
+        return {
+            "success": True,
+            "message": f"File '{safe_filename}' deleted successfully",
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting overlay file: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/overlayfiles/preview/{filename}")
+async def preview_overlay_file(filename: str):
+    """Serve overlay file for preview"""
+    try:
+        # Sanitize filename
+        safe_filename = "".join(
+            c for c in filename if c.isalnum() or c in "._- "
+        ).strip()
+
+        if not safe_filename:
+            raise HTTPException(status_code=400, detail="Invalid filename")
+
+        file_path = OVERLAYFILES_DIR / safe_filename
+
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail="File not found")
+
+        # Serve file
+        return FileResponse(
+            file_path,
+            media_type="image/png",  # Will auto-detect based on extension
+            headers={"Cache-Control": "public, max-age=3600"},
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error serving overlay file: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
