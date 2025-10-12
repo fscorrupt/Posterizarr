@@ -590,7 +590,7 @@ function Dashboard() {
       {/* System Information */}
       <SystemInfo />
 
-      {/* ✅ NEU: Recently Created Assets */}
+      {/*  Recently Created Assets */}
       <RecentAssets />
 
       {/* Running Script Controls */}

@@ -78,7 +78,11 @@ except ImportError as e:
     logger.warning(f"Auth middleware not available: {e}. Basic Auth will be disabled.")
 
 # Check if running in Docker
-IS_DOCKER = os.path.exists("/.dockerenv") or os.environ.get("DOCKER_ENV", "").lower() == "true" or os.environ.get("POSTERIZARR_NON_ROOT", "").lower() == "true"
+IS_DOCKER = (
+    os.path.exists("/.dockerenv")
+    or os.environ.get("DOCKER_ENV", "").lower() == "true"
+    or os.environ.get("POSTERIZARR_NON_ROOT", "").lower() == "true"
+)
 
 if IS_DOCKER:
     BASE_DIR = Path("/config")
@@ -186,9 +190,6 @@ def is_version_newer(current: str, remote: str) -> bool:
     return is_newer
 
 
-# ============================================================================
-# Custom StaticFiles with caching for better performance
-# ============================================================================
 class CachedStaticFiles(StaticFiles):
     """StaticFiles with Cache-Control headers for browser caching"""
 
@@ -202,9 +203,6 @@ class CachedStaticFiles(StaticFiles):
         return response
 
 
-# ============================================================================
-# CORRECTED Helper functions for filtering images - supports BOTH naming schemes
-# ============================================================================
 def is_poster_file(filename: str) -> bool:
     """
     Check if file is a poster:
@@ -756,17 +754,15 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Posterizarr Web UI", lifespan=lifespan)
 
-# Basic Auth Middleware (MUST be added BEFORE CORS)
+# Basic Auth Middleware
 if AUTH_MIDDLEWARE_AVAILABLE:
     try:
-        auth_config = load_auth_config(CONFIG_PATH)
+        # The middleware now loads the config dynamically with every request!
         app.add_middleware(
             BasicAuthMiddleware,
-            username=auth_config["username"],
-            password=auth_config["password"],
-            enabled=auth_config["enabled"],
+            config_path=CONFIG_PATH,  # ✅ GEÄNDERT: Nur config_path übergeben
         )
-        logger.info("Basic Auth middleware registered")
+        logger.info("Basic Auth middleware registered with dynamic config reload")
     except Exception as e:
         logger.error(f"Failed to initialize Basic Auth: {e}")
 else:

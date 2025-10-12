@@ -1,18 +1,22 @@
 """
 Basic Authentication Middleware for Posterizarr Web UI
-
+Version 2 - Blocks EVERYTHING including static files
 """
 
 from fastapi import Request, HTTPException, status
-from fastapi.responses import Response
+from fastapi.responses import Response, HTMLResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 import base64
 import secrets
 import logging
 from pathlib import Path
+import json
 
+# ============================================================================
+# LOGGER SETUP
+# ============================================================================
 auth_logger = logging.getLogger("posterizarr.auth")
-auth_logger.setLevel(logging.WARNING)
+auth_logger.setLevel(logging.INFO)
 
 if not auth_logger.handlers:
     try:
@@ -34,7 +38,7 @@ if not auth_logger.handlers:
         auth_logger.addHandler(auth_handler)
 
         console_handler = logging.StreamHandler()
-        console_handler.setLevel(logging.WARNING)
+        console_handler.setLevel(logging.INFO)
         auth_logger.addHandler(console_handler)
 
         print(f"✅ Auth logger initialized: {auth_log_path}")
@@ -42,43 +46,104 @@ if not auth_logger.handlers:
     except Exception as e:
         print(f"⚠️ Could not initialize auth logger: {e}")
 
-# Fallback logger für Kompatibilität
 logger = auth_logger
 
 
 class BasicAuthMiddleware(BaseHTTPMiddleware):
     """
-    Basic Authentication Middleware
-
+    Basic Authentication Middleware with dynamic config reload
+    Blocks ALL requests including static files when enabled
     """
 
-    def __init__(self, app, username: str, password: str, enabled: bool = False):
+    def __init__(self, app, config_path: Path):
         super().__init__(app)
-        self.username = username
-        self.password = password
-        self.enabled = enabled
+        self.config_path = config_path
+
+        # Load initial config
+        auth_config = self._load_config()
+        self.username = auth_config["username"]
+        self.password = auth_config["password"]
+        self.enabled = auth_config["enabled"]
 
         if self.enabled:
-            auth_logger.info("🔒 Basic Auth ENABLED")
+            auth_logger.info("🔒 Basic Auth ENABLED on startup (Full blocking mode)")
+            auth_logger.info(f"   Username: {self.username}")
         else:
-            auth_logger.info("🔓 Basic Auth DISABLED")
+            auth_logger.info("🔓 Basic Auth DISABLED on startup")
+
+    def _load_config(self) -> dict:
+        """
+        Loads the auth config dynamically from config.json
+        """
+        try:
+            if not self.config_path.exists():
+                auth_logger.warning(
+                    "Config file not found, using default auth settings"
+                )
+                return {
+                    "enabled": False,
+                    "username": "admin",
+                    "password": "posterizarr",
+                }
+
+            with open(self.config_path, "r", encoding="utf-8") as f:
+                config = json.load(f)
+
+            webui_config = config.get("WebUI", {})
+            enabled_value = webui_config.get("basicAuthEnabled", False)
+
+            if isinstance(enabled_value, str):
+                enabled = enabled_value.lower() in ["true", "1", "yes"]
+            else:
+                enabled = bool(enabled_value)
+
+            return {
+                "enabled": enabled,
+                "username": webui_config.get("basicAuthUsername", "admin"),
+                "password": webui_config.get("basicAuthPassword", "posterizarr"),
+            }
+
+        except Exception as e:
+            auth_logger.error(f"Error loading auth config: {e}")
+            return {"enabled": False, "username": "admin", "password": "posterizarr"}
 
     async def dispatch(self, request: Request, call_next):
-        # Wenn Basic Auth deaktiviert ist, einfach durchlassen
+        # Load config dynamically on every request
+        current_config = self._load_config()
+        current_enabled = current_config["enabled"]
+        current_username = current_config["username"]
+        current_password = current_config["password"]
+
+        # Update interne Variablen wenn sich was geändert hat
+        if current_enabled != self.enabled:
+            self.enabled = current_enabled
+            self.username = current_username
+            self.password = current_password
+
+            if self.enabled:
+                auth_logger.info("🔄 Auth Status Changed: ENABLED (Full blocking mode)")
+                auth_logger.info(f"   Username: {self.username}")
+            else:
+                auth_logger.info("🔄 Auth Status Changed: DISABLED")
+
+        # Wenn Basic Auth deaktiviert ist, durchlassen
         if not self.enabled:
             return await call_next(request)
 
-        # Auth-Check-Endpoint immer erlauben (für Frontend-Check)
+        # ✅ Auth-Check-Endpoint immer erlauben (für Frontend-Status-Check)
         if request.url.path == "/api/auth/check":
             return await call_next(request)
 
+        # ✅ WICHTIG: Blockiere ALLES - auch statische Dateien!
+        # Keine Ausnahmen für HTML, JS, CSS, etc.
+        client_ip = request.client.host if request.client else "unknown"
+
         # Prüfe Authorization Header
         auth_header = request.headers.get("Authorization")
-        client_ip = request.client.host if request.client else "unknown"
 
         if not auth_header or not auth_header.startswith("Basic "):
             auth_logger.warning(
-                f"⚠️ Unauthorized access attempt | IP: {client_ip} | Path: {request.url.path}"
+                f"⚠️ Unauthorized access | IP: {client_ip} | Path: {request.url.path}"
             )
             return self._unauthorized_response()
 
@@ -88,20 +153,21 @@ class BasicAuthMiddleware(BaseHTTPMiddleware):
             username, password = credentials.split(":", 1)
 
             # Verwende secrets.compare_digest für timing-safe comparison
-            username_match = secrets.compare_digest(username, self.username)
-            password_match = secrets.compare_digest(password, self.password)
+            username_match = secrets.compare_digest(username, current_username)
+            password_match = secrets.compare_digest(password, current_password)
 
             if username_match and password_match:
-                # Auth erfolgreich
-                auth_logger.info(
-                    f"✅ Successful authentication | User: {username} | IP: {client_ip} | Path: {request.url.path}"
-                )
+                # Auth erfolgreich - nur beim ersten erfolgreichen Login loggen
+                if request.url.path == "/":
+                    auth_logger.info(
+                        f"✅ Successful login | User: {username} | IP: {client_ip}"
+                    )
                 response = await call_next(request)
                 return response
             else:
                 # Auth fehlgeschlagen
                 auth_logger.warning(
-                    f"❌ Failed authentication | User: {username} | IP: {client_ip} | Path: {request.url.path}"
+                    f"❌ Failed login attempt | User: {username} | IP: {client_ip}"
                 )
                 return self._unauthorized_response()
 
@@ -110,22 +176,24 @@ class BasicAuthMiddleware(BaseHTTPMiddleware):
             return self._unauthorized_response()
 
     def _unauthorized_response(self):
-        """Gibt 401 Unauthorized Response zurück"""
+        """
+        Gibt 401 Unauthorized Response zurück
+        Browser zeigt automatisch das Login-Popup an
+        """
         return Response(
-            content="Unauthorized",
+            content="Unauthorized - Authentication required",
             status_code=status.HTTP_401_UNAUTHORIZED,
-            headers={"WWW-Authenticate": 'Basic realm="Posterizarr Web UI"'},
+            headers={
+                "WWW-Authenticate": 'Basic realm="Posterizarr Web UI"',
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+            },
         )
 
 
 def load_auth_config(config_path) -> dict:
     """
-    Returns:
-        dict mit 'enabled', 'username', 'password'
+    Legacy function for backward compatibility
     """
-    import json
-    from pathlib import Path
-
     try:
         config_file = Path(config_path)
         if not config_file.exists():
@@ -135,26 +203,19 @@ def load_auth_config(config_path) -> dict:
         with open(config_file, "r", encoding="utf-8") as f:
             config = json.load(f)
 
-        # Suche nach WebUI-Section
         webui_config = config.get("WebUI", {})
-
-        # Hole enabled Wert und konvertiere String-Booleans korrekt
         enabled_value = webui_config.get("basicAuthEnabled", False)
 
-        # Behandle String-Werte explizit (für Rückwärtskompatibilität mit älteren Configs)
         if isinstance(enabled_value, str):
-            # "true", "True", "1", "yes" -> True
-            # "false", "False", "0", "no", "" -> False
             enabled = enabled_value.lower() in ["true", "1", "yes"]
             auth_logger.info(
                 f"Converted string value '{enabled_value}' to boolean: {enabled}"
             )
         else:
-            # Bereits ein Boolean oder anderer Typ
             enabled = bool(enabled_value)
 
         return {
-            "enabled": enabled,  # Garantiert ein Boolean-Wert
+            "enabled": enabled,
             "username": webui_config.get("basicAuthUsername", "admin"),
             "password": webui_config.get("basicAuthPassword", "posterizarr"),
         }
