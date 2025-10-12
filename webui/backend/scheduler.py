@@ -7,6 +7,7 @@ import json
 import logging
 import asyncio
 import threading
+import os
 from pathlib import Path
 from datetime import datetime
 from typing import Optional, Dict, List
@@ -30,6 +31,12 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
+IS_DOCKER = (
+    os.path.exists("/.dockerenv")
+    or os.environ.get("DOCKER_ENV", "").lower() == "true"
+    or os.environ.get("POSTERIZARR_NON_ROOT", "").lower() == "true"
+)
+
 
 class PosterizarrScheduler:
     """Manages scheduled execution of Posterizarr script in normal mode"""
@@ -44,6 +51,9 @@ class PosterizarrScheduler:
         self._scheduler_initialized = False
         self._lock = asyncio.Lock()  # Lock for thread-safe operations
 
+        # Determine initial timezone (ENV has priority in Docker)
+        initial_timezone = self._get_timezone()
+
         # Initialize scheduler with timezone support
         jobstores = {"default": MemoryJobStore()}
         executors = {"default": AsyncIOExecutor()}
@@ -57,8 +67,37 @@ class PosterizarrScheduler:
             jobstores=jobstores,
             executors=executors,
             job_defaults=job_defaults,
-            timezone="Europe/Berlin",  # Will be updated from config
+            timezone=initial_timezone,  # ✅ Use detected timezone
         )
+
+        logger.info(f"Scheduler initialized with timezone: {initial_timezone}")
+
+    def _get_timezone(self) -> str:
+        """
+        Get timezone from ENV (if Docker) or config
+        Priority:
+        1. Environment variable TZ (only if IS_DOCKER is True)
+        2. Config file timezone setting
+        3. Default: Europe/Berlin
+        """
+        # 1. If Docker, try to read TZ from ENV
+        if IS_DOCKER:
+            env_tz = os.environ.get("TZ")
+            if env_tz:
+                logger.info(f"Using timezone from ENV (Docker): {env_tz}")
+                return env_tz
+
+        # 2. Fallback: Config file
+        config = self.load_config()
+        config_tz = config.get("timezone")
+        if config_tz:
+            logger.info(f"Using timezone from config: {config_tz}")
+            return config_tz
+
+        # 3. Fallback: Default
+        default_tz = "Europe/Berlin"
+        logger.info(f"Using default timezone: {default_tz}")
+        return default_tz
 
     def load_config(self) -> Dict:
         """Load scheduler configuration from JSON file"""
@@ -211,8 +250,8 @@ class PosterizarrScheduler:
                     process = subprocess.Popen(
                         command,
                         cwd=str(self.base_dir),
-                        stdout=None,  # ✅ FIX: Don't read output (prevents Unicode error)
-                        stderr=None,  # ✅ FIX: Don't read errors (prevents Unicode error)
+                        stdout=None,
+                        stderr=None,
                         text=True,
                     )
                     self.current_process = process
@@ -275,8 +314,8 @@ class PosterizarrScheduler:
             self.save_config(config)
             return
 
-        # Get timezone from config
-        timezone = config.get("timezone", "Europe/Berlin")
+        # Get timezone (ENV has priority in Docker)
+        timezone = self._get_timezone()
 
         # Add jobs for each schedule
         for idx, schedule in enumerate(schedules):
@@ -341,8 +380,8 @@ class PosterizarrScheduler:
                 return
 
             if not self.scheduler.running:
-                # Update timezone before starting
-                timezone = config.get("timezone", "Europe/Berlin")
+                # Update timezone before starting (ENV has priority in Docker)
+                timezone = self._get_timezone()
                 self.scheduler.configure(timezone=timezone)
 
                 # Calculate next_run if schedules exist but next_run is not set
@@ -408,12 +447,15 @@ class PosterizarrScheduler:
                 }
             )
 
+        # Show current timezone (ENV or config)
+        current_timezone = self._get_timezone()
+
         return {
             "enabled": config.get("enabled", False),
             "running": self.scheduler.running,
             "is_executing": self.is_running,
             "schedules": config.get("schedules", []),
-            "timezone": config.get("timezone", "Europe/Berlin"),
+            "timezone": current_timezone,  # ✅ Use detected timezone
             "last_run": config.get("last_run"),
             "next_run": config.get("next_run"),
             "active_jobs": job_info,
@@ -428,8 +470,8 @@ class PosterizarrScheduler:
         if hour is None or minute is None:
             return None
 
-        config = self.load_config()
-        timezone_str = config.get("timezone", "Europe/Berlin")
+        # Use _get_timezone() instead of config only
+        timezone_str = self._get_timezone()
 
         try:
             tz = pytz.timezone(timezone_str)
@@ -549,7 +591,6 @@ class PosterizarrScheduler:
 
         logger.info("All schedules cleared")
 
-        # FIX 5: If scheduler is running, reapply empty schedules
         if config.get("enabled", False) and self.scheduler.running:
             logger.info("Scheduler is running, reapplying schedules (now empty)...")
             self.apply_schedules()
