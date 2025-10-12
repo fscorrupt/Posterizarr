@@ -281,12 +281,12 @@ function Dashboard() {
   }, [status.current_mode]);
 
   useEffect(() => {
+    // Only auto-scroll if autoScroll is enabled AND user hasn't manually scrolled up
     if (!autoScroll || !logContainerRef.current) return;
 
-    if (!userHasScrolled.current) {
-      const container = logContainerRef.current;
-      container.scrollTop = container.scrollHeight;
-    }
+    // Always scroll to bottom when autoScroll is enabled (ignore userHasScrolled when autoScroll is on)
+    const container = logContainerRef.current;
+    container.scrollTop = container.scrollHeight;
   }, [status.last_logs, autoScroll]);
 
   useEffect(() => {
@@ -297,12 +297,19 @@ function Dashboard() {
       const { scrollTop, scrollHeight, clientHeight } = logContainer;
       const currentScrollTop = scrollTop;
 
+      // Detect upward scroll (user scrolling up manually)
       if (currentScrollTop < lastScrollTop.current - 5) {
         userHasScrolled.current = true;
+        // If user scrolls up while autoScroll is on, disable autoScroll
+        if (autoScroll) {
+          setAutoScroll(false);
+        }
       }
 
+      // If user scrolls to bottom manually, they want to see new logs
+      // But only reset userHasScrolled if autoScroll is enabled
       const isAtBottom = scrollHeight - scrollTop - clientHeight < 20;
-      if (isAtBottom) {
+      if (isAtBottom && autoScroll) {
         userHasScrolled.current = false;
       }
 
@@ -311,7 +318,7 @@ function Dashboard() {
 
     logContainer.addEventListener("scroll", handleScroll);
     return () => logContainer.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [autoScroll]);
 
   const deleteRunningFile = async () => {
     setLoading(true);
