@@ -673,7 +673,20 @@ async def fetch_version(local_filename: str, github_url: str, version_type: str)
                 f"An unexpected error occurred while fetching remote {version_type} version: {e}"
             )
 
-    return {"local": local_version, "remote": remote_version}
+    # Check if local version is greater than remote (development version)
+    display_version = local_version
+    if local_version and remote_version:
+        local_parsed = parse_version(local_version)
+        remote_parsed = parse_version(remote_version)
+
+        if local_parsed and remote_parsed and local_parsed > remote_parsed:
+            # Local version is ahead of GitHub - add -dev suffix
+            display_version = f"{local_version}-dev"
+            logger.info(
+                f"Local {version_type} version {local_version} is ahead of remote {remote_version}, adding -dev suffix"
+            )
+
+    return {"local": display_version, "remote": remote_version}
 
 
 async def get_script_version():
@@ -731,14 +744,28 @@ async def get_script_version():
 
     # SEMANTIC VERSION COMPARISON
     is_update_available = False
+    display_version = local_version
+
     if local_version and remote_version:
         is_update_available = is_version_newer(local_version, remote_version)
+
+        # Check if local version is GREATER than remote (development version)
+        local_parsed = parse_version(local_version)
+        remote_parsed = parse_version(remote_version)
+
+        if local_parsed and remote_parsed and local_parsed > remote_parsed:
+            # Local version is ahead of GitHub - add -dev suffix
+            display_version = f"{local_version}-dev"
+            logger.info(
+                f"Local version {local_version} is ahead of remote {remote_version}, adding -dev suffix"
+            )
+
         logger.info(
             f"Update available: {is_update_available} (local: {local_version}, remote: {remote_version})"
         )
 
     return {
-        "local": local_version,
+        "local": display_version,
         "remote": remote_version,
         "is_update_available": is_update_available,  # Boolean for update availability
     }

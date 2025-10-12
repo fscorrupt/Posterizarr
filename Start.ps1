@@ -208,7 +208,41 @@ function CompareScriptVersion {
                 # Extract the version from the line
                 Write-Host ""
                 $version = $lineContainingVersion -replace '^\$CurrentScriptVersion\s*=\s*"([^"]+)".*', '$1'
-                Write-Host "Current Script Version: $version | Latest Script Version: $LatestScriptVersion" -ForegroundColor Green
+                
+                # Check if local version is greater than remote (development version)
+                $displayVersion = $version
+                if ($version -and $LatestScriptVersion) {
+                    try {
+                        $localParts = $version.Split('.') | ForEach-Object { [int]$_ }
+                        $remoteParts = $LatestScriptVersion.Split('.') | ForEach-Object { [int]$_ }
+                        
+                        # Compare versions (major.minor.patch)
+                        $isGreater = $false
+                        for ($i = 0; $i -lt [Math]::Min($localParts.Count, $remoteParts.Count); $i++) {
+                            if ($localParts[$i] -gt $remoteParts[$i]) {
+                                $isGreater = $true
+                                break
+                            }
+                            elseif ($localParts[$i] -lt $remoteParts[$i]) {
+                                break
+                            }
+                        }
+                        
+                        if ($isGreater) {
+                            $displayVersion = "$version-dev"
+                            Write-Host "Current Script Version: $displayVersion | Latest Script Version: $LatestScriptVersion (Development version ahead of release)" -ForegroundColor Yellow
+                        }
+                        else {
+                            Write-Host "Current Script Version: $displayVersion | Latest Script Version: $LatestScriptVersion" -ForegroundColor Green
+                        }
+                    }
+                    catch {
+                        Write-Host "Current Script Version: $displayVersion | Latest Script Version: $LatestScriptVersion" -ForegroundColor Green
+                    }
+                }
+                else {
+                    Write-Host "Current Script Version: $displayVersion | Latest Script Version: $LatestScriptVersion" -ForegroundColor Green
+                }
             }
         }
         else {
