@@ -21,6 +21,7 @@ import {
   Bell,
   Lock,
   User,
+  FileImage,
 } from "lucide-react";
 import VersionBadge from "./VersionBadge";
 import { useSidebar } from "../context/SidebarContext";
@@ -57,6 +58,7 @@ const Sidebar = () => {
       ],
     },
     { path: "/test-gallery", label: "Test Assets", icon: Image },
+    { path: "/overlay-assets", label: "Overlay Assets", icon: FileImage },
     {
       path: "/config",
       label: "Config",

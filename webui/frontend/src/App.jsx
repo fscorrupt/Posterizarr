@@ -21,6 +21,7 @@ import TestGallery from "./components/TestGallery";
 import About from "./components/About";
 import SchedulerSettings from "./components/SchedulerSettings";
 import RunModes from "./components/RunModes";
+import OverlayAssets from "./components/OverlayAssets";
 import Sidebar from "./components/Sidebar";
 import TopNavbar from "./components/TopNavbar";
 import LoginScreen from "./components/LoginScreen";
@@ -98,6 +99,7 @@ function AppContent() {
               <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/run-modes" element={<RunModes />} />
+                <Route path="/overlay-assets" element={<OverlayAssets />} />
                 <Route path="/test-gallery" element={<TestGallery />} />
 
                 <Route

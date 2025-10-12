@@ -1035,16 +1035,34 @@ async def get_overlay_files():
             OVERLAYFILES_DIR.mkdir(exist_ok=True)
             return {"success": True, "files": []}
 
-        # Get all image files (png, jpg, jpeg)
-        image_extensions = {".png", ".jpg", ".jpeg"}
-        files = [
-            f.name
-            for f in OVERLAYFILES_DIR.iterdir()
-            if f.is_file() and f.suffix.lower() in image_extensions
-        ]
+        # Get all image and font files (png, jpg, jpeg, ttf, otf, woff, woff2)
+        allowed_extensions = {
+            ".png",
+            ".jpg",
+            ".jpeg",
+            ".ttf",
+            ".otf",
+            ".woff",
+            ".woff2",
+        }
+        files = []
 
-        # Sort alphabetically
-        files.sort()
+        for f in OVERLAYFILES_DIR.iterdir():
+            if f.is_file() and f.suffix.lower() in allowed_extensions:
+                file_info = {
+                    "name": f.name,
+                    "type": (
+                        "image"
+                        if f.suffix.lower() in {".png", ".jpg", ".jpeg"}
+                        else "font"
+                    ),
+                    "extension": f.suffix.lower(),
+                    "size": f.stat().st_size,
+                }
+                files.append(file_info)
+
+        # Sort alphabetically by name
+        files.sort(key=lambda x: x["name"])
 
         logger.info(f"Found {len(files)} overlay files")
         return {"success": True, "files": files}
@@ -1058,14 +1076,22 @@ async def get_overlay_files():
 async def upload_overlay_file(file: UploadFile = File(...)):
     """Upload a new overlay file to Overlayfiles directory"""
     try:
-        # Validate file type
-        allowed_extensions = {".png", ".jpg", ".jpeg"}
+        # Validate file type - images and fonts
+        allowed_extensions = {
+            ".png",
+            ".jpg",
+            ".jpeg",
+            ".ttf",
+            ".otf",
+            ".woff",
+            ".woff2",
+        }
         file_ext = Path(file.filename).suffix.lower()
 
         if file_ext not in allowed_extensions:
             raise HTTPException(
                 status_code=400,
-                detail=f"Invalid file type. Only PNG, JPG, and JPEG files are allowed.",
+                detail=f"Invalid file type. Only PNG, JPG, JPEG, TTF, OTF, WOFF, and WOFF2 files are allowed.",
             )
 
         # Sanitize filename (remove dangerous characters)
