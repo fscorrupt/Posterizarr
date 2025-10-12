@@ -355,10 +355,8 @@ def is_titlecard_file(filename: str) -> bool:
 # ============================================================================
 # DYNAMIC ASSET CACHING SYSTEM
 # ============================================================================
-CACHE_TTL_SECONDS = 300  # Cache data for 5 minutes (only for statistics)
-CACHE_REFRESH_INTERVAL = (
-    600  # Refresh cache every 10 minutes (suitable for large assets)
-)
+CACHE_TTL_SECONDS = 180  # Cache data for 3 minutes (only for statistics)
+CACHE_REFRESH_INTERVAL = 180  # Refresh cache every 3 minutes for faster gallery updates
 
 asset_cache = {
     "last_scanned": 0,
@@ -2143,6 +2141,14 @@ async def get_status():
             current_mode = None
             manual_is_running = False
 
+            # Auto-trigger cache refresh after script finishes
+            logger.info("🔄 Triggering cache refresh after script completion...")
+            try:
+                scan_and_cache_assets()
+                logger.info("✅ Cache refreshed successfully after script completion")
+            except Exception as e:
+                logger.error(f"❌ Error refreshing cache after script completion: {e}")
+
     scheduler_is_running = False
     scheduler_pid = None
     if SCHEDULER_AVAILABLE and scheduler:
@@ -2160,6 +2166,18 @@ async def get_status():
                 scheduler.current_process = None
                 scheduler.is_running = False
                 scheduler_is_running = False
+
+                # Auto-trigger cache refresh after scheduler finishes
+                logger.info("🔄 Triggering cache refresh after scheduler completion...")
+                try:
+                    scan_and_cache_assets()
+                    logger.info(
+                        "✅ Cache refreshed successfully after scheduler completion"
+                    )
+                except Exception as e:
+                    logger.error(
+                        f"❌ Error refreshing cache after scheduler completion: {e}"
+                    )
 
     # Combined running status
     is_running = manual_is_running or scheduler_is_running
@@ -3500,26 +3518,52 @@ async def get_assets_folder_images_filtered(image_type: str, folder_path: str):
 async def get_recent_assets():
     """
     Get recently created assets from ImageChoices.csv files in Logs and RotatedLogs folders
-    Returns the most recent 10 assets with their poster images from assets folder
+    Returns the most recent assets with their poster images from assets folder
+
+    IMPORTANT: LOGS folder is read FIRST, then RotatedLogs
+    Display order: LOGS entries first, then RotatedLogs entries
     """
     try:
-        all_assets = []
+        logs_assets = []
+        rotated_assets = []
 
-        # Read from main Logs folder
+        source_info = {
+            "main_logs": {
+                "exists": False,
+                "count": 0,
+                "path": str(LOGS_DIR / "ImageChoices.csv"),
+            },
+            "rotated_logs": {"folders": [], "total_count": 0},
+        }
+
+        # STEP 1: Read from main Logs folder FIRST
         main_csv = LOGS_DIR / "ImageChoices.csv"
+        source_info["main_logs"]["exists"] = main_csv.exists()
+
         if main_csv.exists():
             try:
                 assets = parse_image_choices_csv(main_csv)
-                all_assets.extend(assets)
-                logger.debug(f"Found {len(assets)} assets in main Logs folder")
+                logs_assets.extend(assets)
+                source_info["main_logs"]["count"] = len(assets)
+                logger.info(
+                    f"✅ Found {len(assets)} assets in main Logs/ImageChoices.csv"
+                )
             except Exception as e:
-                logger.error(f"Error reading {main_csv}: {e}")
+                logger.error(f"❌ Error reading {main_csv}: {e}")
+        else:
+            logger.info(
+                f"ℹ️  Main Logs/ImageChoices.csv does not exist yet (will be created on first script run)"
+            )
 
-        # Read from RotatedLogs subfolders
+        # STEP 2: Read from RotatedLogs subfolders SECOND
         rotated_logs_dir = BASE_DIR / "RotatedLogs"
         if rotated_logs_dir.exists() and rotated_logs_dir.is_dir():
-            # Get all subdirectories in RotatedLogs
-            for subdir in rotated_logs_dir.iterdir():
+            # Get all subdirectories in RotatedLogs, sorted by name (newest first)
+            # Folder names are like: Logs_20251012_121158
+            subdirs = sorted(
+                rotated_logs_dir.iterdir(), key=lambda x: x.name, reverse=True
+            )
+            for subdir in subdirs:
                 if subdir.is_dir():
                     csv_file = subdir / "ImageChoices.csv"
                     if csv_file.exists():
@@ -3528,30 +3572,70 @@ async def get_recent_assets():
                             # Add source folder info to each asset
                             for asset in assets:
                                 asset["source_folder"] = subdir.name
-                            all_assets.extend(assets)
-                            logger.debug(f"Found {len(assets)} assets in {subdir.name}")
+                            rotated_assets.extend(assets)
+
+                            folder_info = {"name": subdir.name, "count": len(assets)}
+                            source_info["rotated_logs"]["folders"].append(folder_info)
+                            source_info["rotated_logs"]["total_count"] += len(assets)
+
+                            logger.info(
+                                f"✅ Found {len(assets)} assets in RotatedLogs/{subdir.name}/ImageChoices.csv"
+                            )
                         except Exception as e:
-                            logger.error(f"Error reading {csv_file}: {e}")
+                            logger.error(f"❌ Error reading {csv_file}: {e}")
 
-        # Get only the last 10 entries (most recent)
-        all_assets = all_assets[-10:]
-        all_assets.reverse()  # Most recent first
+        # STEP 3: Combine - LOGS (newest) first, then RotatedLogs (oldest last)
+        # Important: logs_assets contains the most recent entries
+        # rotated_assets contains older entries from newest folder to oldest folder
+        all_assets = logs_assets + rotated_assets
 
-        # Find poster.jpg for each asset in assets folder
-        for asset in all_assets:
-            poster_path = find_poster_in_assets(asset["rootfolder"])
-            if poster_path:
-                asset["poster_url"] = poster_path
-                asset["has_poster"] = True
-            else:
-                asset["poster_url"] = None
-                asset["has_poster"] = False
-                logger.debug(f"No poster found for: {asset['rootfolder']}")
+        # Log summary
+        total_logs = len(logs_assets)
+        total_rotated = len(rotated_assets)
+        logger.info(
+            f"📊 Total assets: {len(all_assets)} ({total_logs} from Logs + {total_rotated} from RotatedLogs)"
+        )
 
-        return {"success": True, "assets": all_assets, "total_count": len(all_assets)}
+        # If no assets found anywhere, return early
+        if not all_assets:
+            logger.warning("⚠️  No assets found in any ImageChoices.csv files")
+            return {
+                "success": True,
+                "assets": [],
+                "total_count": 0,
+                "source_info": source_info,
+            }
+
+        # Get only the FIRST 10 entries (most recent) from the combined list
+        # Since logs_assets comes first, these are the newest entries
+        recent_assets = all_assets[:10]
+
+        # STEP 4: Find poster.jpg for each asset in assets folder
+        for asset in recent_assets:
+            rootfolder = asset.get("rootfolder", "")
+            if rootfolder:
+                poster_url = find_poster_in_assets(rootfolder)
+                if poster_url:
+                    asset["poster_url"] = poster_url
+                    asset["has_poster"] = True
+                else:
+                    asset["poster_url"] = None
+                    asset["has_poster"] = False
+
+        logger.info(f"✨ Returning {len(recent_assets)} most recent assets")
+
+        return {
+            "success": True,
+            "assets": recent_assets,
+            "total_count": len(recent_assets),
+            "source_info": source_info,
+        }
 
     except Exception as e:
-        logger.error(f"Error getting recent assets: {e}")
+        logger.error(f"💥 Error getting recent assets: {e}")
+        import traceback
+
+        logger.error(traceback.format_exc())
         return {"success": False, "error": str(e), "assets": [], "total_count": 0}
 
 
