@@ -248,6 +248,11 @@ function Dashboard() {
     fetchStatus(true);
     fetchVersion(true); // Uses cache if < 24h old, fetches new if older
 
+    // Poll status every 3 seconds to detect when script finishes
+    const statusInterval = setInterval(() => {
+      fetchStatus(true);
+    }, 3000);
+
     // Interval for force refresh every 24 hours (if page stays open)
     const versionInterval = setInterval(
       () => fetchVersion(true, true), // forceRefresh = true after 24h
@@ -255,6 +260,7 @@ function Dashboard() {
     );
 
     return () => {
+      clearInterval(statusInterval);
       clearInterval(versionInterval);
       disconnectDashboardWebSocket();
     };
@@ -438,13 +444,13 @@ function Dashboard() {
 
         {/* Quick Action: Go to Run Modes */}
         {!status.running && (
-          <a
-            href="/run-modes"
+          <Link
+            to="/run-modes"
             className="flex items-center gap-2 px-4 py-2 bg-theme-primary hover:bg-theme-primary/90 rounded-lg font-medium transition-all shadow-lg hover:scale-[1.02]"
           >
             <Play className="w-5 h-5" />
             Run Script
-          </a>
+          </Link>
         )}
       </div>
 

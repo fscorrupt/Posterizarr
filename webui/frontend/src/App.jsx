@@ -49,7 +49,7 @@ function AppContent() {
     setHasLoggedIn(true);
     login(credentials);
 
-    // Show loading screen for 2-3 seconds
+    // Show loading screen for 2-3 seconds while UI loads in background
     setTimeout(() => {
       setShowLoadingScreen(false);
     }, 2500);
@@ -67,89 +67,98 @@ function AppContent() {
     );
   }
 
-  // Show loading screen after successful login
-  if (showLoadingScreen) {
-    return <LoadingScreen />;
-  }
-
   // Show login screen if auth is required and user is not authenticated
   if (!isAuthenticated) {
     return <LoginScreen onLoginSuccess={handleLoginSuccess} />;
   }
 
   // Show main app if authenticated (or auth is disabled)
+  // When showLoadingScreen is true, render the UI but overlay the loading screen
   return (
-    <div className="min-h-screen bg-gradient-to-br from-theme-dark via-theme-darker to-theme-dark text-theme-text">
-      <TopNavbar />
-      <Sidebar />
-
-      <main
-        className={`pt-16 transition-all duration-300 ${
-          isCollapsed ? "md:ml-20" : "md:ml-64"
-        }`}
-      >
-        <div className="md:pt-0 pt-14">
-          <div className="py-6 px-4 sm:px-6 lg:px-8">
-            <Routes>
-              <Route path="/" element={<Dashboard />} />
-              <Route path="/run-modes" element={<RunModes />} />
-              <Route path="/test-gallery" element={<TestGallery />} />
-
-              <Route
-                path="/gallery"
-                element={<Navigate to="/gallery/posters" replace />}
-              />
-              <Route path="/gallery/posters" element={<GalleryHub />} />
-              <Route path="/gallery/backgrounds" element={<GalleryHub />} />
-              <Route path="/gallery/seasons" element={<GalleryHub />} />
-              <Route path="/gallery/titlecards" element={<GalleryHub />} />
-
-              <Route
-                path="/config"
-                element={<Navigate to="/config/general" replace />}
-              />
-              <Route
-                path="/config/webui"
-                element={<ConfigEditor tab="WebUI" />}
-              />
-              <Route
-                path="/config/general"
-                element={<ConfigEditor tab="General" />}
-              />
-              <Route
-                path="/config/services"
-                element={<ConfigEditor tab="Services" />}
-              />
-              <Route path="/config/api" element={<ConfigEditor tab="API" />} />
-              <Route
-                path="/config/languages"
-                element={<ConfigEditor tab="Languages" />}
-              />
-              <Route
-                path="/config/visuals"
-                element={<ConfigEditor tab="Visuals" />}
-              />
-              <Route
-                path="/config/overlays"
-                element={<ConfigEditor tab="Overlays" />}
-              />
-              <Route
-                path="/config/collections"
-                element={<ConfigEditor tab="Collections" />}
-              />
-              <Route
-                path="/config/notifications"
-                element={<ConfigEditor tab="Notifications" />}
-              />
-
-              <Route path="/scheduler" element={<SchedulerSettings />} />
-              <Route path="/logs" element={<LogViewer />} />
-              <Route path="/about" element={<About />} />
-            </Routes>
-          </div>
+    <>
+      {/* Loading Screen Overlay - shown over the UI during login transition */}
+      {showLoadingScreen && (
+        <div className="fixed inset-0 z-[9999]">
+          <LoadingScreen />
         </div>
-      </main>
-    </div>
+      )}
+
+      {/* Main App - rendered in background while loading screen is shown */}
+      <div className="min-h-screen bg-gradient-to-br from-theme-dark via-theme-darker to-theme-dark text-theme-text">
+        <TopNavbar />
+        <Sidebar />
+
+        <main
+          className={`pt-16 transition-all duration-300 ${
+            isCollapsed ? "md:ml-20" : "md:ml-64"
+          }`}
+        >
+          <div className="md:pt-0 pt-14">
+            <div className="py-6 px-4 sm:px-6 lg:px-8">
+              <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/run-modes" element={<RunModes />} />
+                <Route path="/test-gallery" element={<TestGallery />} />
+
+                <Route
+                  path="/gallery"
+                  element={<Navigate to="/gallery/posters" replace />}
+                />
+                <Route path="/gallery/posters" element={<GalleryHub />} />
+                <Route path="/gallery/backgrounds" element={<GalleryHub />} />
+                <Route path="/gallery/seasons" element={<GalleryHub />} />
+                <Route path="/gallery/titlecards" element={<GalleryHub />} />
+
+                <Route
+                  path="/config"
+                  element={<Navigate to="/config/general" replace />}
+                />
+                <Route
+                  path="/config/webui"
+                  element={<ConfigEditor tab="WebUI" />}
+                />
+                <Route
+                  path="/config/general"
+                  element={<ConfigEditor tab="General" />}
+                />
+                <Route
+                  path="/config/services"
+                  element={<ConfigEditor tab="Services" />}
+                />
+                <Route
+                  path="/config/api"
+                  element={<ConfigEditor tab="API" />}
+                />
+                <Route
+                  path="/config/languages"
+                  element={<ConfigEditor tab="Languages" />}
+                />
+                <Route
+                  path="/config/visuals"
+                  element={<ConfigEditor tab="Visuals" />}
+                />
+                <Route
+                  path="/config/overlays"
+                  element={<ConfigEditor tab="Overlays" />}
+                />
+                <Route
+                  path="/config/collections"
+                  element={<ConfigEditor tab="Collections" />}
+                />
+                <Route
+                  path="/config/notifications"
+                  element={<ConfigEditor tab="Notifications" />}
+                />
+
+                <Route path="/scheduler" element={<SchedulerSettings />} />
+                <Route path="/logs" element={<LogViewer />} />
+                <Route path="/about" element={<About />} />
+              </Routes>
+            </div>
+          </div>
+        </main>
+      </div>
+    </>
   );
 }
 

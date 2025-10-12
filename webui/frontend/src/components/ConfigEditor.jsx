@@ -528,13 +528,13 @@ function ConfigEditor() {
 
   useEffect(() => {
     if (config && !hasInitializedGroups.current) {
-      const firstGroup = tabs["General"]?.groups[0];
+      const firstGroup = getGroupsByTab(activeTab)[0];
       if (firstGroup) {
         setExpandedGroups({ [firstGroup]: true });
         hasInitializedGroups.current = true;
       }
     }
-  }, [config]);
+  }, [config, activeTab]);
 
   useEffect(() => {
     if (activeTab && config && hasInitializedGroups.current) {
@@ -546,6 +546,11 @@ function ConfigEditor() {
         }));
       }
     }
+  }, [activeTab]);
+
+  // Scroll to top when changing tabs
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }, [activeTab]);
 
   // Auto-expand groups when searching
