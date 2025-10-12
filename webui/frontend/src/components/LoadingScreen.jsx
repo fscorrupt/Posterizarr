@@ -53,7 +53,7 @@ function LoadingScreen() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-theme-dark via-theme-darker to-theme-dark flex items-center justify-center px-4">
+    <div className="min-h-screen w-full bg-gradient-to-br from-theme-dark via-theme-darker to-theme-dark flex items-center justify-center px-4">
       <div className="text-center">
         {/* Sonarr-style spinning radar */}
         <div className="relative w-32 h-32 mx-auto mb-8">

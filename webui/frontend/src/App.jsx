@@ -78,7 +78,7 @@ function AppContent() {
     <>
       {/* Loading Screen Overlay - shown over the UI during login transition */}
       {showLoadingScreen && (
-        <div className="fixed inset-0 z-[9999]">
+        <div className="fixed inset-0 z-[9999] bg-theme-bg">
           <LoadingScreen />
         </div>
       )}
