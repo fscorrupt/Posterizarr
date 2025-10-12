@@ -24,6 +24,10 @@ function TitleCardGallery() {
   const [deletingImage, setDeletingImage] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [displayCount, setDisplayCount] = useState(50);
+  const [itemsPerPage, setItemsPerPage] = useState(() => {
+    const saved = localStorage.getItem("titlecard-items-per-page");
+    return saved ? parseInt(saved) : 50;
+  });
 
   // Image size state with localStorage (2-10 range, default 5)
   const [imageSize, setImageSize] = useState(() => {
@@ -178,7 +182,17 @@ function TitleCardGallery() {
   };
 
   const loadMore = () => {
-    setDisplayCount((prev) => prev + 50);
+    setDisplayCount((prev) => prev + itemsPerPage);
+  };
+
+  const loadAll = () => {
+    setDisplayCount(filteredImages.length);
+  };
+
+  const handleItemsPerPageChange = (value) => {
+    setItemsPerPage(value);
+    localStorage.setItem("titlecard-items-per-page", value.toString());
+    setDisplayCount(value);
   };
 
   useEffect(() => {
@@ -192,8 +206,8 @@ function TitleCardGallery() {
   }, [activeFolder]);
 
   useEffect(() => {
-    setDisplayCount(50);
-  }, [searchTerm, activeFolder]);
+    setDisplayCount(itemsPerPage);
+  }, [searchTerm, activeFolder, itemsPerPage]);
 
   const filteredImages = images.filter(
     (img) =>
@@ -434,17 +448,52 @@ function TitleCardGallery() {
           </div>
 
           {hasMore && (
-            <div className="mt-8 flex justify-center">
-              <button
-                onClick={loadMore}
-                className="flex items-center gap-3 px-8 py-4 bg-theme-primary hover:bg-theme-primary/90 rounded-xl font-semibold transition-all transform hover:scale-105 shadow-lg hover:shadow-xl"
-              >
-                <ChevronDown className="w-5 h-5" />
-                Load More
-                <span className="ml-1 px-2 py-0.5 bg-white/20 rounded-full text-sm">
-                  {filteredImages.length - displayCount} remaining
-                </span>
-              </button>
+            <div className="mt-8 space-y-6">
+              {/* Items per page selector */}
+              <div className="flex justify-center">
+                <div className="inline-flex items-center gap-3 px-6 py-3 bg-theme-card border border-theme-border rounded-xl shadow-md">
+                  <label className="text-sm font-medium text-theme-text">
+                    Items per page:
+                  </label>
+                  <select
+                    value={itemsPerPage}
+                    onChange={(e) =>
+                      handleItemsPerPageChange(parseInt(e.target.value))
+                    }
+                    className="px-4 py-2 bg-theme-bg text-theme-text border border-theme-border rounded-lg text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-transparent transition-all cursor-pointer hover:bg-theme-card"
+                  >
+                    <option value={25}>25</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                    <option value={200}>200</option>
+                    <option value={500}>500</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Load buttons */}
+              <div className="flex justify-center gap-4">
+                <button
+                  onClick={loadMore}
+                  className="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-theme-primary to-theme-primary/80 hover:from-theme-primary/90 hover:to-theme-primary/70 text-white rounded-xl font-semibold transition-all transform hover:scale-105 shadow-lg hover:shadow-xl"
+                >
+                  <ChevronDown className="w-5 h-5" />
+                  Load More
+                  <span className="ml-1 px-3 py-1 bg-black/20 rounded-full text-sm font-bold">
+                    {filteredImages.length - displayCount} remaining
+                  </span>
+                </button>
+                <button
+                  onClick={loadAll}
+                  className="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-theme-secondary to-theme-secondary/80 hover:from-theme-secondary/90 hover:to-theme-secondary/70 text-white rounded-xl font-semibold transition-all transform hover:scale-105 shadow-lg hover:shadow-xl"
+                >
+                  <ChevronDown className="w-5 h-5" />
+                  Load All
+                  <span className="ml-1 px-3 py-1 bg-black/20 rounded-full text-sm font-bold">
+                    {filteredImages.length} total
+                  </span>
+                </button>
+              </div>
             </div>
           )}
         </>
