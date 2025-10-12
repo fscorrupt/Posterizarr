@@ -28,7 +28,11 @@ if not auth_logger.handlers:
         LOGS_DIR.mkdir(exist_ok=True)
         auth_log_path = LOGS_DIR / "Auth.log"
 
-        auth_handler = logging.FileHandler(auth_log_path, encoding="utf-8")
+        if auth_log_path.exists():
+            auth_log_path.unlink()
+            print(f"🗑️  Cleared old Auth.log")
+
+        auth_handler = logging.FileHandler(auth_log_path, encoding="utf-8", mode="w")
         auth_handler.setFormatter(
             logging.Formatter(
                 "[%(asctime)s] [%(levelname)-8s] |AUTH| %(message)s",
@@ -130,11 +134,11 @@ class BasicAuthMiddleware(BaseHTTPMiddleware):
         if not self.enabled:
             return await call_next(request)
 
-        # ✅ Always allow auth-check endpoint (for frontend status check)
+        #  Always allow auth-check endpoint (for frontend status check)
         if request.url.path == "/api/auth/check":
             return await call_next(request)
 
-        # ✅ IMPORTANT: Block EVERYTHING - including static files!
+        #  IMPORTANT: Block EVERYTHING - including static files!
         # No exceptions for HTML, JS, CSS, etc.
         client_ip = request.client.host if request.client else "unknown"
 

@@ -118,6 +118,44 @@ if not CONFIG_PATH.exists() and CONFIG_EXAMPLE_PATH.exists():
     logger.warning(f"config.json not found, using config.example.json as fallback")
     CONFIG_PATH = CONFIG_EXAMPLE_PATH
 
+
+def setup_backend_ui_logger():
+    """Setup backend logger to also write to UIlog.log"""
+    try:
+        # Create UILogs directory if not exists
+        UI_LOGS_DIR.mkdir(exist_ok=True)
+
+        # CLEANUP: Delete old log files on startup
+        backend_log_path = UI_LOGS_DIR / "UIlog.log"
+        if backend_log_path.exists():
+            backend_log_path.unlink()
+            print(f"🗑️  Cleared old UIlog.log")
+
+        # Create File Handler for UIlog.log
+        backend_ui_handler = logging.FileHandler(
+            backend_log_path, encoding="utf-8", mode="w"
+        )
+        backend_ui_handler.setLevel(logging.DEBUG)  # All levels
+        backend_ui_handler.setFormatter(
+            logging.Formatter(
+                "[%(asctime)s] [%(levelname)-8s] |BACKEND| %(message)s",
+                datefmt="%Y-%m-%d %H:%M:%S",
+            )
+        )
+
+        # Add handler to root logger (so all backend logs are captured)
+        logging.getLogger().addHandler(backend_ui_handler)
+
+        print(f"✅ Backend logger initialized: {backend_log_path}")
+        logger.info("Backend logging to UIlog.log enabled")
+
+    except Exception as e:
+        print(f"⚠️  Could not initialize backend UI logger: {e}")
+
+
+# Initialize Backend UI Logger on startup
+setup_backend_ui_logger()
+
 current_process: Optional[subprocess.Popen] = None
 current_mode: Optional[str] = None
 scheduler: Optional["PosterizarrScheduler"] = None
@@ -763,7 +801,7 @@ if AUTH_MIDDLEWARE_AVAILABLE:
         # The middleware now loads the config dynamically with every request!
         app.add_middleware(
             BasicAuthMiddleware,
-            config_path=CONFIG_PATH,  # ✅ CHANGED: Only pass config_path
+            config_path=CONFIG_PATH,  #  CHANGED: Only pass config_path
         )
         logger.info("Basic Auth middleware registered with dynamic config reload")
     except Exception as e:
@@ -1292,58 +1330,28 @@ async def validate_tvdb(request: TVDBValidationRequest):
                 )
 
                 if login_response.status_code == 200:
-                    # Token aus Response extrahieren
                     data = login_response.json()
                     token = data.get("data", {}).get("token")
 
                     if token:
+                        success = True
+                        pin_msg = f" (with PIN: {request.pin})" if request.pin else ""
                         logger.info(
                             f"🎟️  Successfully received TVDB token: {token[:15]}...{token[-8:]}"
                         )
+                        logger.info(f"✅ TVDB validation successful!{pin_msg}")
+                        logger.info(f"   Token is valid and working")
+                        logger.info("=" * 60)
 
-                        test_headers = {
-                            "accept": "application/json",
-                            "Authorization": f"Bearer {token}",
+                        return {
+                            "valid": True,
+                            "message": f"TVDB API key is valid{pin_msg}!",
+                            "details": {
+                                "status_code": 200,
+                                "has_pin": bool(request.pin),
+                                "token_received": True,
+                            },
                         }
-
-                        logger.info(
-                            f"🧪 Testing token with artwork/languages endpoint..."
-                        )
-                        test_response = await client.get(
-                            "https://api4.thetvdb.com/v4/artwork/languages",
-                            headers=test_headers,
-                        )
-
-                        logger.info(
-                            f"📥 Test response - Status: {test_response.status_code}"
-                        )
-
-                        if test_response.status_code == 200:
-                            success = True
-                            pin_msg = (
-                                f" (with PIN: {request.pin})" if request.pin else ""
-                            )
-                            logger.info(f"✅ TVDB validation successful!{pin_msg}")
-                            logger.info(f"   Token is valid and working")
-                            logger.info("=" * 60)
-
-                            return {
-                                "valid": True,
-                                "message": f"TVDB API key is valid{pin_msg}!",
-                                "details": {
-                                    "status_code": 200,
-                                    "has_pin": bool(request.pin),
-                                    "token_received": True,
-                                },
-                            }
-                        else:
-                            logger.warning(
-                                f"⚠️  Token received but test failed: Status {test_response.status_code}"
-                            )
-                            retry_count += 1
-                            if retry_count < max_retries:
-                                logger.info(f"⏳ Waiting 10 seconds before retry...")
-                                await asyncio.sleep(10)
                     else:
                         logger.warning(f"⚠️  No token in response data")
                         retry_count += 1
@@ -2311,7 +2319,7 @@ async def search_tmdb_posters(request: TMDBSearchRequest):
         with open(CONFIG_PATH, "r", encoding="utf-8") as f:
             grouped_config = json.load(f)
 
-        # Konvertiere gruppierte Config zu flacher Struktur
+        # Convert grouped config to flat structure
         if CONFIG_MAPPER_AVAILABLE:
             flat_config = flatten_config(grouped_config)
             tmdb_token = flat_config.get("tmdbtoken")
@@ -2320,7 +2328,7 @@ async def search_tmdb_posters(request: TMDBSearchRequest):
                 "PreferredSeasonLanguageOrder", ""
             )
         else:
-            # Fallback: Versuche beide Strukturen
+            # Fallback: Try both structures
             tmdb_token = grouped_config.get("tmdbtoken")
             if not tmdb_token and isinstance(grouped_config.get("ApiPart"), dict):
                 tmdb_token = grouped_config["ApiPart"].get("tmdbtoken")
