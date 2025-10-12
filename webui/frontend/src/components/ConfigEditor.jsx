@@ -526,21 +526,17 @@ function ConfigEditor() {
   }, []);
 
   useEffect(() => {
-    if (config && !activeTab) {
-      setActiveTab("General");
-      // Expand first group of first tab by default - NUR beim ersten Laden!
-      if (!hasInitializedGroups.current) {
-        const firstGroup = tabs["General"].groups[0];
-        if (firstGroup) {
-          setExpandedGroups({ [firstGroup]: true });
-          hasInitializedGroups.current = true;
-        }
+    if (config && !hasInitializedGroups.current) {
+      const firstGroup = tabs["General"]?.groups[0];
+      if (firstGroup) {
+        setExpandedGroups({ [firstGroup]: true });
+        hasInitializedGroups.current = true;
       }
     }
   }, [config]);
 
   useEffect(() => {
-    if (activeTab && hasInitializedGroups.current) {
+    if (activeTab && config && hasInitializedGroups.current) {
       const firstGroup = getGroupsByTab(activeTab)[0];
       if (firstGroup) {
         setExpandedGroups((prev) => ({
@@ -601,13 +597,19 @@ function ConfigEditor() {
   const saveConfig = async () => {
     setSaving(true);
     setError(null);
+
+    //  Save the OLD auth status BEFORE saving
+    const oldAuthEnabled = usingFlatStructure
+      ? config?.basicAuthEnabled
+      : config?.WebUI?.basicAuthEnabled;
+
     try {
       const response = await fetch(`${API_URL}/config`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ config }),
+        body: JSON.stringify({ config }), // Send flat config directly
       });
 
       const data = await response.json();
@@ -617,6 +619,49 @@ function ConfigEditor() {
           duration: 3000,
           position: "top-right",
         });
+
+        //  Get NEW auth status AFTER saving
+        const newAuthEnabled = usingFlatStructure
+          ? config?.basicAuthEnabled
+          : config?.WebUI?.basicAuthEnabled;
+
+        // If Auth has just been ENABLED -> reload page
+        if (!oldAuthEnabled && newAuthEnabled) {
+          toast.success(
+            "Basic Auth enabled! Page will reload in 2 seconds...",
+            {
+              duration: 2000,
+              position: "top-right",
+              icon: "🔒",
+            }
+          );
+
+          // Wait 2 seconds, then reload
+
+          setTimeout(() => {
+            window.location.reload();
+          }, 2000);
+          return;
+        }
+
+        // If Auth was just DISABLED -> reload page too
+
+        if (oldAuthEnabled && !newAuthEnabled) {
+          toast.success(
+            "Basic Auth disabled! Page will reload in 2 seconds...",
+            {
+              duration: 2000,
+              position: "top-right",
+              icon: "🔓",
+            }
+          );
+
+          // Warte 2 Sekunden, dann reload
+          setTimeout(() => {
+            window.location.reload();
+          }, 2000);
+          return;
+        }
       } else {
         setError("Failed to save config");
         toast.error("Failed to save configuration", {
@@ -990,6 +1035,63 @@ function ConfigEditor() {
             />
             <div className="w-11 h-6 bg-gray-600 rounded-full peer peer-focus:ring-2 peer-focus:ring-theme-primary peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-theme-primary"></div>
           </label>
+        </div>
+      );
+    }
+
+    if (key === "FavProvider") {
+      const providerOptions = ["tmdb", "tvdb", "fanart"];
+
+      return (
+        <div className="space-y-2">
+          <div className="relative">
+            <select
+              value={stringValue.toLowerCase()}
+              onChange={(e) => updateValue(fieldKey, e.target.value)}
+              className="w-full h-[42px] px-4 py-2.5 pr-10 bg-theme-bg border border-theme rounded-lg text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all cursor-pointer appearance-none"
+            >
+              {providerOptions.map((option) => (
+                <option key={option} value={option}>
+                  {option.toUpperCase()}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-theme-muted pointer-events-none" />
+          </div>
+          <p className="text-xs text-theme-muted">
+            Select your preferred metadata provider (recommended: TMDB)
+          </p>
+        </div>
+      );
+    }
+
+    // ============ DROPDOWN FÜR TMDB_VOTE_SORTING (KORRIGIERT) ============
+    if (key === "tmdb_vote_sorting") {
+      const sortingOptions = [
+        { value: "vote_average", label: "Vote Average" },
+        { value: "vote_count", label: "Vote Count" },
+        { value: "primary", label: "Primary (Default TMDB View)" },
+      ];
+
+      return (
+        <div className="space-y-2">
+          <div className="relative">
+            <select
+              value={stringValue}
+              onChange={(e) => updateValue(fieldKey, e.target.value)}
+              className="w-full h-[42px] px-4 py-2.5 pr-10 bg-theme-bg border border-theme rounded-lg text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all cursor-pointer appearance-none"
+            >
+              {sortingOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-theme-muted pointer-events-none" />
+          </div>
+          <p className="text-xs text-theme-muted">
+            Picture sorting method via TMDB API
+          </p>
         </div>
       );
     }
