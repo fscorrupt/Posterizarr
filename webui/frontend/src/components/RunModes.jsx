@@ -548,7 +548,7 @@ function RunModes() {
       return;
     }
 
-    // Validierung für Season Poster
+    // Validation for Season Poster
     if (manualForm.posterType === "season" && !tmdbSearch.seasonNumber) {
       toast.error("Please enter a season number!", {
         duration: 3000,
@@ -557,7 +557,7 @@ function RunModes() {
       return;
     }
 
-    // Validierung für Title Cards
+    // Validation for Title Cards
     if (manualForm.posterType === "titlecard") {
       if (!tmdbSearch.seasonNumber) {
         toast.error("Please enter a season number!", {
@@ -601,7 +601,7 @@ function RunModes() {
         poster_type: manualForm.posterType,
       };
 
-      // Füge Season/Episode hinzu wenn vorhanden
+      // Add Season/Episode if available
       if (tmdbSearch.seasonNumber) {
         requestBody.season_number = parseInt(tmdbSearch.seasonNumber);
       }

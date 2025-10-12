@@ -114,7 +114,7 @@ class BasicAuthMiddleware(BaseHTTPMiddleware):
         current_username = current_config["username"]
         current_password = current_config["password"]
 
-        # Update interne Variablen wenn sich was geändert hat
+        # Update internal variables if something has changed
         if current_enabled != self.enabled:
             self.enabled = current_enabled
             self.username = current_username
@@ -126,19 +126,19 @@ class BasicAuthMiddleware(BaseHTTPMiddleware):
             else:
                 auth_logger.info("🔄 Auth Status Changed: DISABLED")
 
-        # Wenn Basic Auth deaktiviert ist, durchlassen
+        # If Basic Auth is disabled, allow through
         if not self.enabled:
             return await call_next(request)
 
-        # ✅ Auth-Check-Endpoint immer erlauben (für Frontend-Status-Check)
+        # ✅ Always allow auth-check endpoint (for frontend status check)
         if request.url.path == "/api/auth/check":
             return await call_next(request)
 
-        # ✅ WICHTIG: Blockiere ALLES - auch statische Dateien!
-        # Keine Ausnahmen für HTML, JS, CSS, etc.
+        # ✅ IMPORTANT: Block EVERYTHING - including static files!
+        # No exceptions for HTML, JS, CSS, etc.
         client_ip = request.client.host if request.client else "unknown"
 
-        # Prüfe Authorization Header
+        # Check Authorization Header
         auth_header = request.headers.get("Authorization")
 
         if not auth_header or not auth_header.startswith("Basic "):
@@ -148,16 +148,16 @@ class BasicAuthMiddleware(BaseHTTPMiddleware):
             return self._unauthorized_response()
 
         try:
-            # Dekodiere Base64 credentials
+            # Decode Base64 credentials
             credentials = base64.b64decode(auth_header[6:]).decode("utf-8")
             username, password = credentials.split(":", 1)
 
-            # Verwende secrets.compare_digest für timing-safe comparison
+            # Use secrets.compare_digest for timing-safe comparison
             username_match = secrets.compare_digest(username, current_username)
             password_match = secrets.compare_digest(password, current_password)
 
             if username_match and password_match:
-                # Auth erfolgreich - nur beim ersten erfolgreichen Login loggen
+                # Auth successful - only log on first successful login
                 if request.url.path == "/":
                     auth_logger.info(
                         f"✅ Successful login | User: {username} | IP: {client_ip}"
@@ -165,7 +165,7 @@ class BasicAuthMiddleware(BaseHTTPMiddleware):
                 response = await call_next(request)
                 return response
             else:
-                # Auth fehlgeschlagen
+                # Auth failed
                 auth_logger.warning(
                     f"❌ Failed login attempt | User: {username} | IP: {client_ip}"
                 )
@@ -177,8 +177,8 @@ class BasicAuthMiddleware(BaseHTTPMiddleware):
 
     def _unauthorized_response(self):
         """
-        Gibt 401 Unauthorized Response zurück
-        Browser zeigt automatisch das Login-Popup an
+        Returns 401 Unauthorized Response
+        Browser automatically shows the login popup
         """
         return Response(
             content="Unauthorized - Authentication required",

@@ -21,6 +21,7 @@ import {
   HelpCircle,
 } from "lucide-react";
 import toast, { Toaster } from "react-hot-toast";
+import ValidateButton from "./ValidateButton";
 
 const API_URL = "/api";
 
@@ -914,10 +915,10 @@ function ConfigEditor() {
       value === "True" ||
       value === "False"
     ) {
-      // Liste der Felder die als echte Booleans (true/false) gespeichert werden
+      // List of fields stored as real booleans (true/false)
       const booleanFields = ["basicAuthEnabled"];
 
-      // Liste der Felder die als String "true"/"false" (klein) gespeichert werden
+      // List of fields stored as string "true"/"false" (lowercase)
       const lowercaseStringBooleanFields = [
         "UsePlex",
         "UseJellyfin",
@@ -989,18 +990,18 @@ function ConfigEditor() {
         "UseTCResolutionOverlays",
       ];
 
-      // Liste der Felder die als String "True"/"False" (GROSS) gespeichert werden
+      // List of fields stored as string "True"/"False" (CAPITAL)
       const capitalizedStringBooleanFields = [
         "SendNotification",
         "UseUptimeKuma",
       ];
 
-      // Bestimme welcher Typ verwendet werden soll
+      // Determine which type to use
       const isBoolean = booleanFields.includes(key);
       const isCapitalizedString = capitalizedStringBooleanFields.includes(key);
       const isLowercaseString = lowercaseStringBooleanFields.includes(key);
 
-      // Bestimme den aktuellen Zustand (enabled/disabled)
+      // Determine current state (enabled/disabled)
       const isEnabled =
         value === "true" || value === true || value === "True" || value === 1;
 
@@ -1014,17 +1015,17 @@ function ConfigEditor() {
               type="checkbox"
               checked={isEnabled}
               onChange={(e) => {
-                // Entscheide basierend auf dem Feld-Typ welcher Wert gespeichert wird
+                // Decide based on field type which value to save
                 let newValue;
 
                 if (isBoolean) {
-                  // Echte Booleans für Auth
+                  // Real booleans for Auth
                   newValue = e.target.checked;
                 } else if (isCapitalizedString) {
-                  // String mit Großbuchstaben für Notifications
+                  // String with capital letters for Notifications
                   newValue = e.target.checked ? "True" : "False";
                 } else {
-                  // String mit Kleinbuchstaben für alles andere (Standard)
+                  // String with lowercase letters for everything else (default)
                   newValue = e.target.checked ? "true" : "false";
                 }
 
@@ -1039,6 +1040,7 @@ function ConfigEditor() {
       );
     }
 
+    // ============ DROPDOWN FOR FAVPROVIDER ============
     if (key === "FavProvider") {
       const providerOptions = ["tmdb", "tvdb", "fanart"];
 
@@ -1065,7 +1067,7 @@ function ConfigEditor() {
       );
     }
 
-    // ============ DROPDOWN FÜR TMDB_VOTE_SORTING (KORRIGIERT) ============
+    // ============ DROPDOWN FOR TMDB_VOTE_SORTING ============
     if (key === "tmdb_vote_sorting") {
       const sortingOptions = [
         { value: "vote_average", label: "Vote Average" },
@@ -1095,6 +1097,236 @@ function ConfigEditor() {
         </div>
       );
     }
+
+    // ============ SERVICES MIT VALIDATE-BUTTONS ============
+
+    // Plex Token mit Validate-Button
+    if (key === "PlexToken") {
+      return (
+        <div className="space-y-2">
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <input
+                type="text"
+                value={stringValue}
+                onChange={(e) => updateValue(fieldKey, e.target.value)}
+                className="w-full h-[42px] px-4 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono pr-10"
+                placeholder="Enter Plex token"
+              />
+              <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-muted" />
+            </div>
+            <ValidateButton type="plex" config={config} label="Validate" />
+          </div>
+          <p className="text-xs text-theme-muted">
+            Your Plex authentication token
+          </p>
+        </div>
+      );
+    }
+
+    // Jellyfin API Key mit Validate-Button
+    if (key === "JellyfinAPIKey") {
+      return (
+        <div className="space-y-2">
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <input
+                type="text"
+                value={stringValue}
+                onChange={(e) => updateValue(fieldKey, e.target.value)}
+                className="w-full h-[42px] px-4 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono pr-10"
+                placeholder="Enter Jellyfin API key"
+              />
+              <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-muted" />
+            </div>
+            <ValidateButton type="jellyfin" config={config} label="Validate" />
+          </div>
+          <p className="text-xs text-theme-muted">
+            Create API key in Jellyfin at Settings → Advanced → API Keys
+          </p>
+        </div>
+      );
+    }
+
+    // Emby API Key mit Validate-Button
+    if (key === "EmbyAPIKey") {
+      return (
+        <div className="space-y-2">
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <input
+                type="text"
+                value={stringValue}
+                onChange={(e) => updateValue(fieldKey, e.target.value)}
+                className="w-full h-[42px] px-4 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono pr-10"
+                placeholder="Enter Emby API key"
+              />
+              <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-muted" />
+            </div>
+            <ValidateButton type="emby" config={config} label="Validate" />
+          </div>
+          <p className="text-xs text-theme-muted">
+            Create API key in Emby at Settings → Advanced → API Keys
+          </p>
+        </div>
+      );
+    }
+
+    // ============ API KEYS MIT VALIDATE-BUTTONS ============
+
+    // TMDB Token mit Validate-Button
+    if (key === "tmdbtoken") {
+      return (
+        <div className="space-y-2">
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <input
+                type="text"
+                value={stringValue}
+                onChange={(e) => updateValue(fieldKey, e.target.value)}
+                className="w-full h-[42px] px-4 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono pr-10"
+                placeholder="Enter TMDB Read Access Token"
+              />
+              <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-muted" />
+            </div>
+            <ValidateButton type="tmdb" config={config} label="Validate" />
+          </div>
+          <p className="text-xs text-theme-muted">
+            Your TMDB API Read Access Token (the really long one)
+          </p>
+        </div>
+      );
+    }
+
+    // TVDB API Key mit Validate-Button
+    if (key === "tvdbapi") {
+      return (
+        <div className="space-y-2">
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <input
+                type="text"
+                value={stringValue}
+                onChange={(e) => updateValue(fieldKey, e.target.value)}
+                className="w-full h-[42px] px-4 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono pr-10"
+                placeholder="Enter TVDB API Key (optionally with #PIN)"
+              />
+              <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-muted" />
+            </div>
+            <ValidateButton type="tvdb" config={config} label="Validate" />
+          </div>
+          <p className="text-xs text-theme-muted">
+            Format: YourApiKey or YourApiKey#YourPin (for subscribers)
+          </p>
+        </div>
+      );
+    }
+
+    // Fanart.tv API Key mit Validate-Button
+    if (key === "FanartTvAPIKey") {
+      return (
+        <div className="space-y-2">
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <input
+                type="text"
+                value={stringValue}
+                onChange={(e) => updateValue(fieldKey, e.target.value)}
+                className="w-full h-[42px] px-4 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono pr-10"
+                placeholder="Enter Fanart.tv Personal API Key"
+              />
+              <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-muted" />
+            </div>
+            <ValidateButton type="fanart" config={config} label="Validate" />
+          </div>
+          <p className="text-xs text-theme-muted">
+            Your Fanart.tv Personal API Key
+          </p>
+        </div>
+      );
+    }
+
+    // ============ NOTIFICATIONS MIT VALIDATE-BUTTONS ============
+
+    // Discord Webhook mit Validate-Button
+    if (key === "Discord") {
+      return (
+        <div className="space-y-2">
+          <div className="flex gap-2">
+            <textarea
+              value={stringValue}
+              onChange={(e) => {
+                updateValue(fieldKey, e.target.value);
+                autoResize(e.target);
+              }}
+              onInput={(e) => autoResize(e.target)}
+              ref={(textarea) => textarea && autoResize(textarea)}
+              rows={1}
+              className="flex-1 px-4 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono text-sm resize-none overflow-hidden min-h-[42px]"
+              placeholder="https://discord.com/api/webhooks/..."
+            />
+            <ValidateButton type="discord" config={config} label="Test" />
+          </div>
+          <p className="text-xs text-theme-muted">
+            Discord webhook URL (sends a test message when validated)
+          </p>
+        </div>
+      );
+    }
+
+    // Apprise URL mit Validate-Button
+    if (key === "AppriseUrl") {
+      return (
+        <div className="space-y-2">
+          <div className="flex gap-2">
+            <textarea
+              value={stringValue}
+              onChange={(e) => {
+                updateValue(fieldKey, e.target.value);
+                autoResize(e.target);
+              }}
+              onInput={(e) => autoResize(e.target)}
+              ref={(textarea) => textarea && autoResize(textarea)}
+              rows={1}
+              className="flex-1 px-4 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono text-sm resize-none overflow-hidden min-h-[42px]"
+              placeholder="discord://... or telegram://... etc."
+            />
+            <ValidateButton type="apprise" config={config} label="Validate" />
+          </div>
+          <p className="text-xs text-theme-muted">
+            Apprise notification URL (format check only)
+          </p>
+        </div>
+      );
+    }
+
+    // Uptime Kuma URL mit Validate-Button
+    if (key === "UptimeKumaUrl") {
+      return (
+        <div className="space-y-2">
+          <div className="flex gap-2">
+            <textarea
+              value={stringValue}
+              onChange={(e) => {
+                updateValue(fieldKey, e.target.value);
+                autoResize(e.target);
+              }}
+              onInput={(e) => autoResize(e.target)}
+              ref={(textarea) => textarea && autoResize(textarea)}
+              rows={1}
+              className="flex-1 px-4 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono text-sm resize-none overflow-hidden min-h-[42px]"
+              placeholder="https://uptime-kuma.domain.com/api/push/..."
+            />
+            <ValidateButton type="uptimekuma" config={config} label="Test" />
+          </div>
+          <p className="text-xs text-theme-muted">
+            Uptime Kuma push monitor URL (sends test ping when validated)
+          </p>
+        </div>
+      );
+    }
+
+    // ============ REST OF THE FUNCTION (UNCHANGED) ============
 
     // Handle text_offset specially
     if (keyLower.includes("offset") || keyLower === "text_offset") {
@@ -1133,6 +1365,7 @@ function ConfigEditor() {
       );
     }
 
+    // Generic password/token/key/secret handling (WITHOUT Validate button for other fields)
     if (
       keyLower.includes("password") ||
       keyLower.includes("token") ||

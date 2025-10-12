@@ -103,7 +103,7 @@ function Dashboard() {
 
         if (cached && cacheTime) {
           const age = Date.now() - parseInt(cacheTime);
-          // Cache ist 24 Stunden gültig
+          // Cache is valid for 24 hours
           if (age < 24 * 60 * 60 * 1000) {
             const cachedData = JSON.parse(cached);
             cachedVersion = cachedData;
@@ -246,11 +246,11 @@ function Dashboard() {
 
   useEffect(() => {
     fetchStatus(true);
-    fetchVersion(true); // Nutzt Cache wenn < 24h alt, fetched neu wenn älter
+    fetchVersion(true); // Uses cache if < 24h old, fetches new if older
 
-    // Intervall für force refresh alle 24 Stunden (falls Seite lange offen bleibt)
+    // Interval for force refresh every 24 hours (if page stays open)
     const versionInterval = setInterval(
-      () => fetchVersion(true, true), // forceRefresh = true nach 24h
+      () => fetchVersion(true, true), // forceRefresh = true after 24h
       24 * 60 * 60 * 1000
     );
 

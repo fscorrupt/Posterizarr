@@ -34,7 +34,7 @@ function TestGallery() {
     current_mode: null,
   });
 
-  // Kategorisierungs-Funktion
+  // Categorization function
   const categorizeImages = (images) => {
     const categories = {
       posters: [],
@@ -152,14 +152,14 @@ function TestGallery() {
     return () => clearInterval(interval);
   }, []);
 
-  // Filtere Bilder basierend auf Suchbegriff
+  // Filter images based on search term
   const filteredImages = images.filter(
     (img) =>
       img.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       img.path.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Kategorisiere gefilterte Bilder
+  // Categorize filtered images
   const categorizedImages = categorizeImages(filteredImages);
 
   // Category Component
@@ -168,7 +168,7 @@ function TestGallery() {
 
     const isExpanded = expandedCategories[categoryKey];
 
-    // Aspect Ratio basierend auf Kategorie
+    // Aspect ratio based on category
     const isPortrait =
       categoryKey === "posters" || categoryKey === "seasonPosters";
     const aspectRatio = isPortrait ? "aspect-[2/3]" : "aspect-[16/9]";

@@ -211,13 +211,13 @@ class PosterizarrScheduler:
                     process = subprocess.Popen(
                         command,
                         cwd=str(self.base_dir),
-                        stdout=None,  # ✅ FIX: Keine Ausgabe lesen (verhindert Unicode-Error)
-                        stderr=None,  # ✅ FIX: Keine Fehler lesen (verhindert Unicode-Error)
+                        stdout=None,  # ✅ FIX: Don't read output (prevents Unicode error)
+                        stderr=None,  # ✅ FIX: Don't read errors (prevents Unicode error)
                         text=True,
                     )
                     self.current_process = process
 
-                    # Wait for completion (ohne Ausgabe zu lesen)
+                    # Wait for completion (without reading output)
                     returncode = process.wait()
 
                     if returncode == 0:

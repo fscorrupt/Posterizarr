@@ -25,10 +25,11 @@ import time
 import requests
 import threading
 from datetime import datetime
+import xml.etree.ElementTree as ET
 
 # Setup logging
-logging.basicConfig(level=logging.WARNING)
-logging.getLogger("httpx").setLevel(logging.WARNING)
+logging.basicConfig(level=logging.INFO)
+logging.getLogger("httpx").setLevel(logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Import config mapper for flat/grouped transformations
@@ -316,8 +317,10 @@ def is_titlecard_file(filename: str) -> bool:
 # ============================================================================
 # DYNAMIC ASSET CACHING SYSTEM
 # ============================================================================
-CACHE_TTL_SECONDS = 300  # Cache data for 5 minutes (nur für Statistiken)
-CACHE_REFRESH_INTERVAL = 600  # Refresh cache every 10 minutes (passt für große Assets)
+CACHE_TTL_SECONDS = 300  # Cache data for 5 minutes (only for statistics)
+CACHE_REFRESH_INTERVAL = (
+    600  # Refresh cache every 10 minutes (suitable for large assets)
+)
 
 asset_cache = {
     "last_scanned": 0,
@@ -691,20 +694,20 @@ async def get_script_version():
 
 class SPAMiddleware(BaseHTTPMiddleware):
     """
-    Middleware für Single Page Application Support
-    Fängt 404-Fehler ab und gibt index.html zurück für React Router
+    Middleware for Single Page Application Support
+    Catches 404 errors and returns index.html for React Router
     """
 
     async def dispatch(self, request: Request, call_next):
         response = await call_next(request)
 
-        # Wenn 404 und KEINE API-Route und KEIN Static-File
+        # If 404 and NOT an API route and NOT a static file
         if response.status_code == 404:
             path = request.url.path
 
-            # Nur für HTML-Routes (keine API, keine Assets)
+            # Only for HTML routes (no API, no assets)
             if not path.startswith(("/api", "/poster_assets", "/test", "/_assets")):
-                # Gib index.html zurück (React Router übernimmt)
+                # Return index.html (React Router takes over)
                 index_path = FRONTEND_DIR / "index.html"
                 if index_path.exists():
                     return FileResponse(index_path)
@@ -760,7 +763,7 @@ if AUTH_MIDDLEWARE_AVAILABLE:
         # The middleware now loads the config dynamically with every request!
         app.add_middleware(
             BasicAuthMiddleware,
-            config_path=CONFIG_PATH,  # ✅ GEÄNDERT: Nur config_path übergeben
+            config_path=CONFIG_PATH,  # ✅ CHANGED: Only pass config_path
         )
         logger.info("Basic Auth middleware registered with dynamic config reload")
     except Exception as e:
@@ -828,6 +831,46 @@ class TMDBSearchRequest(BaseModel):
     poster_type: str = "standard"  # "standard", "season", "titlecard"
     season_number: Optional[int] = None  # For season posters and titlecards
     episode_number: Optional[int] = None  # For titlecards only
+
+
+class PlexValidationRequest(BaseModel):
+    url: str
+    token: str
+
+
+class JellyfinValidationRequest(BaseModel):
+    url: str
+    api_key: str
+
+
+class EmbyValidationRequest(BaseModel):
+    url: str
+    api_key: str
+
+
+class TMDBValidationRequest(BaseModel):
+    token: str
+
+
+class TVDBValidationRequest(BaseModel):
+    api_key: str
+    pin: Optional[str] = None
+
+
+class FanartValidationRequest(BaseModel):
+    api_key: str
+
+
+class DiscordValidationRequest(BaseModel):
+    webhook_url: str
+
+
+class AppriseValidationRequest(BaseModel):
+    url: str
+
+
+class UptimeKumaValidationRequest(BaseModel):
+    url: str
 
 
 @app.get("/api")
@@ -927,6 +970,680 @@ async def update_config(data: ConfigUpdate):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ============================================================================
+# VALIDATION ENDPOINTS
+# ============================================================================
+
+
+@app.post("/api/validate/plex")
+async def validate_plex(request: PlexValidationRequest):
+    """Validate Plex connection"""
+    logger.info("=" * 60)
+    logger.info("🔍 PLEX VALIDATION STARTED")
+    logger.info(f"📍 URL: {request.url}")
+    logger.info(
+        f"🔑 Token: {request.token[:10]}...{request.token[-4:] if len(request.token) > 14 else ''}"
+    )
+
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            url = f"{request.url}/library/sections/?X-Plex-Token={request.token}"
+            logger.info(f"🌐 Sending request to Plex API...")
+
+            response = await client.get(url)
+            logger.info(f"📥 Response received - Status: {response.status_code}")
+
+            if response.status_code == 200:
+                # Parse XML to check for libraries
+                root = ET.fromstring(response.content)
+                lib_count = int(root.get("size", 0))
+                server_name = root.get("friendlyName", "Unknown")
+
+                logger.info(f"✅ Plex validation successful!")
+                logger.info(f"   Server: {server_name}")
+                logger.info(f"   Libraries: {lib_count}")
+                logger.info("=" * 60)
+
+                return {
+                    "valid": True,
+                    "message": f"Plex connection successful! Found {lib_count} libraries.",
+                    "details": {"library_count": lib_count, "server_name": server_name},
+                }
+            elif response.status_code == 401:
+                logger.warning(f"❌Plex validation failed: Invalid token (401)")
+                logger.info("=" * 60)
+                return {
+                    "valid": False,
+                    "message": "Invalid Plex token. Please check your token.",
+                    "details": {"status_code": 401},
+                }
+            else:
+                logger.warning(
+                    f"❌ Plex validation failed: Status {response.status_code}"
+                )
+                logger.info("=" * 60)
+                return {
+                    "valid": False,
+                    "message": f"Plex connection failed (Status: {response.status_code})",
+                    "details": {"status_code": response.status_code},
+                }
+    except httpx.TimeoutException:
+        logger.error(f"⏱️  Plex validation timeout - URL unreachable")
+        logger.info("=" * 60)
+        return {
+            "valid": False,
+            "message": "Connection timeout. Check if Plex URL is correct and server is reachable.",
+            "details": {"error": "timeout"},
+        }
+    except Exception as e:
+        logger.error(f"💥 Plex validation error: {str(e)}")
+        logger.exception("Full traceback:")
+        logger.info("=" * 60)
+        return {
+            "valid": False,
+            "message": f"Error connecting to Plex: {str(e)}",
+            "details": {"error": str(e)},
+        }
+
+
+@app.post("/api/validate/jellyfin")
+async def validate_jellyfin(request: JellyfinValidationRequest):
+    """Validate Jellyfin connection"""
+    logger.info("=" * 60)
+    logger.info("🔍 JELLYFIN VALIDATION STARTED")
+    logger.info(f"📍 URL: {request.url}")
+    logger.info(
+        f"🔑 API Key: {request.api_key[:8]}...{request.api_key[-4:] if len(request.api_key) > 12 else ''}"
+    )
+
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            url = f"{request.url}/System/Info?api_key={request.api_key}"
+            logger.info(f"🌐 Sending request to Jellyfin API...")
+
+            response = await client.get(url)
+            logger.info(f"📥 Response received - Status: {response.status_code}")
+
+            if response.status_code == 200:
+                data = response.json()
+                version = data.get("Version", "Unknown")
+                server_name = data.get("ServerName", "Unknown")
+
+                logger.info(f"✅ Jellyfin validation successful!")
+                logger.info(f"   Server: {server_name}")
+                logger.info(f"   Version: {version}")
+                logger.info("=" * 60)
+
+                return {
+                    "valid": True,
+                    "message": f" Jellyfin connection successful! Version: {version}",
+                    "details": {"version": version, "server_name": server_name},
+                }
+            elif response.status_code == 401:
+                logger.warning(f"❌ Jellyfin validation failed: Invalid API key (401)")
+                logger.info("=" * 60)
+                return {
+                    "valid": False,
+                    "message": " Invalid Jellyfin API key. Please check your API key.",
+                    "details": {"status_code": 401},
+                }
+            else:
+                logger.warning(
+                    f"❌ Jellyfin validation failed: Status {response.status_code}"
+                )
+                logger.info("=" * 60)
+                return {
+                    "valid": False,
+                    "message": f" Jellyfin connection failed (Status: {response.status_code})",
+                    "details": {"status_code": response.status_code},
+                }
+    except httpx.TimeoutException:
+        logger.error(f"⏱️  Jellyfin validation timeout - URL unreachable")
+        logger.info("=" * 60)
+        return {
+            "valid": False,
+            "message": " Connection timeout. Check if Jellyfin URL is correct and server is reachable.",
+            "details": {"error": "timeout"},
+        }
+    except Exception as e:
+        logger.error(f"💥 Jellyfin validation error: {str(e)}")
+        logger.exception("Full traceback:")
+        logger.info("=" * 60)
+        return {
+            "valid": False,
+            "message": f" Error connecting to Jellyfin: {str(e)}",
+            "details": {"error": str(e)},
+        }
+
+
+@app.post("/api/validate/emby")
+async def validate_emby(request: EmbyValidationRequest):
+    """Validate Emby connection"""
+    logger.info("=" * 60)
+    logger.info("🔍 EMBY VALIDATION STARTED")
+    logger.info(f"📍 URL: {request.url}")
+    logger.info(
+        f"🔑 API Key: {request.api_key[:8]}...{request.api_key[-4:] if len(request.api_key) > 12 else ''}"
+    )
+
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            url = f"{request.url}/System/Info?api_key={request.api_key}"
+            logger.info(f"🌐 Sending request to Emby API...")
+
+            response = await client.get(url)
+            logger.info(f"📥 Response received - Status: {response.status_code}")
+
+            if response.status_code == 200:
+                data = response.json()
+                version = data.get("Version", "Unknown")
+                server_name = data.get("ServerName", "Unknown")
+
+                logger.info(f"✅ Emby validation successful!")
+                logger.info(f"   Server: {server_name}")
+                logger.info(f"   Version: {version}")
+                logger.info("=" * 60)
+
+                return {
+                    "valid": True,
+                    "message": f" Emby connection successful! Version: {version}",
+                    "details": {"version": version, "server_name": server_name},
+                }
+            elif response.status_code == 401:
+                logger.warning(f"❌ Emby validation failed: Invalid API key (401)")
+                logger.info("=" * 60)
+                return {
+                    "valid": False,
+                    "message": " Invalid Emby API key. Please check your API key.",
+                    "details": {"status_code": 401},
+                }
+            else:
+                logger.warning(
+                    f"❌ Emby validation failed: Status {response.status_code}"
+                )
+                logger.info("=" * 60)
+                return {
+                    "valid": False,
+                    "message": f" Emby connection failed (Status: {response.status_code})",
+                    "details": {"status_code": response.status_code},
+                }
+    except httpx.TimeoutException:
+        logger.error(f"⏱️  Emby validation timeout - URL unreachable")
+        logger.info("=" * 60)
+        return {
+            "valid": False,
+            "message": " Connection timeout. Check if Emby URL is correct and server is reachable.",
+            "details": {"error": "timeout"},
+        }
+    except Exception as e:
+        logger.error(f"💥 Emby validation error: {str(e)}")
+        logger.exception("Full traceback:")
+        logger.info("=" * 60)
+        return {
+            "valid": False,
+            "message": f" Error connecting to Emby: {str(e)}",
+            "details": {"error": str(e)},
+        }
+
+
+@app.post("/api/validate/tmdb")
+async def validate_tmdb(request: TMDBValidationRequest):
+    """Validate TMDB API token"""
+    logger.info("=" * 60)
+    logger.info("🔍 TMDB VALIDATION STARTED")
+    logger.info(
+        f"🔑 Token: {request.token[:15]}...{request.token[-8:] if len(request.token) > 23 else ''}"
+    )
+
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            headers = {
+                "Authorization": f"Bearer {request.token}",
+                "Content-Type": "application/json",
+            }
+            logger.info(f"🌐 Sending request to TMDB API...")
+
+            response = await client.get(
+                "https://api.themoviedb.org/3/configuration", headers=headers
+            )
+            logger.info(f"📥 Response received - Status: {response.status_code}")
+
+            if response.status_code == 200:
+                logger.info(f"✅ TMDB validation successful!")
+                logger.info("=" * 60)
+                return {
+                    "valid": True,
+                    "message": " TMDB API token is valid!",
+                    "details": {"status_code": 200},
+                }
+            elif response.status_code == 401:
+                logger.warning(f"❌ TMDB validation failed: Invalid token (401)")
+                logger.info("=" * 60)
+                return {
+                    "valid": False,
+                    "message": " Invalid TMDB token. Please check your Read Access Token.",
+                    "details": {"status_code": 401},
+                }
+            else:
+                logger.warning(
+                    f"❌ TMDB validation failed: Status {response.status_code}"
+                )
+                logger.info("=" * 60)
+                return {
+                    "valid": False,
+                    "message": f" TMDB validation failed (Status: {response.status_code})",
+                    "details": {"status_code": response.status_code},
+                }
+    except Exception as e:
+        logger.error(f"💥 TMDB validation error: {str(e)}")
+        logger.exception("Full traceback:")
+        logger.info("=" * 60)
+        return {
+            "valid": False,
+            "message": f" Error validating TMDB token: {str(e)}",
+            "details": {"error": str(e)},
+        }
+
+
+@app.post("/api/validate/tvdb")
+async def validate_tvdb(request: TVDBValidationRequest):
+    """Validate TVDB API key - with login flow"""
+    logger.info("=" * 60)
+    logger.info("🔍 TVDB VALIDATION STARTED")
+    logger.info(
+        f"🔑 API Key: {request.api_key[:8]}...{request.api_key[-4:] if len(request.api_key) > 12 else ''}"
+    )
+    if request.pin:
+        logger.info(f"📌 PIN provided: {request.pin}")
+
+    max_retries = 6
+    retry_count = 0
+    success = False
+
+    while not success and retry_count < max_retries:
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                login_url = "https://api4.thetvdb.com/v4/login"
+
+                # Request body with or without PIN
+                if request.pin:
+                    body = {"apikey": request.api_key, "pin": request.pin}
+                    logger.info(
+                        f"🌐 Attempting TVDB login with API Key + PIN (Attempt {retry_count + 1}/{max_retries})..."
+                    )
+                else:
+                    body = {"apikey": request.api_key}
+                    logger.info(
+                        f"🌐 Attempting TVDB login with API Key only (Attempt {retry_count + 1}/{max_retries})..."
+                    )
+
+                headers = {
+                    "accept": "application/json",
+                    "Content-Type": "application/json",
+                }
+
+                # POST-Request zum Login
+                login_response = await client.post(
+                    login_url, json=body, headers=headers
+                )
+
+                logger.info(
+                    f"📥 Login response received - Status: {login_response.status_code}"
+                )
+
+                if login_response.status_code == 200:
+                    # Token aus Response extrahieren
+                    data = login_response.json()
+                    token = data.get("data", {}).get("token")
+
+                    if token:
+                        logger.info(
+                            f"🎟️  Successfully received TVDB token: {token[:15]}...{token[-8:]}"
+                        )
+
+                        test_headers = {
+                            "accept": "application/json",
+                            "Authorization": f"Bearer {token}",
+                        }
+
+                        logger.info(
+                            f"🧪 Testing token with artwork/languages endpoint..."
+                        )
+                        test_response = await client.get(
+                            "https://api4.thetvdb.com/v4/artwork/languages",
+                            headers=test_headers,
+                        )
+
+                        logger.info(
+                            f"📥 Test response - Status: {test_response.status_code}"
+                        )
+
+                        if test_response.status_code == 200:
+                            success = True
+                            pin_msg = (
+                                f" (with PIN: {request.pin})" if request.pin else ""
+                            )
+                            logger.info(f"✅ TVDB validation successful!{pin_msg}")
+                            logger.info(f"   Token is valid and working")
+                            logger.info("=" * 60)
+
+                            return {
+                                "valid": True,
+                                "message": f"TVDB API key is valid{pin_msg}!",
+                                "details": {
+                                    "status_code": 200,
+                                    "has_pin": bool(request.pin),
+                                    "token_received": True,
+                                },
+                            }
+                        else:
+                            logger.warning(
+                                f"⚠️  Token received but test failed: Status {test_response.status_code}"
+                            )
+                            retry_count += 1
+                            if retry_count < max_retries:
+                                logger.info(f"⏳ Waiting 10 seconds before retry...")
+                                await asyncio.sleep(10)
+                    else:
+                        logger.warning(f"⚠️  No token in response data")
+                        retry_count += 1
+                        if retry_count < max_retries:
+                            logger.info(f"⏳ Waiting 10 seconds before retry...")
+                            await asyncio.sleep(10)
+
+                elif login_response.status_code == 401:
+                    logger.warning(f"❌ TVDB login failed: Invalid API key (401)")
+                    logger.warning(
+                        f"   You may be using a legacy API key. Please use a 'Project API Key'"
+                    )
+                    logger.info("=" * 60)
+                    return {
+                        "valid": False,
+                        "message": "Invalid TVDB API key. Please use a 'Project API Key' (not legacy key).",
+                        "details": {"status_code": 401, "legacy_key_hint": True},
+                    }
+
+                else:
+                    logger.warning(
+                        f"❌ TVDB login failed: Status {login_response.status_code}"
+                    )
+                    retry_count += 1
+                    if retry_count < max_retries:
+                        logger.info(f"⏳ Waiting 10 seconds before retry...")
+                        await asyncio.sleep(10)
+
+        except httpx.TimeoutException:
+            logger.warning(
+                f"⏱️  TVDB login timeout (Attempt {retry_count + 1}/{max_retries})"
+            )
+            retry_count += 1
+            if retry_count < max_retries:
+                logger.info(f"⏳ Waiting 10 seconds before retry...")
+                await asyncio.sleep(10)
+
+        except Exception as e:
+            logger.error(f"💥 TVDB validation error: {str(e)}")
+            logger.exception("Full traceback:")
+            retry_count += 1
+            if retry_count < max_retries:
+                logger.info(f"⏳ Waiting 10 seconds before retry...")
+                await asyncio.sleep(10)
+
+    # If all retries failed
+    if not success:
+        logger.error(f"❌ TVDB validation failed after {max_retries} attempts")
+        logger.error(
+            f"   You may be using a legacy API key. Please use a 'Project API Key'"
+        )
+        logger.info("=" * 60)
+        return {
+            "valid": False,
+            "message": f"Could not validate TVDB API key after {max_retries} attempts. You may be using a legacy API key - please use a 'Project API Key'.",
+            "details": {"attempts": max_retries, "legacy_key_hint": True},
+        }
+
+
+@app.post("/api/validate/fanart")
+async def validate_fanart(request: FanartValidationRequest):
+    """Validate Fanart.tv API key"""
+    logger.info("=" * 60)
+    logger.info("🔍 FANART.TV VALIDATION STARTED")
+    logger.info(
+        f"🔑 API Key: {request.api_key[:8]}...{request.api_key[-4:] if len(request.api_key) > 12 else ''}"
+    )
+
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            test_url = (
+                f"https://webservice.fanart.tv/v3/movies/603?api_key={request.api_key}"
+            )
+            logger.info(
+                f"🌐 Sending test request to Fanart.tv API (Movie ID: 603 - The Matrix)..."
+            )
+
+            response = await client.get(test_url)
+            logger.info(f"📥 Response received - Status: {response.status_code}")
+
+            if response.status_code == 200:
+                logger.info(f"✅ Fanart.tv validation successful!")
+                logger.info("=" * 60)
+                return {
+                    "valid": True,
+                    "message": " Fanart.tv API key is valid!",
+                    "details": {"status_code": 200},
+                }
+            elif response.status_code == 401:
+                logger.warning(f"❌ Fanart.tv validation failed: Invalid API key (401)")
+                logger.info("=" * 60)
+                return {
+                    "valid": False,
+                    "message": " Invalid Fanart.tv API key. Please check your Personal API key.",
+                    "details": {"status_code": 401},
+                }
+            else:
+                logger.warning(
+                    f"❌ Fanart.tv validation failed: Status {response.status_code}"
+                )
+                logger.info("=" * 60)
+                return {
+                    "valid": False,
+                    "message": f" Fanart.tv validation failed (Status: {response.status_code})",
+                    "details": {"status_code": response.status_code},
+                }
+    except Exception as e:
+        logger.error(f"💥 Fanart.tv validation error: {str(e)}")
+        logger.exception("Full traceback:")
+        logger.info("=" * 60)
+        return {
+            "valid": False,
+            "message": f" Error validating Fanart.tv key: {str(e)}",
+            "details": {"error": str(e)},
+        }
+
+
+@app.post("/api/validate/discord")
+async def validate_discord(request: DiscordValidationRequest):
+    """Validate Discord webhook"""
+    logger.info("=" * 60)
+    logger.info("🔍 DISCORD WEBHOOK VALIDATION STARTED")
+    logger.info(f"📍 Webhook URL: {request.webhook_url[:50]}...")
+
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            payload = {
+                "content": "✓ Posterizarr WebUI - Discord webhook validation successful!",
+                "username": "Posterizarr",
+            }
+            logger.info(f"🌐 Sending test message to Discord webhook...")
+
+            response = await client.post(request.webhook_url, json=payload)
+            logger.info(f"📥 Response received - Status: {response.status_code}")
+
+            if response.status_code == 204:
+                logger.info(
+                    f"✅ Discord webhook validation successful! Test message sent."
+                )
+                logger.info("=" * 60)
+                return {
+                    "valid": True,
+                    "message": " Discord webhook is valid! Test message sent.",
+                    "details": {"status_code": 204},
+                }
+            elif response.status_code == 404:
+                logger.warning(
+                    f"❌ Discord webhook validation failed: Webhook not found (404)"
+                )
+                logger.info("=" * 60)
+                return {
+                    "valid": False,
+                    "message": " Discord webhook not found. Please check your webhook URL.",
+                    "details": {"status_code": 404},
+                }
+            else:
+                logger.warning(
+                    f"❌ Discord webhook validation failed: Status {response.status_code}"
+                )
+                logger.info("=" * 60)
+                return {
+                    "valid": False,
+                    "message": f" Discord webhook validation failed (Status: {response.status_code})",
+                    "details": {"status_code": response.status_code},
+                }
+    except Exception as e:
+        logger.error(f"💥 Discord webhook validation error: {str(e)}")
+        logger.exception("Full traceback:")
+        logger.info("=" * 60)
+        return {
+            "valid": False,
+            "message": f" Error validating Discord webhook: {str(e)}",
+            "details": {"error": str(e)},
+        }
+
+
+@app.post("/api/validate/apprise")
+async def validate_apprise(request: AppriseValidationRequest):
+    """Validate Apprise URL (basic format check)"""
+    logger.info("=" * 60)
+    logger.info("🔍 APPRISE URL VALIDATION STARTED")
+    logger.info(f"📍 URL: {request.url}")
+
+    try:
+        valid_prefixes = [
+            "discord://",
+            "telegram://",
+            "slack://",
+            "email://",
+            "mailto://",
+            "pushover://",
+            "gotify://",
+            "ntfy://",
+            "pushbullet://",
+            "rocket://",
+            "mattermost://",
+        ]
+
+        is_valid = any(request.url.startswith(prefix) for prefix in valid_prefixes)
+
+        if is_valid:
+            detected_service = next(
+                (prefix for prefix in valid_prefixes if request.url.startswith(prefix)),
+                None,
+            )
+            logger.info(
+                f"✅ Apprise URL format valid! Detected service: {detected_service}"
+            )
+            logger.info("=" * 60)
+            return {
+                "valid": True,
+                "message": " Apprise URL format looks valid!",
+                "details": {"format_check": True, "service": detected_service},
+            }
+        else:
+            logger.warning(f"❌ Apprise URL format invalid!")
+            logger.warning(
+                f"   URL must start with: {', '.join(valid_prefixes[:5])}..."
+            )
+            logger.info("=" * 60)
+            return {
+                "valid": False,
+                "message": f" Invalid Apprise URL format. Must start with a valid service prefix (discord://, telegram://, etc.)",
+                "details": {"format_check": False},
+            }
+    except Exception as e:
+        logger.error(f"💥 Apprise URL validation error: {str(e)}")
+        logger.exception("Full traceback:")
+        logger.info("=" * 60)
+        return {
+            "valid": False,
+            "message": f" Error validating Apprise URL: {str(e)}",
+            "details": {"error": str(e)},
+        }
+
+
+@app.post("/api/validate/uptimekuma")
+async def validate_uptimekuma(request: UptimeKumaValidationRequest):
+    """Validate Uptime Kuma push URL"""
+    logger.info("=" * 60)
+    logger.info("🔍 UPTIME KUMA VALIDATION STARTED")
+    logger.info(f"📍 Push URL: {request.url[:50]}...")
+
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            logger.info(f"🌐 Sending test push to Uptime Kuma...")
+
+            response = await client.get(
+                request.url,
+                params={
+                    "status": "up",
+                    "msg": "Posterizarr WebUI validation test",
+                    "ping": "",
+                },
+            )
+            logger.info(f"📥 Response received - Status: {response.status_code}")
+
+            if response.status_code == 200:
+                data = response.json()
+                logger.info(f"   Response data: {data}")
+
+                if data.get("ok"):
+                    logger.info(
+                        f"✅ Uptime Kuma validation successful! Test ping sent."
+                    )
+                    logger.info("=" * 60)
+                    return {
+                        "valid": True,
+                        "message": " Uptime Kuma push URL is valid!",
+                        "details": {"status_code": 200},
+                    }
+                else:
+                    logger.warning(f"❌ Uptime Kuma responded but 'ok' was false")
+                    logger.info("=" * 60)
+                    return {
+                        "valid": False,
+                        "message": " Uptime Kuma responded but validation failed.",
+                        "details": {"response": data},
+                    }
+            else:
+                logger.warning(
+                    f"❌ Uptime Kuma validation failed: Status {response.status_code}"
+                )
+                logger.info("=" * 60)
+                return {
+                    "valid": False,
+                    "message": f" Uptime Kuma validation failed (Status: {response.status_code})",
+                    "details": {"status_code": response.status_code},
+                }
+    except Exception as e:
+        logger.error(f"💥 Uptime Kuma validation error: {str(e)}")
+        logger.exception("Full traceback:")
+        logger.info("=" * 60)
+        return {
+            "valid": False,
+            "message": f" Error validating Uptime Kuma URL: {str(e)}",
+            "details": {"error": str(e)},
+        }
+
+
 def get_last_log_lines(count=25, mode=None, log_file=None):
     """Get last N lines from log files based on current mode or specific log file"""
 
@@ -981,7 +1698,7 @@ def get_last_log_lines(count=25, mode=None, log_file=None):
 @app.post("/api/logs/ui")
 async def receive_ui_log(log_entry: UILogEntry):
     """
-    Empfängt UI/Frontend-Logs und schreibt sie in UIlog.log
+    Receives UI/Frontend logs and writes them to UIlog.log
     """
     try:
         ui_log_path = UI_LOGS_DIR / "UIlog.log"
@@ -1009,7 +1726,7 @@ async def receive_ui_log(log_entry: UILogEntry):
 @app.post("/api/logs/ui/batch")
 async def receive_ui_logs_batch(batch: UILogBatch):
     """
-    Empfängt mehrere UI-Logs auf einmal (bessere Performance)
+    Receives multiple UI logs at once (better performance)
     """
     try:
         ui_log_path = UI_LOGS_DIR / "UIlog.log"
@@ -2853,7 +3570,7 @@ async def get_version_ui():
 @app.get("/api/releases")
 async def get_github_releases():
     """
-    Holt alle Releases von GitHub und gibt sie formatiert zurück
+    Fetches all releases from GitHub and returns them formatted
     """
     try:
         async with httpx.AsyncClient() as client:
@@ -2903,7 +3620,7 @@ async def get_github_releases():
 @app.get("/api/assets/stats")
 async def get_assets_stats():
     """
-    Gibt Statistiken über die erstellten Assets zurück - verwendet Cache
+    Returns statistics about created assets - uses cache
     """
     try:
         # Use the existing cache instead of rescanning

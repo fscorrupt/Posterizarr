@@ -14,7 +14,7 @@ const DangerZone = ({ status, loading, onStatusUpdate }) => {
       const data = await response.json();
 
       if (data.success) {
-        // Benutzerfreundlichere Nachricht anstelle von "Stopped: manual"
+        // More user-friendly message instead of "Stopped: manual"
         const message = data.message.includes("Stopped:")
           ? "Script stopped successfully"
           : data.message;
@@ -56,7 +56,7 @@ const DangerZone = ({ status, loading, onStatusUpdate }) => {
       const data = await response.json();
 
       if (data.success) {
-        // Benutzerfreundlichere Nachricht anstelle von "Force killed: manual"
+        // More user-friendly message instead of "Force killed: manual"
         const message = data.message.includes("Force killed:")
           ? "Script force killed successfully"
           : data.message;
@@ -101,7 +101,7 @@ const DangerZone = ({ status, loading, onStatusUpdate }) => {
           const errorData = await response.json();
           errorMessage = errorData.detail || errorData.message || errorMessage;
         } catch {
-          // JSON-Parsing fehlgeschlagen
+          // JSON parsing failed
         }
 
         toast.error(errorMessage, {
