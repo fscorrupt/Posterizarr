@@ -426,6 +426,8 @@ function ConfigEditor() {
   const [overlayFiles, setOverlayFiles] = useState([]);
   const [uploadingOverlay, setUploadingOverlay] = useState(false);
   const [previewOverlay, setPreviewOverlay] = useState(null); // For preview modal
+  const [fontFiles, setFontFiles] = useState([]);
+  const [uploadingFont, setUploadingFont] = useState(false);
   const hasInitializedGroups = useRef(false);
 
   // List of overlay file fields
@@ -441,6 +443,15 @@ function ConfigEditor() {
     "Background1080p",
     "TC4k",
     "TC1080p",
+  ];
+
+  // List of font file fields
+  const FONT_FILE_FIELDS = [
+    "font",
+    "RTLFont",
+    "backgroundfont",
+    "titlecardfont",
+    "collectionfont",
   ];
 
   // Map URL path to tab name
@@ -546,6 +557,7 @@ function ConfigEditor() {
   useEffect(() => {
     fetchConfig();
     fetchOverlayFiles();
+    fetchFontFiles();
   }, []);
 
   useEffect(() => {
@@ -672,6 +684,59 @@ function ConfigEditor() {
       });
     } finally {
       setUploadingOverlay(false);
+    }
+  };
+
+  const fetchFontFiles = async () => {
+    try {
+      const response = await fetch(`${API_URL}/fonts`);
+      const data = await response.json();
+
+      if (data.success) {
+        setFontFiles(data.files || []);
+        console.log(`Loaded ${data.files.length} font files`);
+      }
+    } catch (err) {
+      console.error("Failed to load font files:", err);
+    }
+  };
+
+  const handleFontFileUpload = async (file) => {
+    if (!file) return;
+
+    setUploadingFont(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch(`${API_URL}/fonts/upload`, {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        toast.success(`Font "${data.filename}" uploaded successfully!`, {
+          duration: 3000,
+          position: "top-right",
+        });
+        // Refresh font files list
+        await fetchFontFiles();
+      } else {
+        toast.error(data.detail || "Upload failed", {
+          duration: 4000,
+          position: "top-right",
+        });
+      }
+    } catch (err) {
+      console.error("Upload error:", err);
+      toast.error("Failed to upload file", {
+        duration: 4000,
+        position: "top-right",
+      });
+    } finally {
+      setUploadingFont(false);
     }
   };
 
@@ -1025,6 +1090,78 @@ function ConfigEditor() {
           {/* Help text */}
           <p className="text-xs text-theme-muted">
             Upload PNG, JPG, or JPEG files to the Overlayfiles directory
+          </p>
+        </div>
+      );
+    }
+
+    // ============ FONT FILE DROPDOWN WITH UPLOAD ============
+    if (FONT_FILE_FIELDS.includes(key)) {
+      const stringValue =
+        value === null || value === undefined ? "" : String(value);
+
+      return (
+        <div className="space-y-2">
+          <div className="flex gap-2">
+            {/* Dropdown */}
+            <div className="relative flex-1">
+              <select
+                value={stringValue}
+                onChange={(e) => updateValue(fieldKey, e.target.value)}
+                className="w-full h-[42px] px-4 py-2.5 pr-10 bg-theme-bg border border-theme rounded-lg text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all cursor-pointer appearance-none"
+              >
+                <option value="">-- Select Font File --</option>
+                {fontFiles.map((file) => (
+                  <option key={file} value={file}>
+                    {file}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-theme-muted pointer-events-none" />
+            </div>
+
+            {/* Upload Button */}
+            <label
+              className={`flex items-center gap-2 px-4 py-2 bg-theme-primary/20 hover:bg-theme-primary/30 border border-theme-primary/30 rounded-lg font-medium transition-all cursor-pointer ${
+                uploadingFont ? "opacity-50 cursor-not-allowed" : ""
+              }`}
+            >
+              <input
+                type="file"
+                accept=".ttf,.otf,.woff,.woff2"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    handleFontFileUpload(file);
+                    e.target.value = ""; // Reset input
+                  }
+                }}
+                className="hidden"
+                disabled={uploadingFont}
+              />
+              {uploadingFont ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Upload className="w-4 h-4" />
+              )}
+              <span className="text-sm">Upload</span>
+            </label>
+          </div>
+
+          {/* Current file display */}
+          {stringValue && (
+            <p className="text-xs text-theme-muted">
+              Current:{" "}
+              <span className="font-mono text-theme-primary">
+                {stringValue}
+              </span>
+            </p>
+          )}
+
+          {/* Help text */}
+          <p className="text-xs text-theme-muted">
+            Upload TTF, OTF, WOFF, or WOFF2 font files to the Overlayfiles
+            directory
           </p>
         </div>
       );

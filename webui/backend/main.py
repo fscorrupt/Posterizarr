@@ -1175,6 +1175,124 @@ async def preview_overlay_file(filename: str):
 
 
 # ============================================================================
+# FONT FILES ENDPOINTS
+# ============================================================================
+
+
+@app.get("/api/fonts")
+async def get_font_files():
+    """Get list of font files from Overlayfiles directory"""
+    try:
+        if not OVERLAYFILES_DIR.exists():
+            OVERLAYFILES_DIR.mkdir(exist_ok=True)
+            return {"success": True, "files": []}
+
+        # Get all font files (ttf, otf, woff, woff2)
+        font_extensions = {".ttf", ".otf", ".woff", ".woff2"}
+        files = [
+            f.name
+            for f in OVERLAYFILES_DIR.iterdir()
+            if f.is_file() and f.suffix.lower() in font_extensions
+        ]
+
+        # Sort alphabetically
+        files.sort()
+
+        logger.info(f"Found {len(files)} font files")
+        return {"success": True, "files": files}
+
+    except Exception as e:
+        logger.error(f"Error getting font files: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/fonts/upload")
+async def upload_font_file(file: UploadFile = File(...)):
+    """Upload a new font file to Overlayfiles directory"""
+    try:
+        # Validate file type
+        allowed_extensions = {".ttf", ".otf", ".woff", ".woff2"}
+        file_ext = Path(file.filename).suffix.lower()
+
+        if file_ext not in allowed_extensions:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid file type. Only TTF, OTF, WOFF, and WOFF2 files are allowed.",
+            )
+
+        # Sanitize filename (remove dangerous characters)
+        safe_filename = "".join(
+            c for c in file.filename if c.isalnum() or c in "._- "
+        ).strip()
+
+        if not safe_filename:
+            raise HTTPException(status_code=400, detail="Invalid filename")
+
+        # Save file
+        file_path = OVERLAYFILES_DIR / safe_filename
+
+        # Check if file already exists
+        if file_path.exists():
+            raise HTTPException(
+                status_code=400,
+                detail=f"File '{safe_filename}' already exists. Please rename or delete the existing file first.",
+            )
+
+        # Write file
+        content = await file.read()
+        with open(file_path, "wb") as f:
+            f.write(content)
+
+        logger.info(f"Uploaded font file: {safe_filename} ({len(content)} bytes)")
+
+        return {
+            "success": True,
+            "message": f"Font '{safe_filename}' uploaded successfully",
+            "filename": safe_filename,
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error uploading font file: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/api/fonts/{filename}")
+async def delete_font_file(filename: str):
+    """Delete a font file from Overlayfiles directory"""
+    try:
+        # Sanitize filename
+        safe_filename = "".join(
+            c for c in filename if c.isalnum() or c in "._- "
+        ).strip()
+
+        if not safe_filename:
+            raise HTTPException(status_code=400, detail="Invalid filename")
+
+        file_path = OVERLAYFILES_DIR / safe_filename
+
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail="File not found")
+
+        # Delete file
+        file_path.unlink()
+
+        logger.info(f"Deleted font file: {safe_filename}")
+
+        return {
+            "success": True,
+            "message": f"Font '{safe_filename}' deleted successfully",
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error deleting font file: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================================================
 # VALIDATION ENDPOINTS
 # ============================================================================
 
