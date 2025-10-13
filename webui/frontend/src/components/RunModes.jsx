@@ -1091,7 +1091,7 @@ function RunModes() {
               Manual Mode (Semi-Automated)
             </h2>
             <p className="text-sm text-theme-muted">
-              Create posters manually with custom parameters
+              Create or replace posters manually with full control over search, source, and metadata.
             </p>
           </div>
         </div>
