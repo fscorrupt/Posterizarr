@@ -136,11 +136,7 @@ function FolderView() {
     setSuccess("Content refreshed successfully");
   };
 
-  const deletePoster = async (imagePath, imageName, event) => {
-    if (event) {
-      event.stopPropagation();
-    }
-
+  const deletePoster = async (imagePath, imageName) => {
     setDeletingImage(imagePath);
     try {
       const response = await fetch(`${API_URL}/gallery/${imagePath}`, {
@@ -148,13 +144,25 @@ function FolderView() {
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.detail || "Failed to delete image");
       }
 
-      setSuccess(`Successfully deleted ${imageName}`);
+      const data = await response.json();
 
-      // Reload current level
-      await loadCurrentLevel();
+      if (data.success) {
+        setSuccess(`Successfully deleted ${imageName}`);
+
+        // Close modal if open
+        if (selectedImage && selectedImage.path === imagePath) {
+          setSelectedImage(null);
+        }
+
+        // Reload current level
+        await loadCurrentLevel();
+      } else {
+        throw new Error(data.message || "Failed to delete image");
+      }
     } catch (error) {
       console.error("Error deleting image:", error);
       setError(error.message || `Failed to delete ${imageName}`);
@@ -162,13 +170,6 @@ function FolderView() {
       setDeletingImage(null);
       setDeleteConfirm(null);
     }
-  };
-
-  const confirmDelete = (imagePath, imageName, event) => {
-    if (event) {
-      event.stopPropagation();
-    }
-    setDeleteConfirm({ path: imagePath, name: imageName });
   };
 
   // Filter folders and assets based on search
@@ -224,17 +225,20 @@ function FolderView() {
       )}
 
       {/* Delete Confirmation Dialog */}
-      {deleteConfirm && (
-        <ConfirmDialog
-          title="Delete Image"
-          message={`Are you sure you want to delete "${deleteConfirm.name}"? This action cannot be undone.`}
-          confirmLabel="Delete"
-          cancelLabel="Cancel"
-          onConfirm={() => deletePoster(deleteConfirm.path, deleteConfirm.name)}
-          onCancel={() => setDeleteConfirm(null)}
-          type="danger"
-        />
-      )}
+      <ConfirmDialog
+        isOpen={deleteConfirm !== null}
+        onClose={() => setDeleteConfirm(null)}
+        onConfirm={() => {
+          if (deleteConfirm) {
+            deletePoster(deleteConfirm.path, deleteConfirm.name);
+          }
+        }}
+        title="Delete Image"
+        message="Are you sure you want to delete this image?"
+        itemName={deleteConfirm?.name}
+        confirmText="Delete"
+        type="danger"
+      />
 
       {/* Header with Breadcrumb */}
       <div className="bg-theme-card border border-theme-border rounded-lg p-4 space-y-4">
@@ -380,23 +384,29 @@ function FolderView() {
                       loading="lazy"
                     />
 
-                    {/* Hover Overlay */}
-                    <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                      <button
-                        onClick={(e) =>
-                          confirmDelete(asset.path, asset.name, e)
-                        }
-                        disabled={deletingImage === asset.path}
-                        className="p-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors disabled:opacity-50"
-                        title="Delete image"
-                      >
-                        {deletingImage === asset.path ? (
-                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                        ) : (
-                          <Trash2 className="w-5 h-5" />
-                        )}
-                      </button>
-                    </div>
+                    {/* Delete Button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeleteConfirm({
+                          path: asset.path,
+                          name: asset.name,
+                        });
+                      }}
+                      disabled={deletingImage === asset.path}
+                      className={`absolute top-2 right-2 z-10 p-2 rounded-lg transition-all ${
+                        deletingImage === asset.path
+                          ? "bg-gray-600 cursor-not-allowed"
+                          : "bg-red-600/90 hover:bg-red-700 opacity-0 group-hover:opacity-100"
+                      }`}
+                      title="Delete image"
+                    >
+                      <Trash2
+                        className={`w-4 h-4 text-white ${
+                          deletingImage === asset.path ? "animate-spin" : ""
+                        }`}
+                      />
+                    </button>
                   </div>
 
                   {/* Asset Info */}
@@ -441,11 +451,17 @@ function FolderView() {
 
       {/* Image Preview Modal */}
       {selectedImage && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-theme-card rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden shadow-2xl border-2 border-theme-primary">
+        <div
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setSelectedImage(null)}
+        >
+          <div
+            className="bg-theme-card rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden shadow-2xl border-2 border-theme-primary"
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Modal Header */}
             <div className="px-6 py-4 border-b-2 border-theme flex justify-between items-center bg-theme-card">
-              <div className="flex-1 min-w-0">
+              <div className="flex-1 min-w-0 mr-4">
                 <h3 className="text-xl font-bold text-theme-text truncate">
                   {selectedImage.name}
                 </h3>
@@ -454,21 +470,25 @@ function FolderView() {
                 </p>
               </div>
               <button
-                onClick={(e) =>
-                  confirmDelete(selectedImage.path, selectedImage.name, e)
-                }
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDeleteConfirm({
+                    path: selectedImage.path,
+                    name: selectedImage.name,
+                  });
+                }}
                 disabled={deletingImage === selectedImage.path}
-                className={`ml-4 flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
                   deletingImage === selectedImage.path
                     ? "bg-gray-600 cursor-not-allowed"
                     : "bg-red-600 hover:bg-red-700 hover:scale-105"
                 }`}
               >
-                {deletingImage === selectedImage.path ? (
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <Trash2 className="w-4 h-4" />
-                )}
+                <Trash2
+                  className={`w-4 h-4 ${
+                    deletingImage === selectedImage.path ? "animate-spin" : ""
+                  }`}
+                />
                 Delete
               </button>
             </div>
@@ -500,18 +520,16 @@ function FolderView() {
             </div>
 
             {/* Modal Footer */}
-            <div className="px-6 py-4 border-t-2 border-theme bg-theme-card">
-              <div className="flex justify-between items-center gap-4">
-                <span className="text-sm text-theme-muted font-medium">
-                  Size: {formatFileSize(selectedImage.size)}
-                </span>
-                <button
-                  onClick={() => setSelectedImage(null)}
-                  className="px-6 py-2 bg-theme-primary hover:bg-theme-primary/90 rounded-lg text-sm font-medium transition-all text-white shadow-lg hover:scale-105"
-                >
-                  Close
-                </button>
-              </div>
+            <div className="px-6 py-4 border-t-2 border-theme bg-theme-card flex justify-between items-center">
+              <span className="text-sm text-theme-muted font-medium">
+                Size: {formatFileSize(selectedImage.size)}
+              </span>
+              <button
+                onClick={() => setSelectedImage(null)}
+                className="px-6 py-2 bg-theme-primary hover:bg-theme-primary/90 rounded-lg text-sm font-medium transition-all text-white shadow-lg hover:scale-105"
+              >
+                Close
+              </button>
             </div>
           </div>
         </div>
