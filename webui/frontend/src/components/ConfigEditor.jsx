@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import ValidateButton from "./ValidateButton";
 import Notification from "./Notification";
+import LanguageOrderSelector from "./LanguageOrderSelector";
 
 const API_URL = "/api";
 
@@ -1135,6 +1136,22 @@ function ConfigEditor() {
             directory
           </p>
         </div>
+      );
+    }
+
+    // ============ LANGUAGE ORDER SELECTOR ============
+    if (
+      key === "PreferredLanguageOrder" ||
+      key === "PreferredSeasonLanguageOrder" ||
+      key === "PreferredBackgroundLanguageOrder"
+    ) {
+      return (
+        <LanguageOrderSelector
+          value={Array.isArray(value) ? value : []}
+          onChange={(newValue) => updateValue(fieldKey, newValue)}
+          label={displayName}
+          helpText={CONFIG_TOOLTIPS[key]}
+        />
       );
     }
 
