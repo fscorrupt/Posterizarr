@@ -355,6 +355,9 @@ function FolderView() {
                             {folder.season_count > 0 && (
                               <div>Seasons: {folder.season_count}</div>
                             )}
+                            {folder.titlecard_count > 0 && (
+                              <div>Episodes: {folder.titlecard_count}</div>
+                            )}
                           </>
                         )}
                         {currentPath.length === 1 && folder.asset_count && (
@@ -460,7 +463,7 @@ function FolderView() {
           onClick={() => setSelectedImage(null)}
         >
           <div
-            className="bg-theme-card rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden shadow-2xl border-2 border-theme-primary"
+            className="bg-theme-card rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden shadow-2xl border-2 border-theme-primary"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
@@ -499,11 +502,11 @@ function FolderView() {
 
             {/* Modal Content - Image */}
             <div className="p-6 bg-theme-bg flex items-center justify-center">
-              <div className="max-h-[70vh] flex items-center justify-center">
+              <div className="max-h-[65vh] flex items-center justify-center">
                 <img
                   src={selectedImage.url}
                   alt={selectedImage.name}
-                  className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-2xl"
+                  className="max-w-full max-h-[65vh] object-contain rounded-lg shadow-2xl"
                   onError={(e) => {
                     e.target.style.display = "none";
                     e.target.nextSibling.style.display = "block";
@@ -524,13 +527,13 @@ function FolderView() {
             </div>
 
             {/* Modal Footer */}
-            <div className="px-6 py-4 border-t-2 border-theme bg-theme-card flex justify-between items-center">
+            <div className="px-6 py-5 border-t-2 border-theme bg-theme-card flex justify-between items-center">
               <span className="text-sm text-theme-muted font-medium">
                 Size: {formatFileSize(selectedImage.size)}
               </span>
               <button
                 onClick={() => setSelectedImage(null)}
-                className="px-6 py-2 bg-theme-primary hover:bg-theme-primary/90 rounded-lg text-sm font-medium transition-all text-white shadow-lg hover:scale-105"
+                className="px-6 py-2.5 bg-theme-primary hover:bg-theme-primary/90 rounded-lg text-sm font-medium transition-all text-white shadow-lg hover:scale-105"
               >
                 Close
               </button>

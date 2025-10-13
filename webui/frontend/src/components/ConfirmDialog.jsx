@@ -30,7 +30,7 @@ const ConfirmDialog = ({
 
   return (
     <div
-      className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 animate-fadeIn"
+      className="fixed inset-0 bg-black/80 flex items-center justify-center z-[60] p-4 animate-fadeIn"
       onClick={onClose}
     >
       <div

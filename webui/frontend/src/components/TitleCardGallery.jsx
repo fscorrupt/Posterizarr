@@ -508,18 +508,28 @@ function TitleCardGallery() {
       )}
 
       {selectedImage && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-theme-card rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden shadow-2xl border-2 border-theme-primary">
+        <div
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setSelectedImage(null)}
+        >
+          <div
+            className="bg-theme-card rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl border-2 border-theme-primary"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="px-6 py-4 border-b-2 border-theme flex justify-between items-center bg-theme-card">
-              <h3 className="text-xl font-bold text-theme-text truncate flex-1">
+              <h3 className="text-xl font-bold text-theme-text truncate flex-1 mr-4">
                 {formatDisplayPath(selectedImage.path)}
               </h3>
               <button
-                onClick={(e) =>
-                  deleteTitleCard(selectedImage.path, selectedImage.name, e)
-                }
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDeleteConfirm({
+                    path: selectedImage.path,
+                    name: selectedImage.name,
+                  });
+                }}
                 disabled={deletingImage === selectedImage.path}
-                className={`ml-4 flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
                   deletingImage === selectedImage.path
                     ? "bg-gray-600 cursor-not-allowed"
                     : "bg-red-600 hover:bg-red-700 hover:scale-105"
@@ -534,11 +544,11 @@ function TitleCardGallery() {
               </button>
             </div>
             <div className="p-6 bg-theme-bg flex items-center justify-center">
-              <div className="max-h-[70vh] flex items-center justify-center">
+              <div className="max-h-[65vh] flex items-center justify-center">
                 <img
                   src={selectedImage.url}
                   alt={selectedImage.name}
-                  className="max-w-full max-h-[70vh] object-contain rounded-lg shadow-2xl"
+                  className="max-w-full max-h-[65vh] object-contain rounded-lg shadow-2xl"
                   onError={(e) => {
                     e.target.style.display = "none";
                     e.target.nextSibling.style.display = "block";
@@ -557,13 +567,13 @@ function TitleCardGallery() {
                 </div>
               </div>
             </div>
-            <div className="px-6 py-4 border-t-2 border-theme flex justify-between items-center bg-theme-card">
+            <div className="px-6 py-5 border-t-2 border-theme flex justify-between items-center bg-theme-card">
               <span className="text-sm text-theme-muted font-medium">
                 Size: {(selectedImage.size / 1024).toFixed(2)} KB
               </span>
               <button
                 onClick={() => setSelectedImage(null)}
-                className="px-6 py-2 bg-theme-primary hover:bg-theme-primary/90 rounded-lg text-sm font-medium transition-all text-white shadow-lg hover:scale-105"
+                className="px-6 py-2.5 bg-theme-primary hover:bg-theme-primary/90 rounded-lg text-sm font-medium transition-all text-white shadow-lg hover:scale-105"
               >
                 Close
               </button>
