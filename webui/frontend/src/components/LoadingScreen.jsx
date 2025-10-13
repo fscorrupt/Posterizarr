@@ -53,60 +53,54 @@ function LoadingScreen() {
   }, []);
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-theme-dark via-theme-darker to-theme-dark flex items-center justify-center px-4">
-      <div className="text-center">
-        {/* Sonarr-style spinning radar */}
-        <div className="relative w-32 h-32 mx-auto mb-8">
-          {/* Outer ring */}
-          <div className="absolute inset-0 border-4 border-theme-primary/20 rounded-full"></div>
+    <div className="min-h-screen w-full bg-gradient-to-br from-theme-dark via-theme-darker to-theme-dark flex flex-col items-center pt-32 px-4">
+      {/* Posterizarr Logo */}
+      <div className="mb-8">
+        <h1 className="text-4xl font-bold text-theme-text tracking-wider">
+          POSTERIZARR
+        </h1>
+      </div>
 
-          {/* Middle ring */}
-          <div className="absolute inset-4 border-4 border-theme-primary/40 rounded-full"></div>
+      {/* Radarr-style spinning radar - smaller and at top */}
+      <div className="relative w-20 h-20 mb-8">
+        {/* Outer ring */}
+        <div className="absolute inset-0 border-2 border-theme-primary/20 rounded-full"></div>
 
-          {/* Inner ring */}
-          <div className="absolute inset-8 border-4 border-theme-primary/60 rounded-full"></div>
+        {/* Middle ring */}
+        <div className="absolute inset-2 border-2 border-theme-primary/40 rounded-full"></div>
 
-          {/* Center dot */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-4 h-4 bg-theme-primary rounded-full"></div>
-          </div>
+        {/* Inner ring */}
+        <div className="absolute inset-4 border-2 border-theme-primary/60 rounded-full"></div>
 
-          {/* Rotating radar line */}
-          <div
-            className="absolute inset-0 animate-spin"
-            style={{ animationDuration: "2s" }}
-          >
-            <div className="absolute top-1/2 left-1/2 w-16 h-0.5 bg-gradient-to-r from-theme-primary to-transparent transform -translate-y-1/2 origin-left"></div>
-          </div>
-
-          {/* Pulsing outer glow */}
-          <div className="absolute inset-0 border-4 border-theme-primary rounded-full animate-ping opacity-20"></div>
+        {/* Center dot */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-2 h-2 bg-theme-primary rounded-full"></div>
         </div>
 
-        {/* Loading message */}
-        <div className="space-y-4">
-          <h2 className="text-2xl font-bold text-theme-text">
-            {message}
-            <span className="inline-block w-8 text-left text-theme-primary">
-              {dots}
-            </span>
-          </h2>
-
-          {/* Progress bar */}
-          <div className="w-80 max-w-full mx-auto h-2 bg-theme-darker rounded-full overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-theme-primary to-theme-primary/60 animate-pulse"
-              style={{
-                width: "100%",
-                animation: "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
-              }}
-            ></div>
-          </div>
-
-          <p className="text-sm text-theme-muted mt-4">
-            Initializing Posterizarr...
-          </p>
+        {/* Rotating radar line */}
+        <div
+          className="absolute inset-0 animate-spin"
+          style={{ animationDuration: "1.5s" }}
+        >
+          <div className="absolute top-1/2 left-1/2 w-10 h-0.5 bg-gradient-to-r from-theme-primary to-transparent transform -translate-y-1/2 origin-left"></div>
         </div>
+
+        {/* Pulsing outer glow */}
+        <div className="absolute inset-0 border-2 border-theme-primary rounded-full animate-ping opacity-20"></div>
+      </div>
+
+      {/* Loading message - Radarr style */}
+      <div className="text-center space-y-3">
+        <h2 className="text-xl font-semibold text-theme-text">
+          {message}
+          <span className="inline-block w-6 text-left text-theme-primary">
+            {dots}
+          </span>
+        </h2>
+
+        <p className="text-sm text-theme-muted">
+          Initializing Posterizarr...
+        </p>
       </div>
     </div>
   );
