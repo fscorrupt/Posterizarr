@@ -98,9 +98,7 @@ function LoadingScreen() {
           </span>
         </h2>
 
-        <p className="text-sm text-theme-muted">
-          Initializing Posterizarr...
-        </p>
+        <p className="text-sm text-theme-muted">Initializing Posterizarr...</p>
       </div>
     </div>
   );

@@ -70,9 +70,9 @@ RUNNING_FILE = TEMP_DIR / "Posterizarr.Running"
 # Setup logging
 logging.basicConfig(
     level=logging.INFO,
-    filename=UI_LOGS_DIR / 'BackendServer.log', # Main backend server log file
-    filemode='a', # Append to the log file
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    filename=UI_LOGS_DIR / "BackendServer.log",  # Main backend server log file
+    filemode="a",  # Append to the log file
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logging.getLogger("httpx").setLevel(logging.INFO)
 logger = logging.getLogger(__name__)
@@ -83,6 +83,7 @@ OVERLAYFILES_DIR.mkdir(exist_ok=True)
 if not CONFIG_PATH.exists() and CONFIG_EXAMPLE_PATH.exists():
     logger.warning(f"config.json not found, using config.example.json as fallback")
     CONFIG_PATH = CONFIG_EXAMPLE_PATH
+
 
 def setup_backend_ui_logger():
     """Setup backend logger to also write to FrontendUI.log"""
@@ -116,6 +117,7 @@ def setup_backend_ui_logger():
 
     except Exception as e:
         logger.warning(f"⚠️  Could not initialize backend UI logger: {e}")
+
 
 # Initialize Backend UI Logger on startup
 setup_backend_ui_logger()
@@ -3433,30 +3435,30 @@ async def force_kill_script():
 async def get_logs():
     """Get available log files from both Logs and UILogs directories"""
     log_files = []
-    
+
     # Get logs from main Logs directory
     if LOGS_DIR.exists():
         for log_file in LOGS_DIR.glob("*.log"):
             stat = log_file.stat()
             log_files.append(
                 {
-                    "name": log_file.name, 
-                    "size": stat.st_size, 
+                    "name": log_file.name,
+                    "size": stat.st_size,
                     "modified": stat.st_mtime,
-                    "directory": "Logs"
+                    "directory": "Logs",
                 }
             )
-    
+
     # Get logs from UILogs directory
     if UI_LOGS_DIR.exists():
         for log_file in UI_LOGS_DIR.glob("*.log"):
             stat = log_file.stat()
             log_files.append(
                 {
-                    "name": log_file.name, 
-                    "size": stat.st_size, 
+                    "name": log_file.name,
+                    "size": stat.st_size,
                     "modified": stat.st_mtime,
-                    "directory": "UILogs"
+                    "directory": "UILogs",
                 }
             )
 
@@ -3468,7 +3470,7 @@ async def get_log_content(log_name: str, tail: int = 100):
     """Get log file content from either Logs or UILogs directory"""
     # Try Logs directory first
     log_path = LOGS_DIR / log_name
-    
+
     # If not found, try UILogs directory
     if not log_path.exists():
         log_path = UI_LOGS_DIR / log_name
