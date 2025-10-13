@@ -56,9 +56,11 @@ function LoadingScreen() {
     <div className="min-h-screen w-full bg-gradient-to-br from-theme-dark via-theme-darker to-theme-dark flex flex-col items-center pt-32 px-4">
       {/* Posterizarr Logo */}
       <div className="mb-8">
-        <h1 className="text-4xl font-bold text-theme-text tracking-wider">
-          POSTERIZARR
-        </h1>
+        <img 
+          src="/favicon.png" 
+          alt="Posterizarr Logo" 
+          className="w-24 h-24 object-contain"
+        />
       </div>
 
       {/* Radarr-style spinning radar - smaller and at top */}
