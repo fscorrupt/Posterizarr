@@ -1848,17 +1848,20 @@ function ConfigEditor() {
         <div className="flex items-center justify-between">
           <div className="text-theme-text">
             <span className="font-medium">
+              {
+                getFilteredGroupsByTab(activeTab).filter(
+                  (groupName) => getFilteredFieldsForGroup(groupName).length > 0
+                ).length
+              }{" "}
+              section
               {getFilteredGroupsByTab(activeTab).filter(
                 (groupName) => getFilteredFieldsForGroup(groupName).length > 0
-              ).length}{" "}
-              section{getFilteredGroupsByTab(activeTab).filter(
-                (groupName) => getFilteredFieldsForGroup(groupName).length > 0
-              ).length !== 1 ? "s" : ""}
+              ).length !== 1
+                ? "s"
+                : ""}
             </span>
             {searchQuery && (
-              <span className="ml-2 text-theme-muted text-sm">
-                (filtered)
-              </span>
+              <span className="ml-2 text-theme-muted text-sm">(filtered)</span>
             )}
           </div>
           <div className="flex gap-2">
