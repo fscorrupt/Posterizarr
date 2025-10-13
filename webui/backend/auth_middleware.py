@@ -28,11 +28,11 @@ if not auth_logger.handlers:
             LOGS_DIR = Path(__file__).parent.parent.parent / "UILogs"
 
         LOGS_DIR.mkdir(exist_ok=True)
-        auth_log_path = LOGS_DIR / "Auth.log"
+        auth_log_path = LOGS_DIR / "AuthServer.log"
 
         if auth_log_path.exists():
             auth_log_path.unlink()
-            logger.info(f"🗑️  Cleared old Auth.log")
+            logger.info(f"🗑️  Cleared old AuthServer.log")
 
         auth_handler = logging.FileHandler(auth_log_path, encoding="utf-8", mode="w")
         auth_handler.setFormatter(
