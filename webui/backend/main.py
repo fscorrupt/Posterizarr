@@ -4510,6 +4510,29 @@ if FRONTEND_DIR.exists():
     logger.info(f"Mounted frontend from {FRONTEND_DIR}")
 
 
+# SPA fallback - must be AFTER static files mount
+# This catches all routes that don't match API endpoints or static files
+# and returns index.html so React Router can handle the routing
+@app.exception_handler(404)
+async def spa_fallback(request: Request, exc: HTTPException):
+    """
+    Catch-all handler for SPA (Single Page Application) support.
+    Returns index.html for any 404 that doesn't match an API endpoint,
+    allowing React Router to handle client-side routing.
+    """
+    # Don't intercept API calls or WebSocket connections
+    if request.url.path.startswith(("/api/", "/ws/")):
+        return exc
+
+    # Return index.html for all other 404s (client-side routes)
+    index_path = FRONTEND_DIR / "index.html"
+    if index_path.exists():
+        return FileResponse(index_path)
+
+    # If index.html doesn't exist, return the original 404
+    return exc
+
+
 # ============================================================================
 
 
