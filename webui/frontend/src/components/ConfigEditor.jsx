@@ -432,6 +432,7 @@ function ConfigEditor() {
   const [fontFiles, setFontFiles] = useState([]);
   const [uploadingFont, setUploadingFont] = useState(false);
   const hasInitializedGroups = useRef(false);
+  const initialAuthStatus = useRef(null); // Track initial auth status when config is loaded
 
   // List of overlay file fields
   const OVERLAY_FILE_FIELDS = [
@@ -615,6 +616,15 @@ function ConfigEditor() {
         setDisplayNames(data.display_names || {});
         setUsingFlatStructure(data.using_flat_structure || false);
 
+        // Store initial auth status when config is first loaded
+        if (initialAuthStatus.current === null) {
+          const authEnabled = data.using_flat_structure
+            ? data.config?.basicAuthEnabled
+            : data.config?.WebUI?.basicAuthEnabled;
+          initialAuthStatus.current = Boolean(authEnabled);
+          console.log("Initial auth status saved:", initialAuthStatus.current);
+        }
+
         console.log(
           "Config structure:",
           data.using_flat_structure ? "FLAT" : "GROUPED"
@@ -729,10 +739,22 @@ function ConfigEditor() {
     setSaving(true);
     setError(null);
 
-    //  Save the OLD auth status BEFORE saving
-    const oldAuthEnabled = usingFlatStructure
+    //  Get the ORIGINAL auth status from when config was loaded
+    const oldAuthEnabled = initialAuthStatus.current;
+
+    //  Get CURRENT auth status from the config being saved
+    const newAuthEnabled = usingFlatStructure
       ? config?.basicAuthEnabled
       : config?.WebUI?.basicAuthEnabled;
+
+    // Check if auth status is changing
+    const authChanging = oldAuthEnabled !== Boolean(newAuthEnabled);
+
+    console.log("Auth status check:", {
+      oldAuthEnabled,
+      newAuthEnabled: Boolean(newAuthEnabled),
+      authChanging,
+    });
 
     try {
       const response = await fetch(`${API_URL}/config`, {
@@ -746,41 +768,32 @@ function ConfigEditor() {
       const data = await response.json();
 
       if (data.success) {
+        // If Auth status is changing, immediately reload without showing messages
+        if (authChanging) {
+          console.log("Auth status changed - reloading page...");
+
+          // Clear any existing auth credentials from session storage
+          sessionStorage.removeItem("auth_credentials");
+
+          // Immediately force a full page reload
+          // Use replace to prevent back button issues
+          window.location.replace(window.location.href);
+          return; // This prevents any further execution
+        }
+
+        // Normal save without auth change - update initial auth status
+        initialAuthStatus.current = Boolean(newAuthEnabled);
         setSuccess("Configuration saved successfully!");
-
-        //  Get NEW auth status AFTER saving
-        const newAuthEnabled = usingFlatStructure
-          ? config?.basicAuthEnabled
-          : config?.WebUI?.basicAuthEnabled;
-
-        // If Auth has just been ENABLED -> reload page
-        if (!oldAuthEnabled && newAuthEnabled) {
-          setSuccess("Basic Auth enabled! Page will reload in 2 seconds...");
-
-          // Wait 2 seconds, then reload
-          setTimeout(() => {
-            window.location.reload();
-          }, 2000);
-          return;
-        }
-
-        // If Auth was just DISABLED -> reload page too
-        if (oldAuthEnabled && !newAuthEnabled) {
-          setSuccess("Basic Auth disabled! Page will reload in 2 seconds...");
-
-          // Wait 2 seconds, then reload
-          setTimeout(() => {
-            window.location.reload();
-          }, 2000);
-          return;
-        }
       } else {
         setError("Failed to save configuration");
       }
     } catch (err) {
       setError(`Error: ${err.message}`);
     } finally {
-      setSaving(false);
+      // Only reset saving state if not reloading
+      if (!authChanging) {
+        setSaving(false);
+      }
     }
   };
 
