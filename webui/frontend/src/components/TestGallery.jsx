@@ -269,14 +269,7 @@ function TestGallery() {
       )}
 
       {/* Header - Modernized to match RunModes & ConfigEditor */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-theme-text flex items-center gap-3">
-            <TestTube className="w-8 h-8 text-theme-primary" />
-            View and manage Test Mode output files
-          </h1>
-        </div>
-
+      <div className="flex items-center justify-end">
         <div className="flex gap-3">
           <button
             onClick={() => fetchImages(true)}
