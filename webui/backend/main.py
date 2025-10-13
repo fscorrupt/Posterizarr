@@ -3883,6 +3883,81 @@ async def get_assets_folder_images_filtered(image_type: str, folder_path: str):
         return {"images": []}
 
 
+@app.get("/api/folder-view/items/{library_path:path}")
+async def get_folder_view_items(library_path: str):
+    """
+    Get list of item folders (movies/shows) within a library for folder view navigation
+    Returns folders like "Movie Name (Year) {tmdb-123}" within the specified library
+    """
+    try:
+        if not ASSETS_DIR.exists():
+            return {"folders": []}
+
+        library_full_path = ASSETS_DIR / library_path
+        if not library_full_path.exists() or not library_full_path.is_dir():
+            return {"folders": []}
+
+        folders = []
+        for item in library_full_path.iterdir():
+            if item.is_dir():
+                # Count assets in this folder
+                asset_count = 0
+                for ext in ["*.jpg", "*.jpeg", "*.png", "*.webp"]:
+                    asset_count += len(list(item.glob(ext)))
+
+                folders.append(
+                    {"name": item.name, "path": item.name, "asset_count": asset_count}
+                )
+
+        # Sort by name
+        folders.sort(key=lambda x: x["name"])
+        return {"folders": folders}
+
+    except Exception as e:
+        logger.error(f"Error getting folder view items: {e}")
+        return {"folders": []}
+
+
+@app.get("/api/folder-view/assets/{item_path:path}")
+async def get_folder_view_assets(item_path: str):
+    """
+    Get all assets (poster, background, seasons, etc.) for a specific item in folder view
+    item_path should be like "4K/Movie Name (Year) {tmdb-123}"
+    """
+    try:
+        if not ASSETS_DIR.exists():
+            return {"assets": []}
+
+        item_full_path = ASSETS_DIR / item_path
+        if not item_full_path.exists() or not item_full_path.is_dir():
+            return {"assets": []}
+
+        assets = []
+        for ext in ["*.jpg", "*.jpeg", "*.png", "*.webp"]:
+            for image_path in item_full_path.glob(ext):
+                if image_path.is_file():
+                    # Create relative path from ASSETS_DIR
+                    relative_path = image_path.relative_to(ASSETS_DIR)
+                    url_path = str(relative_path).replace("\\", "/")
+
+                    assets.append(
+                        {
+                            "name": image_path.name,
+                            "path": str(relative_path).replace("\\", "/"),
+                            "url": f"/poster_assets/{url_path}",
+                            "size": image_path.stat().st_size,
+                        }
+                    )
+
+        # Sort by name
+        assets.sort(key=lambda x: x["name"])
+        return {"assets": assets}
+
+    except Exception as e:
+        logger.error(f"Error getting folder view assets: {e}")
+        return {"assets": []}
+
+
 @app.get("/api/recent-assets")
 async def get_recent_assets():
     """
