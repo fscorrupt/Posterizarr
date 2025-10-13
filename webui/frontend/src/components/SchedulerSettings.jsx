@@ -289,7 +289,6 @@ const SchedulerSettings = () => {
         // Update status
         fetchSchedulerData();
 
-        // ✨ Weiterleitung zum LogViewer mit der richtigen Log-Datei
         const logFile = "Scriptlog.log"; // Scheduler runs use the normal script log
         console.log(`🎯 Redirecting to LogViewer with log: ${logFile}`);
 
@@ -386,14 +385,7 @@ const SchedulerSettings = () => {
       />
 
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-theme-text flex items-center gap-3">
-            <Clock className="w-8 h-8 text-theme-primary" />
-            Automate Posterizarr Runs in Normal Mode
-          </h1>
-        </div>
-
+      <div className="flex items-center justify-end">
         {/* Master Toggle */}
         <button
           onClick={toggleScheduler}

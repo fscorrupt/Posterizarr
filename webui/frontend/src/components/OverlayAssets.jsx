@@ -180,9 +180,6 @@ const OverlayAssets = () => {
   return (
     <div className="max-w-7xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold text-theme-text mb-2">
-          Overlay Assets
-        </h1>
         <p className="text-theme-muted">
           Manage overlay files (Images: PNG, JPEG | Fonts: TTF, OTF, WOFF,
           WOFF2)

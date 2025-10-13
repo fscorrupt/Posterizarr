@@ -233,16 +233,10 @@ function SeasonGallery() {
       )}
 
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-theme-text flex items-center gap-3">
-          <Film className="w-8 h-8 text-theme-primary" />
-          Browse and manage your season poster's
-        </h1>
-      </div>
 
       {/* Folder Tabs */}
       {folders.length > 0 && (
-        <div className="">
+        <div className="bg-theme-card rounded-lg border border-theme-border p-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold text-theme-text flex items-center gap-2">
               <Folder className="w-5 h-5 text-theme-primary" />
@@ -275,7 +269,7 @@ function SeasonGallery() {
               </button>
             </div>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2 mb-4">
             {folders
               .filter((folder) => folder.season_count > 0)
               .map((folder) => (
@@ -296,22 +290,20 @@ function SeasonGallery() {
                 </button>
               ))}
           </div>
-        </div>
-      )}
 
-      {/* Search bar */}
-      {activeFolder && images.length > 0 && (
-        <div className="bg-theme-card rounded-xl p-4 border border-theme">
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder={`Search seasons in ${activeFolder.name}...`}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-theme-bg border border-theme-primary/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
-            />
-          </div>
+          {/* Search bar */}
+          {activeFolder && images.length > 0 && (
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <input
+                type="text"
+                placeholder={`Search seasons in ${activeFolder.name}...`}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-12 pr-4 py-3 bg-theme-bg border border-theme-primary/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+              />
+            </div>
+          )}
         </div>
       )}
 
@@ -396,11 +388,11 @@ function SeasonGallery() {
             </div>
           </div>
 
-          <div className={`grid ${getGridClass(imageSize)} gap-6`}>
+          <div className={`grid ${getGridClass(imageSize)} gap-4`}>
             {displayedImages.map((image, index) => (
               <div
                 key={index}
-                className="group relative bg-theme-card rounded-xl overflow-hidden border-2 border-theme-primary/30 hover:border-theme-primary transition-all duration-300 shadow-lg hover:shadow-2xl hover:scale-105"
+                className="group relative bg-theme-card rounded-lg border border-theme-border transition-all duration-200 hover:border-theme-primary overflow-hidden"
               >
                 <button
                   onClick={(e) => {
@@ -408,10 +400,10 @@ function SeasonGallery() {
                     setDeleteConfirm({ path: image.path, name: image.name });
                   }}
                   disabled={deletingImage === image.path}
-                  className={`absolute top-3 right-3 z-10 p-2.5 rounded-lg transition-all shadow-lg ${
+                  className={`absolute top-2 right-2 z-10 p-2 rounded-lg transition-all ${
                     deletingImage === image.path
                       ? "bg-gray-600 cursor-not-allowed"
-                      : "bg-red-600 hover:bg-red-700 opacity-0 group-hover:opacity-100 hover:scale-110"
+                      : "bg-red-600/90 hover:bg-red-700 opacity-0 group-hover:opacity-100"
                   }`}
                   title="Delete season"
                 >
@@ -423,13 +415,13 @@ function SeasonGallery() {
                 </button>
 
                 <div
-                  className="relative cursor-pointer aspect-[2/3]"
+                  className="relative cursor-pointer aspect-[2/3] p-2"
                   onClick={() => setSelectedImage(image)}
                 >
                   <img
                     src={image.url}
                     alt={image.name}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                    className="w-full h-full object-cover rounded"
                     loading="lazy"
                     onError={(e) => {
                       e.target.style.display = "none";
@@ -437,22 +429,21 @@ function SeasonGallery() {
                     }}
                   />
                   <div
-                    className="w-full h-full flex items-center justify-center bg-gray-800"
+                    className="w-full h-full flex items-center justify-center bg-gray-800 rounded"
                     style={{ display: "none" }}
                   >
                     <ImageIcon className="w-12 h-12 text-theme-primary" />
                   </div>
                 </div>
 
-                <div className="p-4 border-t-2 border-theme bg-theme-bg">
+                <div className="p-3 border-t border-theme-border bg-theme-card">
                   <p
-                    className="text-sm text-theme-text truncate font-medium"
+                    className="text-sm text-theme-text truncate"
                     title={formatDisplayPath(image.path)}
                   >
                     {formatDisplayPath(image.path)}
                   </p>
-                  <p className="text-xs text-theme-muted mt-1.5 flex items-center gap-1">
-                    <span className="inline-block w-2 h-2 bg-theme-primary rounded-full"></span>
+                  <p className="text-xs text-theme-muted mt-1">
                     {(image.size / 1024).toFixed(2)} KB
                   </p>
                 </div>

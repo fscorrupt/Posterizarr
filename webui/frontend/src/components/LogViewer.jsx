@@ -436,16 +436,7 @@ function LogViewer() {
       )}
 
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-theme-text flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-theme-primary/10">
-              <FileText className="w-8 h-8 text-theme-primary" />
-            </div>
-            View and monitor your Posterizarr logs in real-time
-          </h1>
-        </div>
-
+      <div className="flex items-center justify-end">
         {/* Connection Status Badge */}
         <div
           className={`flex items-center gap-3 px-4 py-2 rounded-lg bg-theme-card border ${

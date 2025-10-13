@@ -960,14 +960,7 @@ function RunModes() {
       />
 
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-theme-text flex items-center gap-3">
-            <Play className="w-8 h-8 text-theme-primary" />
-            Execute Posterizarr in different Modes
-          </h1>
-        </div>
-
+      <div className="flex items-center justify-end">
         {/* Status Badge */}
         {status.running && (
           <div className="flex items-center gap-3 bg-theme-card px-4 py-2 rounded-lg border border-theme-primary/50">
