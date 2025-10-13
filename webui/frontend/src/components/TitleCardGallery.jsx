@@ -7,6 +7,8 @@ import {
   Search,
   ChevronDown,
   ImageIcon,
+  CheckSquare,
+  Square,
 } from "lucide-react";
 import CompactImageSizeSlider from "./CompactImageSizeSlider";
 import Notification from "./Notification";
@@ -31,6 +33,10 @@ function TitleCardGallery() {
     const saved = localStorage.getItem("titlecard-items-per-page");
     return saved ? parseInt(saved) : 50;
   });
+
+  // Multi-select state
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedImages, setSelectedImages] = useState([]);
 
   // Image size state with localStorage (2-10 range, default 5)
   const [imageSize, setImageSize] = useState(() => {
@@ -181,6 +187,78 @@ function TitleCardGallery() {
     }
   };
 
+  const bulkDeleteTitleCards = async () => {
+    if (selectedImages.length === 0) return;
+
+    setDeletingImage("bulk");
+    try {
+      const response = await fetch(`${API_URL}/titlecards/bulk-delete`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ paths: selectedImages }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.detail || "Failed to delete titlecards");
+      }
+
+      const data = await response.json();
+
+      if (data.success) {
+        const deletedCount = data.deleted.length;
+        const failedCount = data.failed.length;
+
+        if (failedCount > 0) {
+          setError(
+            `Deleted ${deletedCount} titlecard(s), but ${failedCount} failed.`
+          );
+        } else {
+          setSuccess(`Successfully deleted ${deletedCount} titlecard(s)`);
+        }
+
+        // Remove deleted images from the list
+        setImages(images.filter((img) => !data.deleted.includes(img.path)));
+
+        // Clear selection
+        setSelectedImages([]);
+        setSelectMode(false);
+
+        fetchFolders(false);
+      } else {
+        throw new Error(data.message || "Failed to delete titlecards");
+      }
+    } catch (error) {
+      console.error("Error deleting titlecards:", error);
+      setError(`Error while deleting: ${error.message}`);
+    } finally {
+      setDeletingImage(null);
+    }
+  };
+
+  const toggleImageSelection = (imagePath) => {
+    setSelectedImages((prev) =>
+      prev.includes(imagePath)
+        ? prev.filter((path) => path !== imagePath)
+        : [...prev, imagePath]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedImages.length === displayedImages.length) {
+      setSelectedImages([]);
+    } else {
+      setSelectedImages(displayedImages.map((img) => img.path));
+    }
+  };
+
+  const cancelSelectMode = () => {
+    setSelectMode(false);
+    setSelectedImages([]);
+  };
+
   const loadMore = () => {
     setDisplayCount((prev) => prev + itemsPerPage);
   };
@@ -253,6 +331,35 @@ function TitleCardGallery() {
                 onChange={setImageSize}
                 storageKey="gallery-titlecard-size"
               />
+              {/* Select Mode Toggle */}
+              {activeFolder && images.length > 0 && (
+                <button
+                  onClick={() => {
+                    if (selectMode) {
+                      cancelSelectMode();
+                    } else {
+                      setSelectMode(true);
+                    }
+                  }}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all shadow-lg ${
+                    selectMode
+                      ? "bg-orange-600 hover:bg-orange-700"
+                      : "bg-theme-primary hover:bg-theme-primary/90"
+                  }`}
+                >
+                  {selectMode ? (
+                    <>
+                      <Square className="w-5 h-5" />
+                      Cancel Select
+                    </>
+                  ) : (
+                    <>
+                      <CheckSquare className="w-5 h-5" />
+                      Select
+                    </>
+                  )}
+                </button>
+              )}
               {/* Refresh Button */}
               <button
                 onClick={() => {
@@ -378,6 +485,56 @@ function TitleCardGallery() {
         </div>
       ) : (
         <>
+          {/* Selection controls */}
+          {selectMode && (
+            <div className="bg-theme-card rounded-xl p-4 border border-theme-primary">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={toggleSelectAll}
+                    className="flex items-center gap-2 px-4 py-2 bg-theme-primary hover:bg-theme-primary/90 rounded-lg font-medium transition-all"
+                  >
+                    {selectedImages.length === displayedImages.length ? (
+                      <>
+                        <Square className="w-5 h-5" />
+                        Deselect All
+                      </>
+                    ) : (
+                      <>
+                        <CheckSquare className="w-5 h-5" />
+                        Select All
+                      </>
+                    )}
+                  </button>
+                  <span className="text-theme-text font-medium">
+                    {selectedImages.length} selected
+                  </span>
+                </div>
+                <button
+                  onClick={() => {
+                    if (selectedImages.length > 0) {
+                      setDeleteConfirm({
+                        bulk: true,
+                        count: selectedImages.length,
+                      });
+                    }
+                  }}
+                  disabled={
+                    selectedImages.length === 0 || deletingImage === "bulk"
+                  }
+                  className="flex items-center gap-2 px-6 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-all"
+                >
+                  <Trash2
+                    className={`w-5 h-5 ${
+                      deletingImage === "bulk" ? "animate-spin" : ""
+                    }`}
+                  />
+                  Delete Selected ({selectedImages.length})
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className="bg-theme-card rounded-xl p-4 border border-theme">
             <div className="flex items-center justify-between text-sm">
               <span className="text-theme-text font-medium">
@@ -396,49 +553,107 @@ function TitleCardGallery() {
             {displayedImages.map((image, index) => (
               <div
                 key={index}
-                className="group relative bg-theme-card rounded-lg border border-theme-border transition-all duration-200 hover:border-theme-primary overflow-hidden"
+                className={`group relative bg-theme-card rounded-lg border transition-all duration-200 overflow-hidden ${
+                  selectMode && selectedImages.includes(image.path)
+                    ? "border-theme-primary ring-2 ring-theme-primary"
+                    : "border-theme-border hover:border-theme-primary"
+                }`}
               >
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setDeleteConfirm({ path: image.path, name: image.name });
-                  }}
-                  disabled={deletingImage === image.path}
-                  className={`absolute top-2 right-2 z-10 p-2 rounded-lg transition-all ${
-                    deletingImage === image.path
-                      ? "bg-gray-600 cursor-not-allowed"
-                      : "bg-red-600/90 hover:bg-red-700 opacity-0 group-hover:opacity-100"
-                  }`}
-                  title="Delete title card"
-                >
-                  <Trash2
-                    className={`w-4 h-4 text-white ${
-                      deletingImage === image.path ? "animate-spin" : ""
-                    }`}
-                  />
-                </button>
+                {selectMode ? (
+                  <>
+                    {/* Selection checkbox overlay */}
+                    <div
+                      className="absolute top-2 left-2 z-10 cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleImageSelection(image.path);
+                      }}
+                    >
+                      <div
+                        className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all ${
+                          selectedImages.includes(image.path)
+                            ? "bg-theme-primary text-white"
+                            : "bg-black/50 text-white hover:bg-black/70"
+                        }`}
+                      >
+                        {selectedImages.includes(image.path) ? (
+                          <CheckSquare className="w-5 h-5" />
+                        ) : (
+                          <Square className="w-5 h-5" />
+                        )}
+                      </div>
+                    </div>
 
-                <div
-                  className="relative cursor-pointer aspect-[16/9] p-2"
-                  onClick={() => setSelectedImage(image)}
-                >
-                  <img
-                    src={image.url}
-                    alt={image.name}
-                    className="w-full h-full object-cover rounded"
-                    loading="lazy"
-                    onError={(e) => {
-                      e.target.style.display = "none";
-                      e.target.nextSibling.style.display = "flex";
-                    }}
-                  />
-                  <div
-                    className="w-full h-full flex items-center justify-center bg-gray-800 rounded"
-                    style={{ display: "none" }}
-                  >
-                    <ImageIcon className="w-12 h-12 text-theme-primary" />
-                  </div>
-                </div>
+                    <div
+                      className="relative cursor-pointer aspect-[16/9] p-2"
+                      onClick={() => toggleImageSelection(image.path)}
+                    >
+                      <img
+                        src={image.url}
+                        alt={image.name}
+                        className="w-full h-full object-cover rounded"
+                        loading="lazy"
+                        onError={(e) => {
+                          e.target.style.display = "none";
+                          e.target.nextSibling.style.display = "flex";
+                        }}
+                      />
+                      <div
+                        className="w-full h-full flex items-center justify-center bg-gray-800 rounded"
+                        style={{ display: "none" }}
+                      >
+                        <ImageIcon className="w-12 h-12 text-theme-primary" />
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setDeleteConfirm({
+                          path: image.path,
+                          name: image.name,
+                        });
+                      }}
+                      disabled={deletingImage === image.path}
+                      className={`absolute top-2 right-2 z-10 p-2 rounded-lg transition-all ${
+                        deletingImage === image.path
+                          ? "bg-gray-600 cursor-not-allowed"
+                          : "bg-red-600/90 hover:bg-red-700 opacity-0 group-hover:opacity-100"
+                      }`}
+                      title="Delete title card"
+                    >
+                      <Trash2
+                        className={`w-4 h-4 text-white ${
+                          deletingImage === image.path ? "animate-spin" : ""
+                        }`}
+                      />
+                    </button>
+
+                    <div
+                      className="relative cursor-pointer aspect-[16/9] p-2"
+                      onClick={() => setSelectedImage(image)}
+                    >
+                      <img
+                        src={image.url}
+                        alt={image.name}
+                        className="w-full h-full object-cover rounded"
+                        loading="lazy"
+                        onError={(e) => {
+                          e.target.style.display = "none";
+                          e.target.nextSibling.style.display = "flex";
+                        }}
+                      />
+                      <div
+                        className="w-full h-full flex items-center justify-center bg-gray-800 rounded"
+                        style={{ display: "none" }}
+                      >
+                        <ImageIcon className="w-12 h-12 text-theme-primary" />
+                      </div>
+                    </div>
+                  </>
+                )}
 
                 <div className="p-3 border-t border-theme-border bg-theme-card">
                   <p
@@ -588,12 +803,25 @@ function TitleCardGallery() {
         onClose={() => setDeleteConfirm(null)}
         onConfirm={() => {
           if (deleteConfirm) {
-            deleteTitleCard(deleteConfirm.path, deleteConfirm.name);
+            if (deleteConfirm.bulk) {
+              bulkDeleteTitleCards();
+            } else {
+              deleteTitleCard(deleteConfirm.path, deleteConfirm.name);
+            }
+            setDeleteConfirm(null);
           }
         }}
-        title="Delete Title Card"
-        message="Are you sure you want to delete this title card?"
-        itemName={deleteConfirm?.name}
+        title={
+          deleteConfirm?.bulk
+            ? "Delete Multiple Title Cards"
+            : "Delete Title Card"
+        }
+        message={
+          deleteConfirm?.bulk
+            ? `Are you sure you want to delete ${deleteConfirm.count} selected title card(s)?`
+            : "Are you sure you want to delete this title card?"
+        }
+        itemName={deleteConfirm?.bulk ? undefined : deleteConfirm?.name}
         confirmText="Delete"
         type="danger"
       />
