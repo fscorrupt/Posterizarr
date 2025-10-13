@@ -56,6 +56,7 @@ else:
     (BASE_DIR / "temp").mkdir(exist_ok=True)
     (BASE_DIR / "test").mkdir(exist_ok=True)
     (BASE_DIR / "UILogs").mkdir(exist_ok=True)
+    (BASE_DIR / "fontpreviews").mkdir(exist_ok=True)
 
 CONFIG_PATH = BASE_DIR / "config.json"
 CONFIG_EXAMPLE_PATH = BASE_DIR / "config.example.json"
@@ -65,6 +66,7 @@ TEST_DIR = BASE_DIR / "test"
 TEMP_DIR = BASE_DIR / "temp"
 UI_LOGS_DIR = BASE_DIR / "UILogs"
 OVERLAYFILES_DIR = BASE_DIR / "Overlayfiles"
+FONTPREVIEWS_DIR = BASE_DIR / "fontpreviews"
 RUNNING_FILE = TEMP_DIR / "Posterizarr.Running"
 
 # Setup logging
@@ -79,6 +81,9 @@ logger = logging.getLogger(__name__)
 
 # Create Overlayfiles directory if it doesn't exist
 OVERLAYFILES_DIR.mkdir(exist_ok=True)
+
+# Create fontpreviews directory if it doesn't exist
+FONTPREVIEWS_DIR.mkdir(exist_ok=True)
 
 if not CONFIG_PATH.exists() and CONFIG_EXAMPLE_PATH.exists():
     logger.warning(f"config.json not found, using config.example.json as fallback")
@@ -1377,16 +1382,16 @@ async def preview_font_file(filename: str, text: str = "Aa"):
         # Sanitize preview text
         safe_text = "".join(c for c in text if c.isprintable())[:100] or "Aa"
 
-        # Create temporary preview image with unique name based on content
+        # Create font preview image with unique name based on content
         import hashlib
 
         cache_key = hashlib.md5(f"{safe_filename}_{safe_text}".encode()).hexdigest()
-        temp_preview = TEMP_DIR / f"font_preview_{cache_key}.png"
+        font_preview = FONTPREVIEWS_DIR / f"font_preview_{cache_key}.png"
 
         # Return cached preview if it exists and is recent
-        if temp_preview.exists():
+        if font_preview.exists():
             return FileResponse(
-                temp_preview,
+                font_preview,
                 media_type="image/png",
                 headers={"Cache-Control": "public, max-age=3600"},
             )
@@ -1445,12 +1450,12 @@ async def preview_font_file(filename: str, text: str = "Aa"):
             draw.text((x, y), safe_text, font=font, fill="white")
 
             # Save image
-            img.save(temp_preview, "PNG")
+            img.save(font_preview, "PNG")
 
-            logger.info(f"Font preview generated successfully: {temp_preview}")
+            logger.info(f"Font preview generated successfully: {font_preview}")
 
             return FileResponse(
-                temp_preview,
+                font_preview,
                 media_type="image/png",
                 headers={"Cache-Control": "public, max-age=3600"},
             )
@@ -1469,7 +1474,7 @@ async def preview_font_file(filename: str, text: str = "Aa"):
                 else:
                     magick_cmd = "magick"
 
-            absolute_output_path = str(temp_preview.absolute()).replace("\\", "/")
+            absolute_output_path = str(font_preview.absolute()).replace("\\", "/")
 
             # Try copying font to a temp location that ImageMagick might handle better
             import shutil
@@ -1518,14 +1523,14 @@ async def preview_font_file(filename: str, text: str = "Aa"):
                     detail=f"Failed to generate font preview: {result.stderr}",
                 )
 
-            if not temp_preview.exists():
+            if not font_preview.exists():
                 raise HTTPException(
                     status_code=500,
                     detail="Preview image was not created",
                 )
 
             return FileResponse(
-                temp_preview,
+                font_preview,
                 media_type="image/png",
                 headers={"Cache-Control": "public, max-age=3600"},
             )
