@@ -97,8 +97,8 @@ const Sidebar = () => {
       subItems: [
         { path: "/config/webui", label: "WebUI", icon: Lock },
         { path: "/config/general", label: "General", icon: Settings },
-        { path: "/config/services", label: "Services", icon: Database },
-        { path: "/config/api", label: "API", icon: Settings },
+        { path: "/config/services", label: "Media Servers", icon: Database },
+        { path: "/config/api", label: "Service APIs", icon: Settings },
         { path: "/config/languages", label: "Languages", icon: Type },
         { path: "/config/visuals", label: "Visuals", icon: Palette },
         { path: "/config/overlays", label: "Overlays", icon: Palette },

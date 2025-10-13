@@ -464,8 +464,8 @@ function ConfigEditor() {
     const path = location.pathname;
     if (path.includes("/config/webui")) return "WebUI";
     if (path.includes("/config/general")) return "General";
-    if (path.includes("/config/services")) return "Services";
-    if (path.includes("/config/api")) return "API";
+    if (path.includes("/config/services")) return "Media Servers";
+    if (path.includes("/config/api")) return "Service APIs";
     if (path.includes("/config/languages")) return "Languages";
     if (path.includes("/config/visuals")) return "Visuals";
     if (path.includes("/config/overlays")) return "Overlays";
@@ -494,7 +494,7 @@ function ConfigEditor() {
       groups: ["General Settings", "PrerequisitePart"],
       icon: Settings,
     },
-    Services: {
+    "Media Servers": {
       groups: [
         "Plex Settings",
         "Jellyfin Settings",
@@ -505,7 +505,7 @@ function ConfigEditor() {
       ],
       icon: Database,
     },
-    API: {
+    "Service APIs": {
       groups: ["API Keys & Tokens", "ApiPart"],
       icon: Settings,
     },
