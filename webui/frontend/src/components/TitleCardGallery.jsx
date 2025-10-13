@@ -65,13 +65,28 @@ function TitleCardGallery() {
       setFolders(data.folders || []);
 
       if (showNotification && data.folders) {
-        const totalTitlecards = data.folders.reduce((sum, folder) => sum + (folder.titlecard_count || 0), 0);
-        const foldersWithTitlecards = data.folders.filter(f => f.titlecard_count > 0).length;
-        
+        const totalTitlecards = data.folders.reduce(
+          (sum, folder) => sum + (folder.titlecard_count || 0),
+          0
+        );
+        const foldersWithTitlecards = data.folders.filter(
+          (f) => f.titlecard_count > 0
+        ).length;
+
         if (totalTitlecards > 0) {
-          setSuccess(`${foldersWithTitlecards} folder${foldersWithTitlecards !== 1 ? 's' : ''} loaded with ${totalTitlecards} titlecard${totalTitlecards !== 1 ? 's' : ''}`);
+          setSuccess(
+            `${foldersWithTitlecards} folder${
+              foldersWithTitlecards !== 1 ? "s" : ""
+            } loaded with ${totalTitlecards} titlecard${
+              totalTitlecards !== 1 ? "s" : ""
+            }`
+          );
         } else {
-          setSuccess(`${data.folders.length} folder${data.folders.length !== 1 ? 's' : ''} found with 0 titlecards`);
+          setSuccess(
+            `${data.folders.length} folder${
+              data.folders.length !== 1 ? "s" : ""
+            } found with 0 titlecards`
+          );
         }
       }
 

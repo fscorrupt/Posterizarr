@@ -64,13 +64,28 @@ function Gallery() {
       setFolders(data.folders || []);
 
       if (showNotification && data.folders) {
-        const totalPosters = data.folders.reduce((sum, folder) => sum + (folder.poster_count || 0), 0);
-        const foldersWithPosters = data.folders.filter(f => f.poster_count > 0).length;
-        
+        const totalPosters = data.folders.reduce(
+          (sum, folder) => sum + (folder.poster_count || 0),
+          0
+        );
+        const foldersWithPosters = data.folders.filter(
+          (f) => f.poster_count > 0
+        ).length;
+
         if (totalPosters > 0) {
-          setSuccess(`${foldersWithPosters} folder${foldersWithPosters !== 1 ? 's' : ''} loaded with ${totalPosters} poster${totalPosters !== 1 ? 's' : ''}`);
+          setSuccess(
+            `${foldersWithPosters} folder${
+              foldersWithPosters !== 1 ? "s" : ""
+            } loaded with ${totalPosters} poster${
+              totalPosters !== 1 ? "s" : ""
+            }`
+          );
         } else {
-          setSuccess(`${data.folders.length} folder${data.folders.length !== 1 ? 's' : ''} found with 0 posters`);
+          setSuccess(
+            `${data.folders.length} folder${
+              data.folders.length !== 1 ? "s" : ""
+            } found with 0 posters`
+          );
         }
       }
 

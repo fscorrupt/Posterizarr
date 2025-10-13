@@ -61,7 +61,11 @@ function TestGallery() {
     return categories;
   };
 
-  const toggleCategory = (category) => {
+  const toggleCategory = (category, event) => {
+    // Prevent scrolling to top
+    if (event) {
+      event.preventDefault();
+    }
     setExpandedCategories((prev) => ({
       ...prev,
       [category]: !prev[category],
@@ -155,13 +159,13 @@ function TestGallery() {
       categoryKey === "posters" || categoryKey === "seasonPosters";
     const aspectRatio = isPortrait ? "aspect-[2/3]" : "aspect-[16/9]";
     const gridCols = isPortrait
-      ? "grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5"
-      : "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4";
+      ? "grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8"
+      : "grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6";
 
     return (
       <div className="mb-6">
         <button
-          onClick={() => toggleCategory(categoryKey)}
+          onClick={(e) => toggleCategory(categoryKey, e)}
           className="w-full flex items-center justify-between p-5 bg-theme-card border border-theme rounded-xl hover:bg-theme-hover hover:border-theme-primary/50 transition-all group shadow-sm"
         >
           <div className="flex items-center gap-4">
