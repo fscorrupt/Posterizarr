@@ -387,24 +387,38 @@ const OverlayAssets = () => {
                       />
                     </div>
                   ) : (
-                    <div className="flex flex-col items-center justify-center p-4">
-                      <Type className="w-16 h-16 text-theme-primary mb-2" />
-                      <p className="text-theme-muted text-sm text-center">
-                        {file.extension.toUpperCase()} Font
-                      </p>
+                    <div className="w-full h-full p-4 flex items-center justify-center relative">
+                      <img
+                        src={`/api/fonts/preview/${file.name}?text=AaBbCc&v=${file.size}`}
+                        alt={file.name}
+                        className="relative z-10 max-w-full max-h-full object-contain drop-shadow-lg transition-transform duration-300 group-hover:scale-105"
+                        loading="lazy"
+                        onError={(e) => {
+                          // Fallback if preview fails
+                          e.target.style.display = "none";
+                          e.target.nextSibling.style.display = "flex";
+                        }}
+                      />
+                      <div
+                        className="hidden flex-col items-center justify-center"
+                        style={{ display: "none" }}
+                      >
+                        <Type className="w-16 h-16 text-theme-primary mb-2" />
+                        <p className="text-theme-muted text-sm text-center">
+                          {file.extension.toUpperCase()} Font
+                        </p>
+                      </div>
                     </div>
                   )}
                   {/* Hover Overlay */}
                   <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 z-20">
-                    {file.type === "image" && (
-                      <button
-                        onClick={() => setPreviewFile(file)}
-                        className="p-3 bg-theme-primary hover:bg-theme-primary/80 rounded-lg transition-all hover:scale-110 shadow-lg"
-                        title="Preview"
-                      >
-                        <Eye className="w-6 h-6 text-white" />
-                      </button>
-                    )}
+                    <button
+                      onClick={() => setPreviewFile(file)}
+                      className="p-3 bg-theme-primary hover:bg-theme-primary/80 rounded-lg transition-all hover:scale-110 shadow-lg"
+                      title="Preview"
+                    >
+                      <Eye className="w-6 h-6 text-white" />
+                    </button>
                     <button
                       onClick={() => setDeleteConfirm(file)}
                       className="p-3 bg-red-500 hover:bg-red-600 rounded-lg transition-all hover:scale-110 shadow-lg"
@@ -459,9 +473,13 @@ const OverlayAssets = () => {
             {/* Modal Header */}
             <div className="flex items-center justify-between p-4 border-b border-theme sticky top-0 bg-theme-card z-10">
               <div className="flex items-center gap-3">
-                <ImageIcon className="w-5 h-5 text-theme-primary" />
+                {previewFile.type === "image" ? (
+                  <ImageIcon className="w-5 h-5 text-theme-primary" />
+                ) : (
+                  <Type className="w-5 h-5 text-theme-primary" />
+                )}
                 <h3 className="text-lg font-semibold text-theme-text">
-                  Image Preview
+                  {previewFile.type === "image" ? "Image" : "Font"} Preview
                 </h3>
               </div>
               <button
@@ -481,40 +499,97 @@ const OverlayAssets = () => {
                 </p>
               </div>
 
-              {/* Image Preview with Checkered Background */}
-              <div className="relative bg-theme-bg rounded-lg border border-theme p-4 flex items-center justify-center overflow-hidden">
-                {/* Checkered background for transparency */}
-                <div
-                  className="absolute inset-0 rounded-lg"
-                  style={{
-                    backgroundImage: `
-                      linear-gradient(45deg, #3a3a3a 25%, transparent 25%),
-                      linear-gradient(-45deg, #3a3a3a 25%, transparent 25%),
-                      linear-gradient(45deg, transparent 75%, #3a3a3a 75%),
-                      linear-gradient(-45deg, transparent 75%, #3a3a3a 75%)
-                    `,
-                    backgroundSize: "20px 20px",
-                    backgroundPosition: "0 0, 0 10px, 10px -10px, -10px 0px",
-                  }}
-                ></div>
-                <img
-                  src={`/api/overlayfiles/preview/${previewFile.name}`}
-                  alt={previewFile.name}
-                  className="relative z-10 max-w-full h-auto object-contain rounded-lg shadow-lg"
-                  style={{ maxHeight: "55vh" }}
-                  onError={(e) => {
-                    e.target.style.display = "none";
-                    e.target.nextSibling.style.display = "flex";
-                  }}
-                />
-                <div
-                  className="hidden flex-col items-center gap-3 text-theme-muted relative z-10"
-                  style={{ display: "none" }}
-                >
-                  <AlertCircle className="w-12 h-12" />
-                  <p>Failed to load image</p>
+              {previewFile.type === "image" ? (
+                /* Image Preview with Checkered Background */
+                <div className="relative bg-theme-bg rounded-lg border border-theme p-4 flex items-center justify-center overflow-hidden">
+                  {/* Checkered background for transparency */}
+                  <div
+                    className="absolute inset-0 rounded-lg"
+                    style={{
+                      backgroundImage: `
+                        linear-gradient(45deg, #3a3a3a 25%, transparent 25%),
+                        linear-gradient(-45deg, #3a3a3a 25%, transparent 25%),
+                        linear-gradient(45deg, transparent 75%, #3a3a3a 75%),
+                        linear-gradient(-45deg, transparent 75%, #3a3a3a 75%)
+                      `,
+                      backgroundSize: "20px 20px",
+                      backgroundPosition: "0 0, 0 10px, 10px -10px, -10px 0px",
+                    }}
+                  ></div>
+                  <img
+                    src={`/api/overlayfiles/preview/${previewFile.name}`}
+                    alt={previewFile.name}
+                    className="relative z-10 max-w-full h-auto object-contain rounded-lg shadow-lg"
+                    style={{ maxHeight: "55vh" }}
+                    onError={(e) => {
+                      e.target.style.display = "none";
+                      e.target.nextSibling.style.display = "flex";
+                    }}
+                  />
+                  <div
+                    className="hidden flex-col items-center gap-3 text-theme-muted relative z-10"
+                    style={{ display: "none" }}
+                  >
+                    <AlertCircle className="w-12 h-12" />
+                    <p>Failed to load image</p>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                /* Font Preview */
+                <div className="space-y-3">
+                  <div className="bg-theme-bg rounded-lg border border-theme p-4">
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-xs text-theme-muted mb-1">
+                          Uppercase:
+                        </p>
+                        <img
+                          src={`/api/fonts/preview/${previewFile.name}?text=ABCDEFGHIJKLMNOPQRSTUVWXYZ&v=${previewFile.size}`}
+                          alt="Uppercase letters"
+                          className="w-full h-auto object-contain"
+                          loading="lazy"
+                        />
+                      </div>
+                      <div>
+                        <p className="text-xs text-theme-muted mb-1">
+                          Lowercase:
+                        </p>
+                        <img
+                          src={`/api/fonts/preview/${previewFile.name}?text=abcdefghijklmnopqrstuvwxyz&v=${previewFile.size}`}
+                          alt="Lowercase letters"
+                          className="w-full h-auto object-contain"
+                          loading="lazy"
+                        />
+                      </div>
+                      <div>
+                        <p className="text-xs text-theme-muted mb-1">
+                          Numbers:
+                        </p>
+                        <img
+                          src={`/api/fonts/preview/${previewFile.name}?text=0123456789&v=${previewFile.size}`}
+                          alt="Numbers"
+                          className="w-full h-auto object-contain"
+                          loading="lazy"
+                        />
+                      </div>
+                      <div>
+                        <p className="text-xs text-theme-muted mb-1">Sample:</p>
+                        <img
+                          src={`/api/fonts/preview/${previewFile.name}?text=The Quick Brown Fox&v=${previewFile.size}`}
+                          alt="Sample text"
+                          className="w-full h-auto object-contain"
+                          loading="lazy"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-xs text-theme-muted bg-theme-bg rounded-lg border border-theme p-3">
+                    <p className="font-semibold mb-2">Font Information:</p>
+                    <p>Type: {previewFile.extension.toUpperCase()}</p>
+                    <p>Size: {formatFileSize(previewFile.size)}</p>
+                  </div>
+                </div>
+              )}
 
               {/* Modal Footer */}
               <div className="mt-4 flex justify-end gap-3">

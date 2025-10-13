@@ -1352,6 +1352,197 @@ async def delete_font_file(filename: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/api/fonts/preview/{filename}")
+async def preview_font_file(filename: str, text: str = "Aa"):
+    """Generate a preview image for a font file"""
+    try:
+        # Sanitize filename
+        safe_filename = "".join(
+            c for c in filename if c.isalnum() or c in "._- "
+        ).strip()
+
+        if not safe_filename:
+            raise HTTPException(status_code=400, detail="Invalid filename")
+
+        font_path = OVERLAYFILES_DIR / safe_filename
+
+        if not font_path.exists():
+            raise HTTPException(status_code=404, detail="Font file not found")
+
+        # Validate font extension
+        allowed_extensions = {".ttf", ".otf", ".woff", ".woff2"}
+        if font_path.suffix.lower() not in allowed_extensions:
+            raise HTTPException(status_code=400, detail="Not a valid font file")
+
+        # Sanitize preview text
+        safe_text = "".join(c for c in text if c.isprintable())[:100] or "Aa"
+
+        # Create temporary preview image with unique name based on content
+        import hashlib
+
+        cache_key = hashlib.md5(f"{safe_filename}_{safe_text}".encode()).hexdigest()
+        temp_preview = TEMP_DIR / f"font_preview_{cache_key}.png"
+
+        # Return cached preview if it exists and is recent
+        if temp_preview.exists():
+            return FileResponse(
+                temp_preview,
+                media_type="image/png",
+                headers={"Cache-Control": "public, max-age=3600"},
+            )
+
+        try:
+            # Try using PIL/Pillow for font rendering (more reliable than ImageMagick for custom fonts)
+            from PIL import Image, ImageDraw, ImageFont
+
+            logger.info(f"Generating font preview for: {safe_filename}")
+            logger.info(f"Font path: {str(font_path)}")
+            logger.info(f"Font path exists: {font_path.exists()}")
+            logger.info(f"Text: {safe_text}")
+
+            # Adjust image size and font size based on text length
+            text_length = len(safe_text)
+            if text_length <= 6:
+                # Short text (like "AaBbCc") - larger font, smaller canvas
+                img_width, img_height = 400, 200
+                font_size = 48
+            elif text_length <= 20:
+                # Medium text (like "The Quick Brown Fox")
+                img_width, img_height = 600, 150
+                font_size = 36
+            else:
+                # Long text (like full alphabet)
+                img_width, img_height = 800, 150
+                font_size = 32
+
+            # Create image with better quality
+            img = Image.new("RGB", (img_width, img_height), color=(42, 42, 42))
+            draw = ImageDraw.Draw(img)
+
+            # Load font - must succeed or raise error
+            try:
+                font = ImageFont.truetype(str(font_path.absolute()), font_size)
+                logger.info(
+                    f"✅ Font loaded successfully: {font.getname() if hasattr(font, 'getname') else 'Unknown'}"
+                )
+            except OSError as e:
+                logger.error(f"❌ OSError loading font: {e}")
+                raise HTTPException(
+                    status_code=500, detail=f"Cannot load font file: {e}"
+                )
+            except Exception as e:
+                logger.error(f"❌ Error loading font: {e}")
+                raise HTTPException(status_code=500, detail=f"Error loading font: {e}")
+
+            # Calculate text position for centering
+            bbox = draw.textbbox((0, 0), safe_text, font=font)
+            text_width = bbox[2] - bbox[0]
+            text_height = bbox[3] - bbox[1]
+            x = (img_width - text_width) // 2
+            y = (img_height - text_height) // 2 - bbox[1]  # Adjust for baseline
+
+            # Draw text
+            draw.text((x, y), safe_text, font=font, fill="white")
+
+            # Save image
+            img.save(temp_preview, "PNG")
+
+            logger.info(f"Font preview generated successfully: {temp_preview}")
+
+            return FileResponse(
+                temp_preview,
+                media_type="image/png",
+                headers={"Cache-Control": "public, max-age=3600"},
+            )
+
+        except ImportError:
+            # Pillow not available, fall back to ImageMagick with different approach
+            logger.warning("Pillow not available, using ImageMagick fallback")
+
+            # Find magick executable
+            if IS_DOCKER:
+                magick_cmd = "magick"
+            else:
+                magick_exe = APP_DIR / "magick" / "magick.exe"
+                if magick_exe.exists():
+                    magick_cmd = str(magick_exe)
+                else:
+                    magick_cmd = "magick"
+
+            absolute_output_path = str(temp_preview.absolute()).replace("\\", "/")
+
+            # Try copying font to a temp location that ImageMagick might handle better
+            import shutil
+
+            temp_font = TEMP_DIR / f"temp_{safe_filename}"
+            shutil.copy2(font_path, temp_font)
+            temp_font_path = str(temp_font.absolute()).replace("\\", "/")
+
+            logger.info(f"Using temporary font copy: {temp_font_path}")
+
+            # Generate preview using ImageMagick with temp font copy
+            cmd = [
+                magick_cmd,
+                "-background",
+                "#2A2A2A",
+                "-fill",
+                "white",
+                "-font",
+                temp_font_path,
+                "-pointsize",
+                "48",
+                "-size",
+                "400x200",
+                "-gravity",
+                "center",
+                f"label:{safe_text}",
+                absolute_output_path,
+            ]
+
+            logger.info(f"ImageMagick command: {' '.join(cmd)}")
+
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+
+            # Clean up temp font
+            if temp_font.exists():
+                try:
+                    temp_font.unlink()
+                except:
+                    pass
+
+            if result.returncode != 0:
+                logger.error(f"ImageMagick error: {result.stderr}")
+                logger.error(f"ImageMagick stdout: {result.stdout}")
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Failed to generate font preview: {result.stderr}",
+                )
+
+            if not temp_preview.exists():
+                raise HTTPException(
+                    status_code=500,
+                    detail="Preview image was not created",
+                )
+
+            return FileResponse(
+                temp_preview,
+                media_type="image/png",
+                headers={"Cache-Control": "public, max-age=3600"},
+            )
+
+        except subprocess.TimeoutExpired:
+            logger.error("Font preview generation timed out")
+            raise HTTPException(
+                status_code=500, detail="Font preview generation timed out"
+            )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error generating font preview: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # ============================================================================
 # VALIDATION ENDPOINTS
 # ============================================================================
