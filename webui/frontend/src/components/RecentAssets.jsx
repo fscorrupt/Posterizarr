@@ -8,7 +8,7 @@
 
 import React, { useState, useEffect } from "react";
 import { FileImage, ExternalLink, RefreshCw, ImageOff } from "lucide-react";
-import toast from "react-hot-toast";
+import Notification from "./Notification";
 import CompactImageSizeSlider from "./CompactImageSizeSlider";
 
 const API_URL = "/api";
@@ -44,16 +44,10 @@ function RecentAssets() {
         setAssets(data.assets);
       } else {
         setError(data.error || "Failed to load recent assets");
-        if (!silent) {
-          toast.error("Failed to load recent assets");
-        }
       }
     } catch (err) {
       setError(err.message);
       console.error("Error fetching recent assets:", err);
-      if (!silent) {
-        toast.error("Error loading recent assets");
-      }
     } finally {
       setLoading(false);
       if (!silent) {
@@ -102,6 +96,15 @@ function RecentAssets() {
 
   return (
     <div className="bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
+      {/* Notification */}
+      {error && (
+        <Notification
+          type="error"
+          message={error}
+          onClose={() => setError(null)}
+        />
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-semibold text-theme-text flex items-center gap-3">

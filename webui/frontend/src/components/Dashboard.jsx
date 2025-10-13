@@ -16,10 +16,11 @@ import {
   Settings,
   Wifi,
 } from "lucide-react";
-import toast, { Toaster } from "react-hot-toast";
 import SystemInfo from "./SystemInfo";
 import DangerZone from "./DangerZone";
 import RecentAssets from "./RecentAssets";
+import Notification from "./Notification";
+import ConfirmDialog from "./ConfirmDialog";
 
 const API_URL = "/api";
 const isDev = import.meta.env.DEV;
@@ -67,6 +68,9 @@ function Dashboard() {
   const [version, setVersion] = useState(
     cachedVersion || { local: null, remote: null }
   );
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [wsConnected, setWsConnected] = useState(false);
   const [autoScroll, setAutoScroll] = useState(true);
   const wsRef = useRef(null);
@@ -342,33 +346,21 @@ function Dashboard() {
           // JSON parsing failed
         }
 
-        toast.error(errorMessage, {
-          duration: 5000,
-          position: "top-right",
-        });
+        setError(errorMessage);
         return;
       }
 
       const data = await response.json();
 
       if (data.success) {
-        toast.success(data.message || "Running file deleted successfully", {
-          duration: 3000,
-          position: "top-right",
-        });
+        setSuccess(data.message || "Running file deleted successfully");
       } else {
-        toast.error(data.message || "Failed to delete running file", {
-          duration: 4000,
-          position: "top-right",
-        });
+        setError(data.message || "Failed to delete running file");
       }
       fetchStatus();
     } catch (error) {
       console.error("Delete running file error:", error);
-      toast.error(`Error deleting running file: ${error.message}`, {
-        duration: 5000,
-        position: "top-right",
-      });
+      setError(`Error deleting running file: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -431,7 +423,21 @@ function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <Toaster />
+      {/* Notifications */}
+      {error && (
+        <Notification
+          type="error"
+          message={error}
+          onClose={() => setError(null)}
+        />
+      )}
+      {success && (
+        <Notification
+          type="success"
+          message={success}
+          onClose={() => setSuccess(null)}
+        />
+      )}
 
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -468,7 +474,7 @@ function Dashboard() {
                 positive, delete the running file below.
               </p>
               <button
-                onClick={deleteRunningFile}
+                onClick={() => setDeleteConfirm(true)}
                 disabled={loading}
                 className="flex items-center gap-2 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-all text-sm shadow-sm"
               >
@@ -768,6 +774,19 @@ function Dashboard() {
         status={status}
         loading={loading}
         onStatusUpdate={fetchStatus}
+        onSuccess={setSuccess}
+        onError={setError}
+      />
+
+      {/* Delete Running File Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={deleteConfirm}
+        onClose={() => setDeleteConfirm(false)}
+        onConfirm={deleteRunningFile}
+        title="Delete Running File"
+        message="Are you sure you want to delete the running file? This should only be done if you're certain no other instance is running."
+        confirmText="Delete"
+        type="warning"
       />
     </div>
   );

@@ -23,8 +23,8 @@ import {
   Image,
   Eye,
 } from "lucide-react";
-import toast, { Toaster } from "react-hot-toast";
 import ValidateButton from "./ValidateButton";
+import Notification from "./Notification";
 
 const API_URL = "/api";
 
@@ -421,6 +421,7 @@ function ConfigEditor() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
   const [expandedGroups, setExpandedGroups] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
   const [overlayFiles, setOverlayFiles] = useState([]);
@@ -624,11 +625,7 @@ function ConfigEditor() {
         setError("Failed to load config");
       }
     } catch (err) {
-      setError(err.message);
-      toast.error("Failed to load configuration", {
-        duration: 4000,
-        position: "top-right",
-      });
+      setError(`Failed to load configuration: ${err.message}`);
     } finally {
       setLoading(false);
     }
@@ -668,24 +665,15 @@ function ConfigEditor() {
       const data = await response.json();
 
       if (data.success) {
-        toast.success(`File "${data.filename}" uploaded successfully!`, {
-          duration: 3000,
-          position: "top-right",
-        });
+        setSuccess(`File "${data.filename}" uploaded successfully!`);
         // Refresh overlay files list
         await fetchOverlayFiles();
       } else {
-        toast.error(data.detail || "Upload failed", {
-          duration: 4000,
-          position: "top-right",
-        });
+        setError(data.detail || "Upload failed");
       }
     } catch (err) {
       console.error("Upload error:", err);
-      toast.error("Failed to upload file", {
-        duration: 4000,
-        position: "top-right",
-      });
+      setError("Failed to upload file");
     } finally {
       setUploadingOverlay(false);
     }
@@ -721,24 +709,15 @@ function ConfigEditor() {
       const data = await response.json();
 
       if (data.success) {
-        toast.success(`Font "${data.filename}" uploaded successfully!`, {
-          duration: 3000,
-          position: "top-right",
-        });
+        setSuccess(`Font "${data.filename}" uploaded successfully!`);
         // Refresh font files list
         await fetchFontFiles();
       } else {
-        toast.error(data.detail || "Upload failed", {
-          duration: 4000,
-          position: "top-right",
-        });
+        setError(data.detail || "Upload failed");
       }
     } catch (err) {
       console.error("Upload error:", err);
-      toast.error("Failed to upload file", {
-        duration: 4000,
-        position: "top-right",
-      });
+      setError("Failed to upload file");
     } finally {
       setUploadingFont(false);
     }
@@ -765,10 +744,7 @@ function ConfigEditor() {
       const data = await response.json();
 
       if (data.success) {
-        toast.success("Configuration saved successfully!", {
-          duration: 3000,
-          position: "top-right",
-        });
+        setSuccess("Configuration saved successfully!");
 
         //  Get NEW auth status AFTER saving
         const newAuthEnabled = usingFlatStructure
@@ -777,17 +753,9 @@ function ConfigEditor() {
 
         // If Auth has just been ENABLED -> reload page
         if (!oldAuthEnabled && newAuthEnabled) {
-          toast.success(
-            "Basic Auth enabled! Page will reload in 2 seconds...",
-            {
-              duration: 2000,
-              position: "top-right",
-              icon: "🔒",
-            }
-          );
+          setSuccess("Basic Auth enabled! Page will reload in 2 seconds...");
 
           // Wait 2 seconds, then reload
-
           setTimeout(() => {
             window.location.reload();
           }, 2000);
@@ -795,36 +763,20 @@ function ConfigEditor() {
         }
 
         // If Auth was just DISABLED -> reload page too
-
         if (oldAuthEnabled && !newAuthEnabled) {
-          toast.success(
-            "Basic Auth disabled! Page will reload in 2 seconds...",
-            {
-              duration: 2000,
-              position: "top-right",
-              icon: "🔓",
-            }
-          );
+          setSuccess("Basic Auth disabled! Page will reload in 2 seconds...");
 
-          // Warte 2 Sekunden, dann reload
+          // Wait 2 seconds, then reload
           setTimeout(() => {
             window.location.reload();
           }, 2000);
           return;
         }
       } else {
-        setError("Failed to save config");
-        toast.error("Failed to save configuration", {
-          duration: 4000,
-          position: "top-right",
-        });
+        setError("Failed to save configuration");
       }
     } catch (err) {
-      setError(err.message);
-      toast.error(`Error: ${err.message}`, {
-        duration: 4000,
-        position: "top-right",
-      });
+      setError(`Error: ${err.message}`);
     } finally {
       setSaving(false);
     }
@@ -1419,7 +1371,13 @@ function ConfigEditor() {
               />
               <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-muted" />
             </div>
-            <ValidateButton type="plex" config={config} label="Validate" />
+            <ValidateButton
+              type="plex"
+              config={config}
+              label="Validate"
+              onSuccess={setSuccess}
+              onError={setError}
+            />
           </div>
           <p className="text-xs text-theme-muted">
             Your Plex authentication token
@@ -1443,7 +1401,13 @@ function ConfigEditor() {
               />
               <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-muted" />
             </div>
-            <ValidateButton type="jellyfin" config={config} label="Validate" />
+            <ValidateButton
+              type="jellyfin"
+              config={config}
+              label="Validate"
+              onSuccess={setSuccess}
+              onError={setError}
+            />
           </div>
           <p className="text-xs text-theme-muted">
             Create API key in Jellyfin at Settings → Advanced → API Keys
@@ -1467,7 +1431,13 @@ function ConfigEditor() {
               />
               <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-muted" />
             </div>
-            <ValidateButton type="emby" config={config} label="Validate" />
+            <ValidateButton
+              type="emby"
+              config={config}
+              label="Validate"
+              onSuccess={setSuccess}
+              onError={setError}
+            />
           </div>
           <p className="text-xs text-theme-muted">
             Create API key in Emby at Settings → Advanced → API Keys
@@ -1493,7 +1463,13 @@ function ConfigEditor() {
               />
               <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-muted" />
             </div>
-            <ValidateButton type="tmdb" config={config} label="Validate" />
+            <ValidateButton
+              type="tmdb"
+              config={config}
+              label="Validate"
+              onSuccess={setSuccess}
+              onError={setError}
+            />
           </div>
           <p className="text-xs text-theme-muted">
             Your TMDB API Read Access Token (the really long one)
@@ -1517,7 +1493,13 @@ function ConfigEditor() {
               />
               <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-muted" />
             </div>
-            <ValidateButton type="tvdb" config={config} label="Validate" />
+            <ValidateButton
+              type="tvdb"
+              config={config}
+              label="Validate"
+              onSuccess={setSuccess}
+              onError={setError}
+            />
           </div>
           <p className="text-xs text-theme-muted">
             Format: YourApiKey or YourApiKey#YourPin (for subscribers)
@@ -1541,7 +1523,13 @@ function ConfigEditor() {
               />
               <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-muted" />
             </div>
-            <ValidateButton type="fanart" config={config} label="Validate" />
+            <ValidateButton
+              type="fanart"
+              config={config}
+              label="Validate"
+              onSuccess={setSuccess}
+              onError={setError}
+            />
           </div>
           <p className="text-xs text-theme-muted">
             Your Fanart.tv Personal API Key
@@ -1569,7 +1557,13 @@ function ConfigEditor() {
               className="flex-1 px-4 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono text-sm resize-none overflow-hidden min-h-[42px]"
               placeholder="https://discord.com/api/webhooks/..."
             />
-            <ValidateButton type="discord" config={config} label="Test" />
+            <ValidateButton
+              type="discord"
+              config={config}
+              label="Test"
+              onSuccess={setSuccess}
+              onError={setError}
+            />
           </div>
           <p className="text-xs text-theme-muted">
             Discord webhook URL (sends a test message when validated)
@@ -1595,7 +1589,13 @@ function ConfigEditor() {
               className="flex-1 px-4 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono text-sm resize-none overflow-hidden min-h-[42px]"
               placeholder="discord://... or telegram://... etc."
             />
-            <ValidateButton type="apprise" config={config} label="Validate" />
+            <ValidateButton
+              type="apprise"
+              config={config}
+              label="Validate"
+              onSuccess={setSuccess}
+              onError={setError}
+            />
           </div>
           <p className="text-xs text-theme-muted">
             Apprise notification URL (format check only)
@@ -1621,7 +1621,13 @@ function ConfigEditor() {
               className="flex-1 px-4 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono text-sm resize-none overflow-hidden min-h-[42px]"
               placeholder="https://uptime-kuma.domain.com/api/push/..."
             />
-            <ValidateButton type="uptimekuma" config={config} label="Test" />
+            <ValidateButton
+              type="uptimekuma"
+              config={config}
+              label="Test"
+              onSuccess={setSuccess}
+              onError={setError}
+            />
           </div>
           <p className="text-xs text-theme-muted">
             Uptime Kuma push monitor URL (sends test ping when validated)
@@ -1760,7 +1766,21 @@ function ConfigEditor() {
 
   return (
     <div className="space-y-6">
-      <Toaster />
+      {/* Notifications */}
+      {error && (
+        <Notification
+          type="error"
+          message={error}
+          onClose={() => setError(null)}
+        />
+      )}
+      {success && (
+        <Notification
+          type="success"
+          message={success}
+          onClose={() => setSuccess(null)}
+        />
+      )}
 
       {/* Header */}
       <div className="flex items-center justify-between">

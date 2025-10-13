@@ -1,10 +1,19 @@
-import React from "react";
+import React, { useState } from "react";
 import { AlertTriangle, Square, Zap, Trash2 } from "lucide-react";
-import toast from "react-hot-toast";
+import ConfirmDialog from "./ConfirmDialog";
 
 const API_URL = "/api";
 
-const DangerZone = ({ status, loading, onStatusUpdate }) => {
+const DangerZone = ({
+  status,
+  loading,
+  onStatusUpdate,
+  onSuccess,
+  onError,
+}) => {
+  const [forceKillConfirm, setForceKillConfirm] = useState(false);
+  const [deleteFileConfirm, setDeleteFileConfirm] = useState(false);
+
   const stopScript = async () => {
     try {
       const response = await fetch(`${API_URL}/stop`, {
@@ -19,35 +28,18 @@ const DangerZone = ({ status, loading, onStatusUpdate }) => {
           ? "Script stopped successfully"
           : data.message;
 
-        toast.success(message, {
-          duration: 3000,
-          position: "top-right",
-        });
+        if (onSuccess) onSuccess(message);
         if (onStatusUpdate) onStatusUpdate();
       } else {
-        toast.error(data.message || "Failed to stop script", {
-          duration: 4000,
-          position: "top-right",
-        });
+        if (onError) onError(data.message || "Failed to stop script");
       }
     } catch (error) {
       console.error("Error stopping script:", error);
-      toast.error(`Error stopping script: ${error.message}`, {
-        duration: 5000,
-        position: "top-right",
-      });
+      if (onError) onError(`Error stopping script: ${error.message}`);
     }
   };
 
   const forceKillScript = async () => {
-    if (
-      !window.confirm(
-        "⚠️ Force kill will immediately terminate the script. Continue?"
-      )
-    ) {
-      return;
-    }
-
     try {
       const response = await fetch(`${API_URL}/force-kill`, {
         method: "POST",
@@ -61,35 +53,18 @@ const DangerZone = ({ status, loading, onStatusUpdate }) => {
           ? "Script force killed successfully"
           : data.message;
 
-        toast.success(message, {
-          duration: 3000,
-          position: "top-right",
-        });
+        if (onSuccess) onSuccess(message);
         if (onStatusUpdate) onStatusUpdate();
       } else {
-        toast.error(data.message || "Failed to force kill script", {
-          duration: 4000,
-          position: "top-right",
-        });
+        if (onError) onError(data.message || "Failed to force kill script");
       }
     } catch (error) {
       console.error("Error force killing script:", error);
-      toast.error(`Error force killing script: ${error.message}`, {
-        duration: 5000,
-        position: "top-right",
-      });
+      if (onError) onError(`Error force killing script: ${error.message}`);
     }
   };
 
   const deleteRunningFile = async () => {
-    if (
-      !window.confirm(
-        "⚠️ This will delete the running.txt file. Only do this if no script is actually running. Continue?"
-      )
-    ) {
-      return;
-    }
-
     try {
       const response = await fetch(`${API_URL}/running-file`, {
         method: "DELETE",
@@ -104,33 +79,22 @@ const DangerZone = ({ status, loading, onStatusUpdate }) => {
           // JSON parsing failed
         }
 
-        toast.error(errorMessage, {
-          duration: 5000,
-          position: "top-right",
-        });
+        if (onError) onError(errorMessage);
         return;
       }
 
       const data = await response.json();
 
       if (data.success) {
-        toast.success(data.message || "Running file deleted successfully", {
-          duration: 3000,
-          position: "top-right",
-        });
+        if (onSuccess)
+          onSuccess(data.message || "Running file deleted successfully");
         if (onStatusUpdate) onStatusUpdate();
       } else {
-        toast.error(data.message || "Failed to delete running file", {
-          duration: 4000,
-          position: "top-right",
-        });
+        if (onError) onError(data.message || "Failed to delete running file");
       }
     } catch (error) {
       console.error("Error deleting running file:", error);
-      toast.error(`Error deleting running file: ${error.message}`, {
-        duration: 5000,
-        position: "top-right",
-      });
+      if (onError) onError(`Error deleting running file: ${error.message}`);
     }
   };
 
@@ -160,7 +124,7 @@ const DangerZone = ({ status, loading, onStatusUpdate }) => {
         </button>
 
         <button
-          onClick={forceKillScript}
+          onClick={() => setForceKillConfirm(true)}
           disabled={loading || !status?.running}
           className="flex items-center justify-center gap-2 px-4 py-3 bg-red-800 hover:bg-red-900 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg font-medium transition-all border border-red-600 shadow-sm hover:scale-[1.02]"
         >
@@ -169,7 +133,7 @@ const DangerZone = ({ status, loading, onStatusUpdate }) => {
         </button>
 
         <button
-          onClick={deleteRunningFile}
+          onClick={() => setDeleteFileConfirm(true)}
           disabled={loading}
           className="flex items-center justify-center gap-2 px-4 py-3 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg font-medium transition-all border border-orange-500 shadow-sm hover:scale-[1.02]"
         >
@@ -177,6 +141,27 @@ const DangerZone = ({ status, loading, onStatusUpdate }) => {
           Delete Running File
         </button>
       </div>
+
+      {/* Confirm Dialogs */}
+      <ConfirmDialog
+        isOpen={forceKillConfirm}
+        onClose={() => setForceKillConfirm(false)}
+        onConfirm={forceKillScript}
+        title="Force Kill Script"
+        message="Force kill will immediately terminate the script. This should only be used when normal stop doesn't work."
+        confirmText="Force Kill"
+        type="danger"
+      />
+
+      <ConfirmDialog
+        isOpen={deleteFileConfirm}
+        onClose={() => setDeleteFileConfirm(false)}
+        onConfirm={deleteRunningFile}
+        title="Delete Running File"
+        message="This will delete the running.txt file. Only do this if no script is actually running."
+        confirmText="Delete"
+        type="warning"
+      />
     </div>
   );
 };

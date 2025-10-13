@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Image, FolderOpen, HardDrive, Layers, RefreshCw } from "lucide-react";
-import toast from "react-hot-toast";
 
 const API_URL = "/api";
 
-function AssetsStats() {
+function AssetsStats({ onSuccess, onError }) {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -43,24 +42,15 @@ function AssetsStats() {
       const data = await response.json();
 
       if (data.success) {
-        toast.success("Asset cache refreshed successfully!", {
-          duration: 3000,
-          position: "top-right",
-        });
+        if (onSuccess) onSuccess("Asset cache refreshed successfully!");
         // Lade Stats neu nach dem Refresh
         await fetchStats();
       } else {
-        toast.error(`Failed to refresh cache: ${data.error}`, {
-          duration: 4000,
-          position: "top-right",
-        });
+        if (onError) onError(`Failed to refresh cache: ${data.error}`);
       }
     } catch (err) {
       console.error("Error refreshing cache:", err);
-      toast.error("Failed to refresh cache", {
-        duration: 4000,
-        position: "top-right",
-      });
+      if (onError) onError("Failed to refresh cache");
     } finally {
       setRefreshing(false);
     }

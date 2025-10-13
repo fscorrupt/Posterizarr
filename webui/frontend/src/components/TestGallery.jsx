@@ -12,7 +12,7 @@ import {
   Expand,
   Minimize,
 } from "lucide-react";
-import toast, { Toaster } from "react-hot-toast";
+import Notification from "./Notification";
 
 const API_URL = "/api";
 
@@ -22,6 +22,7 @@ function TestGallery() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
   const [scriptLoading, setScriptLoading] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState({
     posters: false,
@@ -79,19 +80,12 @@ function TestGallery() {
       setImages(data.images || []);
 
       if (showToast && data.images && data.images.length > 0) {
-        toast.success(`Loaded ${data.images.length} test files`, {
-          duration: 2000,
-          position: "top-right",
-        });
+        setSuccess(`Loaded ${data.images.length} test files`);
       }
     } catch (error) {
       console.error("Error fetching test images:", error);
-      setError(error.message);
+      setError(error.message || "Failed to load test gallery");
       setImages([]);
-      toast.error("Failed to load test gallery", {
-        duration: 4000,
-        position: "top-right",
-      });
     } finally {
       setLoading(false);
     }
@@ -109,10 +103,7 @@ function TestGallery() {
 
   const runTestMode = async () => {
     if (status.running) {
-      toast.error("Script is already running! Please stop it first.", {
-        duration: 4000,
-        position: "top-right",
-      });
+      setError("Script is already running! Please stop it first.");
       return;
     }
 
@@ -124,22 +115,13 @@ function TestGallery() {
       const data = await response.json();
 
       if (data.success) {
-        toast.success("Test Mode started successfully!", {
-          duration: 4000,
-          position: "top-right",
-        });
+        setSuccess("Test Mode started successfully!");
         fetchStatus();
       } else {
-        toast.error(`Error: ${data.message}`, {
-          duration: 5000,
-          position: "top-right",
-        });
+        setError(`Error: ${data.message}`);
       }
     } catch (error) {
-      toast.error(`Error: ${error.message}`, {
-        duration: 5000,
-        position: "top-right",
-      });
+      setError(`Error: ${error.message}`);
     } finally {
       setScriptLoading(false);
     }
@@ -266,7 +248,21 @@ function TestGallery() {
 
   return (
     <div className="space-y-6">
-      <Toaster />
+      {/* Notification */}
+      {error && (
+        <Notification
+          type="error"
+          message={error}
+          onClose={() => setError(null)}
+        />
+      )}
+      {success && (
+        <Notification
+          type="success"
+          message={success}
+          onClose={() => setSuccess(null)}
+        />
+      )}
 
       {/* Header - Modernized to match RunModes & ConfigEditor */}
       <div className="flex items-center justify-between">

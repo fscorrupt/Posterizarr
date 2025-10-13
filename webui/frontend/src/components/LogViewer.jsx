@@ -12,7 +12,7 @@ import {
   Activity,
   Square,
 } from "lucide-react";
-import toast, { Toaster } from "react-hot-toast";
+import Notification from "./Notification";
 
 const API_URL = "/api";
 const isDev = import.meta.env.DEV;
@@ -40,6 +40,9 @@ function LogViewer() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [loading, setLoading] = useState(false); // ✨ NEW: Loading state for stop button
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+  const [info, setInfo] = useState(null);
   const [status, setStatus] = useState({
     running: false,
     current_mode: null,
@@ -94,22 +97,13 @@ function LogViewer() {
       const data = await response.json();
 
       if (data.success) {
-        toast.success("Script stopped successfully", {
-          duration: 3000,
-          position: "top-right",
-        });
+        setSuccess("Script stopped successfully");
         fetchStatus(); // Refresh status
       } else {
-        toast.error(`Error: ${data.message}`, {
-          duration: 4000,
-          position: "top-right",
-        });
+        setError(`Error: ${data.message}`);
       }
     } catch (error) {
-      toast.error(`Error: ${error.message}`, {
-        duration: 5000,
-        position: "top-right",
-      });
+      setError(`Error: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -157,18 +151,12 @@ function LogViewer() {
       setAvailableLogs(data.logs);
 
       if (showToast) {
-        toast.success("Log files refreshed", {
-          duration: 2000,
-          position: "top-right",
-        });
+        setSuccess("Log files refreshed");
       }
     } catch (error) {
       console.error("Error fetching log files:", error);
       if (showToast) {
-        toast.error("Failed to refresh log files", {
-          duration: 3000,
-          position: "top-right",
-        });
+        setError("Failed to refresh log files");
       }
     } finally {
       setTimeout(() => setIsRefreshing(false), 500);
@@ -183,10 +171,7 @@ function LogViewer() {
       setLogs(strippedContent);
     } catch (error) {
       console.error("Error fetching log:", error);
-      toast.error(`Failed to load ${logName}`, {
-        duration: 3000,
-        position: "top-right",
-      });
+      setError(`Failed to load ${logName}`);
     }
   };
 
@@ -258,10 +243,7 @@ function LogViewer() {
               console.log(`Accepting backend log switch to: ${data.log_file}`);
               setSelectedLog(data.log_file);
               currentLogFileRef.current = data.log_file;
-              toast.info(`Switched to ${data.log_file}`, {
-                duration: 2000,
-                position: "top-right",
-              });
+              setInfo(`Switched to ${data.log_file}`);
             } else {
               console.log(
                 `Ignoring backend log switch - user manually selected ${selectedLog}`
@@ -269,10 +251,7 @@ function LogViewer() {
             }
           } else if (data.type === "error") {
             console.error("WebSocket error message:", data.message);
-            toast.error(data.message, {
-              duration: 3000,
-              position: "top-right",
-            });
+            setError(data.message);
           }
         } catch (error) {
           console.error("Error parsing WebSocket message:", error);
@@ -291,10 +270,7 @@ function LogViewer() {
         if (!event.wasClean) {
           setIsReconnecting(true);
 
-          toast.error("Live feed disconnected. Reconnecting...", {
-            duration: 2000,
-            position: "top-right",
-          });
+          setError("Live feed disconnected. Reconnecting...");
 
           reconnectTimeoutRef.current = setTimeout(() => {
             console.log(`🔄 Reconnecting to ${currentLogFileRef.current}...`);
@@ -339,10 +315,7 @@ function LogViewer() {
       );
       setSelectedLog(location.state.logFile);
 
-      toast.success(`Switched to ${location.state.logFile}`, {
-        duration: 2000,
-        position: "top-right",
-      });
+      setSuccess(`Switched to ${location.state.logFile}`);
     }
   }, [location.state?.logFile]);
 
@@ -380,10 +353,7 @@ function LogViewer() {
 
   const clearLogs = () => {
     setLogs([]);
-    toast.success("Logs cleared", {
-      duration: 2000,
-      position: "top-right",
-    });
+    setSuccess("Logs cleared");
   };
 
   const downloadLogs = async () => {
@@ -405,16 +375,10 @@ function LogViewer() {
       a.click();
       URL.revokeObjectURL(url);
 
-      toast.success("Log file downloaded", {
-        duration: 2000,
-        position: "top-right",
-      });
+      setSuccess("Log file downloaded");
     } catch (error) {
       console.error("Error downloading complete log file:", error);
-      toast.error("Failed to download log file", {
-        duration: 3000,
-        position: "top-right",
-      });
+      setError("Failed to download log file");
     }
   };
 
@@ -448,7 +412,28 @@ function LogViewer() {
 
   return (
     <div className="space-y-6">
-      <Toaster />
+      {/* Notification */}
+      {error && (
+        <Notification
+          type="error"
+          message={error}
+          onClose={() => setError(null)}
+        />
+      )}
+      {success && (
+        <Notification
+          type="success"
+          message={success}
+          onClose={() => setSuccess(null)}
+        />
+      )}
+      {info && (
+        <Notification
+          type="info"
+          message={info}
+          onClose={() => setInfo(null)}
+        />
+      )}
 
       {/* Header */}
       <div className="flex items-center justify-between">

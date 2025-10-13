@@ -7,8 +7,9 @@ import {
   Search,
   ChevronDown,
 } from "lucide-react";
-import toast, { Toaster } from "react-hot-toast";
 import CompactImageSizeSlider from "./CompactImageSizeSlider";
+import Notification from "./Notification";
+import ConfirmDialog from "./ConfirmDialog";
 
 const API_URL = "/api";
 
@@ -19,8 +20,10 @@ function BackgroundsGallery() {
   const [loading, setLoading] = useState(true);
   const [imagesLoading, setImagesLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
   const [deletingImage, setDeletingImage] = useState(null);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [displayCount, setDisplayCount] = useState(50);
   const [itemsPerPage, setItemsPerPage] = useState(() => {
@@ -51,7 +54,7 @@ function BackgroundsGallery() {
     return classes[size] || classes[5];
   };
 
-  const fetchFolders = async (showToast = false) => {
+  const fetchFolders = async (showNotification = false) => {
     try {
       const response = await fetch(`${API_URL}/assets-folders`);
       if (!response.ok) {
@@ -60,11 +63,8 @@ function BackgroundsGallery() {
       const data = await response.json();
       setFolders(data.folders || []);
 
-      if (showToast && data.folders && data.folders.length > 0) {
-        toast.success(`Found: ${data.folders.length} folders`, {
-          duration: 2000,
-          position: "top-right",
-        });
+      if (showNotification && data.folders && data.folders.length > 0) {
+        setSuccess(`Found: ${data.folders.length} folders`);
       }
 
       if (data.folders && data.folders.length > 0 && !activeFolder) {
@@ -77,17 +77,13 @@ function BackgroundsGallery() {
       }
     } catch (error) {
       console.error("Error fetching folders:", error);
-      setError(error.message);
-      toast.error("Failed to load folders", {
-        duration: 4000,
-        position: "top-right",
-      });
+      setError(error.message || "Failed to load folders");
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchFolderImages = async (folder, showToast = false) => {
+  const fetchFolderImages = async (folder, showNotification = false) => {
     if (!folder) return;
 
     setImagesLoading(true);
@@ -101,23 +97,15 @@ function BackgroundsGallery() {
       const data = await response.json();
       setImages(data.images || []);
 
-      if (showToast && data.images && data.images.length > 0) {
-        toast.success(
-          `Loaded ${data.images.length} backgrounds from ${folder.name}`,
-          {
-            duration: 2000,
-            position: "top-right",
-          }
+      if (showNotification && data.images && data.images.length > 0) {
+        setSuccess(
+          `Loaded ${data.images.length} backgrounds from ${folder.name}`
         );
       }
     } catch (error) {
       console.error("Error fetching images:", error);
-      setError(error.message);
+      setError(error.message || `Failed to load images from ${folder.name}`);
       setImages([]);
-      toast.error(`Failed to load images from ${folder.name}`, {
-        duration: 4000,
-        position: "top-right",
-      });
     } finally {
       setImagesLoading(false);
     }
@@ -136,10 +124,6 @@ function BackgroundsGallery() {
       event.stopPropagation();
     }
 
-    if (!window.confirm(`Do you really want to delete  "${imageName}"?`)) {
-      return;
-    }
-
     setDeletingImage(imagePath);
     try {
       const response = await fetch(`${API_URL}/backgrounds/${imagePath}`, {
@@ -154,10 +138,7 @@ function BackgroundsGallery() {
       const data = await response.json();
 
       if (data.success) {
-        toast.success(`Background "${imageName}" deleted successfully`, {
-          duration: 3000,
-          position: "top-right",
-        });
+        setSuccess(`Background "${imageName}" deleted successfully`);
 
         setImages(images.filter((img) => img.path !== imagePath));
 
@@ -171,10 +152,7 @@ function BackgroundsGallery() {
       }
     } catch (error) {
       console.error("Error deleting background:", error);
-      toast.error(`Error while deleting: ${error.message}`, {
-        duration: 5000,
-        position: "top-right",
-      });
+      setError(`Error while deleting: ${error.message}`);
     } finally {
       setDeletingImage(null);
     }
@@ -219,7 +197,21 @@ function BackgroundsGallery() {
 
   return (
     <div className="space-y-6">
-      <Toaster />
+      {/* Notifications */}
+      {error && (
+        <Notification
+          type="error"
+          message={error}
+          onClose={() => setError(null)}
+        />
+      )}
+      {success && (
+        <Notification
+          type="success"
+          message={success}
+          onClose={() => setSuccess(null)}
+        />
+      )}
 
       {/* Header */}
       <div>
@@ -392,7 +384,10 @@ function BackgroundsGallery() {
                 className="group relative bg-theme-card rounded-xl overflow-hidden border-2 border-theme-primary/30 hover:border-theme-primary transition-all duration-300 shadow-lg hover:shadow-2xl hover:scale-105"
               >
                 <button
-                  onClick={(e) => deleteBackground(image.path, image.name, e)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDeleteConfirm({ path: image.path, name: image.name });
+                  }}
                   disabled={deletingImage === image.path}
                   className={`absolute top-3 right-3 z-10 p-2.5 rounded-lg transition-all shadow-lg ${
                     deletingImage === image.path
@@ -562,6 +557,22 @@ function BackgroundsGallery() {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={deleteConfirm !== null}
+        onClose={() => setDeleteConfirm(null)}
+        onConfirm={() => {
+          if (deleteConfirm) {
+            deleteBackground(deleteConfirm.path, deleteConfirm.name);
+          }
+        }}
+        title="Delete Background"
+        message="Are you sure you want to delete this background?"
+        itemName={deleteConfirm?.name}
+        confirmText="Delete"
+        type="danger"
+      />
     </div>
   );
 }

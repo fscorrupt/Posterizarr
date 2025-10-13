@@ -22,7 +22,8 @@ import {
   X,
   ExternalLink,
 } from "lucide-react";
-import toast, { Toaster } from "react-hot-toast";
+import Notification from "./Notification";
+import ConfirmDialog from "./ConfirmDialog";
 import DangerZone from "./DangerZone";
 
 const API_URL = "/api";
@@ -48,7 +49,7 @@ const getLogFileForMode = (mode) => {
 // TMDB POSTER SEARCH MODAL - Defined OUTSIDE component to prevent re-renders
 // ============================================================================
 const TMDBPosterSearchModal = React.memo(
-  ({ tmdbSearch, setTmdbSearch, manualForm, setManualForm }) => {
+  ({ tmdbSearch, setTmdbSearch, manualForm, setManualForm, setSuccess }) => {
     const scrollRef = React.useRef(null);
     const [localDisplayedCount, setLocalDisplayedCount] = React.useState(10);
 
@@ -84,10 +85,7 @@ const TMDBPosterSearchModal = React.memo(
         episodeNumber: "",
         displayedCount: 10,
       });
-      toast.success("Poster URL set! 🎨", {
-        duration: 2000,
-        position: "top-right",
-      });
+      setSuccess("Poster URL set! 🎨");
     };
 
     if (!tmdbSearch.showModal) return null;
@@ -204,6 +202,9 @@ const TMDBPosterSearchModal = React.memo(
 function RunModes() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+  const [resetConfirm, setResetConfirm] = useState(false);
   const [status, setStatus] = useState({
     running: false,
     current_mode: null,
@@ -268,10 +269,7 @@ function RunModes() {
 
   const runScript = async (mode) => {
     if (status.running) {
-      toast.error("Script is already running! Please stop it first.", {
-        duration: 4000,
-        position: "top-right",
-      });
+      setError("Script is already running! Please stop it first.");
       return;
     }
 
@@ -284,10 +282,7 @@ function RunModes() {
       const data = await response.json();
 
       if (data.success) {
-        toast.success(`Started in ${mode} mode`, {
-          duration: 3000,
-          position: "top-right",
-        });
+        setSuccess(`Started in ${mode} mode`);
         fetchStatus();
 
         // ✨ Weiterleitung zum LogViewer mit der richtigen Log-Datei
@@ -298,16 +293,10 @@ function RunModes() {
           navigate("/logs", { state: { logFile: logFile } });
         }, 500);
       } else {
-        toast.error(`Error: ${data.message}`, {
-          duration: 5000,
-          position: "top-right",
-        });
+        setError(`Error: ${data.message}`);
       }
     } catch (error) {
-      toast.error(`Error: ${error.message}`, {
-        duration: 5000,
-        position: "top-right",
-      });
+      setError(`Error: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -315,36 +304,24 @@ function RunModes() {
 
   const runManualMode = async () => {
     if (status.running) {
-      toast.error("Script is already running! Please stop it first.", {
-        duration: 4000,
-        position: "top-right",
-      });
+      setError("Script is already running! Please stop it first.");
       return;
     }
 
     // Validation
     if (!manualForm.picturePath.trim()) {
-      toast.error("Picture Path is required!", {
-        duration: 3000,
-        position: "top-right",
-      });
+      setError("Picture Path is required!");
       return;
     }
 
     // Title text is only required for non-titlecard types
     if (manualForm.posterType !== "titlecard" && !manualForm.titletext.trim()) {
-      toast.error("Title Text is required!", {
-        duration: 3000,
-        position: "top-right",
-      });
+      setError("Title Text is required!");
       return;
     }
 
     if (!manualForm.folderName.trim()) {
-      toast.error("Folder Name is required!", {
-        duration: 3000,
-        position: "top-right",
-      });
+      setError("Folder Name is required!");
       return;
     }
 
@@ -352,10 +329,7 @@ function RunModes() {
       manualForm.posterType !== "collection" &&
       !manualForm.libraryName.trim()
     ) {
-      toast.error("Library Name is required!", {
-        duration: 3000,
-        position: "top-right",
-      });
+      setError("Library Name is required!");
       return;
     }
 
@@ -363,34 +337,22 @@ function RunModes() {
       manualForm.posterType === "season" &&
       !manualForm.seasonPosterName.trim()
     ) {
-      toast.error("Season Poster Name is required for season posters!", {
-        duration: 3000,
-        position: "top-right",
-      });
+      setError("Season Poster Name is required for season posters!");
       return;
     }
 
     // Title card validation
     if (manualForm.posterType === "titlecard") {
       if (!manualForm.epTitleName.trim()) {
-        toast.error("Episode Title is required for title cards!", {
-          duration: 3000,
-          position: "top-right",
-        });
+        setError("Episode Title is required for title cards!");
         return;
       }
       if (!manualForm.seasonPosterName.trim()) {
-        toast.error("Season Name is required for title cards!", {
-          duration: 3000,
-          position: "top-right",
-        });
+        setError("Season Name is required for title cards!");
         return;
       }
       if (!manualForm.episodeNumber.trim()) {
-        toast.error("Episode Number is required for title cards!", {
-          duration: 3000,
-          position: "top-right",
-        });
+        setError("Episode Number is required for title cards!");
         return;
       }
     }
@@ -408,10 +370,7 @@ function RunModes() {
       const data = await response.json();
 
       if (data.success) {
-        toast.success("Manual mode started successfully!", {
-          duration: 3000,
-          position: "top-right",
-        });
+        setSuccess("Manual mode started successfully!");
         // Reset form
         setManualForm({
           picturePath: "",
@@ -431,16 +390,10 @@ function RunModes() {
           navigate("/logs", { state: { logFile: "Manuallog.log" } });
         }, 500);
       } else {
-        toast.error(`Error: ${data.message}`, {
-          duration: 5000,
-          position: "top-right",
-        });
+        setError(`Error: ${data.message}`);
       }
     } catch (error) {
-      toast.error(`Error: ${error.message}`, {
-        duration: 5000,
-        position: "top-right",
-      });
+      setError(`Error: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -448,31 +401,22 @@ function RunModes() {
 
   const resetPosters = async () => {
     if (status.running) {
-      toast.error(
-        "Cannot reset posters while script is running. Please stop it first.",
-        {
-          duration: 4000,
-          position: "top-right",
-        }
+      setError(
+        "Cannot reset posters while script is running. Please stop it first."
       );
       return;
     }
 
     if (!resetLibrary.trim()) {
-      toast.error("Library name is required!", {
-        duration: 3000,
-        position: "top-right",
-      });
+      setError("Library name is required!");
       return;
     }
 
-    if (
-      !window.confirm(
-        `Are you sure you want to reset ALL posters in "${resetLibrary}"? This action CANNOT be undone!\n\nAre you absolutely sure?`
-      )
-    ) {
-      return;
-    }
+    setResetConfirm(true);
+  };
+
+  const handleResetConfirm = async () => {
+    setResetConfirm(false);
 
     setLoading(true);
     try {
@@ -487,22 +431,13 @@ function RunModes() {
       const data = await response.json();
 
       if (data.success) {
-        toast.success(data.message, {
-          duration: 4000,
-          position: "top-right",
-        });
+        setSuccess(data.message);
         setResetLibrary("");
       } else {
-        toast.error(`Error: ${data.message}`, {
-          duration: 5000,
-          position: "top-right",
-        });
+        setError(`Error: ${data.message}`);
       }
     } catch (error) {
-      toast.error(`Error: ${error.message}`, {
-        duration: 5000,
-        position: "top-right",
-      });
+      setError(`Error: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -515,22 +450,13 @@ function RunModes() {
       const data = await response.json();
 
       if (data.success) {
-        toast.success("Script stopped", {
-          duration: 3000,
-          position: "top-right",
-        });
+        setSuccess("Script stopped");
         fetchStatus();
       } else {
-        toast.error(`Error: ${data.message}`, {
-          duration: 3000,
-          position: "top-right",
-        });
+        setError(`Error: ${data.message}`);
       }
     } catch (error) {
-      toast.error(`Error: ${error.message}`, {
-        duration: 3000,
-        position: "top-right",
-      });
+      setError(`Error: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -541,36 +467,24 @@ function RunModes() {
   // ============================================================================
   const searchTMDBPosters = async () => {
     if (!tmdbSearch.query.trim()) {
-      toast.error("Please enter a title or TMDB ID!", {
-        duration: 3000,
-        position: "top-right",
-      });
+      setError("Please enter a title or TMDB ID!");
       return;
     }
 
     // Validation for Season Poster
     if (manualForm.posterType === "season" && !tmdbSearch.seasonNumber) {
-      toast.error("Please enter a season number!", {
-        duration: 3000,
-        position: "top-right",
-      });
+      setError("Please enter a season number!");
       return;
     }
 
     // Validation for Title Cards
     if (manualForm.posterType === "titlecard") {
       if (!tmdbSearch.seasonNumber) {
-        toast.error("Please enter a season number!", {
-          duration: 3000,
-          position: "top-right",
-        });
+        setError("Please enter a season number!");
         return;
       }
       if (!tmdbSearch.episodeNumber) {
-        toast.error("Please enter an episode number!", {
-          duration: 3000,
-          position: "top-right",
-        });
+        setError("Please enter an episode number!");
         return;
       }
     }
@@ -635,24 +549,14 @@ function RunModes() {
           } else if (manualForm.posterType === "titlecard") {
             message = `No images found for S${tmdbSearch.seasonNumber}E${tmdbSearch.episodeNumber}`;
           }
-          toast(message, {
-            duration: 3000,
-            position: "top-right",
-            icon: "ℹ️",
-          });
+          setError(message);
         }
       } else {
-        toast.error(`Error: ${data.message || "Failed to search TMDB"}`, {
-          duration: 5000,
-          position: "top-right",
-        });
+        setError(`Error: ${data.message || "Failed to search TMDB"}`);
         setTmdbSearch({ ...tmdbSearch, searching: false });
       }
     } catch (error) {
-      toast.error(`Error: ${error.message}`, {
-        duration: 5000,
-        position: "top-right",
-      });
+      setError(`Error: ${error.message}`);
       setTmdbSearch({ ...tmdbSearch, searching: false });
     }
   };
@@ -1017,7 +921,32 @@ function RunModes() {
 
   return (
     <div className="space-y-6">
-      <Toaster />
+      {/* Notification */}
+      {error && (
+        <Notification
+          type="error"
+          message={error}
+          onClose={() => setError(null)}
+        />
+      )}
+      {success && (
+        <Notification
+          type="success"
+          message={success}
+          onClose={() => setSuccess(null)}
+        />
+      )}
+
+      {/* Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={resetConfirm}
+        onClose={() => setResetConfirm(false)}
+        onConfirm={handleResetConfirm}
+        title="Reset Posters"
+        message={`Are you sure you want to reset ALL posters in "${resetLibrary}"? This action CANNOT be undone!\n\nAre you absolutely sure?`}
+        type="danger"
+      />
+
       <JellyfinSyncModal />
       <EmbySyncModal />
 
@@ -1027,6 +956,7 @@ function RunModes() {
         setTmdbSearch={setTmdbSearch}
         manualForm={manualForm}
         setManualForm={setManualForm}
+        setSuccess={setSuccess}
       />
 
       {/* Header */}

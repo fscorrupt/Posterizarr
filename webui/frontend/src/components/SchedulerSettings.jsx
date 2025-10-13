@@ -13,7 +13,8 @@ import {
   Settings,
   Zap,
 } from "lucide-react";
-import toast, { Toaster } from "react-hot-toast";
+import Notification from "./Notification";
+import ConfirmDialog from "./ConfirmDialog";
 
 const API_URL = "/api";
 
@@ -26,6 +27,9 @@ const SchedulerSettings = () => {
   const [newDescription, setNewDescription] = useState("");
   const [timezone, setTimezone] = useState("Europe/Berlin");
   const [isUpdating, setIsUpdating] = useState(false);
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
+  const [clearAllConfirm, setClearAllConfirm] = useState(false);
 
   // Common timezones
   const timezones = [
@@ -67,10 +71,7 @@ const SchedulerSettings = () => {
       }
     } catch (error) {
       console.error("Error fetching scheduler data:", error);
-      toast.error("Failed to load scheduler data", {
-        duration: 4000,
-        position: "top-right",
-      });
+      setError("Failed to load scheduler data");
     } finally {
       setLoading(false);
     }
@@ -89,23 +90,14 @@ const SchedulerSettings = () => {
       const data = await response.json();
 
       if (data.success) {
-        toast.success(`Scheduler ${config.enabled ? "disabled" : "enabled"}`, {
-          duration: 3000,
-          position: "top-right",
-        });
+        setSuccess(`Scheduler ${config.enabled ? "disabled" : "enabled"}`);
         await fetchSchedulerData();
       } else {
-        toast.error(data.detail || "Failed to update scheduler", {
-          duration: 4000,
-          position: "top-right",
-        });
+        setError(data.detail || "Failed to update scheduler");
       }
     } catch (error) {
       console.error("Error toggling scheduler:", error);
-      toast.error("Failed to update scheduler", {
-        duration: 4000,
-        position: "top-right",
-      });
+      setError("Failed to update scheduler");
     } finally {
       setIsUpdating(false);
     }
@@ -115,10 +107,7 @@ const SchedulerSettings = () => {
     e.preventDefault();
 
     if (!newTime) {
-      toast.error("Please enter a time", {
-        duration: 3000,
-        position: "top-right",
-      });
+      setError("Please enter a time");
       return;
     }
 
@@ -138,26 +127,17 @@ const SchedulerSettings = () => {
       const data = await response.json();
 
       if (data.success) {
-        toast.success("Schedule added", {
-          duration: 3000,
-          position: "top-right",
-        });
+        setSuccess("Schedule added");
         setNewTime("");
         setNewDescription("");
         await new Promise((resolve) => setTimeout(resolve, 500));
         await fetchSchedulerData();
       } else {
-        toast.error(data.detail || "Failed to add schedule", {
-          duration: 4000,
-          position: "top-right",
-        });
+        setError(data.detail || "Failed to add schedule");
       }
     } catch (error) {
       console.error("Error adding schedule:", error);
-      toast.error("Failed to add schedule", {
-        duration: 4000,
-        position: "top-right",
-      });
+      setError("Failed to add schedule");
     } finally {
       setIsUpdating(false);
     }
@@ -175,37 +155,26 @@ const SchedulerSettings = () => {
       const data = await response.json();
 
       if (data.success) {
-        toast.success("Schedule removed", {
-          duration: 3000,
-          position: "top-right",
-        });
+        setSuccess("Schedule removed");
         await new Promise((resolve) => setTimeout(resolve, 500));
         await fetchSchedulerData();
       } else {
-        toast.error(data.detail || "Failed to remove schedule", {
-          duration: 4000,
-          position: "top-right",
-        });
+        setError(data.detail || "Failed to remove schedule");
       }
     } catch (error) {
       console.error("Error removing schedule:", error);
-      toast.error("Failed to remove schedule", {
-        duration: 4000,
-        position: "top-right",
-      });
+      setError("Failed to remove schedule");
     } finally {
       setIsUpdating(false);
     }
   };
 
   const clearAllSchedules = async () => {
-    if (
-      !window.confirm(
-        "Are you sure you want to clear all schedules? This cannot be undone."
-      )
-    ) {
-      return;
-    }
+    setClearAllConfirm(true);
+  };
+
+  const handleClearAllConfirm = async () => {
+    setClearAllConfirm(false);
 
     if (isUpdating) return;
     setIsUpdating(true);
@@ -218,24 +187,15 @@ const SchedulerSettings = () => {
       const data = await response.json();
 
       if (data.success) {
-        toast.success("All schedules cleared", {
-          duration: 3000,
-          position: "top-right",
-        });
+        setSuccess("All schedules cleared");
         await new Promise((resolve) => setTimeout(resolve, 500));
         await fetchSchedulerData();
       } else {
-        toast.error(data.detail || "Failed to clear schedules", {
-          duration: 4000,
-          position: "top-right",
-        });
+        setError(data.detail || "Failed to clear schedules");
       }
     } catch (error) {
       console.error("Error clearing schedules:", error);
-      toast.error("Failed to clear schedules", {
-        duration: 4000,
-        position: "top-right",
-      });
+      setError("Failed to clear schedules");
     } finally {
       setIsUpdating(false);
     }
@@ -255,25 +215,16 @@ const SchedulerSettings = () => {
       const data = await response.json();
 
       if (data.success) {
-        toast.success("Timezone updated", {
-          duration: 3000,
-          position: "top-right",
-        });
+        setSuccess("Timezone updated");
         setTimezone(newTimezone);
         await new Promise((resolve) => setTimeout(resolve, 500));
         await fetchSchedulerData();
       } else {
-        toast.error(data.detail || "Failed to update timezone", {
-          duration: 4000,
-          position: "top-right",
-        });
+        setError(data.detail || "Failed to update timezone");
       }
     } catch (error) {
       console.error("Error updating timezone:", error);
-      toast.error("Failed to update timezone", {
-        duration: 4000,
-        position: "top-right",
-      });
+      setError("Failed to update timezone");
     } finally {
       setIsUpdating(false);
     }
@@ -293,26 +244,16 @@ const SchedulerSettings = () => {
       const data = await response.json();
 
       if (data.success) {
-        toast.success(
-          value ? "Will skip if already running" : "Will allow concurrent runs",
-          {
-            duration: 3000,
-            position: "top-right",
-          }
+        setSuccess(
+          value ? "Will skip if already running" : "Will allow concurrent runs"
         );
         await fetchSchedulerData();
       } else {
-        toast.error(data.detail || "Failed to update configuration", {
-          duration: 4000,
-          position: "top-right",
-        });
+        setError(data.detail || "Failed to update configuration");
       }
     } catch (error) {
       console.error("Error updating config:", error);
-      toast.error("Failed to update configuration", {
-        duration: 4000,
-        position: "top-right",
-      });
+      setError("Failed to update configuration");
     } finally {
       setIsUpdating(false);
     }
@@ -343,10 +284,7 @@ const SchedulerSettings = () => {
 
       if (data.success) {
         console.log("✅ Success! Showing toast and navigating...");
-        toast.success("Manual run triggered", {
-          duration: 3000,
-          position: "top-right",
-        });
+        setSuccess("Manual run triggered");
 
         // Update status
         fetchSchedulerData();
@@ -362,17 +300,11 @@ const SchedulerSettings = () => {
         }, 1200);
       } else {
         console.log("❌ Request failed:", data.detail);
-        toast.error(data.detail || "Failed to trigger run", {
-          duration: 4000,
-          position: "top-right",
-        });
+        setError(data.detail || "Failed to trigger run");
       }
     } catch (error) {
       console.error("💥 Error in triggerNow:", error);
-      toast.error("Failed to trigger run", {
-        duration: 4000,
-        position: "top-right",
-      });
+      setError("Failed to trigger run");
     } finally {
       console.log("🏁 Finally block - setting isUpdating to false");
       setIsUpdating(false);
@@ -391,24 +323,15 @@ const SchedulerSettings = () => {
       const data = await response.json();
 
       if (data.success) {
-        toast.success("Scheduler restarted", {
-          duration: 3000,
-          position: "top-right",
-        });
+        setSuccess("Scheduler restarted");
         await new Promise((resolve) => setTimeout(resolve, 500));
         await fetchSchedulerData();
       } else {
-        toast.error(data.detail || "Failed to restart scheduler", {
-          duration: 4000,
-          position: "top-right",
-        });
+        setError(data.detail || "Failed to restart scheduler");
       }
     } catch (error) {
       console.error("Error restarting scheduler:", error);
-      toast.error("Failed to restart scheduler", {
-        duration: 4000,
-        position: "top-right",
-      });
+      setError("Failed to restart scheduler");
     } finally {
       setIsUpdating(false);
     }
@@ -436,7 +359,31 @@ const SchedulerSettings = () => {
 
   return (
     <div className="space-y-6">
-      <Toaster />
+      {/* Notification */}
+      {error && (
+        <Notification
+          type="error"
+          message={error}
+          onClose={() => setError(null)}
+        />
+      )}
+      {success && (
+        <Notification
+          type="success"
+          message={success}
+          onClose={() => setSuccess(null)}
+        />
+      )}
+
+      {/* Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={clearAllConfirm}
+        onClose={() => setClearAllConfirm(false)}
+        onConfirm={handleClearAllConfirm}
+        title="Clear All Schedules"
+        message="Are you sure you want to clear all schedules? This cannot be undone."
+        type="danger"
+      />
 
       {/* Header */}
       <div className="flex items-center justify-between">

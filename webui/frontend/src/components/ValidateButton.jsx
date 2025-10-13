@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
-import toast from "react-hot-toast";
 
 const API_URL = "/api";
 
@@ -9,6 +8,8 @@ const ValidateButton = ({
   config,
   label = "Validate",
   className = "",
+  onSuccess,
+  onError,
 }) => {
   const [validating, setValidating] = useState(false);
   const [lastResult, setLastResult] = useState(null);
@@ -98,25 +99,16 @@ const ValidateButton = ({
       const result = await response.json();
       setLastResult(result);
 
-      // Toast-Benachrichtigung
+      // Callback notifications
       if (result.valid) {
-        toast.success(result.message, {
-          duration: 4000,
-          position: "top-right",
-        });
+        if (onSuccess) onSuccess(result.message);
       } else {
-        toast.error(result.message, {
-          duration: 5000,
-          position: "top-right",
-        });
+        if (onError) onError(result.message);
       }
     } catch (error) {
       const errorMessage = `Validation failed: ${error.message}`;
       setLastResult({ valid: false, message: errorMessage });
-      toast.error(errorMessage, {
-        duration: 5000,
-        position: "top-right",
-      });
+      if (onError) onError(errorMessage);
     } finally {
       setValidating(false);
     }
