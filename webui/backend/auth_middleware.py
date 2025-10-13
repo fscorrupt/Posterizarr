@@ -28,11 +28,11 @@ if not auth_logger.handlers:
             LOGS_DIR = Path(__file__).parent.parent.parent / "UILogs"
 
         LOGS_DIR.mkdir(exist_ok=True)
-        auth_log_path = LOGS_DIR / "Auth.log"
+        auth_log_path = LOGS_DIR / "AuthServer.log"
 
         if auth_log_path.exists():
             auth_log_path.unlink()
-            logger.info(f"🗑️  Cleared old Auth.log")
+            logger.info(f"🗑️  Cleared old AuthServer.log")
 
         auth_handler = logging.FileHandler(auth_log_path, encoding="utf-8", mode="w")
         auth_handler.setFormatter(
@@ -136,6 +136,19 @@ class BasicAuthMiddleware(BaseHTTPMiddleware):
         if request.url.path == "/api/auth/check":
             return await call_next(request)
 
+        # Allow root path (/) to load index.html - MUST BE FIRST
+        if request.url.path == "/" or request.url.path == "/index.html":
+            return await call_next(request)
+
+        #  Allow ALL paths that might be React Router routes (no file extension)
+        # This ensures React Router can handle /config, /logs, etc.
+        # Only block if it looks like an API call
+        if (
+            not request.url.path.startswith("/api/")
+            and "." not in request.url.path.split("/")[-1]
+        ):
+            return await call_next(request)
+
         #  Allow frontend static files (HTML, JS, CSS) so login screen can load
         # The frontend will show the login screen if auth is required
         frontend_static_extensions = [
@@ -146,15 +159,13 @@ class BasicAuthMiddleware(BaseHTTPMiddleware):
             ".ico",
             ".svg",
             ".png",
+            ".jpg",
+            ".jpeg",
             ".woff",
             ".woff2",
             ".ttf",
         ]
         if any(request.url.path.endswith(ext) for ext in frontend_static_extensions):
-            return await call_next(request)
-
-        # Allow root path (/) to load index.html
-        if request.url.path == "/" or request.url.path == "/index.html":
             return await call_next(request)
 
         #  Allow static asset paths (images, posters, etc.)

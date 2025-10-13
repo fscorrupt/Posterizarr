@@ -70,9 +70,9 @@ RUNNING_FILE = TEMP_DIR / "Posterizarr.Running"
 # Setup logging
 logging.basicConfig(
     level=logging.INFO,
-    filename=UI_LOGS_DIR / 'backend.log', # Main log file
-    filemode='a', # Append to the log file
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    filename=UI_LOGS_DIR / "BackendServer.log",  # Main backend server log file
+    filemode="a",  # Append to the log file
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logging.getLogger("httpx").setLevel(logging.INFO)
 logger = logging.getLogger(__name__)
@@ -84,19 +84,20 @@ if not CONFIG_PATH.exists() and CONFIG_EXAMPLE_PATH.exists():
     logger.warning(f"config.json not found, using config.example.json as fallback")
     CONFIG_PATH = CONFIG_EXAMPLE_PATH
 
+
 def setup_backend_ui_logger():
-    """Setup backend logger to also write to UIlog.log"""
+    """Setup backend logger to also write to FrontendUI.log"""
     try:
         # Create UILogs directory if not exists
         UI_LOGS_DIR.mkdir(exist_ok=True)
 
         # CLEANUP: Delete old log files on startup
-        backend_log_path = UI_LOGS_DIR / "UIlog.log"
+        backend_log_path = UI_LOGS_DIR / "FrontendUI.log"
         if backend_log_path.exists():
             backend_log_path.unlink()
-            logger.info(f"🗑️  Cleared old UIlog.log")
+            logger.info(f"🗑️  Cleared old FrontendUI.log")
 
-        # Create File Handler for UIlog.log
+        # Create File Handler for FrontendUI.log
         backend_ui_handler = logging.FileHandler(
             backend_log_path, encoding="utf-8", mode="w"
         )
@@ -112,10 +113,11 @@ def setup_backend_ui_logger():
         logging.getLogger().addHandler(backend_ui_handler)
 
         logger.info(f"✅ Backend logger initialized: {backend_log_path}")
-        logger.info("Backend logging to UIlog.log enabled")
+        logger.info("Backend logging to FrontendUI.log enabled")
 
     except Exception as e:
         logger.warning(f"⚠️  Could not initialize backend UI logger: {e}")
+
 
 # Initialize Backend UI Logger on startup
 setup_backend_ui_logger()
@@ -2043,10 +2045,10 @@ def get_last_log_lines(count=25, mode=None, log_file=None):
 @app.post("/api/logs/ui")
 async def receive_ui_log(log_entry: UILogEntry):
     """
-    Receives UI/Frontend logs and writes them to UIlog.log
+    Receives UI/Frontend logs and writes them to FrontendUI.log
     """
     try:
-        ui_log_path = UI_LOGS_DIR / "UIlog.log"
+        ui_log_path = UI_LOGS_DIR / "FrontendUI.log"
 
         # Create log entry in the same format as backend logs
         timestamp = log_entry.timestamp
@@ -2054,10 +2056,10 @@ async def receive_ui_log(log_entry: UILogEntry):
         message = log_entry.message
         source = log_entry.source if log_entry.source else "UI"
 
-        # Format: [TIMESTAMP] [LEVEL] |L.0| MESSAGE
+        # Format: [TIMESTAMP] [LEVEL] |UI| MESSAGE
         log_line = f"[{timestamp}] [{level:8}] |UI| {message}\n"
 
-        # Write into UIlog.log
+        # Write into FrontendUI.log
         with open(ui_log_path, "a", encoding="utf-8") as f:
             f.write(log_line)
 
@@ -2074,7 +2076,7 @@ async def receive_ui_logs_batch(batch: UILogBatch):
     Receives multiple UI logs at once (better performance)
     """
     try:
-        ui_log_path = UI_LOGS_DIR / "UIlog.log"
+        ui_log_path = UI_LOGS_DIR / "FrontendUI.log"
 
         log_lines = []
         for log_entry in batch.logs:
@@ -3431,24 +3433,47 @@ async def force_kill_script():
 
 @app.get("/api/logs")
 async def get_logs():
-    """Get available log files"""
-    if not LOGS_DIR.exists():
-        return {"logs": []}
-
+    """Get available log files from both Logs and UILogs directories"""
     log_files = []
-    for log_file in LOGS_DIR.glob("*.log"):
-        stat = log_file.stat()
-        log_files.append(
-            {"name": log_file.name, "size": stat.st_size, "modified": stat.st_mtime}
-        )
+
+    # Get logs from main Logs directory
+    if LOGS_DIR.exists():
+        for log_file in LOGS_DIR.glob("*.log"):
+            stat = log_file.stat()
+            log_files.append(
+                {
+                    "name": log_file.name,
+                    "size": stat.st_size,
+                    "modified": stat.st_mtime,
+                    "directory": "Logs",
+                }
+            )
+
+    # Get logs from UILogs directory
+    if UI_LOGS_DIR.exists():
+        for log_file in UI_LOGS_DIR.glob("*.log"):
+            stat = log_file.stat()
+            log_files.append(
+                {
+                    "name": log_file.name,
+                    "size": stat.st_size,
+                    "modified": stat.st_mtime,
+                    "directory": "UILogs",
+                }
+            )
 
     return {"logs": sorted(log_files, key=lambda x: x["modified"], reverse=True)}
 
 
 @app.get("/api/logs/{log_name}")
 async def get_log_content(log_name: str, tail: int = 100):
-    """Get log file content"""
+    """Get log file content from either Logs or UILogs directory"""
+    # Try Logs directory first
     log_path = LOGS_DIR / log_name
+
+    # If not found, try UILogs directory
+    if not log_path.exists():
+        log_path = UI_LOGS_DIR / log_name
 
     if not log_path.exists():
         raise HTTPException(status_code=404, detail="Log file not found")
@@ -3477,8 +3502,10 @@ async def websocket_logs(
     await websocket.accept()
     logger.info(f"WebSocket connection established for log: {log_file}")
 
-    # Determine which log file to monitor
+    # Determine which log file to monitor - check both directories
     log_path = LOGS_DIR / log_file
+    if not log_path.exists():
+        log_path = UI_LOGS_DIR / log_file
 
     # Track if user explicitly requested a specific log file
     user_requested_log = log_file != "Scriptlog.log"  # User manually selected a log
@@ -3534,7 +3561,10 @@ async def websocket_logs(
                     )
 
                     current_log_file = new_log_file
+                    # Check both directories for the new log file
                     log_path = LOGS_DIR / new_log_file
+                    if not log_path.exists():
+                        log_path = UI_LOGS_DIR / new_log_file
                     last_position = log_path.stat().st_size if log_path.exists() else 0
 
                     # Notify client about log file change

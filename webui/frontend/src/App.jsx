@@ -31,18 +31,38 @@ import uiLogger from "./utils/uiLogger";
 
 function AppContent() {
   const { isCollapsed } = useSidebar();
-  const { isAuthenticated, loading, login } = useAuth();
+  const { isAuthenticated, loading, login, isAuthEnabled } = useAuth();
   const [showLoadingScreen, setShowLoadingScreen] = useState(false);
   const [hasLoggedIn, setHasLoggedIn] = useState(false);
+  const hasShownStartupScreen = React.useRef(false);
 
   useEffect(() => {
     console.log("✅ Posterizarr UI started - UI-Logger active");
-    console.info("📊 UI logs will be saved to UIlog.log");
+    console.info("📊 UI logs will be saved to FrontendUI.log");
 
     return () => {
       // uiLogger.destroy();
     };
   }, []);
+
+  // Show loading screen when authenticated without login (auth disabled on startup)
+  // This provides a smooth experience even when auth is not required
+  useEffect(() => {
+    if (
+      isAuthenticated &&
+      !hasLoggedIn &&
+      !loading &&
+      isAuthEnabled === false &&
+      !hasShownStartupScreen.current
+    ) {
+      // Auth is disabled, show loading screen briefly for smooth startup
+      hasShownStartupScreen.current = true;
+      setShowLoadingScreen(true);
+      setTimeout(() => {
+        setShowLoadingScreen(false);
+      }, 1500); // Shorter duration when no auth
+    }
+  }, [isAuthenticated, hasLoggedIn, loading, isAuthEnabled]);
 
   // Handle login success with loading screen
   const handleLoginSuccess = (credentials) => {
