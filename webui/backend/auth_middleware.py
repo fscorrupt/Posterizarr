@@ -43,10 +43,6 @@ if not auth_logger.handlers:
         )
         auth_logger.addHandler(auth_handler)
 
-        console_handler = logging.StreamHandler()
-        console_handler.setLevel(logging.INFO)
-        auth_logger.addHandler(console_handler)
-
         logger.info(f"✅ Auth logger initialized: {auth_log_path}")
 
     except Exception as e:
