@@ -192,8 +192,12 @@ function FolderView() {
 
   const getAssetAspectRatio = (assetName) => {
     const name = assetName.toLowerCase();
-    // Backgrounds and titlecards are horizontal (16:9)
-    if (name.includes("background") || name.includes("titlecard")) {
+    // Backgrounds and titlecards (SXXEXX pattern) are horizontal (16:9)
+    if (
+      name.includes("background") ||
+      name.includes("titlecard") ||
+      /s\d{2}e\d{2}/i.test(name)
+    ) {
       return "aspect-[16/9]";
     }
     // Posters and seasons are vertical (2:3)
