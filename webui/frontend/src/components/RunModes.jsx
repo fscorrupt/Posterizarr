@@ -320,15 +320,16 @@ function RunModes() {
       return;
     }
 
-    if (!manualForm.folderName.trim()) {
+    // Folder name is NOT required for collection posters
+    if (
+      manualForm.posterType !== "collection" &&
+      !manualForm.folderName.trim()
+    ) {
       setError("Folder Name is required!");
       return;
     }
 
-    if (
-      manualForm.posterType !== "collection" &&
-      !manualForm.libraryName.trim()
-    ) {
+    if (!manualForm.libraryName.trim()) {
       setError("Library Name is required!");
       return;
     }
@@ -359,12 +360,15 @@ function RunModes() {
 
     setLoading(true);
     try {
+      // Remove mediaTypeSelection from the request payload as it's only for UI
+      const { mediaTypeSelection, ...requestPayload } = manualForm;
+
       const response = await fetch(`${API_URL}/run-manual`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(manualForm),
+        body: JSON.stringify(requestPayload),
       });
 
       const data = await response.json();
@@ -1091,7 +1095,8 @@ function RunModes() {
               Manual Mode (Semi-Automated)
             </h2>
             <p className="text-sm text-theme-muted">
-              Create or replace posters manually with full control over search, source, and metadata.
+              Create or replace posters manually with full control over search,
+              source, and metadata.
             </p>
           </div>
         </div>

@@ -843,6 +843,23 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Posterizarr Web UI", lifespan=lifespan)
 
+# Add exception handler for validation errors
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Custom handler for validation errors with detailed logging"""
+    logger.error(f"Validation error for {request.method} {request.url}")
+    logger.error(f"Request body: {await request.body()}")
+    logger.error(f"Validation errors: {exc.errors()}")
+    return JSONResponse(
+        status_code=400,
+        content={"detail": exc.errors(), "body": str(exc.body)},
+    )
+
+
 # Basic Auth Middleware
 if AUTH_MIDDLEWARE_AVAILABLE:
     try:
@@ -878,6 +895,8 @@ class ResetPostersRequest(BaseModel):
 
 
 class ManualModeRequest(BaseModel):
+    model_config = {"extra": "ignore"}  # Ignore extra fields from frontend
+
     picturePath: str
     titletext: str
     folderName: str
@@ -3452,6 +3471,9 @@ async def run_manual_mode(request: ManualModeRequest):
     """Run manual mode with custom parameters"""
     global current_process, current_mode
 
+    # Debug logging
+    logger.info(f"Manual mode request received: {request.model_dump()}")
+
     # Check if already running
     if current_process and current_process.poll() is None:
         raise HTTPException(
@@ -3466,10 +3488,16 @@ async def run_manual_mode(request: ManualModeRequest):
     if not request.picturePath or not request.picturePath.strip():
         raise HTTPException(status_code=400, detail="Picture path is required")
 
-    if not request.titletext or not request.titletext.strip():
+    # Title text is NOT required for titlecards (they use epTitleName instead)
+    if request.posterType != "titlecard" and (
+        not request.titletext or not request.titletext.strip()
+    ):
         raise HTTPException(status_code=400, detail="Title text is required")
 
-    if not request.folderName or not request.folderName.strip():
+    # Folder name is NOT required for collection posters
+    if request.posterType != "collection" and (
+        not request.folderName or not request.folderName.strip()
+    ):
         raise HTTPException(status_code=400, detail="Folder name is required")
 
     if not request.libraryName or not request.libraryName.strip():
@@ -3550,6 +3578,8 @@ async def run_manual_mode(request: ManualModeRequest):
         command.extend(
             [
                 "-TitleCard",
+                "-Titletext",
+                request.epTitleName.strip(),  # Use episode title as the main title
                 "-FolderName",
                 request.folderName.strip(),
                 "-LibraryName",
