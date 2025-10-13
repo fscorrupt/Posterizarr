@@ -15,6 +15,8 @@ import json
 # ============================================================================
 # LOGGER SETUP
 # ============================================================================
+logger = logging.getLogger(__name__)
+
 auth_logger = logging.getLogger("posterizarr.auth")
 auth_logger.setLevel(logging.INFO)
 
@@ -30,7 +32,7 @@ if not auth_logger.handlers:
 
         if auth_log_path.exists():
             auth_log_path.unlink()
-            print(f"🗑️  Cleared old Auth.log")
+            logger.info(f"🗑️  Cleared old Auth.log")
 
         auth_handler = logging.FileHandler(auth_log_path, encoding="utf-8", mode="w")
         auth_handler.setFormatter(
@@ -45,10 +47,10 @@ if not auth_logger.handlers:
         console_handler.setLevel(logging.INFO)
         auth_logger.addHandler(console_handler)
 
-        print(f"✅ Auth logger initialized: {auth_log_path}")
+        logger.info(f"✅ Auth logger initialized: {auth_log_path}")
 
     except Exception as e:
-        print(f"⚠️ Could not initialize auth logger: {e}")
+        logger.warning(f"⚠️ Could not initialize auth logger: {e}")
 
 logger = auth_logger
 

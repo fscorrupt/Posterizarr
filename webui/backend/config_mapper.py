@@ -16,6 +16,8 @@ Usage in Backend:
     # Get tooltip for a config key
     tooltip = get_tooltip("tmdbtoken")
 """
+import logging
+logger = logging.getLogger(__name__)
 
 # Import tooltips from separate file
 try:
@@ -222,7 +224,7 @@ def remove_prefix_with_original_case(flat_key):
 
     # Fallback: try to infer the original key
     # This should rarely be needed if ORIGINAL_KEYS is complete
-    print(f"Warning: No mapping found for '{flat_key}', using fallback logic")
+    logger.warning(f"No mapping found for '{flat_key}', using fallback logic")
 
     # Try to find the prefix
     for prefix in [
@@ -829,7 +831,7 @@ def unflatten_config(flat_config):
 
         if not group_name:
             # Unknown key - try to determine group from prefix
-            print(f"Warning: Unknown config key '{key}' - skipping")
+            logger.warning(f"Unknown config key '{key}' - skipping")
             continue
 
         # Initialize group if it doesn't exist

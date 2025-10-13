@@ -28,16 +28,98 @@ import requests
 import threading
 from datetime import datetime
 import xml.etree.ElementTree as ET
-
-# Setup logging
-logging.basicConfig(level=logging.INFO)
-logging.getLogger("httpx").setLevel(logging.INFO)
-logger = logging.getLogger(__name__)
-
-# Import config mapper for flat/grouped transformations
 import sys
 
 sys.path.insert(0, str(Path(__file__).parent))
+
+# Check if running in Docker
+IS_DOCKER = (
+    os.path.exists("/.dockerenv")
+    or os.environ.get("DOCKER_ENV", "").lower() == "true"
+    or os.environ.get("POSTERIZARR_NON_ROOT", "").lower() == "true"
+)
+
+if IS_DOCKER:
+    BASE_DIR = Path("/config")
+    APP_DIR = Path("/app")
+    ASSETS_DIR = Path("/assets")
+    FRONTEND_DIR = Path("/app/frontend/dist")
+else:
+    # Local: webui/backend/main.py -> project root (3 levels up)
+    PROJECT_ROOT = Path(__file__).parent.parent.parent
+    BASE_DIR = PROJECT_ROOT
+    APP_DIR = PROJECT_ROOT
+    ASSETS_DIR = PROJECT_ROOT / "assets"
+    FRONTEND_DIR = PROJECT_ROOT / "webui" / "frontend" / "dist"
+    ASSETS_DIR.mkdir(exist_ok=True)
+    (BASE_DIR / "Logs").mkdir(exist_ok=True)
+    (BASE_DIR / "temp").mkdir(exist_ok=True)
+    (BASE_DIR / "test").mkdir(exist_ok=True)
+    (BASE_DIR / "UILogs").mkdir(exist_ok=True)
+
+CONFIG_PATH = BASE_DIR / "config.json"
+CONFIG_EXAMPLE_PATH = BASE_DIR / "config.example.json"
+SCRIPT_PATH = APP_DIR / "Posterizarr.ps1"
+LOGS_DIR = BASE_DIR / "Logs"
+TEST_DIR = BASE_DIR / "test"
+TEMP_DIR = BASE_DIR / "temp"
+UI_LOGS_DIR = BASE_DIR / "UILogs"
+OVERLAYFILES_DIR = BASE_DIR / "Overlayfiles"
+RUNNING_FILE = TEMP_DIR / "Posterizarr.Running"
+
+# Setup logging
+logging.basicConfig(
+    level=logging.INFO,
+    filename=UI_LOGS_DIR / 'backend.log', # Main log file
+    filemode='a', # Append to the log file
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logging.getLogger("httpx").setLevel(logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Create Overlayfiles directory if it doesn't exist
+OVERLAYFILES_DIR.mkdir(exist_ok=True)
+
+if not CONFIG_PATH.exists() and CONFIG_EXAMPLE_PATH.exists():
+    logger.warning(f"config.json not found, using config.example.json as fallback")
+    CONFIG_PATH = CONFIG_EXAMPLE_PATH
+
+def setup_backend_ui_logger():
+    """Setup backend logger to also write to UIlog.log"""
+    try:
+        # Create UILogs directory if not exists
+        UI_LOGS_DIR.mkdir(exist_ok=True)
+
+        # CLEANUP: Delete old log files on startup
+        backend_log_path = UI_LOGS_DIR / "UIlog.log"
+        if backend_log_path.exists():
+            backend_log_path.unlink()
+            logger.info(f"🗑️  Cleared old UIlog.log")
+
+        # Create File Handler for UIlog.log
+        backend_ui_handler = logging.FileHandler(
+            backend_log_path, encoding="utf-8", mode="w"
+        )
+        backend_ui_handler.setLevel(logging.DEBUG)  # All levels
+        backend_ui_handler.setFormatter(
+            logging.Formatter(
+                "[%(asctime)s] [%(levelname)-8s] |BACKEND| %(message)s",
+                datefmt="%Y-%m-%d %H:%M:%S",
+            )
+        )
+
+        # Add handler to root logger (so all backend logs are captured)
+        logging.getLogger().addHandler(backend_ui_handler)
+
+        logger.info(f"✅ Backend logger initialized: {backend_log_path}")
+        logger.info("Backend logging to UIlog.log enabled")
+
+    except Exception as e:
+        logger.warning(f"⚠️  Could not initialize backend UI logger: {e}")
+
+# Initialize Backend UI Logger on startup
+setup_backend_ui_logger()
+
 try:
     from config_mapper import (
         flatten_config,
@@ -79,88 +161,6 @@ try:
 except ImportError as e:
     AUTH_MIDDLEWARE_AVAILABLE = False
     logger.warning(f"Auth middleware not available: {e}. Basic Auth will be disabled.")
-
-# Check if running in Docker
-IS_DOCKER = (
-    os.path.exists("/.dockerenv")
-    or os.environ.get("DOCKER_ENV", "").lower() == "true"
-    or os.environ.get("POSTERIZARR_NON_ROOT", "").lower() == "true"
-)
-
-if IS_DOCKER:
-    BASE_DIR = Path("/config")
-    APP_DIR = Path("/app")
-    ASSETS_DIR = Path("/assets")
-    FRONTEND_DIR = Path("/app/frontend/dist")
-    logger.info("Running in DOCKER mode")
-else:
-    # Local: webui/backend/main.py -> project root (3 levels up)
-    PROJECT_ROOT = Path(__file__).parent.parent.parent
-    BASE_DIR = PROJECT_ROOT
-    APP_DIR = PROJECT_ROOT
-    ASSETS_DIR = PROJECT_ROOT / "assets"
-    FRONTEND_DIR = PROJECT_ROOT / "webui" / "frontend" / "dist"
-    ASSETS_DIR.mkdir(exist_ok=True)
-    (BASE_DIR / "Logs").mkdir(exist_ok=True)
-    (BASE_DIR / "temp").mkdir(exist_ok=True)
-    (BASE_DIR / "test").mkdir(exist_ok=True)
-    (BASE_DIR / "UILogs").mkdir(exist_ok=True)
-    logger.info(f"Running in LOCAL mode: {BASE_DIR}")
-
-CONFIG_PATH = BASE_DIR / "config.json"
-CONFIG_EXAMPLE_PATH = BASE_DIR / "config.example.json"
-SCRIPT_PATH = APP_DIR / "Posterizarr.ps1"
-LOGS_DIR = BASE_DIR / "Logs"
-TEST_DIR = BASE_DIR / "test"
-TEMP_DIR = BASE_DIR / "temp"
-UI_LOGS_DIR = BASE_DIR / "UILogs"
-OVERLAYFILES_DIR = BASE_DIR / "Overlayfiles"
-RUNNING_FILE = TEMP_DIR / "Posterizarr.Running"
-
-# Create Overlayfiles directory if it doesn't exist
-OVERLAYFILES_DIR.mkdir(exist_ok=True)
-
-if not CONFIG_PATH.exists() and CONFIG_EXAMPLE_PATH.exists():
-    logger.warning(f"config.json not found, using config.example.json as fallback")
-    CONFIG_PATH = CONFIG_EXAMPLE_PATH
-
-
-def setup_backend_ui_logger():
-    """Setup backend logger to also write to UIlog.log"""
-    try:
-        # Create UILogs directory if not exists
-        UI_LOGS_DIR.mkdir(exist_ok=True)
-
-        # CLEANUP: Delete old log files on startup
-        backend_log_path = UI_LOGS_DIR / "UIlog.log"
-        if backend_log_path.exists():
-            backend_log_path.unlink()
-            print(f"🗑️  Cleared old UIlog.log")
-
-        # Create File Handler for UIlog.log
-        backend_ui_handler = logging.FileHandler(
-            backend_log_path, encoding="utf-8", mode="w"
-        )
-        backend_ui_handler.setLevel(logging.DEBUG)  # All levels
-        backend_ui_handler.setFormatter(
-            logging.Formatter(
-                "[%(asctime)s] [%(levelname)-8s] |BACKEND| %(message)s",
-                datefmt="%Y-%m-%d %H:%M:%S",
-            )
-        )
-
-        # Add handler to root logger (so all backend logs are captured)
-        logging.getLogger().addHandler(backend_ui_handler)
-
-        print(f"✅ Backend logger initialized: {backend_log_path}")
-        logger.info("Backend logging to UIlog.log enabled")
-
-    except Exception as e:
-        print(f"⚠️  Could not initialize backend UI logger: {e}")
-
-
-# Initialize Backend UI Logger on startup
-setup_backend_ui_logger()
 
 current_process: Optional[subprocess.Popen] = None
 current_mode: Optional[str] = None
