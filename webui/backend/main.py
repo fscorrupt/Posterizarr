@@ -618,6 +618,11 @@ def parse_image_choices_csv(csv_path: Path) -> list:
                 if not title and not rootfolder:
                     continue
 
+                # Exclude if download_source is "N/A"
+                download_source = row.get("Download Source", "").strip('"')
+                if download_source == "N/A":
+                    continue
+
                 # Remove quotes from values if present
                 asset = {
                     "title": row.get("Title", "").strip('"'),
