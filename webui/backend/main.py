@@ -5037,6 +5037,416 @@ async def run_scheduler_now():
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ============================================================================
+# ASSET REPLACEMENT API
+# ============================================================================
+
+
+class AssetReplaceRequest(BaseModel):
+    """Request to fetch asset previews from services or upload custom"""
+
+    asset_path: str  # Path to the asset being replaced
+    media_type: str  # "movie" or "tv"
+    asset_type: str  # "poster", "background", "season", "titlecard"
+    tmdb_id: Optional[str] = None
+    tvdb_id: Optional[str] = None
+    title: Optional[str] = None  # Movie/show title for fallback search
+    year: Optional[int] = None  # Release year for fallback search
+    season_number: Optional[int] = None
+    episode_number: Optional[int] = None
+
+
+class AssetUploadRequest(BaseModel):
+    """Request to replace an asset with uploaded image"""
+
+    asset_path: str
+    image_data: str  # Base64 encoded image
+
+
+@app.post("/api/assets/fetch-replacements")
+async def fetch_asset_replacements(request: AssetReplaceRequest):
+    """
+    Fetch replacement asset previews from TMDB, TVDB, and Fanart.tv
+    Returns a list of preview images from all available sources
+    """
+    try:
+        # Load config to get API keys
+        if not CONFIG_PATH.exists():
+            raise HTTPException(status_code=404, detail="Config file not found")
+
+        with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+            grouped_config = json.load(f)
+
+        # Get API tokens
+        if CONFIG_MAPPER_AVAILABLE:
+            flat_config = flatten_config(grouped_config)
+            tmdb_token = flat_config.get("tmdbtoken", "")
+            tvdb_api_key = flat_config.get("tvdbapikey", "")
+            tvdb_pin = flat_config.get("tvdbpin", "")
+            fanart_api_key = flat_config.get("fanartapikey", "")
+        else:
+            api_part = grouped_config.get("ApiPart", {})
+            tmdb_token = api_part.get("tmdbtoken", "")
+            tvdb_api_key = api_part.get("tvdbapikey", "")
+            tvdb_pin = api_part.get("tvdbpin", "")
+            fanart_api_key = api_part.get("fanartapikey", "")
+
+        results = {"tmdb": [], "tvdb": [], "fanart": []}
+
+        # Helper function to search for TMDB ID by title and year
+        async def search_tmdb_id(
+            title: str, year: Optional[int], media_type: str
+        ) -> Optional[str]:
+            if not tmdb_token or not title:
+                return None
+            try:
+                headers = {
+                    "Authorization": f"Bearer {tmdb_token}",
+                    "Content-Type": "application/json",
+                }
+                search_endpoint = "movie" if media_type == "movie" else "tv"
+                url = f"https://api.themoviedb.org/3/search/{search_endpoint}"
+                params = {"query": title}
+                if year and media_type == "movie":
+                    params["year"] = year
+                elif year and media_type == "tv":
+                    params["first_air_date_year"] = year
+
+                response = requests.get(url, headers=headers, params=params, timeout=10)
+                if response.status_code == 200:
+                    data = response.json()
+                    results = data.get("results", [])
+                    if results:
+                        return str(results[0].get("id"))
+            except Exception as e:
+                print(f"Error searching TMDB by title: {e}")
+            return None
+
+        # If no TMDB ID provided but we have title, try to search for it
+        tmdb_id_to_use = request.tmdb_id
+        if not tmdb_id_to_use and request.title and tmdb_token:
+            tmdb_id_to_use = await search_tmdb_id(
+                request.title, request.year, request.media_type
+            )
+
+        # ========== TMDB ==========
+        if tmdb_token and tmdb_id_to_use:
+            try:
+                headers = {
+                    "Authorization": f"Bearer {tmdb_token}",
+                    "Content-Type": "application/json",
+                }
+
+                media_endpoint = "movie" if request.media_type == "movie" else "tv"
+
+                if (
+                    request.asset_type == "titlecard"
+                    and request.season_number
+                    and request.episode_number
+                ):
+                    # Episode stills
+                    url = f"https://api.themoviedb.org/3/tv/{tmdb_id_to_use}/season/{request.season_number}/episode/{request.episode_number}/images"
+                    response = requests.get(url, headers=headers, timeout=10)
+                    if response.status_code == 200:
+                        data = response.json()
+                        for still in data.get("stills", []):
+                            results["tmdb"].append(
+                                {
+                                    "url": f"https://image.tmdb.org/t/p/w500{still.get('file_path')}",
+                                    "original_url": f"https://image.tmdb.org/t/p/original{still.get('file_path')}",
+                                    "source": "TMDB",
+                                    "type": "episode_still",
+                                    "vote_average": still.get("vote_average", 0),
+                                }
+                            )
+
+                elif request.asset_type == "season" and request.season_number:
+                    # Season posters
+                    url = f"https://api.themoviedb.org/3/tv/{tmdb_id_to_use}/season/{request.season_number}/images"
+                    response = requests.get(url, headers=headers, timeout=10)
+                    if response.status_code == 200:
+                        data = response.json()
+                        for poster in data.get("posters", []):
+                            results["tmdb"].append(
+                                {
+                                    "url": f"https://image.tmdb.org/t/p/w500{poster.get('file_path')}",
+                                    "original_url": f"https://image.tmdb.org/t/p/original{poster.get('file_path')}",
+                                    "source": "TMDB",
+                                    "type": "season_poster",
+                                    "language": poster.get("iso_639_1"),
+                                    "vote_average": poster.get("vote_average", 0),
+                                }
+                            )
+
+                elif request.asset_type == "background":
+                    # Backgrounds
+                    url = f"https://api.themoviedb.org/3/{media_endpoint}/{tmdb_id_to_use}/images"
+                    response = requests.get(url, headers=headers, timeout=10)
+                    if response.status_code == 200:
+                        data = response.json()
+                        for backdrop in data.get("backdrops", []):
+                            results["tmdb"].append(
+                                {
+                                    "url": f"https://image.tmdb.org/t/p/w500{backdrop.get('file_path')}",
+                                    "original_url": f"https://image.tmdb.org/t/p/original{backdrop.get('file_path')}",
+                                    "source": "TMDB",
+                                    "type": "backdrop",
+                                    "language": backdrop.get("iso_639_1"),
+                                    "vote_average": backdrop.get("vote_average", 0),
+                                }
+                            )
+
+                else:
+                    # Standard posters
+                    url = f"https://api.themoviedb.org/3/{media_endpoint}/{tmdb_id_to_use}/images"
+                    response = requests.get(url, headers=headers, timeout=10)
+                    if response.status_code == 200:
+                        data = response.json()
+                        for poster in data.get("posters", []):
+                            results["tmdb"].append(
+                                {
+                                    "url": f"https://image.tmdb.org/t/p/w500{poster.get('file_path')}",
+                                    "original_url": f"https://image.tmdb.org/t/p/original{poster.get('file_path')}",
+                                    "source": "TMDB",
+                                    "type": "poster",
+                                    "language": poster.get("iso_639_1"),
+                                    "vote_average": poster.get("vote_average", 0),
+                                }
+                            )
+
+            except Exception as e:
+                logger.error(f"Error fetching TMDB assets: {e}")
+
+        # ========== TVDB ==========
+        if tvdb_api_key and request.tvdb_id:
+            try:
+                # First, login to get token
+                async with httpx.AsyncClient(timeout=10.0) as client:
+                    login_url = "https://api4.thetvdb.com/v4/login"
+                    body = {"apikey": tvdb_api_key}
+                    if tvdb_pin:
+                        body["pin"] = tvdb_pin
+
+                    headers = {
+                        "accept": "application/json",
+                        "Content-Type": "application/json",
+                    }
+
+                    login_response = await client.post(
+                        login_url, json=body, headers=headers
+                    )
+
+                    if login_response.status_code == 200:
+                        token = login_response.json().get("data", {}).get("token")
+
+                        if token:
+                            auth_headers = {
+                                "Authorization": f"Bearer {token}",
+                                "accept": "application/json",
+                            }
+
+                            # Fetch artwork
+                            artwork_url = f"https://api4.thetvdb.com/v4/series/{request.tvdb_id}/artworks"
+                            artwork_params = {
+                                "lang": "eng",
+                                "type": "2",
+                            }  # type=2 for posters
+
+                            if request.asset_type == "background":
+                                artwork_params["type"] = "3"  # type=3 for backgrounds
+
+                            artwork_response = await client.get(
+                                artwork_url, headers=auth_headers, params=artwork_params
+                            )
+
+                            if artwork_response.status_code == 200:
+                                artwork_data = artwork_response.json()
+                                artworks = artwork_data.get("data", {}).get(
+                                    "artworks", []
+                                )
+
+                                for artwork in artworks:
+                                    results["tvdb"].append(
+                                        {
+                                            "url": artwork.get("image"),
+                                            "original_url": artwork.get("image"),
+                                            "source": "TVDB",
+                                            "type": request.asset_type,
+                                            "language": artwork.get("language"),
+                                        }
+                                    )
+
+            except Exception as e:
+                logger.error(f"Error fetching TVDB assets: {e}")
+
+        # ========== Fanart.tv ==========
+        if fanart_api_key and (tmdb_id_to_use or request.tvdb_id):
+            try:
+                if request.media_type == "movie" and tmdb_id_to_use:
+                    url = f"https://webservice.fanart.tv/v3/movies/{tmdb_id_to_use}?api_key={fanart_api_key}"
+                elif request.media_type == "tv" and request.tvdb_id:
+                    url = f"https://webservice.fanart.tv/v3/tv/{request.tvdb_id}?api_key={fanart_api_key}"
+                else:
+                    url = None
+
+                if url:
+                    response = requests.get(url, timeout=10)
+                    if response.status_code == 200:
+                        data = response.json()
+
+                        # Map asset types to fanart.tv keys
+                        if request.asset_type == "poster":
+                            fanart_keys = (
+                                ["movieposter"]
+                                if request.media_type == "movie"
+                                else ["tvposter"]
+                            )
+                        elif request.asset_type == "background":
+                            fanart_keys = (
+                                ["moviebackground"]
+                                if request.media_type == "movie"
+                                else ["showbackground"]
+                            )
+                        else:
+                            fanart_keys = []
+
+                        for key in fanart_keys:
+                            items = data.get(key, [])
+                            for item in items:
+                                results["fanart"].append(
+                                    {
+                                        "url": item.get("url"),
+                                        "original_url": item.get("url"),
+                                        "source": "Fanart.tv",
+                                        "type": request.asset_type,
+                                        "language": item.get("lang"),
+                                        "likes": item.get("likes", 0),
+                                    }
+                                )
+
+            except Exception as e:
+                logger.error(f"Error fetching Fanart.tv assets: {e}")
+
+        # Count total results
+        total_count = sum(len(results[source]) for source in results)
+
+        logger.info(
+            f"Fetched {total_count} replacement options: "
+            f"TMDB={len(results['tmdb'])}, TVDB={len(results['tvdb'])}, Fanart={len(results['fanart'])}"
+        )
+
+        return {
+            "success": True,
+            "results": results,
+            "total_count": total_count,
+        }
+
+    except Exception as e:
+        logger.error(f"Error fetching asset replacements: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/assets/upload-replacement")
+async def upload_asset_replacement(
+    file: UploadFile = File(...), asset_path: str = Query(...)
+):
+    """
+    Replace an asset with an uploaded image
+    """
+    try:
+        # Validate asset path exists
+        full_asset_path = ASSETS_DIR / asset_path
+        if not full_asset_path.exists():
+            raise HTTPException(status_code=404, detail="Asset not found")
+
+        # Read uploaded file
+        contents = await file.read()
+
+        # Validate it's an image
+        if not file.content_type or not file.content_type.startswith("image/"):
+            raise HTTPException(status_code=400, detail="File must be an image")
+
+        # Create backup of original
+        backup_path = full_asset_path.with_suffix(full_asset_path.suffix + ".backup")
+        if full_asset_path.exists() and not backup_path.exists():
+            import shutil
+
+            shutil.copy2(full_asset_path, backup_path)
+            logger.info(f"Created backup: {backup_path}")
+
+        # Save new image
+        with open(full_asset_path, "wb") as f:
+            f.write(contents)
+
+        logger.info(f"Replaced asset: {asset_path} (size: {len(contents)} bytes)")
+
+        return {
+            "success": True,
+            "message": "Asset replaced successfully",
+            "path": asset_path,
+            "size": len(contents),
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error uploading asset replacement: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/assets/replace-from-url")
+async def replace_asset_from_url(
+    asset_path: str = Query(...), image_url: str = Query(...)
+):
+    """
+    Replace an asset by downloading from a URL
+    """
+    try:
+        # Validate asset path exists
+        full_asset_path = ASSETS_DIR / asset_path
+        if not full_asset_path.exists():
+            raise HTTPException(status_code=404, detail="Asset not found")
+
+        # Download image from URL
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.get(image_url)
+            if response.status_code != 200:
+                raise HTTPException(
+                    status_code=400, detail="Failed to download image from URL"
+                )
+
+            contents = response.content
+
+        # Create backup of original
+        backup_path = full_asset_path.with_suffix(full_asset_path.suffix + ".backup")
+        if full_asset_path.exists() and not backup_path.exists():
+            import shutil
+
+            shutil.copy2(full_asset_path, backup_path)
+            logger.info(f"Created backup: {backup_path}")
+
+        # Save new image
+        with open(full_asset_path, "wb") as f:
+            f.write(contents)
+
+        logger.info(
+            f"Replaced asset from URL: {asset_path} (size: {len(contents)} bytes)"
+        )
+
+        return {
+            "success": True,
+            "message": "Asset replaced successfully",
+            "path": asset_path,
+            "size": len(contents),
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error replacing asset from URL: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 if ASSETS_DIR.exists():
     app.mount(
         "/poster_assets",

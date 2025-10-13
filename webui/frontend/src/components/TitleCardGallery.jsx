@@ -13,6 +13,7 @@ import {
 import CompactImageSizeSlider from "./CompactImageSizeSlider";
 import Notification from "./Notification";
 import ConfirmDialog from "./ConfirmDialog";
+import AssetReplacer from "./AssetReplacer";
 
 const API_URL = "/api";
 
@@ -37,6 +38,13 @@ function TitleCardGallery() {
   // Multi-select state
   const [selectMode, setSelectMode] = useState(false);
   const [selectedImages, setSelectedImages] = useState([]);
+
+  // Asset replacer state
+  const [replacerOpen, setReplacerOpen] = useState(false);
+  const [assetToReplace, setAssetToReplace] = useState(null);
+
+  // Cache-busting state to force image reload after replacement
+  const [cacheBuster, setCacheBuster] = useState(Date.now());
 
   // Image size state with localStorage (2-10 range, default 5)
   const [imageSize, setImageSize] = useState(() => {
@@ -589,7 +597,7 @@ function TitleCardGallery() {
                       onClick={() => toggleImageSelection(image.path)}
                     >
                       <img
-                        src={image.url}
+                        src={`${image.url}?t=${cacheBuster}`}
                         alt={image.name}
                         className="w-full h-full object-cover rounded"
                         loading="lazy"
@@ -608,6 +616,22 @@ function TitleCardGallery() {
                   </>
                 ) : (
                   <>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setAssetToReplace({
+                          path: image.path,
+                          url: image.url,
+                          name: image.name,
+                          type: "titlecard",
+                        });
+                        setReplacerOpen(true);
+                      }}
+                      className="absolute top-2 left-2 z-10 p-2 rounded-lg transition-all bg-blue-600/90 hover:bg-blue-700 opacity-0 group-hover:opacity-100"
+                      title="Replace title card"
+                    >
+                      <RefreshCw className="w-4 h-4 text-white" />
+                    </button>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
@@ -636,7 +660,7 @@ function TitleCardGallery() {
                       onClick={() => setSelectedImage(image)}
                     >
                       <img
-                        src={image.url}
+                        src={`${image.url}?t=${cacheBuster}`}
                         alt={image.name}
                         className="w-full h-full object-cover rounded"
                         loading="lazy"
@@ -735,33 +759,50 @@ function TitleCardGallery() {
               <h3 className="text-xl font-bold text-theme-text truncate flex-1 mr-4">
                 {formatDisplayPath(selectedImage.path)}
               </h3>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setDeleteConfirm({
-                    path: selectedImage.path,
-                    name: selectedImage.name,
-                  });
-                }}
-                disabled={deletingImage === selectedImage.path}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
-                  deletingImage === selectedImage.path
-                    ? "bg-gray-600 cursor-not-allowed"
-                    : "bg-red-600 hover:bg-red-700 hover:scale-105"
-                }`}
-              >
-                <Trash2
-                  className={`w-4 h-4 ${
-                    deletingImage === selectedImage.path ? "animate-spin" : ""
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDeleteConfirm({
+                      path: selectedImage.path,
+                      name: selectedImage.name,
+                    });
+                  }}
+                  disabled={deletingImage === selectedImage.path}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                    deletingImage === selectedImage.path
+                      ? "bg-gray-600 cursor-not-allowed"
+                      : "bg-red-600 hover:bg-red-700 hover:scale-105"
                   }`}
-                />
-                Delete
-              </button>
+                >
+                  <Trash2
+                    className={`w-4 h-4 ${
+                      deletingImage === selectedImage.path ? "animate-spin" : ""
+                    }`}
+                  />
+                  Delete
+                </button>
+                <button
+                  onClick={() => {
+                    setAssetToReplace({
+                      path: selectedImage.path,
+                      url: selectedImage.url,
+                      name: selectedImage.name,
+                      type: "titlecard",
+                    });
+                    setReplacerOpen(true);
+                  }}
+                  className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white flex items-center space-x-2"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  <span>Replace</span>
+                </button>
+              </div>
             </div>
             <div className="p-6 bg-theme-bg flex items-center justify-center">
               <div className="max-h-[65vh] flex items-center justify-center">
                 <img
-                  src={selectedImage.url}
+                  src={`${selectedImage.url}?t=${cacheBuster}`}
                   alt={selectedImage.name}
                   className="max-w-full max-h-[65vh] object-contain rounded-lg shadow-2xl"
                   onError={(e) => {
@@ -825,6 +866,24 @@ function TitleCardGallery() {
         confirmText="Delete"
         type="danger"
       />
+
+      {/* Asset Replacer Modal */}
+      {replacerOpen && assetToReplace && (
+        <AssetReplacer
+          asset={assetToReplace}
+          onClose={() => {
+            setReplacerOpen(false);
+            setAssetToReplace(null);
+          }}
+          onSuccess={() => {
+            // Force cache-bust and refetch images
+            setCacheBuster(Date.now());
+            setTimeout(() => {
+              fetchFolderImages();
+            }, 500);
+          }}
+        />
+      )}
     </div>
   );
 }

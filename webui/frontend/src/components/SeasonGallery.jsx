@@ -13,6 +13,7 @@ import {
 import CompactImageSizeSlider from "./CompactImageSizeSlider";
 import Notification from "./Notification";
 import ConfirmDialog from "./ConfirmDialog";
+import AssetReplacer from "./AssetReplacer";
 
 const API_URL = "/api";
 
@@ -37,6 +38,13 @@ function SeasonGallery() {
   // Multi-select state
   const [selectMode, setSelectMode] = useState(false);
   const [selectedImages, setSelectedImages] = useState([]);
+
+  // Asset replacer state
+  const [replacerOpen, setReplacerOpen] = useState(false);
+  const [assetToReplace, setAssetToReplace] = useState(null);
+
+  // Cache busting timestamp for force-reloading images after replacement
+  const [cacheBuster, setCacheBuster] = useState(Date.now());
 
   // Image size state with localStorage (2-10 range, default 5)
   const [imageSize, setImageSize] = useState(() => {
@@ -585,7 +593,7 @@ function SeasonGallery() {
                       onClick={() => toggleImageSelection(image.path)}
                     >
                       <img
-                        src={image.url}
+                        src={`${image.url}?t=${cacheBuster}`}
                         alt={image.name}
                         className="w-full h-full object-cover rounded"
                         loading="lazy"
@@ -627,12 +635,24 @@ function SeasonGallery() {
                       />
                     </button>
 
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setAssetToReplace({ ...image, type: "season" });
+                        setReplacerOpen(true);
+                      }}
+                      className="absolute top-2 left-2 z-10 p-2 rounded-lg bg-blue-600/90 hover:bg-blue-700 opacity-0 group-hover:opacity-100 transition-all"
+                      title="Replace asset"
+                    >
+                      <RefreshCw className="w-4 h-4 text-white" />
+                    </button>
+
                     <div
                       className="relative cursor-pointer aspect-[2/3] p-2"
                       onClick={() => setSelectedImage(image)}
                     >
                       <img
-                        src={image.url}
+                        src={`${image.url}?t=${cacheBuster}`}
                         alt={image.name}
                         className="w-full h-full object-cover rounded"
                         loading="lazy"
@@ -731,33 +751,46 @@ function SeasonGallery() {
               <h3 className="text-xl font-bold text-theme-text truncate flex-1 mr-4">
                 {formatDisplayPath(selectedImage.path)}
               </h3>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setDeleteConfirm({
-                    path: selectedImage.path,
-                    name: selectedImage.name,
-                  });
-                }}
-                disabled={deletingImage === selectedImage.path}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
-                  deletingImage === selectedImage.path
-                    ? "bg-gray-600 cursor-not-allowed"
-                    : "bg-red-600 hover:bg-red-700 hover:scale-105"
-                }`}
-              >
-                <Trash2
-                  className={`w-4 h-4 ${
-                    deletingImage === selectedImage.path ? "animate-spin" : ""
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setAssetToReplace({ ...selectedImage, type: "season" });
+                    setReplacerOpen(true);
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all bg-blue-600 hover:bg-blue-700 hover:scale-105"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  Replace
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDeleteConfirm({
+                      path: selectedImage.path,
+                      name: selectedImage.name,
+                    });
+                  }}
+                  disabled={deletingImage === selectedImage.path}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                    deletingImage === selectedImage.path
+                      ? "bg-gray-600 cursor-not-allowed"
+                      : "bg-red-600 hover:bg-red-700 hover:scale-105"
                   }`}
-                />
-                Delete
-              </button>
+                >
+                  <Trash2
+                    className={`w-4 h-4 ${
+                      deletingImage === selectedImage.path ? "animate-spin" : ""
+                    }`}
+                  />
+                  Delete
+                </button>
+              </div>
             </div>
             <div className="p-6 bg-theme-bg flex items-center justify-center">
               <div className="max-h-[65vh] flex items-center justify-center">
                 <img
-                  src={selectedImage.url}
+                  src={`${selectedImage.url}?t=${cacheBuster}`}
                   alt={selectedImage.name}
                   className="max-w-full max-h-[65vh] object-contain rounded-lg shadow-2xl"
                   onError={(e) => {
@@ -821,6 +854,35 @@ function SeasonGallery() {
         confirmText="Delete"
         type="danger"
       />
+
+      {/* Asset Replacer Modal */}
+      {replacerOpen && assetToReplace && (
+        <AssetReplacer
+          asset={assetToReplace}
+          onClose={() => {
+            setReplacerOpen(false);
+            setAssetToReplace(null);
+          }}
+          onSuccess={() => {
+            // Force cache refresh by updating timestamp
+            setCacheBuster(Date.now());
+
+            // Update selectedImage if it's still open to show the new image
+            if (selectedImage && assetToReplace) {
+              setSelectedImage({
+                ...selectedImage,
+                url: `${selectedImage.url.split("?")[0]}?t=${Date.now()}`,
+              });
+            }
+
+            // Refresh the images after successful replacement
+            setTimeout(() => {
+              fetchFolderImages(activeFolder, false);
+            }, 500);
+            setSuccess("Asset replaced successfully!");
+          }}
+        />
+      )}
     </div>
   );
 }
