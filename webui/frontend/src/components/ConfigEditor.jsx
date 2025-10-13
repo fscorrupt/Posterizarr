@@ -28,6 +28,7 @@ import {
 import ValidateButton from "./ValidateButton";
 import Notification from "./Notification";
 import LanguageOrderSelector from "./LanguageOrderSelector";
+import LibraryExclusionSelector from "./LibraryExclusionSelector";
 
 const API_URL = "/api";
 
@@ -1151,6 +1152,46 @@ function ConfigEditor() {
           onChange={(newValue) => updateValue(fieldKey, newValue)}
           label={displayName}
           helpText={CONFIG_TOOLTIPS[key]}
+        />
+      );
+    }
+
+    // ============ LIBRARY EXCLUSION SELECTOR ============
+    if (key === "PlexLibstoExclude") {
+      return (
+        <LibraryExclusionSelector
+          value={Array.isArray(value) ? value : []}
+          onChange={(newValue) => updateValue(fieldKey, newValue)}
+          label={displayName}
+          helpText={CONFIG_TOOLTIPS[key]}
+          mediaServerType="plex"
+          config={config}
+        />
+      );
+    }
+
+    if (key === "JellyfinLibstoExclude") {
+      return (
+        <LibraryExclusionSelector
+          value={Array.isArray(value) ? value : []}
+          onChange={(newValue) => updateValue(fieldKey, newValue)}
+          label={displayName}
+          helpText={CONFIG_TOOLTIPS[key]}
+          mediaServerType="jellyfin"
+          config={config}
+        />
+      );
+    }
+
+    if (key === "EmbyLibstoExclude") {
+      return (
+        <LibraryExclusionSelector
+          value={Array.isArray(value) ? value : []}
+          onChange={(newValue) => updateValue(fieldKey, newValue)}
+          label={displayName}
+          helpText={CONFIG_TOOLTIPS[key]}
+          mediaServerType="emby"
+          config={config}
         />
       );
     }

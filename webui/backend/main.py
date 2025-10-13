@@ -1996,6 +1996,138 @@ async def validate_uptimekuma(request: UptimeKumaValidationRequest):
         }
 
 
+# ============================================================================
+# LIBRARY FETCHING ENDPOINTS
+# ============================================================================
+
+
+@app.post("/api/libraries/plex")
+async def get_plex_libraries(request: PlexValidationRequest):
+    """Fetch Plex libraries"""
+    logger.info("📚 Fetching Plex libraries...")
+
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            url = f"{request.url}/library/sections/?X-Plex-Token={request.token}"
+            response = await client.get(url)
+
+            if response.status_code == 200:
+                root = ET.fromstring(response.content)
+                libraries = []
+
+                for directory in root.findall(".//Directory"):
+                    lib_title = directory.get("title", "")
+                    lib_type = directory.get("type", "")
+                    lib_key = directory.get("key", "")
+
+                    # Only include movie and show libraries
+                    if lib_type in ["movie", "show"]:
+                        libraries.append(
+                            {"name": lib_title, "type": lib_type, "key": lib_key}
+                        )
+
+                logger.info(f"✅ Found {len(libraries)} Plex libraries")
+                return {"success": True, "libraries": libraries}
+            else:
+                logger.error(
+                    f"❌ Failed to fetch Plex libraries: {response.status_code}"
+                )
+                return {
+                    "success": False,
+                    "error": f"Failed to fetch libraries (Status: {response.status_code})",
+                }
+    except Exception as e:
+        logger.error(f"💥 Error fetching Plex libraries: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
+@app.post("/api/libraries/jellyfin")
+async def get_jellyfin_libraries(request: JellyfinValidationRequest):
+    """Fetch Jellyfin libraries"""
+    logger.info("📚 Fetching Jellyfin libraries...")
+
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            headers = {"X-Emby-Token": request.api_key}
+            url = f"{request.url}/Library/VirtualFolders"
+            response = await client.get(url, headers=headers)
+
+            if response.status_code == 200:
+                data = response.json()
+                libraries = []
+
+                for lib in data:
+                    lib_name = lib.get("Name", "")
+                    lib_type = lib.get("CollectionType", "mixed")
+
+                    # Only include movies and tvshows
+                    if lib_type in ["movies", "tvshows", "mixed"]:
+                        libraries.append(
+                            {
+                                "name": lib_name,
+                                "type": lib_type,
+                                "id": lib.get("ItemId", ""),
+                            }
+                        )
+
+                logger.info(f"✅ Found {len(libraries)} Jellyfin libraries")
+                return {"success": True, "libraries": libraries}
+            else:
+                logger.error(
+                    f"❌ Failed to fetch Jellyfin libraries: {response.status_code}"
+                )
+                return {
+                    "success": False,
+                    "error": f"Failed to fetch libraries (Status: {response.status_code})",
+                }
+    except Exception as e:
+        logger.error(f"💥 Error fetching Jellyfin libraries: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
+@app.post("/api/libraries/emby")
+async def get_emby_libraries(request: EmbyValidationRequest):
+    """Fetch Emby libraries"""
+    logger.info("📚 Fetching Emby libraries...")
+
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            url = f"{request.url}/Library/VirtualFolders?api_key={request.api_key}"
+            response = await client.get(url)
+
+            if response.status_code == 200:
+                data = response.json()
+                libraries = []
+
+                for lib in data:
+                    lib_name = lib.get("Name", "")
+                    lib_type = lib.get("CollectionType", "mixed")
+
+                    # Only include movies and tvshows
+                    if lib_type in ["movies", "tvshows", "mixed"]:
+                        libraries.append(
+                            {
+                                "name": lib_name,
+                                "type": lib_type,
+                                "id": lib.get("ItemId", ""),
+                            }
+                        )
+
+                logger.info(f"✅ Found {len(libraries)} Emby libraries")
+                return {"success": True, "libraries": libraries}
+            else:
+                logger.error(
+                    f"❌ Failed to fetch Emby libraries: {response.status_code}"
+                )
+                return {
+                    "success": False,
+                    "error": f"Failed to fetch libraries (Status: {response.status_code})",
+                }
+    except Exception as e:
+        logger.error(f"💥 Error fetching Emby libraries: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
 def get_last_log_lines(count=25, mode=None, log_file=None):
     """Get last N lines from log files based on current mode or specific log file"""
 
