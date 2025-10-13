@@ -8338,6 +8338,19 @@ if ($Manual) {
         # Move file back to original naming with Brackets.
         Move-Item -LiteralPath $PosterImage -destination $PosterImageoriginal -Force -ErrorAction SilentlyContinue
         Write-Entry -Subtext "Poster created and moved to: $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Manuallog.log -Color Green -log Info
+
+        $CSVtemp = New-Object psobject
+        $CSVtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
+        $CSVtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value $(if ($SeasonPoster) { "Season" }Elseif ($CollectionCard) { "Collection" }Elseif ($TitleCard) { "Episode" }Else { "Poster" })
+        $CSVtemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $FolderName
+        $CSVtemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $LibraryName
+        $CSVtemp | Add-Member -MemberType NoteProperty -Name "Language" -Value 'N/A'
+        $CSVtemp | Add-Member -MemberType NoteProperty -Name "Fallback" -Value 'N/A'
+        $CSVtemp | Add-Member -MemberType NoteProperty -Name "TextTruncated" -Value $(if ($global:IsTruncated) { 'true' } else { 'false' })
+        $CSVtemp | Add-Member -MemberType NoteProperty -Name "Download Source" -Value $PicturePath
+        $CSVtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A"
+        # Export the array to a CSV file
+        $CSVtemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
     }
 
     # Clear Running File
