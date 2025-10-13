@@ -19,14 +19,8 @@ import {
   Loader2,
   Search,
   HelpCircle,
-  Upload,
-  Image,
-  Eye,
-  Expand,
-  Minimize,
 } from "lucide-react";
-import ValidateButton from "./ValidateButton";
-import Notification from "./Notification";
+import toast, { Toaster } from "react-hot-toast";
 
 const API_URL = "/api";
 
@@ -423,39 +417,9 @@ function ConfigEditor() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
   const [expandedGroups, setExpandedGroups] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
-  const [overlayFiles, setOverlayFiles] = useState([]);
-  const [uploadingOverlay, setUploadingOverlay] = useState(false);
-  const [previewOverlay, setPreviewOverlay] = useState(null); // For preview modal
-  const [fontFiles, setFontFiles] = useState([]);
-  const [uploadingFont, setUploadingFont] = useState(false);
   const hasInitializedGroups = useRef(false);
-
-  // List of overlay file fields
-  const OVERLAY_FILE_FIELDS = [
-    "overlayfile",
-    "seasonoverlayfile",
-    "backgroundoverlayfile",
-    "titlecardoverlayfile",
-    "collectionoverlayfile",
-    "poster4k",
-    "Poster1080p",
-    "Background4k",
-    "Background1080p",
-    "TC4k",
-    "TC1080p",
-  ];
-
-  // List of font file fields
-  const FONT_FILE_FIELDS = [
-    "font",
-    "RTLFont",
-    "backgroundfont",
-    "titlecardfont",
-    "collectionfont",
-  ];
 
   // Map URL path to tab name
   const getActiveTabFromPath = () => {
@@ -559,19 +523,17 @@ function ConfigEditor() {
 
   useEffect(() => {
     fetchConfig();
-    fetchOverlayFiles();
-    fetchFontFiles();
   }, []);
 
   useEffect(() => {
     if (config && !hasInitializedGroups.current) {
-      const firstGroup = getGroupsByTab(activeTab)[0];
+      const firstGroup = tabs["General"]?.groups[0];
       if (firstGroup) {
         setExpandedGroups({ [firstGroup]: true });
         hasInitializedGroups.current = true;
       }
     }
-  }, [config, activeTab]);
+  }, [config]);
 
   useEffect(() => {
     if (activeTab && config && hasInitializedGroups.current) {
@@ -583,11 +545,6 @@ function ConfigEditor() {
         }));
       }
     }
-  }, [activeTab]);
-
-  // Scroll to top when changing tabs
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
   }, [activeTab]);
 
   // Auto-expand groups when searching
@@ -627,158 +584,48 @@ function ConfigEditor() {
         setError("Failed to load config");
       }
     } catch (err) {
-      setError(`Failed to load configuration: ${err.message}`);
+      setError(err.message);
+      toast.error("Failed to load configuration", {
+        duration: 4000,
+        position: "top-right",
+      });
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchOverlayFiles = async () => {
-    try {
-      const response = await fetch(`${API_URL}/overlayfiles`);
-      const data = await response.json();
-
-      if (data.success) {
-        // Filter only image files (not fonts)
-        const imageFiles = (data.files || []).filter(
-          (file) => file.type === "image"
-        );
-        setOverlayFiles(imageFiles);
-        console.log(`Loaded ${imageFiles.length} overlay files`);
-      }
-    } catch (err) {
-      console.error("Failed to load overlay files:", err);
-    }
-  };
-
-  const handleOverlayFileUpload = async (file) => {
-    if (!file) return;
-
-    setUploadingOverlay(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const response = await fetch(`${API_URL}/overlayfiles/upload`, {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        setSuccess(`File "${data.filename}" uploaded successfully!`);
-        // Refresh overlay files list
-        await fetchOverlayFiles();
-      } else {
-        setError(data.detail || "Upload failed");
-      }
-    } catch (err) {
-      console.error("Upload error:", err);
-      setError("Failed to upload file");
-    } finally {
-      setUploadingOverlay(false);
-    }
-  };
-
-  const fetchFontFiles = async () => {
-    try {
-      const response = await fetch(`${API_URL}/fonts`);
-      const data = await response.json();
-
-      if (data.success) {
-        setFontFiles(data.files || []);
-        console.log(`Loaded ${data.files.length} font files`);
-      }
-    } catch (err) {
-      console.error("Failed to load font files:", err);
-    }
-  };
-
-  const handleFontFileUpload = async (file) => {
-    if (!file) return;
-
-    setUploadingFont(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-
-      const response = await fetch(`${API_URL}/fonts/upload`, {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        setSuccess(`Font "${data.filename}" uploaded successfully!`);
-        // Refresh font files list
-        await fetchFontFiles();
-      } else {
-        setError(data.detail || "Upload failed");
-      }
-    } catch (err) {
-      console.error("Upload error:", err);
-      setError("Failed to upload file");
-    } finally {
-      setUploadingFont(false);
     }
   };
 
   const saveConfig = async () => {
     setSaving(true);
     setError(null);
-
-    //  Save the OLD auth status BEFORE saving
-    const oldAuthEnabled = usingFlatStructure
-      ? config?.basicAuthEnabled
-      : config?.WebUI?.basicAuthEnabled;
-
     try {
       const response = await fetch(`${API_URL}/config`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ config }), // Send flat config directly
+        body: JSON.stringify({ config }),
       });
 
       const data = await response.json();
 
       if (data.success) {
-        setSuccess("Configuration saved successfully!");
-
-        //  Get NEW auth status AFTER saving
-        const newAuthEnabled = usingFlatStructure
-          ? config?.basicAuthEnabled
-          : config?.WebUI?.basicAuthEnabled;
-
-        // If Auth has just been ENABLED -> reload page
-        if (!oldAuthEnabled && newAuthEnabled) {
-          setSuccess("Basic Auth enabled! Page will reload in 2 seconds...");
-
-          // Wait 2 seconds, then reload
-          setTimeout(() => {
-            window.location.reload();
-          }, 2000);
-          return;
-        }
-
-        // If Auth was just DISABLED -> reload page too
-        if (oldAuthEnabled && !newAuthEnabled) {
-          setSuccess("Basic Auth disabled! Page will reload in 2 seconds...");
-
-          // Wait 2 seconds, then reload
-          setTimeout(() => {
-            window.location.reload();
-          }, 2000);
-          return;
-        }
+        toast.success("Configuration saved successfully!", {
+          duration: 3000,
+          position: "top-right",
+        });
       } else {
-        setError("Failed to save configuration");
+        setError("Failed to save config");
+        toast.error("Failed to save configuration", {
+          duration: 4000,
+          position: "top-right",
+        });
       }
     } catch (err) {
-      setError(`Error: ${err.message}`);
+      setError(err.message);
+      toast.error(`Error: ${err.message}`, {
+        duration: 4000,
+        position: "top-right",
+      });
     } finally {
       setSaving(false);
     }
@@ -970,161 +817,6 @@ function ConfigEditor() {
     const fieldKey = usingFlatStructure ? key : `${groupName}.${key}`;
     const displayName = getDisplayName(key);
 
-    // ============ OVERLAY FILE DROPDOWN WITH UPLOAD ============
-    if (OVERLAY_FILE_FIELDS.includes(key)) {
-      const stringValue =
-        value === null || value === undefined ? "" : String(value);
-
-      return (
-        <div className="space-y-2">
-          <div className="flex gap-2">
-            {/* Dropdown */}
-            <div className="relative flex-1">
-              <select
-                value={stringValue}
-                onChange={(e) => updateValue(fieldKey, e.target.value)}
-                className="w-full h-[42px] px-4 py-2.5 pr-10 bg-theme-bg border border-theme rounded-lg text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all cursor-pointer appearance-none"
-              >
-                <option value="">-- Select Overlay File --</option>
-                {overlayFiles.map((file) => (
-                  <option key={file.name} value={file.name}>
-                    {file.name}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-theme-muted pointer-events-none" />
-            </div>
-
-            {/* Upload Button */}
-            <label
-              className={`flex items-center gap-2 px-4 py-2 bg-theme-primary/20 hover:bg-theme-primary/30 border border-theme-primary/30 rounded-lg font-medium transition-all cursor-pointer ${
-                uploadingOverlay ? "opacity-50 cursor-not-allowed" : ""
-              }`}
-            >
-              <input
-                type="file"
-                accept=".png,.jpg,.jpeg"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    handleOverlayFileUpload(file);
-                    e.target.value = ""; // Reset input
-                  }
-                }}
-                className="hidden"
-                disabled={uploadingOverlay}
-              />
-              {uploadingOverlay ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Upload className="w-4 h-4" />
-              )}
-              <span className="text-sm">Upload</span>
-            </label>
-
-            {/* Preview Button */}
-            {stringValue && (
-              <button
-                onClick={() => setPreviewOverlay(stringValue)}
-                className="flex items-center gap-2 px-4 py-2 bg-theme-bg hover:bg-theme-hover border border-theme rounded-lg font-medium transition-all"
-                title="Preview overlay image"
-              >
-                <Eye className="w-4 h-4 text-theme-primary" />
-                <span className="text-sm">Preview</span>
-              </button>
-            )}
-          </div>
-
-          {/* Current file display */}
-          {stringValue && (
-            <p className="text-xs text-theme-muted">
-              Current:{" "}
-              <span className="font-mono text-theme-primary">
-                {stringValue}
-              </span>
-            </p>
-          )}
-
-          {/* Help text */}
-          <p className="text-xs text-theme-muted">
-            Upload PNG, JPG, or JPEG files to the Overlayfiles directory
-          </p>
-        </div>
-      );
-    }
-
-    // ============ FONT FILE DROPDOWN WITH UPLOAD ============
-    if (FONT_FILE_FIELDS.includes(key)) {
-      const stringValue =
-        value === null || value === undefined ? "" : String(value);
-
-      return (
-        <div className="space-y-2">
-          <div className="flex gap-2">
-            {/* Dropdown */}
-            <div className="relative flex-1">
-              <select
-                value={stringValue}
-                onChange={(e) => updateValue(fieldKey, e.target.value)}
-                className="w-full h-[42px] px-4 py-2.5 pr-10 bg-theme-bg border border-theme rounded-lg text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all cursor-pointer appearance-none"
-              >
-                <option value="">-- Select Font File --</option>
-                {fontFiles.map((file) => (
-                  <option key={file} value={file}>
-                    {file}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-theme-muted pointer-events-none" />
-            </div>
-
-            {/* Upload Button */}
-            <label
-              className={`flex items-center gap-2 px-4 py-2 bg-theme-primary/20 hover:bg-theme-primary/30 border border-theme-primary/30 rounded-lg font-medium transition-all cursor-pointer ${
-                uploadingFont ? "opacity-50 cursor-not-allowed" : ""
-              }`}
-            >
-              <input
-                type="file"
-                accept=".ttf,.otf,.woff,.woff2"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    handleFontFileUpload(file);
-                    e.target.value = ""; // Reset input
-                  }
-                }}
-                className="hidden"
-                disabled={uploadingFont}
-              />
-              {uploadingFont ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Upload className="w-4 h-4" />
-              )}
-              <span className="text-sm">Upload</span>
-            </label>
-          </div>
-
-          {/* Current file display */}
-          {stringValue && (
-            <p className="text-xs text-theme-muted">
-              Current:{" "}
-              <span className="font-mono text-theme-primary">
-                {stringValue}
-              </span>
-            </p>
-          )}
-
-          {/* Help text */}
-          <p className="text-xs text-theme-muted">
-            Upload TTF, OTF, WOFF, or WOFF2 font files to the Overlayfiles
-            directory
-          </p>
-        </div>
-      );
-    }
-
     // Handle arrays with pill-style tags
     if (Array.isArray(value)) {
       return (
@@ -1298,348 +990,6 @@ function ConfigEditor() {
       );
     }
 
-    // ============ DROPDOWN FOR FAVPROVIDER ============
-    if (key === "FavProvider") {
-      const providerOptions = ["tmdb", "tvdb", "fanart"];
-
-      return (
-        <div className="space-y-2">
-          <div className="relative">
-            <select
-              value={stringValue.toLowerCase()}
-              onChange={(e) => updateValue(fieldKey, e.target.value)}
-              className="w-full h-[42px] px-4 py-2.5 pr-10 bg-theme-bg border border-theme rounded-lg text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all cursor-pointer appearance-none"
-            >
-              {providerOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option.toUpperCase()}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-theme-muted pointer-events-none" />
-          </div>
-          <p className="text-xs text-theme-muted">
-            Select your preferred metadata provider (recommended: TMDB)
-          </p>
-        </div>
-      );
-    }
-
-    // ============ DROPDOWN FOR TMDB_VOTE_SORTING ============
-    if (key === "tmdb_vote_sorting") {
-      const sortingOptions = [
-        { value: "vote_average", label: "Vote Average" },
-        { value: "vote_count", label: "Vote Count" },
-        { value: "primary", label: "Primary (Default TMDB View)" },
-      ];
-
-      return (
-        <div className="space-y-2">
-          <div className="relative">
-            <select
-              value={stringValue}
-              onChange={(e) => updateValue(fieldKey, e.target.value)}
-              className="w-full h-[42px] px-4 py-2.5 pr-10 bg-theme-bg border border-theme rounded-lg text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all cursor-pointer appearance-none"
-            >
-              {sortingOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-theme-muted pointer-events-none" />
-          </div>
-          <p className="text-xs text-theme-muted">
-            Picture sorting method via TMDB API
-          </p>
-        </div>
-      );
-    }
-
-    // ============ SERVICES MIT VALIDATE-BUTTONS ============
-
-    // Plex Token mit Validate-Button
-    if (key === "PlexToken") {
-      return (
-        <div className="space-y-2">
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <input
-                type="text"
-                value={stringValue}
-                onChange={(e) => updateValue(fieldKey, e.target.value)}
-                className="w-full h-[42px] px-4 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono pr-10"
-                placeholder="Enter Plex token"
-              />
-              <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-muted" />
-            </div>
-            <ValidateButton
-              type="plex"
-              config={config}
-              label="Validate"
-              onSuccess={setSuccess}
-              onError={setError}
-            />
-          </div>
-          <p className="text-xs text-theme-muted">
-            Your Plex authentication token
-          </p>
-        </div>
-      );
-    }
-
-    // Jellyfin API Key mit Validate-Button
-    if (key === "JellyfinAPIKey") {
-      return (
-        <div className="space-y-2">
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <input
-                type="text"
-                value={stringValue}
-                onChange={(e) => updateValue(fieldKey, e.target.value)}
-                className="w-full h-[42px] px-4 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono pr-10"
-                placeholder="Enter Jellyfin API key"
-              />
-              <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-muted" />
-            </div>
-            <ValidateButton
-              type="jellyfin"
-              config={config}
-              label="Validate"
-              onSuccess={setSuccess}
-              onError={setError}
-            />
-          </div>
-          <p className="text-xs text-theme-muted">
-            Create API key in Jellyfin at Settings → Advanced → API Keys
-          </p>
-        </div>
-      );
-    }
-
-    // Emby API Key mit Validate-Button
-    if (key === "EmbyAPIKey") {
-      return (
-        <div className="space-y-2">
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <input
-                type="text"
-                value={stringValue}
-                onChange={(e) => updateValue(fieldKey, e.target.value)}
-                className="w-full h-[42px] px-4 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono pr-10"
-                placeholder="Enter Emby API key"
-              />
-              <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-muted" />
-            </div>
-            <ValidateButton
-              type="emby"
-              config={config}
-              label="Validate"
-              onSuccess={setSuccess}
-              onError={setError}
-            />
-          </div>
-          <p className="text-xs text-theme-muted">
-            Create API key in Emby at Settings → Advanced → API Keys
-          </p>
-        </div>
-      );
-    }
-
-    // ============ API KEYS MIT VALIDATE-BUTTONS ============
-
-    // TMDB Token mit Validate-Button
-    if (key === "tmdbtoken") {
-      return (
-        <div className="space-y-2">
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <input
-                type="text"
-                value={stringValue}
-                onChange={(e) => updateValue(fieldKey, e.target.value)}
-                className="w-full h-[42px] px-4 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono pr-10"
-                placeholder="Enter TMDB Read Access Token"
-              />
-              <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-muted" />
-            </div>
-            <ValidateButton
-              type="tmdb"
-              config={config}
-              label="Validate"
-              onSuccess={setSuccess}
-              onError={setError}
-            />
-          </div>
-          <p className="text-xs text-theme-muted">
-            Your TMDB API Read Access Token (the really long one)
-          </p>
-        </div>
-      );
-    }
-
-    // TVDB API Key mit Validate-Button
-    if (key === "tvdbapi") {
-      return (
-        <div className="space-y-2">
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <input
-                type="text"
-                value={stringValue}
-                onChange={(e) => updateValue(fieldKey, e.target.value)}
-                className="w-full h-[42px] px-4 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono pr-10"
-                placeholder="Enter TVDB API Key (optionally with #PIN)"
-              />
-              <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-muted" />
-            </div>
-            <ValidateButton
-              type="tvdb"
-              config={config}
-              label="Validate"
-              onSuccess={setSuccess}
-              onError={setError}
-            />
-          </div>
-          <p className="text-xs text-theme-muted">
-            Format: YourApiKey or YourApiKey#YourPin (for subscribers)
-          </p>
-        </div>
-      );
-    }
-
-    // Fanart.tv API Key mit Validate-Button
-    if (key === "FanartTvAPIKey") {
-      return (
-        <div className="space-y-2">
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <input
-                type="text"
-                value={stringValue}
-                onChange={(e) => updateValue(fieldKey, e.target.value)}
-                className="w-full h-[42px] px-4 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono pr-10"
-                placeholder="Enter Fanart.tv Personal API Key"
-              />
-              <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-muted" />
-            </div>
-            <ValidateButton
-              type="fanart"
-              config={config}
-              label="Validate"
-              onSuccess={setSuccess}
-              onError={setError}
-            />
-          </div>
-          <p className="text-xs text-theme-muted">
-            Your Fanart.tv Personal API Key
-          </p>
-        </div>
-      );
-    }
-
-    // ============ NOTIFICATIONS MIT VALIDATE-BUTTONS ============
-
-    // Discord Webhook mit Validate-Button
-    if (key === "Discord") {
-      return (
-        <div className="space-y-2">
-          <div className="flex gap-2">
-            <textarea
-              value={stringValue}
-              onChange={(e) => {
-                updateValue(fieldKey, e.target.value);
-                autoResize(e.target);
-              }}
-              onInput={(e) => autoResize(e.target)}
-              ref={(textarea) => textarea && autoResize(textarea)}
-              rows={1}
-              className="flex-1 px-4 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono text-sm resize-none overflow-hidden min-h-[42px]"
-              placeholder="https://discord.com/api/webhooks/..."
-            />
-            <ValidateButton
-              type="discord"
-              config={config}
-              label="Test"
-              onSuccess={setSuccess}
-              onError={setError}
-            />
-          </div>
-          <p className="text-xs text-theme-muted">
-            Discord webhook URL (sends a test message when validated)
-          </p>
-        </div>
-      );
-    }
-
-    // Apprise URL mit Validate-Button
-    if (key === "AppriseUrl") {
-      return (
-        <div className="space-y-2">
-          <div className="flex gap-2">
-            <textarea
-              value={stringValue}
-              onChange={(e) => {
-                updateValue(fieldKey, e.target.value);
-                autoResize(e.target);
-              }}
-              onInput={(e) => autoResize(e.target)}
-              ref={(textarea) => textarea && autoResize(textarea)}
-              rows={1}
-              className="flex-1 px-4 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono text-sm resize-none overflow-hidden min-h-[42px]"
-              placeholder="discord://... or telegram://... etc."
-            />
-            <ValidateButton
-              type="apprise"
-              config={config}
-              label="Validate"
-              onSuccess={setSuccess}
-              onError={setError}
-            />
-          </div>
-          <p className="text-xs text-theme-muted">
-            Apprise notification URL (format check only)
-          </p>
-        </div>
-      );
-    }
-
-    // Uptime Kuma URL mit Validate-Button
-    if (key === "UptimeKumaUrl") {
-      return (
-        <div className="space-y-2">
-          <div className="flex gap-2">
-            <textarea
-              value={stringValue}
-              onChange={(e) => {
-                updateValue(fieldKey, e.target.value);
-                autoResize(e.target);
-              }}
-              onInput={(e) => autoResize(e.target)}
-              ref={(textarea) => textarea && autoResize(textarea)}
-              rows={1}
-              className="flex-1 px-4 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono text-sm resize-none overflow-hidden min-h-[42px]"
-              placeholder="https://uptime-kuma.domain.com/api/push/..."
-            />
-            <ValidateButton
-              type="uptimekuma"
-              config={config}
-              label="Test"
-              onSuccess={setSuccess}
-              onError={setError}
-            />
-          </div>
-          <p className="text-xs text-theme-muted">
-            Uptime Kuma push monitor URL (sends test ping when validated)
-          </p>
-        </div>
-      );
-    }
-
-    // ============ REST OF THE FUNCTION (UNCHANGED) ============
-
     // Handle text_offset specially
     if (keyLower.includes("offset") || keyLower === "text_offset") {
       return (
@@ -1677,7 +1027,6 @@ function ConfigEditor() {
       );
     }
 
-    // Generic password/token/key/secret handling (WITHOUT Validate button for other fields)
     if (
       keyLower.includes("password") ||
       keyLower.includes("token") ||
@@ -1768,21 +1117,7 @@ function ConfigEditor() {
 
   return (
     <div className="space-y-6">
-      {/* Notifications */}
-      {error && (
-        <Notification
-          type="error"
-          message={error}
-          onClose={() => setError(null)}
-        />
-      )}
-      {success && (
-        <Notification
-          type="success"
-          message={success}
-          onClose={() => setSuccess(null)}
-        />
-      )}
+      <Toaster />
 
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -1841,54 +1176,6 @@ function ConfigEditor() {
             Filtering settings matching "{searchQuery}"
           </p>
         )}
-      </div>
-
-      {/* Expand/Collapse All Controls */}
-      <div className="bg-theme-card rounded-xl p-4 border border-theme shadow-sm">
-        <div className="flex items-center justify-between">
-          <div className="text-theme-text">
-            <span className="font-medium">
-              {getFilteredGroupsByTab(activeTab).filter(
-                (groupName) => getFilteredFieldsForGroup(groupName).length > 0
-              ).length}{" "}
-              section{getFilteredGroupsByTab(activeTab).filter(
-                (groupName) => getFilteredFieldsForGroup(groupName).length > 0
-              ).length !== 1 ? "s" : ""}
-            </span>
-            {searchQuery && (
-              <span className="ml-2 text-theme-muted text-sm">
-                (filtered)
-              </span>
-            )}
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => {
-                const allGroups = getFilteredGroupsByTab(activeTab);
-                const newExpandedState = {};
-                allGroups.forEach((groupName) => {
-                  if (getFilteredFieldsForGroup(groupName).length > 0) {
-                    newExpandedState[groupName] = true;
-                  }
-                });
-                setExpandedGroups(newExpandedState);
-              }}
-              className="flex items-center gap-1 px-3 py-2 text-sm bg-theme-hover hover:bg-theme-primary/20 border border-theme hover:border-theme-primary rounded-lg transition-all font-medium"
-            >
-              <Expand className="w-4 h-4" />
-              Expand All
-            </button>
-            <button
-              onClick={() => {
-                setExpandedGroups({});
-              }}
-              className="flex items-center gap-1 px-3 py-2 text-sm bg-theme-hover hover:bg-theme-primary/20 border border-theme hover:border-theme-primary rounded-lg transition-all font-medium"
-            >
-              <Minimize className="w-4 h-4" />
-              Collapse All
-            </button>
-          </div>
-        </div>
       </div>
 
       {/* Settings Groups */}
@@ -2008,92 +1295,6 @@ function ConfigEditor() {
           </div>
         )}
       </div>
-
-      {/* Overlay Preview Modal */}
-      {previewOverlay && (
-        <div
-          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
-          onClick={() => setPreviewOverlay(null)}
-        >
-          <div
-            className="bg-theme-card rounded-xl border border-theme shadow-2xl max-w-3xl w-full max-h-[85vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Modal Header */}
-            <div className="flex items-center justify-between p-4 border-b border-theme sticky top-0 bg-theme-card z-10">
-              <div className="flex items-center gap-3">
-                <Image className="w-5 h-5 text-theme-primary" />
-                <h3 className="text-lg font-semibold text-theme-text">
-                  Overlay Preview
-                </h3>
-              </div>
-              <button
-                onClick={() => setPreviewOverlay(null)}
-                className="p-2 hover:bg-theme-hover rounded-lg transition-all"
-              >
-                <X className="w-5 h-5 text-theme-text" />
-              </button>
-            </div>
-
-            {/* Modal Content */}
-            <div className="p-6">
-              <div className="mb-4">
-                <p className="text-sm text-theme-muted mb-1">Filename:</p>
-                <p className="text-theme-text font-mono bg-theme-bg px-3 py-2 rounded-lg border border-theme">
-                  {previewOverlay}
-                </p>
-              </div>
-
-              {/* Image Preview with Checkered Background */}
-              <div className="relative bg-theme-bg rounded-lg border border-theme p-4 flex items-center justify-center overflow-hidden">
-                {/* Checkered background for transparency */}
-                <div
-                  className="absolute inset-0 rounded-lg"
-                  style={{
-                    backgroundImage: `
-                      linear-gradient(45deg, #3a3a3a 25%, transparent 25%),
-                      linear-gradient(-45deg, #3a3a3a 25%, transparent 25%),
-                      linear-gradient(45deg, transparent 75%, #3a3a3a 75%),
-                      linear-gradient(-45deg, transparent 75%, #3a3a3a 75%)
-                    `,
-                    backgroundSize: "20px 20px",
-                    backgroundPosition: "0 0, 0 10px, 10px -10px, -10px 0px",
-                  }}
-                ></div>
-                <img
-                  src={`${API_URL}/overlayfiles/preview/${encodeURIComponent(
-                    previewOverlay
-                  )}`}
-                  alt={previewOverlay}
-                  className="relative z-10 max-w-full h-auto object-contain rounded-lg shadow-lg"
-                  style={{ maxHeight: "55vh" }}
-                  onError={(e) => {
-                    e.target.style.display = "none";
-                    e.target.nextSibling.style.display = "flex";
-                  }}
-                />
-                <div
-                  className="hidden flex-col items-center gap-3 text-theme-muted relative z-10"
-                  style={{ display: "none" }}
-                >
-                  <AlertCircle className="w-12 h-12" />
-                  <p>Failed to load image</p>
-                </div>
-              </div>
-
-              {/* Modal Footer */}
-              <div className="mt-4 flex justify-end gap-3">
-                <button
-                  onClick={() => setPreviewOverlay(null)}
-                  className="px-4 py-2 bg-theme-bg hover:bg-theme-hover border border-theme rounded-lg font-medium transition-all"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
