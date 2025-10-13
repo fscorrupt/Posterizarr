@@ -36,6 +36,28 @@ const Sidebar = () => {
   const [isConfigExpanded, setIsConfigExpanded] = useState(false);
   const [isThemeDropdownOpen, setIsThemeDropdownOpen] = useState(false);
 
+  // Check if Folder View is active
+  const [viewMode, setViewMode] = useState(() => {
+    return localStorage.getItem("gallery-view-mode") || "grid";
+  });
+
+  // Update viewMode when localStorage changes (listen to storage events)
+  React.useEffect(() => {
+    const handleStorageChange = () => {
+      setViewMode(localStorage.getItem("gallery-view-mode") || "grid");
+    };
+
+    // Listen for custom event from GalleryHub
+    window.addEventListener("viewModeChanged", handleStorageChange);
+    // Also check periodically (fallback)
+    const interval = setInterval(handleStorageChange, 500);
+
+    return () => {
+      window.removeEventListener("viewModeChanged", handleStorageChange);
+      clearInterval(interval);
+    };
+  }, []);
+
   const themeArray = Object.entries(themes).map(([id, config]) => ({
     id,
     name: config.name,
@@ -50,12 +72,20 @@ const Sidebar = () => {
       label: "Assets",
       icon: Image,
       hasSubItems: true,
-      subItems: [
-        { path: "/gallery/posters", label: "Posters", icon: Image },
-        { path: "/gallery/backgrounds", label: "Backgrounds", icon: Layers },
-        { path: "/gallery/seasons", label: "Seasons", icon: Film },
-        { path: "/gallery/titlecards", label: "Title Cards", icon: Tv },
-      ],
+      subItems:
+        // In Folder View: Only show "Posters" tab, in Grid View: show all tabs
+        viewMode === "folder"
+          ? [{ path: "/gallery/posters", label: "Posters", icon: Image }]
+          : [
+              { path: "/gallery/posters", label: "Posters", icon: Image },
+              {
+                path: "/gallery/backgrounds",
+                label: "Backgrounds",
+                icon: Layers,
+              },
+              { path: "/gallery/seasons", label: "Seasons", icon: Film },
+              { path: "/gallery/titlecards", label: "Title Cards", icon: Tv },
+            ],
     },
     { path: "/test-gallery", label: "Test Assets", icon: Image },
     { path: "/overlay-assets", label: "Overlay Assets", icon: FileImage },

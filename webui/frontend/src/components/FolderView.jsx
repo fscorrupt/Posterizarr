@@ -189,6 +189,16 @@ function FolderView() {
     return <ImageIcon className="w-4 h-4" />;
   };
 
+  const getAssetAspectRatio = (assetName) => {
+    const name = assetName.toLowerCase();
+    // Backgrounds and titlecards are horizontal (16:9)
+    if (name.includes("background") || name.includes("titlecard")) {
+      return "aspect-[16/9]";
+    }
+    // Posters and seasons are vertical (2:3)
+    return "aspect-[2/3]";
+  };
+
   const formatFileSize = (bytes) => {
     if (bytes < 1024) return bytes + " B";
     if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
@@ -227,15 +237,15 @@ function FolderView() {
       )}
 
       {/* Header with Breadcrumb */}
-      <div className="bg-theme-secondary border border-theme-border rounded-lg p-4 space-y-4">
+      <div className="bg-theme-card border border-theme-border rounded-lg p-4 space-y-4">
         {/* Breadcrumb Navigation */}
         <div className="flex items-center gap-2 flex-wrap">
           <button
             onClick={navigateHome}
-            className="flex items-center gap-2 px-3 py-2 bg-theme-dark hover:bg-theme-darker border border-theme-border rounded-lg transition-colors"
+            className="flex items-center gap-2 px-3 py-2 bg-theme-hover hover:bg-theme-primary/70 border border-theme-border rounded-lg transition-all"
           >
             <Home className="w-4 h-4" />
-            <span className="text-sm font-medium">Assets</span>
+            <span className="text-sm font-medium text-theme-text">Assets</span>
           </button>
 
           {currentPath.map((folder, index) => (
@@ -243,10 +253,10 @@ function FolderView() {
               <ChevronRight className="w-4 h-4 text-theme-muted" />
               <button
                 onClick={() => navigateToLevel(index + 1)}
-                className={`px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
+                className={`px-3 py-2 rounded-lg transition-all text-sm font-medium ${
                   index === currentPath.length - 1
-                    ? "bg-theme-primary text-white"
-                    : "bg-theme-dark hover:bg-theme-darker border border-theme-border"
+                    ? "bg-theme-primary text-white scale-105"
+                    : "bg-theme-hover hover:bg-theme-primary/70 border border-theme-border text-theme-text"
                 }`}
               >
                 {folder}
@@ -271,30 +281,30 @@ function FolderView() {
                 }
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-theme-dark border border-theme-border rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary text-sm"
+                className="w-full pl-10 pr-4 py-2 bg-theme-bg border border-theme-border rounded-lg focus:outline-none focus:ring-2 focus:ring-theme-primary text-sm"
               />
             </div>
           </div>
 
+          {/* Image Size Slider (only when showing assets) */}
+          {currentPath.length === 2 && assets.length > 0 && (
+            <CompactImageSizeSlider
+              value={imageSize}
+              onChange={setImageSize}
+              min={2}
+              max={10}
+            />
+          )}
+
           <button
             onClick={handleRefresh}
             disabled={loading}
-            className="flex items-center gap-2 px-4 py-2 bg-theme-primary hover:bg-theme-primary-hover text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+            className="flex items-center gap-2 px-4 py-2 bg-theme-primary hover:bg-theme-primary/90 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg transition-all font-medium shadow-lg"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+            <RefreshCw className={`w-5 h-5 ${loading ? "animate-spin" : ""}`} />
             <span>Refresh</span>
           </button>
         </div>
-
-        {/* Image Size Slider (only when showing assets) */}
-        {currentPath.length === 2 && assets.length > 0 && (
-          <CompactImageSizeSlider
-            value={imageSize}
-            onChange={setImageSize}
-            min={2}
-            max={10}
-          />
-        )}
       </div>
 
       {/* Content Area */}
@@ -314,11 +324,11 @@ function FolderView() {
                 <button
                   key={folder.path || folder.name}
                   onClick={() => navigateToFolder(folder.name)}
-                  className="group bg-theme-secondary border border-theme-border rounded-lg p-4 hover:border-theme-primary transition-all text-left"
+                  className="group bg-theme-card border border-theme-border rounded-lg p-4 hover:border-theme-primary transition-all text-left shadow-sm hover:shadow-md"
                 >
                   <div className="flex items-start gap-3">
-                    <div className="p-3 bg-theme-dark rounded-lg group-hover:bg-theme-primary transition-colors">
-                      <Folder className="w-6 h-6 text-theme-muted group-hover:text-white" />
+                    <div className="p-3 rounded-lg border border-theme-border group-hover:bg-theme-primary group-hover:border-theme-primary transition-colors">
+                      <Folder className="w-6 h-6 text-theme-muted group-hover:text-white transition-colors" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-medium text-theme-text truncate mb-1">
@@ -356,11 +366,13 @@ function FolderView() {
               {filteredAssets.map((asset) => (
                 <div
                   key={asset.path}
-                  className="group relative bg-theme-secondary border border-theme-border rounded-lg overflow-hidden hover:border-theme-primary transition-all cursor-pointer"
+                  className="group relative bg-theme-card border border-theme-border rounded-lg overflow-hidden hover:border-theme-primary transition-all cursor-pointer shadow-sm hover:shadow-md"
                   onClick={() => setSelectedImage(asset)}
                 >
                   {/* Asset Image */}
-                  <div className="aspect-[2/3] relative">
+                  <div
+                    className={`${getAssetAspectRatio(asset.name)} relative`}
+                  >
                     <img
                       src={asset.url}
                       alt={asset.name}
@@ -488,19 +500,18 @@ function FolderView() {
             </div>
 
             {/* Modal Footer */}
-            <div className="px-6 py-4 border-t-2 border-theme flex justify-between items-center bg-theme-card">
-              <div className="flex items-center gap-4">
-                <span className="text-sm text-theme-muted font-medium flex items-center gap-2">
-                  {getAssetTypeIcon(selectedImage.name)}
-                  <span>Size: {formatFileSize(selectedImage.size)}</span>
+            <div className="px-6 py-4 border-t-2 border-theme bg-theme-card">
+              <div className="flex justify-between items-center gap-4">
+                <span className="text-sm text-theme-muted font-medium">
+                  Size: {formatFileSize(selectedImage.size)}
                 </span>
+                <button
+                  onClick={() => setSelectedImage(null)}
+                  className="px-6 py-2 bg-theme-primary hover:bg-theme-primary/90 rounded-lg text-sm font-medium transition-all text-white shadow-lg hover:scale-105"
+                >
+                  Close
+                </button>
               </div>
-              <button
-                onClick={() => setSelectedImage(null)}
-                className="px-6 py-2 bg-theme-primary hover:bg-theme-primary/90 rounded-lg text-sm font-medium transition-all text-white shadow-lg hover:scale-105"
-              >
-                Close
-              </button>
             </div>
           </div>
         </div>

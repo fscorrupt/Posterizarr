@@ -16,9 +16,11 @@ function GalleryHub() {
     return saved || "grid";
   });
 
-  // Save view mode to localStorage
+  // Save view mode to localStorage and notify other components
   useEffect(() => {
     localStorage.setItem("gallery-view-mode", viewMode);
+    // Dispatch custom event to notify Sidebar
+    window.dispatchEvent(new Event("viewModeChanged"));
   }, [viewMode]);
 
   const getActiveTabFromPath = () => {
@@ -48,7 +50,7 @@ function GalleryHub() {
   return (
     <div className="space-y-4">
       {/* View Mode Toggle */}
-      <div className="bg-theme-secondary border border-theme-border rounded-lg p-4">
+      <div className="bg-theme-card border border-theme-border rounded-lg p-4">
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-lg font-semibold text-theme-text mb-1">
@@ -66,7 +68,7 @@ function GalleryHub() {
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
                 viewMode === "grid"
                   ? "bg-theme-primary text-white"
-                  : "bg-theme-dark hover:bg-theme-darker border border-theme-border text-theme-text"
+                  : "bg-theme-hover hover:bg-theme-primary/70 border border-theme-border text-theme-text"
               }`}
             >
               <LayoutGrid className="w-4 h-4" />
@@ -77,7 +79,7 @@ function GalleryHub() {
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
                 viewMode === "folder"
                   ? "bg-theme-primary text-white"
-                  : "bg-theme-dark hover:bg-theme-darker border border-theme-border text-theme-text"
+                  : "bg-theme-hover hover:bg-theme-primary/70 border border-theme-border text-theme-text"
               }`}
             >
               <FolderTree className="w-4 h-4" />
