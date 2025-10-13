@@ -63,8 +63,15 @@ function BackgroundsGallery() {
       const data = await response.json();
       setFolders(data.folders || []);
 
-      if (showNotification && data.folders && data.folders.length > 0) {
-        setSuccess(`Found: ${data.folders.length} folders`);
+      if (showNotification && data.folders) {
+        const totalBackgrounds = data.folders.reduce((sum, folder) => sum + (folder.background_count || 0), 0);
+        const foldersWithBackgrounds = data.folders.filter(f => f.background_count > 0).length;
+        
+        if (totalBackgrounds > 0) {
+          setSuccess(`${foldersWithBackgrounds} folder${foldersWithBackgrounds !== 1 ? 's' : ''} loaded with ${totalBackgrounds} background${totalBackgrounds !== 1 ? 's' : ''}`);
+        } else {
+          setSuccess(`${data.folders.length} folder${data.folders.length !== 1 ? 's' : ''} found with 0 backgrounds`);
+        }
       }
 
       if (data.folders && data.folders.length > 0 && !activeFolder) {
