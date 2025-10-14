@@ -46,6 +46,37 @@ const getLogFileForMode = (mode) => {
 };
 
 // ============================================================================
+// WAIT FOR LOG FILE - Polls backend until log file exists
+// ============================================================================
+const waitForLogFile = async (logFileName, maxAttempts = 30, delayMs = 200) => {
+  for (let i = 0; i < maxAttempts; i++) {
+    try {
+      const response = await fetch(`${API_URL}/logs/${logFileName}/exists`);
+      const data = await response.json();
+
+      if (data.exists) {
+        console.log(
+          `✅ Log file ${logFileName} exists after ${i + 1} attempts`
+        );
+        return true;
+      }
+
+      // Wait before next attempt
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    } catch (error) {
+      console.error(`Error checking log file existence: ${error}`);
+      // Continue trying even if there's an error
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+  }
+
+  console.warn(
+    `⚠️ Log file ${logFileName} not found after ${maxAttempts} attempts`
+  );
+  return false;
+};
+
+// ============================================================================
 // TMDB POSTER SEARCH MODAL - Defined OUTSIDE component to prevent re-renders
 // ============================================================================
 const TMDBPosterSearchModal = React.memo(
@@ -321,11 +352,19 @@ function RunModes() {
 
         // ✨ Weiterleitung zum LogViewer mit der richtigen Log-Datei
         const logFile = getLogFileForMode(mode);
-        console.log(`🎯 Redirecting to LogViewer with log: ${logFile}`);
+        console.log(`🎯 Waiting for log file: ${logFile}`);
 
-        setTimeout(() => {
+        // Wait for log file to be created before navigating
+        const logExists = await waitForLogFile(logFile);
+
+        if (logExists) {
+          console.log(`🎯 Redirecting to LogViewer with log: ${logFile}`);
           navigate("/logs", { state: { logFile: logFile } });
-        }, 500);
+        } else {
+          console.warn(`⚠️ Log file ${logFile} not found, redirecting anyway`);
+          // Still navigate even if log doesn't exist yet
+          navigate("/logs", { state: { logFile: logFile } });
+        }
       } else {
         showError(`Error: ${data.message}`);
       }
@@ -432,10 +471,20 @@ function RunModes() {
           setUploadPreview(null);
           fetchStatus();
 
-          console.log("🎯 Redirecting to LogViewer with log: Manuallog.log");
-          setTimeout(() => {
+          console.log("🎯 Waiting for log file: Manuallog.log (upload)");
+
+          // Wait for log file to be created before navigating
+          const logExists = await waitForLogFile("Manuallog.log");
+
+          if (logExists) {
+            console.log("🎯 Redirecting to LogViewer with log: Manuallog.log");
             navigate("/logs", { state: { logFile: "Manuallog.log" } });
-          }, 500);
+          } else {
+            console.warn(
+              "⚠️ Log file Manuallog.log not found, redirecting anyway"
+            );
+            navigate("/logs", { state: { logFile: "Manuallog.log" } });
+          }
         } else {
           showError(`Error: ${data.message}`);
         }
@@ -469,10 +518,20 @@ function RunModes() {
           setUploadPreview(null);
           fetchStatus();
 
-          console.log("🎯 Redirecting to LogViewer with log: Manuallog.log");
-          setTimeout(() => {
+          console.log("🎯 Waiting for log file: Manuallog.log (URL)");
+
+          // Wait for log file to be created before navigating
+          const logExists = await waitForLogFile("Manuallog.log");
+
+          if (logExists) {
+            console.log("🎯 Redirecting to LogViewer with log: Manuallog.log");
             navigate("/logs", { state: { logFile: "Manuallog.log" } });
-          }, 500);
+          } else {
+            console.warn(
+              "⚠️ Log file Manuallog.log not found, redirecting anyway"
+            );
+            navigate("/logs", { state: { logFile: "Manuallog.log" } });
+          }
         } else {
           showError(`Error: ${data.message}`);
         }

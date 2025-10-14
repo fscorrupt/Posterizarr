@@ -4264,6 +4264,25 @@ async def get_log_content(log_name: str, tail: int = 100):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.get("/api/logs/{log_name}/exists")
+async def check_log_exists(log_name: str):
+    """Check if a log file exists (for waiting until script creates log)"""
+    # Try Logs directory first
+    log_path = LOGS_DIR / log_name
+
+    # If not found, try UILogs directory
+    if not log_path.exists():
+        log_path = UI_LOGS_DIR / log_name
+
+    exists = log_path.exists()
+
+    return {
+        "exists": exists,
+        "log_name": log_name,
+        "path": str(log_path) if exists else None,
+    }
+
+
 @app.websocket("/ws/logs")
 async def websocket_logs(
     websocket: WebSocket, log_file: Optional[str] = Query("Scriptlog.log")
@@ -4271,7 +4290,7 @@ async def websocket_logs(
     """
     WebSocket endpoint for REAL-TIME log streaming
 
-    FIXED: Now properly accepts and respects the log_file query parameter
+    Now properly accepts and respects the log_file query parameter
     - Frontend can specify which log file to watch
     - Backend won't override user's manual selection
     - Only auto-switches if user is watching the "active" log for current mode
