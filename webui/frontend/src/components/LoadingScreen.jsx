@@ -54,41 +54,48 @@ function LoadingScreen() {
 
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-theme-dark via-theme-darker to-theme-dark flex flex-col items-center pt-32 px-4">
+      <style>{`
+        @keyframes ringPulse {
+          0%, 100% {
+            opacity: 0.2;
+            transform: scale(1);
+          }
+          50% {
+            opacity: 1;
+            transform: scale(1.1);
+          }
+        }
+        .ring-pulse-1 {
+          animation: ringPulse 2s ease-in-out infinite;
+        }
+        .ring-pulse-2 {
+          animation: ringPulse 2s ease-in-out infinite;
+          animation-delay: 0.2s;
+        }
+        .ring-pulse-3 {
+          animation: ringPulse 2s ease-in-out infinite;
+          animation-delay: 0.4s;
+        }
+      `}</style>
       {/* Posterizarr Logo */}
       <div className="mb-8">
         <img
-          src="/favicon.png"
+          src="/logo.png"
           alt="Posterizarr Logo"
-          className="w-24 h-24 object-contain"
+          className="h-12 w-auto object-contain"
         />
       </div>
 
       {/* Radarr-style spinning radar - smaller and at top */}
-      <div className="relative w-20 h-20 mb-8">
-        {/* Outer ring */}
-        <div className="absolute inset-0 border-2 border-theme-primary/20 rounded-full"></div>
+      <div className="relative w-12 h-12 mb-8">
+        {/* Outer ring - pulsing */}
+        <div className="absolute inset-0 border border-white rounded-full ring-pulse-1"></div>
 
-        {/* Middle ring */}
-        <div className="absolute inset-2 border-2 border-theme-primary/40 rounded-full"></div>
+        {/* Middle ring - pulsing with delay */}
+        <div className="absolute inset-1 border border-white rounded-full ring-pulse-2"></div>
 
-        {/* Inner ring */}
-        <div className="absolute inset-4 border-2 border-theme-primary/60 rounded-full"></div>
-
-        {/* Center dot */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="w-2 h-2 bg-theme-primary rounded-full"></div>
-        </div>
-
-        {/* Rotating radar line */}
-        <div
-          className="absolute inset-0 animate-spin"
-          style={{ animationDuration: "1.5s" }}
-        >
-          <div className="absolute top-1/2 left-1/2 w-10 h-0.5 bg-gradient-to-r from-theme-primary to-transparent transform -translate-y-1/2 origin-left"></div>
-        </div>
-
-        {/* Pulsing outer glow */}
-        <div className="absolute inset-0 border-2 border-theme-primary rounded-full animate-ping opacity-20"></div>
+        {/* Inner ring - pulsing with delay */}
+        <div className="absolute inset-2 border border-white rounded-full ring-pulse-3"></div>
       </div>
 
       {/* Loading message - Radarr style */}

@@ -122,7 +122,7 @@ const Sidebar = () => {
           isCollapsed ? "w-20" : "w-64"
         }`}
       >
-        <div className="flex items-center p-4 h-16">
+        <div className="flex items-center p-4 h-20">
           <button
             onClick={() => setIsCollapsed(!isCollapsed)}
             className="p-2 rounded-lg hover:bg-theme-hover transition-colors text-theme-text"
@@ -131,9 +131,13 @@ const Sidebar = () => {
             <Menu className="w-5 h-5" />
           </button>
           {!isCollapsed && (
-            <span className="ml-3 text-xl font-bold text-theme-primary">
-              Posterizarr
-            </span>
+            <div className="ml-3 flex items-center">
+              <img
+                src="/logo.png"
+                alt="Posterizarr Logo"
+                className="h-12 w-auto object-contain"
+              />
+            </div>
           )}
         </div>
 
