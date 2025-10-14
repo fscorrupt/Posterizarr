@@ -7280,7 +7280,7 @@ Else {
 }
 # Delete all files and subfolders within the temp directory
 if (Test-Path $TempPath) {
-    Get-ChildItem -Path (Join-Path $TempPath '*') -Recurse | Where-Object { $_.Name -ne 'Posterizarr.Running' } | Remove-Item -Force
+    Get-ChildItem -Path (Join-Path $TempPath '*') -Recurse -Exclude 'Posterizarr.Running', 'font_preview*' | Remove-Item -Force
     Write-Entry -Message "Deleting temp folder: $TempPath" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
 }
 if ($Testing) {
