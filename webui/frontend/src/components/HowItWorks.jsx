@@ -325,7 +325,7 @@ function HowItWorks() {
             <ArrowRight className="w-4 h-4" />
           </a>
           <a
-            href="https://github.com/fscorrupt/Posterizarr"
+            href="https://github.com/fscorrupt/Posterizarr#readme"
             target="_blank"
             rel="noopener noreferrer"
             className="px-5 py-2.5 bg-theme-hover hover:bg-theme-primary/20 text-theme-text rounded-lg font-medium transition-colors duration-200 flex items-center gap-2 border border-theme"
