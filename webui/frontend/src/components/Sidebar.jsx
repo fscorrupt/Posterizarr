@@ -22,6 +22,7 @@ import {
   Lock,
   User,
   FileImage,
+  Lightbulb,
 } from "lucide-react";
 import VersionBadge from "./VersionBadge";
 import { useSidebar } from "../context/SidebarContext";
@@ -108,6 +109,7 @@ const Sidebar = () => {
     },
     { path: "/scheduler", label: "Scheduler", icon: Clock },
     { path: "/logs", label: "Logs", icon: FileText },
+    { path: "/how-it-works", label: "How It Works", icon: Lightbulb },
     { path: "/about", label: "About", icon: Info },
   ];
 

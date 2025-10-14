@@ -21,6 +21,7 @@ import Dashboard from "./components/Dashboard";
 import GalleryHub from "./components/GalleryHub";
 import TestGallery from "./components/TestGallery";
 import About from "./components/About";
+import HowItWorks from "./components/HowItWorks";
 import SchedulerSettings from "./components/SchedulerSettings";
 import RunModes from "./components/RunModes";
 import OverlayAssets from "./components/OverlayAssets";
@@ -182,6 +183,7 @@ function AppContent() {
 
                 <Route path="/scheduler" element={<SchedulerSettings />} />
                 <Route path="/logs" element={<LogViewer />} />
+                <Route path="/how-it-works" element={<HowItWorks />} />
                 <Route path="/about" element={<About />} />
               </Routes>
             </div>
