@@ -45,13 +45,6 @@ if IS_DOCKER:
     ASSETS_DIR = Path("/assets")
     IMAGES_DIR = Path("/app/images")
     FRONTEND_DIR = Path("/app/frontend/dist")
-    # Ensure directories exist in Docker
-    (BASE_DIR / "Logs").mkdir(parents=True, exist_ok=True)
-    (BASE_DIR / "temp").mkdir(parents=True, exist_ok=True)
-    (BASE_DIR / "test").mkdir(parents=True, exist_ok=True)
-    (BASE_DIR / "UILogs").mkdir(parents=True, exist_ok=True)
-    (BASE_DIR / "uploads").mkdir(parents=True, exist_ok=True)
-    (BASE_DIR / "fontpreviews").mkdir(parents=True, exist_ok=True)
 else:
     # Local: webui/backend/main.py -> project root (3 levels up)
     PROJECT_ROOT = Path(__file__).parent.parent.parent
@@ -61,12 +54,20 @@ else:
     IMAGES_DIR = PROJECT_ROOT / "images"
     FRONTEND_DIR = PROJECT_ROOT / "webui" / "frontend" / "dist"
     ASSETS_DIR.mkdir(exist_ok=True)
-    (BASE_DIR / "Logs").mkdir(exist_ok=True)
-    (BASE_DIR / "temp").mkdir(exist_ok=True)
-    (BASE_DIR / "test").mkdir(exist_ok=True)
-    (BASE_DIR / "UILogs").mkdir(exist_ok=True)
-    (BASE_DIR / "uploads").mkdir(exist_ok=True)
-    (BASE_DIR / "fontpreviews").mkdir(exist_ok=True)
+
+# Ensure directories exist locally
+SUBDIRS_TO_CREATE = [
+    "Logs",
+    "temp",
+    "test",
+    "UILogs",
+    "uploads",
+    "fontpreviews",
+]
+
+# Creating all directories in a single loop
+for subdir in SUBDIRS_TO_CREATE:
+    (BASE_DIR / subdir).mkdir(parents=True, exist_ok=True)
 
 CONFIG_PATH = BASE_DIR / "config.json"
 CONFIG_EXAMPLE_PATH = BASE_DIR / "config.example.json"
