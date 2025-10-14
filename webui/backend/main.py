@@ -643,7 +643,14 @@ def find_poster_in_assets(
                             episode_code = match.group(1).upper()  # e.g. "S01E01"
                             image_file = item / f"{episode_code}.jpg"
 
-                    elif asset_type == "Background":
+                    elif asset_type in [
+                        "Background",
+                        "Movie Background",
+                        "Show Background",
+                        "TV Background",
+                        "Series Background",
+                        "Episode Background",
+                    ]:
                         # Look for background.jpg in the folder
                         image_file = item / "background.jpg"
 
@@ -5043,9 +5050,9 @@ async def get_recent_assets():
         # Reverse the list to get the most recent assets first (bottom to top of CSV)
         all_assets.reverse()
 
-        # Get the first 20 entries to ensure we have enough assets after filtering
-        # (in case some don't have existing poster files)
-        candidate_assets = all_assets[:20]
+        # Get up to 100 most recent entries for frontend pagination
+        # Frontend will handle pagination/sliding through the assets
+        candidate_assets = all_assets[:100]
 
         # STEP 4: Find poster.jpg for each asset in assets folder and filter out non-existing
         recent_assets = []
@@ -5064,15 +5071,11 @@ async def get_recent_assets():
                     asset["poster_url"] = poster_url
                     asset["has_poster"] = True
                     recent_assets.append(asset)
-
-                    # Stop when we have 10 valid assets
-                    if len(recent_assets) >= 10:
-                        break
                 else:
                     logger.info(f"⏭️  Skipping asset (poster not found): {title}")
 
         logger.info(
-            f"✨ Returning {len(recent_assets)} most recent assets with existing posters"
+            f"✨ Returning {len(recent_assets)} most recent assets with existing images"
         )
 
         return {

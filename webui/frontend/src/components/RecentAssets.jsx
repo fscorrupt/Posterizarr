@@ -6,7 +6,14 @@
 // - Cached data with silent background refresh (every 2 minutes)
 
 import React, { useState, useEffect } from "react";
-import { FileImage, ExternalLink, RefreshCw, ImageOff } from "lucide-react";
+import {
+  FileImage,
+  ExternalLink,
+  RefreshCw,
+  ImageOff,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import Notification from "./Notification";
 import { useToast } from "../context/ToastContext";
 import CompactImageSizeSlider from "./CompactImageSizeSlider";
@@ -22,6 +29,18 @@ function RecentAssets() {
   const [error, setError] = useState(null); // Error state
 
   const [refreshing, setRefreshing] = useState(false);
+
+  // Tab filter state with localStorage
+  const [activeTab, setActiveTab] = useState(() => {
+    const saved = localStorage.getItem("recent-assets-tab");
+    return saved || "All";
+  });
+
+  // Pagination offset state with localStorage per tab
+  const [pageOffset, setPageOffset] = useState(() => {
+    const saved = localStorage.getItem(`recent-assets-offset-${activeTab}`);
+    return saved ? parseInt(saved) : 0;
+  });
 
   // Asset count state with localStorage (5-10 range, default 10)
   const [assetCount, setAssetCount] = useState(() => {
@@ -78,6 +97,61 @@ function RecentAssets() {
     const validCount = Math.min(Math.max(newCount, 5), 10);
     setAssetCount(validCount);
     localStorage.setItem("recent-assets-count", validCount.toString());
+    // Reset offset when changing count
+    setPageOffset(0);
+    localStorage.setItem(`recent-assets-offset-${activeTab}`, "0");
+  };
+
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    localStorage.setItem("recent-assets-tab", tab);
+    // Load offset for this tab or reset to 0
+    const savedOffset = localStorage.getItem(`recent-assets-offset-${tab}`);
+    setPageOffset(savedOffset ? parseInt(savedOffset) : 0);
+  };
+
+  const handlePageChange = (direction) => {
+    const filteredAssets = filterAssetsByTab(assets);
+    const maxOffset = Math.max(0, filteredAssets.length - assetCount);
+
+    let newOffset = pageOffset;
+    if (direction === "prev") {
+      newOffset = Math.max(0, pageOffset - assetCount);
+    } else if (direction === "next") {
+      newOffset = Math.min(maxOffset, pageOffset + assetCount);
+    }
+
+    setPageOffset(newOffset);
+    localStorage.setItem(
+      `recent-assets-offset-${activeTab}`,
+      newOffset.toString()
+    );
+  };
+
+  // Filter assets based on active tab
+  const filterAssetsByTab = (assetList) => {
+    if (activeTab === "All") {
+      return assetList;
+    }
+
+    return assetList.filter((asset) => {
+      const type = asset.type?.toLowerCase() || "";
+
+      switch (activeTab) {
+        case "Posters":
+          return type === "movie" || type === "poster" || type === "show";
+        case "Backgrounds":
+          return type.includes("background");
+        case "Seasons":
+          return type === "season";
+        case "TitleCards":
+          return (
+            type === "episode" || type === "titlecard" || type === "title_card"
+          );
+        default:
+          return true;
+      }
+    });
   };
 
   const getTypeColor = (type) => {
@@ -112,9 +186,12 @@ function RecentAssets() {
 
   // Determine if asset should use landscape aspect ratio
   const isLandscapeAsset = (type) => {
+    const typeStr = type?.toLowerCase() || "";
+    // Check for any background or titlecard/episode types
     const landscapeTypes = ["background", "episode", "titlecard", "title_card"];
-    const isLandscape = landscapeTypes.includes(type?.toLowerCase());
-    console.log(`Asset type: "${type}" -> Landscape: ${isLandscape}`);
+    const isLandscape =
+      landscapeTypes.some((t) => typeStr.includes(t)) ||
+      typeStr.includes("background");
     return isLandscape;
   };
 
@@ -125,8 +202,58 @@ function RecentAssets() {
     return "bg-yellow-500/20 text-yellow-400 border-yellow-500/50";
   };
 
-  // Get the assets to display based on slider value
-  const displayedAssets = assets.slice(0, assetCount);
+  // Get the assets to display based on slider value, active tab, and pagination
+  const filteredAssets = filterAssetsByTab(assets);
+  const displayedAssets = filteredAssets.slice(
+    pageOffset,
+    pageOffset + assetCount
+  );
+
+  // Calculate pagination info
+  const totalPages = Math.ceil(filteredAssets.length / assetCount);
+  const currentPage = Math.floor(pageOffset / assetCount) + 1;
+  const hasPrevPage = pageOffset > 0;
+  const hasNextPage = pageOffset + assetCount < filteredAssets.length;
+
+  // Tab configuration - dynamically filter tabs based on available assets
+  const allTabs = [
+    { id: "All", label: "All" },
+    { id: "Posters", label: "Posters" },
+    { id: "Backgrounds", label: "Backgrounds" },
+    { id: "Seasons", label: "Seasons" },
+    { id: "TitleCards", label: "TitleCards" },
+  ];
+
+  // Filter tabs to only show those with assets
+  const tabs = allTabs.filter((tab) => {
+    if (tab.id === "All") {
+      return assets.length > 0; // Always show "All" if there are any assets
+    }
+    // Count how many assets match this tab
+    const tabAssets = assets.filter((asset) => {
+      const type = asset.type?.toLowerCase() || "";
+      switch (tab.id) {
+        case "Posters":
+          return type === "movie" || type === "poster" || type === "show";
+        case "Backgrounds":
+          return type.includes("background");
+        case "Seasons":
+          return type === "season";
+        case "TitleCards":
+          return (
+            type === "episode" || type === "titlecard" || type === "title_card"
+          );
+        default:
+          return false;
+      }
+    });
+    return tabAssets.length > 0; // Only show tab if it has assets
+  });
+
+  // Don't render the card if there are no assets and not loading
+  if (!loading && assets.length === 0) {
+    return null;
+  }
 
   return (
     <div className="bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
@@ -162,6 +289,38 @@ function RecentAssets() {
             <span className="text-sm font-medium">Refresh</span>
           </button>
         </div>
+      </div>
+
+      {/* Tab Navigation */}
+      <div className="flex gap-2 mb-4 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-theme-border scrollbar-track-transparent">
+        {tabs.map((tab) => {
+          const tabFilteredCount = filterAssetsByTab(assets).length;
+          const isActive = activeTab === tab.id;
+
+          return (
+            <button
+              key={tab.id}
+              onClick={() => handleTabChange(tab.id)}
+              className={`
+                flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all whitespace-nowrap
+                ${
+                  isActive
+                    ? "bg-theme-primary text-white shadow-lg"
+                    : "bg-theme-bg text-theme-muted hover:text-theme-text hover:bg-theme-hover border border-theme"
+                }
+              `}
+            >
+              <span>{tab.label}</span>
+              {isActive && (
+                <span className="ml-1 px-2 py-0.5 rounded-full bg-white/20 text-xs font-semibold">
+                  {tab.id === "All"
+                    ? assets.length
+                    : filterAssetsByTab(assets).length}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {/* Content */}
@@ -314,10 +473,46 @@ function RecentAssets() {
             </div>
           </div>
 
-          {/* Footer with count */}
-          <div className="mt-4 pt-4 border-t border-theme text-center text-sm text-theme-muted">
-            Showing {displayedAssets.length} of {assets.length} recent{" "}
-            {assets.length === 1 ? "asset" : "assets"}
+          {/* Footer with count and pagination */}
+          <div className="mt-4 pt-4 border-t border-theme">
+            <div className="flex items-center justify-between">
+              {/* Left: Count info */}
+              <div className="text-sm text-theme-muted">
+                Showing {pageOffset + 1}-
+                {Math.min(pageOffset + assetCount, filteredAssets.length)} of{" "}
+                {filteredAssets.length}{" "}
+                {activeTab !== "All" && `${activeTab.toLowerCase()} `}
+                {filteredAssets.length === 1 ? "asset" : "assets"}
+                {activeTab !== "All" && ` (${assets.length} total)`}
+              </div>
+
+              {/* Right: Pagination controls */}
+              {totalPages > 1 && (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handlePageChange("prev")}
+                    disabled={!hasPrevPage}
+                    className="p-2 rounded-lg bg-theme-bg hover:bg-theme-hover border border-theme disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                    title="Previous page"
+                  >
+                    <ChevronLeft className="w-4 h-4 text-theme-text" />
+                  </button>
+
+                  <span className="text-sm text-theme-muted px-3">
+                    Page {currentPage} / {totalPages}
+                  </span>
+
+                  <button
+                    onClick={() => handlePageChange("next")}
+                    disabled={!hasNextPage}
+                    className="p-2 rounded-lg bg-theme-bg hover:bg-theme-hover border border-theme disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                    title="Next page"
+                  >
+                    <ChevronRight className="w-4 h-4 text-theme-text" />
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </>
       )}
