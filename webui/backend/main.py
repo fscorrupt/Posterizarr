@@ -568,7 +568,7 @@ def find_poster_in_assets(
 
     Args:
         rootfolder: The rootfolder name from ImageChoices.csv (e.g. "1 Million Followers (2024) {tmdb-1117126}")
-        asset_type: Type of asset ("Poster", "Season", "TitleCard", "Background", "Show")
+        asset_type: Type of asset ("Poster", "Season", "TitleCard", "Title_Card", "Background", "Episode", "Show")
         title: Full title from CSV (used to extract Season/Episode info)
 
     Returns:
@@ -596,8 +596,8 @@ def find_poster_in_assets(
                             # Try without padding
                             image_file = item / f"Season{match.group(1)}.jpg"
 
-                elif asset_type == "TitleCard" or asset_type == "Title_Card":
-                    # Extract episode info from title (format: "S01E01 | Episode Title")
+                elif asset_type in ["TitleCard", "Title_Card", "Episode"]:
+                    # Extract episode info from title (format: "S01E01 | Episode Title" or just "Episode Title")
                     import re
 
                     match = re.search(r"(S\d+E\d+)", title, re.IGNORECASE)
@@ -605,8 +605,12 @@ def find_poster_in_assets(
                         episode_code = match.group(1).upper()  # e.g. "S01E01"
                         image_file = item / f"{episode_code}.jpg"
 
+                elif asset_type == "Background":
+                    # Look for background.jpg in the folder
+                    image_file = item / "background.jpg"
+
                 else:
-                    # Default: look for poster.jpg
+                    # Default: look for poster.jpg (for "Poster", "Show", or any other type)
                     image_file = item / "poster.jpg"
 
                 # Check if the image file exists
@@ -649,12 +653,20 @@ def parse_image_choices_csv(csv_path: Path) -> list:
                 if not title and not rootfolder:
                     continue
 
-                # Exclude if download_source is "N/A"
-                download_source = row.get("Download Source", "").strip('"')
-                if download_source == "N/A":
-                    continue
-
                 # Remove quotes from values if present
+                download_source = row.get("Download Source", "").strip('"')
+                provider_link = row.get("Fav Provider Link", "").strip('"')
+
+                # Determine if manually created (download_source is N/A or a local path)
+                is_manually_created = download_source == "N/A" or (
+                    download_source
+                    and (
+                        download_source.startswith("C:")
+                        or download_source.startswith("/")
+                        or download_source.startswith("\\")
+                    )
+                )
+
                 asset = {
                     "title": row.get("Title", "").strip('"'),
                     "type": row.get("Type", "").strip('"'),
@@ -664,8 +676,9 @@ def parse_image_choices_csv(csv_path: Path) -> list:
                     "fallback": row.get("Fallback", "").strip('"').lower() == "true",
                     "text_truncated": row.get("TextTruncated", "").strip('"').lower()
                     == "true",
-                    "download_source": row.get("Download Source", "").strip('"'),
-                    "provider_link": row.get("Fav Provider Link", "").strip('"'),
+                    "download_source": download_source,
+                    "provider_link": provider_link if provider_link != "N/A" else "",
+                    "is_manually_created": is_manually_created,
                 }
                 assets.append(asset)
 
