@@ -198,10 +198,19 @@ function FolderView() {
       name.includes("titlecard") ||
       /s\d{2}e\d{2}/i.test(name)
     ) {
-      return "aspect-[16/9]";
+      return "aspect-[16/9] w-full";
     }
     // Posters and seasons are vertical (2:3)
-    return "aspect-[2/3]";
+    return "aspect-[2/3] w-full";
+  };
+
+  const isHorizontalAsset = (assetName) => {
+    const name = assetName.toLowerCase();
+    return (
+      name.includes("background") ||
+      name.includes("titlecard") ||
+      /s\d{2}e\d{2}/i.test(name)
+    );
   };
 
   const formatFileSize = (bytes) => {
@@ -373,63 +382,68 @@ function FolderView() {
 
           {/* Assets Grid */}
           {filteredAssets.length > 0 && (
-            <div className={`grid ${getGridClass(imageSize)} gap-4`}>
-              {filteredAssets.map((asset) => (
-                <div
-                  key={asset.path}
-                  className="group relative bg-theme-card border border-theme-border rounded-lg overflow-hidden hover:border-theme-primary transition-all cursor-pointer shadow-sm hover:shadow-md"
-                  onClick={() => setSelectedImage(asset)}
-                >
-                  {/* Asset Image */}
+            <div className="asset-grid" style={{ "--grid-size": imageSize }}>
+              {filteredAssets.map((asset) => {
+                const isHorizontal = isHorizontalAsset(asset.name);
+                return (
                   <div
-                    className={`${getAssetAspectRatio(asset.name)} relative`}
+                    key={asset.path}
+                    className="group relative bg-theme-card border border-theme-border rounded-lg overflow-hidden hover:border-theme-primary transition-all cursor-pointer shadow-sm hover:shadow-md flex flex-col"
+                    onClick={() => setSelectedImage(asset)}
                   >
-                    <img
-                      src={asset.url}
-                      alt={asset.name}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                    />
-
-                    {/* Delete Button */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setDeleteConfirm({
-                          path: asset.path,
-                          name: asset.name,
-                        });
-                      }}
-                      disabled={deletingImage === asset.path}
-                      className={`absolute top-2 right-2 z-10 p-2 rounded-lg transition-all ${
-                        deletingImage === asset.path
-                          ? "bg-gray-600 cursor-not-allowed"
-                          : "bg-red-600/90 hover:bg-red-700 opacity-0 group-hover:opacity-100"
-                      }`}
-                      title="Delete image"
+                    {/* Asset Image */}
+                    <div
+                      className={`${getAssetAspectRatio(
+                        asset.name
+                      )} relative flex-shrink-0`}
                     >
-                      <Trash2
-                        className={`w-4 h-4 text-white ${
-                          deletingImage === asset.path ? "animate-spin" : ""
-                        }`}
+                      <img
+                        src={asset.url}
+                        alt={asset.name}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
                       />
-                    </button>
-                  </div>
 
-                  {/* Asset Info */}
-                  <div className="p-2 space-y-1">
-                    <div className="flex items-center gap-2">
-                      {getAssetTypeIcon(asset.name)}
-                      <span className="text-xs font-medium text-theme-text truncate">
-                        {asset.name}
-                      </span>
+                      {/* Delete Button */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDeleteConfirm({
+                            path: asset.path,
+                            name: asset.name,
+                          });
+                        }}
+                        disabled={deletingImage === asset.path}
+                        className={`absolute top-2 right-2 z-10 p-2 rounded-lg transition-all ${
+                          deletingImage === asset.path
+                            ? "bg-gray-600 cursor-not-allowed"
+                            : "bg-red-600/90 hover:bg-red-700 opacity-0 group-hover:opacity-100"
+                        }`}
+                        title="Delete image"
+                      >
+                        <Trash2
+                          className={`w-4 h-4 text-white ${
+                            deletingImage === asset.path ? "animate-spin" : ""
+                          }`}
+                        />
+                      </button>
                     </div>
-                    <div className="text-xs text-theme-muted">
-                      {formatFileSize(asset.size)}
+
+                    {/* Asset Info */}
+                    <div className="p-2 space-y-1">
+                      <div className="flex items-center gap-2">
+                        {getAssetTypeIcon(asset.name)}
+                        <span className="text-xs font-medium text-theme-text truncate">
+                          {asset.name}
+                        </span>
+                      </div>
+                      <div className="text-xs text-theme-muted">
+                        {formatFileSize(asset.size)}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
@@ -541,6 +555,75 @@ function FolderView() {
           </div>
         </div>
       )}
+
+      {/* Asset Grid Styles */}
+      <style jsx>{`
+        .asset-grid {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 1rem;
+          align-items: flex-end;
+        }
+
+        /* Dynamic grid item sizing based on image size slider */
+        .asset-grid > div {
+          flex: 0 0
+            calc((100% - (var(--grid-size) - 1) * 1rem) / var(--grid-size));
+          min-width: 0;
+          display: flex;
+          flex-direction: column;
+        }
+
+        /* Image container maintains aspect ratio */
+        .asset-grid > div > div:first-child {
+          flex-shrink: 0;
+          width: 100%;
+        }
+
+        /* Info section */
+        .asset-grid > div > div:last-child {
+          display: flex;
+          flex-direction: column;
+        }
+
+        /* Responsive breakpoints */
+        @media (max-width: 1280px) {
+          .asset-grid > div {
+            flex: 0 0
+              calc(
+                (100% - (min(var(--grid-size), 8) - 1) * 1rem) /
+                  min(var(--grid-size), 8)
+              );
+          }
+        }
+
+        @media (max-width: 1024px) {
+          .asset-grid > div {
+            flex: 0 0
+              calc(
+                (100% - (min(var(--grid-size), 6) - 1) * 1rem) /
+                  min(var(--grid-size), 6)
+              );
+          }
+        }
+
+        @media (max-width: 768px) {
+          .asset-grid > div {
+            flex: 0 0
+              calc(
+                (100% - (min(var(--grid-size), 4) - 1) * 1rem) /
+                  min(var(--grid-size), 4)
+              );
+          }
+        }
+
+        @media (max-width: 640px) {
+          .asset-grid > div {
+            flex: 0 0 calc((100% - 1rem) / 2);
+            min-width: 140px;
+          }
+        }
+      `}</style>
     </div>
   );
 }

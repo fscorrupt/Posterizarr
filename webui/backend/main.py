@@ -561,7 +561,10 @@ def get_fresh_assets():
 
 
 def find_poster_in_assets(
-    rootfolder: str, asset_type: str = "Poster", title: str = ""
+    rootfolder: str,
+    asset_type: str = "Poster",
+    title: str = "",
+    download_source: str = "",
 ) -> str:
     """
     Search recursively in ASSETS_DIR for a folder matching rootfolder and return image URL
@@ -570,6 +573,7 @@ def find_poster_in_assets(
         rootfolder: The rootfolder name from ImageChoices.csv (e.g. "1 Million Followers (2024) {tmdb-1117126}")
         asset_type: Type of asset ("Poster", "Season", "TitleCard", "Title_Card", "Background", "Episode", "Show")
         title: Full title from CSV (used to extract Season/Episode info)
+        download_source: Path from CSV (for manually created assets, contains actual file path)
 
     Returns:
         URL path to image or None if not found
@@ -578,40 +582,69 @@ def find_poster_in_assets(
         return None
 
     try:
+        # If download_source is a local path, try to extract the filename from it
+        image_filename = None
+        if download_source and download_source != "N/A":
+            # Check if it looks like a file path (has backslashes or forward slashes and contains a file extension)
+            if (
+                "\\" in download_source or "/" in download_source
+            ) and "." in download_source:
+                # Extract filename from path (e.g., "C:\...\S01E02.jpg" -> "S01E02.jpg")
+                import os
+
+                image_filename = os.path.basename(download_source)
+                logger.info(
+                    f"🔍 Extracted filename from download_source: {image_filename} (from: {download_source})"
+                )
+
         # Search recursively for the folder
         for item in ASSETS_DIR.rglob("*"):
             if item.is_dir() and item.name == rootfolder:
                 # Found the matching folder
                 image_file = None
 
-                if asset_type == "Season":
-                    # Extract season number from title (format: "Show Name | Season 01")
-                    import re
+                # First priority: use filename from download_source if available
+                if image_filename:
+                    image_file = item / image_filename
+                    logger.info(
+                        f"🔍 Checking for file from download_source: {image_file}"
+                    )
+                    if not image_file.exists():
+                        logger.warning(
+                            f"❌ File from download_source not found: {image_file}"
+                        )
+                        image_file = None
 
-                    match = re.search(r"Season\s*(\d+)", title, re.IGNORECASE)
-                    if match:
-                        season_num = match.group(1).zfill(2)  # Pad to 2 digits
-                        image_file = item / f"Season{season_num}.jpg"
-                        if not image_file.exists():
-                            # Try without padding
-                            image_file = item / f"Season{match.group(1)}.jpg"
+                # Second priority: determine by asset type
+                if not image_file:
+                    if asset_type == "Season":
+                        # Extract season number from title (format: "Show Name | Season 01" or "Title SEASON")
+                        import re
 
-                elif asset_type in ["TitleCard", "Title_Card", "Episode"]:
-                    # Extract episode info from title (format: "S01E01 | Episode Title" or just "Episode Title")
-                    import re
+                        match = re.search(r"Season\s*(\d+)", title, re.IGNORECASE)
+                        if match:
+                            season_num = match.group(1).zfill(2)  # Pad to 2 digits
+                            image_file = item / f"Season{season_num}.jpg"
+                            if not image_file.exists():
+                                # Try without padding
+                                image_file = item / f"Season{match.group(1)}.jpg"
 
-                    match = re.search(r"(S\d+E\d+)", title, re.IGNORECASE)
-                    if match:
-                        episode_code = match.group(1).upper()  # e.g. "S01E01"
-                        image_file = item / f"{episode_code}.jpg"
+                    elif asset_type in ["TitleCard", "Title_Card", "Episode"]:
+                        # Extract episode info from title (format: "S01E01 | Episode Title" or just "Episode Title")
+                        import re
 
-                elif asset_type == "Background":
-                    # Look for background.jpg in the folder
-                    image_file = item / "background.jpg"
+                        match = re.search(r"(S\d+E\d+)", title, re.IGNORECASE)
+                        if match:
+                            episode_code = match.group(1).upper()  # e.g. "S01E01"
+                            image_file = item / f"{episode_code}.jpg"
 
-                else:
-                    # Default: look for poster.jpg (for "Poster", "Show", or any other type)
-                    image_file = item / "poster.jpg"
+                    elif asset_type == "Background":
+                        # Look for background.jpg in the folder
+                        image_file = item / "background.jpg"
+
+                    else:
+                        # Default: look for poster.jpg (for "Poster", "Show", or any other type)
+                        image_file = item / "poster.jpg"
 
                 # Check if the image file exists
                 if image_file and image_file.exists() and image_file.is_file():
@@ -619,8 +652,12 @@ def find_poster_in_assets(
                     relative_path = image_file.relative_to(ASSETS_DIR)
                     # Create URL path with forward slashes
                     url_path = str(relative_path).replace("\\", "/")
+                    logger.info(f"✅ Found image: {url_path}")
                     return f"/poster_assets/{url_path}"
 
+        logger.warning(
+            f"❌ No image found for rootfolder: {rootfolder}, type: {asset_type}"
+        )
         return None
 
     except Exception as e:
@@ -4762,8 +4799,11 @@ async def get_recent_assets():
             rootfolder = asset.get("rootfolder", "")
             asset_type = asset.get("type", "Poster")
             title = asset.get("title", "")
+            download_source = asset.get("download_source", "")
             if rootfolder:
-                poster_url = find_poster_in_assets(rootfolder, asset_type, title)
+                poster_url = find_poster_in_assets(
+                    rootfolder, asset_type, title, download_source
+                )
                 if poster_url:
                     asset["poster_url"] = poster_url
                     asset["has_poster"] = True

@@ -76,12 +76,39 @@ function RecentAssets() {
   const getTypeColor = (type) => {
     switch (type?.toLowerCase()) {
       case "movie":
+      case "poster":
         return "bg-blue-500/20 text-blue-400 border-blue-500/50";
       case "show":
         return "bg-purple-500/20 text-purple-400 border-purple-500/50";
+      case "season":
+        return "bg-indigo-500/20 text-indigo-400 border-indigo-500/50";
+      case "episode":
+      case "titlecard":
+      case "title_card":
+        return "bg-cyan-500/20 text-cyan-400 border-cyan-500/50";
+      case "background":
+        return "bg-pink-500/20 text-pink-400 border-pink-500/50";
       default:
         return "bg-gray-500/20 text-gray-400 border-gray-500/50";
     }
+  };
+
+  const getTypeLabel = (type) => {
+    switch (type?.toLowerCase()) {
+      case "titlecard":
+      case "title_card":
+        return "Episode";
+      default:
+        return type;
+    }
+  };
+
+  // Determine if asset should use landscape aspect ratio
+  const isLandscapeAsset = (type) => {
+    const landscapeTypes = ["background", "episode", "titlecard", "title_card"];
+    const isLandscape = landscapeTypes.includes(type?.toLowerCase());
+    console.log(`Asset type: "${type}" -> Landscape: ${isLandscape}`);
+    return isLandscape;
   };
 
   const getLanguageColor = (language) => {
@@ -162,9 +189,9 @@ function RecentAssets() {
       ) : (
         <>
           {/* Flexible Grid - All posters visible in one row, responsive */}
-          <div className="w-full">
+          <div className="w-full overflow-x-auto">
             <div
-              className="poster-grid gap-4"
+              className="poster-grid"
               style={{
                 "--poster-count": assetCount,
               }}
@@ -172,10 +199,16 @@ function RecentAssets() {
               {displayedAssets.map((asset, index) => (
                 <div
                   key={index}
-                  className="bg-theme-bg rounded-lg overflow-hidden border border-theme hover:border-theme-primary transition-all group"
+                  className="bg-theme-bg rounded-lg overflow-hidden border border-theme hover:border-theme-primary transition-all group flex flex-col"
                 >
-                  {/* Poster Image */}
-                  <div className="relative aspect-[2/3] bg-theme-dark">
+                  {/* Poster/Background Image - Dynamic Aspect Ratio */}
+                  <div
+                    className={`relative bg-theme-dark flex-shrink-0 ${
+                      isLandscapeAsset(asset.type)
+                        ? "aspect-[16/9]"
+                        : "aspect-[2/3]"
+                    }`}
+                  >
                     {asset.has_poster ? (
                       <img
                         src={asset.poster_url}
@@ -212,7 +245,7 @@ function RecentAssets() {
                   </div>
 
                   {/* Asset Info */}
-                  <div className="p-3 bg-theme-card">
+                  <div className="p-3 bg-theme-card flex-1 flex flex-col justify-between">
                     <h3
                       className="font-semibold text-theme-text text-sm truncate mb-2"
                       title={asset.title}
@@ -221,15 +254,15 @@ function RecentAssets() {
                     </h3>
 
                     {/* All Badges in one row */}
-                    <div className="flex flex-wrap gap-1">
-                      {/* Type Badge (Movie/Show) */}
+                    <div className="flex flex-wrap gap-1 mt-auto">
+                      {/* Type Badge (Poster/Show/Season/Episode/Background) */}
                       {asset.type && (
                         <span
                           className={`px-1.5 py-0.5 rounded text-xs font-medium border ${getTypeColor(
                             asset.type
                           )}`}
                         >
-                          {asset.type}
+                          {getTypeLabel(asset.type)}
                         </span>
                       )}
 
@@ -240,16 +273,25 @@ function RecentAssets() {
                         </span>
                       )}
 
-                      {/* Language Badge */}
-                      {asset.language && (
-                        <span
-                          className={`px-1.5 py-0.5 rounded text-xs font-medium border ${getLanguageColor(
-                            asset.language
-                          )}`}
-                        >
-                          {asset.language}
+                      {/* Manual Badge (replaces N/A) */}
+                      {asset.is_manually_created && (
+                        <span className="px-1.5 py-0.5 rounded text-xs font-medium bg-purple-500/20 text-purple-400 border border-purple-500/50">
+                          Manual
                         </span>
                       )}
+
+                      {/* Language Badge (only if not manually created) */}
+                      {!asset.is_manually_created &&
+                        asset.language &&
+                        asset.language !== "N/A" && (
+                          <span
+                            className={`px-1.5 py-0.5 rounded text-xs font-medium border ${getLanguageColor(
+                              asset.language
+                            )}`}
+                          >
+                            {asset.language}
+                          </span>
+                        )}
 
                       {/* Fallback Badge */}
                       {asset.fallback && (
@@ -285,21 +327,52 @@ function RecentAssets() {
       {/* Poster Grid Styles */}
       <style jsx>{`
         .poster-grid {
-          display: grid;
-          grid-template-columns: repeat(var(--poster-count), minmax(0, 1fr));
+          display: flex;
+          gap: 1rem;
+          align-items: flex-end;
+        }
+
+        /* Cards maintain their natural size */
+        .poster-grid > div {
+          display: flex;
+          flex-direction: column;
+          flex: 0 0
+            calc(
+              (100% - (var(--poster-count) - 1) * 1rem) / var(--poster-count)
+            );
+          min-width: 0;
+        }
+
+        /* Image container maintains aspect ratio */
+        .poster-grid > div > div:first-child {
+          flex-shrink: 0;
+          width: 100%;
+        }
+
+        /* Info section */
+        .poster-grid > div > div:last-child {
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
         }
 
         /* Responsive: Tablet */
         @media (max-width: 1024px) {
           .poster-grid {
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            flex-wrap: wrap;
+            align-items: flex-start;
+          }
+          .poster-grid > div {
+            flex: 0 0 calc((100% - 3rem) / 4);
+            min-width: 180px;
           }
         }
 
         /* Responsive: Mobile */
         @media (max-width: 640px) {
-          .poster-grid {
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+          .poster-grid > div {
+            flex: 0 0 calc((100% - 1rem) / 2);
+            min-width: 140px;
           }
         }
       `}</style>
