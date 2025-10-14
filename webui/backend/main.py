@@ -560,15 +560,19 @@ def get_fresh_assets():
     return asset_cache
 
 
-def find_poster_in_assets(rootfolder: str) -> str:
+def find_poster_in_assets(
+    rootfolder: str, asset_type: str = "Poster", title: str = ""
+) -> str:
     """
-    Search recursively in ASSETS_DIR for a folder matching rootfolder and return poster.jpg URL
+    Search recursively in ASSETS_DIR for a folder matching rootfolder and return image URL
 
     Args:
         rootfolder: The rootfolder name from ImageChoices.csv (e.g. "1 Million Followers (2024) {tmdb-1117126}")
+        asset_type: Type of asset ("Poster", "Season", "TitleCard", "Background", "Show")
+        title: Full title from CSV (used to extract Season/Episode info)
 
     Returns:
-        URL path to poster.jpg or None if not found
+        URL path to image or None if not found
     """
     if not ASSETS_DIR.exists():
         return None
@@ -577,11 +581,38 @@ def find_poster_in_assets(rootfolder: str) -> str:
         # Search recursively for the folder
         for item in ASSETS_DIR.rglob("*"):
             if item.is_dir() and item.name == rootfolder:
-                # Found the matching folder, now look for poster.jpg
-                poster_file = item / "poster.jpg"
-                if poster_file.exists() and poster_file.is_file():
+                # Found the matching folder
+                image_file = None
+
+                if asset_type == "Season":
+                    # Extract season number from title (format: "Show Name | Season 01")
+                    import re
+
+                    match = re.search(r"Season\s*(\d+)", title, re.IGNORECASE)
+                    if match:
+                        season_num = match.group(1).zfill(2)  # Pad to 2 digits
+                        image_file = item / f"Season{season_num}.jpg"
+                        if not image_file.exists():
+                            # Try without padding
+                            image_file = item / f"Season{match.group(1)}.jpg"
+
+                elif asset_type == "TitleCard" or asset_type == "Title_Card":
+                    # Extract episode info from title (format: "S01E01 | Episode Title")
+                    import re
+
+                    match = re.search(r"(S\d+E\d+)", title, re.IGNORECASE)
+                    if match:
+                        episode_code = match.group(1).upper()  # e.g. "S01E01"
+                        image_file = item / f"{episode_code}.jpg"
+
+                else:
+                    # Default: look for poster.jpg
+                    image_file = item / "poster.jpg"
+
+                # Check if the image file exists
+                if image_file and image_file.exists() and image_file.is_file():
                     # Create relative path from ASSETS_DIR
-                    relative_path = poster_file.relative_to(ASSETS_DIR)
+                    relative_path = image_file.relative_to(ASSETS_DIR)
                     # Create URL path with forward slashes
                     url_path = str(relative_path).replace("\\", "/")
                     return f"/poster_assets/{url_path}"
@@ -589,7 +620,7 @@ def find_poster_in_assets(rootfolder: str) -> str:
         return None
 
     except Exception as e:
-        logger.error(f"Error searching for poster in assets: {e}")
+        logger.error(f"Error searching for {asset_type} in assets: {e}")
         return None
 
 
@@ -4635,8 +4666,10 @@ async def get_recent_assets():
         # STEP 4: Find poster.jpg for each asset in assets folder
         for asset in recent_assets:
             rootfolder = asset.get("rootfolder", "")
+            asset_type = asset.get("type", "Poster")
+            title = asset.get("title", "")
             if rootfolder:
-                poster_url = find_poster_in_assets(rootfolder)
+                poster_url = find_poster_in_assets(rootfolder, asset_type, title)
                 if poster_url:
                     asset["poster_url"] = poster_url
                     asset["has_poster"] = True
