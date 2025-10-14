@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   X,
   Upload,
@@ -13,6 +14,7 @@ import Notification from "./Notification";
 const API_URL = "/api";
 
 function AssetReplacer({ asset, onClose, onSuccess }) {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [previews, setPreviews] = useState({ tmdb: [], tvdb: [], fanart: [] });
@@ -584,13 +586,18 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
       if (data.success) {
         if (data.manual_run_triggered) {
           setSuccess("Asset replaced and queued for overlay processing! 🎨");
+          // Navigate to LogViewer with Manuallog.log after overlay run is triggered
+          setTimeout(() => {
+            console.log("🎯 Redirecting to LogViewer with log: Manuallog.log");
+            navigate("/logs", { state: { logFile: "Manuallog.log" } });
+          }, 1500);
         } else {
           setSuccess("Asset replaced successfully!");
+          setTimeout(() => {
+            onSuccess?.();
+            onClose();
+          }, 2000);
         }
-        setTimeout(() => {
-          onSuccess?.();
-          onClose();
-        }, 2000);
       } else {
         setError("Failed to replace asset");
       }

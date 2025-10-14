@@ -223,6 +223,10 @@ function RunModes() {
     episodeNumber: "",
   });
 
+  // File upload state
+  const [uploadedFile, setUploadedFile] = useState(null);
+  const [uploadPreview, setUploadPreview] = useState(null);
+
   // Reset Posters Form State
   const [resetLibrary, setResetLibrary] = useState("");
 
@@ -267,6 +271,37 @@ function RunModes() {
     }
   };
 
+  // Handle file upload
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith("image/")) {
+        setError("Please upload an image file!");
+        return;
+      }
+
+      setUploadedFile(file);
+
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setUploadPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+
+      // Clear picturePath when file is uploaded
+      setManualForm({ ...manualForm, picturePath: "" });
+      setSuccess(`File "${file.name}" uploaded successfully! 📁`);
+    }
+  };
+
+  // Clear uploaded file
+  const clearUploadedFile = () => {
+    setUploadedFile(null);
+    setUploadPreview(null);
+  };
+
   const runScript = async (mode) => {
     if (status.running) {
       setError("Script is already running! Please stop it first.");
@@ -308,9 +343,9 @@ function RunModes() {
       return;
     }
 
-    // Validation
-    if (!manualForm.picturePath.trim()) {
-      setError("Picture Path is required!");
+    // Validation - Check if file was uploaded or URL/path provided
+    if (!uploadedFile && !manualForm.picturePath.trim()) {
+      setError("Please upload an image or provide a URL/path!");
       return;
     }
 
@@ -360,41 +395,88 @@ function RunModes() {
 
     setLoading(true);
     try {
-      // Remove mediaTypeSelection from the request payload as it's only for UI
-      const { mediaTypeSelection, ...requestPayload } = manualForm;
+      let requestPayload = { ...manualForm };
+      delete requestPayload.mediaTypeSelection;
 
-      const response = await fetch(`${API_URL}/run-manual`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(requestPayload),
-      });
+      // If a file was uploaded, use FormData for multipart upload
+      if (uploadedFile) {
+        const formData = new FormData();
+        formData.append("file", uploadedFile);
 
-      const data = await response.json();
-
-      if (data.success) {
-        setSuccess("Manual mode started successfully!");
-        // Reset form
-        setManualForm({
-          picturePath: "",
-          titletext: "",
-          folderName: "",
-          libraryName: "",
-          posterType: "standard",
-          mediaTypeSelection: "movie",
-          seasonPosterName: "",
-          epTitleName: "",
-          episodeNumber: "",
+        // Append all other form fields
+        Object.keys(requestPayload).forEach((key) => {
+          formData.append(key, requestPayload[key]);
         });
-        fetchStatus();
 
-        console.log("🎯 Redirecting to LogViewer with log: Manuallog.log");
-        setTimeout(() => {
-          navigate("/logs", { state: { logFile: "Manuallog.log" } });
-        }, 500);
+        const response = await fetch(`${API_URL}/run-manual-upload`, {
+          method: "POST",
+          body: formData,
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          setSuccess("Manual mode started successfully!");
+          // Reset form
+          setManualForm({
+            picturePath: "",
+            titletext: "",
+            folderName: "",
+            libraryName: "",
+            posterType: "standard",
+            mediaTypeSelection: "movie",
+            seasonPosterName: "",
+            epTitleName: "",
+            episodeNumber: "",
+          });
+          setUploadedFile(null);
+          setUploadPreview(null);
+          fetchStatus();
+
+          console.log("🎯 Redirecting to LogViewer with log: Manuallog.log");
+          setTimeout(() => {
+            navigate("/logs", { state: { logFile: "Manuallog.log" } });
+          }, 500);
+        } else {
+          setError(`Error: ${data.message}`);
+        }
       } else {
-        setError(`Error: ${data.message}`);
+        // Use URL/path - existing behavior
+        const response = await fetch(`${API_URL}/run-manual`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestPayload),
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          setSuccess("Manual mode started successfully!");
+          // Reset form
+          setManualForm({
+            picturePath: "",
+            titletext: "",
+            folderName: "",
+            libraryName: "",
+            posterType: "standard",
+            mediaTypeSelection: "movie",
+            seasonPosterName: "",
+            epTitleName: "",
+            episodeNumber: "",
+          });
+          setUploadedFile(null);
+          setUploadPreview(null);
+          fetchStatus();
+
+          console.log("🎯 Redirecting to LogViewer with log: Manuallog.log");
+          setTimeout(() => {
+            navigate("/logs", { state: { logFile: "Manuallog.log" } });
+          }, 500);
+        } else {
+          setError(`Error: ${data.message}`);
+        }
       }
     } catch (error) {
       setError(`Error: ${error.message}`);
@@ -1396,20 +1478,95 @@ function RunModes() {
           {/* Picture Path */}
           <div>
             <label className="block text-sm font-medium text-theme-text mb-2">
-              Picture Path <span className="text-red-400">*</span>
+              Picture Source <span className="text-red-400">*</span>
             </label>
-            <input
-              type="text"
-              value={manualForm.picturePath}
-              onChange={(e) =>
-                setManualForm({ ...manualForm, picturePath: e.target.value })
-              }
-              placeholder="C:\path\to\image.jpg or https://url.to/image.jpg"
-              disabled={loading || status.running}
-              className="w-full px-4 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary disabled:opacity-50 disabled:cursor-not-allowed"
-            />
-            <p className="text-xs text-theme-muted mt-1">
-              Local file path or direct URL to the source image
+
+            {/* Upload Section */}
+            <div className="space-y-3">
+              {/* File Upload Button */}
+              <div className="flex items-center gap-3">
+                <label
+                  htmlFor="file-upload"
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg border-2 transition-all cursor-pointer ${
+                    uploadedFile
+                      ? "bg-green-600 border-green-500 text-white"
+                      : "bg-theme-hover border-theme hover:border-theme-primary text-theme-text"
+                  } ${
+                    loading || status.running
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
+                  }`}
+                >
+                  <FolderOpen className="w-5 h-5" />
+                  {uploadedFile ? "File Selected" : "Upload Image"}
+                </label>
+                <input
+                  id="file-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileUpload}
+                  disabled={loading || status.running}
+                  className="hidden"
+                />
+
+                {uploadedFile && (
+                  <button
+                    onClick={clearUploadedFile}
+                    disabled={loading || status.running}
+                    className="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+
+              {/* Preview if file uploaded */}
+              {uploadPreview && (
+                <div className="bg-theme-bg border border-theme rounded-lg p-3">
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={uploadPreview}
+                      alt="Preview"
+                      className="w-16 h-24 object-cover rounded border border-theme-primary"
+                    />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-theme-text">
+                        {uploadedFile.name}
+                      </p>
+                      <p className="text-xs text-theme-muted">
+                        {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Divider */}
+              <div className="flex items-center gap-3">
+                <div className="flex-1 border-t border-theme"></div>
+                <span className="text-xs text-theme-muted uppercase">or</span>
+                <div className="flex-1 border-t border-theme"></div>
+              </div>
+
+              {/* URL/Path Input */}
+              <input
+                type="text"
+                value={manualForm.picturePath}
+                onChange={(e) => {
+                  setManualForm({ ...manualForm, picturePath: e.target.value });
+                  if (e.target.value.trim()) {
+                    clearUploadedFile();
+                  }
+                }}
+                placeholder="Or enter URL/path: C:\path\to\image.jpg or https://url.to/image.jpg"
+                disabled={loading || status.running || uploadedFile}
+                className="w-full px-4 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary disabled:opacity-50 disabled:cursor-not-allowed"
+              />
+            </div>
+
+            <p className="text-xs text-theme-muted mt-2">
+              Upload a local image file or enter a direct URL/path to the source
+              image
             </p>
           </div>
 
@@ -1576,14 +1733,19 @@ function RunModes() {
           <button
             onClick={runManualMode}
             disabled={loading || status.running}
-            className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-theme-primary hover:bg-theme-primary/90 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg font-medium transition-all shadow-lg hover:scale-[1.02]"
+            className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-theme-primary hover:bg-theme-primary/90 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg font-medium transition-all shadow-lg"
           >
             {loading ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
+              <>
+                <Loader2 className="w-5 h-5" />
+                Processing...
+              </>
             ) : (
-              <Play className="w-5 h-5" />
+              <>
+                <Play className="w-5 h-5" />
+                Run Manual Mode
+              </>
             )}
-            Run Manual Mode
           </button>
         </div>
 

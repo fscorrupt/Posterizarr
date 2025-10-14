@@ -56,6 +56,7 @@ else:
     (BASE_DIR / "temp").mkdir(exist_ok=True)
     (BASE_DIR / "test").mkdir(exist_ok=True)
     (BASE_DIR / "UILogs").mkdir(exist_ok=True)
+    (BASE_DIR / "uploads").mkdir(exist_ok=True)
 
 CONFIG_PATH = BASE_DIR / "config.json"
 CONFIG_EXAMPLE_PATH = BASE_DIR / "config.example.json"
@@ -65,6 +66,7 @@ TEST_DIR = BASE_DIR / "test"
 TEMP_DIR = BASE_DIR / "temp"
 UI_LOGS_DIR = BASE_DIR / "UILogs"
 OVERLAYFILES_DIR = BASE_DIR / "Overlayfiles"
+UPLOADS_DIR = BASE_DIR / "uploads"
 RUNNING_FILE = TEMP_DIR / "Posterizarr.Running"
 
 # Setup logging
@@ -79,6 +81,9 @@ logger = logging.getLogger(__name__)
 
 # Create Overlayfiles directory if it doesn't exist
 OVERLAYFILES_DIR.mkdir(exist_ok=True)
+
+# Create uploads directory if it doesn't exist
+UPLOADS_DIR.mkdir(exist_ok=True)
 
 if not CONFIG_PATH.exists() and CONFIG_EXAMPLE_PATH.exists():
     logger.warning(f"config.json not found, using config.example.json as fallback")
@@ -3820,6 +3825,251 @@ async def run_manual_mode(request: ManualModeRequest):
         raise HTTPException(status_code=500, detail=error_msg)
     except Exception as e:
         logger.error(f"Error running manual mode: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/run-manual-upload")
+async def run_manual_mode_upload(
+    file: UploadFile = File(...),
+    picturePath: str = "",
+    titletext: str = "",
+    folderName: str = "",
+    libraryName: str = "",
+    posterType: str = "standard",
+    seasonPosterName: str = "",
+    epTitleName: str = "",
+    episodeNumber: str = "",
+):
+    """Run manual mode with uploaded file"""
+    global current_process, current_mode
+
+    logger.info(f"Manual mode upload request received")
+    logger.info(f"  File: {file.filename}")
+    logger.info(f"  Poster Type: {posterType}")
+
+    # Check if already running
+    if current_process and current_process.poll() is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Script is already running. Please stop the script first.",
+        )
+
+    if not SCRIPT_PATH.exists():
+        raise HTTPException(status_code=404, detail="Posterizarr.ps1 not found")
+
+    # Validate file upload
+    if not file:
+        raise HTTPException(status_code=400, detail="No file uploaded")
+
+    # Validate file type
+    allowed_extensions = [".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tiff"]
+    file_extension = Path(file.filename).suffix.lower()
+    if file_extension not in allowed_extensions:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid file type. Allowed: {', '.join(allowed_extensions)}",
+        )
+
+    # Validate required fields
+    if posterType != "titlecard" and not titletext.strip():
+        raise HTTPException(status_code=400, detail="Title text is required")
+
+    if posterType != "collection" and not folderName.strip():
+        raise HTTPException(status_code=400, detail="Folder name is required")
+
+    if not libraryName.strip():
+        raise HTTPException(status_code=400, detail="Library name is required")
+
+    if posterType == "season" and not seasonPosterName.strip():
+        raise HTTPException(
+            status_code=400, detail="Season poster name is required for season posters"
+        )
+
+    if posterType == "titlecard":
+        if not epTitleName.strip():
+            raise HTTPException(
+                status_code=400, detail="Episode title name is required for title cards"
+            )
+        if not episodeNumber.strip():
+            raise HTTPException(
+                status_code=400, detail="Episode number is required for title cards"
+            )
+        if not seasonPosterName.strip():
+            raise HTTPException(
+                status_code=400, detail="Season name is required for title cards"
+            )
+
+    try:
+        # Create uploads directory if it doesn't exist
+        UPLOADS_DIR.mkdir(exist_ok=True)
+
+        # Generate unique filename with timestamp
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        safe_filename = f"{timestamp}_{file.filename}"
+        upload_path = UPLOADS_DIR / safe_filename
+
+        # Save uploaded file to uploads directory
+        logger.info(f"Saving uploaded file to: {upload_path}")
+        with open(upload_path, "wb") as buffer:
+            content = await file.read()
+            buffer.write(content)
+
+        logger.info(f"File saved successfully: {upload_path} ({len(content)} bytes)")
+
+        # Determine PowerShell command
+        import platform
+
+        if platform.system() == "Windows":
+            ps_command = "pwsh"
+            try:
+                subprocess.run([ps_command, "-v"], capture_output=True, check=True)
+            except (subprocess.CalledProcessError, FileNotFoundError):
+                ps_command = "powershell"
+                logger.info("pwsh not found, using powershell instead")
+        else:
+            ps_command = "pwsh"
+
+        # Build command with uploaded file path
+        command = [
+            ps_command,
+            "-File",
+            str(SCRIPT_PATH),
+            "-Manual",
+            "-PicturePath",
+            str(upload_path),  # Use the uploaded file path
+        ]
+
+        # Add poster type specific switches and parameters
+        if posterType == "season":
+            command.extend(
+                [
+                    "-SeasonPoster",
+                    "-Titletext",
+                    titletext.strip(),
+                    "-FolderName",
+                    folderName.strip(),
+                    "-LibraryName",
+                    libraryName.strip(),
+                    "-SeasonPosterName",
+                    seasonPosterName.strip(),
+                ]
+            )
+        elif posterType == "collection":
+            command.extend(
+                [
+                    "-CollectionCard",
+                    "-Titletext",
+                    titletext.strip(),
+                    "-LibraryName",
+                    libraryName.strip(),
+                ]
+            )
+        elif posterType == "background":
+            command.extend(
+                [
+                    "-BackgroundCard",
+                    "-Titletext",
+                    titletext.strip(),
+                    "-FolderName",
+                    folderName.strip(),
+                    "-LibraryName",
+                    libraryName.strip(),
+                ]
+            )
+        elif posterType == "titlecard":
+            command.extend(
+                [
+                    "-TitleCard",
+                    "-Titletext",
+                    epTitleName.strip(),
+                    "-FolderName",
+                    folderName.strip(),
+                    "-LibraryName",
+                    libraryName.strip(),
+                    "-EPTitleName",
+                    epTitleName.strip(),
+                    "-SeasonPosterName",
+                    seasonPosterName.strip(),
+                    "-EpisodeNumber",
+                    episodeNumber.strip(),
+                ]
+            )
+        else:  # standard
+            command.extend(
+                [
+                    "-Titletext",
+                    titletext.strip(),
+                    "-FolderName",
+                    folderName.strip(),
+                    "-LibraryName",
+                    libraryName.strip(),
+                ]
+            )
+
+        logger.info(f"Running manual mode with uploaded file:")
+        logger.info(f"  Picture Path: {upload_path}")
+        logger.info(f"  Type: {posterType}")
+        logger.info(f"Running command: {' '.join(command)}")
+
+        # Run the manual mode command
+        current_process = subprocess.Popen(
+            command,
+            cwd=str(BASE_DIR),
+            stdout=None,
+            stderr=None,
+            text=True,
+        )
+        current_mode = "manual"
+
+        logger.info(f"Started manual mode with PID {current_process.pid}")
+
+        # Schedule cleanup after process completes (in background)
+        async def cleanup_upload():
+            """Cleanup uploaded file after process completes"""
+            try:
+                # Wait for process to complete
+                while current_process.poll() is None:
+                    await asyncio.sleep(1)
+
+                # Wait a bit more to ensure file operations are complete
+                await asyncio.sleep(5)
+
+                # Delete the uploaded file
+                if upload_path.exists():
+                    upload_path.unlink()
+                    logger.info(f"Cleaned up uploaded file: {upload_path}")
+            except Exception as e:
+                logger.error(f"Error cleaning up uploaded file: {e}")
+
+        # Start cleanup task in background
+        asyncio.create_task(cleanup_upload())
+
+        poster_type_display = {
+            "standard": "standard poster",
+            "season": "season poster",
+            "collection": "collection poster",
+            "titlecard": "episode title card",
+            "background": "background poster",
+        }
+
+        return {
+            "success": True,
+            "message": f"Started manual mode for {poster_type_display.get(posterType, 'poster')}",
+            "pid": current_process.pid,
+            "upload_path": str(upload_path),
+        }
+    except FileNotFoundError as e:
+        error_msg = f"PowerShell not found. Please install PowerShell 7+ (pwsh) or ensure Windows PowerShell is in PATH."
+        logger.error(error_msg)
+        # Cleanup on error
+        if upload_path.exists():
+            upload_path.unlink()
+        raise HTTPException(status_code=500, detail=error_msg)
+    except Exception as e:
+        logger.error(f"Error running manual mode with upload: {e}")
+        # Cleanup on error
+        if upload_path and upload_path.exists():
+            upload_path.unlink()
         raise HTTPException(status_code=500, detail=str(e))
 
 
