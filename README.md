@@ -888,6 +888,17 @@ On [docker](#docker) this way:
 docker exec -it posterizarr pwsh /app/Posterizarr.ps1 -Manual -CollectionCard -PicturePath "/path/to/collection_bg.jpg" -Titletext "James Bond" -LibraryName "Movies"
 ```
 
+**Background Poster**
+
+To create a standard background poster for a movie or a TV show's main entry:
+```powershell
+.\Posterizarr.ps1 -Manual -BackgroundCard -PicturePath "C:\path\to\movie_bg.jpg" -Titletext "The Martian" -FolderName "The Martian (2015)" -LibraryName "Movies"
+```
+On [docker](#docker) this way:
+```sh
+docker exec -it posterizarr pwsh /app/Posterizarr.ps1 -Manual -BackgroundCard -PicturePath "/path/to/movie_bg.jpg" -Titletext "The Martian" -FolderName "The Martian (2015)" -LibraryName "Movies"
+```
+
 **Episode Title Card**
 
 To create a 16:9 title card for a specific episode, use the -TitleCard switch and provide episode details:

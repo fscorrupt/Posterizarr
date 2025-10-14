@@ -10,6 +10,7 @@ param (
     [switch]$SeasonPoster,
     [switch]$TitleCard,
     [switch]$CollectionCard,
+    [switch]$BackgroundCard,
     [string]$PicturePath,
     [string]$Titletext,
     [string]$FolderName,
@@ -7560,6 +7561,10 @@ if ($Manual) {
             $response = Read-Host "Create Collection? (y/n)"
             if ($response.ToLower() -eq 'y') { $CollectionCard = $true }
         }
+        if (-not $PSBoundParameters.ContainsKey('BackgroundCard')) {
+            $response = Read-Host "Create Background? (y/n)"
+            if ($response.ToLower() -eq 'y') { $BackgroundCard = $true }
+        }
     }
     if ($CollectionCard) {
         if ([string]::IsNullOrEmpty($Titletext)) {
@@ -7572,7 +7577,7 @@ if ($Manual) {
             $FolderName = Read-Host "Enter Media Foldername (how plex sees it)"
         }
         if ([string]::IsNullOrEmpty($Titletext)) {
-            $Titletext = Read-Host "Enter Movie/Show/Collection Title"
+            $Titletext = Read-Host "Enter Movie/Show/Background Title"
         }
     }
 
@@ -7626,7 +7631,7 @@ if ($Manual) {
             $TargetFolder = Join-Path -Path "$AssetPath\$LibraryName" -ChildPath $FolderName
             New-Item -ItemType Directory -Path $TargetFolder -Force | Out-Null
         }
-        if ($CollectionCard) {
+        Elseif ($CollectionCard) {
             $PosterImageoriginal = "$AssetPath\Collections\$LibraryName\$FolderName\poster.jpg"
             $CollectionPath = "$AssetPath\Collections\$LibraryName\$FolderName"
             # Ensure the Collection directory exists
@@ -7641,7 +7646,7 @@ if ($Manual) {
                 }
             }
         }
-        if ($TitleCard) {
+        Elseif ($TitleCard) {
             if ([string]::IsNullOrEmpty($EPTitleName)) { $EPTitleName = Read-Host "Enter Episode Title Name" }
             if ([string]::IsNullOrEmpty($EpisodeNumber)) { $EpisodeNumber = Read-Host "Enter Episode Number (eq. 1)" }
             if ([string]::IsNullOrEmpty($SeasonPosterName)) { $SeasonPosterName = Read-Host "Enter Season Number (eq. 1)" }
@@ -7657,6 +7662,13 @@ if ($Manual) {
                 $global:episode = "E" + $global:EpisodeNumber.PadLeft(2, '0')
             }
             $PosterImageoriginal = "$AssetPath\$LibraryName\$FolderName\$global:seasontmp$global:episode.jpg"
+            # Create Folder if Missing
+            $TargetFolder = Join-Path -Path "$AssetPath\$LibraryName" -ChildPath $FolderName
+            New-Item -ItemType Directory -Path $TargetFolder -Force | Out-Null
+        }
+        Elseif ($BackgroundCard) {
+            $PosterImageoriginal = "$AssetPath\$LibraryName\$FolderName\background.jpg"
+
             # Create Folder if Missing
             $TargetFolder = Join-Path -Path "$AssetPath\$LibraryName" -ChildPath $FolderName
             New-Item -ItemType Directory -Path $TargetFolder -Force | Out-Null
@@ -7688,7 +7700,7 @@ if ($Manual) {
             }
             $PosterImageoriginal = "$AssetPath\$($FolderName)_$global:seasontmp.jpg"
         }
-        if ($CollectionCard) {
+        Elseif ($CollectionCard) {
             $PosterImageoriginal = "$AssetPath\Collections\$($FolderName)_poster.jpg"
             $CollectionPath = "$AssetPath\Collections"
             # Ensure the Collection directory exists
@@ -7703,7 +7715,7 @@ if ($Manual) {
                 }
             }
         }
-        if ($TitleCard) {
+        Elseif ($TitleCard) {
             if ([string]::IsNullOrEmpty($EPTitleName)) { $EPTitleName = Read-Host "Enter Episode Title Name" }
             if ([string]::IsNullOrEmpty($EpisodeNumber)) { $EpisodeNumber = Read-Host "Enter Episode Number (eq. 1)" }
             if ([string]::IsNullOrEmpty($SeasonPosterName)) { $SeasonPosterName = Read-Host "Enter Season Number (eq. 1)" }
@@ -7719,6 +7731,9 @@ if ($Manual) {
                 $global:episode = "E" + $global:EpisodeNumber.PadLeft(2, '0')
             }
             $PosterImageoriginal = "$AssetPath\$($FolderName)_$global:seasontmp$global:episode.jpg"
+        }
+        Elseif ($BackgroundCard) {
+            $PosterImageoriginal = "$AssetPath\$($FolderName)_background.jpg"
         }
     }
 
@@ -7778,7 +7793,6 @@ if ($Manual) {
             }
         }
         elseif ($TitleCard) {
-            $Posteroverlay = $titlecardoverlay
             if ($AddTitleCardEPTitleText -eq 'true') {
                 if ($TitleCardEPTitlefontAllCaps -eq 'true') {
                     $joinedTitle = $EPTitleName.ToUpper()
@@ -7788,7 +7802,6 @@ if ($Manual) {
                 }
             }
             if ($AddTitleCardEPText -eq 'true') {
-                $Posteroverlay = $titlecardoverlay
                 $bullet = [char]0x2022
                 $global:SeasonEPNumber = "$SeasonTCText $global:SeasonNumber $bullet $EpisodeTCText $global:EpisodeNumber"
 
@@ -7797,6 +7810,16 @@ if ($Manual) {
                 }
                 Else {
                     $EPNumberTitle = $global:SeasonEPNumber
+                }
+            }
+        }
+        elseif ($BackgroundCard) {
+            if ($AddBackgroundText -eq 'true') {
+                if ($BackgroundfontAllCaps -eq 'true') {
+                    $joinedTitle = $Titletext.ToUpper()
+                }
+                Else {
+                    $joinedTitle = $Titletext
                 }
             }
         }
@@ -7876,6 +7899,25 @@ if ($Manual) {
                     Write-Entry -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                 }
             }
+            elseif ($BackgroundCard) {
+                # Resize Image to 2000x3000 and apply Border and overlay
+                if ($AddBackgroundBorder -eq 'true' -and $AddBackgroundOverlay -eq 'true') {
+                    $Arguments = "`"$PosterImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$Backgroundoverlay`" -gravity south -quality $global:outputQuality -composite -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$PosterImage`""
+                    Write-Entry -Subtext "Resizing it | Adding Borders | Adding Overlay" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
+                }
+                if ($AddBackgroundBorder -eq 'true' -and $AddBackgroundOverlay -eq 'false') {
+                    $Arguments = "`"$PosterImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" -shave `"$Backgroundborderwidthsecond`"  -bordercolor `"$Backgroundbordercolor`" -border `"$Backgroundborderwidth`" `"$PosterImage`""
+                    Write-Entry -Subtext "Resizing it | Adding Borders" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
+                }
+                if ($AddBackgroundBorder -eq 'false' -and $AddBackgroundOverlay -eq 'true') {
+                    $Arguments = "`"$PosterImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$Backgroundoverlay`" -gravity south -quality $global:outputQuality -composite `"$PosterImage`""
+                    Write-Entry -Subtext "Resizing it | Adding Overlay" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
+                }
+                if ($AddBackgroundBorder -eq 'false' -and $AddBackgroundOverlay -eq 'false') {
+                    $Arguments = "`"$PosterImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$PosterImage`""
+                    Write-Entry -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
+                }
+            }
             Else {
                 # Resize Image to 2000x3000 and apply Border and overlay
                 if ($AddBorder -eq 'true' -and $AddOverlay -eq 'true') {
@@ -7899,7 +7941,7 @@ if ($Manual) {
             $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
             InvokeMagickCommand -Command $magick -Arguments $Arguments
 
-            if ($AddText -eq 'true' -or $AddSeasonText -eq 'true' -or $AddTitleCardEPTitleText -eq 'true' -or $AddTitleCardEPText -eq 'true' -or $AddCollectionText -eq 'true') {
+            if ($AddText -eq 'true' -or $AddSeasonText -eq 'true' -or $AddTitleCardEPTitleText -eq 'true' -or $AddTitleCardEPText -eq 'true' -or $AddCollectionText -eq 'true' -or $AddBackgroundText -eq 'true') {
                 $joinedTitle = $joinedTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
                 if ($AddShowTitletoSeason -eq 'true' -and $SeasonPoster) {
                     $ShowjoinedTitle = $ShowjoinedTitle -replace '„', '"' -replace '”', '"' -replace '“', '"' -replace '"', '""' -replace '`', ''
@@ -7942,20 +7984,11 @@ if ($Manual) {
                 }
 
                 $joinedTitlePointSize = $joinedTitle -replace '""', '""""'
-                if ($SeasonPoster) {
-                    $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize -lineSpacing $SeasonlineSpacing
-                }
-                elseif ($CollectionCard) {
-                    $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $CollectionfontImagemagick -box_width $CollectionMaxWidth  -box_height $CollectionMaxHeight -min_pointsize $CollectionminPointSize -max_pointsize $CollectionmaxPointSize -lineSpacing $CollectionlineSpacing
-                }
-                elseif ($TitleCard) {
-                    $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize -lineSpacing $TitleCardEPTitlelineSpacing
-                }
-                Else {
-                    $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize -lineSpacing $lineSpacing
-                }
+
                 Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
                 if ($SeasonPoster) {
+                    $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize -lineSpacing $SeasonlineSpacing
+                    Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
                     # Add Stroke
                     if ($AddSeasonTextStroke -eq 'true') {
                         $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Seasonfontcolor`" -stroke `"$Seasonstrokecolor`" -strokewidth `"$Seasonstrokewidth`" -size `"$Seasonboxsize`" -background none -interline-spacing `"$SeasonlineSpacing`" -gravity `"$Seasontextgravity`" caption:`"$joinedTitle`" -trim +repage -extent `"$Seasonboxsize`" `) -gravity south -geometry +0`"$Seasontext_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
@@ -7973,8 +8006,21 @@ if ($Manual) {
                             $ShowOnSeasonArguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$showoptimalFontSize`" -fill `"$ShowOnSeasonfontcolor`" -size `"$ShowOnSeasonboxsize`" -background none -interline-spacing `"$ShowOnSeasonlineSpacing`" -gravity `"$ShowOnSeasontextgravity`" caption:`"$ShowjoinedTitle`" -trim +repage -extent `"$ShowOnSeasonboxsize`" `) -gravity south -geometry +0`"$ShowOnSeasontext_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
                         }
                     }
+
+                    Write-Entry -Subtext "    Applying Season Poster text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
+                    $logEntry = "`"$magick`" $Arguments"
+                    $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+                    InvokeMagickCommand -Command $magick -Arguments $Arguments
+                    if ($AddShowTitletoSeason -eq 'true') {
+                        Write-Entry -Subtext "    Applying showTitle text: `"$ShowjoinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                        $logEntry = "`"$magick`" $ShowOnSeasonArguments"
+                        $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+                        InvokeMagickCommand -Command $magick -Arguments $ShowOnSeasonArguments
+                    }
                 }
                 elseif ($CollectionCard) {
+                    $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $CollectionfontImagemagick -box_width $CollectionMaxWidth  -box_height $CollectionMaxHeight -min_pointsize $CollectionminPointSize -max_pointsize $CollectionmaxPointSize -lineSpacing $CollectionlineSpacing
+
                     # Add Stroke
                     if ($AddCollectionTextStroke -eq 'true') {
                         $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$CollectionfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Collectionfontcolor`" -stroke `"$Collectionstrokecolor`" -strokewidth `"$Collectionstrokewidth`" -size `"$Collectionboxsize`" -background none -interline-spacing `"$CollectionlineSpacing`" -gravity `"$Collectiontextgravity`" caption:`"$joinedTitle`" -trim +repage -extent `"$Collectionboxsize`" `) -gravity south -geometry +0`"$Collectiontext_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
@@ -7992,8 +8038,19 @@ if ($Manual) {
                             $CollectionTitleArguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$CollectionfontImagemagick`" -pointsize `"$CollectionTitleoptimalFontSize`" -fill `"$CollectionTitlefontcolor`" -size `"$CollectionTitleboxsize`" -background none -interline-spacing `"$CollectionTitlelineSpacing`" -gravity `"$CollectionTitletextgravity`" caption:`"$CollectionjoinedTitle`" -trim +repage -extent `"$CollectionTitleboxsize`" `) -gravity south -geometry +0`"$CollectionTitletext_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
                         }
                     }
+                    Write-Entry -Subtext "    Applying Collection Poster text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
+                    $logEntry = "`"$magick`" $Arguments"
+                    $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+                    InvokeMagickCommand -Command $magick -Arguments $Arguments
+                    if ($AddCollectionTitle -eq 'true') {
+                        Write-Entry -Subtext "    Applying collectionTitle text: `"$CollectionjoinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+                        $logEntry = "`"$magick`" $CollectionTitleArguments"
+                        $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+                        InvokeMagickCommand -Command $magick -Arguments $CollectionTitleArguments
+                    }
                 }
                 Elseif ($TitleCard) {
+                    $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize -lineSpacing $TitleCardEPTitlelineSpacing
                     # Add Stroke
                     if ($AddTitleCardEPTitleTextStroke -eq 'true') {
                         $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$TitleCardEPTitlefontcolor`" -stroke `"$TitleCardEPTitlestrokecolor`" -strokewidth `"$TitleCardEPTitlestrokewidth`" -size `"$TitleCardEPTitleboxsize`" -background none -interline-spacing `"$TitleCardEPTitlelineSpacing`" -gravity `"$TitleCardEPTitletextgravity`" caption:`"$joinedTitle`" -trim +repage -extent `"$TitleCardEPTitleboxsize`" `) -gravity south -geometry +0`"$TitleCardEPTitletext_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
@@ -8011,41 +8068,6 @@ if ($Manual) {
                             $EPNumberArguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$TitleCardfontImagemagick`" -pointsize `"$EPNumberoptimalFontSize`" -fill `"$TitleCardEPfontcolor`" -size `"$TitleCardEPboxsize`" -background none -interline-spacing `"$TitleCardEPlineSpacing`" -gravity `"$TitleCardEPtextgravity`" caption:`"$EPNumberjoinedTitle`" -trim +repage -extent `"$TitleCardEPboxsize`" `) -gravity south -geometry +0`"$TitleCardEPtext_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
                         }
                     }
-                }
-                Else {
-                    # Add Stroke
-                    if ($AddTextStroke -eq 'true') {
-                        $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -stroke `"$strokecolor`" -strokewidth `"$strokewidth`" -size `"$boxsize`" -background none -interline-spacing `"$lineSpacing`" -gravity `"$textgravity`" caption:`"$joinedTitle`" -trim +repage -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
-                    }
-                    Else {
-                        $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none -interline-spacing `"$lineSpacing`" -gravity `"$textgravity`" caption:`"$joinedTitle`" -trim +repage -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
-                    }
-                }
-                if ($SeasonPoster) {
-                    Write-Entry -Subtext "    Applying Season Poster text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
-                    $logEntry = "`"$magick`" $Arguments"
-                    $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
-                    InvokeMagickCommand -Command $magick -Arguments $Arguments
-                    if ($AddShowTitletoSeason -eq 'true') {
-                        Write-Entry -Subtext "    Applying showTitle text: `"$ShowjoinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                        $logEntry = "`"$magick`" $ShowOnSeasonArguments"
-                        $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
-                        InvokeMagickCommand -Command $magick -Arguments $ShowOnSeasonArguments
-                    }
-                }
-                elseif ($CollectionCard) {
-                    Write-Entry -Subtext "    Applying Collection Poster text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
-                    $logEntry = "`"$magick`" $Arguments"
-                    $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
-                    InvokeMagickCommand -Command $magick -Arguments $Arguments
-                    if ($AddCollectionTitle -eq 'true') {
-                        Write-Entry -Subtext "    Applying collectionTitle text: `"$CollectionjoinedTitle`"" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
-                        $logEntry = "`"$magick`" $CollectionTitleArguments"
-                        $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
-                        InvokeMagickCommand -Command $magick -Arguments $CollectionTitleArguments
-                    }
-                }
-                elseif ($TitleCard) {
                     Write-Entry -Subtext "    Applying TitleCard Poster text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
                     $logEntry = "`"$magick`" $Arguments"
                     $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
@@ -8057,7 +8079,31 @@ if ($Manual) {
                         InvokeMagickCommand -Command $magick -Arguments $EPNumberArguments
                     }
                 }
+                Elseif ($BackgroundCard) {
+                    $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize -lineSpacing $BackgroundlineSpacing
+                    Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
+                    # Add Stroke
+                    if ($AddTextStroke -eq 'true') {
+                        $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$backgroundfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -stroke `"$Backgroundstrokecolor`" -strokewidth `"$strokewidth`" -size `"$Backgroundboxsize`" -background none -interline-spacing `"$BackgroundlineSpacing`" -gravity `"$Backgroundtextgravity`" caption:`"$joinedTitle`" -trim +repage -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
+                    }
+                    Else {
+                        $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$backgroundfontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$Backgroundfontcolor`" -size `"$Backgroundboxsize`" -background none -interline-spacing `"$BackgroundlineSpacing`" -gravity `"$Backgroundtextgravity`" caption:`"$joinedTitle`" -trim +repage -extent `"$Backgroundboxsize`" `) -gravity south -geometry +0`"$Backgroundtext_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
+                    }
+                    Write-Entry -Subtext "    Applying Background Poster text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
+                    $logEntry = "`"$magick`" $Arguments"
+                    $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
+                    InvokeMagickCommand -Command $magick -Arguments $Arguments
+                }
                 Else {
+                    $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize -lineSpacing $lineSpacing
+                    Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
+                    # Add Stroke
+                    if ($AddTextStroke -eq 'true') {
+                        $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -stroke `"$strokecolor`" -strokewidth `"$strokewidth`" -size `"$boxsize`" -background none -interline-spacing `"$lineSpacing`" -gravity `"$textgravity`" caption:`"$joinedTitle`" -trim +repage -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
+                    }
+                    Else {
+                        $Arguments = "`"$PosterImage`" -gravity center -background None -layers Flatten `( -font `"$fontImagemagick`" -pointsize `"$optimalFontSize`" -fill `"$fontcolor`" -size `"$boxsize`" -background none -interline-spacing `"$lineSpacing`" -gravity `"$textgravity`" caption:`"$joinedTitle`" -trim +repage -extent `"$boxsize`" `) -gravity south -geometry +0`"$text_offset`" -quality $global:outputQuality -composite `"$PosterImage`""
+                    }
                     Write-Entry -Subtext "    Applying Poster text: `"$joinedTitle`"" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
                     $logEntry = "`"$magick`" $Arguments"
                     $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
@@ -8067,8 +8113,15 @@ if ($Manual) {
         }
     }
     Else {
-        # Resize Image to 2000x3000
-        $Resizeargument = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$PosterImage`""
+        if ($TitleCard) {
+            $Resizeargument = "`"$PosterImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$PosterSize`" `"$PosterImage`""
+        }
+        Elseif ($BackgroundCard) {
+            $Resizeargument = "`"$PosterImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$PosterSize`" `"$PosterImage`""
+        }
+        Else {
+            $Resizeargument = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$PosterImage`""
+        }
         Write-Entry -Subtext "Resizing it... " -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
         $logEntry = "`"$magick`" $Resizeargument"
         $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
