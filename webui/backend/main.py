@@ -43,13 +43,22 @@ if IS_DOCKER:
     BASE_DIR = Path("/config")
     APP_DIR = Path("/app")
     ASSETS_DIR = Path("/assets")
+    IMAGES_DIR = Path("/app/images")
     FRONTEND_DIR = Path("/app/frontend/dist")
+    # Ensure directories exist in Docker
+    (BASE_DIR / "Logs").mkdir(parents=True, exist_ok=True)
+    (BASE_DIR / "temp").mkdir(parents=True, exist_ok=True)
+    (BASE_DIR / "test").mkdir(parents=True, exist_ok=True)
+    (BASE_DIR / "UILogs").mkdir(parents=True, exist_ok=True)
+    (BASE_DIR / "uploads").mkdir(parents=True, exist_ok=True)
+    (BASE_DIR / "fontpreviews").mkdir(parents=True, exist_ok=True)
 else:
     # Local: webui/backend/main.py -> project root (3 levels up)
     PROJECT_ROOT = Path(__file__).parent.parent.parent
     BASE_DIR = PROJECT_ROOT
     APP_DIR = PROJECT_ROOT
     ASSETS_DIR = PROJECT_ROOT / "assets"
+    IMAGES_DIR = PROJECT_ROOT / "images"
     FRONTEND_DIR = PROJECT_ROOT / "webui" / "frontend" / "dist"
     ASSETS_DIR.mkdir(exist_ok=True)
     (BASE_DIR / "Logs").mkdir(exist_ok=True)
@@ -6204,6 +6213,14 @@ if TEST_DIR.exists():
         name="test",
     )
     logger.info(f"Mounted /test -> {TEST_DIR} (with 24h cache)")
+
+if IMAGES_DIR.exists():
+    app.mount(
+        "/images",
+        CachedStaticFiles(directory=str(IMAGES_DIR), max_age=86400),  # 24h Cache
+        name="images",
+    )
+    logger.info(f"Mounted /images -> {IMAGES_DIR} (with 24h cache)")
 
 if FRONTEND_DIR.exists():
     app.mount("/", StaticFiles(directory=str(FRONTEND_DIR), html=True), name="frontend")

@@ -19,6 +19,8 @@ import {
   Tv,
   Layout,
   ArrowRight,
+  Eye,
+  ExternalLink,
 } from "lucide-react";
 
 function HowItWorks() {
@@ -151,15 +153,17 @@ function HowItWorks() {
   return (
     <div className="px-4 py-6 space-y-8">
       {/* Header */}
-      <div className="bg-theme-card border border-theme rounded-lg p-8 text-center space-y-4">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-lg bg-theme-primary/10 border border-theme-primary/30 mb-2">
-          <Layers className="w-8 h-8 text-theme-primary" />
+      {/* Header */}
+      <div className="text-center mb-12">
+        <div className="flex justify-center mb-4">
+          <img src="/logo.png" alt="Posterizarr" className="h-15 w-auto" />
         </div>
-        <h1 className="text-3xl font-bold text-theme-text">How It Works</h1>
-        <p className="text-base text-theme-muted max-w-3xl mx-auto">
-          Posterizarr automates the entire process of creating and managing
-          artwork for your media library. Here's how it transforms your media
-          experience.
+        <h1 className="text-4xl font-bold text-theme-text mb-4">
+          How Posterizarr Works
+        </h1>
+        <p className="text-xl text-theme-muted max-w-3xl mx-auto">
+          Automated poster management for your media library with intelligent
+          overlay application and seamless integration
         </p>
       </div>
 
@@ -301,6 +305,70 @@ function HowItWorks() {
               </div>
             );
           })}
+        </div>
+      </div>
+
+      {/* Example Showcase */}
+      <div className="bg-theme-card border border-theme rounded-lg p-6 space-y-6">
+        <h2 className="text-2xl font-bold text-theme-text flex items-center gap-2">
+          <Eye className="w-6 h-6 text-theme-primary" />
+          See It In Action
+        </h2>
+
+        {/* Posterizarr Results */}
+        <div className="space-y-4">
+          <div>
+            <h3 className="text-lg font-semibold text-theme-text mb-3">
+              Posterizarr Output
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="group relative bg-theme-hover border border-theme rounded-lg overflow-hidden hover:border-theme-primary/50 transition-all">
+                <img
+                  src="/images/posterizarr-overview.jpg"
+                  alt="Posterizarr Overview - Original"
+                  className="w-full h-auto object-contain group-hover:scale-[1.02] transition-transform duration-300"
+                />
+              </div>
+              <div className="group relative bg-theme-hover border border-theme rounded-lg overflow-hidden hover:border-theme-primary/50 transition-all">
+                <img
+                  src="/images/posterizarr-overview-new.jpg"
+                  alt="Posterizarr Overview - Updated"
+                  className="w-full h-auto object-contain group-hover:scale-[1.02] transition-transform duration-300"
+                />
+              </div>
+            </div>
+            <p className="text-sm text-theme-muted mt-3">
+              High-quality artwork automatically downloaded and processed with
+              your custom overlays
+            </p>
+          </div>
+
+          {/* Kometa Integration Results */}
+          <div>
+            <h3 className="text-lg font-semibold text-theme-text mb-3">
+              After Kometa Integration
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="group relative bg-theme-hover border border-theme rounded-lg overflow-hidden hover:border-theme-primary/50 transition-all">
+                <img
+                  src="/images/kometa-overview.png"
+                  alt="Kometa Overview - Original"
+                  className="w-full h-auto object-contain group-hover:scale-[1.02] transition-transform duration-300"
+                />
+              </div>
+              <div className="group relative bg-theme-hover border border-theme rounded-lg overflow-hidden hover:border-theme-primary/50 transition-all">
+                <img
+                  src="/images/kometa-overview-new.jpg"
+                  alt="Kometa Overview - Updated"
+                  className="w-full h-auto object-contain group-hover:scale-[1.02] transition-transform duration-300"
+                />
+              </div>
+            </div>
+            <p className="text-sm text-theme-muted mt-3">
+              Final results in your media server with additional Kometa overlays
+              applied
+            </p>
+          </div>
         </div>
       </div>
 
