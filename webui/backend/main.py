@@ -932,7 +932,9 @@ class ManualModeRequest(BaseModel):
     titletext: str
     folderName: str
     libraryName: str
-    posterType: Literal["standard", "season", "collection", "titlecard", "background"] = "standard"
+    posterType: Literal[
+        "standard", "season", "collection", "titlecard", "background"
+    ] = "standard"
     seasonPosterName: str = ""
     epTitleName: str = ""
     episodeNumber: str = ""
@@ -5538,10 +5540,19 @@ async def upload_asset_replacement(
 
 @app.post("/api/assets/replace-from-url")
 async def replace_asset_from_url(
-    asset_path: str = Query(...), image_url: str = Query(...)
+    asset_path: str = Query(...),
+    image_url: str = Query(...),
+    process_with_overlays: bool = Query(False),
+    title_text: Optional[str] = Query(None),
+    folder_name: Optional[str] = Query(None),
+    library_name: Optional[str] = Query(None),
+    season_number: Optional[str] = Query(None),
+    episode_number: Optional[str] = Query(None),
+    episode_title: Optional[str] = Query(None),
 ):
     """
     Replace an asset by downloading from a URL
+    Optionally process with overlays using Manual Run
     """
     try:
         # Validate asset path exists
@@ -5575,18 +5586,268 @@ async def replace_asset_from_url(
             f"Replaced asset from URL: {asset_path} (size: {len(contents)} bytes)"
         )
 
-        return {
+        result = {
             "success": True,
             "message": "Asset replaced successfully",
             "path": asset_path,
             "size": len(contents),
         }
 
+        # If process_with_overlays is enabled, trigger Manual Run
+        if process_with_overlays:
+            logger.info(f"🎨 Processing with overlays enabled for: {asset_path}")
+
+            try:
+                # Parse asset path to extract info
+                # Format: LibraryName/FolderName/poster.jpg, Season01.jpg, or S01E01.jpg
+                path_parts = Path(asset_path).parts
+
+                if len(path_parts) >= 3:
+                    # Use provided library_name and folder_name if available, otherwise extract from path
+                    extracted_library_name = path_parts[0]
+                    extracted_folder_name = path_parts[1]
+                    filename = path_parts[-1]
+
+                    # Prefer user-provided values over extracted values
+                    final_library_name = (
+                        library_name if library_name else extracted_library_name
+                    )
+                    final_folder_name = (
+                        folder_name if folder_name else extracted_folder_name
+                    )
+
+                    # Determine poster type from filename
+                    poster_type = None
+                    season_poster_name = None
+                    ep_title_name = None
+                    ep_number = None
+
+                    if filename == "poster.jpg":
+                        poster_type = "standard"
+                    elif filename == "background.jpg":
+                        poster_type = "background"
+                    elif re.match(r"^Season(\d+)\.jpg$", filename):
+                        poster_type = "season"
+                        # Extract season number from filename or use provided one
+                        season_match = re.match(r"^Season(\d+)\.jpg$", filename)
+                        if season_match:
+                            extracted_season = season_match.group(1)
+                            # Use provided season_number or fall back to extracted
+                            season_poster_name = f"Season {season_number if season_number else extracted_season}"
+                        elif season_number:
+                            season_poster_name = f"Season {season_number}"
+                        else:
+                            raise ValueError(
+                                f"Could not determine season number for: {filename}"
+                            )
+                    elif re.match(r"^S(\d+)E(\d+)\.jpg$", filename):
+                        poster_type = "titlecard"
+                        # Extract season/episode from filename or use provided values
+                        ep_match = re.match(r"^S(\d+)E(\d+)\.jpg$", filename)
+                        if ep_match:
+                            extracted_season = ep_match.group(1)
+                            extracted_episode = ep_match.group(2)
+                            # Use provided values or fall back to extracted
+                            season_poster_name = (
+                                season_number if season_number else extracted_season
+                            )
+                            ep_number = (
+                                episode_number if episode_number else extracted_episode
+                            )
+                        else:
+                            season_poster_name = season_number
+                            ep_number = episode_number
+
+                        # Episode title must be provided
+                        if not episode_title:
+                            raise ValueError(
+                                f"Episode title is required for title card processing"
+                            )
+                        ep_title_name = episode_title
+                    else:
+                        raise ValueError(
+                            f"Unsupported file type for overlay processing: {filename}"
+                        )
+
+                    # Extract title text from folder name if not provided
+                    # Remove year and TMDB/TVDB ID from folder name
+                    final_title_text = title_text
+                    if not final_title_text:
+                        # Match patterns like "Movie Name (2024) {tmdb-12345}"
+                        title_match = re.match(r"^(.+?)\s*\(\d{4}\)", final_folder_name)
+                        if title_match:
+                            final_title_text = title_match.group(1).strip()
+                        else:
+                            # Fallback: use folder name as-is
+                            final_title_text = final_folder_name
+
+                    logger.info(
+                        f"📋 Manual Run params - Library: {final_library_name}, Folder: {final_folder_name}, Type: {poster_type}, Title: {final_title_text}"
+                    )
+                    if season_poster_name:
+                        logger.info(f"📋 Season: {season_poster_name}")
+                    if ep_number and ep_title_name:
+                        logger.info(f"📋 Episode: {ep_number} - {ep_title_name}")
+
+                    # Build ManualModeRequest
+                    manual_request = ManualModeRequest(
+                        picturePath=str(full_asset_path),
+                        titletext=(
+                            final_title_text
+                            if poster_type != "titlecard"
+                            else ep_title_name
+                        ),
+                        folderName=final_folder_name,
+                        libraryName=final_library_name,
+                        posterType=poster_type,
+                        seasonPosterName=season_poster_name or "",
+                        epTitleName=ep_title_name or "",
+                        episodeNumber=ep_number or "",
+                    )
+
+                    # Call run_manual_mode (we need to make it callable)
+                    await trigger_manual_run_internal(manual_request)
+
+                    result["message"] = (
+                        "Asset replaced and queued for overlay processing"
+                    )
+                    result["manual_run_triggered"] = True
+                    logger.info(
+                        f"✅ Manual Run triggered successfully for {asset_path}"
+                    )
+                else:
+                    logger.warning(
+                        f"⚠️ Cannot extract library/folder from path: {asset_path}"
+                    )
+                    result["manual_run_triggered"] = False
+                    result["message"] = (
+                        "Asset replaced but overlay processing skipped (invalid path structure)"
+                    )
+
+            except Exception as e:
+                logger.error(f"❌ Failed to trigger Manual Run: {e}")
+                result["manual_run_triggered"] = False
+                result["manual_run_error"] = str(e)
+                # Don't fail the whole request, asset is already replaced
+
+        return result
+
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error replacing asset from URL: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+async def trigger_manual_run_internal(request: ManualModeRequest):
+    """
+    Internal function to trigger manual run without HTTP overhead
+    This is called from replace_asset_from_url
+    """
+    global current_process, current_mode
+
+    # Check if already running
+    if current_process and current_process.poll() is None:
+        raise ValueError("Script is already running")
+
+    if not SCRIPT_PATH.exists():
+        raise ValueError("Posterizarr.ps1 not found")
+
+    # Determine PowerShell command
+    import platform
+
+    if platform.system() == "Windows":
+        ps_command = "pwsh"
+        try:
+            subprocess.run([ps_command, "-v"], capture_output=True, check=True)
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            ps_command = "powershell"
+            logger.info("pwsh not found, using powershell instead")
+    else:
+        ps_command = "pwsh"
+
+    # Build command based on poster type
+    command = [
+        ps_command,
+        "-File",
+        str(SCRIPT_PATH),
+        "-Manual",
+        "-PicturePath",
+        request.picturePath.strip(),
+    ]
+
+    # Add poster type specific switches and parameters
+    if request.posterType == "titlecard":
+        command.extend(
+            [
+                "-TitleCard",
+                "-Titletext",
+                request.epTitleName.strip(),
+                "-FolderName",
+                request.folderName.strip(),
+                "-LibraryName",
+                request.libraryName.strip(),
+                "-EPTitleName",
+                request.epTitleName.strip(),
+                "-EpisodeNumber",
+                request.episodeNumber.strip(),
+                "-SeasonPosterName",
+                request.seasonPosterName.strip(),
+            ]
+        )
+    elif request.posterType == "season":
+        command.extend(
+            [
+                "-SeasonPoster",
+                "-Titletext",
+                request.titletext.strip(),
+                "-FolderName",
+                request.folderName.strip(),
+                "-LibraryName",
+                request.libraryName.strip(),
+                "-SeasonPosterName",
+                request.seasonPosterName.strip(),
+            ]
+        )
+    elif request.posterType == "background":
+        command.extend(
+            [
+                "-BackgroundCard",
+                "-Titletext",
+                request.titletext.strip(),
+                "-FolderName",
+                request.folderName.strip(),
+                "-LibraryName",
+                request.libraryName.strip(),
+            ]
+        )
+    else:  # standard poster
+        command.extend(
+            [
+                "-Titletext",
+                request.titletext.strip(),
+                "-FolderName",
+                request.folderName.strip(),
+                "-LibraryName",
+                request.libraryName.strip(),
+            ]
+        )
+
+    logger.info(f"🚀 Starting Manual Run: {' '.join(command)}")
+
+    # Start the process in background
+    # IMPORTANT: Do NOT redirect stdout/stderr to PIPE if we're not reading them!
+    # This prevents the process from hanging when the buffer fills up
+    current_process = subprocess.Popen(
+        command,
+        cwd=str(BASE_DIR),
+        stdout=None,  # Let output go to console/log
+        stderr=None,  # Let output go to console/log
+        text=True,
+    )
+    current_mode = "manual"
+
+    logger.info(f"✅ Manual Run process started (PID: {current_process.pid})")
 
 
 if ASSETS_DIR.exists():

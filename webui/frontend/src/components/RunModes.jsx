@@ -499,7 +499,10 @@ function RunModes() {
       // Determine media type based on posterType and mediaTypeSelection
       let mediaType;
 
-      if (manualForm.posterType === "standard" || manualForm.posterType === "background") {
+      if (
+        manualForm.posterType === "standard" ||
+        manualForm.posterType === "background"
+      ) {
         // For standard and background posters, use the user's selection
         mediaType = manualForm.mediaTypeSelection; // "movie" or "tv"
       } else if (

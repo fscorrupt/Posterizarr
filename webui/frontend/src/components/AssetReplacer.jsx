@@ -20,6 +20,23 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
   const [activeTab, setActiveTab] = useState("upload");
+  const [processWithOverlays, setProcessWithOverlays] = useState(false);
+
+  // Manual form for editable parameters (overlay processing)
+  const [manualForm, setManualForm] = useState({
+    titletext: "",
+    foldername: "",
+    libraryname: "",
+    seasonPosterName: "", // For season posters and titlecards
+    episodeNumber: "", // For titlecards
+    episodeTitleName: "", // For titlecards
+  });
+
+  // Manual search state (separate from manual form!)
+  const [manualSearchForm, setManualSearchForm] = useState({
+    seasonNumber: "", // For searching seasons
+    episodeNumber: "", // For searching episodes
+  });
 
   // Extract metadata from asset
   const extractMetadata = () => {
@@ -32,6 +49,25 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
     // Format examples: "Movie Name (2024) {tmdb-12345}" or "Show Name (2020) {tvdb-67890}"
     let title = null;
     let year = null;
+    let folderName = null;
+    let libraryName = null;
+
+    // Extract library name (parent folder: "4K", "TV", etc.)
+    const pathSegments = asset.path?.split(/[\/\\]/).filter(Boolean);
+    if (pathSegments && pathSegments.length > 0) {
+      // Find library name - usually the top-level folder like "4K" or "TV"
+      for (let i = 0; i < pathSegments.length; i++) {
+        // Common library folder names
+        if (pathSegments[i].match(/^(4K|TV|Movies|Series|anime)$/i)) {
+          libraryName = pathSegments[i];
+          break;
+        }
+      }
+      // If not found, use the first segment as library name
+      if (!libraryName && pathSegments.length > 0) {
+        libraryName = pathSegments[0];
+      }
+    }
 
     // Determine asset type first (needed for title extraction logic)
     let assetType = "poster";
@@ -46,7 +82,6 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
     // For seasons and titlecards, extract title from parent folder (show name)
     if (assetType === "season" || assetType === "titlecard") {
       // Path format: ".../Show Name (Year) {tvdb-123}/Season01/..." or ".../Show Name (Year) {tvdb-123}/S01E01.jpg"
-      const pathSegments = asset.path?.split(/[\/\\]/).filter(Boolean);
 
       if (pathSegments && pathSegments.length > 1) {
         // Find the show folder (parent of Season folder or file)
@@ -73,6 +108,8 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
 
         if (showFolderIndex >= 0 && pathSegments[showFolderIndex]) {
           const showFolder = pathSegments[showFolderIndex];
+          folderName = showFolder; // Store the full folder name
+
           // Extract title and year from show folder: "Show Name (2020) {tvdb-123}"
           const showMatch = showFolder.match(/^(.+?)\s*\((\d{4})\)\s*\{/);
           if (showMatch) {
@@ -100,8 +137,19 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
         /[\/\\]([^\/\\]+?)\s*\((\d{4})\)\s*\{/
       );
       if (titleYearMatch) {
+        folderName = titleYearMatch[0].replace(/^[\/\\]/, "").trim(); // Store folder with ID
         title = titleYearMatch[1].trim();
         year = parseInt(titleYearMatch[2]);
+
+        // Extract the full folder name for movies
+        if (pathSegments && pathSegments.length > 0) {
+          for (let i = pathSegments.length - 1; i >= 0; i--) {
+            if (pathSegments[i].match(/\{(tvdb|tmdb)-\d+\}/)) {
+              folderName = pathSegments[i];
+              break;
+            }
+          }
+        }
       } else {
         // Fallback: Try just year in parentheses
         const yearMatch = asset.path?.match(/\((\d{4})\)/);
@@ -110,11 +158,19 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
         }
 
         // Try to extract title from last folder/file segment
-        const pathSegments = asset.path?.split(/[\/\\]/).filter(Boolean);
         if (pathSegments && pathSegments.length > 0) {
           const lastSegment = pathSegments[pathSegments.length - 1];
+          // Check if it's a file (has extension)
+          const isFile = lastSegment.match(/\.[^.]+$/);
+          const folderSegment =
+            isFile && pathSegments.length > 1
+              ? pathSegments[pathSegments.length - 2]
+              : lastSegment;
+
+          folderName = folderSegment;
+
           // Remove year, ID tags, and file extension
-          const cleanTitle = lastSegment
+          const cleanTitle = folderSegment
             .replace(/\s*\(\d{4}\)\s*/, "")
             .replace(/\s*\{[^}]+\}\s*/, "")
             .replace(/\.[^.]+$/, "")
@@ -139,6 +195,8 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
       tvdb_id: tvdbMatch ? tvdbMatch[1] : null,
       title: title,
       year: year,
+      folder_name: folderName,
+      library_name: libraryName,
       media_type: mediaType,
       asset_type: assetType,
       season_number: seasonMatch
@@ -161,6 +219,65 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
   const [searchYear, setSearchYear] = useState(
     metadata.year ? String(metadata.year) : ""
   );
+
+  // Initialize season number from metadata
+  useEffect(() => {
+    if (metadata.season_number) {
+      // For season posters, format as "Season XX"
+      if (metadata.asset_type === "season") {
+        const seasonNum = String(metadata.season_number).padStart(2, "0");
+        setManualForm((prev) => ({
+          ...prev,
+          seasonPosterName: `Season ${seasonNum}`,
+        }));
+        // Also set for manual search
+        setManualSearchForm((prev) => ({
+          ...prev,
+          seasonNumber: String(metadata.season_number),
+        }));
+      } else if (metadata.asset_type === "titlecard") {
+        // For titlecards, just the number
+        const seasonNum = String(metadata.season_number).padStart(2, "0");
+        setManualForm((prev) => ({
+          ...prev,
+          seasonPosterName: seasonNum,
+        }));
+        // Also set for manual search
+        setManualSearchForm((prev) => ({
+          ...prev,
+          seasonNumber: String(metadata.season_number),
+        }));
+      }
+    }
+  }, [metadata.season_number, metadata.asset_type]);
+
+  // Initialize episode data from metadata (for titlecards)
+  useEffect(() => {
+    if (metadata.episode_number) {
+      const episodeNum = String(metadata.episode_number).padStart(2, "0");
+      setManualForm((prev) => ({
+        ...prev,
+        episodeNumber: episodeNum,
+      }));
+      // Also set for manual search
+      setManualSearchForm((prev) => ({
+        ...prev,
+        episodeNumber: String(metadata.episode_number),
+      }));
+    }
+  }, [metadata.episode_number]);
+
+  // Initialize title text from metadata
+  useEffect(() => {
+    if (metadata.title) {
+      setManualForm((prev) => ({
+        ...prev,
+        titletext: metadata.title,
+        foldername: metadata.folder_name || "",
+        libraryname: metadata.library_name || "",
+      }));
+    }
+  }, [metadata.title, metadata.folder_name, metadata.library_name]);
 
   // Format display name with metadata
   const getDisplayName = () => {
@@ -310,24 +427,170 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
     setUploading(true);
     setError(null);
 
+    // Validation for poster/background with overlays
+    if (
+      processWithOverlays &&
+      (metadata.asset_type === "poster" || metadata.asset_type === "background")
+    ) {
+      const titleText = manualForm?.titletext || metadata.title;
+      const folderName = manualForm?.foldername || metadata.folder_name;
+      const libraryName = manualForm?.libraryname || metadata.library_name;
+
+      if (!titleText || !titleText.trim()) {
+        setError("Please enter a title text for overlay processing");
+        setUploading(false);
+        return;
+      }
+      if (!folderName || !folderName.trim()) {
+        setError("Please enter a folder name for overlay processing");
+        setUploading(false);
+        return;
+      }
+      if (!libraryName || !libraryName.trim()) {
+        setError("Please enter a library name for overlay processing");
+        setUploading(false);
+        return;
+      }
+    }
+
+    // Validation for season posters
+    if (processWithOverlays && metadata.asset_type === "season") {
+      const titleText = manualForm?.titletext || metadata.title;
+      const folderName = manualForm?.foldername || metadata.folder_name;
+      const libraryName = manualForm?.libraryname || metadata.library_name;
+      const seasonPosterName = manualForm?.seasonPosterName;
+
+      if (!titleText || !titleText.trim()) {
+        setError("Please enter a title text for overlay processing");
+        setUploading(false);
+        return;
+      }
+      if (!folderName || !folderName.trim()) {
+        setError("Please enter a folder name for overlay processing");
+        setUploading(false);
+        return;
+      }
+      if (!libraryName || !libraryName.trim()) {
+        setError("Please enter a library name for overlay processing");
+        setUploading(false);
+        return;
+      }
+      if (!seasonPosterName || !seasonPosterName.trim()) {
+        setError("Please enter a season poster name for overlay processing");
+        setUploading(false);
+        return;
+      }
+    }
+
+    // Validation for title cards
+    if (processWithOverlays && metadata.asset_type === "titlecard") {
+      const folderName = manualForm?.foldername || metadata.folder_name;
+      const libraryName = manualForm?.libraryname || metadata.library_name;
+      const seasonPosterName = manualForm?.seasonPosterName;
+      const episodeNumber = manualForm?.episodeNumber;
+      const episodeTitleName = manualForm?.episodeTitleName;
+
+      if (!folderName || !folderName.trim()) {
+        setError("Please enter a folder name for overlay processing");
+        setUploading(false);
+        return;
+      }
+      if (!libraryName || !libraryName.trim()) {
+        setError("Please enter a library name for overlay processing");
+        setUploading(false);
+        return;
+      }
+      if (!seasonPosterName || !seasonPosterName.trim()) {
+        setError("Please enter a season poster name for overlay processing");
+        setUploading(false);
+        return;
+      }
+      if (!episodeNumber || !episodeNumber.trim()) {
+        setError("Please enter an episode number for overlay processing");
+        setUploading(false);
+        return;
+      }
+      if (!episodeTitleName || !episodeTitleName.trim()) {
+        setError("Please enter an episode title for overlay processing");
+        setUploading(false);
+        return;
+      }
+    }
+
     try {
-      const response = await fetch(
-        `${API_URL}/assets/replace-from-url?asset_path=${encodeURIComponent(
-          asset.path
-        )}&image_url=${encodeURIComponent(preview.original_url)}`,
-        {
-          method: "POST",
+      // Build URL with parameters
+      let url = `${API_URL}/assets/replace-from-url?asset_path=${encodeURIComponent(
+        asset.path
+      )}&image_url=${encodeURIComponent(
+        preview.original_url
+      )}&process_with_overlays=${processWithOverlays}`;
+
+      // Add title text if provided (for poster/background/season)
+      if (processWithOverlays && metadata.asset_type !== "titlecard") {
+        const titleText = manualForm?.titletext || metadata.title;
+        const folderName = manualForm?.foldername || metadata.folder_name;
+        const libraryName = manualForm?.libraryname || metadata.library_name;
+
+        if (titleText) {
+          url += `&title_text=${encodeURIComponent(titleText)}`;
         }
-      );
+        if (folderName) {
+          url += `&folder_name=${encodeURIComponent(folderName)}`;
+        }
+        if (libraryName) {
+          url += `&library_name=${encodeURIComponent(libraryName)}`;
+        }
+      }
+
+      // Add season number if applicable (for season posters)
+      if (processWithOverlays && metadata.asset_type === "season") {
+        const seasonPosterName = manualForm?.seasonPosterName;
+        if (seasonPosterName) {
+          url += `&season_number=${encodeURIComponent(seasonPosterName)}`;
+        }
+      }
+
+      // Add episode data for titlecards
+      if (processWithOverlays && metadata.asset_type === "titlecard") {
+        const folderName = manualForm?.foldername || metadata.folder_name;
+        const libraryName = manualForm?.libraryname || metadata.library_name;
+        const seasonPosterName = manualForm?.seasonPosterName;
+        const episodeNumber = manualForm?.episodeNumber;
+        const episodeTitleName = manualForm?.episodeTitleName;
+
+        if (folderName) {
+          url += `&folder_name=${encodeURIComponent(folderName)}`;
+        }
+        if (libraryName) {
+          url += `&library_name=${encodeURIComponent(libraryName)}`;
+        }
+        if (seasonPosterName) {
+          url += `&season_number=${encodeURIComponent(seasonPosterName)}`;
+        }
+        if (episodeNumber) {
+          url += `&episode_number=${encodeURIComponent(episodeNumber)}`;
+        }
+        if (episodeTitleName) {
+          url += `&episode_title=${encodeURIComponent(episodeTitleName)}`;
+        }
+      }
+
+      const response = await fetch(url, {
+        method: "POST",
+      });
 
       const data = await response.json();
 
       if (data.success) {
-        setSuccess("Asset replaced successfully!");
+        if (data.manual_run_triggered) {
+          setSuccess("Asset replaced and queued for overlay processing! 🎨");
+        } else {
+          setSuccess("Asset replaced successfully!");
+        }
         setTimeout(() => {
           onSuccess?.();
           onClose();
-        }, 1500);
+        }, 2000);
       } else {
         setError("Failed to replace asset");
       }
@@ -502,10 +765,270 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
                         className="w-full px-3 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary"
                       />
                     </div>
+
+                    {/* Season/Episode fields for TV content */}
+                    {(metadata.asset_type === "season" ||
+                      metadata.asset_type === "titlecard") && (
+                      <>
+                        <div>
+                          <label className="block text-sm font-medium text-theme-text mb-1">
+                            Season Number *
+                          </label>
+                          <input
+                            type="number"
+                            value={manualSearchForm.seasonNumber}
+                            onChange={(e) =>
+                              setManualSearchForm({
+                                ...manualSearchForm,
+                                seasonNumber: e.target.value,
+                              })
+                            }
+                            placeholder="1"
+                            min="0"
+                            className="w-full px-3 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary"
+                          />
+                        </div>
+
+                        {metadata.asset_type === "titlecard" && (
+                          <div>
+                            <label className="block text-sm font-medium text-theme-text mb-1">
+                              Episode Number *
+                            </label>
+                            <input
+                              type="number"
+                              value={manualSearchForm.episodeNumber}
+                              onChange={(e) =>
+                                setManualSearchForm({
+                                  ...manualSearchForm,
+                                  episodeNumber: e.target.value,
+                                })
+                              }
+                              placeholder="1"
+                              min="0"
+                              className="w-full px-3 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary"
+                            />
+                          </div>
+                        )}
+                      </>
+                    )}
+
                     <p className="text-xs text-theme-muted">
                       This will search for assets instead of using the detected
                       metadata
                     </p>
+                  </div>
+                )}
+
+                {/* Process with Overlays Toggle - For poster, background, season, and titlecard assets */}
+                {(metadata.asset_type === "poster" ||
+                  metadata.asset_type === "background" ||
+                  metadata.asset_type === "season" ||
+                  metadata.asset_type === "titlecard") && (
+                  <div className="mb-4">
+                    <div className="flex items-center justify-center gap-2 mb-3">
+                      <label className="flex items-center gap-2 text-theme-text cursor-pointer group">
+                        <input
+                          type="checkbox"
+                          checked={processWithOverlays}
+                          onChange={(e) =>
+                            setProcessWithOverlays(e.target.checked)
+                          }
+                          className="w-4 h-4 rounded border-theme-muted text-theme-primary focus:ring-theme-primary"
+                        />
+                        <span className="text-sm flex items-center gap-1">
+                          🎨 Process with overlays after replace
+                          <span className="text-xs text-theme-muted ml-1">
+                            (applies borders, overlays & text)
+                          </span>
+                        </span>
+                      </label>
+                    </div>
+
+                    {/* Parameter Inputs - Shown when overlay processing is enabled for ANY type */}
+                    {processWithOverlays && (
+                      <div className="bg-theme-hover border border-theme rounded-lg p-4 max-w-2xl mx-auto space-y-4">
+                        <div className="text-center mb-3">
+                          <p className="text-sm font-medium text-theme-text">
+                            📝 Manual Run Parameters (adjust if needed)
+                          </p>
+                          <p className="text-xs text-theme-muted mt-1">
+                            Automatically run Manual Mode to add overlays, text,
+                            and other processing to the replaced asset
+                          </p>
+                        </div>
+
+                        {/* Title Text - For all types except titlecard */}
+                        {metadata.asset_type !== "titlecard" && (
+                          <div>
+                            <label className="block text-sm font-medium text-theme-text mb-2">
+                              Title Text *
+                            </label>
+                            <input
+                              type="text"
+                              value={manualForm?.titletext || ""}
+                              onChange={(e) =>
+                                setManualForm({
+                                  ...manualForm,
+                                  titletext: e.target.value,
+                                })
+                              }
+                              placeholder="e.g., A Shaun the Sheep Movie Farmageddon"
+                              className="w-full px-3 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary"
+                            />
+                            <p className="text-xs text-theme-muted mt-1">
+                              The title to display on the {metadata.asset_type}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Folder Name - NOT for collection */}
+                        {metadata.asset_type !== "collection" && (
+                          <div>
+                            <label className="block text-sm font-medium text-theme-text mb-2">
+                              Folder Name *
+                            </label>
+                            <input
+                              type="text"
+                              value={manualForm?.foldername || ""}
+                              onChange={(e) =>
+                                setManualForm({
+                                  ...manualForm,
+                                  foldername: e.target.value,
+                                })
+                              }
+                              placeholder="e.g., A Shaun the Sheep Movie Farmageddon (2019) {tmdb-422803}"
+                              className="w-full px-3 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary"
+                            />
+                            <p className="text-xs text-theme-muted mt-1">
+                              📁 Automatically detected from asset path
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Library Name - For all types */}
+                        <div>
+                          <label className="block text-sm font-medium text-theme-text mb-2">
+                            Library Name *
+                          </label>
+                          <input
+                            type="text"
+                            value={manualForm?.libraryname || ""}
+                            onChange={(e) =>
+                              setManualForm({
+                                ...manualForm,
+                                libraryname: e.target.value,
+                              })
+                            }
+                            placeholder="e.g., 4K"
+                            className="w-full px-3 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary"
+                          />
+                          <p className="text-xs text-theme-muted mt-1">
+                            📚 Parent folder of the asset (e.g., TV, "4K",
+                            "Movies")
+                          </p>
+                        </div>
+
+                        {/* Season Number - For season posters */}
+                        {metadata.asset_type === "season" && (
+                          <div>
+                            <label className="block text-sm font-medium text-theme-text mb-2">
+                              Season Poster Name *
+                            </label>
+                            <input
+                              type="text"
+                              value={manualForm.seasonPosterName}
+                              onChange={(e) =>
+                                setManualForm({
+                                  ...manualForm,
+                                  seasonPosterName: e.target.value,
+                                })
+                              }
+                              placeholder="e.g., Season 01 or Season 1"
+                              className="w-full px-3 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary"
+                            />
+                            <p className="text-xs text-theme-muted mt-1">
+                              Format: "Season 01" or "Season 1"
+                            </p>
+                          </div>
+                        )}
+
+                        {/* TitleCard-specific: Episode Title, Season Name, Episode Number */}
+                        {metadata.asset_type === "titlecard" && (
+                          <>
+                            <div>
+                              <label className="block text-sm font-medium text-theme-text mb-2">
+                                Episode Title *
+                              </label>
+                              <input
+                                type="text"
+                                value={manualForm.episodeTitleName}
+                                onChange={(e) =>
+                                  setManualForm({
+                                    ...manualForm,
+                                    episodeTitleName: e.target.value,
+                                  })
+                                }
+                                placeholder="e.g., Pilot"
+                                className="w-full px-3 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary"
+                              />
+                              <p className="text-xs text-theme-muted mt-1">
+                                The title of the episode
+                              </p>
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-medium text-theme-text mb-2">
+                                Season Poster Name *
+                              </label>
+                              <input
+                                type="text"
+                                value={manualForm.seasonPosterName}
+                                onChange={(e) =>
+                                  setManualForm({
+                                    ...manualForm,
+                                    seasonPosterName: e.target.value,
+                                  })
+                                }
+                                placeholder="e.g., 01 or 1"
+                                className="w-full px-3 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary"
+                              />
+                              <p className="text-xs text-theme-muted mt-1">
+                                Season number (e.g., "01" or "1")
+                              </p>
+                            </div>
+
+                            <div>
+                              <label className="block text-sm font-medium text-theme-text mb-2">
+                                Episode Number *
+                              </label>
+                              <input
+                                type="text"
+                                value={manualForm.episodeNumber}
+                                onChange={(e) =>
+                                  setManualForm({
+                                    ...manualForm,
+                                    episodeNumber: e.target.value,
+                                  })
+                                }
+                                placeholder="e.g., 01 or 1"
+                                className="w-full px-3 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary"
+                              />
+                              <p className="text-xs text-theme-muted mt-1">
+                                Episode number (e.g., "01" or "1")
+                              </p>
+                            </div>
+                          </>
+                        )}
+
+                        <div className="pt-2 border-t border-theme">
+                          <p className="text-xs text-blue-400 flex items-center gap-1">
+                            ℹ️ After replacing the asset, a Manual Run will be
+                            triggered with these parameters to process overlays
+                            and text
+                          </p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
 
