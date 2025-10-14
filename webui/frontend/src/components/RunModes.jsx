@@ -216,7 +216,7 @@ function RunModes() {
     titletext: "",
     folderName: "",
     libraryName: "",
-    posterType: "standard", // standard, season, collection, titlecard
+    posterType: "standard", // standard, season, collection, titlecard, background
     mediaTypeSelection: "movie", // "movie" or "tv" - for standard posters only
     seasonPosterName: "",
     epTitleName: "",
@@ -499,8 +499,8 @@ function RunModes() {
       // Determine media type based on posterType and mediaTypeSelection
       let mediaType;
 
-      if (manualForm.posterType === "standard") {
-        // For standard posters, use the user's selection
+      if (manualForm.posterType === "standard" || manualForm.posterType === "background") {
+        // For standard and background posters, use the user's selection
         mediaType = manualForm.mediaTypeSelection; // "movie" or "tv"
       } else if (
         manualForm.posterType === "season" ||
@@ -873,9 +873,40 @@ function RunModes() {
             placeholder: "James Bond Collection",
             description: "The name of the collection in Plex",
           },
-          // No libraryName needed for collections
-          libraryName: {},
+          libraryName: {
+            placeholder: "Movies",
+            description: 'Plex library for collections (e.g., "Movies")',
+          },
         };
+      case "background":
+        // Background uses same hints as standard
+        if (manualForm.mediaTypeSelection === "tv") {
+          return {
+            folderName: {
+              label: "Folder Name",
+              placeholder: "Breaking Bad (2008)",
+              description:
+                'Show folder name as seen by Plex (e.g., "Breaking Bad (2008)")',
+            },
+            libraryName: {
+              placeholder: "TV Shows",
+              description: 'Plex library for shows (e.g., "TV Shows")',
+            },
+          };
+        } else {
+          return {
+            folderName: {
+              label: "Folder Name",
+              placeholder: "The Martian (2015)",
+              description:
+                'Movie folder name as seen by Plex (e.g., "The Martian (2015)")',
+            },
+            libraryName: {
+              placeholder: "Movies",
+              description: 'Plex library for movies (e.g., "Movies")',
+            },
+          };
+        }
       case "standard":
         // Different hints for movies vs TV shows
         if (manualForm.mediaTypeSelection === "tv") {
@@ -1108,7 +1139,7 @@ function RunModes() {
             <label className="block text-sm font-medium text-theme-text mb-2">
               Poster Type
             </label>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
               <button
                 onClick={() =>
                   setManualForm({ ...manualForm, posterType: "standard" })
@@ -1121,7 +1152,7 @@ function RunModes() {
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 <Film className="w-5 h-5" />
-                Standard
+                Poster
               </button>
               <button
                 onClick={() =>
@@ -1153,6 +1184,20 @@ function RunModes() {
               </button>
               <button
                 onClick={() =>
+                  setManualForm({ ...manualForm, posterType: "background" })
+                }
+                disabled={loading || status.running}
+                className={`flex items-center justify-center gap-2 px-4 py-3 rounded-lg border-2 transition-all ${
+                  manualForm.posterType === "background"
+                    ? "bg-theme-primary border-theme-primary text-white"
+                    : "bg-theme-hover border-theme hover:border-theme-primary text-theme-text"
+                } disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                <ImageIcon className="w-5 h-5" />
+                Background
+              </button>
+              <button
+                onClick={() =>
                   setManualForm({ ...manualForm, posterType: "collection" })
                 }
                 disabled={loading || status.running}
@@ -1168,8 +1213,9 @@ function RunModes() {
             </div>
           </div>
 
-          {/* Movie/TV Show Toggle - Only for Standard Poster Type */}
-          {manualForm.posterType === "standard" && (
+          {/* Movie/TV Show Toggle - For Standard and Background Poster Types */}
+          {(manualForm.posterType === "standard" ||
+            manualForm.posterType === "background") && (
             <div>
               <label className="block text-sm font-medium text-theme-text mb-2">
                 Media Type
@@ -1386,47 +1432,47 @@ function RunModes() {
             </div>
           )}
 
-          {/* DYNAMIC Folder/Collection Name Field */}
-          <div>
-            <label className="block text-sm font-medium text-theme-text mb-2">
-              {hints.folderName.label} <span className="text-red-400">*</span>
-            </label>
-            <input
-              type="text"
-              value={manualForm.folderName}
-              onChange={(e) =>
-                setManualForm({ ...manualForm, folderName: e.target.value })
-              }
-              placeholder={hints.folderName.placeholder}
-              disabled={loading || status.running}
-              className="w-full px-4 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary disabled:opacity-50 disabled:cursor-not-allowed"
-            />
-            <p className="text-xs text-theme-muted mt-1">
-              {hints.folderName.description}
-            </p>
-          </div>
-
-          {/* DYNAMIC & CONDITIONAL Library Name Field */}
+          {/* Folder Name Field - Hidden for collections (uses titletext as folder name) */}
           {manualForm.posterType !== "collection" && (
             <div>
               <label className="block text-sm font-medium text-theme-text mb-2">
-                Library Name <span className="text-red-400">*</span>
+                {hints.folderName.label} <span className="text-red-400">*</span>
               </label>
               <input
                 type="text"
-                value={manualForm.libraryName}
+                value={manualForm.folderName}
                 onChange={(e) =>
-                  setManualForm({ ...manualForm, libraryName: e.target.value })
+                  setManualForm({ ...manualForm, folderName: e.target.value })
                 }
-                placeholder={hints.libraryName.placeholder}
+                placeholder={hints.folderName.placeholder}
                 disabled={loading || status.running}
                 className="w-full px-4 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary disabled:opacity-50 disabled:cursor-not-allowed"
               />
               <p className="text-xs text-theme-muted mt-1">
-                {hints.libraryName.description}
+                {hints.folderName.description}
               </p>
             </div>
           )}
+
+          {/* Library Name Field - Required for all poster types */}
+          <div>
+            <label className="block text-sm font-medium text-theme-text mb-2">
+              Library Name <span className="text-red-400">*</span>
+            </label>
+            <input
+              type="text"
+              value={manualForm.libraryName}
+              onChange={(e) =>
+                setManualForm({ ...manualForm, libraryName: e.target.value })
+              }
+              placeholder={hints.libraryName.placeholder}
+              disabled={loading || status.running}
+              className="w-full px-4 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary disabled:opacity-50 disabled:cursor-not-allowed"
+            />
+            <p className="text-xs text-theme-muted mt-1">
+              {hints.libraryName.description}
+            </p>
+          </div>
 
           {/* CONDITIONAL FIELDS MOVED HERE FOR BETTER UX */}
           {/* Season Poster Name (only shown for season type) */}

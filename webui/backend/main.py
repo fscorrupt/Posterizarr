@@ -932,7 +932,7 @@ class ManualModeRequest(BaseModel):
     titletext: str
     folderName: str
     libraryName: str
-    posterType: Literal["standard", "season", "collection", "titlecard"] = "standard"
+    posterType: Literal["standard", "season", "collection", "titlecard", "background"] = "standard"
     seasonPosterName: str = ""
     epTitleName: str = ""
     episodeNumber: str = ""
@@ -3004,6 +3004,8 @@ async def search_tmdb_posters(request: TMDBSearchRequest):
     - Standard: Returns show/movie posters (filtered by PreferredLanguageOrder)
     - Season: Returns season-specific posters (filtered by PreferredSeasonLanguageOrder)
     - Titlecard: Returns episode stills (only 'xx' - no language/international)
+    - Background: Returns show/movie backdrops (filtered by PreferredBackgroundLanguageOrder)
+    - Collection: Returns collection posters (only 'xx' - no language/international)
     """
 
     def filter_and_sort_posters_by_language(posters_list, preferred_languages):
@@ -3064,6 +3066,9 @@ async def search_tmdb_posters(request: TMDBSearchRequest):
             preferred_season_language_order = flat_config.get(
                 "PreferredSeasonLanguageOrder", ""
             )
+            preferred_background_language_order = flat_config.get(
+                "PreferredBackgroundLanguageOrder", ""
+            )
         else:
             # Fallback: Try both structures
             tmdb_token = grouped_config.get("tmdbtoken")
@@ -3074,6 +3079,9 @@ async def search_tmdb_posters(request: TMDBSearchRequest):
             preferred_language_order = grouped_config.get("PreferredLanguageOrder", "")
             preferred_season_language_order = grouped_config.get(
                 "PreferredSeasonLanguageOrder", ""
+            )
+            preferred_background_language_order = grouped_config.get(
+                "PreferredBackgroundLanguageOrder", ""
             )
 
             # If not found at root, try in ApiPart
@@ -3088,6 +3096,12 @@ async def search_tmdb_posters(request: TMDBSearchRequest):
             ):
                 preferred_season_language_order = grouped_config["ApiPart"].get(
                     "PreferredSeasonLanguageOrder", ""
+                )
+            if not preferred_background_language_order and isinstance(
+                grouped_config.get("ApiPart"), dict
+            ):
+                preferred_background_language_order = grouped_config["ApiPart"].get(
+                    "PreferredBackgroundLanguageOrder", ""
                 )
 
         # Parse language preferences (handle both string and list formats)
@@ -3107,9 +3121,12 @@ async def search_tmdb_posters(request: TMDBSearchRequest):
         season_language_order_list = parse_language_order(
             preferred_season_language_order
         )
+        background_language_order_list = parse_language_order(
+            preferred_background_language_order
+        )
 
         logger.info(
-            f"Language preferences - Standard: {language_order_list}, Season: {season_language_order_list}"
+            f"Language preferences - Standard: {language_order_list}, Season: {season_language_order_list}, Background: {background_language_order_list}"
         )
 
         if not tmdb_token:
@@ -3293,6 +3310,56 @@ async def search_tmdb_posters(request: TMDBSearchRequest):
                 logger.warning(
                     f"No season posters found for Season {request.season_number}"
                 )
+
+        elif request.poster_type == "background":
+            # ========== BACKGROUND IMAGES (Backdrops 16:9) ==========
+            images_url = (
+                f"https://api.themoviedb.org/3/{media_endpoint}/{tmdb_id}/images"
+            )
+            images_response = requests.get(images_url, headers=headers, timeout=10)
+
+            if images_response.status_code == 200:
+                images_data = images_response.json()
+                backdrops = images_data.get("backdrops", [])
+
+                # Filter and sort by PreferredBackgroundLanguageOrder
+                # If background language order is empty or "PleaseFillMe", fall back to standard poster language order
+                if not background_language_order_list or (
+                    len(background_language_order_list) == 1
+                    and background_language_order_list[0].lower() == "pleasefillme"
+                ):
+                    logger.info(
+                        "Background language order not configured, using standard poster language order"
+                    )
+                    filtered_backdrops = filter_and_sort_posters_by_language(
+                        backdrops, language_order_list
+                    )
+                else:
+                    filtered_backdrops = filter_and_sort_posters_by_language(
+                        backdrops, background_language_order_list
+                    )
+
+                logger.info(
+                    f"Background images: {len(backdrops)} total, {len(filtered_backdrops)} after filtering by language preferences"
+                )
+
+                for backdrop in filtered_backdrops:  # Load all backdrops
+                    results.append(
+                        {
+                            "tmdb_id": tmdb_id,
+                            "title": base_title,
+                            "poster_path": backdrop.get("file_path"),
+                            "poster_url": f"https://image.tmdb.org/t/p/w500{backdrop.get('file_path')}",
+                            "original_url": f"https://image.tmdb.org/t/p/original{backdrop.get('file_path')}",
+                            "language": backdrop.get("iso_639_1"),
+                            "vote_average": backdrop.get("vote_average", 0),
+                            "width": backdrop.get("width", 0),
+                            "height": backdrop.get("height", 0),
+                            "type": "backdrop",
+                        }
+                    )
+            else:
+                logger.warning(f"No background images found for {base_title}")
 
         else:
             # ========== STANDARD POSTERS (Show/Movie) ==========
@@ -3601,6 +3668,18 @@ async def run_manual_mode(request: ManualModeRequest):
                 "-CollectionCard",
                 "-Titletext",
                 request.titletext.strip(),
+                "-LibraryName",
+                request.libraryName.strip(),
+            ]
+        )
+    elif request.posterType == "background":
+        command.extend(
+            [
+                "-BackgroundCard",
+                "-Titletext",
+                request.titletext.strip(),
+                "-FolderName",
+                request.folderName.strip(),
                 "-LibraryName",
                 request.libraryName.strip(),
             ]
