@@ -8134,7 +8134,7 @@ if ($Manual) {
 
         $CSVtemp = New-Object psobject
         $CSVtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
-        $CSVtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value $(if ($SeasonPoster) { "Season" }Elseif ($CollectionCard) { "Collection" }Elseif ($TitleCard) { "Episode" }Else { "Poster" })
+        $CSVtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value $(if ($SeasonPoster) { "Season" }Elseif ($CollectionCard) { "Collection" }Elseif ($TitleCard) { "Episode" }Elseif ($BackgroundCard) { "Background" }Else { "Poster" })
         $CSVtemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $FolderName
         $CSVtemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $LibraryName
         $CSVtemp | Add-Member -MemberType NoteProperty -Name "Language" -Value 'N/A'
