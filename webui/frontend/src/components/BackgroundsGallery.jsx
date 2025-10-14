@@ -11,19 +11,21 @@ import {
 } from "lucide-react";
 import CompactImageSizeSlider from "./CompactImageSizeSlider";
 import Notification from "./Notification";
+import { useToast } from "../context/ToastContext";
 import ConfirmDialog from "./ConfirmDialog";
 import AssetReplacer from "./AssetReplacer";
 
 const API_URL = "/api";
 
 function BackgroundsGallery() {
+  const { showSuccess, showError, showInfo } = useToast();
   const [folders, setFolders] = useState([]);
   const [activeFolder, setActiveFolder] = useState(null);
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [imagesLoading, setImagesLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
+  const [error, setError] = useState(null); // Local error state for loading display
+
   const [selectedImage, setSelectedImage] = useState(null);
   const [deletingImage, setDeletingImage] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
@@ -87,7 +89,7 @@ function BackgroundsGallery() {
         ).length;
 
         if (totalBackgrounds > 0) {
-          setSuccess(
+          showSuccess(
             `${foldersWithBackgrounds} folder${
               foldersWithBackgrounds !== 1 ? "s" : ""
             } loaded with ${totalBackgrounds} background${
@@ -95,7 +97,7 @@ function BackgroundsGallery() {
             }`
           );
         } else {
-          setSuccess(
+          showSuccess(
             `${data.folders.length} folder${
               data.folders.length !== 1 ? "s" : ""
             } found with 0 backgrounds`
@@ -113,7 +115,9 @@ function BackgroundsGallery() {
       }
     } catch (error) {
       console.error("Error fetching folders:", error);
-      setError(error.message || "Failed to load folders");
+      const errorMsg = error.message || "Failed to load folders";
+      setError(errorMsg);
+      showError(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -134,13 +138,16 @@ function BackgroundsGallery() {
       setImages(data.images || []);
 
       if (showNotification && data.images && data.images.length > 0) {
-        setSuccess(
+        showSuccess(
           `Loaded ${data.images.length} backgrounds from ${folder.name}`
         );
       }
     } catch (error) {
       console.error("Error fetching images:", error);
-      setError(error.message || `Failed to load images from ${folder.name}`);
+      const errorMsg =
+        error.message || `Failed to load images from ${folder.name}`;
+      setError(errorMsg);
+      showError(errorMsg);
       setImages([]);
     } finally {
       setImagesLoading(false);
@@ -174,7 +181,7 @@ function BackgroundsGallery() {
       const data = await response.json();
 
       if (data.success) {
-        setSuccess(`Background "${imageName}" deleted successfully`);
+        showSuccess(`Background "${imageName}" deleted successfully`);
 
         setImages(images.filter((img) => img.path !== imagePath));
 
@@ -188,7 +195,7 @@ function BackgroundsGallery() {
       }
     } catch (error) {
       console.error("Error deleting background:", error);
-      setError(`Error while deleting: ${error.message}`);
+      showError(`Error while deleting: ${error.message}`);
     } finally {
       setDeletingImage(null);
     }
@@ -219,11 +226,11 @@ function BackgroundsGallery() {
         const failedCount = data.failed.length;
 
         if (failedCount > 0) {
-          setError(
+          showError(
             `Deleted ${deletedCount} background(s), but ${failedCount} failed.`
           );
         } else {
-          setSuccess(`Successfully deleted ${deletedCount} background(s)`);
+          showSuccess(`Successfully deleted ${deletedCount} background(s)`);
         }
 
         // Remove deleted images from the list
@@ -239,7 +246,7 @@ function BackgroundsGallery() {
       }
     } catch (error) {
       console.error("Error deleting backgrounds:", error);
-      setError(`Error while deleting: ${error.message}`);
+      showError(`Error while deleting: ${error.message}`);
     } finally {
       setDeletingImage(null);
     }
@@ -305,22 +312,6 @@ function BackgroundsGallery() {
 
   return (
     <div className="space-y-6">
-      {/* Notifications */}
-      {error && (
-        <Notification
-          type="error"
-          message={error}
-          onClose={() => setError(null)}
-        />
-      )}
-      {success && (
-        <Notification
-          type="success"
-          message={success}
-          onClose={() => setSuccess(null)}
-        />
-      )}
-
       {/* Header */}
 
       {/* Folder Tabs */}
@@ -882,7 +873,7 @@ function BackgroundsGallery() {
             setTimeout(() => {
               fetchFolderImages(activeFolder, false);
             }, 500);
-            setSuccess("Asset replaced successfully!");
+            showSuccess("Asset replaced successfully!");
           }}
         />
       )}

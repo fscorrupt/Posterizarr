@@ -1,4 +1,3 @@
-// RecentAssets.jsx - Improved Version
 // - CompactImageSizeSlider (5-10 Assets)
 // - Dynamic poster sizing with CSS Grid
 // - Single horizontal row, all posters visible
@@ -9,6 +8,7 @@
 import React, { useState, useEffect } from "react";
 import { FileImage, ExternalLink, RefreshCw, ImageOff } from "lucide-react";
 import Notification from "./Notification";
+import { useToast } from "../context/ToastContext";
 import CompactImageSizeSlider from "./CompactImageSizeSlider";
 
 const API_URL = "/api";
@@ -16,9 +16,11 @@ const API_URL = "/api";
 let cachedAssets = null;
 
 function RecentAssets() {
+  const { showSuccess, showError, showInfo } = useToast();
   const [assets, setAssets] = useState(cachedAssets || []);
   const [loading, setLoading] = useState(false); // No initial loading if cached
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(null); // Error state
+
   const [refreshing, setRefreshing] = useState(false);
 
   // Asset count state with localStorage (5-10 range, default 10)
@@ -42,11 +44,16 @@ function RecentAssets() {
       if (data.success) {
         cachedAssets = data.assets; // 🎯 Save to persistent cache
         setAssets(data.assets);
+        setError(null);
       } else {
-        setError(data.error || "Failed to load recent assets");
+        const errorMsg = data.error || "Failed to load recent assets";
+        setError(errorMsg);
+        showError(errorMsg);
       }
     } catch (err) {
-      setError(err.message);
+      const errorMsg = err.message || "Failed to load recent assets";
+      setError(errorMsg);
+      showError(errorMsg);
       console.error("Error fetching recent assets:", err);
     } finally {
       setLoading(false);
@@ -123,15 +130,6 @@ function RecentAssets() {
 
   return (
     <div className="bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
-      {/* Notification */}
-      {error && (
-        <Notification
-          type="error"
-          message={error}
-          onClose={() => setError(null)}
-        />
-      )}
-
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-semibold text-theme-text flex items-center gap-3">

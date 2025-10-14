@@ -29,6 +29,7 @@ import ValidateButton from "./ValidateButton";
 import Notification from "./Notification";
 import LanguageOrderSelector from "./LanguageOrderSelector";
 import LibraryExclusionSelector from "./LibraryExclusionSelector";
+import { useToast } from "../context/ToastContext";
 
 const API_URL = "/api";
 
@@ -418,14 +419,14 @@ const CONFIG_TOOLTIPS = {
 
 function ConfigEditor() {
   const location = useLocation();
+  const { showSuccess, showError, showInfo } = useToast();
   const [config, setConfig] = useState(null);
   const [uiGroups, setUiGroups] = useState(null);
   const [displayNames, setDisplayNames] = useState({});
   const [usingFlatStructure, setUsingFlatStructure] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
+  const [error, setError] = useState(null); // Error state for display
   const [expandedGroups, setExpandedGroups] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
   const [overlayFiles, setOverlayFiles] = useState([]);
@@ -607,7 +608,7 @@ function ConfigEditor() {
 
   const fetchConfig = async () => {
     setLoading(true);
-    setError(null);
+    setError(null); // Clear any previous errors
     try {
       const response = await fetch(`${API_URL}/config`);
       const data = await response.json();
@@ -636,10 +637,14 @@ function ConfigEditor() {
           Object.keys(data.display_names || {}).length
         );
       } else {
-        setError("Failed to load config");
+        const errorMsg = "Failed to load config";
+        setError(errorMsg);
+        showError(errorMsg);
       }
     } catch (err) {
-      setError(`Failed to load configuration: ${err.message}`);
+      const errorMsg = `Failed to load configuration: ${err.message}`;
+      setError(errorMsg);
+      showError(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -679,15 +684,15 @@ function ConfigEditor() {
       const data = await response.json();
 
       if (data.success) {
-        setSuccess(`File "${data.filename}" uploaded successfully!`);
+        showSuccess(`File "${data.filename}" uploaded successfully!`);
         // Refresh overlay files list
         await fetchOverlayFiles();
       } else {
-        setError(data.detail || "Upload failed");
+        showError(data.detail || "Upload failed");
       }
     } catch (err) {
       console.error("Upload error:", err);
-      setError("Failed to upload file");
+      showError("Failed to upload file");
     } finally {
       setUploadingOverlay(false);
     }
@@ -723,15 +728,15 @@ function ConfigEditor() {
       const data = await response.json();
 
       if (data.success) {
-        setSuccess(`Font "${data.filename}" uploaded successfully!`);
+        showSuccess(`Font "${data.filename}" uploaded successfully!`);
         // Refresh font files list
         await fetchFontFiles();
       } else {
-        setError(data.detail || "Upload failed");
+        showError(data.detail || "Upload failed");
       }
     } catch (err) {
       console.error("Upload error:", err);
-      setError("Failed to upload file");
+      showError("Failed to upload file");
     } finally {
       setUploadingFont(false);
     }
@@ -785,12 +790,12 @@ function ConfigEditor() {
 
         // Normal save without auth change - update initial auth status
         initialAuthStatus.current = Boolean(newAuthEnabled);
-        setSuccess("Configuration saved successfully!");
+        showSuccess("Configuration saved successfully!");
       } else {
-        setError("Failed to save configuration");
+        showError("Failed to save configuration");
       }
     } catch (err) {
-      setError(`Error: ${err.message}`);
+      showError(`Error: ${err.message}`);
     } finally {
       // Only reset saving state if not reloading
       if (!authChanging) {
@@ -1448,8 +1453,8 @@ function ConfigEditor() {
               type="plex"
               config={config}
               label="Validate"
-              onSuccess={setSuccess}
-              onError={setError}
+              onSuccess={showSuccess}
+              onError={showError}
             />
           </div>
           <p className="text-xs text-theme-muted">
@@ -1478,8 +1483,8 @@ function ConfigEditor() {
               type="jellyfin"
               config={config}
               label="Validate"
-              onSuccess={setSuccess}
-              onError={setError}
+              onSuccess={showSuccess}
+              onError={showError}
             />
           </div>
           <p className="text-xs text-theme-muted">
@@ -1508,8 +1513,8 @@ function ConfigEditor() {
               type="emby"
               config={config}
               label="Validate"
-              onSuccess={setSuccess}
-              onError={setError}
+              onSuccess={showSuccess}
+              onError={showError}
             />
           </div>
           <p className="text-xs text-theme-muted">
@@ -1540,8 +1545,8 @@ function ConfigEditor() {
               type="tmdb"
               config={config}
               label="Validate"
-              onSuccess={setSuccess}
-              onError={setError}
+              onSuccess={showSuccess}
+              onError={showError}
             />
           </div>
           <p className="text-xs text-theme-muted">
@@ -1570,8 +1575,8 @@ function ConfigEditor() {
               type="tvdb"
               config={config}
               label="Validate"
-              onSuccess={setSuccess}
-              onError={setError}
+              onSuccess={showSuccess}
+              onError={showError}
             />
           </div>
           <p className="text-xs text-theme-muted">
@@ -1600,8 +1605,8 @@ function ConfigEditor() {
               type="fanart"
               config={config}
               label="Validate"
-              onSuccess={setSuccess}
-              onError={setError}
+              onSuccess={showSuccess}
+              onError={showError}
             />
           </div>
           <p className="text-xs text-theme-muted">
@@ -1634,8 +1639,8 @@ function ConfigEditor() {
               type="discord"
               config={config}
               label="Test"
-              onSuccess={setSuccess}
-              onError={setError}
+              onSuccess={showSuccess}
+              onError={showError}
             />
           </div>
           <p className="text-xs text-theme-muted">
@@ -1666,8 +1671,8 @@ function ConfigEditor() {
               type="apprise"
               config={config}
               label="Validate"
-              onSuccess={setSuccess}
-              onError={setError}
+              onSuccess={showSuccess}
+              onError={showError}
             />
           </div>
           <p className="text-xs text-theme-muted">
@@ -1698,8 +1703,8 @@ function ConfigEditor() {
               type="uptimekuma"
               config={config}
               label="Test"
-              onSuccess={setSuccess}
-              onError={setError}
+              onSuccess={showSuccess}
+              onError={showError}
             />
           </div>
           <p className="text-xs text-theme-muted">
@@ -1839,22 +1844,6 @@ function ConfigEditor() {
 
   return (
     <div className="space-y-6">
-      {/* Notifications */}
-      {error && (
-        <Notification
-          type="error"
-          message={error}
-          onClose={() => setError(null)}
-        />
-      )}
-      {success && (
-        <Notification
-          type="success"
-          message={success}
-          onClose={() => setSuccess(null)}
-        />
-      )}
-
       {/* Header */}
       <div className="flex items-center justify-end">
         <div className="flex gap-3">

@@ -13,6 +13,7 @@ import {
   Square,
 } from "lucide-react";
 import Notification from "./Notification";
+import { useToast } from "../context/ToastContext";
 
 const API_URL = "/api";
 const isDev = import.meta.env.DEV;
@@ -27,6 +28,7 @@ const getWebSocketURL = (logFile) => {
 };
 
 function LogViewer() {
+  const { showSuccess, showError, showInfo } = useToast();
   const location = useLocation();
   const [logs, setLogs] = useState([]);
   const [availableLogs, setAvailableLogs] = useState([]);
@@ -40,9 +42,7 @@ function LogViewer() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [loading, setLoading] = useState(false); // ✨ NEW: Loading state for stop button
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
-  const [info, setInfo] = useState(null);
+
   const [status, setStatus] = useState({
     running: false,
     current_mode: null,
@@ -97,13 +97,13 @@ function LogViewer() {
       const data = await response.json();
 
       if (data.success) {
-        setSuccess("Script stopped successfully");
+        showSuccess("Script stopped successfully");
         fetchStatus(); // Refresh status
       } else {
-        setError(`Error: ${data.message}`);
+        showError(`Error: ${data.message}`);
       }
     } catch (error) {
-      setError(`Error: ${error.message}`);
+      showError(`Error: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -151,12 +151,12 @@ function LogViewer() {
       setAvailableLogs(data.logs);
 
       if (showToast) {
-        setSuccess("Log files refreshed");
+        showSuccess("Log files refreshed");
       }
     } catch (error) {
       console.error("Error fetching log files:", error);
       if (showToast) {
-        setError("Failed to refresh log files");
+        showError("Failed to refresh log files");
       }
     } finally {
       setTimeout(() => setIsRefreshing(false), 500);
@@ -171,7 +171,7 @@ function LogViewer() {
       setLogs(strippedContent);
     } catch (error) {
       console.error("Error fetching log:", error);
-      setError(`Failed to load ${logName}`);
+      showError(`Failed to load ${logName}`);
     }
   };
 
@@ -243,7 +243,7 @@ function LogViewer() {
               console.log(`Accepting backend log switch to: ${data.log_file}`);
               setSelectedLog(data.log_file);
               currentLogFileRef.current = data.log_file;
-              setInfo(`Switched to ${data.log_file}`);
+              showInfo(`Switched to ${data.log_file}`);
             } else {
               console.log(
                 `Ignoring backend log switch - user manually selected ${selectedLog}`
@@ -251,7 +251,7 @@ function LogViewer() {
             }
           } else if (data.type === "error") {
             console.error("WebSocket error message:", data.message);
-            setError(data.message);
+            showError(data.message);
           }
         } catch (error) {
           console.error("Error parsing WebSocket message:", error);
@@ -270,7 +270,7 @@ function LogViewer() {
         if (!event.wasClean) {
           setIsReconnecting(true);
 
-          setError("Live feed disconnected. Reconnecting...");
+          showError("Live feed disconnected. Reconnecting...");
 
           reconnectTimeoutRef.current = setTimeout(() => {
             console.log(`🔄 Reconnecting to ${currentLogFileRef.current}...`);
@@ -315,7 +315,7 @@ function LogViewer() {
       );
       setSelectedLog(location.state.logFile);
 
-      setSuccess(`Switched to ${location.state.logFile}`);
+      showSuccess(`Switched to ${location.state.logFile}`);
     }
   }, [location.state?.logFile]);
 
@@ -353,7 +353,7 @@ function LogViewer() {
 
   const clearLogs = () => {
     setLogs([]);
-    setSuccess("Logs cleared");
+    showSuccess("Logs cleared");
   };
 
   const downloadLogs = async () => {
@@ -375,10 +375,10 @@ function LogViewer() {
       a.click();
       URL.revokeObjectURL(url);
 
-      setSuccess("Log file downloaded");
+      showSuccess("Log file downloaded");
     } catch (error) {
       console.error("Error downloading complete log file:", error);
-      setError("Failed to download log file");
+      showError("Failed to download log file");
     }
   };
 
@@ -412,29 +412,6 @@ function LogViewer() {
 
   return (
     <div className="space-y-6">
-      {/* Notification */}
-      {error && (
-        <Notification
-          type="error"
-          message={error}
-          onClose={() => setError(null)}
-        />
-      )}
-      {success && (
-        <Notification
-          type="success"
-          message={success}
-          onClose={() => setSuccess(null)}
-        />
-      )}
-      {info && (
-        <Notification
-          type="info"
-          message={info}
-          onClose={() => setInfo(null)}
-        />
-      )}
-
       {/* Header */}
       <div className="flex items-center justify-end">
         {/* Connection Status Badge */}

@@ -4,10 +4,12 @@ import {
   Routes,
   Route,
   Navigate,
+  useLocation,
 } from "react-router-dom";
 import { ThemeProvider } from "./context/ThemeContext";
 import { SidebarProvider, useSidebar } from "./context/SidebarContext";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { ToastProvider } from "./context/ToastContext";
 
 // Setup fetch interceptor BEFORE any other imports that might use fetch
 import { setupFetchInterceptor } from "./utils/fetchInterceptor";
@@ -32,9 +34,15 @@ import uiLogger from "./utils/uiLogger";
 function AppContent() {
   const { isCollapsed } = useSidebar();
   const { isAuthenticated, loading, login, isAuthEnabled } = useAuth();
+  const location = useLocation();
   const [showLoadingScreen, setShowLoadingScreen] = useState(false);
   const [hasLoggedIn, setHasLoggedIn] = useState(false);
   const hasShownStartupScreen = React.useRef(false);
+
+  // Scroll to top on route change
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
 
   useEffect(() => {
     console.log("✅ Posterizarr UI started - UI-Logger active");
@@ -190,7 +198,9 @@ function App() {
       <ThemeProvider>
         <AuthProvider>
           <SidebarProvider>
-            <AppContent />
+            <ToastProvider>
+              <AppContent />
+            </ToastProvider>
           </SidebarProvider>
         </AuthProvider>
       </ThemeProvider>

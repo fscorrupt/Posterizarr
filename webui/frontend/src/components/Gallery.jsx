@@ -11,19 +11,21 @@ import {
 } from "lucide-react";
 import CompactImageSizeSlider from "./CompactImageSizeSlider";
 import Notification from "./Notification";
+import { useToast } from "../context/ToastContext";
 import ConfirmDialog from "./ConfirmDialog";
 import AssetReplacer from "./AssetReplacer";
 
 const API_URL = "/api";
 
 function Gallery() {
+  const { showSuccess, showError, showInfo } = useToast();
   const [folders, setFolders] = useState([]);
   const [activeFolder, setActiveFolder] = useState(null);
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [imagesLoading, setImagesLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
+  const [error, setError] = useState(null); // Local error state for loading display
+
   const [selectedImage, setSelectedImage] = useState(null);
   const [deletingImage, setDeletingImage] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
@@ -87,7 +89,7 @@ function Gallery() {
         ).length;
 
         if (totalPosters > 0) {
-          setSuccess(
+          showSuccess(
             `${foldersWithPosters} folder${
               foldersWithPosters !== 1 ? "s" : ""
             } loaded with ${totalPosters} poster${
@@ -95,7 +97,7 @@ function Gallery() {
             }`
           );
         } else {
-          setSuccess(
+          showSuccess(
             `${data.folders.length} folder${
               data.folders.length !== 1 ? "s" : ""
             } found with 0 posters`
@@ -111,7 +113,9 @@ function Gallery() {
       }
     } catch (error) {
       console.error("Error fetching folders:", error);
-      setError(error.message || "Failed to load folders");
+      const errorMsg = error.message || "Failed to load folders";
+      setError(errorMsg);
+      showError(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -132,11 +136,14 @@ function Gallery() {
       setImages(data.images || []);
 
       if (showNotification && data.images && data.images.length > 0) {
-        setSuccess(`Loaded ${data.images.length} posters from ${folder.name}`);
+        showSuccess(`Loaded ${data.images.length} posters from ${folder.name}`);
       }
     } catch (error) {
       console.error("Error fetching images:", error);
-      setError(error.message || `Failed to load images from ${folder.name}`);
+      const errorMsg =
+        error.message || `Failed to load images from ${folder.name}`;
+      setError(errorMsg);
+      showError(errorMsg);
       setImages([]);
     } finally {
       setImagesLoading(false);
@@ -170,7 +177,7 @@ function Gallery() {
       const data = await response.json();
 
       if (data.success) {
-        setSuccess(`Poster "${imageName}" deleted successfully`);
+        showSuccess(`Poster "${imageName}" deleted successfully`);
 
         setImages(images.filter((img) => img.path !== imagePath));
 
@@ -184,7 +191,7 @@ function Gallery() {
       }
     } catch (error) {
       console.error("Error deleting poster:", error);
-      setError(`Error while deleting: ${error.message}`);
+      showError(`Error while deleting: ${error.message}`);
     } finally {
       setDeletingImage(null);
     }
@@ -215,11 +222,11 @@ function Gallery() {
         const failedCount = data.failed.length;
 
         if (failedCount > 0) {
-          setError(
+          showError(
             `Deleted ${deletedCount} poster(s), but ${failedCount} failed.`
           );
         } else {
-          setSuccess(`Successfully deleted ${deletedCount} poster(s)`);
+          showSuccess(`Successfully deleted ${deletedCount} poster(s)`);
         }
 
         // Remove deleted images from the list
@@ -235,7 +242,7 @@ function Gallery() {
       }
     } catch (error) {
       console.error("Error deleting posters:", error);
-      setError(`Error while deleting: ${error.message}`);
+      showError(`Error while deleting: ${error.message}`);
     } finally {
       setDeletingImage(null);
     }
@@ -301,22 +308,6 @@ function Gallery() {
 
   return (
     <div className="space-y-6">
-      {/* Notifications */}
-      {error && (
-        <Notification
-          type="error"
-          message={error}
-          onClose={() => setError(null)}
-        />
-      )}
-      {success && (
-        <Notification
-          type="success"
-          message={success}
-          onClose={() => setSuccess(null)}
-        />
-      )}
-
       {/* Header */}
 
       {/* Folder Tabs */}
@@ -876,7 +867,7 @@ function Gallery() {
             setTimeout(() => {
               fetchFolderImages(activeFolder, false);
             }, 500);
-            setSuccess("Asset replaced successfully!");
+            showSuccess("Asset replaced successfully!");
           }}
         />
       )}

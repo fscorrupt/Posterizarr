@@ -13,17 +13,18 @@ import {
 } from "lucide-react";
 import CompactImageSizeSlider from "./CompactImageSizeSlider";
 import Notification from "./Notification";
+import { useToast } from "../context/ToastContext";
 import ConfirmDialog from "./ConfirmDialog";
 
 const API_URL = "/api";
 
 function FolderView() {
+  const { showSuccess, showError, showInfo } = useToast();
   const [currentPath, setCurrentPath] = useState([]); // Navigation breadcrumb
   const [folders, setFolders] = useState([]); // Current level folders
   const [assets, setAssets] = useState([]); // Assets in current folder
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
+
   const [selectedImage, setSelectedImage] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [deletingImage, setDeletingImage] = useState(null);
@@ -63,7 +64,7 @@ function FolderView() {
 
   const loadCurrentLevel = async () => {
     setLoading(true);
-    setError(null);
+    showError(null);
 
     try {
       if (currentPath.length === 0) {
@@ -78,7 +79,7 @@ function FolderView() {
       }
     } catch (err) {
       console.error("Error loading folder view:", err);
-      setError(err.message || "Failed to load content");
+      showError(err.message || "Failed to load content");
     } finally {
       setLoading(false);
     }
@@ -130,10 +131,10 @@ function FolderView() {
   };
 
   const handleRefresh = async () => {
-    setSuccess(null);
-    setError(null);
+    showSuccess(null);
+    showError(null);
     await loadCurrentLevel();
-    setSuccess("Content refreshed successfully");
+    showSuccess("Content refreshed successfully");
   };
 
   const deletePoster = async (imagePath, imageName) => {
@@ -151,7 +152,7 @@ function FolderView() {
       const data = await response.json();
 
       if (data.success) {
-        setSuccess(`Successfully deleted ${imageName}`);
+        showSuccess(`Successfully deleted ${imageName}`);
 
         // Close modal if open
         if (selectedImage && selectedImage.path === imagePath) {
@@ -165,7 +166,7 @@ function FolderView() {
       }
     } catch (error) {
       console.error("Error deleting image:", error);
-      setError(error.message || `Failed to delete ${imageName}`);
+      showError(error.message || `Failed to delete ${imageName}`);
     } finally {
       setDeletingImage(null);
       setDeleteConfirm(null);
@@ -221,22 +222,6 @@ function FolderView() {
 
   return (
     <div className="space-y-6">
-      {/* Notifications */}
-      {success && (
-        <Notification
-          message={success}
-          type="success"
-          onClose={() => setSuccess(null)}
-        />
-      )}
-      {error && (
-        <Notification
-          message={error}
-          type="error"
-          onClose={() => setError(null)}
-        />
-      )}
-
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog
         isOpen={deleteConfirm !== null}

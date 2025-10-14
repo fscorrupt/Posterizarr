@@ -14,6 +14,7 @@ import {
   Zap,
 } from "lucide-react";
 import Notification from "./Notification";
+import { useToast } from "../context/ToastContext";
 import ConfirmDialog from "./ConfirmDialog";
 
 const API_URL = "/api";
@@ -27,8 +28,7 @@ const SchedulerSettings = () => {
   const [newDescription, setNewDescription] = useState("");
   const [timezone, setTimezone] = useState("Europe/Berlin");
   const [isUpdating, setIsUpdating] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
+
   const [clearAllConfirm, setClearAllConfirm] = useState(false);
 
   // Common timezones
@@ -71,7 +71,7 @@ const SchedulerSettings = () => {
       }
     } catch (error) {
       console.error("Error fetching scheduler data:", error);
-      setError("Failed to load scheduler data");
+      showError("Failed to load scheduler data");
     } finally {
       setLoading(false);
     }
@@ -90,14 +90,14 @@ const SchedulerSettings = () => {
       const data = await response.json();
 
       if (data.success) {
-        setSuccess(`Scheduler ${config.enabled ? "disabled" : "enabled"}`);
+        showSuccess(`Scheduler ${config.enabled ? "disabled" : "enabled"}`);
         await fetchSchedulerData();
       } else {
-        setError(data.detail || "Failed to update scheduler");
+        showError(data.detail || "Failed to update scheduler");
       }
     } catch (error) {
       console.error("Error toggling scheduler:", error);
-      setError("Failed to update scheduler");
+      showError("Failed to update scheduler");
     } finally {
       setIsUpdating(false);
     }
@@ -107,7 +107,7 @@ const SchedulerSettings = () => {
     e.preventDefault();
 
     if (!newTime) {
-      setError("Please enter a time");
+      showError("Please enter a time");
       return;
     }
 
@@ -127,17 +127,17 @@ const SchedulerSettings = () => {
       const data = await response.json();
 
       if (data.success) {
-        setSuccess("Schedule added");
+        showSuccess("Schedule added");
         setNewTime("");
         setNewDescription("");
         await new Promise((resolve) => setTimeout(resolve, 500));
         await fetchSchedulerData();
       } else {
-        setError(data.detail || "Failed to add schedule");
+        showError(data.detail || "Failed to add schedule");
       }
     } catch (error) {
       console.error("Error adding schedule:", error);
-      setError("Failed to add schedule");
+      showError("Failed to add schedule");
     } finally {
       setIsUpdating(false);
     }
@@ -155,15 +155,15 @@ const SchedulerSettings = () => {
       const data = await response.json();
 
       if (data.success) {
-        setSuccess("Schedule removed");
+        showSuccess("Schedule removed");
         await new Promise((resolve) => setTimeout(resolve, 500));
         await fetchSchedulerData();
       } else {
-        setError(data.detail || "Failed to remove schedule");
+        showError(data.detail || "Failed to remove schedule");
       }
     } catch (error) {
       console.error("Error removing schedule:", error);
-      setError("Failed to remove schedule");
+      showError("Failed to remove schedule");
     } finally {
       setIsUpdating(false);
     }
@@ -187,15 +187,15 @@ const SchedulerSettings = () => {
       const data = await response.json();
 
       if (data.success) {
-        setSuccess("All schedules cleared");
+        showSuccess("All schedules cleared");
         await new Promise((resolve) => setTimeout(resolve, 500));
         await fetchSchedulerData();
       } else {
-        setError(data.detail || "Failed to clear schedules");
+        showError(data.detail || "Failed to clear schedules");
       }
     } catch (error) {
       console.error("Error clearing schedules:", error);
-      setError("Failed to clear schedules");
+      showError("Failed to clear schedules");
     } finally {
       setIsUpdating(false);
     }
@@ -215,16 +215,16 @@ const SchedulerSettings = () => {
       const data = await response.json();
 
       if (data.success) {
-        setSuccess("Timezone updated");
+        showSuccess("Timezone updated");
         setTimezone(newTimezone);
         await new Promise((resolve) => setTimeout(resolve, 500));
         await fetchSchedulerData();
       } else {
-        setError(data.detail || "Failed to update timezone");
+        showError(data.detail || "Failed to update timezone");
       }
     } catch (error) {
       console.error("Error updating timezone:", error);
-      setError("Failed to update timezone");
+      showError("Failed to update timezone");
     } finally {
       setIsUpdating(false);
     }
@@ -244,16 +244,16 @@ const SchedulerSettings = () => {
       const data = await response.json();
 
       if (data.success) {
-        setSuccess(
+        showSuccess(
           value ? "Will skip if already running" : "Will allow concurrent runs"
         );
         await fetchSchedulerData();
       } else {
-        setError(data.detail || "Failed to update configuration");
+        showError(data.detail || "Failed to update configuration");
       }
     } catch (error) {
       console.error("Error updating config:", error);
-      setError("Failed to update configuration");
+      showError("Failed to update configuration");
     } finally {
       setIsUpdating(false);
     }
@@ -284,7 +284,7 @@ const SchedulerSettings = () => {
 
       if (data.success) {
         console.log("✅ Success! Showing toast and navigating...");
-        setSuccess("Manual run triggered");
+        showSuccess("Manual run triggered");
 
         // Update status
         fetchSchedulerData();
@@ -299,11 +299,11 @@ const SchedulerSettings = () => {
         }, 1200);
       } else {
         console.log("❌ Request failed:", data.detail);
-        setError(data.detail || "Failed to trigger run");
+        showError(data.detail || "Failed to trigger run");
       }
     } catch (error) {
       console.error("💥 Error in triggerNow:", error);
-      setError("Failed to trigger run");
+      showError("Failed to trigger run");
     } finally {
       console.log("🏁 Finally block - setting isUpdating to false");
       setIsUpdating(false);
@@ -322,15 +322,15 @@ const SchedulerSettings = () => {
       const data = await response.json();
 
       if (data.success) {
-        setSuccess("Scheduler restarted");
+        showSuccess("Scheduler restarted");
         await new Promise((resolve) => setTimeout(resolve, 500));
         await fetchSchedulerData();
       } else {
-        setError(data.detail || "Failed to restart scheduler");
+        showError(data.detail || "Failed to restart scheduler");
       }
     } catch (error) {
       console.error("Error restarting scheduler:", error);
-      setError("Failed to restart scheduler");
+      showError("Failed to restart scheduler");
     } finally {
       setIsUpdating(false);
     }
@@ -358,22 +358,6 @@ const SchedulerSettings = () => {
 
   return (
     <div className="space-y-6">
-      {/* Notification */}
-      {error && (
-        <Notification
-          type="error"
-          message={error}
-          onClose={() => setError(null)}
-        />
-      )}
-      {success && (
-        <Notification
-          type="success"
-          message={success}
-          onClose={() => setSuccess(null)}
-        />
-      )}
-
       {/* Confirm Dialog */}
       <ConfirmDialog
         isOpen={clearAllConfirm}

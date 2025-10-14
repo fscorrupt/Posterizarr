@@ -13,16 +13,18 @@ import {
   Minimize,
 } from "lucide-react";
 import Notification from "./Notification";
+import { useToast } from "../context/ToastContext";
 
 const API_URL = "/api";
 
 function TestGallery() {
+  const { showSuccess, showError, showInfo } = useToast();
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null); // Local error state for loading display
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
+
   const [scriptLoading, setScriptLoading] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState({
     posters: false,
@@ -74,7 +76,7 @@ function TestGallery() {
 
   const fetchImages = async (showToast = false) => {
     setLoading(true);
-    setError(null);
+    showError(null);
     try {
       const response = await fetch(`${API_URL}/test-gallery`);
       if (!response.ok) {
@@ -84,11 +86,13 @@ function TestGallery() {
       setImages(data.images || []);
 
       if (showToast && data.images && data.images.length > 0) {
-        setSuccess(`Loaded ${data.images.length} test files`);
+        showSuccess(`Loaded ${data.images.length} test files`);
       }
     } catch (error) {
       console.error("Error fetching test images:", error);
-      setError(error.message || "Failed to load test gallery");
+      const errorMsg = error.message || "Failed to load test gallery";
+      setError(errorMsg);
+      showError(errorMsg);
       setImages([]);
     } finally {
       setLoading(false);
@@ -107,7 +111,7 @@ function TestGallery() {
 
   const runTestMode = async () => {
     if (status.running) {
-      setError("Script is already running! Please stop it first.");
+      showError("Script is already running! Please stop it first.");
       return;
     }
 
@@ -119,13 +123,13 @@ function TestGallery() {
       const data = await response.json();
 
       if (data.success) {
-        setSuccess("Test Mode started successfully!");
+        showSuccess("Test Mode started successfully!");
         fetchStatus();
       } else {
-        setError(`Error: ${data.message}`);
+        showError(`Error: ${data.message}`);
       }
     } catch (error) {
-      setError(`Error: ${error.message}`);
+      showError(`Error: ${error.message}`);
     } finally {
       setScriptLoading(false);
     }
@@ -252,22 +256,6 @@ function TestGallery() {
 
   return (
     <div className="space-y-6">
-      {/* Notification */}
-      {error && (
-        <Notification
-          type="error"
-          message={error}
-          onClose={() => setError(null)}
-        />
-      )}
-      {success && (
-        <Notification
-          type="success"
-          message={success}
-          onClose={() => setSuccess(null)}
-        />
-      )}
-
       {/* Header - Modernized to match RunModes & ConfigEditor */}
       <div className="flex items-center justify-end">
         <div className="flex gap-3">

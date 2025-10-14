@@ -20,6 +20,7 @@ import SystemInfo from "./SystemInfo";
 import DangerZone from "./DangerZone";
 import RecentAssets from "./RecentAssets";
 import Notification from "./Notification";
+import { useToast } from "../context/ToastContext";
 import ConfirmDialog from "./ConfirmDialog";
 
 const API_URL = "/api";
@@ -50,6 +51,7 @@ let cachedStatus = null;
 let cachedVersion = null;
 
 function Dashboard() {
+  const { showSuccess, showError, showInfo } = useToast();
   const [status, setStatus] = useState(
     cachedStatus || {
       running: false,
@@ -68,11 +70,11 @@ function Dashboard() {
   const [version, setVersion] = useState(
     cachedVersion || { local: null, remote: null }
   );
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
+
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [wsConnected, setWsConnected] = useState(false);
   const [autoScroll, setAutoScroll] = useState(true);
+  const [allLogs, setAllLogs] = useState([]); // Store all logs
   const wsRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
   const logContainerRef = useRef(null);
@@ -89,6 +91,11 @@ function Dashboard() {
       const data = await response.json();
       cachedStatus = data;
       setStatus(data);
+
+      // Initialize allLogs with the initial logs from status
+      if (data.last_logs && data.last_logs.length > 0) {
+        setAllLogs(data.last_logs);
+      }
     } catch (error) {
       console.error("Error fetching status:", error);
     } finally {
@@ -199,12 +206,18 @@ function Dashboard() {
         try {
           const data = JSON.parse(event.data);
           if (data.type === "log") {
+            // Add new log line to allLogs
+            setAllLogs((prev) => [...prev, data.content]);
+
+            // Update status with last 25 logs for backward compatibility
             setStatus((prev) => ({
               ...prev,
               last_logs: [...prev.last_logs.slice(-24), data.content],
             }));
           } else if (data.type === "log_file_changed") {
             console.log(`🔄 Backend switched to: ${data.log_file}`);
+            // Clear logs when switching log files
+            setAllLogs([]);
             disconnectDashboardWebSocket();
             setTimeout(() => connectDashboardWebSocket(), 300);
           }
@@ -291,13 +304,17 @@ function Dashboard() {
   }, [status.current_mode]);
 
   useEffect(() => {
-    // Only auto-scroll if autoScroll is enabled AND user hasn't manually scrolled up
+    // Auto-scroll to bottom when new logs arrive and autoScroll is enabled
     if (!autoScroll || !logContainerRef.current) return;
 
-    // Always scroll to bottom when autoScroll is enabled (ignore userHasScrolled when autoScroll is on)
     const container = logContainerRef.current;
-    container.scrollTop = container.scrollHeight;
-  }, [status.last_logs, autoScroll]);
+    // Use requestAnimationFrame for smoother scrolling
+    requestAnimationFrame(() => {
+      if (container) {
+        container.scrollTop = container.scrollHeight;
+      }
+    });
+  }, [allLogs, autoScroll]);
 
   useEffect(() => {
     const logContainer = logContainerRef.current;
@@ -306,6 +323,7 @@ function Dashboard() {
     const handleScroll = () => {
       const { scrollTop, scrollHeight, clientHeight } = logContainer;
       const currentScrollTop = scrollTop;
+      const isAtBottom = scrollHeight - scrollTop - clientHeight < 20;
 
       // Detect upward scroll (user scrolling up manually)
       if (currentScrollTop < lastScrollTop.current - 5) {
@@ -316,10 +334,9 @@ function Dashboard() {
         }
       }
 
-      // If user scrolls to bottom manually, they want to see new logs
-      // But only reset userHasScrolled if autoScroll is enabled
-      const isAtBottom = scrollHeight - scrollTop - clientHeight < 20;
-      if (isAtBottom && autoScroll) {
+      // If user scrolls to bottom manually, enable autoScroll again
+      if (isAtBottom && !autoScroll) {
+        setAutoScroll(true);
         userHasScrolled.current = false;
       }
 
@@ -346,21 +363,21 @@ function Dashboard() {
           // JSON parsing failed
         }
 
-        setError(errorMessage);
+        showError(errorMessage);
         return;
       }
 
       const data = await response.json();
 
       if (data.success) {
-        setSuccess(data.message || "Running file deleted successfully");
+        showSuccess(data.message || "Running file deleted successfully");
       } else {
-        setError(data.message || "Failed to delete running file");
+        showError(data.message || "Failed to delete running file");
       }
       fetchStatus();
     } catch (error) {
       console.error("Delete running file error:", error);
-      setError(`Error deleting running file: ${error.message}`);
+      showError(`Error deleting running file: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -423,22 +440,6 @@ function Dashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Notifications */}
-      {error && (
-        <Notification
-          type="error"
-          message={error}
-          onClose={() => setError(null)}
-        />
-      )}
-      {success && (
-        <Notification
-          type="success"
-          message={success}
-          onClose={() => setSuccess(null)}
-        />
-      )}
-
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -665,6 +666,11 @@ function Dashboard() {
                     ? getLogFileForMode(status.current_mode)
                     : status.active_log}
                 </span>
+                {allLogs.length > 0 && (
+                  <span className="ml-3 text-xs text-theme-muted/70">
+                    ({allLogs.length} lines loaded)
+                  </span>
+                )}
               </p>
             )}
           </div>
@@ -699,12 +705,13 @@ function Dashboard() {
         </div>
 
         <div className="bg-black rounded-lg overflow-hidden border-2 border-theme shadow-sm">
-          {status.last_logs && status.last_logs.length > 0 ? (
+          {allLogs && allLogs.length > 0 ? (
             <div
               ref={logContainerRef}
               className="font-mono text-[11px] leading-relaxed max-h-96 overflow-y-auto"
             >
-              {status.last_logs.map((line, index) => {
+              {/* Display all logs, but auto-scroll to bottom showing last 25 */}
+              {allLogs.map((line, index) => {
                 const parsed = parseLogLine(line);
 
                 if (parsed.raw === null) {
@@ -714,7 +721,7 @@ function Dashboard() {
                 if (parsed.raw) {
                   return (
                     <div
-                      key={index}
+                      key={`log-${index}`}
                       className="px-3 py-1.5 hover:bg-gray-900/50 transition-colors border-l-2 border-transparent hover:border-theme-primary/50"
                       style={{ color: "#9ca3af" }}
                     >
@@ -727,7 +734,7 @@ function Dashboard() {
 
                 return (
                   <div
-                    key={index}
+                    key={`log-${index}`}
                     className="px-3 py-1.5 hover:bg-gray-900/50 transition-colors flex items-center gap-2 border-l-2 border-transparent hover:border-theme-primary/50"
                   >
                     <span style={{ color: "#6b7280" }} className="text-[10px]">
@@ -774,8 +781,8 @@ function Dashboard() {
         status={status}
         loading={loading}
         onStatusUpdate={fetchStatus}
-        onSuccess={setSuccess}
-        onError={setError}
+        onSuccess={showSuccess}
+        onError={showError}
       />
 
       {/* Delete Running File Confirmation Dialog */}

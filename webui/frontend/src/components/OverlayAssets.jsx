@@ -12,32 +12,23 @@ import {
   Type,
   Filter,
 } from "lucide-react";
+import { useToast } from "../context/ToastContext";
 
 const OverlayAssets = () => {
+  const { showSuccess, showError } = useToast();
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
   const [previewFile, setPreviewFile] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [filterType, setFilterType] = useState("all"); // "all", "image", "font"
+  const [error, setError] = useState(null); // Error state for display
+  const [success, setSuccess] = useState(null); // Success state for display
 
   // Load files on mount
   useEffect(() => {
     loadFiles();
   }, []);
-
-  // Auto-hide messages after 5 seconds
-  useEffect(() => {
-    if (error || success) {
-      const timer = setTimeout(() => {
-        setError(null);
-        setSuccess(null);
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [error, success]);
 
   const loadFiles = async () => {
     try {
@@ -48,12 +39,17 @@ const OverlayAssets = () => {
 
       if (data.success) {
         setFiles(data.files || []);
+        setError(null);
       } else {
-        setError("Failed to load overlay files");
+        const errorMsg = "Failed to load overlay files";
+        setError(errorMsg);
+        showError(errorMsg);
       }
     } catch (err) {
       console.error("Error loading overlay files:", err);
-      setError("Failed to load overlay files: " + err.message);
+      const errorMsg = "Failed to load overlay files: " + err.message;
+      setError(errorMsg);
+      showError(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -90,7 +86,7 @@ const OverlayAssets = () => {
     ];
 
     if (!validExtensions.includes(fileExtension)) {
-      setError(
+      showError(
         "Invalid file type. Only PNG, JPEG, TTF, OTF, WOFF, and WOFF2 files are allowed."
       );
       return;
@@ -98,7 +94,7 @@ const OverlayAssets = () => {
 
     // Validate file size (max 10MB)
     if (file.size > 10 * 1024 * 1024) {
-      setError("File size too large. Maximum size is 10MB.");
+      showError("File size too large. Maximum size is 10MB.");
       return;
     }
 
@@ -118,16 +114,22 @@ const OverlayAssets = () => {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        setSuccess(data.message || "File uploaded successfully");
+        const successMsg = data.message || "File uploaded successfully";
+        setSuccess(successMsg);
+        showSuccess(successMsg);
         await loadFiles(); // Reload file list
         // Reset file input
         event.target.value = "";
       } else {
-        setError(data.detail || "Failed to upload file");
+        const errorMsg = data.detail || "Failed to upload file";
+        setError(errorMsg);
+        showError(errorMsg);
       }
     } catch (err) {
       console.error("Error uploading file:", err);
-      setError("Failed to upload file: " + err.message);
+      const errorMsg = "Failed to upload file: " + err.message;
+      setError(errorMsg);
+      showError(errorMsg);
     } finally {
       setUploading(false);
     }
@@ -145,15 +147,21 @@ const OverlayAssets = () => {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        setSuccess(data.message || "File deleted successfully");
+        const successMsg = data.message || "File deleted successfully";
+        setSuccess(successMsg);
+        showSuccess(successMsg);
         await loadFiles(); // Reload file list
         setDeleteConfirm(null);
       } else {
-        setError(data.detail || "Failed to delete file");
+        const errorMsg = data.detail || "Failed to delete file";
+        setError(errorMsg);
+        showError(errorMsg);
       }
     } catch (err) {
       console.error("Error deleting file:", err);
-      setError("Failed to delete file: " + err.message);
+      const errorMsg = "Failed to delete file: " + err.message;
+      setError(errorMsg);
+      showError(errorMsg);
     }
   };
 

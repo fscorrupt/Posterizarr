@@ -12,19 +12,21 @@ import {
 } from "lucide-react";
 import CompactImageSizeSlider from "./CompactImageSizeSlider";
 import Notification from "./Notification";
+import { useToast } from "../context/ToastContext";
 import ConfirmDialog from "./ConfirmDialog";
 import AssetReplacer from "./AssetReplacer";
 
 const API_URL = "/api";
 
 function SeasonGallery() {
+  const { showSuccess, showError, showInfo } = useToast();
   const [folders, setFolders] = useState([]);
   const [activeFolder, setActiveFolder] = useState(null);
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(true);
   const [imagesLoading, setImagesLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
+  const [error, setError] = useState(null); // Local error state for loading display
+
   const [selectedImage, setSelectedImage] = useState(null);
   const [deletingImage, setDeletingImage] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
@@ -88,7 +90,7 @@ function SeasonGallery() {
         ).length;
 
         if (totalSeasons > 0) {
-          setSuccess(
+          showSuccess(
             `${foldersWithSeasons} folder${
               foldersWithSeasons !== 1 ? "s" : ""
             } loaded with ${totalSeasons} season poster${
@@ -96,7 +98,7 @@ function SeasonGallery() {
             }`
           );
         } else {
-          setSuccess(
+          showSuccess(
             `${data.folders.length} folder${
               data.folders.length !== 1 ? "s" : ""
             } found with 0 season posters`
@@ -112,7 +114,9 @@ function SeasonGallery() {
       }
     } catch (error) {
       console.error("Error fetching folders:", error);
-      setError(error.message || "Failed to load folders");
+      const errorMsg = error.message || "Failed to load folders";
+      setError(errorMsg);
+      showError(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -133,11 +137,14 @@ function SeasonGallery() {
       setImages(data.images || []);
 
       if (showNotification && data.images && data.images.length > 0) {
-        setSuccess(`Loaded ${data.images.length} seasons from ${folder.name}`);
+        showSuccess(`Loaded ${data.images.length} seasons from ${folder.name}`);
       }
     } catch (error) {
       console.error("Error fetching images:", error);
-      setError(error.message || `Failed to load images from ${folder.name}`);
+      const errorMsg =
+        error.message || `Failed to load images from ${folder.name}`;
+      setError(errorMsg);
+      showError(errorMsg);
       setImages([]);
     } finally {
       setImagesLoading(false);
@@ -171,7 +178,7 @@ function SeasonGallery() {
       const data = await response.json();
 
       if (data.success) {
-        setSuccess(`Season "${imageName}" deleted successfully`);
+        showSuccess(`Season "${imageName}" deleted successfully`);
 
         setImages(images.filter((img) => img.path !== imagePath));
 
@@ -185,7 +192,7 @@ function SeasonGallery() {
       }
     } catch (error) {
       console.error("Error deleting season:", error);
-      setError(`Error while deleting: ${error.message}`);
+      showError(`Error while deleting: ${error.message}`);
     } finally {
       setDeletingImage(null);
     }
@@ -216,11 +223,11 @@ function SeasonGallery() {
         const failedCount = data.failed.length;
 
         if (failedCount > 0) {
-          setError(
+          showError(
             `Deleted ${deletedCount} season(s), but ${failedCount} failed.`
           );
         } else {
-          setSuccess(`Successfully deleted ${deletedCount} season(s)`);
+          showSuccess(`Successfully deleted ${deletedCount} season(s)`);
         }
 
         // Remove deleted images from the list
@@ -236,7 +243,7 @@ function SeasonGallery() {
       }
     } catch (error) {
       console.error("Error deleting seasons:", error);
-      setError(`Error while deleting: ${error.message}`);
+      showError(`Error while deleting: ${error.message}`);
     } finally {
       setDeletingImage(null);
     }
@@ -302,22 +309,6 @@ function SeasonGallery() {
 
   return (
     <div className="space-y-6">
-      {/* Notifications */}
-      {error && (
-        <Notification
-          type="error"
-          message={error}
-          onClose={() => setError(null)}
-        />
-      )}
-      {success && (
-        <Notification
-          type="success"
-          message={success}
-          onClose={() => setSuccess(null)}
-        />
-      )}
-
       {/* Header */}
 
       {/* Folder Tabs */}
@@ -879,7 +870,7 @@ function SeasonGallery() {
             setTimeout(() => {
               fetchFolderImages(activeFolder, false);
             }, 500);
-            setSuccess("Asset replaced successfully!");
+            showSuccess("Asset replaced successfully!");
           }}
         />
       )}

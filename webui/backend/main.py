@@ -5040,28 +5040,40 @@ async def get_recent_assets():
                 "source_info": source_info,
             }
 
-        # Get only the FIRST 10 entries (most recent) from the combined list
-        # Since logs_assets comes first, these are the newest entries
-        recent_assets = all_assets[:10]
+        # Reverse the list to get the most recent assets first (bottom to top of CSV)
+        all_assets.reverse()
 
-        # STEP 4: Find poster.jpg for each asset in assets folder
-        for asset in recent_assets:
+        # Get the first 20 entries to ensure we have enough assets after filtering
+        # (in case some don't have existing poster files)
+        candidate_assets = all_assets[:20]
+
+        # STEP 4: Find poster.jpg for each asset in assets folder and filter out non-existing
+        recent_assets = []
+        for asset in candidate_assets:
             rootfolder = asset.get("rootfolder", "")
             asset_type = asset.get("type", "Poster")
             title = asset.get("title", "")
             download_source = asset.get("download_source", "")
+
             if rootfolder:
                 poster_url = find_poster_in_assets(
                     rootfolder, asset_type, title, download_source
                 )
                 if poster_url:
+                    # Only include assets where the poster file exists
                     asset["poster_url"] = poster_url
                     asset["has_poster"] = True
-                else:
-                    asset["poster_url"] = None
-                    asset["has_poster"] = False
+                    recent_assets.append(asset)
 
-        logger.info(f"✨ Returning {len(recent_assets)} most recent assets")
+                    # Stop when we have 10 valid assets
+                    if len(recent_assets) >= 10:
+                        break
+                else:
+                    logger.info(f"⏭️  Skipping asset (poster not found): {title}")
+
+        logger.info(
+            f"✨ Returning {len(recent_assets)} most recent assets with existing posters"
+        )
 
         return {
             "success": True,

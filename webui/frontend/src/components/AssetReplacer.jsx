@@ -10,17 +10,18 @@ import {
   Image as ImageIcon,
 } from "lucide-react";
 import Notification from "./Notification";
+import { useToast } from "../context/ToastContext";
 
 const API_URL = "/api";
 
 function AssetReplacer({ asset, onClose, onSuccess }) {
+  const { showSuccess, showError, showInfo } = useToast();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [previews, setPreviews] = useState({ tmdb: [], tvdb: [], fanart: [] });
   const [selectedPreview, setSelectedPreview] = useState(null);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
+
   const [activeTab, setActiveTab] = useState("upload");
   const [processWithOverlays, setProcessWithOverlays] = useState(false);
 
@@ -325,7 +326,7 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
 
   const fetchPreviews = async () => {
     setLoading(true);
-    setError(null);
+    showError(null);
 
     try {
       let metadata = extractMetadata();
@@ -333,7 +334,7 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
       // Override with manual search if enabled
       if (manualSearch) {
         if (!searchTitle.trim()) {
-          setError("Please enter a title to search for");
+          showError("Please enter a title to search for");
           setLoading(false);
           return;
         }
@@ -361,7 +362,7 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
 
       if (data.success) {
         setPreviews(data.results);
-        setSuccess(
+        showSuccess(
           `Found ${data.total_count} replacement options from ${
             Object.keys(data.results).filter((k) => data.results[k].length > 0)
               .length
@@ -369,10 +370,10 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
         );
         setActiveTab("previews");
       } else {
-        setError("Failed to fetch previews");
+        showError("Failed to fetch previews");
       }
     } catch (err) {
-      setError(`Error fetching previews: ${err.message}`);
+      showError(`Error fetching previews: ${err.message}`);
       console.error("Error fetching previews:", err);
     } finally {
       setLoading(false);
@@ -385,12 +386,12 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
 
     // Validate file type
     if (!file.type.startsWith("image/")) {
-      setError("Please select an image file");
+      showError("Please select an image file");
       return;
     }
 
     setUploading(true);
-    setError(null);
+    showError(null);
 
     try {
       const formData = new FormData();
@@ -409,16 +410,16 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
       const data = await response.json();
 
       if (data.success) {
-        setSuccess("Asset replaced successfully!");
+        showSuccess("Asset replaced successfully!");
         setTimeout(() => {
           onSuccess?.();
           onClose();
         }, 1500);
       } else {
-        setError("Failed to upload asset");
+        showError("Failed to upload asset");
       }
     } catch (err) {
-      setError(`Error uploading file: ${err.message}`);
+      showError(`Error uploading file: ${err.message}`);
       console.error("Error uploading file:", err);
     } finally {
       setUploading(false);
@@ -427,7 +428,7 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
 
   const handleSelectPreview = async (preview) => {
     setUploading(true);
-    setError(null);
+    showError(null);
 
     // Validation for poster/background with overlays
     if (
@@ -439,17 +440,17 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
       const libraryName = manualForm?.libraryname || metadata.library_name;
 
       if (!titleText || !titleText.trim()) {
-        setError("Please enter a title text for overlay processing");
+        showError("Please enter a title text for overlay processing");
         setUploading(false);
         return;
       }
       if (!folderName || !folderName.trim()) {
-        setError("Please enter a folder name for overlay processing");
+        showError("Please enter a folder name for overlay processing");
         setUploading(false);
         return;
       }
       if (!libraryName || !libraryName.trim()) {
-        setError("Please enter a library name for overlay processing");
+        showError("Please enter a library name for overlay processing");
         setUploading(false);
         return;
       }
@@ -463,22 +464,22 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
       const seasonPosterName = manualForm?.seasonPosterName;
 
       if (!titleText || !titleText.trim()) {
-        setError("Please enter a title text for overlay processing");
+        showError("Please enter a title text for overlay processing");
         setUploading(false);
         return;
       }
       if (!folderName || !folderName.trim()) {
-        setError("Please enter a folder name for overlay processing");
+        showError("Please enter a folder name for overlay processing");
         setUploading(false);
         return;
       }
       if (!libraryName || !libraryName.trim()) {
-        setError("Please enter a library name for overlay processing");
+        showError("Please enter a library name for overlay processing");
         setUploading(false);
         return;
       }
       if (!seasonPosterName || !seasonPosterName.trim()) {
-        setError("Please enter a season poster name for overlay processing");
+        showError("Please enter a season poster name for overlay processing");
         setUploading(false);
         return;
       }
@@ -493,27 +494,27 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
       const episodeTitleName = manualForm?.episodeTitleName;
 
       if (!folderName || !folderName.trim()) {
-        setError("Please enter a folder name for overlay processing");
+        showError("Please enter a folder name for overlay processing");
         setUploading(false);
         return;
       }
       if (!libraryName || !libraryName.trim()) {
-        setError("Please enter a library name for overlay processing");
+        showError("Please enter a library name for overlay processing");
         setUploading(false);
         return;
       }
       if (!seasonPosterName || !seasonPosterName.trim()) {
-        setError("Please enter a season poster name for overlay processing");
+        showError("Please enter a season poster name for overlay processing");
         setUploading(false);
         return;
       }
       if (!episodeNumber || !episodeNumber.trim()) {
-        setError("Please enter an episode number for overlay processing");
+        showError("Please enter an episode number for overlay processing");
         setUploading(false);
         return;
       }
       if (!episodeTitleName || !episodeTitleName.trim()) {
-        setError("Please enter an episode title for overlay processing");
+        showError("Please enter an episode title for overlay processing");
         setUploading(false);
         return;
       }
@@ -585,24 +586,24 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
 
       if (data.success) {
         if (data.manual_run_triggered) {
-          setSuccess("Asset replaced and queued for overlay processing! 🎨");
+          showSuccess("Asset replaced and queued for overlay processing! 🎨");
           // Navigate to LogViewer with Manuallog.log after overlay run is triggered
           setTimeout(() => {
             console.log("🎯 Redirecting to LogViewer with log: Manuallog.log");
             navigate("/logs", { state: { logFile: "Manuallog.log" } });
           }, 1500);
         } else {
-          setSuccess("Asset replaced successfully!");
+          showSuccess("Asset replaced successfully!");
           setTimeout(() => {
             onSuccess?.();
             onClose();
           }, 2000);
         }
       } else {
-        setError("Failed to replace asset");
+        showError("Failed to replace asset");
       }
     } catch (err) {
-      setError(`Error replacing asset: ${err.message}`);
+      showError(`Error replacing asset: ${err.message}`);
       console.error("Error replacing asset:", err);
     } finally {
       setUploading(false);
@@ -627,26 +628,6 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-theme-card rounded-xl border border-theme max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-        {/* Notifications */}
-        {error && (
-          <div className="absolute top-4 right-4 z-10">
-            <Notification
-              type="error"
-              message={error}
-              onClose={() => setError(null)}
-            />
-          </div>
-        )}
-        {success && (
-          <div className="absolute top-4 right-4 z-10">
-            <Notification
-              type="success"
-              message={success}
-              onClose={() => setSuccess(null)}
-            />
-          </div>
-        )}
-
         {/* Header */}
         <div className="border-b border-theme p-6">
           <div className="flex items-center justify-between">
@@ -1186,6 +1167,7 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
 }
 
 function PreviewCard({ preview, onSelect, disabled, isHorizontal = false }) {
+  const { showSuccess, showError, showInfo } = useToast();
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
 
