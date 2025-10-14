@@ -434,6 +434,7 @@ function ConfigEditor() {
   const [previewOverlay, setPreviewOverlay] = useState(null); // For preview modal
   const [fontFiles, setFontFiles] = useState([]);
   const [uploadingFont, setUploadingFont] = useState(false);
+  const [previewFont, setPreviewFont] = useState(null); // For font preview modal
   const hasInitializedGroups = useRef(false);
   const initialAuthStatus = useRef(null); // Track initial auth status when config is loaded
 
@@ -517,12 +518,12 @@ function ConfigEditor() {
     },
     Visuals: {
       groups: [
+        "Image Processing",
         "Image Filters",
-        "Text Formatting",
-        "Fonts",
         "Overlay Files",
         "Resolution Overlays",
-        "Image Processing",
+        "Fonts",
+        "Text Formatting",
         "OverlayPart",
       ],
       icon: Palette,
@@ -566,6 +567,22 @@ function ConfigEditor() {
     fetchOverlayFiles();
     fetchFontFiles();
   }, []);
+
+  // Add keyboard shortcut for saving (Ctrl+Enter or Cmd+Enter)
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      // Save on Ctrl+Enter (Windows/Linux) or Cmd+Enter (Mac)
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+        e.preventDefault();
+        if (!saving) {
+          saveConfig();
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyPress);
+    return () => window.removeEventListener("keydown", handleKeyPress);
+  }, [saving, config]);
 
   useEffect(() => {
     if (config && !hasInitializedGroups.current) {
@@ -1124,6 +1141,18 @@ function ConfigEditor() {
               )}
               <span className="text-sm">Upload</span>
             </label>
+
+            {/* Preview Button */}
+            {stringValue && (
+              <button
+                onClick={() => setPreviewFont(stringValue)}
+                className="flex items-center gap-2 px-4 py-2 bg-theme-bg hover:bg-theme-hover border border-theme rounded-lg font-medium transition-all"
+                title="Preview font"
+              >
+                <Eye className="w-4 h-4 text-theme-primary" />
+                <span className="text-sm">Preview</span>
+              </button>
+            )}
           </div>
 
           {/* Current file display */}
@@ -1616,7 +1645,7 @@ function ConfigEditor() {
       );
     }
 
-    // ============ NOTIFICATIONS MIT VALIDATE-BUTTONS ============
+    // ============ NOTIFICATIONS with VALIDATE-BUTTONS ============
 
     // Discord Webhook mit Validate-Button
     if (key === "Discord") {
@@ -1714,8 +1743,6 @@ function ConfigEditor() {
       );
     }
 
-    // ============ REST OF THE FUNCTION (UNCHANGED) ============
-
     // Handle text_offset specially
     if (keyLower.includes("offset") || keyLower === "text_offset") {
       return (
@@ -1734,20 +1761,188 @@ function ConfigEditor() {
       );
     }
 
+    // ============ LOG LEVEL (1, 2, or 3) ============
+    if (key === "logLevel") {
+      const numValue = String(stringValue || "2");
+
+      return (
+        <div className="space-y-2">
+          <div className="relative">
+            <select
+              value={numValue}
+              onChange={(e) => updateValue(fieldKey, e.target.value)}
+              className="w-full h-[42px] px-4 py-2.5 pr-10 bg-theme-bg border border-theme rounded-lg text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all cursor-pointer appearance-none"
+            >
+              <option value="1">1 - Warning/Error messages only</option>
+              <option value="2">
+                2 - Info/Warning/Error messages (Default)
+              </option>
+              <option value="3">
+                3 - Info/Warning/Error/Debug (Most verbose)
+              </option>
+            </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-theme-muted pointer-events-none" />
+          </div>
+          <p className="text-xs text-theme-muted">
+            Logging verbosity: 1 = Warning/Error, 2 = Info/Warning/Error
+            (default), 3 = Info/Warning/Error/Debug
+          </p>
+        </div>
+      );
+    }
+
+    // ============ TEXT GRAVITY (Alignment) ============
+    if (keyLower.includes("gravity") || keyLower.endsWith("textgravity")) {
+      const gravityValue = String(stringValue || "South");
+
+      return (
+        <div className="space-y-2">
+          <div className="relative">
+            <select
+              value={gravityValue}
+              onChange={(e) => updateValue(fieldKey, e.target.value)}
+              className="w-full h-[42px] px-4 py-2.5 pr-10 bg-theme-bg border border-theme rounded-lg text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all cursor-pointer appearance-none"
+            >
+              <option value="NorthWest">NorthWest (Top Left)</option>
+              <option value="North">North (Top Center)</option>
+              <option value="NorthEast">NorthEast (Top Right)</option>
+              <option value="West">West (Middle Left)</option>
+              <option value="Center">Center (Middle Center)</option>
+              <option value="East">East (Middle Right)</option>
+              <option value="SouthWest">SouthWest (Bottom Left)</option>
+              <option value="South">South (Bottom Center)</option>
+              <option value="SouthEast">SouthEast (Bottom Right)</option>
+            </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-theme-muted pointer-events-none" />
+          </div>
+          <p className="text-xs text-theme-muted">
+            Text alignment position within the text box
+          </p>
+        </div>
+      );
+    }
+
+    // ============ OUTPUT QUALITY (1-100%) ============
+    if (key === "outputQuality") {
+      // Parse the value - handle both "92" and "92%" formats for display
+      // Strip % for input display, but save WITH % to config
+      let displayValue = String(stringValue || "").trim();
+      if (displayValue.endsWith("%")) {
+        displayValue = displayValue.slice(0, -1).trim();
+      }
+
+      const numValue = displayValue === "" ? "" : Number(displayValue);
+      const isInvalid =
+        displayValue !== "" &&
+        (numValue < 1 || numValue > 100 || isNaN(numValue));
+
+      return (
+        <div className="space-y-2">
+          <div className="relative">
+            <input
+              type="number"
+              min="1"
+              max="100"
+              step="1"
+              value={displayValue}
+              onChange={(e) => {
+                const val = e.target.value.trim();
+                // Allow empty or valid integers between 1-100
+                // Store WITH % symbol for backend compatibility
+                if (val === "") {
+                  updateValue(fieldKey, "");
+                } else {
+                  const numVal = Number(val);
+                  if (
+                    !isNaN(numVal) &&
+                    numVal >= 1 &&
+                    numVal <= 100 &&
+                    Number.isInteger(numVal)
+                  ) {
+                    // Save with % symbol (integers only)
+                    updateValue(fieldKey, val + "%");
+                  }
+                }
+              }}
+              onBlur={(e) => {
+                // Enforce bounds on blur and round to integer
+                let val = e.target.value.trim();
+                if (val !== "") {
+                  const numVal = Number(val);
+                  if (!isNaN(numVal)) {
+                    const intVal = Math.round(numVal);
+                    if (intVal < 1) {
+                      updateValue(fieldKey, "1%");
+                    } else if (intVal > 100) {
+                      updateValue(fieldKey, "100%");
+                    } else {
+                      // Save with % symbol (integers only)
+                      updateValue(fieldKey, String(intVal) + "%");
+                    }
+                  }
+                }
+              }}
+              className={`w-full h-[42px] px-4 py-2.5 pr-10 bg-theme-bg border ${
+                isInvalid ? "border-red-500" : "border-theme"
+              } rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all`}
+              placeholder="1-100"
+            />
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-theme-muted text-sm font-medium pointer-events-none">
+              %
+            </span>
+          </div>
+          <p className="text-xs text-theme-muted">
+            Image quality percentage (1-100). Default: 92%. Setting to 100%
+            doubles file size
+          </p>
+          {isInvalid && (
+            <p className="text-xs text-red-400">
+              Value must be between 1 and 100
+            </p>
+          )}
+        </div>
+      );
+    }
+
+    // ============ NUMERIC FIELDS (WITH VALIDATION) ============
     if (
       type === "number" ||
       keyLower.includes("port") ||
       keyLower.includes("size") ||
       keyLower.includes("width") ||
-      keyLower.includes("height")
+      keyLower.includes("height") ||
+      keyLower.includes("pointsize") ||
+      keyLower.includes("borderwidth") ||
+      keyLower.includes("strokewidth") ||
+      keyLower.includes("spacing")
     ) {
       return (
         <div className="space-y-2">
           <input
             type="number"
+            min="0"
+            step="1"
             value={stringValue}
-            onChange={(e) => updateValue(fieldKey, e.target.value)}
+            onChange={(e) => {
+              const val = e.target.value;
+              // Only allow empty string or valid non-negative numbers
+              if (val === "" || (!isNaN(val) && Number(val) >= 0)) {
+                updateValue(fieldKey, val);
+              }
+            }}
+            onKeyDown={(e) => {
+              // Prevent minus sign, 'e', '+', and other non-numeric keys
+              if (
+                e.key === "-" ||
+                e.key === "e" ||
+                e.key === "E" ||
+                e.key === "+"
+              ) {
+                e.preventDefault();
+              }
+            }}
             className="w-full h-[42px] px-4 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+            placeholder="Enter number"
           />
         </div>
       );
@@ -1859,13 +2054,19 @@ function ConfigEditor() {
             onClick={saveConfig}
             disabled={saving}
             className="flex items-center gap-2 px-6 py-2.5 bg-theme-primary hover:bg-theme-primary/90 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg font-medium transition-all shadow-lg hover:scale-105"
+            title="Save configuration (Ctrl+Enter)"
           >
             {saving ? (
               <Loader2 className="w-5 h-5 animate-spin" />
             ) : (
               <Save className="w-5 h-5" />
             )}
-            {saving ? "Saving..." : "Save Changes"}
+            <span>{saving ? "Saving..." : "Save Changes"}</span>
+            {!saving && (
+              <span className="hidden sm:inline text-xs opacity-70 ml-1">
+                (Ctrl+↵)
+              </span>
+            )}
           </button>
         </div>
       </div>
@@ -2142,6 +2343,123 @@ function ConfigEditor() {
               <div className="mt-4 flex justify-end gap-3">
                 <button
                   onClick={() => setPreviewOverlay(null)}
+                  className="px-4 py-2 bg-theme-bg hover:bg-theme-hover border border-theme rounded-lg font-medium transition-all"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Font Preview Modal */}
+      {previewFont && (
+        <div
+          className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
+          onClick={() => setPreviewFont(null)}
+        >
+          <div
+            className="bg-theme-card rounded-xl border border-theme shadow-2xl max-w-3xl w-full max-h-[85vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-4 border-b border-theme sticky top-0 bg-theme-card z-10">
+              <div className="flex items-center gap-3">
+                <Type className="w-5 h-5 text-theme-primary" />
+                <h3 className="text-lg font-semibold text-theme-text">
+                  Font Preview
+                </h3>
+              </div>
+              <button
+                onClick={() => setPreviewFont(null)}
+                className="p-2 hover:bg-theme-hover rounded-lg transition-all"
+              >
+                <X className="w-5 h-5 text-theme-text" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6">
+              <div className="mb-4">
+                <p className="text-sm text-theme-muted mb-1">Filename:</p>
+                <p className="text-theme-text font-mono bg-theme-bg px-3 py-2 rounded-lg border border-theme">
+                  {previewFont}
+                </p>
+              </div>
+
+              {/* Font Preview Samples */}
+              <div className="space-y-3">
+                <div className="bg-theme-bg rounded-lg border border-theme p-4">
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-xs text-theme-muted mb-1">
+                        Uppercase:
+                      </p>
+                      <img
+                        src={`${API_URL}/fonts/preview/${encodeURIComponent(
+                          previewFont
+                        )}?text=ABCDEFGHIJKLMNOPQRSTUVWXYZ`}
+                        alt="Uppercase letters"
+                        className="w-full h-auto object-contain"
+                        loading="lazy"
+                        onError={(e) => {
+                          e.target.style.display = "none";
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <p className="text-xs text-theme-muted mb-1">
+                        Lowercase:
+                      </p>
+                      <img
+                        src={`${API_URL}/fonts/preview/${encodeURIComponent(
+                          previewFont
+                        )}?text=abcdefghijklmnopqrstuvwxyz`}
+                        alt="Lowercase letters"
+                        className="w-full h-auto object-contain"
+                        loading="lazy"
+                        onError={(e) => {
+                          e.target.style.display = "none";
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <p className="text-xs text-theme-muted mb-1">Numbers:</p>
+                      <img
+                        src={`${API_URL}/fonts/preview/${encodeURIComponent(
+                          previewFont
+                        )}?text=0123456789`}
+                        alt="Numbers"
+                        className="w-full h-auto object-contain"
+                        loading="lazy"
+                        onError={(e) => {
+                          e.target.style.display = "none";
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <p className="text-xs text-theme-muted mb-1">Sample:</p>
+                      <img
+                        src={`${API_URL}/fonts/preview/${encodeURIComponent(
+                          previewFont
+                        )}?text=The Quick Brown Fox Jumps Over The Lazy Dog`}
+                        alt="Sample text"
+                        className="w-full h-auto object-contain"
+                        loading="lazy"
+                        onError={(e) => {
+                          e.target.style.display = "none";
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="mt-4 flex justify-end gap-3">
+                <button
+                  onClick={() => setPreviewFont(null)}
                   className="px-4 py-2 bg-theme-bg hover:bg-theme-hover border border-theme rounded-lg font-medium transition-all"
                 >
                   Close
