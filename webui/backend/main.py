@@ -4992,12 +4992,14 @@ async def get_recent_assets():
     Get recently created assets from ImageChoices.csv files in Logs and RotatedLogs folders
     Returns the most recent assets with their poster images from assets folder
 
-    IMPORTANT: LOGS folder is read FIRST, then RotatedLogs
-    Display order: LOGS entries first, then RotatedLogs entries
+    IMPORTANT: Read CSV files from BOTTOM to TOP (newest entries first)
+    1. Read /Logs/ImageChoices.csv from bottom to top
+    2. If not enough, read RotatedLogs folders (newest folder first) from bottom to top
+    3. Continue until we have collected 100 assets
     """
     try:
-        logs_assets = []
-        rotated_assets = []
+        all_assets = []
+        max_assets = 100
 
         source_info = {
             "main_logs": {
@@ -5008,17 +5010,19 @@ async def get_recent_assets():
             "rotated_logs": {"folders": [], "total_count": 0},
         }
 
-        # STEP 1: Read from main Logs folder FIRST
+        # STEP 1: Read from main Logs folder FIRST (from bottom to top)
         main_csv = LOGS_DIR / "ImageChoices.csv"
         source_info["main_logs"]["exists"] = main_csv.exists()
 
         if main_csv.exists():
             try:
                 assets = parse_image_choices_csv(main_csv)
-                logs_assets.extend(assets)
+                # Reverse to get newest entries first (bottom to top)
+                assets.reverse()
+                all_assets.extend(assets)
                 source_info["main_logs"]["count"] = len(assets)
                 logger.info(
-                    f"✅ Found {len(assets)} assets in main Logs/ImageChoices.csv"
+                    f"✅ Found {len(assets)} assets in main Logs/ImageChoices.csv (reading from bottom to top)"
                 )
             except Exception as e:
                 logger.error(f"❌ Error reading {main_csv}: {e}")
@@ -5027,45 +5031,58 @@ async def get_recent_assets():
                 f"ℹ️  Main Logs/ImageChoices.csv does not exist yet (will be created on first script run)"
             )
 
-        # STEP 2: Read from RotatedLogs subfolders SECOND
-        rotated_logs_dir = BASE_DIR / "RotatedLogs"
-        if rotated_logs_dir.exists() and rotated_logs_dir.is_dir():
-            # Get all subdirectories in RotatedLogs, sorted by name (newest first)
-            # Folder names are like: Logs_20251012_121158
-            subdirs = sorted(
-                rotated_logs_dir.iterdir(), key=lambda x: x.name, reverse=True
-            )
-            for subdir in subdirs:
-                if subdir.is_dir():
-                    csv_file = subdir / "ImageChoices.csv"
-                    if csv_file.exists():
-                        try:
-                            assets = parse_image_choices_csv(csv_file)
-                            # Add source folder info to each asset
-                            for asset in assets:
-                                asset["source_folder"] = subdir.name
-                            rotated_assets.extend(assets)
+        # STEP 2: If we need more assets, read from RotatedLogs subfolders (newest folder first)
+        if len(all_assets) < max_assets:
+            rotated_logs_dir = BASE_DIR / "RotatedLogs"
+            if rotated_logs_dir.exists() and rotated_logs_dir.is_dir():
+                # Get all subdirectories in RotatedLogs, sorted by name (newest first)
+                # Folder names are like: Logs_20251012_121158
+                subdirs = sorted(
+                    rotated_logs_dir.iterdir(), key=lambda x: x.name, reverse=True
+                )
 
-                            folder_info = {"name": subdir.name, "count": len(assets)}
-                            source_info["rotated_logs"]["folders"].append(folder_info)
-                            source_info["rotated_logs"]["total_count"] += len(assets)
+                for subdir in subdirs:
+                    # Stop if we already have enough assets
+                    if len(all_assets) >= max_assets:
+                        break
 
-                            logger.info(
-                                f"✅ Found {len(assets)} assets in RotatedLogs/{subdir.name}/ImageChoices.csv"
-                            )
-                        except Exception as e:
-                            logger.error(f"❌ Error reading {csv_file}: {e}")
+                    if subdir.is_dir():
+                        csv_file = subdir / "ImageChoices.csv"
+                        if csv_file.exists():
+                            try:
+                                assets = parse_image_choices_csv(csv_file)
+                                # Reverse to get newest entries first (bottom to top)
+                                assets.reverse()
 
-        # STEP 3: Combine - LOGS (newest) first, then RotatedLogs (oldest last)
-        # Important: logs_assets contains the most recent entries
-        # rotated_assets contains older entries from newest folder to oldest folder
-        all_assets = logs_assets + rotated_assets
+                                # Add source folder info to each asset
+                                for asset in assets:
+                                    asset["source_folder"] = subdir.name
+
+                                # Only add what we need
+                                remaining = max_assets - len(all_assets)
+                                assets_to_add = assets[:remaining]
+                                all_assets.extend(assets_to_add)
+
+                                folder_info = {
+                                    "name": subdir.name,
+                                    "count": len(assets_to_add),
+                                }
+                                source_info["rotated_logs"]["folders"].append(
+                                    folder_info
+                                )
+                                source_info["rotated_logs"]["total_count"] += len(
+                                    assets_to_add
+                                )
+
+                                logger.info(
+                                    f"✅ Added {len(assets_to_add)} assets from RotatedLogs/{subdir.name}/ImageChoices.csv (reading from bottom to top)"
+                                )
+                            except Exception as e:
+                                logger.error(f"❌ Error reading {csv_file}: {e}")
 
         # Log summary
-        total_logs = len(logs_assets)
-        total_rotated = len(rotated_assets)
         logger.info(
-            f"📊 Total assets: {len(all_assets)} ({total_logs} from Logs + {total_rotated} from RotatedLogs)"
+            f"📊 Total assets collected: {len(all_assets)} (up to {max_assets} newest entries)"
         )
 
         # If no assets found anywhere, return early
@@ -5078,16 +5095,9 @@ async def get_recent_assets():
                 "source_info": source_info,
             }
 
-        # Reverse the list to get the most recent assets first (bottom to top of CSV)
-        all_assets.reverse()
-
-        # Get up to 100 most recent entries for frontend pagination
-        # Frontend will handle pagination/sliding through the assets
-        candidate_assets = all_assets[:100]
-
-        # STEP 4: Find poster.jpg for each asset in assets folder and filter out non-existing
+        # STEP 3: Find poster.jpg for each asset in assets folder and filter out non-existing
         recent_assets = []
-        for asset in candidate_assets:
+        for asset in all_assets:
             rootfolder = asset.get("rootfolder", "")
             asset_type = asset.get("type", "Poster")
             title = asset.get("title", "")
@@ -5103,7 +5113,7 @@ async def get_recent_assets():
                     asset["has_poster"] = True
                     recent_assets.append(asset)
                 else:
-                    logger.info(f"⏭️  Skipping asset (poster not found): {title}")
+                    logger.debug(f"⏭️  Skipping asset (poster not found): {title}")
 
         logger.info(
             f"✨ Returning {len(recent_assets)} most recent assets with existing images"
