@@ -655,7 +655,7 @@ function Dashboard() {
               )}
             </div>
 
-            {status.active_log && (
+            {status.running && status.active_log && allLogs.length > 0 && (
               <p
                 className="text-xs text-theme-muted mt-2"
                 style={{ marginLeft: "calc(2.25rem + 0.75rem)" }}
@@ -666,11 +666,9 @@ function Dashboard() {
                     ? getLogFileForMode(status.current_mode)
                     : status.active_log}
                 </span>
-                {allLogs.length > 0 && (
-                  <span className="ml-3 text-xs text-theme-muted/70">
-                    ({allLogs.length} lines loaded)
-                  </span>
-                )}
+                <span className="ml-3 text-xs text-theme-muted/70">
+                  ({allLogs.length} lines loaded)
+                </span>
               </p>
             )}
           </div>
@@ -705,7 +703,7 @@ function Dashboard() {
         </div>
 
         <div className="bg-black rounded-lg overflow-hidden border-2 border-theme shadow-sm">
-          {allLogs && allLogs.length > 0 ? (
+          {status.running && allLogs && allLogs.length > 0 ? (
             <div
               ref={logContainerRef}
               className="font-mono text-[11px] leading-relaxed max-h-96 overflow-y-auto"
@@ -756,7 +754,9 @@ function Dashboard() {
                 No logs available
               </p>
               <p className="text-gray-600 text-xs mt-1">
-                Start a script to see output here
+                {status.running
+                  ? "Waiting for logs..."
+                  : "Please start a run to see logs here"}
               </p>
             </div>
           )}
