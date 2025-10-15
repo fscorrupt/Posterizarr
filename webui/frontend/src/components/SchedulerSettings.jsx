@@ -52,6 +52,7 @@ const waitForLogFile = async (logFileName, maxAttempts = 30, delayMs = 200) => {
 
 const SchedulerSettings = () => {
   const navigate = useNavigate();
+  const { showSuccess, showError } = useToast();
   const [config, setConfig] = useState(null);
   const [status, setStatus] = useState(null);
   const [loading, setLoading] = useState(true);
