@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import Notification from "./Notification";
 import { useToast } from "../context/ToastContext";
+import ConfirmDialog from "./ConfirmDialog";
 
 const API_URL = "/api";
 
@@ -29,8 +30,12 @@ function TestGallery() {
   const [error, setError] = useState(null); // Local error state for loading display
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
-  const [viewMode, setViewMode] = useState("grid"); // "grid" or "folder"
+  const [viewMode, setViewMode] = useState(() => {
+    const saved = localStorage.getItem("test-gallery-view-mode");
+    return saved || "grid";
+  }); // "grid" or "folder"
   const [expandedFolders, setExpandedFolders] = useState({});
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
 
   const [scriptLoading, setScriptLoading] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState({
@@ -101,11 +106,12 @@ function TestGallery() {
     }));
   };
 
-  const deleteImage = async (imagePath, imageName) => {
-    if (!confirm(`Are you sure you want to delete "${imageName}"?`)) {
-      return;
-    }
+  const changeViewMode = (mode) => {
+    setViewMode(mode);
+    localStorage.setItem("test-gallery-view-mode", mode);
+  };
 
+  const deleteImage = async (imagePath, imageName) => {
     try {
       const response = await fetch(`${API_URL}/test-gallery/delete`, {
         method: "DELETE",
@@ -256,9 +262,7 @@ function TestGallery() {
         >
           <div className="flex items-center gap-3">
             <div className="text-left">
-              <h3 className="text-lg font-semibold text-theme-text">
-                {title}
-              </h3>
+              <h3 className="text-lg font-semibold text-theme-text">{title}</h3>
               {description && (
                 <p className="text-xs text-theme-muted mt-1">{description}</p>
               )}
@@ -287,7 +291,10 @@ function TestGallery() {
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    deleteImage(image.path, image.name);
+                    setDeleteConfirm({
+                      path: image.path,
+                      name: image.name,
+                    });
                   }}
                   className="absolute top-2 right-2 z-10 p-2 rounded-lg bg-red-600/90 hover:bg-red-700 opacity-0 group-hover:opacity-100 transition-all"
                   title="Delete"
@@ -431,7 +438,12 @@ function TestGallery() {
                             <Download className="w-4 h-4" />
                           </button>
                           <button
-                            onClick={() => deleteImage(image.path, image.name)}
+                            onClick={() =>
+                              setDeleteConfirm({
+                                path: image.path,
+                                name: image.name,
+                              })
+                            }
                             className="p-2 bg-red-600/90 hover:bg-red-700 text-white rounded-lg transition-all"
                             title="Delete"
                           >
@@ -465,14 +477,16 @@ function TestGallery() {
               disabled={loading}
               className="flex items-center gap-2 px-4 py-2 bg-theme-primary hover:bg-theme-primary/90 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-all shadow-lg"
             >
-              <RefreshCw className={`w-5 h-5 ${loading ? "animate-spin" : ""}`} />
+              <RefreshCw
+                className={`w-5 h-5 ${loading ? "animate-spin" : ""}`}
+              />
               Refresh
             </button>
 
             <button
               onClick={runTestMode}
               disabled={scriptLoading || status.running}
-              className="flex items-center gap-2 px-4 py-2 bg-theme-primary hover:bg-theme-primary/90 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-all shadow-lg"
+              className="flex items-center gap-2 px-4 py-2 bg-theme-bg hover:bg-theme-primary/90 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-all shadow-lg"
             >
               {scriptLoading ? (
                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -516,7 +530,7 @@ function TestGallery() {
             </div>
             <div className="flex gap-2">
               <button
-                onClick={() => setViewMode("grid")}
+                onClick={() => changeViewMode("grid")}
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-all whitespace-nowrap shadow-sm ${
                   viewMode === "grid"
                     ? "bg-theme-primary text-white scale-105"
@@ -527,7 +541,7 @@ function TestGallery() {
                 Grid
               </button>
               <button
-                onClick={() => setViewMode("folder")}
+                onClick={() => changeViewMode("folder")}
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-all whitespace-nowrap shadow-sm ${
                   viewMode === "folder"
                     ? "bg-theme-primary text-white scale-105"
@@ -588,7 +602,8 @@ function TestGallery() {
           <div className="bg-theme-card rounded-xl p-4 border border-theme">
             <div className="flex items-center justify-between text-sm">
               <span className="text-theme-text font-medium">
-                Showing {filteredImages.length} test file{filteredImages.length !== 1 ? "s" : ""}
+                Showing {filteredImages.length} test file
+                {filteredImages.length !== 1 ? "s" : ""}
               </span>
               {images.length !== filteredImages.length && (
                 <span className="text-theme-primary font-semibold">
@@ -634,7 +649,8 @@ function TestGallery() {
                   <>
                     <button
                       onClick={() => {
-                        const folderStructure = organizeByFolder(filteredImages);
+                        const folderStructure =
+                          organizeByFolder(filteredImages);
                         const allFolders = Object.keys(folderStructure).reduce(
                           (acc, key) => {
                             acc[key] = true;
@@ -765,7 +781,10 @@ function TestGallery() {
                 </button>
                 <button
                   onClick={() => {
-                    deleteImage(selectedImage.path, selectedImage.name);
+                    setDeleteConfirm({
+                      path: selectedImage.path,
+                      name: selectedImage.name,
+                    });
                   }}
                   className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm font-medium transition-all text-white shadow-lg"
                 >
@@ -783,6 +802,22 @@ function TestGallery() {
           </div>
         </div>
       )}
+
+      {/* Confirm Dialog */}
+      <ConfirmDialog
+        isOpen={!!deleteConfirm}
+        onClose={() => setDeleteConfirm(null)}
+        onConfirm={() => {
+          if (deleteConfirm) {
+            deleteImage(deleteConfirm.path, deleteConfirm.name);
+          }
+        }}
+        title="Delete Test File"
+        message="Are you sure you want to delete this test file? This action cannot be undone."
+        itemName={deleteConfirm?.name}
+        confirmText="Delete"
+        type="danger"
+      />
     </div>
   );
 }

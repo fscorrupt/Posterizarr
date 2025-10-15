@@ -9,6 +9,7 @@ import {
   ImageIcon,
   CheckSquare,
   Square,
+  X,
 } from "lucide-react";
 import CompactImageSizeSlider from "./CompactImageSizeSlider";
 import Notification from "./Notification";
@@ -746,49 +747,19 @@ function TitleCardGallery() {
             className="bg-theme-card rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl border-2 border-theme-primary"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="px-6 py-4 border-b-2 border-theme flex justify-between items-center bg-theme-card">
-              <h3 className="text-xl font-bold text-theme-text truncate flex-1 mr-4">
-                {formatDisplayPath(selectedImage.path)}
-              </h3>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => {
-                    setAssetToReplace({
-                      path: selectedImage.path,
-                      url: selectedImage.url,
-                      name: selectedImage.name,
-                      type: "titlecard",
-                    });
-                    setReplacerOpen(true);
-                  }}
-                  className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white flex items-center space-x-2"
-                >
-                  <RefreshCw className="w-4 h-4" />
-                  <span>Replace</span>
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setDeleteConfirm({
-                      path: selectedImage.path,
-                      name: selectedImage.name,
-                    });
-                  }}
-                  disabled={deletingImage === selectedImage.path}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
-                    deletingImage === selectedImage.path
-                      ? "bg-gray-600 cursor-not-allowed"
-                      : "bg-red-600 hover:bg-red-700 hover:scale-105"
-                  }`}
-                >
-                  <Trash2
-                    className={`w-4 h-4 ${
-                      deletingImage === selectedImage.path ? "animate-spin" : ""
-                    }`}
-                  />
-                  Delete
-                </button>
+            <div className="flex items-center justify-between px-6 py-4 bg-theme-primary rounded-t-2xl">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <ImageIcon className="w-6 h-6 text-white flex-shrink-0" />
+                <h3 className="text-lg font-semibold text-white truncate">
+                  {formatDisplayPath(selectedImage.path)}
+                </h3>
               </div>
+              <button
+                onClick={() => setSelectedImage(null)}
+                className="text-white/80 hover:text-white transition-all p-1 hover:bg-white/10 rounded flex-shrink-0"
+              >
+                <X className="w-6 h-6" />
+              </button>
             </div>
             <div className="p-6 bg-theme-bg flex items-center justify-center">
               <div className="max-h-[65vh] flex items-center justify-center">
@@ -814,16 +785,55 @@ function TitleCardGallery() {
                 </div>
               </div>
             </div>
-            <div className="px-6 py-5 border-t-2 border-theme flex justify-between items-center bg-theme-card">
+            <div className="px-6 py-5 border-t-2 border-theme flex justify-between items-center bg-theme-card rounded-b-2xl">
               <span className="text-sm text-theme-muted font-medium">
                 Size: {(selectedImage.size / 1024).toFixed(2)} KB
               </span>
-              <button
-                onClick={() => setSelectedImage(null)}
-                className="px-6 py-2.5 bg-theme-primary hover:bg-theme-primary/90 rounded-lg text-sm font-medium transition-all text-white shadow-lg hover:scale-105"
-              >
-                Close
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    setAssetToReplace({
+                      path: selectedImage.path,
+                      url: selectedImage.url,
+                      name: selectedImage.name,
+                      type: "titlecard",
+                    });
+                    setReplacerOpen(true);
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium transition-all text-white shadow-lg"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  Replace
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDeleteConfirm({
+                      path: selectedImage.path,
+                      name: selectedImage.name,
+                    });
+                  }}
+                  disabled={deletingImage === selectedImage.path}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all text-white shadow-lg ${
+                    deletingImage === selectedImage.path
+                      ? "bg-gray-600 cursor-not-allowed"
+                      : "bg-red-600 hover:bg-red-700"
+                  }`}
+                >
+                  <Trash2
+                    className={`w-4 h-4 ${
+                      deletingImage === selectedImage.path ? "animate-spin" : ""
+                    }`}
+                  />
+                  Delete
+                </button>
+                <button
+                  onClick={() => setSelectedImage(null)}
+                  className="px-6 py-2.5 bg-theme-primary hover:bg-theme-primary/90 rounded-lg text-sm font-medium transition-all text-white shadow-lg"
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         </div>
