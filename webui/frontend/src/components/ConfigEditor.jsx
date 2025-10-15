@@ -77,9 +77,9 @@ const CONFIG_TOOLTIPS = {
   PlexLibstoExclude:
     "Plex libraries, by name, to exclude from processing (comma-separated list)",
   PlexUrl:
-    "Plex server URL (e.g., http://192.168.1.1:32400 or http://myplexserver.com:32400)",
+    "Plex server URL (e.g., http://192.168.1.1:32400 or http://myplexserver.com:32400). This field is only enabled when Plex is selected as your active media server",
   UsePlex:
-    "If set to true, you tell the script to use a Plex Server (Default: true). Do not enable more than one media server",
+    "Enable Plex as your media server. NOTE: Only ONE media server can be active at a time (Plex, Jellyfin, or Emby)",
   PlexUploadExistingAssets:
     "If set to true, the script will check local assets and upload them to Plex, but only if Plex does not already have EXIF data from Posterizarr, Kometa, or TCM",
   PlexUpload:
@@ -89,25 +89,29 @@ const CONFIG_TOOLTIPS = {
   JellyfinLibstoExclude:
     "Jellyfin libraries, by local folder name, to exclude from processing (comma-separated list)",
   JellyfinUrl:
-    "Jellyfin server URL (e.g., http://192.168.1.1:8096 or http://myplexserver.com:8096)",
+    "Jellyfin server URL (e.g., http://192.168.1.1:8096 or http://myplexserver.com:8096). This field is enabled when either Jellyfin is selected as your active media server OR when JellySync is enabled",
   UseJellyfin:
-    "If set to true, you tell the script to use a Jellyfin Server (Default: false). Do not enable more than one media server",
+    "Enable Jellyfin as your media server. NOTE: Only ONE media server can be active at a time (Plex, Jellyfin, or Emby)",
+  UseJellySync:
+    "Enable synchronization with your Jellyfin server. When enabled, the Jellyfin URL and API Key fields become available for configuration. NOTE: This toggle is disabled when Jellyfin is selected as the active media server",
   JellyfinUploadExistingAssets:
-    "If set to true, the script will check local assets and upload them to Jellyfin, but only if Jellyfin does not already have EXIF data from Posterizarr, Kometa, or TCM",
+    "If set to true, the script will check local assets and upload them to Jellyfin, but only if Jellyfin does not already have EXIF data from Posterizarr, Kometa, or TCM. NOTE: This requires UseJellyfin to be enabled",
   JellyfinReplaceThumbwithBackdrop:
-    "If set to true, the script will replace the Thumb picture with the backdrop image. This only occurs if BackgroundPosters is also set to true",
+    "If set to true, the script will replace the Thumb picture with the backdrop image. This only occurs if BackgroundPosters is also set to true. NOTE: This requires UseJellyfin to be enabled",
 
   // EmbyPart
   EmbyLibstoExclude:
     "Emby libraries, by local folder name, to exclude from processing (comma-separated list)",
   EmbyUrl:
-    "Emby server URL (e.g., http://192.168.1.1:8096/emby or http://myplexserver.com:8096/emby)",
+    "Emby server URL (e.g., http://192.168.1.1:8096/emby or http://myplexserver.com:8096/emby). This field is enabled when either Emby is selected as your active media server OR when EmbySync is enabled",
   UseEmby:
-    "If set to true, you tell the script to use an Emby Server (Default: false). Do not enable more than one media server",
+    "Enable Emby as your media server. NOTE: Only ONE media server can be active at a time (Plex, Jellyfin, or Emby)",
+  UseEmbySync:
+    "Enable synchronization with your Emby server. When enabled, the Emby URL and API Key fields become available for configuration. NOTE: This toggle is disabled when Emby is selected as the active media server",
   EmbyUploadExistingAssets:
-    "If set to true, the script will check local assets and upload them to Emby, but only if Emby does not already have EXIF data from Posterizarr, Kometa, or TCM",
+    "If set to true, the script will check local assets and upload them to Emby, but only if Emby does not already have EXIF data from Posterizarr, Kometa, or TCM. NOTE: This requires UseEmby to be enabled",
   EmbyReplaceThumbwithBackdrop:
-    "If set to true, the script will replace the Thumb picture with the backdrop image. This only occurs if BackgroundPosters is also set to true",
+    "If set to true, the script will replace the Thumb picture with the backdrop image. This only occurs if BackgroundPosters is also set to true. NOTE: This requires UseEmby to be enabled",
 
   // Notification
   SendNotification:
@@ -437,6 +441,10 @@ function ConfigEditor() {
   const [previewFont, setPreviewFont] = useState(null); // For font preview modal
   const hasInitializedGroups = useRef(false);
   const initialAuthStatus = useRef(null); // Track initial auth status when config is loaded
+
+  // UI-only state for Sync toggles (not saved to config)
+  const [useJellySync, setUseJellySync] = useState(false);
+  const [useEmbySync, setUseEmbySync] = useState(false);
 
   // List of overlay file fields
   const OVERLAY_FILE_FIELDS = [
@@ -1002,6 +1010,78 @@ function ConfigEditor() {
     return getGroupIcon(groupName);
   };
 
+  // Helper function to check if a media server field should be disabled
+  const isFieldDisabled = (key) => {
+    if (!config) return false;
+
+    const getValue = (fieldKey) => {
+      const val = usingFlatStructure
+        ? config[fieldKey]
+        : config[fieldKey.split(".")[0]]?.[fieldKey.split(".")[1]];
+      return val === "true" || val === true;
+    };
+
+    // Check media server status
+    const plexEnabled = getValue("UsePlex");
+    const jellyfinEnabled = getValue("UseJellyfin");
+    const embyEnabled = getValue("UseEmby");
+
+    // === PLEX FIELDS ===
+    // All Plex fields are disabled if Plex is not enabled
+    const plexFields = [
+      "PlexUrl",
+      "PlexToken",
+      "PlexLibstoExclude",
+      "PlexUploadExistingAssets",
+      "PlexUpload",
+    ];
+    if (plexFields.includes(key) && !plexEnabled) {
+      return true;
+    }
+
+    // === JELLYFIN FIELDS ===
+    // Connection fields (URL, API, Libs) are enabled if Jellyfin OR JellySync is enabled
+    const jellyfinConnectionFields = [
+      "JellyfinUrl",
+      "JellyfinAPIKey",
+      "JellyfinLibstoExclude",
+    ];
+    if (
+      jellyfinConnectionFields.includes(key) &&
+      !jellyfinEnabled &&
+      !useJellySync
+    ) {
+      return true;
+    }
+
+    // Upload/Replace fields ONLY depend on UseJellyfin (NOT on Sync)
+    const jellyfinUploadFields = [
+      "JellyfinUploadExistingAssets",
+      "JellyfinReplaceThumbwithBackdrop",
+    ];
+    if (jellyfinUploadFields.includes(key) && !jellyfinEnabled) {
+      return true;
+    }
+
+    // === EMBY FIELDS ===
+    // Connection fields (URL, API, Libs) are enabled if Emby OR EmbySync is enabled
+    const embyConnectionFields = ["EmbyUrl", "EmbyAPIKey", "EmbyLibstoExclude"];
+    if (embyConnectionFields.includes(key) && !embyEnabled && !useEmbySync) {
+      return true;
+    }
+
+    // Upload/Replace fields ONLY depend on UseEmby (NOT on Sync)
+    const embyUploadFields = [
+      "EmbyUploadExistingAssets",
+      "EmbyReplaceThumbwithBackdrop",
+    ];
+    if (embyUploadFields.includes(key) && !embyEnabled) {
+      return true;
+    }
+
+    return false;
+  };
+
   const renderInput = (groupName, key, value) => {
     const Icon = getInputIcon(key, value);
     const fieldKey = usingFlatStructure ? key : `${groupName}.${key}`;
@@ -1192,40 +1272,46 @@ function ConfigEditor() {
 
     // ============ LIBRARY EXCLUSION SELECTOR ============
     if (key === "PlexLibstoExclude") {
+      const disabled = isFieldDisabled(key);
+
       return (
         <LibraryExclusionSelector
           value={Array.isArray(value) ? value : []}
           onChange={(newValue) => updateValue(fieldKey, newValue)}
-          label={displayName}
           helpText={CONFIG_TOOLTIPS[key]}
           mediaServerType="plex"
           config={config}
+          disabled={disabled}
         />
       );
     }
 
     if (key === "JellyfinLibstoExclude") {
+      const disabled = isFieldDisabled(key);
+
       return (
         <LibraryExclusionSelector
           value={Array.isArray(value) ? value : []}
           onChange={(newValue) => updateValue(fieldKey, newValue)}
-          label={displayName}
           helpText={CONFIG_TOOLTIPS[key]}
           mediaServerType="jellyfin"
           config={config}
+          disabled={disabled}
         />
       );
     }
 
     if (key === "EmbyLibstoExclude") {
+      const disabled = isFieldDisabled(key);
+
       return (
         <LibraryExclusionSelector
           value={Array.isArray(value) ? value : []}
           onChange={(newValue) => updateValue(fieldKey, newValue)}
-          label={displayName}
           helpText={CONFIG_TOOLTIPS[key]}
           mediaServerType="emby"
           config={config}
+          disabled={disabled}
         />
       );
     }
@@ -1368,15 +1454,47 @@ function ConfigEditor() {
       const isEnabled =
         value === "true" || value === true || value === "True" || value === 1;
 
+      // Special handling for Media Server toggles (only one can be active)
+      const isMediaServerToggle = [
+        "UsePlex",
+        "UseJellyfin",
+        "UseEmby",
+      ].includes(key);
+
+      // Check if this field should be disabled
+      const disabled = isFieldDisabled(key);
+
       return (
-        <div className="flex items-center justify-between h-[42px] px-4 bg-theme-bg rounded-lg border border-theme hover:border-theme-primary/30 transition-all">
+        <div
+          className={`flex items-center justify-between h-[42px] px-4 bg-theme-bg rounded-lg border border-theme transition-all ${
+            disabled
+              ? "opacity-50 cursor-not-allowed"
+              : "hover:border-theme-primary/30"
+          }`}
+        >
           <div className="text-sm font-medium text-theme-text">
             {displayName}
+            {disabled && (
+              <span className="text-xs text-theme-muted ml-2">
+                (Requires{" "}
+                {key.includes("Plex")
+                  ? "Plex"
+                  : key.includes("Jellyfin")
+                  ? "Jellyfin"
+                  : "Emby"}{" "}
+                to be enabled)
+              </span>
+            )}
           </div>
-          <label className="relative inline-flex items-center cursor-pointer">
+          <label
+            className={`relative inline-flex items-center ${
+              disabled ? "cursor-not-allowed" : "cursor-pointer"
+            }`}
+          >
             <input
               type="checkbox"
               checked={isEnabled}
+              disabled={disabled}
               onChange={(e) => {
                 // Decide based on field type which value to save
                 let newValue;
@@ -1392,12 +1510,23 @@ function ConfigEditor() {
                   newValue = e.target.checked ? "true" : "false";
                 }
 
+                // Special handling for Media Server toggles - Radio button behavior
+                if (isMediaServerToggle && e.target.checked) {
+                  // When turning ON a media server, turn OFF the others
+                  const serverFields = ["UsePlex", "UseJellyfin", "UseEmby"];
+                  serverFields.forEach((serverKey) => {
+                    if (serverKey !== key) {
+                      updateValue(serverKey, "false");
+                    }
+                  });
+                }
+
                 updateValue(fieldKey, newValue);
               }}
               className="sr-only peer"
               id={`${groupName}-${key}`}
             />
-            <div className="w-11 h-6 bg-gray-600 rounded-full peer peer-focus:ring-2 peer-focus:ring-theme-primary peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-theme-primary"></div>
+            <div className="w-11 h-6 bg-gray-600 rounded-full peer peer-focus:ring-2 peer-focus:ring-theme-primary peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-theme-primary peer-disabled:opacity-50 peer-disabled:cursor-not-allowed"></div>
           </label>
         </div>
       );
@@ -1465,6 +1594,8 @@ function ConfigEditor() {
 
     // Plex Token mit Validate-Button
     if (key === "PlexToken") {
+      const disabled = isFieldDisabled(key);
+
       return (
         <div className="space-y-2">
           <div className="flex gap-2">
@@ -1473,10 +1604,19 @@ function ConfigEditor() {
                 type="text"
                 value={stringValue}
                 onChange={(e) => updateValue(fieldKey, e.target.value)}
-                className="w-full h-[42px] px-4 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono pr-10"
-                placeholder="Enter Plex token"
+                disabled={disabled}
+                className={`w-full h-[42px] px-4 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono pr-10 ${
+                  disabled ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+                placeholder={
+                  disabled ? "Enable Plex first" : "Enter Plex token"
+                }
               />
-              <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-muted" />
+              <Lock
+                className={`absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-muted ${
+                  disabled ? "opacity-50" : ""
+                }`}
+              />
             </div>
             <ValidateButton
               type="plex"
@@ -1484,10 +1624,13 @@ function ConfigEditor() {
               label="Validate"
               onSuccess={showSuccess}
               onError={showError}
+              disabled={disabled}
             />
           </div>
           <p className="text-xs text-theme-muted">
-            Your Plex authentication token
+            {disabled
+              ? "This field is only available when Plex is selected as your media server"
+              : "Your Plex authentication token"}
           </p>
         </div>
       );
@@ -1495,6 +1638,8 @@ function ConfigEditor() {
 
     // Jellyfin API Key mit Validate-Button
     if (key === "JellyfinAPIKey") {
+      const disabled = isFieldDisabled(key);
+
       return (
         <div className="space-y-2">
           <div className="flex gap-2">
@@ -1503,10 +1648,21 @@ function ConfigEditor() {
                 type="text"
                 value={stringValue}
                 onChange={(e) => updateValue(fieldKey, e.target.value)}
-                className="w-full h-[42px] px-4 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono pr-10"
-                placeholder="Enter Jellyfin API key"
+                disabled={disabled}
+                className={`w-full h-[42px] px-4 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono pr-10 ${
+                  disabled ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+                placeholder={
+                  disabled
+                    ? "Enable Jellyfin or JellySync first"
+                    : "Enter Jellyfin API key"
+                }
               />
-              <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-muted" />
+              <Lock
+                className={`absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-muted ${
+                  disabled ? "opacity-50" : ""
+                }`}
+              />
             </div>
             <ValidateButton
               type="jellyfin"
@@ -1514,10 +1670,13 @@ function ConfigEditor() {
               label="Validate"
               onSuccess={showSuccess}
               onError={showError}
+              disabled={disabled}
             />
           </div>
           <p className="text-xs text-theme-muted">
-            Create API key in Jellyfin at Settings → Advanced → API Keys
+            {disabled
+              ? "This field is available when Jellyfin is selected as your media server OR when JellySync is enabled"
+              : "Create API key in Jellyfin at Settings → Advanced → API Keys"}
           </p>
         </div>
       );
@@ -1525,6 +1684,8 @@ function ConfigEditor() {
 
     // Emby API Key mit Validate-Button
     if (key === "EmbyAPIKey") {
+      const disabled = isFieldDisabled(key);
+
       return (
         <div className="space-y-2">
           <div className="flex gap-2">
@@ -1533,10 +1694,21 @@ function ConfigEditor() {
                 type="text"
                 value={stringValue}
                 onChange={(e) => updateValue(fieldKey, e.target.value)}
-                className="w-full h-[42px] px-4 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono pr-10"
-                placeholder="Enter Emby API key"
+                disabled={disabled}
+                className={`w-full h-[42px] px-4 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono pr-10 ${
+                  disabled ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+                placeholder={
+                  disabled
+                    ? "Enable Emby or EmbySync first"
+                    : "Enter Emby API key"
+                }
               />
-              <Lock className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-muted" />
+              <Lock
+                className={`absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-muted ${
+                  disabled ? "opacity-50" : ""
+                }`}
+              />
             </div>
             <ValidateButton
               type="emby"
@@ -1544,10 +1716,115 @@ function ConfigEditor() {
               label="Validate"
               onSuccess={showSuccess}
               onError={showError}
+              disabled={disabled}
             />
           </div>
           <p className="text-xs text-theme-muted">
-            Create API key in Emby at Settings → Advanced → API Keys
+            {disabled
+              ? "This field is available when Emby is selected as your media server OR when EmbySync is enabled"
+              : "Create API key in Emby at Settings → Advanced → API Keys"}
+          </p>
+        </div>
+      );
+    }
+
+    // ============ MEDIA SERVER URL FIELDS ============
+
+    // Plex URL
+    if (key === "PlexUrl") {
+      const disabled = isFieldDisabled(key);
+
+      return (
+        <div className="space-y-2">
+          <textarea
+            value={stringValue}
+            onChange={(e) => {
+              updateValue(fieldKey, e.target.value);
+              autoResize(e.target);
+            }}
+            onInput={(e) => autoResize(e.target)}
+            ref={(textarea) => textarea && autoResize(textarea)}
+            disabled={disabled}
+            rows={1}
+            className={`w-full px-4 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono text-sm resize-none overflow-hidden min-h-[42px] ${
+              disabled ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+            placeholder={
+              disabled ? "Enable Plex first" : "http://192.168.1.1:32400"
+            }
+          />
+          <p className="text-xs text-theme-muted">
+            {disabled
+              ? "This field is only available when Plex is selected as your media server"
+              : "Your Plex server URL (e.g., http://192.168.1.1:32400)"}
+          </p>
+        </div>
+      );
+    }
+
+    // Jellyfin URL
+    if (key === "JellyfinUrl") {
+      const disabled = isFieldDisabled(key);
+
+      return (
+        <div className="space-y-2">
+          <textarea
+            value={stringValue}
+            onChange={(e) => {
+              updateValue(fieldKey, e.target.value);
+              autoResize(e.target);
+            }}
+            onInput={(e) => autoResize(e.target)}
+            ref={(textarea) => textarea && autoResize(textarea)}
+            disabled={disabled}
+            rows={1}
+            className={`w-full px-4 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono text-sm resize-none overflow-hidden min-h-[42px] ${
+              disabled ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+            placeholder={
+              disabled
+                ? "Enable Jellyfin or JellySync first"
+                : "http://192.168.1.1:8096"
+            }
+          />
+          <p className="text-xs text-theme-muted">
+            {disabled
+              ? "This field is available when Jellyfin is selected as your media server OR when JellySync is enabled"
+              : "Your Jellyfin server URL (e.g., http://192.168.1.1:8096)"}
+          </p>
+        </div>
+      );
+    }
+
+    // Emby URL
+    if (key === "EmbyUrl") {
+      const disabled = isFieldDisabled(key);
+
+      return (
+        <div className="space-y-2">
+          <textarea
+            value={stringValue}
+            onChange={(e) => {
+              updateValue(fieldKey, e.target.value);
+              autoResize(e.target);
+            }}
+            onInput={(e) => autoResize(e.target)}
+            ref={(textarea) => textarea && autoResize(textarea)}
+            disabled={disabled}
+            rows={1}
+            className={`w-full px-4 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono text-sm resize-none overflow-hidden min-h-[42px] ${
+              disabled ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+            placeholder={
+              disabled
+                ? "Enable Emby or EmbySync first"
+                : "http://192.168.1.1:8096/emby"
+            }
+          />
+          <p className="text-xs text-theme-muted">
+            {disabled
+              ? "This field is available when Emby is selected as your media server OR when EmbySync is enabled"
+              : "Your Emby server URL (e.g., http://192.168.1.1:8096/emby)"}
           </p>
         </div>
       );
@@ -2467,14 +2744,18 @@ function ConfigEditor() {
               {isExpanded && (
                 <div className="px-6 pb-6 border-t border-theme bg-theme-bg/30">
                   <div className="pt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {fields.map((key) => {
+                    {fields.map((key, index) => {
                       const value = usingFlatStructure
                         ? config[key]
                         : config[groupName]?.[key];
 
                       const displayName = getDisplayName(key);
 
-                      return (
+                      // Create array to hold the field(s) to render
+                      const fieldsToRender = [];
+
+                      // Main field
+                      fieldsToRender.push(
                         <div key={key} className="space-y-3">
                           <label className="block">
                             <div className="flex items-center justify-between mb-3">
@@ -2498,6 +2779,140 @@ function ConfigEditor() {
                           </label>
                         </div>
                       );
+
+                      // Insert UseJellySync after UseJellyfin
+                      if (
+                        key === "UseJellyfin" &&
+                        (groupName === "JellyfinPart" ||
+                          groupName === "Jellyfin Settings")
+                      ) {
+                        // Check if UseJellyfin is enabled - if yes, disable the Sync toggle
+                        const jellyfinEnabled = usingFlatStructure
+                          ? config["UseJellyfin"] === "true" ||
+                            config["UseJellyfin"] === true
+                          : config["JellyfinPart"]?.UseJellyfin === "true" ||
+                            config["JellyfinPart"]?.UseJellyfin === true;
+
+                        fieldsToRender.push(
+                          <div key="UseJellySync-ui" className="space-y-3">
+                            <label className="block">
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-semibold text-theme-primary">
+                                    Use JellySync
+                                  </span>
+                                  {CONFIG_TOOLTIPS["UseJellySync"] && (
+                                    <Tooltip
+                                      text={CONFIG_TOOLTIPS["UseJellySync"]}
+                                    >
+                                      <HelpCircle className="w-4 h-4 text-theme-muted hover:text-theme-primary cursor-help transition-colors" />
+                                    </Tooltip>
+                                  )}
+                                </div>
+                                <span className="text-xs text-theme-muted font-mono bg-theme-bg px-2 py-1 rounded">
+                                  UI Only
+                                </span>
+                              </div>
+                              <div
+                                className={`flex items-center justify-between h-[42px] px-4 bg-theme-bg rounded-lg border border-theme transition-all ${
+                                  jellyfinEnabled
+                                    ? "opacity-50 cursor-not-allowed"
+                                    : "hover:border-theme-primary/30"
+                                }`}
+                              >
+                                <div className="text-sm font-medium text-theme-text">
+                                  Use JellySync
+                                  {jellyfinEnabled && (
+                                    <span className="text-xs text-theme-muted ml-2">
+                                      (Disabled when Jellyfin is active)
+                                    </span>
+                                  )}
+                                </div>
+                                <label className="relative inline-flex items-center cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={useJellySync}
+                                    onChange={(e) =>
+                                      setUseJellySync(e.target.checked)
+                                    }
+                                    disabled={jellyfinEnabled}
+                                    className="sr-only peer"
+                                  />
+                                  <div className="w-11 h-6 bg-gray-600 rounded-full peer peer-focus:ring-2 peer-focus:ring-theme-primary peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-theme-primary peer-disabled:opacity-50 peer-disabled:cursor-not-allowed"></div>
+                                </label>
+                              </div>
+                            </label>
+                          </div>
+                        );
+                      }
+
+                      // Insert UseEmbySync after UseEmby
+                      if (
+                        key === "UseEmby" &&
+                        (groupName === "EmbyPart" ||
+                          groupName === "Emby Settings")
+                      ) {
+                        // Check if UseEmby is enabled - if yes, disable the Sync toggle
+                        const embyEnabled = usingFlatStructure
+                          ? config["UseEmby"] === "true" ||
+                            config["UseEmby"] === true
+                          : config["EmbyPart"]?.UseEmby === "true" ||
+                            config["EmbyPart"]?.UseEmby === true;
+
+                        fieldsToRender.push(
+                          <div key="UseEmbySync-ui" className="space-y-3">
+                            <label className="block">
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-semibold text-theme-primary">
+                                    Use EmbySync
+                                  </span>
+                                  {CONFIG_TOOLTIPS["UseEmbySync"] && (
+                                    <Tooltip
+                                      text={CONFIG_TOOLTIPS["UseEmbySync"]}
+                                    >
+                                      <HelpCircle className="w-4 h-4 text-theme-muted hover:text-theme-primary cursor-help transition-colors" />
+                                    </Tooltip>
+                                  )}
+                                </div>
+                                <span className="text-xs text-theme-muted font-mono bg-theme-bg px-2 py-1 rounded">
+                                  UI Only
+                                </span>
+                              </div>
+                              <div
+                                className={`flex items-center justify-between h-[42px] px-4 bg-theme-bg rounded-lg border border-theme transition-all ${
+                                  embyEnabled
+                                    ? "opacity-50 cursor-not-allowed"
+                                    : "hover:border-theme-primary/30"
+                                }`}
+                              >
+                                <div className="text-sm font-medium text-theme-text">
+                                  Use EmbySync
+                                  {embyEnabled && (
+                                    <span className="text-xs text-theme-muted ml-2">
+                                      (Disabled when Emby is active)
+                                    </span>
+                                  )}
+                                </div>
+                                <label className="relative inline-flex items-center cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={useEmbySync}
+                                    onChange={(e) =>
+                                      setUseEmbySync(e.target.checked)
+                                    }
+                                    disabled={embyEnabled}
+                                    className="sr-only peer"
+                                  />
+                                  <div className="w-11 h-6 bg-gray-600 rounded-full peer peer-focus:ring-2 peer-focus:ring-theme-primary peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-theme-primary peer-disabled:opacity-50 peer-disabled:cursor-not-allowed"></div>
+                                </label>
+                              </div>
+                            </label>
+                          </div>
+                        );
+                      }
+
+                      return fieldsToRender;
                     })}
                   </div>
                 </div>

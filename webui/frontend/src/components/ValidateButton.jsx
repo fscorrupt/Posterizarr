@@ -10,6 +10,7 @@ const ValidateButton = ({
   className = "",
   onSuccess,
   onError,
+  disabled = false,
 }) => {
   const [validating, setValidating] = useState(false);
   const [lastResult, setLastResult] = useState(null);
@@ -117,13 +118,13 @@ const ValidateButton = ({
   return (
     <button
       onClick={validateService}
-      disabled={validating}
+      disabled={validating || disabled}
       className={`
         inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium
         transition-all duration-200 min-w-[120px] justify-center
         ${
-          validating
-            ? "bg-theme-muted/20 text-theme-muted cursor-not-allowed"
+          validating || disabled
+            ? "bg-theme-muted/20 text-theme-muted cursor-not-allowed opacity-50"
             : lastResult?.valid
             ? "bg-green-500/20 text-green-400 border border-green-500/30 hover:bg-green-500/30"
             : lastResult?.valid === false

@@ -8,6 +8,7 @@ const LibraryExclusionSelector = ({
   helpText,
   mediaServerType, // 'plex', 'jellyfin', or 'emby'
   config, // Full config object to get connection details
+  disabled = false, // New prop for disabled state
 }) => {
   const [excludedLibraries, setExcludedLibraries] = useState([]);
   const [availableLibraries, setAvailableLibraries] = useState([]);
@@ -117,20 +118,45 @@ const LibraryExclusionSelector = ({
   };
 
   return (
-    <div className="space-y-3">
+    <div
+      className={`space-y-3 ${
+        disabled ? "opacity-50 pointer-events-none" : ""
+      }`}
+    >
       {label && (
         <label className="block text-sm font-medium text-theme-text">
           {label}
         </label>
       )}
 
+      {/* Disabled Message */}
+      {disabled && (
+        <div className="flex items-start gap-3 px-4 py-3 bg-theme-muted/10 border border-theme rounded-lg">
+          <AlertCircle className="w-5 h-5 text-theme-muted flex-shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-sm text-theme-muted font-medium">
+              Library selection is currently disabled
+            </p>
+            <p className="text-xs text-theme-muted/80 mt-1">
+              Enable{" "}
+              {mediaServerType.charAt(0).toUpperCase() +
+                mediaServerType.slice(1)}{" "}
+              server or{" "}
+              {mediaServerType.charAt(0).toUpperCase() +
+                mediaServerType.slice(1)}
+              Sync to access this feature
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Fetch Libraries Button */}
       <div className="flex gap-2">
         <button
           onClick={fetchLibraries}
-          disabled={loadingLibraries}
+          disabled={loadingLibraries || disabled}
           className={`flex items-center gap-2 px-4 py-2.5 bg-theme-primary/20 hover:bg-theme-primary/30 border border-theme-primary/30 rounded-lg font-medium transition-all ${
-            loadingLibraries ? "opacity-50 cursor-not-allowed" : ""
+            loadingLibraries || disabled ? "opacity-50 cursor-not-allowed" : ""
           }`}
         >
           {loadingLibraries ? (
@@ -143,7 +169,7 @@ const LibraryExclusionSelector = ({
           </span>
         </button>
 
-        {librariesFetched && availableLibraries.length > 0 && (
+        {librariesFetched && availableLibraries.length > 0 && !disabled && (
           <>
             <button
               onClick={clearAll}
