@@ -105,6 +105,16 @@ def sync_csv_to_database(csv_path: Path, db_path: Path) -> int:
                 image_type = row["Type"].strip('"')
                 rootfolder = row["Rootfolder"].strip('"')
 
+                # Skip empty or invalid rows
+                if (
+                    not title
+                    or title.upper() == "UNKNOWN"
+                    or not image_type
+                    or not rootfolder
+                ):
+                    records_skipped += 1
+                    continue
+
                 # Check if record already exists
                 cursor.execute(
                     """

@@ -86,6 +86,11 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
     let folderName = null;
     let libraryName = null;
 
+    // Priority 1: Use asset.name if provided (from MissingAssets or other sources)
+    if (asset.name) {
+      title = asset.name;
+    }
+
     // Extract library name (parent folder: "4K", "TV", etc.)
     const pathSegments = asset.path?.split(/[\/\\]/).filter(Boolean);
     if (pathSegments && pathSegments.length > 0) {
@@ -103,6 +108,11 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
       }
     }
 
+    // Use asset.library_name if provided (from MissingAssets)
+    if (asset.library_name) {
+      libraryName = asset.library_name;
+    }
+
     // Determine asset type first (needed for title extraction logic)
     let assetType = "poster";
     if (asset.path?.includes("background") || asset.type === "background") {
@@ -114,7 +124,7 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
     }
 
     // For seasons and titlecards, extract title from parent folder (show name)
-    if (assetType === "season" || assetType === "titlecard") {
+    if (!title && (assetType === "season" || assetType === "titlecard")) {
       // Path format: ".../Show Name (Year) {tvdb-123}/Season01/..." or ".../Show Name (Year) {tvdb-123}/S01E01.jpg"
 
       if (pathSegments && pathSegments.length > 1) {
@@ -147,14 +157,16 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
           // Extract title and year from show folder: "Show Name (2020) {tvdb-123}"
           const showMatch = showFolder.match(/^(.+?)\s*\((\d{4})\)\s*\{/);
           if (showMatch) {
-            title = showMatch[1].trim();
+            if (!title) title = showMatch[1].trim();
             year = parseInt(showMatch[2]);
           } else {
             // Fallback: clean the folder name
-            title = showFolder
-              .replace(/\s*\(\d{4}\)\s*/, "")
-              .replace(/\s*\{[^}]+\}\s*/, "")
-              .trim();
+            if (!title) {
+              title = showFolder
+                .replace(/\s*\(\d{4}\)\s*/, "")
+                .replace(/\s*\{[^}]+\}\s*/, "")
+                .trim();
+            }
 
             // Try to extract year separately
             const yearMatch = showFolder.match(/\((\d{4})\)/);
@@ -164,7 +176,7 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
           }
         }
       }
-    } else {
+    } else if (!title) {
       // For movies/posters/backgrounds: extract from the main folder/file
       // Try to extract title and year from common patterns
       const titleYearMatch = asset.path?.match(
@@ -217,8 +229,29 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
     }
 
     // Determine media type
-    const isMovie = asset.path?.includes("4K") || asset.type === "movie";
-    const mediaType = isMovie ? "movie" : "tv";
+    // Priority: 1) Explicit asset.media_type hint 2) Library folder detection 3) Asset type detection
+    let mediaType = "movie"; // default
+
+    if (asset.media_type) {
+      // Use explicit hint if provided (from MissingAssets or other sources)
+      mediaType = asset.media_type;
+    } else if (asset.library_name) {
+      // Check library name for TV indicators
+      const tvLibraries = ["TV", "Shows", "Series", "Television"];
+      const isTVLibrary = tvLibraries.some((lib) =>
+        asset.library_name.toLowerCase().includes(lib.toLowerCase())
+      );
+      mediaType = isTVLibrary ? "tv" : "movie";
+    } else {
+      // Fall back to path-based detection
+      const isMovie =
+        asset.path?.includes("4K") ||
+        asset.path?.includes("Movies") ||
+        asset.type === "movie" ||
+        assetType === "poster" ||
+        assetType === "background";
+      mediaType = isMovie ? "movie" : "tv";
+    }
 
     // Extract season/episode numbers
     const seasonMatch = asset.path?.match(/Season(\d+)/);
@@ -303,15 +336,21 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
 
   // Initialize title text from metadata
   useEffect(() => {
-    if (metadata.title) {
+    if (metadata.title || asset.folder_name || asset.library_name) {
       setManualForm((prev) => ({
         ...prev,
         titletext: metadata.title,
-        foldername: metadata.folder_name || "",
-        libraryname: metadata.library_name || "",
+        foldername: asset.folder_name || metadata.folder_name || "",
+        libraryname: asset.library_name || metadata.library_name || "",
       }));
     }
-  }, [metadata.title, metadata.folder_name, metadata.library_name]);
+  }, [
+    metadata.title,
+    metadata.folder_name,
+    metadata.library_name,
+    asset.folder_name,
+    asset.library_name,
+  ]);
 
   // Format display name with metadata
   const getDisplayName = () => {

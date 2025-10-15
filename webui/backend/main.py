@@ -1175,6 +1175,12 @@ class UILogBatch(BaseModel):
     logs: list[UILogEntry]
 
 
+class RemoveAssetRequest(BaseModel):
+    title: str
+    type: str
+    rootfolder: str
+
+
 class ScheduleCreate(BaseModel):
     time: str  # Format: "HH:MM"
     description: Optional[str] = ""
@@ -1507,6 +1513,174 @@ async def preview_overlay_file(filename: str):
         raise
     except Exception as e:
         logger.error(f"Error serving overlay file: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================================================
+# MISSING ASSETS ENDPOINT
+# ============================================================================
+
+
+@app.get("/api/missing-assets")
+async def get_missing_assets():
+    """Get list of all assets from database with categorization data"""
+    try:
+        import sqlite3
+
+        db_path = APP_DIR / "database" / "posterizarr.db"
+
+        if not db_path.exists():
+            logger.warning("Database not found, returning empty assets list")
+            return {"success": True, "assets": []}
+
+        # Connect to database
+        conn = sqlite3.connect(str(db_path))
+        conn.row_factory = sqlite3.Row  # Enable column access by name
+        cursor = conn.cursor()
+
+        # Query all assets with all relevant columns
+        cursor.execute(
+            """
+            SELECT 
+                title,
+                type,
+                rootfolder,
+                library_name,
+                language,
+                fallback,
+                text_truncated,
+                download_source,
+                fav_provider_link,
+                is_manually_created,
+                created_at
+            FROM image_choices
+            ORDER BY library_name, title
+        """
+        )
+
+        rows = cursor.fetchall()
+        assets = [dict(row) for row in rows]
+
+        conn.close()
+
+        logger.info(f"Found {len(assets)} assets in database")
+        return {"success": True, "assets": assets}
+
+    except Exception as e:
+        logger.error(f"Error getting assets: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/missing-assets/remove")
+async def remove_asset_from_database(request: RemoveAssetRequest):
+    """Remove an asset from the database"""
+    try:
+        import sqlite3
+
+        title = request.title
+        asset_type = request.type
+        rootfolder = request.rootfolder
+
+        db_path = APP_DIR / "database" / "posterizarr.db"
+
+        if not db_path.exists():
+            logger.warning("Database not found")
+            return {"success": False, "error": "Database not found"}
+
+        # Connect to database
+        conn = sqlite3.connect(str(db_path))
+        cursor = conn.cursor()
+
+        # Build DELETE query based on available fields
+        # Handle cases where fields might be empty or NULL
+        if title and asset_type and rootfolder:
+            # All fields available - use exact match
+            cursor.execute(
+                """
+                DELETE FROM image_choices 
+                WHERE title = ? AND type = ? AND rootfolder = ?
+            """,
+                (title, asset_type, rootfolder),
+            )
+        elif title and asset_type:
+            # No rootfolder - match by title and type
+            cursor.execute(
+                """
+                DELETE FROM image_choices 
+                WHERE title = ? AND type = ?
+            """,
+                (title, asset_type),
+            )
+        elif title:
+            # Only title - match by title only
+            cursor.execute(
+                """
+                DELETE FROM image_choices 
+                WHERE title = ?
+            """,
+                (title,),
+            )
+        else:
+            # No valid fields - cannot delete
+            conn.close()
+            raise HTTPException(
+                status_code=400, detail="At least title is required to delete"
+            )
+
+        deleted_count = cursor.rowcount
+        conn.commit()
+        conn.close()
+
+        if deleted_count > 0:
+            logger.info(
+                f"Removed {deleted_count} asset(s) from database: {title} ({asset_type})"
+            )
+            return {"success": True, "deleted": deleted_count}
+        else:
+            logger.warning(f"Asset not found in database: {title} ({asset_type})")
+            return {"success": False, "error": "Asset not found"}
+
+    except Exception as e:
+        logger.error(f"Error removing asset from database: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/missing-assets/cleanup")
+async def cleanup_invalid_assets():
+    """Remove all invalid/UNKNOWN assets from the database"""
+    try:
+        import sqlite3
+
+        db_path = APP_DIR / "database" / "posterizarr.db"
+
+        if not db_path.exists():
+            logger.warning("Database not found")
+            return {"success": False, "error": "Database not found"}
+
+        # Connect to database
+        conn = sqlite3.connect(str(db_path))
+        cursor = conn.cursor()
+
+        # Delete invalid entries
+        cursor.execute(
+            """
+            DELETE FROM image_choices 
+            WHERE title = '' OR title IS NULL 
+               OR UPPER(title) = 'UNKNOWN'
+               OR type = '' OR type IS NULL
+               OR rootfolder = '' OR rootfolder IS NULL
+        """
+        )
+
+        deleted_count = cursor.rowcount
+        conn.commit()
+        conn.close()
+
+        logger.info(f"Cleaned up {deleted_count} invalid asset(s) from database")
+        return {"success": True, "deleted": deleted_count}
+
+    except Exception as e:
+        logger.error(f"Error cleaning up invalid assets: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -5765,22 +5939,116 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                 elif year and media_type == "tv":
                     params["first_air_date_year"] = year
 
+                logger.info(
+                    f"Searching TMDB for {media_type}: '{title}' (year: {year})"
+                )
                 response = requests.get(url, headers=headers, params=params, timeout=10)
                 if response.status_code == 200:
                     data = response.json()
-                    results = data.get("results", [])
-                    if results:
-                        return str(results[0].get("id"))
+                    search_results = data.get("results", [])
+                    if search_results:
+                        found_id = str(search_results[0].get("id"))
+                        found_title = search_results[0].get("title") or search_results[
+                            0
+                        ].get("name")
+                        logger.info(f"✅ Found TMDB ID: {found_id} for '{found_title}'")
+                        return found_id
+                    else:
+                        logger.warning(f"❌ No TMDB results found for '{title}'")
+                else:
+                    logger.warning(
+                        f"TMDB search failed with status {response.status_code}"
+                    )
             except Exception as e:
-                print(f"Error searching TMDB by title: {e}")
+                logger.error(f"Error searching TMDB by title: {e}")
+            return None
+
+        # Helper function to search for TVDB ID by title
+        async def search_tvdb_id(title: str) -> Optional[str]:
+            if not tvdb_api_key or not title:
+                return None
+            try:
+                # Login to TVDB
+                async with httpx.AsyncClient(timeout=10.0) as client:
+                    login_url = "https://api4.thetvdb.com/v4/login"
+                    body = {"apikey": tvdb_api_key}
+                    if tvdb_pin:
+                        body["pin"] = tvdb_pin
+
+                    headers = {
+                        "accept": "application/json",
+                        "Content-Type": "application/json",
+                    }
+
+                    login_response = await client.post(
+                        login_url, json=body, headers=headers
+                    )
+
+                    if login_response.status_code == 200:
+                        token = login_response.json().get("data", {}).get("token")
+
+                        if token:
+                            auth_headers = {
+                                "Authorization": f"Bearer {token}",
+                                "accept": "application/json",
+                            }
+
+                            # Search for series by name
+                            search_url = "https://api4.thetvdb.com/v4/search"
+                            search_params = {"query": title, "type": "series"}
+
+                            logger.info(f"Searching TVDB for series: '{title}'")
+                            search_response = await client.get(
+                                search_url, headers=auth_headers, params=search_params
+                            )
+
+                            if search_response.status_code == 200:
+                                search_data = search_response.json()
+                                search_results = search_data.get("data", [])
+                                if search_results:
+                                    found_id = str(search_results[0].get("tvdb_id"))
+                                    found_name = search_results[0].get("name")
+                                    logger.info(
+                                        f"✅ Found TVDB ID: {found_id} for '{found_name}'"
+                                    )
+                                    return found_id
+                                else:
+                                    logger.warning(
+                                        f"❌ No TVDB results found for '{title}'"
+                                    )
+                            else:
+                                logger.warning(
+                                    f"TVDB search failed with status {search_response.status_code}"
+                                )
+                    else:
+                        logger.warning(
+                            f"TVDB login failed with status {login_response.status_code}"
+                        )
+
+            except Exception as e:
+                logger.error(f"Error searching TVDB by title: {e}")
             return None
 
         # If no TMDB ID provided but we have title, try to search for it
         tmdb_id_to_use = request.tmdb_id
         if not tmdb_id_to_use and request.title and tmdb_token:
+            logger.info(f"No TMDB ID provided, searching by title: '{request.title}'")
             tmdb_id_to_use = await search_tmdb_id(
                 request.title, request.year, request.media_type
             )
+
+        # If no TVDB ID provided but we have title and it's TV content, try to search for it
+        tvdb_id_to_use = request.tvdb_id
+        if (
+            not tvdb_id_to_use
+            and request.title
+            and request.media_type == "tv"
+            and tvdb_api_key
+        ):
+            logger.info(
+                f"No TVDB ID provided for TV content, searching by title: '{request.title}'"
+            )
+            tvdb_id_to_use = await search_tvdb_id(request.title)
 
         # ========== TMDB ==========
         if tmdb_token and tmdb_id_to_use:
@@ -5871,8 +6139,12 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                 logger.error(f"Error fetching TMDB assets: {e}")
 
         # ========== TVDB ==========
-        if tvdb_api_key and request.tvdb_id:
+        if tvdb_api_key and tvdb_id_to_use:
             try:
+                logger.info(
+                    f"Fetching from TVDB - tvdb_id: {tvdb_id_to_use}, asset_type: {request.asset_type}"
+                )
+
                 # First, login to get token
                 async with httpx.AsyncClient(timeout=10.0) as client:
                     login_url = "https://api4.thetvdb.com/v4/login"
@@ -5889,6 +6161,10 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                         login_url, json=body, headers=headers
                     )
 
+                    logger.info(
+                        f"TVDB login response status: {login_response.status_code}"
+                    )
+
                     if login_response.status_code == 200:
                         token = login_response.json().get("data", {}).get("token")
 
@@ -5899,7 +6175,7 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                             }
 
                             # Fetch artwork
-                            artwork_url = f"https://api4.thetvdb.com/v4/series/{request.tvdb_id}/artworks"
+                            artwork_url = f"https://api4.thetvdb.com/v4/series/{tvdb_id_to_use}/artworks"
                             artwork_params = {
                                 "lang": "eng",
                                 "type": "2",
@@ -5908,8 +6184,16 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                             if request.asset_type == "background":
                                 artwork_params["type"] = "3"  # type=3 for backgrounds
 
+                            logger.info(
+                                f"TVDB artwork URL: {artwork_url} with params: {artwork_params}"
+                            )
+
                             artwork_response = await client.get(
                                 artwork_url, headers=auth_headers, params=artwork_params
+                            )
+
+                            logger.info(
+                                f"TVDB artwork response status: {artwork_response.status_code}"
                             )
 
                             if artwork_response.status_code == 200:
@@ -5917,6 +6201,8 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                                 artworks = artwork_data.get("data", {}).get(
                                     "artworks", []
                                 )
+
+                                logger.info(f"TVDB found {len(artworks)} artworks")
 
                                 for artwork in artworks:
                                     results["tvdb"].append(
@@ -5928,22 +6214,43 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                                             "language": artwork.get("language"),
                                         }
                                     )
+                            else:
+                                logger.warning(
+                                    f"TVDB artwork request failed: {artwork_response.text[:200]}"
+                                )
+                    else:
+                        logger.warning(
+                            f"TVDB login failed: {login_response.text[:200]}"
+                        )
 
             except Exception as e:
                 logger.error(f"Error fetching TVDB assets: {e}")
+                logger.exception("Full traceback:")
 
         # ========== Fanart.tv ==========
-        if fanart_api_key and (tmdb_id_to_use or request.tvdb_id):
+        if fanart_api_key and (tmdb_id_to_use or tvdb_id_to_use):
             try:
+                logger.info(
+                    f"Fetching from Fanart.tv - media_type: {request.media_type}, "
+                    f"tmdb_id: {tmdb_id_to_use}, tvdb_id: {tvdb_id_to_use}, "
+                    f"asset_type: {request.asset_type}"
+                )
+
                 if request.media_type == "movie" and tmdb_id_to_use:
                     url = f"https://webservice.fanart.tv/v3/movies/{tmdb_id_to_use}?api_key={fanart_api_key}"
-                elif request.media_type == "tv" and request.tvdb_id:
-                    url = f"https://webservice.fanart.tv/v3/tv/{request.tvdb_id}?api_key={fanart_api_key}"
+                elif request.media_type == "tv" and tvdb_id_to_use:
+                    url = f"https://webservice.fanart.tv/v3/tv/{tvdb_id_to_use}?api_key={fanart_api_key}"
                 else:
                     url = None
+                    logger.warning(
+                        f"Fanart.tv: Cannot determine URL - need TMDB ID for movies or TVDB ID for TV shows"
+                    )
 
                 if url:
+                    logger.info(f"Fanart.tv URL: {url}")
                     response = requests.get(url, timeout=10)
+                    logger.info(f"Fanart.tv response status: {response.status_code}")
+
                     if response.status_code == 200:
                         data = response.json()
 
@@ -5963,8 +6270,15 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                         else:
                             fanart_keys = []
 
+                        logger.info(
+                            f"Fanart.tv keys to check: {fanart_keys}, available keys: {list(data.keys())}"
+                        )
+
                         for key in fanart_keys:
                             items = data.get(key, [])
+                            logger.info(
+                                f"Fanart.tv found {len(items)} items for key '{key}'"
+                            )
                             for item in items:
                                 results["fanart"].append(
                                     {
@@ -5976,9 +6290,14 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                                         "likes": item.get("likes", 0),
                                     }
                                 )
+                    else:
+                        logger.warning(
+                            f"Fanart.tv returned status {response.status_code}: {response.text[:200]}"
+                        )
 
             except Exception as e:
                 logger.error(f"Error fetching Fanart.tv assets: {e}")
+                logger.exception("Full traceback:")
 
         # Count total results
         total_count = sum(len(results[source]) for source in results)
