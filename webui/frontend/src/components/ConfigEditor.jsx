@@ -1743,19 +1743,65 @@ function ConfigEditor() {
       );
     }
 
-    // Handle text_offset specially
+    // Handle text_offset specially with enhanced number input
     if (keyLower.includes("offset") || keyLower === "text_offset") {
+      // Parse the current value - keep the sign!
+      let parsedValue = 0;
+      if (stringValue) {
+        // Remove + if present, keep - if present
+        const cleanValue = stringValue.replace(/^\+/, "");
+        parsedValue = parseInt(cleanValue, 10) || 0;
+      }
+
       return (
         <div className="space-y-2">
-          <input
-            type="text"
-            value={stringValue}
-            onChange={(e) => updateValue(fieldKey, e.target.value)}
-            className="w-full h-[42px] px-4 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono"
-            placeholder="+200 or -150"
-          />
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              value={parsedValue}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val === "" || val === "-") {
+                  updateValue(fieldKey, "");
+                } else {
+                  const num = parseInt(val, 10);
+                  if (!isNaN(num)) {
+                    // Format with explicit + or - sign
+                    const formattedValue = num >= 0 ? `+${num}` : `${num}`;
+                    updateValue(fieldKey, formattedValue);
+                  }
+                }
+              }}
+              onBlur={(e) => {
+                // Ensure proper formatting on blur
+                const val = e.target.value;
+                if (val === "" || val === "-" || val === "+") {
+                  updateValue(fieldKey, "+0");
+                } else {
+                  const num = parseInt(val, 10);
+                  if (!isNaN(num)) {
+                    const formattedValue = num >= 0 ? `+${num}` : `${num}`;
+                    updateValue(fieldKey, formattedValue);
+                  }
+                }
+              }}
+              className="flex-1 h-[42px] px-4 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono"
+              placeholder="0"
+            />
+            <div className="flex items-center gap-1 px-3 py-2 bg-theme-bg border border-theme rounded-lg text-theme-muted text-sm font-mono min-w-[60px] justify-center">
+              <span
+                className={`font-bold ${
+                  parsedValue >= 0 ? "text-green-500" : "text-red-500"
+                }`}
+              >
+                {parsedValue >= 0 ? "+" : "-"}
+              </span>
+              <span>{Math.abs(parsedValue)}</span>
+            </div>
+          </div>
           <p className="text-xs text-theme-muted">
-            Use + or - prefix (e.g., +200, -150)
+            Offset from bottom of image. Positive (+) moves up, negative (-)
+            moves down
           </p>
         </div>
       );
@@ -1900,6 +1946,220 @@ function ConfigEditor() {
               Value must be between 1 and 100
             </p>
           )}
+        </div>
+      );
+    }
+
+    // ============ COLOR FIELDS (WITH COLOR PICKER) ============
+    if (
+      keyLower.includes("color") ||
+      keyLower.includes("fontcolor") ||
+      keyLower.includes("bordercolor") ||
+      keyLower.includes("strokecolor")
+    ) {
+      // Determine if current value is hex or color name
+      const isHexColor = stringValue.match(/^#[0-9A-Fa-f]{6}$/);
+      const currentInputType = isHexColor ? "hex" : "name";
+
+      // Common CSS color names supported by ImageMagick
+      const colorNames = [
+        "white",
+        "black",
+        "red",
+        "green",
+        "blue",
+        "yellow",
+        "cyan",
+        "magenta",
+        "gray",
+        "grey",
+        "silver",
+        "maroon",
+        "olive",
+        "lime",
+        "aqua",
+        "teal",
+        "navy",
+        "fuchsia",
+        "purple",
+        "orange",
+        "brown",
+        "pink",
+        "gold",
+        "violet",
+        "indigo",
+        "turquoise",
+        "tan",
+        "khaki",
+        "coral",
+        "salmon",
+        "crimson",
+        "lavender",
+        "plum",
+        "orchid",
+        "chocolate",
+        "sienna",
+      ].sort();
+
+      // Convert hex to RGB for preview contrast calculation
+      const hexToRgb = (hex) => {
+        if (!hex || !hex.startsWith("#")) return null;
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result
+          ? {
+              r: parseInt(result[1], 16),
+              g: parseInt(result[2], 16),
+              b: parseInt(result[3], 16),
+            }
+          : null;
+      };
+
+      const rgb = isHexColor ? hexToRgb(stringValue) : null;
+
+      return (
+        <div className="space-y-2">
+          {/* Input Type Toggle */}
+          <div className="flex gap-2 mb-2">
+            <button
+              type="button"
+              onClick={() => {
+                if (currentInputType === "hex") {
+                  // Switch to name, default to white
+                  updateValue(fieldKey, "white");
+                }
+              }}
+              className={`px-3 py-1 text-xs rounded-lg transition-all ${
+                currentInputType === "name"
+                  ? "bg-theme-primary text-white"
+                  : "bg-theme-bg text-theme-muted hover:bg-theme-hover"
+              }`}
+            >
+              Color Name
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                if (currentInputType === "name") {
+                  // Switch to hex, default to white
+                  updateValue(fieldKey, "#FFFFFF");
+                }
+              }}
+              className={`px-3 py-1 text-xs rounded-lg transition-all ${
+                currentInputType === "hex"
+                  ? "bg-theme-primary text-white"
+                  : "bg-theme-bg text-theme-muted hover:bg-theme-hover"
+              }`}
+            >
+              Hex Code
+            </button>
+          </div>
+
+          {currentInputType === "name" ? (
+            // Color Name Dropdown
+            <div className="relative">
+              {stringValue && (
+                <div
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded border-2 border-gray-400 shadow-sm pointer-events-none z-10"
+                  style={{ backgroundColor: stringValue }}
+                  title={stringValue}
+                />
+              )}
+              <select
+                value={stringValue.toLowerCase()}
+                onChange={(e) => updateValue(fieldKey, e.target.value)}
+                className="w-full h-[42px] pl-12 pr-10 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all cursor-pointer appearance-none"
+              >
+                <option value="">-- Select Color --</option>
+                {colorNames.map((color) => (
+                  <option key={color} value={color}>
+                    {color.charAt(0).toUpperCase() + color.slice(1)}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-theme-muted pointer-events-none" />
+            </div>
+          ) : (
+            // Hex Color Picker
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  value={stringValue}
+                  onChange={(e) => {
+                    const val = e.target.value.toUpperCase();
+                    // Allow empty or partial hex while typing
+                    if (
+                      val === "" ||
+                      val === "#" ||
+                      /^#[0-9A-F]{0,6}$/.test(val)
+                    ) {
+                      updateValue(fieldKey, val);
+                    }
+                  }}
+                  onBlur={(e) => {
+                    // Validate and fix on blur
+                    let val = e.target.value.toUpperCase();
+                    if (!val.startsWith("#")) {
+                      val = "#" + val;
+                    }
+                    // Pad with zeros if incomplete
+                    if (val.length < 7) {
+                      val = val.padEnd(7, "0");
+                    }
+                    // Validate hex format
+                    if (/^#[0-9A-F]{6}$/.test(val)) {
+                      updateValue(fieldKey, val);
+                    } else {
+                      // Fallback to white if invalid
+                      updateValue(fieldKey, "#FFFFFF");
+                    }
+                  }}
+                  className="w-full h-[42px] px-12 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono"
+                  placeholder="#FFFFFF"
+                  maxLength={7}
+                />
+                {/* Color preview swatch on the left */}
+                <div
+                  className="absolute left-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded border-2 border-white shadow-sm cursor-pointer"
+                  style={{ backgroundColor: stringValue || "#FFFFFF" }}
+                  title={stringValue}
+                />
+              </div>
+              {/* Native color picker */}
+              <input
+                type="color"
+                value={
+                  stringValue && /^#[0-9A-Fa-f]{6}$/.test(stringValue)
+                    ? stringValue
+                    : "#FFFFFF"
+                }
+                onChange={(e) =>
+                  updateValue(fieldKey, e.target.value.toUpperCase())
+                }
+                className="h-[42px] w-[42px] bg-theme-bg border border-theme rounded-lg cursor-pointer"
+                title="Pick color"
+              />
+            </div>
+          )}
+
+          {/* Preview and current value */}
+          <div className="flex items-center gap-2 text-xs text-theme-muted">
+            <div
+              className="w-full h-8 rounded border border-theme flex items-center justify-center font-mono text-sm"
+              style={{
+                backgroundColor: stringValue || "#FFFFFF",
+                color:
+                  rgb && rgb.r * 0.299 + rgb.g * 0.587 + rgb.b * 0.114 > 128
+                    ? "#000000"
+                    : "#FFFFFF",
+              }}
+            >
+              {stringValue || "No color"}
+            </div>
+          </div>
+          <p className="text-xs text-theme-muted">
+            Choose a color name or hex code (e.g., #FFFFFF)
+          </p>
         </div>
       );
     }
