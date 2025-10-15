@@ -1,0 +1,8 @@
+# Ignore the actual database file
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Keep the directory structure
+!.gitkeep

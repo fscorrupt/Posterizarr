@@ -72,7 +72,7 @@ COPY webui/backend/ /app/backend/
 COPY --from=frontend-builder /app/frontend/dist /app/frontend/dist
 
 # Create necessary directories
-RUN mkdir -p /app/Logs /app/assets /app/temp
+RUN mkdir -p /app/Logs /app/assets /app/temp /app/database
 
 # ---- Combined startup script ----
 COPY <<'EOF' /app/start.sh
