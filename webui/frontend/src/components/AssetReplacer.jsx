@@ -865,7 +865,7 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
                           className="w-4 h-4 rounded border-theme-muted text-theme-primary focus:ring-theme-primary"
                         />
                         <span className="text-sm flex items-center gap-1">
-                          🎨 Process with overlays after replace
+                          Process with overlays after replace
                           <span className="text-xs text-theme-muted ml-1">
                             (applies borders, overlays & text)
                           </span>

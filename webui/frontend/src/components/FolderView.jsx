@@ -15,6 +15,7 @@ import CompactImageSizeSlider from "./CompactImageSizeSlider";
 import Notification from "./Notification";
 import { useToast } from "../context/ToastContext";
 import ConfirmDialog from "./ConfirmDialog";
+import AssetReplacer from "./AssetReplacer";
 
 const API_URL = "/api";
 
@@ -29,6 +30,10 @@ function FolderView() {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [deletingImage, setDeletingImage] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Asset replacer state
+  const [replacerOpen, setReplacerOpen] = useState(false);
+  const [assetToReplace, setAssetToReplace] = useState(null);
 
   // Image size state with localStorage (2-10 range, default 5)
   const [imageSize, setImageSize] = useState(() => {
@@ -220,6 +225,16 @@ function FolderView() {
     return (bytes / (1024 * 1024)).toFixed(1) + " MB";
   };
 
+  const getAssetType = (assetName) => {
+    const name = assetName.toLowerCase();
+    if (name.includes("poster")) return "poster";
+    if (name.includes("background")) return "background";
+    if (name.includes("season")) return "season";
+    if (name.includes("titlecard") || /s\d{2}e\d{2}/i.test(name))
+      return "titlecard";
+    return "poster"; // default
+  };
+
   return (
     <div className="space-y-6">
       {/* Delete Confirmation Dialog */}
@@ -389,6 +404,24 @@ function FolderView() {
                         loading="lazy"
                       />
 
+                      {/* Replace Button */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setAssetToReplace({
+                            path: asset.path,
+                            url: asset.url,
+                            name: asset.name,
+                            type: getAssetType(asset.name),
+                          });
+                          setReplacerOpen(true);
+                        }}
+                        className="absolute top-2 left-2 z-10 p-2 rounded-lg transition-all bg-blue-600/90 hover:bg-blue-700 opacity-0 group-hover:opacity-100"
+                        title="Replace image"
+                      >
+                        <RefreshCw className="w-4 h-4 text-white" />
+                      </button>
+
                       {/* Delete Button */}
                       <button
                         onClick={(e) => {
@@ -475,28 +508,47 @@ function FolderView() {
                   {currentPath.join(" / ")}
                 </p>
               </div>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setDeleteConfirm({
-                    path: selectedImage.path,
-                    name: selectedImage.name,
-                  });
-                }}
-                disabled={deletingImage === selectedImage.path}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
-                  deletingImage === selectedImage.path
-                    ? "bg-gray-600 cursor-not-allowed"
-                    : "bg-red-600 hover:bg-red-700 hover:scale-105"
-                }`}
-              >
-                <Trash2
-                  className={`w-4 h-4 ${
-                    deletingImage === selectedImage.path ? "animate-spin" : ""
+              <div className="flex gap-2">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setAssetToReplace({
+                      path: selectedImage.path,
+                      url: selectedImage.url,
+                      name: selectedImage.name,
+                      type: getAssetType(selectedImage.name),
+                    });
+                    setReplacerOpen(true);
+                    setSelectedImage(null); // Close the preview modal
+                  }}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all bg-blue-600 hover:bg-blue-700 hover:scale-105"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  Replace
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setDeleteConfirm({
+                      path: selectedImage.path,
+                      name: selectedImage.name,
+                    });
+                  }}
+                  disabled={deletingImage === selectedImage.path}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+                    deletingImage === selectedImage.path
+                      ? "bg-gray-600 cursor-not-allowed"
+                      : "bg-red-600 hover:bg-red-700 hover:scale-105"
                   }`}
-                />
-                Delete
-              </button>
+                >
+                  <Trash2
+                    className={`w-4 h-4 ${
+                      deletingImage === selectedImage.path ? "animate-spin" : ""
+                    }`}
+                  />
+                  Delete
+                </button>
+              </div>
             </div>
 
             {/* Modal Content - Image */}
@@ -609,6 +661,23 @@ function FolderView() {
           }
         }
       `}</style>
+
+      {/* Asset Replacer Modal */}
+      {replacerOpen && assetToReplace && (
+        <AssetReplacer
+          asset={assetToReplace}
+          onClose={() => {
+            setReplacerOpen(false);
+            setAssetToReplace(null);
+          }}
+          onSuccess={() => {
+            // Refetch images after successful replacement
+            setTimeout(() => {
+              loadCurrentLevel();
+            }, 500);
+          }}
+        />
+      )}
     </div>
   );
 }

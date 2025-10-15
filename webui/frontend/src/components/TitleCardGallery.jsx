@@ -752,6 +752,21 @@ function TitleCardGallery() {
               </h3>
               <div className="flex items-center gap-3">
                 <button
+                  onClick={() => {
+                    setAssetToReplace({
+                      path: selectedImage.path,
+                      url: selectedImage.url,
+                      name: selectedImage.name,
+                      type: "titlecard",
+                    });
+                    setReplacerOpen(true);
+                  }}
+                  className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white flex items-center space-x-2"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  <span>Replace</span>
+                </button>
+                <button
                   onClick={(e) => {
                     e.stopPropagation();
                     setDeleteConfirm({
@@ -772,21 +787,6 @@ function TitleCardGallery() {
                     }`}
                   />
                   Delete
-                </button>
-                <button
-                  onClick={() => {
-                    setAssetToReplace({
-                      path: selectedImage.path,
-                      url: selectedImage.url,
-                      name: selectedImage.name,
-                      type: "titlecard",
-                    });
-                    setReplacerOpen(true);
-                  }}
-                  className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white flex items-center space-x-2"
-                >
-                  <RefreshCw className="w-4 h-4" />
-                  <span>Replace</span>
                 </button>
               </div>
             </div>
