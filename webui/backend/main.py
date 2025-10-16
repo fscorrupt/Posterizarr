@@ -1008,52 +1008,21 @@ async def lifespan(app: FastAPI):
         csv_path = LOGS_DIR / "ImageChoices.csv"
 
         if db_manager_path.exists():
-            # Only create database if it doesn't exist
-            if not db_path.exists():
-                logger.info("Database not found, creating empty database...")
-                # Import here to avoid circular imports
-                import sqlite3
-
-                db_path.parent.mkdir(parents=True, exist_ok=True)
-
-                # Create empty database with structure
-                conn = sqlite3.connect(str(db_path))
-                cursor = conn.cursor()
-                cursor.execute(
-                    """
-                    CREATE TABLE IF NOT EXISTS image_choices (
-                        id INTEGER PRIMARY KEY AUTOINCREMENT,
-                        title TEXT NOT NULL,
-                        type TEXT NOT NULL,
-                        rootfolder TEXT NOT NULL,
-                        library_name TEXT NOT NULL,
-                        language TEXT NOT NULL,
-                        fallback TEXT NOT NULL,
-                        text_truncated TEXT NOT NULL,
-                        download_source TEXT,
-                        fav_provider_link TEXT,
-                        is_manually_created TEXT NOT NULL,
-                        created_at TIMESTAMP DEFAULT (datetime('now', 'localtime'))
-                    )
-                """
+            # Always ensure database structure exists
+            if not db_path.exists() or not csv_path.exists():
+                logger.info("Initializing database structure...")
+                result = subprocess.run(
+                    [sys.executable, str(db_manager_path), str(APP_DIR), "--silent"],
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
                 )
-                cursor.execute(
-                    "CREATE INDEX IF NOT EXISTS idx_title ON image_choices(title)"
-                )
-                cursor.execute(
-                    "CREATE INDEX IF NOT EXISTS idx_library_name ON image_choices(library_name)"
-                )
-                cursor.execute(
-                    "CREATE INDEX IF NOT EXISTS idx_type ON image_choices(type)"
-                )
-                cursor.execute(
-                    "CREATE INDEX IF NOT EXISTS idx_language ON image_choices(language)"
-                )
-                conn.commit()
-                conn.close()
-                logger.info(f"Empty database created successfully at {db_path}")
+                if result.returncode == 0:
+                    logger.info("Database initialized successfully")
+                else:
+                    logger.info("Database structure created (waiting for first CSV)")
             else:
-                logger.info(f"Using existing database at {db_path}")
+                logger.info(f"Database already exists at {db_path}")
     except Exception as e:
         logger.warning(f"Database initialization skipped: {e}")
 
