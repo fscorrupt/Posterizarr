@@ -457,16 +457,6 @@ const AssetOverview = () => {
         borderColor: "border-purple-900/40",
         hoverBorderColor: "hover:border-purple-500/50",
       },
-      {
-        key: "manual",
-        label: "Manual",
-        count: data.categories.manual?.count || 0,
-        icon: Edit,
-        color: "text-blue-400",
-        bgColor: "bg-gradient-to-br from-blue-900/30 to-blue-950/20",
-        borderColor: "border-blue-900/40",
-        hoverBorderColor: "hover:border-blue-500/50",
-      },
     ];
   }, [data]);
 
@@ -522,7 +512,7 @@ const AssetOverview = () => {
       </div>
 
       {/* Category Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         {categoryCards.map((card) => {
           const Icon = card.icon;
           const isSelected = selectedCategory === card.label;
