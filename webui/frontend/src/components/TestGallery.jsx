@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import Notification from "./Notification";
 import { useToast } from "../context/ToastContext";
+import ScrollToButtons from "./ScrollToButtons";
 
 const API_URL = "/api";
 
@@ -256,6 +257,7 @@ function TestGallery() {
 
   return (
     <div className="space-y-6">
+      <ScrollToButtons />
       {/* Header - Modernized to match RunModes & ConfigEditor */}
       <div className="flex items-center justify-end">
         <div className="flex gap-3">

@@ -15,6 +15,7 @@ import Notification from "./Notification";
 import { useToast } from "../context/ToastContext";
 import ConfirmDialog from "./ConfirmDialog";
 import AssetReplacer from "./AssetReplacer";
+import ScrollToButtons from "./ScrollToButtons";
 
 const API_URL = "/api";
 
@@ -313,6 +314,7 @@ function TitleCardGallery() {
 
   return (
     <div className="space-y-6">
+      <ScrollToButtons />
       {/* Header */}
 
       {/* Folder Tabs */}
