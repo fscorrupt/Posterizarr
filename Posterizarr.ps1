@@ -7551,14 +7551,6 @@ if ($Manual) {
         $PicturePath = Read-Host "Enter local path or url to source picture"
     }
     if ([string]::IsNullOrEmpty($PicturePath)) {
-        if (-not $PSBoundParameters.ContainsKey('MoviePosterCard')) {
-            $response = Read-Host "Create Movie Poster? (y/n)"
-            if ($response.ToLower() -eq 'y') { $MoviePosterCard = $true }
-        }
-        if (-not $PSBoundParameters.ContainsKey('ShowPosterCard')) {
-            $response = Read-Host "Create Show Poster? (y/n)"
-            if ($response.ToLower() -eq 'y') { $ShowPosterCard = $true }
-        }
         if (-not $PSBoundParameters.ContainsKey('SeasonPoster')) {
             $response = Read-Host "Create Season Poster? (y/n)"
             if ($response.ToLower() -eq 'y') { $SeasonPoster = $true }
@@ -7605,6 +7597,9 @@ if ($Manual) {
     }
     Elseif ($ShowPosterCard) {
         $PosterType = "Show"
+    }
+    Else {
+        $PosterType = "Poster"
     }
     if ($LibraryFolders -eq 'true') {
         if ([string]::IsNullOrEmpty($LibraryName)) {
@@ -7688,8 +7683,11 @@ if ($Manual) {
             if ($MoviePosterCard) {
                 $PosterType = "Movie Background"
             }
-            else {
+            Elseif ($ShowPosterCard) {
                 $PosterType = "Show Background"
+            }
+            else {
+                $PosterType = "Background"
             }
 
             $PosterImageoriginal = "$AssetPath\$LibraryName\$FolderName\background.jpg"
@@ -7764,8 +7762,11 @@ if ($Manual) {
             if ($MoviePosterCard) {
                 $PosterType = "Movie Background"
             }
-            else {
+            Elseif ($ShowPosterCard) {
                 $PosterType = "Show Background"
+            }
+            else {
+                $PosterType = "Background"
             }
             $PosterImageoriginal = "$AssetPath\$($FolderName)_background.jpg"
         }
