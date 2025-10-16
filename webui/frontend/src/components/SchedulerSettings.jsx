@@ -63,18 +63,78 @@ const SchedulerSettings = () => {
 
   const [clearAllConfirm, setClearAllConfirm] = useState(false);
 
-  // Common timezones
+  // Common timezones - comprehensive list
   const timezones = [
-    "Europe/Berlin",
-    "Europe/London",
-    "Europe/Paris",
-    "America/New_York",
-    "America/Los_Angeles",
-    "America/Chicago",
-    "Asia/Tokyo",
-    "Asia/Shanghai",
-    "Australia/Sydney",
+    // UTC
     "UTC",
+    // North America - US
+    "America/New_York",        // Eastern Time
+    "America/Chicago",         // Central Time
+    "America/Denver",          // Mountain Time
+    "America/Phoenix",         // Arizona (no DST)
+    "America/Los_Angeles",     // Pacific Time
+    "America/Anchorage",       // Alaska Time
+    "America/Honolulu",        // Hawaii Time
+    "America/Boise",           // Mountain Time (Idaho)
+    // North America - Canada
+    "America/Toronto",         // Eastern Time (Canada)
+    "America/Vancouver",       // Pacific Time (Canada)
+    "America/Edmonton",        // Mountain Time (Canada)
+    "America/Winnipeg",        // Central Time (Canada)
+    "America/Halifax",         // Atlantic Time (Canada)
+    "America/St_Johns",        // Newfoundland Time
+    // Central & South America
+    "America/Mexico_City",     // Mexico
+    "America/Sao_Paulo",       // Brazil
+    "America/Buenos_Aires",    // Argentina
+    "America/Bogota",          // Colombia
+    "America/Lima",            // Peru
+    "America/Santiago",        // Chile
+    // Europe
+    "Europe/London",           // UK
+    "Europe/Dublin",           // Ireland
+    "Europe/Paris",            // France
+    "Europe/Berlin",           // Germany
+    "Europe/Amsterdam",        // Netherlands
+    "Europe/Brussels",         // Belgium
+    "Europe/Madrid",           // Spain
+    "Europe/Rome",             // Italy
+    "Europe/Vienna",           // Austria
+    "Europe/Zurich",           // Switzerland
+    "Europe/Stockholm",        // Sweden
+    "Europe/Oslo",             // Norway
+    "Europe/Copenhagen",       // Denmark
+    "Europe/Helsinki",         // Finland
+    "Europe/Warsaw",           // Poland
+    "Europe/Prague",           // Czech Republic
+    "Europe/Budapest",         // Hungary
+    "Europe/Athens",           // Greece
+    "Europe/Istanbul",         // Turkey
+    "Europe/Moscow",           // Russia (Moscow)
+    // Asia
+    "Asia/Dubai",              // UAE
+    "Asia/Kolkata",            // India
+    "Asia/Bangkok",            // Thailand
+    "Asia/Singapore",          // Singapore
+    "Asia/Hong_Kong",          // Hong Kong
+    "Asia/Shanghai",           // China
+    "Asia/Tokyo",              // Japan
+    "Asia/Seoul",              // South Korea
+    "Asia/Jakarta",            // Indonesia
+    "Asia/Manila",             // Philippines
+    "Asia/Taipei",             // Taiwan
+    // Australia & Pacific
+    "Australia/Sydney",        // Australia (NSW)
+    "Australia/Melbourne",     // Australia (VIC)
+    "Australia/Brisbane",      // Australia (QLD)
+    "Australia/Perth",         // Australia (WA)
+    "Australia/Adelaide",      // Australia (SA)
+    "Pacific/Auckland",        // New Zealand
+    // Africa
+    "Africa/Cairo",            // Egypt
+    "Africa/Johannesburg",     // South Africa
+    "Africa/Lagos",            // Nigeria
+    "Africa/Nairobi",          // Kenya
   ];
 
   useEffect(() => {
