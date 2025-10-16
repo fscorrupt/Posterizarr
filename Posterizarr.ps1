@@ -10,6 +10,8 @@ param (
     [switch]$SeasonPoster,
     [switch]$TitleCard,
     [switch]$CollectionCard,
+    [switch]$MoviePosterCard,
+    [switch]$ShowPosterCard,
     [switch]$BackgroundCard,
     [string]$PicturePath,
     [string]$Titletext,
@@ -1201,10 +1203,10 @@ function GetTMDBMoviePoster {
         if ($response) {
             if ($response.images.posters) {
                 if ($global:WidthHeightFilter -eq 'true') {
-                    $NoLangPoster = ($response.images.posters | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null) -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
+                    $NoLangPoster = ($response.images.posters | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null) -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight })
                 }
                 Else {
-                    $NoLangPoster = ($response.images.posters | Where-Object {$_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null})
+                    $NoLangPoster = ($response.images.posters | Where-Object {$_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null})
                 }
                 if (!$NoLangPoster) {
                     Write-Entry -Subtext "PreferTextless Value: $global:PosterPreferTextless" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Cyan -log Debug
@@ -1276,7 +1278,7 @@ function GetTMDBMoviePoster {
                 Else {
                     if ($global:WidthHeightFilter -eq 'true') {
                         if ($global:TMDBVoteSorting -eq 'primary') {
-                            $filteredPosters = $response.images.posters | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null) -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
+                            $filteredPosters = $response.images.posters | Where-Object { ($_.iso_639_1 -eq 'xx' -or $_.iso_3166_1 -eq 'XX' -or $_.iso_3166_1 -eq $null -or $_.iso_639_1 -eq $null) -and $_.width -ge $global:PosterMinWidth -and $_.height -ge $global:PosterMinHeight }
 
                             if ($filteredPosters) {
                                 $posterpath = $filteredPosters[0].file_path
@@ -7549,6 +7551,14 @@ if ($Manual) {
         $PicturePath = Read-Host "Enter local path or url to source picture"
     }
     if ([string]::IsNullOrEmpty($PicturePath)) {
+        if (-not $PSBoundParameters.ContainsKey('MoviePosterCard')) {
+            $response = Read-Host "Create Movie Poster? (y/n)"
+            if ($response.ToLower() -eq 'y') { $MoviePosterCard = $true }
+        }
+        if (-not $PSBoundParameters.ContainsKey('ShowPosterCard')) {
+            $response = Read-Host "Create Show Poster? (y/n)"
+            if ($response.ToLower() -eq 'y') { $ShowPosterCard = $true }
+        }
         if (-not $PSBoundParameters.ContainsKey('SeasonPoster')) {
             $response = Read-Host "Create Season Poster? (y/n)"
             if ($response.ToLower() -eq 'y') { $SeasonPoster = $true }
@@ -7567,7 +7577,7 @@ if ($Manual) {
         }
     }
     if ($CollectionCard) {
-        if ([string]::IsNullOrEmpty($Titletext)) {
+        if ($Titletext -eq $null) {
             $Titletext = Read-Host "Enter Movie/Show/Collection Title"
         }
         $FolderName = $Titletext
@@ -7576,7 +7586,7 @@ if ($Manual) {
         if ([string]::IsNullOrEmpty($FolderName)) {
             $FolderName = Read-Host "Enter Media Foldername (how plex sees it)"
         }
-        if ([string]::IsNullOrEmpty($Titletext)) {
+        if ($Titletext -eq $null) {
             $Titletext = Read-Host "Enter Movie/Show/Background Title"
         }
     }
@@ -7590,7 +7600,12 @@ if ($Manual) {
     }
     $FolderName = $FolderName.replace('"', '')
     $Titletext = $Titletext.replace('"', '')
-
+    if ($MoviePosterCard) {
+        $PosterType = "Movie"
+    }
+    Elseif ($ShowPosterCard) {
+        $PosterType = "Show"
+    }
     if ($LibraryFolders -eq 'true') {
         if ([string]::IsNullOrEmpty($LibraryName)) {
             $LibraryName = Read-Host "Enter Plex Library Name"
@@ -7604,6 +7619,7 @@ if ($Manual) {
         New-Item -ItemType Directory -Path $TargetFolder -Force | Out-Null
 
         if ($SeasonPoster) {
+            $PosterType = "Season"
             if ([string]::IsNullOrEmpty($SeasonPosterName)) {
                 $SeasonPosterName = Read-Host "Enter Season Name"
             }
@@ -7632,6 +7648,7 @@ if ($Manual) {
             New-Item -ItemType Directory -Path $TargetFolder -Force | Out-Null
         }
         Elseif ($CollectionCard) {
+            $PosterType = "Collection"
             $PosterImageoriginal = "$AssetPath\Collections\$LibraryName\$FolderName\poster.jpg"
             $CollectionPath = "$AssetPath\Collections\$LibraryName\$FolderName"
             # Ensure the Collection directory exists
@@ -7647,7 +7664,8 @@ if ($Manual) {
             }
         }
         Elseif ($TitleCard) {
-            if ([string]::IsNullOrEmpty($EPTitleName)) { $EPTitleName = Read-Host "Enter Episode Title Name" }
+            $PosterType = "Episode"
+            if ($EPTitleName -eq $null) { $EPTitleName = Read-Host "Enter Episode Title Name" }
             if ([string]::IsNullOrEmpty($EpisodeNumber)) { $EpisodeNumber = Read-Host "Enter Episode Number (eq. 1)" }
             if ([string]::IsNullOrEmpty($SeasonPosterName)) { $SeasonPosterName = Read-Host "Enter Season Number (eq. 1)" }
             if ($SeasonPosterName -match $seasonNumberPattern) {
@@ -7667,6 +7685,13 @@ if ($Manual) {
             New-Item -ItemType Directory -Path $TargetFolder -Force | Out-Null
         }
         Elseif ($BackgroundCard) {
+            if ($MoviePosterCard) {
+                $PosterType = "Movie Background"
+            }
+            else {
+                $PosterType = "Show Background"
+            }
+
             $PosterImageoriginal = "$AssetPath\$LibraryName\$FolderName\background.jpg"
 
             # Create Folder if Missing
@@ -7676,6 +7701,7 @@ if ($Manual) {
     }
     Else {
         if ($SeasonPoster) {
+            $PosterType = "Season"
             if ([string]::IsNullOrEmpty($SeasonPosterName)) {
                 $SeasonPosterName = Read-Host "Enter Season Name"
             }
@@ -7701,6 +7727,7 @@ if ($Manual) {
             $PosterImageoriginal = "$AssetPath\$($FolderName)_$global:seasontmp.jpg"
         }
         Elseif ($CollectionCard) {
+            $PosterType = "Collection"
             $PosterImageoriginal = "$AssetPath\Collections\$($FolderName)_poster.jpg"
             $CollectionPath = "$AssetPath\Collections"
             # Ensure the Collection directory exists
@@ -7716,7 +7743,8 @@ if ($Manual) {
             }
         }
         Elseif ($TitleCard) {
-            if ([string]::IsNullOrEmpty($EPTitleName)) { $EPTitleName = Read-Host "Enter Episode Title Name" }
+            $PosterType = "Episode"
+            if ($EPTitleName -eq $null) { $EPTitleName = Read-Host "Enter Episode Title Name" }
             if ([string]::IsNullOrEmpty($EpisodeNumber)) { $EpisodeNumber = Read-Host "Enter Episode Number (eq. 1)" }
             if ([string]::IsNullOrEmpty($SeasonPosterName)) { $SeasonPosterName = Read-Host "Enter Season Number (eq. 1)" }
             if ($SeasonPosterName -match $seasonNumberPattern) {
@@ -7733,6 +7761,12 @@ if ($Manual) {
             $PosterImageoriginal = "$AssetPath\$($FolderName)_$global:seasontmp$global:episode.jpg"
         }
         Elseif ($BackgroundCard) {
+            if ($MoviePosterCard) {
+                $PosterType = "Movie Background"
+            }
+            else {
+                $PosterType = "Show Background"
+            }
             $PosterImageoriginal = "$AssetPath\$($FolderName)_background.jpg"
         }
     }
@@ -7985,8 +8019,7 @@ if ($Manual) {
 
                 $joinedTitlePointSize = $joinedTitle -replace '""', '""""'
 
-                Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
-                if ($SeasonPoster) {
+                if ($SeasonPoster -and $AddSeasonText -eq 'true') {
                     $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $SeasonMaxWidth  -box_height $SeasonMaxHeight -min_pointsize $SeasonminPointSize -max_pointsize $SeasonmaxPointSize -lineSpacing $SeasonlineSpacing
                     Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
                     # Add Stroke
@@ -8018,7 +8051,7 @@ if ($Manual) {
                         InvokeMagickCommand -Command $magick -Arguments $ShowOnSeasonArguments
                     }
                 }
-                elseif ($CollectionCard) {
+                elseif ($CollectionCard -and $AddCollectionText -eq 'true') {
                     $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $CollectionfontImagemagick -box_width $CollectionMaxWidth  -box_height $CollectionMaxHeight -min_pointsize $CollectionminPointSize -max_pointsize $CollectionmaxPointSize -lineSpacing $CollectionlineSpacing
 
                     # Add Stroke
@@ -8049,7 +8082,7 @@ if ($Manual) {
                         InvokeMagickCommand -Command $magick -Arguments $CollectionTitleArguments
                     }
                 }
-                Elseif ($TitleCard) {
+                Elseif ($TitleCard -and ($AddTitleCardEPTitleText -eq 'true' -or $AddTitleCardEPText -eq 'true')) {
                     $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $TitleCardfontImagemagick -box_width $TitleCardEPTitleMaxWidth  -box_height $TitleCardEPTitleMaxHeight -min_pointsize $TitleCardEPTitleminPointSize -max_pointsize $TitleCardEPTitlemaxPointSize -lineSpacing $TitleCardEPTitlelineSpacing
                     # Add Stroke
                     if ($AddTitleCardEPTitleTextStroke -eq 'true') {
@@ -8079,7 +8112,7 @@ if ($Manual) {
                         InvokeMagickCommand -Command $magick -Arguments $EPNumberArguments
                     }
                 }
-                Elseif ($BackgroundCard) {
+                Elseif ($BackgroundCard -and $AddBackgroundText -eq 'true') {
                     $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $backgroundfontImagemagick -box_width $BackgroundMaxWidth  -box_height $BackgroundMaxHeight -min_pointsize $BackgroundminPointSize -max_pointsize $BackgroundmaxPointSize -lineSpacing $BackgroundlineSpacing
                     Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
                     # Add Stroke
@@ -8094,7 +8127,7 @@ if ($Manual) {
                     $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
                     InvokeMagickCommand -Command $magick -Arguments $Arguments
                 }
-                Else {
+                Elseif ($AddText -eq 'true') {
                     $optimalFontSize = Get-OptimalPointSize -text $joinedTitlePointSize -font $fontImagemagick -box_width $MaxWidth  -box_height $MaxHeight -min_pointsize $minPointSize -max_pointsize $maxPointSize -lineSpacing $lineSpacing
                     Write-Entry -Subtext "Optimal font size set to: '$optimalFontSize'" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
                     # Add Stroke
@@ -8134,7 +8167,7 @@ if ($Manual) {
 
         $CSVtemp = New-Object psobject
         $CSVtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
-        $CSVtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value $(if ($SeasonPoster) { "Season" }Elseif ($CollectionCard) { "Collection" }Elseif ($TitleCard) { "Episode" }Elseif ($BackgroundCard) { "Background" }Else { "Poster" })
+        $CSVtemp | Add-Member -MemberType NoteProperty -Name "Type" -Value $PosterType
         $CSVtemp | Add-Member -MemberType NoteProperty -Name "Rootfolder" -Value $FolderName
         $CSVtemp | Add-Member -MemberType NoteProperty -Name "LibraryName" -Value $LibraryName
         $CSVtemp | Add-Member -MemberType NoteProperty -Name "Language" -Value 'N/A'
