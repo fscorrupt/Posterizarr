@@ -8,7 +8,9 @@ import {
   FileQuestion,
   RefreshCw,
   Search,
+  Replace,
 } from "lucide-react";
+import AssetReplacer from "./AssetReplacer";
 
 const AssetOverview = () => {
   const [data, setData] = useState(null);
@@ -18,6 +20,8 @@ const AssetOverview = () => {
   const [selectedType, setSelectedType] = useState("All Types");
   const [selectedLibrary, setSelectedLibrary] = useState("All Libraries");
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
+  const [selectedAsset, setSelectedAsset] = useState(null);
+  const [showReplacer, setShowReplacer] = useState(false);
 
   // Fetch data from API
   const fetchData = async () => {
@@ -38,6 +42,197 @@ const AssetOverview = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Handle opening the replacer
+  const handleReplace = async (asset) => {
+    // Instead of constructing the path manually (which doesn't work for Seasons/TitleCards),
+    // we ask the backend to find the actual asset file in the filesystem
+    try {
+      const response = await fetch(`/api/imagechoices/${asset.id}/find-asset`);
+
+      if (!response.ok) {
+        console.error("Failed to find asset file:", await response.text());
+        // Fallback to manual construction for backwards compatibility
+        constructAssetManually(asset);
+        return;
+      }
+
+      const data = await response.json();
+
+      if (data.success && data.asset) {
+        // Use the actual asset path from filesystem
+        const assetTypeRaw = (asset.Type || "").toLowerCase();
+        let mediaType = "movie";
+        if (
+          assetTypeRaw.includes("show") ||
+          assetTypeRaw.includes("series") ||
+          assetTypeRaw.includes("episode") ||
+          assetTypeRaw.includes("season") ||
+          assetTypeRaw.includes("titlecard") ||
+          assetTypeRaw.includes("tv")
+        ) {
+          mediaType = "tv";
+        }
+
+        const assetForReplacer = {
+          id: asset.id,
+          title: asset.Title,
+          name: data.asset.name,
+          path: data.asset.path,
+          type: mediaType,
+          library: data.asset.library,
+          url: data.asset.url,
+          _dbData: asset,
+          _originalType: asset.Type,
+        };
+
+        console.log("🔄 Found actual asset file from filesystem:", {
+          dbRecord: {
+            Title: asset.Title,
+            Type: asset.Type,
+            Rootfolder: asset.Rootfolder,
+          },
+          foundAsset: {
+            path: data.asset.path,
+            name: data.asset.name,
+            type: mediaType,
+          },
+        });
+
+        setSelectedAsset(assetForReplacer);
+        setShowReplacer(true);
+      } else {
+        console.error("Backend found no asset file");
+        constructAssetManually(asset);
+      }
+    } catch (error) {
+      console.error("Error finding asset:", error);
+      constructAssetManually(asset);
+    }
+  };
+
+  // Fallback: Manual path construction (for backwards compatibility)
+  const constructAssetManually = (asset) => {
+    console.warn("⚠️ Using manual path construction as fallback");
+
+    let fullPath;
+
+    if (asset.Rootfolder) {
+      // Rootfolder contains: "Man-Thing (2005) {tmdb-18882}"
+      // Determine filename based on asset type (same as actual file structure)
+      const assetType = (asset.Type || "").toLowerCase();
+      let filename = "poster.jpg"; // Default
+
+      if (assetType.includes("background")) {
+        filename = "background.jpg";
+      } else if (assetType.includes("season")) {
+        filename = "season.jpg";
+      } else if (assetType.includes("titlecard")) {
+        filename = "titlecard.jpg";
+      }
+
+      // Construct path like Gallery does: "LibraryName/Rootfolder/filename"
+      fullPath = `${asset.LibraryName}/${asset.Rootfolder}/${filename}`;
+    } else if (asset.Title) {
+      // Fallback without Rootfolder
+      const assetType = (asset.Type || "").toLowerCase();
+      const filename = assetType.includes("background")
+        ? "background.jpg"
+        : "poster.jpg";
+      fullPath = `${asset.LibraryName || "4K"}/${asset.Title}/${filename}`;
+    } else {
+      // Last fallback
+      fullPath = `${asset.LibraryName || "4K"}/unknown.jpg`;
+    }
+
+    // Determine the correct type for AssetReplacer
+    // AssetReplacer's extractMetadata expects:
+    // - asset.type to determine media_type ("movie" vs "tv")
+    // - asset.type or path to determine asset_type ("poster", "background", etc.)
+    const assetTypeRaw = (asset.Type || "").toLowerCase();
+
+    // Determine if it's a movie or TV show
+    // DB Type examples:
+    // - Movies: "Movie", "Movie Background"
+    // - TV: "Show", "Show Background", "Season", "Season Poster", "TitleCard", "Episode"
+    let mediaType = "movie"; // Default
+    if (
+      assetTypeRaw.includes("show") ||
+      assetTypeRaw.includes("series") ||
+      assetTypeRaw.includes("episode") ||
+      assetTypeRaw.includes("season") ||
+      assetTypeRaw.includes("titlecard") ||
+      assetTypeRaw.includes("tv")
+    ) {
+      mediaType = "tv";
+    }
+
+    const assetForReplacer = {
+      id: asset.id,
+      title: asset.Title,
+      name: fullPath.split("/").pop(), // Just the filename
+      path: fullPath, // Relative path from assets folder (like Gallery)
+      type: mediaType, // "movie" or "tv" - used by extractMetadata() to set media_type
+      library: asset.LibraryName || "",
+      url: `/poster_assets/${fullPath}`, // Same URL format as Gallery
+      // Pass through original DB data for debugging
+      _dbData: asset,
+      _originalType: asset.Type, // Keep original for reference
+    };
+
+    console.log(
+      "🔄 Converting asset for replacer (Gallery-compatible format):",
+      {
+        original: {
+          Title: asset.Title,
+          Type: asset.Type,
+          Rootfolder: asset.Rootfolder,
+          LibraryName: asset.LibraryName,
+        },
+        converted: {
+          path: assetForReplacer.path,
+          name: assetForReplacer.name,
+          url: assetForReplacer.url,
+          type: assetForReplacer.type,
+        },
+      }
+    );
+
+    setSelectedAsset(assetForReplacer);
+    setShowReplacer(true);
+  };
+
+  // Handle successful replacement
+  const handleReplaceSuccess = async () => {
+    // Delete the DB entry after successful replacement
+    try {
+      const response = await fetch(`/api/imagechoices/${selectedAsset.id}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        console.log("✅ DB entry deleted after successful replacement");
+        // Refresh the data to update the UI
+        await fetchData();
+
+        // Trigger event to update sidebar badge count
+        window.dispatchEvent(new Event("assetReplaced"));
+      } else {
+        console.error("❌ Failed to delete DB entry");
+      }
+    } catch (error) {
+      console.error("Error deleting DB entry:", error);
+    }
+
+    setShowReplacer(false);
+    setSelectedAsset(null);
+  };
+
+  // Handle closing the replacer
+  const handleCloseReplacer = () => {
+    setShowReplacer(false);
+    setSelectedAsset(null);
+  };
 
   // Get all assets from all categories
   const allAssets = useMemo(() => {
@@ -82,6 +277,11 @@ const AssetOverview = () => {
       const categoryKey = selectedCategory.toLowerCase().replace(/[- ]/g, "_");
       assets = data.categories[categoryKey]?.assets || [];
     }
+
+    // Filter out Manual entries (Manual === "true")
+    assets = assets.filter(
+      (asset) => !asset.Manual || asset.Manual.toLowerCase() !== "true"
+    );
 
     // Apply search filter
     if (searchQuery.trim()) {
@@ -213,8 +413,9 @@ const AssetOverview = () => {
         count: data.categories.assets_with_issues.count,
         icon: AlertTriangle,
         color: "text-yellow-400",
-        bgColor: "bg-yellow-500/10",
-        borderColor: "border-yellow-500/20",
+        bgColor: "bg-gradient-to-br from-black/80 to-black/60",
+        borderColor: "border-black/40",
+        hoverBorderColor: "hover:border-yellow-500/50",
       },
       {
         key: "missing_assets",
@@ -222,8 +423,9 @@ const AssetOverview = () => {
         count: data.categories.missing_assets.count,
         icon: FileQuestion,
         color: "text-red-400",
-        bgColor: "bg-red-500/10",
-        borderColor: "border-red-500/20",
+        bgColor: "bg-gradient-to-br from-red-900/30 to-red-950/20",
+        borderColor: "border-red-900/40",
+        hoverBorderColor: "hover:border-red-500/50",
       },
       {
         key: "non_primary_lang",
@@ -231,8 +433,9 @@ const AssetOverview = () => {
         count: data.categories.non_primary_lang.count,
         icon: Globe,
         color: "text-yellow-400",
-        bgColor: "bg-yellow-500/10",
-        borderColor: "border-yellow-500/20",
+        bgColor: "bg-gradient-to-br from-yellow-900/20 to-yellow-950/10",
+        borderColor: "border-yellow-900/40",
+        hoverBorderColor: "hover:border-yellow-500/50",
       },
       {
         key: "non_primary_provider",
@@ -240,8 +443,9 @@ const AssetOverview = () => {
         count: data.categories.non_primary_provider.count,
         icon: Database,
         color: "text-orange-400",
-        bgColor: "bg-orange-500/10",
-        borderColor: "border-orange-500/20",
+        bgColor: "bg-gradient-to-br from-orange-900/30 to-orange-950/20",
+        borderColor: "border-orange-900/40",
+        hoverBorderColor: "hover:border-orange-500/50",
       },
       {
         key: "truncated_text",
@@ -249,17 +453,19 @@ const AssetOverview = () => {
         count: data.categories.truncated_text.count,
         icon: Type,
         color: "text-purple-400",
-        bgColor: "bg-purple-500/10",
-        borderColor: "border-purple-500/20",
+        bgColor: "bg-gradient-to-br from-purple-900/30 to-purple-950/20",
+        borderColor: "border-purple-900/40",
+        hoverBorderColor: "hover:border-purple-500/50",
       },
       {
         key: "manual",
         label: "Manual",
-        count: data.categories.manual.count,
+        count: data.categories.manual?.count || 0,
         icon: Edit,
         color: "text-blue-400",
-        bgColor: "bg-blue-500/10",
-        borderColor: "border-blue-500/20",
+        bgColor: "bg-gradient-to-br from-blue-900/30 to-blue-950/20",
+        borderColor: "border-blue-900/40",
+        hoverBorderColor: "hover:border-blue-500/50",
       },
     ];
   }, [data]);
@@ -294,12 +500,12 @@ const AssetOverview = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-2">
         <div>
           <div className="flex items-center gap-3">
-            <AlertTriangle className="w-8 h-8 text-yellow-400" />
+            <AlertTriangle className="w-8 h-8 text-orange-400" />
             <h1 className="text-3xl font-bold text-theme-text">
-              Missing Assets
+              Asset Overview
             </h1>
           </div>
           <p className="text-theme-muted mt-2">
@@ -308,7 +514,7 @@ const AssetOverview = () => {
         </div>
         <button
           onClick={fetchData}
-          className="flex items-center gap-2 px-4 py-2 bg-theme-primary hover:bg-theme-primary/80 text-white rounded-lg transition-colors"
+          className="flex items-center gap-2 px-5 py-2.5 bg-yellow-600 hover:bg-yellow-500 text-white rounded-lg transition-all duration-200 font-semibold shadow-md hover:shadow-lg"
         >
           <RefreshCw className="w-4 h-4" />
           Refresh
@@ -327,21 +533,26 @@ const AssetOverview = () => {
               onClick={() =>
                 setSelectedCategory(isSelected ? "All Categories" : card.label)
               }
-              className={`p-4 rounded-lg border transition-all ${
+              className={`relative p-5 rounded-xl border-2 transition-all duration-200 ${
+                card.bgColor
+              } ${card.borderColor} ${card.hoverBorderColor} ${
                 isSelected
-                  ? `${card.bgColor} ${card.borderColor} scale-105`
-                  : "bg-theme-card border-theme hover:border-theme-primary/30"
+                  ? "ring-2 ring-theme-primary/50 scale-105 shadow-lg"
+                  : "hover:scale-102 shadow-md"
               }`}
             >
-              <div className="flex items-center justify-between mb-2">
-                <Icon className={`w-5 h-5 ${card.color}`} />
-                <span className={`text-2xl font-bold ${card.color}`}>
+              <div className="flex items-start justify-between mb-3">
+                <Icon className={`w-6 h-6 ${card.color}`} />
+                <span className={`text-3xl font-bold ${card.color}`}>
                   {card.count}
                 </span>
               </div>
-              <div className="text-sm font-medium text-theme-muted text-left">
+              <div className="text-sm font-semibold text-gray-300 text-left">
                 {card.label}
               </div>
+              {isSelected && (
+                <div className="absolute inset-0 bg-theme-primary/5 rounded-xl pointer-events-none" />
+              )}
             </button>
           );
         })}
@@ -466,16 +677,28 @@ const AssetOverview = () => {
                         )}
                     </div>
 
-                    {/* Tags */}
-                    <div className="flex flex-wrap gap-2 max-w-md">
-                      {tags.map((tag, index) => (
-                        <span
-                          key={index}
-                          className={`px-3 py-1 rounded-full text-xs font-medium border whitespace-nowrap ${tag.color}`}
-                        >
-                          {tag.label}
-                        </span>
-                      ))}
+                    {/* Tags and Replace Button */}
+                    <div className="flex items-start gap-3">
+                      <div className="flex flex-wrap gap-2 max-w-md">
+                        {tags.map((tag, index) => (
+                          <span
+                            key={index}
+                            className={`px-3 py-1 rounded-full text-xs font-medium border whitespace-nowrap ${tag.color}`}
+                          >
+                            {tag.label}
+                          </span>
+                        ))}
+                      </div>
+
+                      {/* Replace Button */}
+                      <button
+                        onClick={() => handleReplace(asset)}
+                        className="flex items-center gap-2 px-4 py-2 bg-theme-primary hover:bg-theme-primary/80 text-white rounded-lg transition-colors whitespace-nowrap"
+                        title="Replace this asset"
+                      >
+                        <Replace className="w-4 h-4" />
+                        Replace
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -484,6 +707,15 @@ const AssetOverview = () => {
           </div>
         )}
       </div>
+
+      {/* Asset Replacer Modal */}
+      {showReplacer && selectedAsset && (
+        <AssetReplacer
+          asset={selectedAsset}
+          onClose={handleCloseReplacer}
+          onSuccess={handleReplaceSuccess}
+        />
+      )}
     </div>
   );
 };

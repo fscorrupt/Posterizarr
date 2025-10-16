@@ -504,6 +504,9 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
         if (data.manual_run_triggered) {
           showSuccess("Asset replaced and queued for overlay processing! 🎨");
 
+          // Call onSuccess to delete DB entry before navigating
+          onSuccess?.();
+
           console.log("🎯 Waiting for log file: Manuallog.log");
 
           // Wait for log file to be created before navigating
@@ -697,6 +700,9 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
       if (data.success) {
         if (data.manual_run_triggered) {
           showSuccess("Asset replaced and queued for overlay processing! 🎨");
+
+          // Call onSuccess to delete DB entry before navigating
+          onSuccess?.();
 
           console.log("🎯 Waiting for log file: Manuallog.log");
 

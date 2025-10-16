@@ -60,9 +60,20 @@ const Sidebar = () => {
     };
 
     fetchMissingAssetsCount();
+
+    // Listen for assetReplaced event to refresh immediately
+    const handleAssetReplaced = () => {
+      fetchMissingAssetsCount();
+    };
+    window.addEventListener("assetReplaced", handleAssetReplaced);
+
     // Refresh every 60 seconds
     const interval = setInterval(fetchMissingAssetsCount, 60000);
-    return () => clearInterval(interval);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("assetReplaced", handleAssetReplaced);
+    };
   }, []);
 
   // Update viewMode when localStorage changes (listen to storage events)

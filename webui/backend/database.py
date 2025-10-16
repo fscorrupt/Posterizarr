@@ -175,6 +175,24 @@ class ImageChoicesDB:
             logger.error(f"Error fetching record by title: {e}")
             raise
 
+    def get_choice_by_id(self, record_id: int):
+        """
+        Get image choice by ID
+
+        Args:
+            record_id: ID of the record to fetch
+
+        Returns:
+            sqlite3.Row or None: Record if found, None otherwise
+        """
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute("SELECT * FROM imagechoices WHERE id = ?", (record_id,))
+            return cursor.fetchone()
+        except sqlite3.Error as e:
+            logger.error(f"Error fetching record by ID: {e}")
+            raise
+
     def update_choice(self, record_id: int, **kwargs):
         """
         Update an existing image choice record

@@ -6418,7 +6418,8 @@ class ImageChoiceRecord(BaseModel):
 async def get_assets_overview():
     """
     Get asset overview with categorized issues.
-    Categories: Missing Assets, Non-Primary Lang, Non-Primary Provider, Truncated Text, Manual, Total with Issues
+    Categories: Missing Assets, Non-Primary Lang, Non-Primary Provider, Truncated Text, Total with Issues
+    Note: Manual entries are excluded from all categories
     """
     if not DATABASE_AVAILABLE or db is None:
         raise HTTPException(status_code=503, detail="Database not available")
@@ -6455,12 +6456,17 @@ async def get_assets_overview():
         non_primary_lang = []
         non_primary_provider = []
         truncated_text = []
-        manual_assets = []
         assets_with_issues = []
 
         # Categorize each record
         for record in records:
             record_dict = dict(record)
+
+            # Skip Manual entries entirely (Manual == "True" or "true")
+            manual_value = str(record_dict.get("Manual", "")).lower()
+            if manual_value == "true":
+                continue
+
             has_issue = False
 
             # Missing Assets: DownloadSource == "N/A"
@@ -6547,12 +6553,6 @@ async def get_assets_overview():
                 truncated_text.append(record_dict)
                 has_issue = True
 
-            # Manual: Manual == "True" or "true"
-            manual_value = str(record_dict.get("Manual", "")).lower()
-            if manual_value == "true":
-                manual_assets.append(record_dict)
-                # Note: Manual is not considered an "issue" for the total count
-
             # Add to assets_with_issues if any issue flag is set
             if has_issue:
                 assets_with_issues.append(record_dict)
@@ -6574,10 +6574,6 @@ async def get_assets_overview():
                 "truncated_text": {
                     "count": len(truncated_text),
                     "assets": truncated_text,
-                },
-                "manual": {
-                    "count": len(manual_assets),
-                    "assets": manual_assets,
                 },
                 "assets_with_issues": {
                     "count": len(assets_with_issues),
@@ -6679,6 +6675,85 @@ async def delete_imagechoice(record_id: int):
         return {"message": "Record deleted successfully"}
     except Exception as e:
         logger.error(f"Error deleting image choice: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/imagechoices/{record_id}/find-asset")
+async def find_asset_for_imagechoice(record_id: int):
+    """
+    Find the actual asset file path for a database record.
+    Searches the filesystem for the matching asset based on Rootfolder, LibraryName, and Type.
+    Returns the asset path in Gallery-compatible format.
+    """
+    if not DATABASE_AVAILABLE or db is None:
+        raise HTTPException(status_code=503, detail="Database not available")
+
+    try:
+        # Get the record from DB
+        record = db.get_choice_by_id(record_id)
+        if not record:
+            raise HTTPException(status_code=404, detail="Record not found")
+
+        record_dict = dict(record)
+        rootfolder = record_dict.get("Rootfolder")
+        library = record_dict.get("LibraryName")
+        asset_type = (record_dict.get("Type") or "").lower()
+
+        if not rootfolder or not library:
+            raise HTTPException(
+                status_code=400, detail="Record missing Rootfolder or LibraryName"
+            )
+
+        # Construct the folder path
+        folder_path = ASSETS_DIR / library / rootfolder
+
+        if not folder_path.exists() or not folder_path.is_dir():
+            raise HTTPException(
+                status_code=404,
+                detail=f"Asset folder not found: {library}/{rootfolder}",
+            )
+
+        # Determine which file pattern to look for based on type
+        if "background" in asset_type:
+            pattern = "background.*"
+        elif "season" in asset_type:
+            pattern = "Season*.*"
+        elif "titlecard" in asset_type or "episode" in asset_type:
+            pattern = "S[0-9][0-9]E[0-9][0-9].*"
+        else:
+            pattern = "poster.*"
+
+        # Find matching files
+        import glob
+
+        matching_files = list(folder_path.glob(pattern))
+
+        if not matching_files:
+            raise HTTPException(
+                status_code=404,
+                detail=f"No matching asset found in {library}/{rootfolder} with pattern {pattern}",
+            )
+
+        # Return the first match (in Gallery-compatible format)
+        asset_file = matching_files[0]
+        relative_path = asset_file.relative_to(ASSETS_DIR)
+        path_str = str(relative_path).replace("\\", "/")
+
+        return {
+            "success": True,
+            "asset": {
+                "name": asset_file.name,
+                "path": path_str,
+                "url": f"/poster_assets/{path_str}",
+                "type": asset_type,
+                "library": library,
+            },
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error finding asset for record {record_id}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
