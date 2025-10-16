@@ -10176,7 +10176,9 @@ Elseif ($Tautulli) {
                                         'TVDB' { $movietemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
                                         Default { $movietemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
                                     }
-
+                                    if ($EntryDir -and (Test-Path -LiteralPath $EntryDir) -and !(Get-ChildItem -LiteralPath $EntryDir)) {
+                                        Remove-Item -LiteralPath $EntryDir -Force -ErrorAction SilentlyContinue | out-null
+                                    }
                                     # Export the array to a CSV file
                                     $movietemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                                 }
@@ -10591,7 +10593,9 @@ Elseif ($Tautulli) {
                                         'TVDB' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
                                         Default { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
                                     }
-
+                                    if ($EntryDir -and (Test-Path -LiteralPath $EntryDir) -and !(Get-ChildItem -LiteralPath $EntryDir)) {
+                                        Remove-Item -LiteralPath $EntryDir -Force -ErrorAction SilentlyContinue | out-null
+                                    }
                                     # Export the array to a CSV file
                                     $moviebackgroundtemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                                 }
@@ -10635,7 +10639,9 @@ Elseif ($Tautulli) {
                     'TVDB' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
                     Default { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
                 }
-
+                if ($EntryDir -and (Test-Path -LiteralPath $EntryDir) -and !(Get-ChildItem -LiteralPath $EntryDir)) {
+                    Remove-Item -LiteralPath $EntryDir -Force -ErrorAction SilentlyContinue | out-null
+                }
                 # Export the array to a CSV file
                 $moviebackgroundtemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
             }
@@ -11092,7 +11098,9 @@ Elseif ($Tautulli) {
                                     'TVDB' { $showtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
                                     Default { $showtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
                                 }
-
+                                if ($EntryDir -and (Test-Path -LiteralPath $EntryDir) -and !(Get-ChildItem -LiteralPath $EntryDir)) {
+                                    Remove-Item -LiteralPath $EntryDir -Force -ErrorAction SilentlyContinue | out-null
+                                }
                                 # Export the array to a CSV file
                                 $showtemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                             }
@@ -11524,7 +11532,9 @@ Elseif ($Tautulli) {
                                     'TVDB' { $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
                                     Default { $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
                                 }
-
+                                if ($EntryDir -and (Test-Path -LiteralPath $EntryDir) -and !(Get-ChildItem -LiteralPath $EntryDir)) {
+                                    Remove-Item -LiteralPath $EntryDir -Force -ErrorAction SilentlyContinue | out-null
+                                }
                                 # Export the array to a CSV file
                                 $showbackgroundtemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                             }
@@ -12167,7 +12177,9 @@ Elseif ($Tautulli) {
                                         'TVDB' { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
                                         Default { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
                                     }
-
+                                    if ($EntryDir -and (Test-Path -LiteralPath $EntryDir) -and !(Get-ChildItem -LiteralPath $EntryDir)) {
+                                        Remove-Item -LiteralPath $EntryDir -Force -ErrorAction SilentlyContinue | out-null
+                                    }
                                     # Export the array to a CSV file
                                     $seasontemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                                 }
@@ -12739,7 +12751,9 @@ Elseif ($Tautulli) {
                                                         'TVDB' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
                                                         Default { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
                                                     }
-
+                                                    if ($EntryDir -and (Test-Path -LiteralPath $EntryDir) -and !(Get-ChildItem -LiteralPath $EntryDir)) {
+                                                        Remove-Item -LiteralPath $EntryDir -Force -ErrorAction SilentlyContinue | out-null
+                                                    }
                                                     # Export the array to a CSV file
                                                     $episodetemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                                                 }
@@ -13288,7 +13302,9 @@ Elseif ($Tautulli) {
                                                         'TVDB' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
                                                         Default { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
                                                     }
-
+                                                    if ($EntryDir -and (Test-Path -LiteralPath $EntryDir) -and !(Get-ChildItem -LiteralPath $EntryDir)) {
+                                                        Remove-Item -LiteralPath $EntryDir -Force -ErrorAction SilentlyContinue | out-null
+                                                    }
                                                     # Export the array to a CSV file
                                                     $episodetemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                                                 }
@@ -14411,7 +14427,9 @@ Elseif ($ArrTrigger) {
                                             'TVDB' { $movietemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
                                             Default { $movietemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
                                         }
-
+                                        if ($EntryDir -and (Test-Path -LiteralPath $EntryDir) -and !(Get-ChildItem -LiteralPath $EntryDir)) {
+                                            Remove-Item -LiteralPath $EntryDir -Force -ErrorAction SilentlyContinue | out-null
+                                        }
                                         # Export the array to a CSV file
                                         $movietemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                                     }
@@ -14798,7 +14816,9 @@ Elseif ($ArrTrigger) {
                                             'TVDB' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
                                             Default { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
                                         }
-
+                                        if ($EntryDir -and (Test-Path -LiteralPath $EntryDir) -and !(Get-ChildItem -LiteralPath $EntryDir)) {
+                                            Remove-Item -LiteralPath $EntryDir -Force -ErrorAction SilentlyContinue | out-null
+                                        }
                                         # Export the array to a CSV file
                                         $moviebackgroundtemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                                     }
@@ -14849,7 +14869,9 @@ Elseif ($ArrTrigger) {
                         'TVDB' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
                         Default { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
                     }
-
+                    if ($EntryDir -and (Test-Path -LiteralPath $EntryDir) -and !(Get-ChildItem -LiteralPath $EntryDir)) {
+                        Remove-Item -LiteralPath $EntryDir -Force -ErrorAction SilentlyContinue | out-null
+                    }
                     # Export the array to a CSV file
                     $moviebackgroundtemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                 }
@@ -15261,7 +15283,9 @@ Elseif ($ArrTrigger) {
                                         'TVDB' { $showtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
                                         Default { $showtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
                                     }
-
+                                    if ($EntryDir -and (Test-Path -LiteralPath $EntryDir) -and !(Get-ChildItem -LiteralPath $EntryDir)) {
+                                        Remove-Item -LiteralPath $EntryDir -Force -ErrorAction SilentlyContinue | out-null
+                                    }
                                     # Export the array to a CSV file
                                     $showtemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                                 }
@@ -15658,7 +15682,9 @@ Elseif ($ArrTrigger) {
                                         'TVDB' { $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
                                         Default { $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
                                     }
-
+                                    if ($EntryDir -and (Test-Path -LiteralPath $EntryDir) -and !(Get-ChildItem -LiteralPath $EntryDir)) {
+                                        Remove-Item -LiteralPath $EntryDir -Force -ErrorAction SilentlyContinue | out-null
+                                    }
                                     # Export the array to a CSV file
                                     $showbackgroundtemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                                 }
@@ -16215,7 +16241,9 @@ Elseif ($ArrTrigger) {
                                                 'TVDB' { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
                                                 Default { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
                                             }
-
+                                            if ($EntryDir -and (Test-Path -LiteralPath $EntryDir) -and !(Get-ChildItem -LiteralPath $EntryDir)) {
+                                                Remove-Item -LiteralPath $EntryDir -Force -ErrorAction SilentlyContinue | out-null
+                                            }
                                             # Export the array to a CSV file
                                             $seasontemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                                         }
@@ -16696,7 +16724,9 @@ Elseif ($ArrTrigger) {
                                                             'TVDB' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
                                                             Default { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
                                                         }
-
+                                                        if ($EntryDir -and (Test-Path -LiteralPath $EntryDir) -and !(Get-ChildItem -LiteralPath $EntryDir)) {
+                                                            Remove-Item -LiteralPath $EntryDir -Force -ErrorAction SilentlyContinue | out-null
+                                                        }
                                                         # Export the array to a CSV file
                                                         $episodetemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                                                     }
@@ -17156,7 +17186,9 @@ Elseif ($ArrTrigger) {
                                                             'TVDB' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
                                                             Default { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
                                                         }
-
+                                                        if ($EntryDir -and (Test-Path -LiteralPath $EntryDir) -and !(Get-ChildItem -LiteralPath $EntryDir)) {
+                                                            Remove-Item -LiteralPath $EntryDir -Force -ErrorAction SilentlyContinue | out-null
+                                                        }
                                                         # Export the array to a CSV file
                                                         $episodetemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                                                     }
@@ -18273,7 +18305,9 @@ Elseif ($ArrTrigger) {
                                             'TVDB' { $movietemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
                                             Default { $movietemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
                                         }
-
+                                        if ($EntryDir -and (Test-Path -LiteralPath $EntryDir) -and !(Get-ChildItem -LiteralPath $EntryDir)) {
+                                            Remove-Item -LiteralPath $EntryDir -Force -ErrorAction SilentlyContinue | out-null
+                                        }
                                         # Export the array to a CSV file
                                         $movietemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                                     }
@@ -18688,7 +18722,9 @@ Elseif ($ArrTrigger) {
                                             'TVDB' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
                                             Default { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
                                         }
-
+                                        if ($EntryDir -and (Test-Path -LiteralPath $EntryDir) -and !(Get-ChildItem -LiteralPath $EntryDir)) {
+                                            Remove-Item -LiteralPath $EntryDir -Force -ErrorAction SilentlyContinue | out-null
+                                        }
                                         # Export the array to a CSV file
                                         $moviebackgroundtemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                                     }
@@ -18732,7 +18768,9 @@ Elseif ($ArrTrigger) {
                         'TVDB' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
                         Default { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
                     }
-
+                    if ($EntryDir -and (Test-Path -LiteralPath $EntryDir) -and !(Get-ChildItem -LiteralPath $EntryDir)) {
+                        Remove-Item -LiteralPath $EntryDir -Force -ErrorAction SilentlyContinue | out-null
+                    }
                     # Export the array to a CSV file
                     $moviebackgroundtemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                 }
@@ -19189,7 +19227,9 @@ Elseif ($ArrTrigger) {
                                         'TVDB' { $showtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
                                         Default { $showtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
                                     }
-
+                                    if ($EntryDir -and (Test-Path -LiteralPath $EntryDir) -and !(Get-ChildItem -LiteralPath $EntryDir)) {
+                                        Remove-Item -LiteralPath $EntryDir -Force -ErrorAction SilentlyContinue | out-null
+                                    }
                                     # Export the array to a CSV file
                                     $showtemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                                 }
@@ -19621,7 +19661,9 @@ Elseif ($ArrTrigger) {
                                         'TVDB' { $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
                                         Default { $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
                                     }
-
+                                    if ($EntryDir -and (Test-Path -LiteralPath $EntryDir) -and !(Get-ChildItem -LiteralPath $EntryDir)) {
+                                        Remove-Item -LiteralPath $EntryDir -Force -ErrorAction SilentlyContinue | out-null
+                                    }
                                     # Export the array to a CSV file
                                     $showbackgroundtemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                                 }
@@ -20264,7 +20306,9 @@ Elseif ($ArrTrigger) {
                                             'TVDB' { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
                                             Default { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
                                         }
-
+                                        if ($EntryDir -and (Test-Path -LiteralPath $EntryDir) -and !(Get-ChildItem -LiteralPath $EntryDir)) {
+                                            Remove-Item -LiteralPath $EntryDir -Force -ErrorAction SilentlyContinue | out-null
+                                        }
                                         # Export the array to a CSV file
                                         $seasontemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                                     }
@@ -20836,7 +20880,9 @@ Elseif ($ArrTrigger) {
                                                             'TVDB' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
                                                             Default { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
                                                         }
-
+                                                        if ($EntryDir -and (Test-Path -LiteralPath $EntryDir) -and !(Get-ChildItem -LiteralPath $EntryDir)) {
+                                                            Remove-Item -LiteralPath $EntryDir -Force -ErrorAction SilentlyContinue | out-null
+                                                        }
                                                         # Export the array to a CSV file
                                                         $episodetemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                                                     }
@@ -21385,7 +21431,9 @@ Elseif ($ArrTrigger) {
                                                             'TVDB' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
                                                             Default { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
                                                         }
-
+                                                        if ($EntryDir -and (Test-Path -LiteralPath $EntryDir) -and !(Get-ChildItem -LiteralPath $EntryDir)) {
+                                                            Remove-Item -LiteralPath $EntryDir -Force -ErrorAction SilentlyContinue | out-null
+                                                        }
                                                         # Export the array to a CSV file
                                                         $episodetemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                                                     }
@@ -23674,7 +23722,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                         'TVDB' { $movietemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
                                         Default { $movietemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
                                     }
-
+                                    if ($EntryDir -and (Test-Path -LiteralPath $EntryDir) -and !(Get-ChildItem -LiteralPath $EntryDir)) {
+                                        Remove-Item -LiteralPath $EntryDir -Force -ErrorAction SilentlyContinue | out-null
+                                    }
                                     # Export the array to a CSV file
                                     $movietemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                                 }
@@ -24061,7 +24111,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                         'TVDB' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
                                         Default { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
                                     }
-
+                                    if ($EntryDir -and (Test-Path -LiteralPath $EntryDir) -and !(Get-ChildItem -LiteralPath $EntryDir)) {
+                                        Remove-Item -LiteralPath $EntryDir -Force -ErrorAction SilentlyContinue | out-null
+                                    }
                                     # Export the array to a CSV file
                                     $moviebackgroundtemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                                 }
@@ -24112,7 +24164,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                     'TVDB' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
                     Default { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
                 }
-
+                if ($EntryDir -and (Test-Path -LiteralPath $EntryDir) -and !(Get-ChildItem -LiteralPath $EntryDir)) {
+                    Remove-Item -LiteralPath $EntryDir -Force -ErrorAction SilentlyContinue | out-null
+                }
                 # Export the array to a CSV file
                 $moviebackgroundtemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
             }
@@ -24524,7 +24578,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                     'TVDB' { $showtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
                                     Default { $showtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
                                 }
-
+                                if ($EntryDir -and (Test-Path -LiteralPath $EntryDir) -and !(Get-ChildItem -LiteralPath $EntryDir)) {
+                                    Remove-Item -LiteralPath $EntryDir -Force -ErrorAction SilentlyContinue | out-null
+                                }
                                 # Export the array to a CSV file
                                 $showtemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                             }
@@ -24921,7 +24977,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                     'TVDB' { $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
                                     Default { $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
                                 }
-
+                                if ($EntryDir -and (Test-Path -LiteralPath $EntryDir) -and !(Get-ChildItem -LiteralPath $EntryDir)) {
+                                    Remove-Item -LiteralPath $EntryDir -Force -ErrorAction SilentlyContinue | out-null
+                                }
                                 # Export the array to a CSV file
                                 $showbackgroundtemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                             }
@@ -25492,7 +25550,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                             'TVDB' { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
                                             Default { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
                                         }
-
+                                        if ($EntryDir -and (Test-Path -LiteralPath $EntryDir) -and !(Get-ChildItem -LiteralPath $EntryDir)) {
+                                            Remove-Item -LiteralPath $EntryDir -Force -ErrorAction SilentlyContinue | out-null
+                                        }
                                         # Export the array to a CSV file
                                         $seasontemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                                     }
@@ -25973,7 +26033,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                                         'TVDB' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
                                                         Default { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
                                                     }
-
+                                                    if ($EntryDir -and (Test-Path -LiteralPath $EntryDir) -and !(Get-ChildItem -LiteralPath $EntryDir)) {
+                                                        Remove-Item -LiteralPath $EntryDir -Force -ErrorAction SilentlyContinue | out-null
+                                                    }
                                                     # Export the array to a CSV file
                                                     $episodetemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                                                 }
@@ -26433,7 +26495,9 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
                                                         'TVDB' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
                                                         Default { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
                                                     }
-
+                                                    if ($EntryDir -and (Test-Path -LiteralPath $EntryDir) -and !(Get-ChildItem -LiteralPath $EntryDir)) {
+                                                        Remove-Item -LiteralPath $EntryDir -Force -ErrorAction SilentlyContinue | out-null
+                                                    }
                                                     # Export the array to a CSV file
                                                     $episodetemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                                                 }
@@ -28101,7 +28165,9 @@ else {
                                         'TVDB' { $movietemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
                                         Default { $movietemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
                                     }
-
+                                    if ($EntryDir -and (Test-Path -LiteralPath $EntryDir) -and !(Get-ChildItem -LiteralPath $EntryDir)) {
+                                        Remove-Item -LiteralPath $EntryDir -Force -ErrorAction SilentlyContinue | out-null
+                                    }
                                     # Export the array to a CSV file
                                     $movietemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                                 }
@@ -28549,7 +28615,9 @@ else {
                                         'TVDB' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
                                         Default { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
                                     }
-
+                                    if ($EntryDir -and (Test-Path -LiteralPath $EntryDir) -and !(Get-ChildItem -LiteralPath $EntryDir)) {
+                                        Remove-Item -LiteralPath $EntryDir -Force -ErrorAction SilentlyContinue | out-null
+                                    }
                                     # Export the array to a CSV file
                                     $moviebackgroundtemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                                 }
@@ -28622,7 +28690,9 @@ else {
                     'TVDB' { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
                     Default { $moviebackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
                 }
-
+                if ($EntryDir -and (Test-Path -LiteralPath $EntryDir) -and !(Get-ChildItem -LiteralPath $EntryDir)) {
+                    Remove-Item -LiteralPath $EntryDir -Force -ErrorAction SilentlyContinue | out-null
+                }
                 # Export the array to a CSV file
                 $moviebackgroundtemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
             }
@@ -29088,7 +29158,9 @@ else {
                                     'TVDB' { $showtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
                                     Default { $showtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
                                 }
-
+                                if ($EntryDir -and (Test-Path -LiteralPath $EntryDir) -and !(Get-ChildItem -LiteralPath $EntryDir)) {
+                                    Remove-Item -LiteralPath $EntryDir -Force -ErrorAction SilentlyContinue | out-null
+                                }
                                 # Export the array to a CSV file
                                 $showtemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                             }
@@ -29545,7 +29617,9 @@ else {
                                     'TVDB' { $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
                                     Default { $showbackgroundtemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
                                 }
-
+                                if ($EntryDir -and (Test-Path -LiteralPath $EntryDir) -and !(Get-ChildItem -LiteralPath $EntryDir)) {
+                                    Remove-Item -LiteralPath $EntryDir -Force -ErrorAction SilentlyContinue | out-null
+                                }
                                 # Export the array to a CSV file
                                 $showbackgroundtemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                             }
@@ -30225,7 +30299,9 @@ else {
                                         'TVDB' { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
                                         Default { $seasontemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
                                     }
-
+                                    if ($EntryDir -and (Test-Path -LiteralPath $EntryDir) -and !(Get-ChildItem -LiteralPath $EntryDir)) {
+                                        Remove-Item -LiteralPath $EntryDir -Force -ErrorAction SilentlyContinue | out-null
+                                    }
                                     # Export the array to a CSV file
                                     $seasontemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                                 }
@@ -30826,7 +30902,9 @@ else {
                                                         'TVDB' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
                                                         Default { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
                                                     }
-
+                                                    if ($EntryDir -and (Test-Path -LiteralPath $EntryDir) -and !(Get-ChildItem -LiteralPath $EntryDir)) {
+                                                        Remove-Item -LiteralPath $EntryDir -Force -ErrorAction SilentlyContinue | out-null
+                                                    }
                                                     # Export the array to a CSV file
                                                     $episodetemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                                                 }
@@ -31406,7 +31484,9 @@ else {
                                                         'TVDB' { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value $(if ($global:TVDBAssetChangeUrl) { $global:TVDBAssetChangeUrl }Else { "N/A" }) }
                                                         Default { $episodetemp | Add-Member -MemberType NoteProperty -Name "Fav Provider Link" -Value "N/A" }
                                                     }
-
+                                                    if ($EntryDir -and (Test-Path -LiteralPath $EntryDir) -and !(Get-ChildItem -LiteralPath $EntryDir)) {
+                                                        Remove-Item -LiteralPath $EntryDir -Force -ErrorAction SilentlyContinue | out-null
+                                                    }
                                                     # Export the array to a CSV file
                                                     $episodetemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
                                                 }
