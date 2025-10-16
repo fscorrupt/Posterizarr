@@ -218,7 +218,9 @@ function FolderView() {
   };
 
   const selectAllFolders = () => {
-    setSelectedFolders(filteredFolders.map((folder) => folder.path || folder.name));
+    setSelectedFolders(
+      filteredFolders.map((folder) => folder.path || folder.name)
+    );
   };
 
   const deselectAllFolders = () => {
@@ -302,7 +304,7 @@ function FolderView() {
         const response = await fetch(
           `${API_URL}/folder-view/assets/${encodeURIComponent(fullPath)}`
         );
-        
+
         if (response.ok) {
           const data = await response.json();
           const assets = data.assets || [];
@@ -310,9 +312,12 @@ function FolderView() {
           // Delete each asset
           for (const asset of assets) {
             try {
-              const deleteResponse = await fetch(`${API_URL}/gallery/${asset.path}`, {
-                method: "DELETE",
-              });
+              const deleteResponse = await fetch(
+                `${API_URL}/gallery/${asset.path}`,
+                {
+                  method: "DELETE",
+                }
+              );
               if (deleteResponse.ok) {
                 totalDeleted++;
               }
@@ -441,7 +446,11 @@ function FolderView() {
             ? `Are you sure you want to delete ${deleteConfirm.count} selected asset(s)?`
             : "Are you sure you want to delete this asset?"
         }
-        itemName={deleteConfirm?.bulk || deleteConfirm?.bulkFolders ? undefined : deleteConfirm?.name}
+        itemName={
+          deleteConfirm?.bulk || deleteConfirm?.bulkFolders
+            ? undefined
+            : deleteConfirm?.name
+        }
         confirmText="Delete"
         type="danger"
       />
@@ -507,7 +516,8 @@ function FolderView() {
           )}
 
           {/* Select Mode Controls - Show for folders (level 0 or 1) or assets (level 2) */}
-          {((currentPath.length < 2 && folders.length > 0) || (currentPath.length === 2 && assets.length > 0)) && (
+          {((currentPath.length < 2 && folders.length > 0) ||
+            (currentPath.length === 2 && assets.length > 0)) && (
             <>
               {selectMode && (
                 <>
@@ -516,7 +526,10 @@ function FolderView() {
                     <>
                       <button
                         onClick={selectAllFolders}
-                        disabled={selectedFolders.length === filteredFolders.length && filteredFolders.length > 0}
+                        disabled={
+                          selectedFolders.length === filteredFolders.length &&
+                          filteredFolders.length > 0
+                        }
                         className="flex items-center gap-2 px-4 py-2 bg-theme-hover hover:bg-theme-primary/70 border border-theme-border rounded-lg transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <CheckSquare className="w-5 h-5" />
@@ -543,7 +556,9 @@ function FolderView() {
                         >
                           <Trash2
                             className={`w-5 h-5 ${
-                              deletingImage === "bulk-folders" ? "animate-spin" : ""
+                              deletingImage === "bulk-folders"
+                                ? "animate-spin"
+                                : ""
                             }`}
                           />
                           Delete All Assets ({selectedFolders.length})
@@ -551,13 +566,16 @@ function FolderView() {
                       )}
                     </>
                   )}
-                  
+
                   {/* Controls for Assets */}
                   {currentPath.length === 2 && (
                     <>
                       <button
                         onClick={selectAllAssets}
-                        disabled={selectedAssets.length === filteredAssets.length && filteredAssets.length > 0}
+                        disabled={
+                          selectedAssets.length === filteredAssets.length &&
+                          filteredAssets.length > 0
+                        }
                         className="flex items-center gap-2 px-4 py-2 bg-theme-hover hover:bg-theme-primary/70 border border-theme-border rounded-lg transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <CheckSquare className="w-5 h-5" />
@@ -676,44 +694,48 @@ function FolderView() {
                               : "bg-white/90 border-gray-300"
                           }`}
                         >
-                          {isSelected && <Check className="w-4 h-4 text-white" />}
+                          {isSelected && (
+                            <Check className="w-4 h-4 text-white" />
+                          )}
                         </div>
                       </div>
                     )}
 
                     <div className="flex items-start gap-3">
-                    <div className="p-3 rounded-lg border border-theme-border group-hover:bg-theme-primary group-hover:border-theme-primary transition-colors">
-                      <Folder className="w-6 h-6 text-theme-muted group-hover:text-white transition-colors" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-medium text-theme-text truncate mb-1">
-                        {folder.name}
-                      </h3>
-                      <div className="text-xs text-theme-muted space-y-1">
-                        {currentPath.length === 0 && (
-                          <>
-                            <div>Total: {folder.total_count || 0} assets</div>
-                            {folder.poster_count > 0 && (
-                              <div>Posters: {folder.poster_count}</div>
-                            )}
-                            {folder.background_count > 0 && (
-                              <div>Backgrounds: {folder.background_count}</div>
-                            )}
-                            {folder.season_count > 0 && (
-                              <div>Seasons: {folder.season_count}</div>
-                            )}
-                            {folder.titlecard_count > 0 && (
-                              <div>Episodes: {folder.titlecard_count}</div>
-                            )}
-                          </>
-                        )}
-                        {currentPath.length === 1 && folder.asset_count && (
-                          <div>{folder.asset_count} assets</div>
-                        )}
+                      <div className="p-3 rounded-lg border border-theme-border group-hover:bg-theme-primary group-hover:border-theme-primary transition-colors">
+                        <Folder className="w-6 h-6 text-theme-muted group-hover:text-white transition-colors" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-theme-text truncate mb-1">
+                          {folder.name}
+                        </h3>
+                        <div className="text-xs text-theme-muted space-y-1">
+                          {currentPath.length === 0 && (
+                            <>
+                              <div>Total: {folder.total_count || 0} assets</div>
+                              {folder.poster_count > 0 && (
+                                <div>Posters: {folder.poster_count}</div>
+                              )}
+                              {folder.background_count > 0 && (
+                                <div>
+                                  Backgrounds: {folder.background_count}
+                                </div>
+                              )}
+                              {folder.season_count > 0 && (
+                                <div>Seasons: {folder.season_count}</div>
+                              )}
+                              {folder.titlecard_count > 0 && (
+                                <div>Episodes: {folder.titlecard_count}</div>
+                              )}
+                            </>
+                          )}
+                          {currentPath.length === 1 && folder.asset_count && (
+                            <div>{folder.asset_count} assets</div>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </button>
+                  </button>
                 );
               })}
             </div>
@@ -751,7 +773,9 @@ function FolderView() {
                               : "bg-white/90 border-gray-300"
                           }`}
                         >
-                          {isSelected && <Check className="w-4 h-4 text-white" />}
+                          {isSelected && (
+                            <Check className="w-4 h-4 text-white" />
+                          )}
                         </div>
                       </div>
                     )}
