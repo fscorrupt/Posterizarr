@@ -350,7 +350,7 @@ function RunModes() {
         showSuccess(`Started in ${mode} mode`);
         fetchStatus();
 
-        // ✨ Redirect to LogViewer with the correct log file
+        // ✨ Weiterleitung zum LogViewer mit der richtigen Log-Datei
         const logFile = getLogFileForMode(mode);
         console.log(`🎯 Waiting for log file: ${logFile}`);
 
