@@ -10,12 +10,16 @@ import {
   Film,
   Tv,
   FileImage,
+  CheckSquare,
+  Square,
+  Check,
 } from "lucide-react";
 import CompactImageSizeSlider from "./CompactImageSizeSlider";
 import Notification from "./Notification";
 import { useToast } from "../context/ToastContext";
 import ConfirmDialog from "./ConfirmDialog";
 import AssetReplacer from "./AssetReplacer";
+import ScrollToButtons from "./ScrollToButtons";
 
 const API_URL = "/api";
 
@@ -30,6 +34,11 @@ function FolderView() {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [deletingImage, setDeletingImage] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+
+  // Multi-select state
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedAssets, setSelectedAssets] = useState([]);
+  const [selectedFolders, setSelectedFolders] = useState([]); // For selecting folders/items
 
   // Asset replacer state
   const [replacerOpen, setReplacerOpen] = useState(false);
@@ -65,6 +74,10 @@ function FolderView() {
   // Load data when path changes
   useEffect(() => {
     loadCurrentLevel();
+    // Clear select mode and selections when navigating
+    setSelectMode(false);
+    setSelectedAssets([]);
+    setSelectedFolders([]);
   }, [currentPath]);
 
   const loadCurrentLevel = async () => {
@@ -178,6 +191,167 @@ function FolderView() {
     }
   };
 
+  // Multi-select functions for assets
+  const toggleAssetSelection = (assetPath) => {
+    setSelectedAssets((prev) =>
+      prev.includes(assetPath)
+        ? prev.filter((p) => p !== assetPath)
+        : [...prev, assetPath]
+    );
+  };
+
+  const selectAllAssets = () => {
+    setSelectedAssets(filteredAssets.map((asset) => asset.path));
+  };
+
+  const deselectAllAssets = () => {
+    setSelectedAssets([]);
+  };
+
+  // Multi-select functions for folders
+  const toggleFolderSelection = (folderPath) => {
+    setSelectedFolders((prev) =>
+      prev.includes(folderPath)
+        ? prev.filter((p) => p !== folderPath)
+        : [...prev, folderPath]
+    );
+  };
+
+  const selectAllFolders = () => {
+    setSelectedFolders(filteredFolders.map((folder) => folder.path || folder.name));
+  };
+
+  const deselectAllFolders = () => {
+    setSelectedFolders([]);
+  };
+
+  const cancelSelectMode = () => {
+    setSelectMode(false);
+    setSelectedAssets([]);
+    setSelectedFolders([]);
+  };
+
+  const bulkDeleteAssets = async () => {
+    const count = selectedAssets.length;
+    setDeletingImage("bulk");
+
+    let successCount = 0;
+    let failCount = 0;
+
+    for (const assetPath of selectedAssets) {
+      try {
+        const response = await fetch(`${API_URL}/gallery/${assetPath}`, {
+          method: "DELETE",
+        });
+
+        if (response.ok) {
+          successCount++;
+        } else {
+          failCount++;
+        }
+      } catch (error) {
+        console.error(`Error deleting ${assetPath}:`, error);
+        failCount++;
+      }
+    }
+
+    setDeletingImage(null);
+    setDeleteConfirm(null);
+    cancelSelectMode();
+
+    if (successCount > 0) {
+      showSuccess(
+        `Successfully deleted ${successCount} asset${
+          successCount !== 1 ? "s" : ""
+        }`
+      );
+    }
+
+    if (failCount > 0) {
+      showError(
+        `Failed to delete ${failCount} asset${failCount !== 1 ? "s" : ""}`
+      );
+    }
+
+    // Reload current level
+    await loadCurrentLevel();
+  };
+
+  const bulkDeleteFolders = async () => {
+    const count = selectedFolders.length;
+    setDeletingImage("bulk-folders");
+
+    let successCount = 0;
+    let failCount = 0;
+    let totalDeleted = 0;
+
+    // For folders, we need to get all assets in each folder and delete them
+    for (const folderIdentifier of selectedFolders) {
+      try {
+        // Build the full path based on current level
+        let fullPath;
+        if (currentPath.length === 0) {
+          // Library level - folderIdentifier is the library name
+          fullPath = folderIdentifier;
+        } else if (currentPath.length === 1) {
+          // Item level - folderIdentifier is the item name
+          fullPath = `${currentPath[0]}/${folderIdentifier}`;
+        }
+
+        // Fetch assets in this folder/item
+        const response = await fetch(
+          `${API_URL}/folder-view/assets/${encodeURIComponent(fullPath)}`
+        );
+        
+        if (response.ok) {
+          const data = await response.json();
+          const assets = data.assets || [];
+
+          // Delete each asset
+          for (const asset of assets) {
+            try {
+              const deleteResponse = await fetch(`${API_URL}/gallery/${asset.path}`, {
+                method: "DELETE",
+              });
+              if (deleteResponse.ok) {
+                totalDeleted++;
+              }
+            } catch (error) {
+              console.error(`Error deleting asset ${asset.path}:`, error);
+            }
+          }
+          successCount++;
+        } else {
+          failCount++;
+        }
+      } catch (error) {
+        console.error(`Error processing folder ${folderIdentifier}:`, error);
+        failCount++;
+      }
+    }
+
+    setDeletingImage(null);
+    setDeleteConfirm(null);
+    cancelSelectMode();
+
+    if (successCount > 0) {
+      showSuccess(
+        `Successfully processed ${successCount} folder${
+          successCount !== 1 ? "s" : ""
+        } (${totalDeleted} assets deleted)`
+      );
+    }
+
+    if (failCount > 0) {
+      showError(
+        `Failed to process ${failCount} folder${failCount !== 1 ? "s" : ""}`
+      );
+    }
+
+    // Reload current level
+    await loadCurrentLevel();
+  };
+
   // Filter folders and assets based on search
   const filteredFolders = folders.filter((folder) =>
     folder.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -237,18 +411,37 @@ function FolderView() {
 
   return (
     <div className="space-y-6">
+      <ScrollToButtons />
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog
         isOpen={deleteConfirm !== null}
         onClose={() => setDeleteConfirm(null)}
         onConfirm={() => {
           if (deleteConfirm) {
-            deletePoster(deleteConfirm.path, deleteConfirm.name);
+            if (deleteConfirm.bulkFolders) {
+              bulkDeleteFolders();
+            } else if (deleteConfirm.bulk) {
+              bulkDeleteAssets();
+            } else {
+              deletePoster(deleteConfirm.path, deleteConfirm.name);
+            }
           }
         }}
-        title="Delete Image"
-        message="Are you sure you want to delete this image?"
-        itemName={deleteConfirm?.name}
+        title={
+          deleteConfirm?.bulkFolders
+            ? "Delete All Assets in Selected Folders"
+            : deleteConfirm?.bulk
+            ? "Delete Multiple Assets"
+            : "Delete Asset"
+        }
+        message={
+          deleteConfirm?.bulkFolders
+            ? `Are you sure you want to delete ALL assets in ${deleteConfirm.count} selected folder(s)? This will delete all posters, backgrounds, seasons, and title cards within these folders.`
+            : deleteConfirm?.bulk
+            ? `Are you sure you want to delete ${deleteConfirm.count} selected asset(s)?`
+            : "Are you sure you want to delete this asset?"
+        }
+        itemName={deleteConfirm?.bulk || deleteConfirm?.bulkFolders ? undefined : deleteConfirm?.name}
         confirmText="Delete"
         type="danger"
       />
@@ -313,6 +506,123 @@ function FolderView() {
             />
           )}
 
+          {/* Select Mode Controls - Show for folders (level 0 or 1) or assets (level 2) */}
+          {((currentPath.length < 2 && folders.length > 0) || (currentPath.length === 2 && assets.length > 0)) && (
+            <>
+              {selectMode && (
+                <>
+                  {/* Controls for Folders */}
+                  {currentPath.length < 2 && (
+                    <>
+                      <button
+                        onClick={selectAllFolders}
+                        disabled={selectedFolders.length === filteredFolders.length && filteredFolders.length > 0}
+                        className="flex items-center gap-2 px-4 py-2 bg-theme-hover hover:bg-theme-primary/70 border border-theme-border rounded-lg transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <CheckSquare className="w-5 h-5" />
+                        Select All ({filteredFolders.length})
+                      </button>
+                      <button
+                        onClick={deselectAllFolders}
+                        disabled={selectedFolders.length === 0}
+                        className="flex items-center gap-2 px-4 py-2 bg-theme-hover hover:bg-theme-primary/70 border border-theme-border rounded-lg transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <Square className="w-5 h-5" />
+                        Deselect All
+                      </button>
+                      {selectedFolders.length > 0 && (
+                        <button
+                          onClick={() =>
+                            setDeleteConfirm({
+                              bulkFolders: true,
+                              count: selectedFolders.length,
+                            })
+                          }
+                          disabled={deletingImage === "bulk-folders"}
+                          className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg transition-all font-medium shadow-lg"
+                        >
+                          <Trash2
+                            className={`w-5 h-5 ${
+                              deletingImage === "bulk-folders" ? "animate-spin" : ""
+                            }`}
+                          />
+                          Delete All Assets ({selectedFolders.length})
+                        </button>
+                      )}
+                    </>
+                  )}
+                  
+                  {/* Controls for Assets */}
+                  {currentPath.length === 2 && (
+                    <>
+                      <button
+                        onClick={selectAllAssets}
+                        disabled={selectedAssets.length === filteredAssets.length && filteredAssets.length > 0}
+                        className="flex items-center gap-2 px-4 py-2 bg-theme-hover hover:bg-theme-primary/70 border border-theme-border rounded-lg transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <CheckSquare className="w-5 h-5" />
+                        Select All ({filteredAssets.length})
+                      </button>
+                      <button
+                        onClick={deselectAllAssets}
+                        disabled={selectedAssets.length === 0}
+                        className="flex items-center gap-2 px-4 py-2 bg-theme-hover hover:bg-theme-primary/70 border border-theme-border rounded-lg transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <Square className="w-5 h-5" />
+                        Deselect All
+                      </button>
+                      {selectedAssets.length > 0 && (
+                        <button
+                          onClick={() =>
+                            setDeleteConfirm({
+                              bulk: true,
+                              count: selectedAssets.length,
+                            })
+                          }
+                          disabled={deletingImage === "bulk"}
+                          className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg transition-all font-medium shadow-lg"
+                        >
+                          <Trash2
+                            className={`w-5 h-5 ${
+                              deletingImage === "bulk" ? "animate-spin" : ""
+                            }`}
+                          />
+                          Delete ({selectedAssets.length})
+                        </button>
+                      )}
+                    </>
+                  )}
+                </>
+              )}
+              <button
+                onClick={() => {
+                  if (selectMode) {
+                    cancelSelectMode();
+                  } else {
+                    setSelectMode(true);
+                  }
+                }}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all shadow-lg ${
+                  selectMode
+                    ? "bg-orange-600 hover:bg-orange-700"
+                    : "bg-theme-primary hover:bg-theme-primary/90"
+                }`}
+              >
+                {selectMode ? (
+                  <>
+                    <Square className="w-5 h-5" />
+                    Cancel Select
+                  </>
+                ) : (
+                  <>
+                    <CheckSquare className="w-5 h-5" />
+                    Select
+                  </>
+                )}
+              </button>
+            </>
+          )}
+
           <button
             onClick={handleRefresh}
             disabled={loading}
@@ -337,13 +647,41 @@ function FolderView() {
           {/* Folder Grid (Libraries or Items) */}
           {filteredFolders.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {filteredFolders.map((folder) => (
-                <button
-                  key={folder.path || folder.name}
-                  onClick={() => navigateToFolder(folder.name)}
-                  className="group bg-theme-card border border-theme-border rounded-lg p-4 hover:border-theme-primary transition-all text-left shadow-sm hover:shadow-md"
-                >
-                  <div className="flex items-start gap-3">
+              {filteredFolders.map((folder) => {
+                const folderIdentifier = folder.path || folder.name;
+                const isSelected = selectedFolders.includes(folderIdentifier);
+                return (
+                  <button
+                    key={folderIdentifier}
+                    onClick={() => {
+                      if (selectMode) {
+                        toggleFolderSelection(folderIdentifier);
+                      } else {
+                        navigateToFolder(folder.name);
+                      }
+                    }}
+                    className={`group relative bg-theme-card border rounded-lg p-4 transition-all text-left shadow-sm hover:shadow-md ${
+                      isSelected
+                        ? "border-theme-primary ring-2 ring-theme-primary"
+                        : "border-theme-border hover:border-theme-primary"
+                    }`}
+                  >
+                    {/* Selection Checkbox (visible in select mode) */}
+                    {selectMode && (
+                      <div className="absolute top-2 right-2 z-10">
+                        <div
+                          className={`w-6 h-6 rounded flex items-center justify-center border-2 transition-all ${
+                            isSelected
+                              ? "bg-theme-primary border-theme-primary"
+                              : "bg-white/90 border-gray-300"
+                          }`}
+                        >
+                          {isSelected && <Check className="w-4 h-4 text-white" />}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex items-start gap-3">
                     <div className="p-3 rounded-lg border border-theme-border group-hover:bg-theme-primary group-hover:border-theme-primary transition-colors">
                       <Folder className="w-6 h-6 text-theme-muted group-hover:text-white transition-colors" />
                     </div>
@@ -376,7 +714,8 @@ function FolderView() {
                     </div>
                   </div>
                 </button>
-              ))}
+                );
+              })}
             </div>
           )}
 
@@ -385,12 +724,38 @@ function FolderView() {
             <div className="asset-grid" style={{ "--grid-size": imageSize }}>
               {filteredAssets.map((asset) => {
                 const isHorizontal = isHorizontalAsset(asset.name);
+                const isSelected = selectedAssets.includes(asset.path);
                 return (
                   <div
                     key={asset.path}
-                    className="group relative bg-theme-card border border-theme-border rounded-lg overflow-hidden hover:border-theme-primary transition-all cursor-pointer shadow-sm hover:shadow-md flex flex-col"
-                    onClick={() => setSelectedImage(asset)}
+                    className={`group relative bg-theme-card border rounded-lg overflow-hidden transition-all cursor-pointer shadow-sm hover:shadow-md flex flex-col ${
+                      isSelected
+                        ? "border-theme-primary ring-2 ring-theme-primary"
+                        : "border-theme-border hover:border-theme-primary"
+                    }`}
+                    onClick={() => {
+                      if (selectMode) {
+                        toggleAssetSelection(asset.path);
+                      } else {
+                        setSelectedImage(asset);
+                      }
+                    }}
                   >
+                    {/* Selection Checkbox (visible in select mode) */}
+                    {selectMode && (
+                      <div className="absolute top-2 left-2 z-20">
+                        <div
+                          className={`w-6 h-6 rounded flex items-center justify-center border-2 transition-all ${
+                            isSelected
+                              ? "bg-theme-primary border-theme-primary"
+                              : "bg-white/90 border-gray-300"
+                          }`}
+                        >
+                          {isSelected && <Check className="w-4 h-4 text-white" />}
+                        </div>
+                      </div>
+                    )}
+
                     {/* Asset Image */}
                     <div
                       className={`${getAssetAspectRatio(
@@ -404,47 +769,51 @@ function FolderView() {
                         loading="lazy"
                       />
 
-                      {/* Replace Button */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setAssetToReplace({
-                            path: asset.path,
-                            url: asset.url,
-                            name: asset.name,
-                            type: getAssetType(asset.name),
-                          });
-                          setReplacerOpen(true);
-                        }}
-                        className="absolute top-2 left-2 z-10 p-2 rounded-lg transition-all bg-blue-600/90 hover:bg-blue-700 opacity-0 group-hover:opacity-100"
-                        title="Replace image"
-                      >
-                        <RefreshCw className="w-4 h-4 text-white" />
-                      </button>
+                      {/* Replace Button (hidden in select mode) */}
+                      {!selectMode && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setAssetToReplace({
+                              path: asset.path,
+                              url: asset.url,
+                              name: asset.name,
+                              type: getAssetType(asset.name),
+                            });
+                            setReplacerOpen(true);
+                          }}
+                          className="absolute top-2 left-2 z-10 p-2 rounded-lg transition-all bg-blue-600/90 hover:bg-blue-700 opacity-0 group-hover:opacity-100"
+                          title="Replace image"
+                        >
+                          <RefreshCw className="w-4 h-4 text-white" />
+                        </button>
+                      )}
 
-                      {/* Delete Button */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setDeleteConfirm({
-                            path: asset.path,
-                            name: asset.name,
-                          });
-                        }}
-                        disabled={deletingImage === asset.path}
-                        className={`absolute top-2 right-2 z-10 p-2 rounded-lg transition-all ${
-                          deletingImage === asset.path
-                            ? "bg-gray-600 cursor-not-allowed"
-                            : "bg-red-600/90 hover:bg-red-700 opacity-0 group-hover:opacity-100"
-                        }`}
-                        title="Delete image"
-                      >
-                        <Trash2
-                          className={`w-4 h-4 text-white ${
-                            deletingImage === asset.path ? "animate-spin" : ""
+                      {/* Delete Button (hidden in select mode) */}
+                      {!selectMode && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setDeleteConfirm({
+                              path: asset.path,
+                              name: asset.name,
+                            });
+                          }}
+                          disabled={deletingImage === asset.path}
+                          className={`absolute top-2 right-2 z-10 p-2 rounded-lg transition-all ${
+                            deletingImage === asset.path
+                              ? "bg-gray-600 cursor-not-allowed"
+                              : "bg-red-600/90 hover:bg-red-700 opacity-0 group-hover:opacity-100"
                           }`}
-                        />
-                      </button>
+                          title="Delete image"
+                        >
+                          <Trash2
+                            className={`w-4 h-4 text-white ${
+                              deletingImage === asset.path ? "animate-spin" : ""
+                            }`}
+                          />
+                        </button>
+                      )}
                     </div>
 
                     {/* Asset Info */}
