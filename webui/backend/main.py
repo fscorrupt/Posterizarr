@@ -63,7 +63,6 @@ SUBDIRS_TO_CREATE = [
     "UILogs",
     "uploads",
     "fontpreviews",
-    "database",  # Database directory
 ]
 
 # Creating all directories in a single loop
@@ -907,92 +906,6 @@ class SPAMiddleware(BaseHTTPMiddleware):
         return response
 
 
-# ============================================
-# Database Auto-Update Background Task
-# ============================================
-db_watcher_task = None
-db_watcher_stop_event = None
-
-
-async def database_auto_updater():
-    """
-    Background task that watches for ImageChoices.csv updates
-    and syncs them to the SQLite database when script completes
-    """
-    global db_watcher_stop_event
-
-    logger.info("Database auto-updater started")
-    last_script_running = False
-    csv_path = LOGS_DIR / "ImageChoices.csv"
-    db_manager_path = APP_DIR / "database_manager.py"
-
-    # Ensure database directory exists
-    (APP_DIR / "database").mkdir(parents=True, exist_ok=True)
-
-    while not db_watcher_stop_event.is_set():
-        try:
-            current_script_running = RUNNING_FILE.exists()
-
-            # Detect when script transitions from running to stopped
-            if last_script_running and not current_script_running:
-                # Script just finished, check if CSV exists
-                if csv_path.exists() and db_manager_path.exists():
-                    logger.info(
-                        "Script completed, updating database from ImageChoices.csv"
-                    )
-                    try:
-                        # Run database_manager.py to sync CSV → DB
-                        result = subprocess.run(
-                            [
-                                sys.executable,
-                                str(db_manager_path),
-                                str(APP_DIR),
-                                "--silent",
-                            ],
-                            capture_output=True,
-                            text=True,
-                            timeout=30,
-                        )
-                        if result.returncode == 0:
-                            logger.info("Database updated successfully")
-                        else:
-                            logger.warning(
-                                f"Database update completed with warnings: {result.stderr}"
-                            )
-                    except Exception as e:
-                        logger.error(f"Failed to update database: {e}")
-
-            last_script_running = current_script_running
-
-            # Check every 2 seconds
-            await asyncio.sleep(2)
-
-        except Exception as e:
-            logger.error(f"Error in database auto-updater: {e}")
-            await asyncio.sleep(5)
-
-    logger.info("Database auto-updater stopped")
-
-
-def start_database_watcher():
-    """Start the database auto-updater background task"""
-    global db_watcher_task, db_watcher_stop_event
-
-    if db_watcher_task is None:
-        db_watcher_stop_event = asyncio.Event()
-        db_watcher_task = asyncio.create_task(database_auto_updater())
-        logger.info("Database watcher background task started")
-
-
-def stop_database_watcher():
-    """Stop the database auto-updater background task"""
-    global db_watcher_task, db_watcher_stop_event
-
-    if db_watcher_task:
-        db_watcher_stop_event.set()
-        logger.info("Database watcher background task stopped")
-
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan event handler for startup and shutdown"""
@@ -1000,39 +913,10 @@ async def lifespan(app: FastAPI):
 
     # Startup: Pre-populate asset cache
     logger.info("Starting Posterizarr Web UI Backend")
-
-    # Initialize database on startup
-    try:
-        db_manager_path = APP_DIR / "database_manager.py"
-        db_path = APP_DIR / "database" / "posterizarr.db"
-        csv_path = LOGS_DIR / "ImageChoices.csv"
-
-        if db_manager_path.exists():
-            # Always ensure database structure exists
-            if not db_path.exists() or not csv_path.exists():
-                logger.info("Initializing database structure...")
-                result = subprocess.run(
-                    [sys.executable, str(db_manager_path), str(APP_DIR), "--silent"],
-                    capture_output=True,
-                    text=True,
-                    timeout=30,
-                )
-                if result.returncode == 0:
-                    logger.info("Database initialized successfully")
-                else:
-                    logger.info("Database structure created (waiting for first CSV)")
-            else:
-                logger.info(f"Database already exists at {db_path}")
-    except Exception as e:
-        logger.warning(f"Database initialization skipped: {e}")
-
     scan_and_cache_assets()
 
     # Start background cache refresh
     start_cache_refresh_background()
-
-    # Start database auto-updater
-    start_database_watcher()
 
     # Initialize and start scheduler if available
     if SCHEDULER_AVAILABLE:
@@ -1051,9 +935,6 @@ async def lifespan(app: FastAPI):
     # Shutdown
     # Stop background cache refresh
     stop_cache_refresh_background()
-
-    # Stop database watcher
-    stop_database_watcher()
 
     if scheduler:
         try:
