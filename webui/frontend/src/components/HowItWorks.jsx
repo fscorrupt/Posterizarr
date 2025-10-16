@@ -324,14 +324,14 @@ function HowItWorks() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="group relative bg-theme-hover border border-theme rounded-lg overflow-hidden hover:border-theme-primary/50 transition-all">
                 <img
-                  src="/images/posterizarr-overview.jpg"
+                  src="https://raw.githubusercontent.com/fscorrupt/Posterizarr/main/images/posterizarr-overview.jpg"
                   alt="Posterizarr Overview - Original"
                   className="w-full h-auto object-contain group-hover:scale-[1.02] transition-transform duration-300"
                 />
               </div>
               <div className="group relative bg-theme-hover border border-theme rounded-lg overflow-hidden hover:border-theme-primary/50 transition-all">
                 <img
-                  src="/images/posterizarr-overview-new.jpg"
+                  src="https://raw.githubusercontent.com/fscorrupt/Posterizarr/main/images/posterizarr-overview-new.jpg"
                   alt="Posterizarr Overview - Updated"
                   className="w-full h-auto object-contain group-hover:scale-[1.02] transition-transform duration-300"
                 />
@@ -351,14 +351,14 @@ function HowItWorks() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="group relative bg-theme-hover border border-theme rounded-lg overflow-hidden hover:border-theme-primary/50 transition-all">
                 <img
-                  src="/images/kometa-overview.png"
+                  src="https://raw.githubusercontent.com/fscorrupt/Posterizarr/main/images/kometa-overview.png"
                   alt="Kometa Overview - Original"
                   className="w-full h-auto object-contain group-hover:scale-[1.02] transition-transform duration-300"
                 />
               </div>
               <div className="group relative bg-theme-hover border border-theme rounded-lg overflow-hidden hover:border-theme-primary/50 transition-all">
                 <img
-                  src="/images/kometa-overview-new.jpg"
+                  src="https://raw.githubusercontent.com/fscorrupt/Posterizarr/main/images/kometa-overview-new.jpg"
                   alt="Kometa Overview - Updated"
                   className="w-full h-auto object-contain group-hover:scale-[1.02] transition-transform duration-300"
                 />
