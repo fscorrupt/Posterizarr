@@ -23,7 +23,6 @@ import {
   User,
   FileImage,
   Lightbulb,
-  AlertCircle,
 } from "lucide-react";
 import VersionBadge from "./VersionBadge";
 import { useSidebar } from "../context/SidebarContext";
@@ -91,7 +90,6 @@ const Sidebar = () => {
     },
     { path: "/test-gallery", label: "Test Assets", icon: Image },
     { path: "/overlay-assets", label: "Overlay Assets", icon: FileImage },
-    { path: "/missing-assets", label: "Missing Assets", icon: AlertCircle },
     {
       path: "/config",
       label: "Config",
