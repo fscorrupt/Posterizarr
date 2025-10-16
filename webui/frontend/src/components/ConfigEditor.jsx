@@ -1011,7 +1011,7 @@ function ConfigEditor() {
   };
 
   // Helper function to check if a media server field should be disabled
-  const isFieldDisabled = (key) => {
+  const isFieldDisabled = (key, groupName) => {
     if (!config) return false;
 
     const getValue = (fieldKey) => {
@@ -1019,6 +1019,44 @@ function ConfigEditor() {
         ? config[fieldKey]
         : config[fieldKey.split(".")[0]]?.[fieldKey.split(".")[1]];
       return val === "true" || val === true;
+    };
+
+    // Mapping between UI display group names and their prefixes in flat config
+    const groupPrefixMap = {
+      "Poster Settings": "Poster",
+      "Season Poster Settings": "SeasonPoster",
+      "Background Settings": "Background",
+      "Title Card Overlay": "TitleCard",
+      "Title Card Title Text": "TitleCardTitle",
+      "Title Card Episode Text": "TitleCardEP",
+      "Show Title on Season": "ShowTitle",
+      "Collection Title": "CollectionTitle",
+      "Collection Poster": "CollectionPoster",
+    };
+
+    const getGroupValue = (group, field) => {
+      if (usingFlatStructure) {
+        // In flat structure, fields are prefixed with group prefix
+        const prefix = groupPrefixMap[group] || "";
+        const flatKey = prefix + field;
+        const val = config[flatKey];
+
+        // Convert string booleans to actual booleans
+        const boolVal = val === "true" || val === true;
+
+        // Debug logging
+        console.log(
+          `🔍 Checking ${group}.${field} -> ${flatKey} = ${val} (converted to: ${boolVal})`
+        );
+
+        return boolVal;
+      }
+      const val = config[group]?.[field];
+      const boolVal = val === "true" || val === true;
+      console.log(
+        `🔍 Checking ${group}.${field} (nested) = ${val} (converted to: ${boolVal})`
+      );
+      return boolVal;
     };
 
     // Check media server status
@@ -1077,6 +1115,145 @@ function ConfigEditor() {
     ];
     if (embyUploadFields.includes(key) && !embyEnabled) {
       return true;
+    }
+
+    // === OVERLAY AND TEXT CONDITIONAL DISABLING ===
+    const keyLower = key.toLowerCase();
+
+    console.log(
+      `🎯 isFieldDisabled called: key="${key}", groupName="${groupName}", keyLower="${keyLower}"`
+    );
+
+    // Groups where AddBorder affects bordercolor and borderwidth
+    const borderGroups = [
+      "Collection Poster",
+      "Background Settings",
+      "Season Poster Settings",
+      "Poster Settings",
+      "Title Card Overlay",
+    ];
+
+    // Groups where AddText affects text-related fields
+    const textGroups = [
+      "Collection Poster",
+      "Background Settings",
+      "Season Poster Settings",
+      "Poster Settings",
+    ];
+
+    // Groups where AddTextStroke affects stroke fields
+    const strokeGroups = [
+      "Collection Poster",
+      "Background Settings",
+      "Season Poster Settings",
+      "Poster Settings",
+      "Show Title on Season",
+      "Title Card Title Text",
+      "Title Card Episode Text",
+      "Collection Title",
+    ];
+
+    // Border-related fields
+    if (
+      borderGroups.includes(groupName) &&
+      (keyLower.includes("bordercolor") || keyLower.includes("borderwidth"))
+    ) {
+      console.log(`🔶 Border field detected in ${groupName}`);
+      const addBorder = getGroupValue(groupName, "AddBorder");
+      console.log(`   AddBorder = ${addBorder}, returning ${!addBorder}`);
+      if (!addBorder) return true;
+    }
+
+    // Text-related fields (when AddText is false)
+    const textFieldSuffixes = [
+      "addtextstroke",
+      "strokecolor",
+      "strokewidth",
+      "minpointsize",
+      "maxpointsize",
+      "maxwidth",
+      "maxheight",
+      "text_offset",
+      "textoffset", // Flat structure uses CamelCase without underscore
+      "linespacing",
+      "textgravity",
+      "fontallcaps",
+      "fontcolor",
+    ];
+
+    if (
+      textGroups.includes(groupName) &&
+      textFieldSuffixes.some((suffix) => keyLower.endsWith(suffix))
+    ) {
+      console.log(`📝 Text field detected: ${keyLower} in ${groupName}`);
+      const addText = getGroupValue(groupName, "AddText");
+      console.log(`   AddText = ${addText}, returning ${!addText}`);
+      if (!addText) return true;
+    }
+
+    // Stroke-related fields (when AddTextStroke is false)
+    const strokeFieldSuffixes = ["strokecolor", "strokewidth"];
+
+    if (
+      strokeGroups.includes(groupName) &&
+      strokeFieldSuffixes.some((suffix) => keyLower.endsWith(suffix))
+    ) {
+      console.log(`✏️ Stroke field detected: ${keyLower} in ${groupName}`);
+      const addTextStroke = getGroupValue(groupName, "AddTextStroke");
+      console.log(
+        `   AddTextStroke = ${addTextStroke}, returning ${!addTextStroke}`
+      );
+      if (!addTextStroke) return true;
+    }
+
+    // Show Title on Season - when AddShowTitletoSeason is false
+    if (
+      groupName === "Show Title on Season" &&
+      textFieldSuffixes.some((suffix) => keyLower.endsWith(suffix))
+    ) {
+      console.log(`📺 Show Title field detected: ${keyLower}`);
+      const addShowTitle = getGroupValue(groupName, "AddShowTitletoSeason");
+      console.log(
+        `   AddShowTitletoSeason = ${addShowTitle}, returning ${!addShowTitle}`
+      );
+      if (!addShowTitle) return true;
+    }
+
+    // Title Card Title Text - when AddEPTitleText is false
+    if (
+      groupName === "Title Card Title Text" &&
+      textFieldSuffixes.some((suffix) => keyLower.endsWith(suffix))
+    ) {
+      console.log(`🎬 Title Card Title field detected: ${keyLower}`);
+      const addEPTitleText = getGroupValue(groupName, "AddEPTitleText");
+      console.log(
+        `   AddEPTitleText = ${addEPTitleText}, returning ${!addEPTitleText}`
+      );
+      if (!addEPTitleText) return true;
+    }
+
+    // Title Card Episode Text - when AddEPText is false
+    if (
+      groupName === "Title Card Episode Text" &&
+      textFieldSuffixes.some((suffix) => keyLower.endsWith(suffix))
+    ) {
+      console.log(`🎞️ Title Card Episode field detected: ${keyLower}`);
+      const addEPText = getGroupValue(groupName, "AddEPText");
+      console.log(`   AddEPText = ${addEPText}, returning ${!addEPText}`);
+      if (!addEPText) return true;
+    }
+
+    // Collection Title - when AddCollectionTitle is false
+    if (
+      groupName === "Collection Title" &&
+      textFieldSuffixes.some((suffix) => keyLower.endsWith(suffix))
+    ) {
+      console.log(`📚 Collection Title field detected: ${keyLower}`);
+      const addCollectionTitle = getGroupValue(groupName, "AddCollectionTitle");
+      console.log(
+        `   AddCollectionTitle = ${addCollectionTitle}, returning ${!addCollectionTitle}`
+      );
+      if (!addCollectionTitle) return true;
     }
 
     return false;
@@ -1272,7 +1449,7 @@ function ConfigEditor() {
 
     // ============ LIBRARY EXCLUSION SELECTOR ============
     if (key === "PlexLibstoExclude") {
-      const disabled = isFieldDisabled(key);
+      const disabled = isFieldDisabled(key, groupName);
 
       return (
         <LibraryExclusionSelector
@@ -1287,7 +1464,7 @@ function ConfigEditor() {
     }
 
     if (key === "JellyfinLibstoExclude") {
-      const disabled = isFieldDisabled(key);
+      const disabled = isFieldDisabled(key, groupName);
 
       return (
         <LibraryExclusionSelector
@@ -1302,7 +1479,7 @@ function ConfigEditor() {
     }
 
     if (key === "EmbyLibstoExclude") {
-      const disabled = isFieldDisabled(key);
+      const disabled = isFieldDisabled(key, groupName);
 
       return (
         <LibraryExclusionSelector
@@ -1462,7 +1639,54 @@ function ConfigEditor() {
       ].includes(key);
 
       // Check if this field should be disabled
-      const disabled = isFieldDisabled(key);
+      const disabled = isFieldDisabled(key, groupName);
+
+      // Determine the reason for being disabled
+      const getDisabledReason = () => {
+        if (!disabled) return null;
+
+        // Check for media server dependencies
+        if (key.includes("Plex")) return "Plex to be enabled";
+        if (key.includes("Jellyfin")) return "Jellyfin to be enabled";
+        if (key.includes("Emby")) return "Emby to be enabled";
+
+        // Check for overlay/text dependencies based on field type
+        const keyLower = key.toLowerCase();
+
+        // Border fields
+        if (
+          keyLower.includes("bordercolor") ||
+          keyLower.includes("borderwidth")
+        ) {
+          return "Add Border to be enabled";
+        }
+
+        // Text stroke fields
+        if (
+          keyLower.includes("strokecolor") ||
+          keyLower.includes("strokewidth")
+        ) {
+          return "Add Text Stroke to be enabled";
+        }
+
+        // General text fields
+        if (
+          keyLower.includes("fontallcaps") ||
+          keyLower.includes("fontcolor") ||
+          keyLower.includes("minpointsize") ||
+          keyLower.includes("maxpointsize") ||
+          keyLower.includes("maxwidth") ||
+          keyLower.includes("maxheight") ||
+          keyLower.includes("linespacing") ||
+          keyLower.includes("textgravity") ||
+          keyLower.includes("addtextstroke") ||
+          keyLower.includes("textoffset")
+        ) {
+          return "Add Text to be enabled";
+        }
+
+        return "required settings to be enabled";
+      };
 
       return (
         <div
@@ -1476,13 +1700,7 @@ function ConfigEditor() {
             {displayName}
             {disabled && (
               <span className="text-xs text-theme-muted ml-2">
-                (Requires{" "}
-                {key.includes("Plex")
-                  ? "Plex"
-                  : key.includes("Jellyfin")
-                  ? "Jellyfin"
-                  : "Emby"}{" "}
-                to be enabled)
+                (Requires {getDisabledReason()})
               </span>
             )}
           </div>
@@ -1594,7 +1812,7 @@ function ConfigEditor() {
 
     // Plex Token mit Validate-Button
     if (key === "PlexToken") {
-      const disabled = isFieldDisabled(key);
+      const disabled = isFieldDisabled(key, groupName);
 
       return (
         <div className="space-y-2">
@@ -1638,7 +1856,7 @@ function ConfigEditor() {
 
     // Jellyfin API Key mit Validate-Button
     if (key === "JellyfinAPIKey") {
-      const disabled = isFieldDisabled(key);
+      const disabled = isFieldDisabled(key, groupName);
 
       return (
         <div className="space-y-2">
@@ -1684,7 +1902,7 @@ function ConfigEditor() {
 
     // Emby API Key mit Validate-Button
     if (key === "EmbyAPIKey") {
-      const disabled = isFieldDisabled(key);
+      const disabled = isFieldDisabled(key, groupName);
 
       return (
         <div className="space-y-2">
@@ -1732,7 +1950,7 @@ function ConfigEditor() {
 
     // Plex URL
     if (key === "PlexUrl") {
-      const disabled = isFieldDisabled(key);
+      const disabled = isFieldDisabled(key, groupName);
 
       return (
         <div className="space-y-2">
@@ -1764,7 +1982,7 @@ function ConfigEditor() {
 
     // Jellyfin URL
     if (key === "JellyfinUrl") {
-      const disabled = isFieldDisabled(key);
+      const disabled = isFieldDisabled(key, groupName);
 
       return (
         <div className="space-y-2">
@@ -1798,7 +2016,7 @@ function ConfigEditor() {
 
     // Emby URL
     if (key === "EmbyUrl") {
-      const disabled = isFieldDisabled(key);
+      const disabled = isFieldDisabled(key, groupName);
 
       return (
         <div className="space-y-2">
@@ -2022,6 +2240,8 @@ function ConfigEditor() {
 
     // Handle text_offset specially with enhanced number input
     if (keyLower.includes("offset") || keyLower === "text_offset") {
+      const disabled = isFieldDisabled(key, groupName);
+
       // Parse the current value - keep the sign!
       let parsedValue = 0;
       if (stringValue) {
@@ -2036,6 +2256,7 @@ function ConfigEditor() {
             <input
               type="number"
               value={parsedValue}
+              disabled={disabled}
               onChange={(e) => {
                 const val = e.target.value;
                 if (val === "" || val === "-") {
@@ -2062,7 +2283,9 @@ function ConfigEditor() {
                   }
                 }
               }}
-              className="flex-1 h-[42px] px-4 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono"
+              className={`flex-1 h-[42px] px-4 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono ${
+                disabled ? "opacity-50 cursor-not-allowed" : ""
+              }`}
               placeholder="0"
             />
             <div className="flex items-center gap-1 px-3 py-2 bg-theme-bg border border-theme rounded-lg text-theme-muted text-sm font-mono min-w-[60px] justify-center">
@@ -2117,6 +2340,7 @@ function ConfigEditor() {
     // ============ TEXT GRAVITY (Alignment) ============
     if (keyLower.includes("gravity") || keyLower.endsWith("textgravity")) {
       const gravityValue = String(stringValue || "South");
+      const disabled = isFieldDisabled(key, groupName);
 
       return (
         <div className="space-y-2">
@@ -2124,7 +2348,10 @@ function ConfigEditor() {
             <select
               value={gravityValue}
               onChange={(e) => updateValue(fieldKey, e.target.value)}
-              className="w-full h-[42px] px-4 py-2.5 pr-10 bg-theme-bg border border-theme rounded-lg text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all cursor-pointer appearance-none"
+              disabled={disabled}
+              className={`w-full h-[42px] px-4 py-2.5 pr-10 bg-theme-bg border border-theme rounded-lg text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all cursor-pointer appearance-none ${
+                disabled ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             >
               <option value="NorthWest">NorthWest (Top Left)</option>
               <option value="North">North (Top Center)</option>
@@ -2234,6 +2461,8 @@ function ConfigEditor() {
       keyLower.includes("bordercolor") ||
       keyLower.includes("strokecolor")
     ) {
+      const disabled = isFieldDisabled(key, groupName);
+
       // Determine if current value is hex or color name
       const isHexColor = stringValue.match(/^#[0-9A-Fa-f]{6}$/);
       const currentInputType = isHexColor ? "hex" : "name";
@@ -2300,32 +2529,34 @@ function ConfigEditor() {
             <button
               type="button"
               onClick={() => {
-                if (currentInputType === "hex") {
+                if (currentInputType === "hex" && !disabled) {
                   // Switch to name, default to white
                   updateValue(fieldKey, "white");
                 }
               }}
+              disabled={disabled}
               className={`px-3 py-1 text-xs rounded-lg transition-all ${
                 currentInputType === "name"
                   ? "bg-theme-primary text-white"
                   : "bg-theme-bg text-theme-muted hover:bg-theme-hover"
-              }`}
+              } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
             >
               Color Name
             </button>
             <button
               type="button"
               onClick={() => {
-                if (currentInputType === "name") {
+                if (currentInputType === "name" && !disabled) {
                   // Switch to hex, default to white
                   updateValue(fieldKey, "#FFFFFF");
                 }
               }}
+              disabled={disabled}
               className={`px-3 py-1 text-xs rounded-lg transition-all ${
                 currentInputType === "hex"
                   ? "bg-theme-primary text-white"
                   : "bg-theme-bg text-theme-muted hover:bg-theme-hover"
-              }`}
+              } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
             >
               Hex Code
             </button>
@@ -2344,7 +2575,10 @@ function ConfigEditor() {
               <select
                 value={stringValue.toLowerCase()}
                 onChange={(e) => updateValue(fieldKey, e.target.value)}
-                className="w-full h-[42px] pl-12 pr-10 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all cursor-pointer appearance-none"
+                disabled={disabled}
+                className={`w-full h-[42px] pl-12 pr-10 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all cursor-pointer appearance-none ${
+                  disabled ? "opacity-50 cursor-not-allowed" : ""
+                }`}
               >
                 <option value="">-- Select Color --</option>
                 {colorNames.map((color) => (
@@ -2391,7 +2625,10 @@ function ConfigEditor() {
                       updateValue(fieldKey, "#FFFFFF");
                     }
                   }}
-                  className="w-full h-[42px] px-12 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono"
+                  disabled={disabled}
+                  className={`w-full h-[42px] px-12 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono ${
+                    disabled ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
                   placeholder="#FFFFFF"
                   maxLength={7}
                 />
@@ -2413,7 +2650,10 @@ function ConfigEditor() {
                 onChange={(e) =>
                   updateValue(fieldKey, e.target.value.toUpperCase())
                 }
-                className="h-[42px] w-[42px] bg-theme-bg border border-theme rounded-lg cursor-pointer"
+                disabled={disabled}
+                className={`h-[42px] w-[42px] bg-theme-bg border border-theme rounded-lg cursor-pointer ${
+                  disabled ? "opacity-50 cursor-not-allowed" : ""
+                }`}
                 title="Pick color"
               />
             </div>
@@ -2454,6 +2694,8 @@ function ConfigEditor() {
       keyLower.includes("spacing") ||
       keyLower === "maxlogs"
     ) {
+      const disabled = isFieldDisabled(key, groupName);
+
       return (
         <div className="space-y-2">
           <input
@@ -2479,7 +2721,10 @@ function ConfigEditor() {
                 e.preventDefault();
               }
             }}
-            className="w-full h-[42px] px-4 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+            disabled={disabled}
+            className={`w-full h-[42px] px-4 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all ${
+              disabled ? "opacity-50 cursor-not-allowed" : ""
+            }`}
             placeholder="Enter number"
           />
         </div>
@@ -2509,6 +2754,9 @@ function ConfigEditor() {
       );
     }
 
+    // Check if field should be disabled
+    const disabled = isFieldDisabled(key, groupName);
+
     if (
       stringValue.length > 100 ||
       keyLower.includes("path") ||
@@ -2525,7 +2773,10 @@ function ConfigEditor() {
             onInput={(e) => autoResize(e.target)}
             ref={(textarea) => textarea && autoResize(textarea)}
             rows={1}
-            className="w-full px-4 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono text-sm resize-none overflow-hidden min-h-[42px]"
+            disabled={disabled}
+            className={`w-full px-4 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all font-mono text-sm resize-none overflow-hidden min-h-[42px] ${
+              disabled ? "opacity-50 cursor-not-allowed" : ""
+            }`}
           />
         </div>
       );
@@ -2537,7 +2788,10 @@ function ConfigEditor() {
           type="text"
           value={stringValue}
           onChange={(e) => updateValue(fieldKey, e.target.value)}
-          className="w-full h-[42px] px-4 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
+          disabled={disabled}
+          className={`w-full h-[42px] px-4 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all ${
+            disabled ? "opacity-50 cursor-not-allowed" : ""
+          }`}
         />
       </div>
     );
