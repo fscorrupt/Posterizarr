@@ -63,6 +63,7 @@ SUBDIRS_TO_CREATE = [
     "UILogs",
     "uploads",
     "fontpreviews",
+    "database",
 ]
 
 # Creating all directories in a single loop
@@ -79,13 +80,24 @@ UI_LOGS_DIR = BASE_DIR / "UILogs"
 OVERLAYFILES_DIR = BASE_DIR / "Overlayfiles"
 UPLOADS_DIR = BASE_DIR / "uploads"
 FONTPREVIEWS_DIR = BASE_DIR / "fontpreviews"
+DATABASE_DIR = BASE_DIR / "database"
 RUNNING_FILE = TEMP_DIR / "Posterizarr.Running"
+IMAGECHOICES_DB_PATH = DATABASE_DIR / "imagechoices.db"
+
+# Clear UILogs on startup - remove all log files
+import glob
+
+for log_file in glob.glob(str(UI_LOGS_DIR / "*.log")):
+    try:
+        os.remove(log_file)
+    except Exception as e:
+        pass  # Ignore errors during cleanup
 
 # Setup logging
 logging.basicConfig(
     level=logging.INFO,
     filename=UI_LOGS_DIR / "BackendServer.log",  # Main backend server log file
-    filemode="a",  # Append to the log file
+    filemode="w",  # Overwrite the log file on each startup
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logging.getLogger("httpx").setLevel(logging.INFO)
@@ -181,14 +193,63 @@ except ImportError as e:
     AUTH_MIDDLEWARE_AVAILABLE = False
     logger.warning(f"Auth middleware not available: {e}. Basic Auth will be disabled.")
 
+# Import database module
+try:
+    from database import init_database, ImageChoicesDB
+
+    DATABASE_AVAILABLE = True
+    logger.info("Database module loaded successfully")
+except ImportError as e:
+    DATABASE_AVAILABLE = False
+    logger.warning(
+        f"Database module not available: {e}. Database features will be disabled."
+    )
+
 current_process: Optional[subprocess.Popen] = None
 current_mode: Optional[str] = None
 scheduler: Optional["PosterizarrScheduler"] = None
+db: Optional["ImageChoicesDB"] = None
 
 # Initialize cache variables early to prevent race conditions
 cache_refresh_task = None
 cache_refresh_running = False
 cache_scan_in_progress = False
+
+
+def import_imagechoices_to_db():
+    """
+    Import ImageChoices.csv from Logs directory to database
+    Only imports new records that don't already exist
+    """
+    if not DATABASE_AVAILABLE or db is None:
+        logger.debug("Database not available, skipping CSV import")
+        return
+
+    csv_path = LOGS_DIR / "ImageChoices.csv"
+    if not csv_path.exists():
+        logger.debug("ImageChoices.csv does not exist yet, skipping import")
+        return
+
+    try:
+        logger.info("📊 Importing ImageChoices.csv to database...")
+        stats = db.import_from_csv(csv_path)
+
+        if stats["added"] > 0:
+            logger.info(
+                f"✅ CSV import successful: {stats['added']} new record(s) added, "
+                f"{stats['skipped']} skipped (already exist), "
+                f"{stats['errors']} error(s)"
+            )
+        else:
+            logger.debug(
+                f"CSV import: No new records to add ({stats['skipped']} already exist)"
+            )
+
+        if stats["errors"] > 0:
+            logger.warning(f"Import errors: {stats['error_details']}")
+
+    except Exception as e:
+        logger.error(f"❌ Error importing CSV to database: {e}")
 
 
 def parse_version(version_str: str) -> tuple:
@@ -909,7 +970,7 @@ class SPAMiddleware(BaseHTTPMiddleware):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan event handler for startup and shutdown"""
-    global scheduler
+    global scheduler, db
 
     # Startup: Pre-populate asset cache
     logger.info("Starting Posterizarr Web UI Backend")
@@ -917,6 +978,54 @@ async def lifespan(app: FastAPI):
 
     # Start background cache refresh
     start_cache_refresh_background()
+
+    # Initialize database if available
+    if DATABASE_AVAILABLE:
+        try:
+            logger.info("📊 Initializing imagechoices database...")
+
+            # Check if database exists before initialization
+            db_existed_before = IMAGECHOICES_DB_PATH.exists()
+
+            # Initialize database (creates if not exists)
+            db = init_database(IMAGECHOICES_DB_PATH)
+
+            # If database was just created (first start), check for existing CSV to import
+            if not db_existed_before:
+                csv_path = LOGS_DIR / "ImageChoices.csv"
+                if csv_path.exists():
+                    logger.info(
+                        "📥 Found existing ImageChoices.csv - importing to new database..."
+                    )
+                    try:
+                        stats = db.import_from_csv(csv_path)
+                        if stats["added"] > 0:
+                            logger.info(
+                                f"✅ Initialized database with {stats['added']} records from existing CSV"
+                            )
+                        else:
+                            logger.info(
+                                "ℹ️  No records imported from CSV (all empty or invalid)"
+                            )
+                    except Exception as csv_error:
+                        logger.warning(f"⚠️  Could not import existing CSV: {csv_error}")
+                else:
+                    logger.info("ℹ️  No existing CSV found - database initialized empty")
+
+            # Check if database has any records
+            try:
+                record_count = len(db.get_all_choices())
+                logger.info(
+                    f"✅ Database ready: {IMAGECHOICES_DB_PATH} ({record_count} records)"
+                )
+            except Exception:
+                logger.info(f"✅ Database ready: {IMAGECHOICES_DB_PATH}")
+
+        except Exception as e:
+            logger.error(f"Failed to initialize database: {e}")
+            db = None
+    else:
+        logger.info("Database module not available, skipping database initialization")
 
     # Initialize and start scheduler if available
     if SCHEDULER_AVAILABLE:
@@ -942,6 +1051,13 @@ async def lifespan(app: FastAPI):
             logger.info("Scheduler stopped")
         except Exception as e:
             logger.error(f"Error stopping scheduler: {e}")
+
+    if db:
+        try:
+            db.close()
+            logger.info("Database connection closed")
+        except Exception as e:
+            logger.error(f"Error closing database: {e}")
 
     logger.info("Shutting down Posterizarr Web UI Backend")
 
@@ -2944,6 +3060,12 @@ async def get_status():
             except Exception as e:
                 logger.error(f"❌ Error refreshing cache after script completion: {e}")
 
+            # Import ImageChoices.csv to database
+            try:
+                import_imagechoices_to_db()
+            except Exception as e:
+                logger.error(f"❌ Error importing ImageChoices.csv to database: {e}")
+
     scheduler_is_running = False
     scheduler_pid = None
     if SCHEDULER_AVAILABLE and scheduler:
@@ -2972,6 +3094,14 @@ async def get_status():
                 except Exception as e:
                     logger.error(
                         f"❌ Error refreshing cache after scheduler completion: {e}"
+                    )
+
+                # Import ImageChoices.csv to database
+                try:
+                    import_imagechoices_to_db()
+                except Exception as e:
+                    logger.error(
+                        f"❌ Error importing ImageChoices.csv to database: {e}"
                     )
 
     # Combined running status
@@ -4989,145 +5119,97 @@ async def get_folder_view_assets(item_path: str):
 @app.get("/api/recent-assets")
 async def get_recent_assets():
     """
-    Get recently created assets from ImageChoices.csv files in Logs and RotatedLogs folders
+    Get recently created assets from the imagechoices database
     Returns the most recent assets with their poster images from assets folder
 
-    IMPORTANT: Read CSV files from BOTTOM to TOP (newest entries first)
-    1. Read /Logs/ImageChoices.csv from bottom to top
-    2. If not enough, read RotatedLogs folders (newest folder first) from bottom to top
-    3. Continue until we have collected 100 assets
+    Uses the imagechoices.db database instead of CSV files
+    Assets are ordered by ID DESC (newest/highest ID first)
     """
     try:
-        all_assets = []
-        max_assets = 100
+        # Get all assets from database (already sorted by id DESC - newest first)
+        db_records = db.get_all_choices()
 
-        source_info = {
-            "main_logs": {
-                "exists": False,
-                "count": 0,
-                "path": str(LOGS_DIR / "ImageChoices.csv"),
-            },
-            "rotated_logs": {"folders": [], "total_count": 0},
-        }
+        logger.info(f"📊 Found {len(db_records)} total assets in database")
 
-        # STEP 1: Read from main Logs folder FIRST (from bottom to top)
-        main_csv = LOGS_DIR / "ImageChoices.csv"
-        source_info["main_logs"]["exists"] = main_csv.exists()
-
-        if main_csv.exists():
-            try:
-                assets = parse_image_choices_csv(main_csv)
-                # Reverse to get newest entries first (bottom to top)
-                assets.reverse()
-                all_assets.extend(assets)
-                source_info["main_logs"]["count"] = len(assets)
-                logger.info(
-                    f"✅ Found {len(assets)} assets in main Logs/ImageChoices.csv (reading from bottom to top)"
-                )
-            except Exception as e:
-                logger.error(f"❌ Error reading {main_csv}: {e}")
-        else:
-            logger.info(
-                f"ℹ️  Main Logs/ImageChoices.csv does not exist yet (will be created on first script run)"
-            )
-
-        # STEP 2: If we need more assets, read from RotatedLogs subfolders (newest folder first)
-        if len(all_assets) < max_assets:
-            rotated_logs_dir = BASE_DIR / "RotatedLogs"
-            if rotated_logs_dir.exists() and rotated_logs_dir.is_dir():
-                # Get all subdirectories in RotatedLogs, sorted by name (newest first)
-                # Folder names are like: Logs_20251012_121158
-                subdirs = sorted(
-                    rotated_logs_dir.iterdir(), key=lambda x: x.name, reverse=True
-                )
-
-                for subdir in subdirs:
-                    # Stop if we already have enough assets
-                    if len(all_assets) >= max_assets:
-                        break
-
-                    if subdir.is_dir():
-                        csv_file = subdir / "ImageChoices.csv"
-                        if csv_file.exists():
-                            try:
-                                assets = parse_image_choices_csv(csv_file)
-                                # Reverse to get newest entries first (bottom to top)
-                                assets.reverse()
-
-                                # Add source folder info to each asset
-                                for asset in assets:
-                                    asset["source_folder"] = subdir.name
-
-                                # Only add what we need
-                                remaining = max_assets - len(all_assets)
-                                assets_to_add = assets[:remaining]
-                                all_assets.extend(assets_to_add)
-
-                                folder_info = {
-                                    "name": subdir.name,
-                                    "count": len(assets_to_add),
-                                }
-                                source_info["rotated_logs"]["folders"].append(
-                                    folder_info
-                                )
-                                source_info["rotated_logs"]["total_count"] += len(
-                                    assets_to_add
-                                )
-
-                                logger.info(
-                                    f"✅ Added {len(assets_to_add)} assets from RotatedLogs/{subdir.name}/ImageChoices.csv (reading from bottom to top)"
-                                )
-                            except Exception as e:
-                                logger.error(f"❌ Error reading {csv_file}: {e}")
-
-        # Log summary
-        logger.info(
-            f"📊 Total assets collected: {len(all_assets)} (up to {max_assets} newest entries)"
-        )
-
-        # If no assets found anywhere, return early
-        if not all_assets:
-            logger.warning("⚠️  No assets found in any ImageChoices.csv files")
+        # If no assets found, return early
+        if not db_records:
+            logger.warning("⚠️  No assets found in database")
             return {
                 "success": True,
                 "assets": [],
                 "total_count": 0,
-                "source_info": source_info,
             }
 
-        # STEP 3: Find poster.jpg for each asset in assets folder and filter out non-existing
+        # Convert database records to asset format and find poster files
         recent_assets = []
-        for asset in all_assets:
-            rootfolder = asset.get("rootfolder", "")
-            asset_type = asset.get("type", "Poster")
-            title = asset.get("title", "")
-            download_source = asset.get("download_source", "")
+        max_assets = 100  # Limit to 100 most recent assets
+
+        for record in db_records[:max_assets]:  # Only process the first 100
+            # Convert database record (sqlite3.Row) to dict
+            asset_dict = dict(record)
+
+            rootfolder = asset_dict.get("Rootfolder", "")
+            asset_type = asset_dict.get("Type", "Poster")
+            title = asset_dict.get("Title", "")
+            download_source = asset_dict.get("Download Source", "")
+
+            # Determine if manually created based on Manual field or download_source
+            manual_field = asset_dict.get("Manual", "N/A")
+            is_manually_created = manual_field in ["Yes", "true", True]
+
+            if not is_manually_created:
+                # Fallback check on download_source
+                is_manually_created = download_source == "N/A" or (
+                    download_source
+                    and (
+                        download_source.startswith("C:")
+                        or download_source.startswith("/")
+                        or download_source.startswith("\\")
+                    )
+                )
 
             if rootfolder:
                 poster_url = find_poster_in_assets(
                     rootfolder, asset_type, title, download_source
                 )
                 if poster_url:
-                    # Only include assets where the poster file exists
-                    asset["poster_url"] = poster_url
-                    asset["has_poster"] = True
+                    # Format asset for frontend (match old CSV format)
+                    asset = {
+                        "title": asset_dict.get("Title", ""),
+                        "type": asset_dict.get("Type", ""),
+                        "rootfolder": rootfolder,
+                        "library": asset_dict.get("LibraryName", ""),
+                        "language": asset_dict.get("Language", ""),
+                        "fallback": asset_dict.get("Fallback", "").lower() == "true",
+                        "text_truncated": asset_dict.get("TextTruncated", "").lower()
+                        == "true",
+                        "download_source": download_source,
+                        "provider_link": (
+                            asset_dict.get("Fav Provider Link", "")
+                            if asset_dict.get("Fav Provider Link", "") != "N/A"
+                            else ""
+                        ),
+                        "is_manually_created": is_manually_created,
+                        "poster_url": poster_url,
+                        "has_poster": True,
+                        "created_at": asset_dict.get("created_at", ""),
+                    }
                     recent_assets.append(asset)
                 else:
                     logger.debug(f"⏭️  Skipping asset (poster not found): {title}")
 
         logger.info(
-            f"✨ Returning {len(recent_assets)} most recent assets with existing images"
+            f"✨ Returning {len(recent_assets)} most recent assets with existing images from database"
         )
 
         return {
             "success": True,
             "assets": recent_assets,
             "total_count": len(recent_assets),
-            "source_info": source_info,
         }
 
     except Exception as e:
-        logger.error(f"💥 Error getting recent assets: {e}")
+        logger.error(f"💥 Error getting recent assets from database: {e}")
         import traceback
 
         logger.error(traceback.format_exc())
@@ -5851,10 +5933,19 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
 
 @app.post("/api/assets/upload-replacement")
 async def upload_asset_replacement(
-    file: UploadFile = File(...), asset_path: str = Query(...)
+    file: UploadFile = File(...),
+    asset_path: str = Query(...),
+    process_with_overlays: bool = Query(False),
+    title_text: Optional[str] = Query(None),
+    folder_name: Optional[str] = Query(None),
+    library_name: Optional[str] = Query(None),
+    season_number: Optional[str] = Query(None),
+    episode_number: Optional[str] = Query(None),
+    episode_title: Optional[str] = Query(None),
 ):
     """
     Replace an asset with an uploaded image
+    Optionally process with overlays using Manual Run
     """
     try:
         # Validate asset path exists
@@ -5883,12 +5974,106 @@ async def upload_asset_replacement(
 
         logger.info(f"Replaced asset: {asset_path} (size: {len(contents)} bytes)")
 
-        return {
+        result = {
             "success": True,
             "message": "Asset replaced successfully",
             "path": asset_path,
             "size": len(contents),
         }
+
+        # If process_with_overlays is enabled, trigger Manual Run
+        if process_with_overlays:
+            logger.info(f"🎨 Processing with overlays enabled for: {asset_path}")
+
+            try:
+                # Parse asset path to extract info
+                # Format: LibraryName/FolderName/poster.jpg, Season01.jpg, or S01E01.jpg
+                path_parts = Path(asset_path).parts
+
+                if len(path_parts) >= 3:
+                    # Use provided library_name and folder_name if available, otherwise extract from path
+                    extracted_library_name = path_parts[0]
+                    extracted_folder_name = path_parts[1]
+
+                    final_library_name = library_name or extracted_library_name
+                    final_folder_name = folder_name or extracted_folder_name
+                    final_title_text = title_text or extracted_folder_name
+
+                    # Determine poster type from filename
+                    filename = Path(asset_path).name.lower()
+
+                    # Build Manual Run command
+                    command = [
+                        "pwsh" if os.name == "nt" else "pwsh",
+                        "-File",
+                        str(SCRIPT_PATH),
+                        "-manual",
+                        "-Titletext",
+                        final_title_text,
+                        "-FolderName",
+                        final_folder_name,
+                        "-LibraryName",
+                        final_library_name,
+                    ]
+
+                    # Handle Season posters (Season01.jpg, Season 01.jpg, etc.)
+                    if season_number or "season" in filename:
+                        command.extend(["-SeasonPoster"])
+                        if season_number:
+                            command.extend(["-SeasonPosterName", season_number])
+
+                    # Handle TitleCards (S01E01.jpg, etc.)
+                    elif episode_number and episode_title:
+                        command.extend(["-TitleCards"])
+                        command.extend(["-EpisodeNumber", episode_number])
+                        command.extend(["-EpisodeTitleName", episode_title])
+
+                    # Handle Background cards (background.jpg, backdrop.jpg, etc.)
+                    elif "background" in filename or "backdrop" in filename:
+                        command.extend(["-BackgroundCard"])
+
+                    # Default: Standard poster
+                    # No additional flags needed
+
+                    logger.info(
+                        f"🚀 Starting Manual Run for overlay processing: {' '.join(command)}"
+                    )
+
+                    # Start the Manual Run process
+                    global current_process, current_mode
+                    current_process = subprocess.Popen(
+                        command,
+                        cwd=str(BASE_DIR),
+                        stdout=None,
+                        stderr=None,
+                        text=True,
+                    )
+                    current_mode = "manual"
+
+                    logger.info(
+                        f"✅ Manual Run started (PID: {current_process.pid}) for overlay processing"
+                    )
+
+                    result["manual_run_triggered"] = True
+                    result["message"] = (
+                        "Asset replaced and queued for overlay processing"
+                    )
+
+                else:
+                    logger.warning(
+                        f"⚠️ Invalid path structure for overlay processing: {asset_path}"
+                    )
+                    result["manual_run_triggered"] = False
+                    result["message"] = (
+                        "Asset replaced but overlay processing skipped (invalid path structure)"
+                    )
+
+            except Exception as e:
+                logger.error(f"❌ Error triggering Manual Run: {e}")
+                result["manual_run_triggered"] = False
+                result["error"] = str(e)
+
+        return result
 
     except HTTPException:
         raise
@@ -6207,6 +6392,327 @@ async def trigger_manual_run_internal(request: ManualModeRequest):
     current_mode = "manual"
 
     logger.info(f"✅ Manual Run process started (PID: {current_process.pid})")
+
+
+# ============================================
+# API ENDPOINTS: IMAGE CHOICES DATABASE
+# ============================================
+
+
+class ImageChoiceRecord(BaseModel):
+    """Model for image choice record"""
+
+    Title: str
+    Type: Optional[str] = None
+    Rootfolder: Optional[str] = None
+    LibraryName: Optional[str] = None
+    Language: Optional[str] = None
+    Fallback: Optional[str] = None
+    TextTruncated: Optional[str] = None
+    DownloadSource: Optional[str] = None
+    FavProviderLink: Optional[str] = None
+    Manual: Optional[str] = None
+
+
+@app.get("/api/assets/overview")
+async def get_assets_overview():
+    """
+    Get asset overview with categorized issues.
+    Categories: Missing Assets, Non-Primary Lang, Non-Primary Provider, Truncated Text, Manual, Total with Issues
+    """
+    if not DATABASE_AVAILABLE or db is None:
+        raise HTTPException(status_code=503, detail="Database not available")
+
+    try:
+        # Get all records from database
+        records = db.get_all_choices()
+
+        # Get primary language and provider from config
+        primary_language = None
+        primary_provider = None
+
+        try:
+            if CONFIG_PATH.exists():
+                with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+                    config = json.load(f)
+
+                    # Check ApiPart for PreferredLanguageOrder
+                    api_part = config.get("ApiPart", {})
+                    lang_order = api_part.get("PreferredLanguageOrder", [])
+                    if lang_order and len(lang_order) > 0:
+                        primary_language = lang_order[0]
+
+                    # Get FavProvider from ApiPart
+                    fav_provider = api_part.get("FavProvider", "")
+                    if fav_provider:
+                        primary_provider = fav_provider.lower()
+
+        except Exception as e:
+            logger.warning(f"Could not read config: {e}")
+
+        # Initialize categories
+        missing_assets = []
+        non_primary_lang = []
+        non_primary_provider = []
+        truncated_text = []
+        manual_assets = []
+        assets_with_issues = []
+
+        # Categorize each record
+        for record in records:
+            record_dict = dict(record)
+            has_issue = False
+
+            # Missing Assets: DownloadSource == "N/A"
+            if record_dict.get("DownloadSource") == "N/A":
+                missing_assets.append(record_dict)
+                has_issue = True
+
+            # Check if Fallback was used (general error indicator)
+            fallback_value = str(record_dict.get("Fallback", "")).lower()
+            is_fallback = fallback_value == "true"
+
+            # Non-Primary Language: Check language against config
+            # Fallback=true can indicate language fallback OR provider fallback
+            # We need to check the actual language to determine if it's a language issue
+            language = record_dict.get("Language", "")
+            provider_link = record_dict.get("FavProviderLink", "")
+
+            if language and primary_language:
+                # Normalize: "Textless" = "xx", case-insensitive
+                lang_normalized = (
+                    "xx" if language.lower() == "textless" else language.lower()
+                )
+                primary_normalized = (
+                    "xx"
+                    if primary_language.lower() == "textless"
+                    else primary_language.lower()
+                )
+
+                if lang_normalized != primary_normalized:
+                    non_primary_lang.append(record_dict)
+                    has_issue = True
+            elif language and not primary_language:
+                # If no primary language set, consider anything that's not Textless/xx as non-primary
+                if language.lower() not in ["xx", "textless"]:
+                    non_primary_lang.append(record_dict)
+                    has_issue = True
+
+            # Non-Primary Provider: Check if Fallback=true AND it's NOT a language issue
+            # If Fallback=true but language is correct, then it must be a provider fallback
+            if is_fallback:
+                # Check if this is a provider issue by looking at the provider link
+                is_language_issue = False
+
+                if language and primary_language:
+                    lang_normalized = (
+                        "xx" if language.lower() == "textless" else language.lower()
+                    )
+                    primary_normalized = (
+                        "xx"
+                        if primary_language.lower() == "textless"
+                        else primary_language.lower()
+                    )
+                    is_language_issue = lang_normalized != primary_normalized
+
+                # If Fallback=true but language is correct, it's a provider issue
+                if not is_language_issue:
+                    # Check if provider link contains the primary provider
+                    # Map provider names to their URL patterns
+                    provider_patterns = {
+                        "tmdb": ["tmdb", "themoviedb"],
+                        "tvdb": ["tvdb", "thetvdb"],
+                        "fanart": ["fanart"],
+                        "plex": ["plex"],
+                    }
+
+                    is_primary_provider = False
+                    if primary_provider and provider_link and provider_link != "N/A":
+                        # Check if any pattern for the primary provider is in the link
+                        patterns = provider_patterns.get(
+                            primary_provider, [primary_provider]
+                        )
+                        is_primary_provider = any(
+                            pattern in provider_link.lower() for pattern in patterns
+                        )
+
+                    # If not from primary provider, add to non_primary_provider
+                    if not is_primary_provider and provider_link != "N/A":
+                        non_primary_provider.append(record_dict)
+                        has_issue = True
+
+            # Truncated Text: TextTruncated == "True" or "true"
+            truncated_value = str(record_dict.get("TextTruncated", "")).lower()
+            if truncated_value == "true":
+                truncated_text.append(record_dict)
+                has_issue = True
+
+            # Manual: Manual == "True" or "true"
+            manual_value = str(record_dict.get("Manual", "")).lower()
+            if manual_value == "true":
+                manual_assets.append(record_dict)
+                # Note: Manual is not considered an "issue" for the total count
+
+            # Add to assets_with_issues if any issue flag is set
+            if has_issue:
+                assets_with_issues.append(record_dict)
+
+        return {
+            "categories": {
+                "missing_assets": {
+                    "count": len(missing_assets),
+                    "assets": missing_assets,
+                },
+                "non_primary_lang": {
+                    "count": len(non_primary_lang),
+                    "assets": non_primary_lang,
+                },
+                "non_primary_provider": {
+                    "count": len(non_primary_provider),
+                    "assets": non_primary_provider,
+                },
+                "truncated_text": {
+                    "count": len(truncated_text),
+                    "assets": truncated_text,
+                },
+                "manual": {
+                    "count": len(manual_assets),
+                    "assets": manual_assets,
+                },
+                "assets_with_issues": {
+                    "count": len(assets_with_issues),
+                    "assets": assets_with_issues,
+                },
+            },
+            "config": {
+                "primary_language": primary_language,
+                "primary_provider": primary_provider,
+            },
+        }
+    except Exception as e:
+        logger.error(f"Error fetching assets overview: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/imagechoices")
+async def get_all_imagechoices():
+    """Get all image choice records"""
+    if not DATABASE_AVAILABLE or db is None:
+        raise HTTPException(status_code=503, detail="Database not available")
+
+    try:
+        records = db.get_all_choices()
+        # Convert sqlite3.Row to dict
+        return [dict(record) for record in records]
+    except Exception as e:
+        logger.error(f"Error fetching image choices: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/imagechoices/{title}")
+async def get_imagechoice_by_title(title: str):
+    """Get image choice by title"""
+    if not DATABASE_AVAILABLE or db is None:
+        raise HTTPException(status_code=503, detail="Database not available")
+
+    try:
+        record = db.get_choice_by_title(title)
+        if record is None:
+            raise HTTPException(status_code=404, detail="Record not found")
+        return dict(record)
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching image choice: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/imagechoices")
+async def create_imagechoice(record: ImageChoiceRecord):
+    """Create a new image choice record"""
+    if not DATABASE_AVAILABLE or db is None:
+        raise HTTPException(status_code=503, detail="Database not available")
+
+    try:
+        record_id = db.insert_choice(
+            title=record.Title,
+            type_=record.Type,
+            rootfolder=record.Rootfolder,
+            library_name=record.LibraryName,
+            language=record.Language,
+            fallback=record.Fallback,
+            text_truncated=record.TextTruncated,
+            download_source=record.DownloadSource,
+            fav_provider_link=record.FavProviderLink,
+            manual=record.Manual,
+        )
+        return {"id": record_id, "message": "Record created successfully"}
+    except Exception as e:
+        logger.error(f"Error creating image choice: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.put("/api/imagechoices/{record_id}")
+async def update_imagechoice(record_id: int, record: ImageChoiceRecord):
+    """Update an existing image choice record"""
+    if not DATABASE_AVAILABLE or db is None:
+        raise HTTPException(status_code=503, detail="Database not available")
+
+    try:
+        # Convert record to dict and filter out None values
+        update_data = {k: v for k, v in record.dict().items() if v is not None}
+        db.update_choice(record_id, **update_data)
+        return {"message": "Record updated successfully"}
+    except Exception as e:
+        logger.error(f"Error updating image choice: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/api/imagechoices/{record_id}")
+async def delete_imagechoice(record_id: int):
+    """Delete an image choice record"""
+    if not DATABASE_AVAILABLE or db is None:
+        raise HTTPException(status_code=503, detail="Database not available")
+
+    try:
+        db.delete_choice(record_id)
+        return {"message": "Record deleted successfully"}
+    except Exception as e:
+        logger.error(f"Error deleting image choice: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/imagechoices/import")
+async def import_imagechoices_csv():
+    """Manually trigger import of ImageChoices.csv to database"""
+    if not DATABASE_AVAILABLE or db is None:
+        raise HTTPException(status_code=503, detail="Database not available")
+
+    csv_path = LOGS_DIR / "ImageChoices.csv"
+    if not csv_path.exists():
+        raise HTTPException(
+            status_code=404, detail="ImageChoices.csv not found in Logs directory"
+        )
+
+    try:
+        stats = db.import_from_csv(csv_path)
+        return {
+            "message": "CSV import completed",
+            "stats": {
+                "added": stats["added"],
+                "skipped": stats["skipped"],
+                "errors": stats["errors"],
+                "error_details": stats["error_details"] if stats["errors"] > 0 else [],
+            },
+        }
+    except Exception as e:
+        logger.error(f"Error importing CSV: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================
+# STATIC FILE MOUNTS
+# ============================================
 
 
 if ASSETS_DIR.exists():

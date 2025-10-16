@@ -23,6 +23,7 @@ import {
   User,
   FileImage,
   Lightbulb,
+  AlertTriangle,
 } from "lucide-react";
 import VersionBadge from "./VersionBadge";
 import { useSidebar } from "../context/SidebarContext";
@@ -36,11 +37,33 @@ const Sidebar = () => {
   const [isAssetsExpanded, setIsAssetsExpanded] = useState(false);
   const [isConfigExpanded, setIsConfigExpanded] = useState(false);
   const [isThemeDropdownOpen, setIsThemeDropdownOpen] = useState(false);
+  const [missingAssetsCount, setMissingAssetsCount] = useState(0);
 
   // Check if Folder View is active
   const [viewMode, setViewMode] = useState(() => {
     return localStorage.getItem("gallery-view-mode") || "grid";
   });
+
+  // Fetch missing assets count
+  React.useEffect(() => {
+    const fetchMissingAssetsCount = async () => {
+      try {
+        const response = await fetch("/api/assets/overview");
+        if (response.ok) {
+          const data = await response.json();
+          // Show total assets with issues (not just missing assets)
+          setMissingAssetsCount(data.categories.assets_with_issues.count);
+        }
+      } catch (error) {
+        console.error("Failed to fetch missing assets count:", error);
+      }
+    };
+
+    fetchMissingAssetsCount();
+    // Refresh every 60 seconds
+    const interval = setInterval(fetchMissingAssetsCount, 60000);
+    return () => clearInterval(interval);
+  }, []);
 
   // Update viewMode when localStorage changes (listen to storage events)
   React.useEffect(() => {
@@ -88,8 +111,14 @@ const Sidebar = () => {
               { path: "/gallery/titlecards", label: "Title Cards", icon: Tv },
             ],
     },
-    { path: "/test-gallery", label: "Test Assets", icon: Image },
+    {
+      path: "/asset-overview",
+      label: "Missing Assets",
+      icon: AlertTriangle,
+      badge: missingAssetsCount,
+    },
     { path: "/overlay-assets", label: "Overlay Assets", icon: FileImage },
+    { path: "/test-gallery", label: "Test Assets", icon: Image },
     {
       path: "/config",
       label: "Config",
@@ -226,7 +255,7 @@ const Sidebar = () => {
                   key={item.path}
                   to={item.path}
                   className={`flex items-center ${
-                    isCollapsed ? "justify-center" : "px-3"
+                    isCollapsed ? "justify-center" : "justify-between px-3"
                   } py-3 rounded-lg text-sm font-medium transition-all group ${
                     isActive
                       ? "bg-theme-primary text-white shadow-lg"
@@ -234,8 +263,17 @@ const Sidebar = () => {
                   }`}
                   title={isCollapsed ? item.label : ""}
                 >
-                  <Icon className="w-5 h-5 flex-shrink-0" />
-                  {!isCollapsed && <span className="ml-3">{item.label}</span>}
+                  <div className="flex items-center">
+                    <Icon className="w-5 h-5 flex-shrink-0" />
+                    {!isCollapsed && <span className="ml-3">{item.label}</span>}
+                  </div>
+                  {!isCollapsed &&
+                    item.badge !== undefined &&
+                    item.badge > 0 && (
+                      <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full min-w-[1.5rem] text-center">
+                        {item.badge}
+                      </span>
+                    )}
                 </Link>
               );
             })}
@@ -420,14 +458,21 @@ const Sidebar = () => {
                       key={item.path}
                       to={item.path}
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className={`flex items-center px-3 py-3 rounded-lg text-sm font-medium transition-all ${
+                      className={`flex items-center justify-between px-3 py-3 rounded-lg text-sm font-medium transition-all ${
                         isActive
                           ? "bg-theme-primary text-white shadow-lg"
                           : "text-theme-muted hover:bg-theme-hover hover:text-theme-text"
                       }`}
                     >
-                      <Icon className="w-5 h-5 mr-3" />
-                      <span>{item.label}</span>
+                      <div className="flex items-center">
+                        <Icon className="w-5 h-5 mr-3" />
+                        <span>{item.label}</span>
+                      </div>
+                      {item.badge !== undefined && item.badge > 0 && (
+                        <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full min-w-[1.5rem] text-center">
+                          {item.badge}
+                        </span>
+                      )}
                     </Link>
                   );
                 })}

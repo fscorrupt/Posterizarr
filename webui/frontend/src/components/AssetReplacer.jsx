@@ -425,27 +425,106 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
     showError(null);
 
     try {
+      // Build URL with process_with_overlays parameter
+      let url = `${API_URL}/assets/upload-replacement?asset_path=${encodeURIComponent(
+        asset.path
+      )}&process_with_overlays=${processWithOverlays}`;
+
+      // Add overlay processing parameters if checkbox is checked
+      if (processWithOverlays) {
+        const titleText = manualForm?.titletext || metadata.title;
+        const folderName = manualForm?.foldername || metadata.folder_name;
+        const libraryName = manualForm?.libraryname || metadata.library_name;
+
+        // Validation
+        if (!titleText || !titleText.trim()) {
+          showError("Please enter a title text for overlay processing");
+          setUploading(false);
+          return;
+        }
+        if (!folderName || !folderName.trim()) {
+          showError("Please enter a folder name for overlay processing");
+          setUploading(false);
+          return;
+        }
+        if (!libraryName || !libraryName.trim()) {
+          showError("Please enter a library name for overlay processing");
+          setUploading(false);
+          return;
+        }
+
+        // Add parameters to URL
+        url += `&title_text=${encodeURIComponent(titleText)}`;
+        url += `&folder_name=${encodeURIComponent(folderName)}`;
+        url += `&library_name=${encodeURIComponent(libraryName)}`;
+
+        // For season posters
+        if (metadata.asset_type === "season") {
+          const seasonPosterName = manualForm?.seasonPosterName;
+          if (!seasonPosterName || !seasonPosterName.trim()) {
+            showError("Please enter a season number for overlay processing");
+            setUploading(false);
+            return;
+          }
+          url += `&season_number=${encodeURIComponent(seasonPosterName)}`;
+        }
+
+        // For titlecards
+        if (metadata.asset_type === "titlecard") {
+          const episodeNumber = manualForm?.episodeNumber;
+          const episodeTitleName = manualForm?.episodeTitleName;
+
+          if (!episodeNumber || !episodeNumber.trim()) {
+            showError("Please enter an episode number for overlay processing");
+            setUploading(false);
+            return;
+          }
+          if (!episodeTitleName || !episodeTitleName.trim()) {
+            showError("Please enter an episode title for overlay processing");
+            setUploading(false);
+            return;
+          }
+
+          url += `&episode_number=${encodeURIComponent(episodeNumber)}`;
+          url += `&episode_title=${encodeURIComponent(episodeTitleName)}`;
+        }
+      }
+
       const formData = new FormData();
       formData.append("file", file);
 
-      const response = await fetch(
-        `${API_URL}/assets/upload-replacement?asset_path=${encodeURIComponent(
-          asset.path
-        )}`,
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
+      const response = await fetch(url, {
+        method: "POST",
+        body: formData,
+      });
 
       const data = await response.json();
 
       if (data.success) {
-        showSuccess("Asset replaced successfully!");
-        setTimeout(() => {
-          onSuccess?.();
-          onClose();
-        }, 1500);
+        if (data.manual_run_triggered) {
+          showSuccess("Asset replaced and queued for overlay processing! 🎨");
+
+          console.log("🎯 Waiting for log file: Manuallog.log");
+
+          // Wait for log file to be created before navigating
+          const logExists = await waitForLogFile("Manuallog.log");
+
+          if (logExists) {
+            console.log("🎯 Redirecting to LogViewer with log: Manuallog.log");
+            navigate("/logs", { state: { logFile: "Manuallog.log" } });
+          } else {
+            console.warn(
+              "⚠️ Log file Manuallog.log not found, redirecting anyway"
+            );
+            navigate("/logs", { state: { logFile: "Manuallog.log" } });
+          }
+        } else {
+          showSuccess("Asset replaced successfully!");
+          setTimeout(() => {
+            onSuccess?.();
+            onClose();
+          }, 2000);
+        }
       } else {
         showError("Failed to upload asset");
       }

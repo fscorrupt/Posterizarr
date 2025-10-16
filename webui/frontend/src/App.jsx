@@ -25,6 +25,7 @@ import HowItWorks from "./components/HowItWorks";
 import SchedulerSettings from "./components/SchedulerSettings";
 import RunModes from "./components/RunModes";
 import OverlayAssets from "./components/OverlayAssets";
+import AssetOverview from "./components/AssetOverview";
 import Sidebar from "./components/Sidebar";
 import TopNavbar from "./components/TopNavbar";
 import LoginScreen from "./components/LoginScreen";
@@ -129,6 +130,7 @@ function AppContent() {
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/run-modes" element={<RunModes />} />
                 <Route path="/overlay-assets" element={<OverlayAssets />} />
+                <Route path="/asset-overview" element={<AssetOverview />} />
                 <Route path="/test-gallery" element={<TestGallery />} />
 
                 <Route
