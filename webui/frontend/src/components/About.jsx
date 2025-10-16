@@ -102,7 +102,17 @@ function About() {
         <Info className="w-5 h-5 text-orange-400 flex-shrink-0 mt-0.5" />
         <p className="text-orange-300 text-sm">
           This is BETA software. Features may be broken and/or unstable. Please
-          report any issues on GitHub!
+          report any issues on{" "}
+          <a
+            href="https://github.com/fscorrupt/Posterizarr/issues"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-orange-400 hover:text-orange-300 underline font-medium inline-flex items-center gap-1"
+          >
+            GitHub
+            <ExternalLink className="w-3 h-3" />
+          </a>
+          !
         </p>
       </div>
 
