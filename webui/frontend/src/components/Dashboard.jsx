@@ -17,6 +17,7 @@ import {
   Wifi,
 } from "lucide-react";
 import SystemInfo from "./SystemInfo";
+import RuntimeStats from "./RuntimeStats";
 import DangerZone from "./DangerZone";
 import RecentAssets from "./RecentAssets";
 import Notification from "./Notification";
@@ -609,6 +610,9 @@ function Dashboard() {
 
       {/* System Information */}
       <SystemInfo />
+
+      {/* Runtime Statistics */}
+      <RuntimeStats />
 
       {/*  Recently Created Assets */}
       <RecentAssets />
