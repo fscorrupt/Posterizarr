@@ -2451,7 +2451,8 @@ function ConfigEditor() {
       keyLower.includes("pointsize") ||
       keyLower.includes("borderwidth") ||
       keyLower.includes("strokewidth") ||
-      keyLower.includes("spacing")
+      keyLower.includes("spacing") ||
+      keyLower === "maxlogs"
     ) {
       return (
         <div className="space-y-2">
