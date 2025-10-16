@@ -5334,6 +5334,14 @@ async def get_recent_assets():
                 )
 
             if rootfolder:
+                # Check if this is a fallback asset (skip fallback assets in recent view)
+                is_fallback = asset_dict.get("Fallback", "").lower() == "true"
+
+                # Skip fallback assets - they should only appear in assets overview
+                if is_fallback:
+                    logger.debug(f"⏭️  Skipping fallback asset in recent view: {title}")
+                    continue
+
                 poster_url = find_poster_in_assets(
                     rootfolder, asset_type, title, download_source
                 )
@@ -5345,7 +5353,7 @@ async def get_recent_assets():
                         "rootfolder": rootfolder,
                         "library": asset_dict.get("LibraryName", ""),
                         "language": asset_dict.get("Language", ""),
-                        "fallback": asset_dict.get("Fallback", "").lower() == "true",
+                        "fallback": False,  # Always false here since we filter out fallback assets
                         "text_truncated": asset_dict.get("TextTruncated", "").lower()
                         == "true",
                         "download_source": download_source,
