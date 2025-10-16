@@ -55,7 +55,6 @@ def ensure_database_exists(db_path: Path) -> sqlite3.Connection:
             text_truncated TEXT NOT NULL,
             download_source TEXT,
             fav_provider_link TEXT,
-            is_manually_created TEXT NOT NULL,
             created_at TIMESTAMP DEFAULT (datetime('now', 'localtime'))
         )
     """
@@ -68,14 +67,6 @@ def ensure_database_exists(db_path: Path) -> sqlite3.Connection:
     )
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_type ON image_choices(type)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_language ON image_choices(language)")
-
-    # Add is_manually_created column if it doesn't exist (for existing databases)
-    cursor.execute("PRAGMA table_info(image_choices)")
-    columns = [column[1] for column in cursor.fetchall()]
-    if "is_manually_created" not in columns:
-        cursor.execute(
-            "ALTER TABLE image_choices ADD COLUMN is_manually_created TEXT NOT NULL DEFAULT 'false'"
-        )
 
     conn.commit()
     return conn
@@ -120,8 +111,8 @@ def sync_csv_to_database(csv_path: Path, db_path: Path) -> int:
                         """
                         INSERT INTO image_choices 
                         (title, type, rootfolder, library_name, language, 
-                         fallback, text_truncated, download_source, fav_provider_link, is_manually_created)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                         fallback, text_truncated, download_source, fav_provider_link)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                         (
                             title,
@@ -133,7 +124,6 @@ def sync_csv_to_database(csv_path: Path, db_path: Path) -> int:
                             row["TextTruncated"].strip('"'),
                             row["Download Source"].strip('"'),
                             row["Fav Provider Link"].strip('"'),
-                            "false",
                         ),
                     )
                     records_imported += 1
