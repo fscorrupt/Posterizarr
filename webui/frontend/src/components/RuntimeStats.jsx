@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { Clock, RefreshCw, Image, AlertTriangle, Film, Tv } from "lucide-react";
+import {
+  Clock,
+  RefreshCw,
+  Image,
+  AlertTriangle,
+  Film,
+  Tv,
+  Calendar,
+} from "lucide-react";
 
 const API_URL = "/api";
 
@@ -15,6 +23,12 @@ function RuntimeStats() {
       backgrounds: 0,
       titlecards: 0,
       errors: 0,
+      scheduler: {
+        enabled: false,
+        schedules: [],
+        next_run: null,
+        timezone: null,
+      },
     }
   );
   const [loading, setLoading] = useState(false);
@@ -239,6 +253,70 @@ function RuntimeStats() {
               </div>
             </div>
           </div>
+
+          {/* Scheduler Information */}
+          {runtimeStats.scheduler && runtimeStats.scheduler.enabled && (
+            <div className="mt-6 bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 rounded-lg bg-theme-primary/10">
+                  <Calendar className="w-5 h-5 text-theme-primary" />
+                </div>
+                <h3 className="text-lg font-semibold text-theme-text">
+                  Scheduled Runs
+                </h3>
+              </div>
+
+              <div className="space-y-3">
+                {/* Next Run */}
+                {runtimeStats.scheduler.next_run && (
+                  <div className="flex items-center justify-between p-3 bg-theme-hover rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-theme-primary" />
+                      <span className="text-sm font-medium text-theme-text">
+                        Next Run:
+                      </span>
+                    </div>
+                    <span className="text-sm font-bold text-theme-primary">
+                      {new Date(
+                        runtimeStats.scheduler.next_run
+                      ).toLocaleString()}
+                    </span>
+                  </div>
+                )}
+
+                {/* All Schedules */}
+                {runtimeStats.scheduler.schedules &&
+                  runtimeStats.scheduler.schedules.length > 0 && (
+                    <div className="p-3 bg-theme-hover rounded-lg">
+                      <p className="text-xs text-theme-muted mb-2 font-medium">
+                        Configured Schedule Times:
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {runtimeStats.scheduler.schedules.map(
+                          (schedule, index) => (
+                            <span
+                              key={index}
+                              className="inline-flex items-center gap-1 px-3 py-1 bg-theme-card border border-theme-primary/30 rounded-full text-sm text-theme-primary font-medium"
+                            >
+                              <Clock className="w-3 h-3" />
+                              {schedule.time}
+                            </span>
+                          )
+                        )}
+                      </div>
+                      {runtimeStats.scheduler.timezone && (
+                        <p className="text-xs text-theme-muted mt-2">
+                          Timezone:{" "}
+                          <span className="font-mono text-theme-text">
+                            {runtimeStats.scheduler.timezone}
+                          </span>
+                        </p>
+                      )}
+                    </div>
+                  )}
+              </div>
+            </div>
+          )}
         </>
       )}
     </div>

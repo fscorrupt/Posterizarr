@@ -3315,6 +3315,26 @@ async def get_runtime_stats():
         if total_images == 0 and (posters + seasons + backgrounds + titlecards) > 0:
             total_images = posters + seasons + backgrounds + titlecards
 
+        # Get scheduler information if available
+        scheduler_info = {
+            "enabled": False,
+            "schedules": [],
+            "next_run": None,
+            "timezone": None,
+        }
+
+        if SCHEDULER_AVAILABLE and scheduler:
+            try:
+                status = scheduler.get_status()
+                scheduler_info = {
+                    "enabled": status.get("enabled", False),
+                    "schedules": status.get("schedules", []),
+                    "next_run": status.get("next_run"),
+                    "timezone": status.get("timezone"),
+                }
+            except Exception as e:
+                logger.warning(f"Could not get scheduler info: {e}")
+
         return {
             "success": True,
             "runtime": runtime,
@@ -3324,6 +3344,7 @@ async def get_runtime_stats():
             "backgrounds": backgrounds,
             "titlecards": titlecards,
             "errors": errors,
+            "scheduler": scheduler_info,
         }
 
     except Exception as e:
@@ -3338,6 +3359,12 @@ async def get_runtime_stats():
             "backgrounds": 0,
             "titlecards": 0,
             "errors": 0,
+            "scheduler": {
+                "enabled": False,
+                "schedules": [],
+                "next_run": None,
+                "timezone": None,
+            },
         }
 
 
