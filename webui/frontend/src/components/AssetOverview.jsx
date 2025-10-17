@@ -251,15 +251,23 @@ const AssetOverview = () => {
     return Array.from(assets.values());
   }, [data]);
 
-  // Get unique types and libraries for filters
+  // Get unique types and libraries for filters (excluding Manual entries)
   const types = useMemo(() => {
-    const uniqueTypes = new Set(allAssets.map((a) => a.Type).filter(Boolean));
+    const nonManualAssets = allAssets.filter(
+      (asset) => !asset.Manual || asset.Manual.toLowerCase() !== "true"
+    );
+    const uniqueTypes = new Set(
+      nonManualAssets.map((a) => a.Type).filter(Boolean)
+    );
     return ["All Types", ...Array.from(uniqueTypes).sort()];
   }, [allAssets]);
 
   const libraries = useMemo(() => {
+    const nonManualAssets = allAssets.filter(
+      (asset) => !asset.Manual || asset.Manual.toLowerCase() !== "true"
+    );
     const uniqueLibs = new Set(
-      allAssets.map((a) => a.LibraryName).filter(Boolean)
+      nonManualAssets.map((a) => a.LibraryName).filter(Boolean)
     );
     return ["All Libraries", ...Array.from(uniqueLibs).sort()];
   }, [allAssets]);
@@ -504,10 +512,10 @@ const AssetOverview = () => {
         </div>
         <button
           onClick={fetchData}
-          className="flex items-center gap-2 px-5 py-2.5 bg-yellow-600 hover:bg-yellow-500 text-white rounded-lg transition-all duration-200 font-semibold shadow-md hover:shadow-lg"
+          className="flex items-center gap-2 px-3 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
         >
-          <RefreshCw className="w-4 h-4" />
-          Refresh
+          <RefreshCw className="w-4 h-4 text-theme-primary" />
+          <span className="text-theme-text">Refresh</span>
         </button>
       </div>
 
@@ -523,9 +531,9 @@ const AssetOverview = () => {
               onClick={() =>
                 setSelectedCategory(isSelected ? "All Categories" : card.label)
               }
-              className={`relative p-5 rounded-xl border-2 transition-all duration-200 ${
-                card.bgColor
-              } ${card.borderColor} ${card.hoverBorderColor} ${
+              className={`relative p-5 rounded-xl border-2 transition-all duration-200 bg-black/60 ${
+                card.borderColor
+              } ${card.hoverBorderColor} ${
                 isSelected
                   ? "ring-2 ring-theme-primary/50 scale-105 shadow-lg"
                   : "hover:scale-102 shadow-md"
