@@ -3,10 +3,8 @@
 <br />
 <div align="center">
   <a href="https://github.com/fscorrupt/Posterizarr">
-    <img src="/images/webhook.png" alt="Logo" width="100" height="100">
+    <img src="/images/logo_banner.png" alt="Logo" width="100" height="100">
   </a>
-
-<h1 align="center">Posterizarr</h1>
 
   <p align="center">
     <a href="https://ko-fi.com/R6R81S6SC">Donate</a>
