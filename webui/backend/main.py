@@ -4121,144 +4121,9 @@ async def search_tmdb_posters(request: TMDBSearchRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/api/run/{mode}")
-async def run_script(mode: str):
-    """Run Posterizarr script in different modes"""
-    global current_process, current_mode
-
-    # Check if already running
-    if current_process and current_process.poll() is None:
-        raise HTTPException(status_code=400, detail="Script is already running")
-
-    if not SCRIPT_PATH.exists():
-        raise HTTPException(status_code=404, detail="Posterizarr.ps1 not found")
-
-    # Determine PowerShell command
-    import platform
-
-    if platform.system() == "Windows":
-        ps_command = "pwsh"
-        try:
-            subprocess.run([ps_command, "-v"], capture_output=True, check=True)
-        except (subprocess.CalledProcessError, FileNotFoundError):
-            ps_command = "powershell"
-            logger.info("pwsh not found, using powershell instead")
-    else:
-        ps_command = "pwsh"
-
-    # Determine command based on mode
-    commands = {
-        "normal": [ps_command, "-File", str(SCRIPT_PATH)],
-        "testing": [ps_command, "-File", str(SCRIPT_PATH), "-Testing"],
-        "manual": [ps_command, "-File", str(SCRIPT_PATH), "-Manual"],
-        "backup": [ps_command, "-File", str(SCRIPT_PATH), "-Backup"],
-        "syncjelly": [ps_command, "-File", str(SCRIPT_PATH), "-SyncJelly"],
-        "syncemby": [ps_command, "-File", str(SCRIPT_PATH), "-SyncEmby"],
-    }
-
-    if mode not in commands:
-        raise HTTPException(status_code=400, detail=f"Invalid mode: {mode}")
-
-    try:
-        logger.info(f"Running command: {' '.join(commands[mode])}")
-        current_process = subprocess.Popen(
-            commands[mode],
-            cwd=str(BASE_DIR),
-            stdout=None,
-            stderr=None,
-            text=True,
-        )
-        current_mode = mode  # Set current mode
-        logger.info(
-            f"Started Posterizarr in {mode} mode with PID {current_process.pid}"
-        )
-        return {
-            "success": True,
-            "message": f"Started in {mode} mode",
-            "pid": current_process.pid,
-        }
-    except FileNotFoundError as e:
-        error_msg = f"PowerShell not found. Please install PowerShell 7+ (pwsh) or ensure Windows PowerShell is in PATH. Error: {str(e)}"
-        logger.error(error_msg)
-        raise HTTPException(status_code=500, detail=error_msg)
-    except Exception as e:
-        logger.error(f"Error starting script: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.post("/api/reset-posters")
-async def reset_posters(request: ResetPostersRequest):
-    """Reset all posters in a Plex library"""
-    global current_process, current_mode
-
-    # Check if script is running
-    if current_process and current_process.poll() is None:
-        raise HTTPException(
-            status_code=400,
-            detail="Cannot reset posters while script is running. Please stop the script first.",
-        )
-
-    if not SCRIPT_PATH.exists():
-        raise HTTPException(status_code=404, detail="Posterizarr.ps1 not found")
-
-    if not request.library or not request.library.strip():
-        raise HTTPException(status_code=400, detail="Library name is required")
-
-    # Determine PowerShell command
-    import platform
-
-    if platform.system() == "Windows":
-        ps_command = "pwsh"
-        try:
-            subprocess.run([ps_command, "-v"], capture_output=True, check=True)
-        except (subprocess.CalledProcessError, FileNotFoundError):
-            ps_command = "powershell"
-            logger.info("pwsh not found, using powershell instead")
-    else:
-        ps_command = "pwsh"
-
-    # Build command with PosterReset switch and library parameter
-    command = [
-        ps_command,
-        "-File",
-        str(SCRIPT_PATH),
-        "-PosterReset",
-        "-LibraryToReset",
-        request.library.strip(),
-    ]
-
-    try:
-        logger.info(f"Resetting posters for library: {request.library}")
-        logger.info(f"Running command: {' '.join(command)}")
-
-        # Run the reset command
-        current_process = subprocess.Popen(
-            command,
-            cwd=str(BASE_DIR),
-            stdout=None,
-            stderr=None,
-            text=True,
-        )
-        current_mode = "reset"  # Set current mode to reset
-
-        logger.info(
-            f"Started poster reset for library '{request.library}' with PID {current_process.pid}"
-        )
-
-        return {
-            "success": True,
-            "message": f"Started resetting posters for library: {request.library}",
-            "pid": current_process.pid,
-        }
-    except FileNotFoundError as e:
-        error_msg = f"PowerShell not found. Please install PowerShell 7+ (pwsh) or ensure Windows PowerShell is in PATH. Error: {str(e)}"
-        logger.error(error_msg)
-        raise HTTPException(status_code=500, detail=error_msg)
-    except Exception as e:
-        logger.error(f"Error resetting posters: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
+# ============================================================================
+# MANUAL RUN ENDPOINTS - Must be defined BEFORE generic /api/run/{mode}
+# ============================================================================
 @app.post("/api/run-manual")
 async def run_manual_mode(request: ManualModeRequest):
     """Run manual mode with custom parameters"""
@@ -4699,15 +4564,150 @@ async def run_manual_mode_upload(
     except FileNotFoundError as e:
         error_msg = f"PowerShell not found. Please install PowerShell 7+ (pwsh) or ensure Windows PowerShell is in PATH."
         logger.error(error_msg)
-        # Cleanup on error
-        if upload_path.exists():
-            upload_path.unlink()
         raise HTTPException(status_code=500, detail=error_msg)
     except Exception as e:
-        logger.error(f"Error running manual mode with upload: {e}")
-        # Cleanup on error
-        if upload_path and upload_path.exists():
-            upload_path.unlink()
+        logger.error(f"Error running manual mode: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================================================
+# GENERIC RUN ENDPOINT - Must be defined AFTER specific endpoints like /api/run-manual
+# ============================================================================
+@app.post("/api/run/{mode}")
+async def run_script(mode: str):
+    """Run Posterizarr script in different modes"""
+    global current_process, current_mode
+
+    # Check if already running
+    if current_process and current_process.poll() is None:
+        raise HTTPException(status_code=400, detail="Script is already running")
+
+    if not SCRIPT_PATH.exists():
+        raise HTTPException(status_code=404, detail="Posterizarr.ps1 not found")
+
+    # Determine PowerShell command
+    import platform
+
+    if platform.system() == "Windows":
+        ps_command = "pwsh"
+        try:
+            subprocess.run([ps_command, "-v"], capture_output=True, check=True)
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            ps_command = "powershell"
+            logger.info("pwsh not found, using powershell instead")
+    else:
+        ps_command = "pwsh"
+
+    # Determine command based on mode
+    commands = {
+        "normal": [ps_command, "-File", str(SCRIPT_PATH)],
+        "testing": [ps_command, "-File", str(SCRIPT_PATH), "-Testing"],
+        "manual": [ps_command, "-File", str(SCRIPT_PATH), "-Manual"],
+        "backup": [ps_command, "-File", str(SCRIPT_PATH), "-Backup"],
+        "syncjelly": [ps_command, "-File", str(SCRIPT_PATH), "-SyncJelly"],
+        "syncemby": [ps_command, "-File", str(SCRIPT_PATH), "-SyncEmby"],
+    }
+
+    if mode not in commands:
+        raise HTTPException(status_code=400, detail=f"Invalid mode: {mode}")
+
+    try:
+        logger.info(f"Running command: {' '.join(commands[mode])}")
+        current_process = subprocess.Popen(
+            commands[mode],
+            cwd=str(BASE_DIR),
+            stdout=None,
+            stderr=None,
+            text=True,
+        )
+        current_mode = mode  # Set current mode
+        logger.info(
+            f"Started Posterizarr in {mode} mode with PID {current_process.pid}"
+        )
+        return {
+            "success": True,
+            "message": f"Started in {mode} mode",
+            "pid": current_process.pid,
+        }
+    except FileNotFoundError as e:
+        error_msg = f"PowerShell not found. Please install PowerShell 7+ (pwsh) or ensure Windows PowerShell is in PATH. Error: {str(e)}"
+        logger.error(error_msg)
+        raise HTTPException(status_code=500, detail=error_msg)
+    except Exception as e:
+        logger.error(f"Error starting script: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/reset-posters")
+async def reset_posters(request: ResetPostersRequest):
+    """Reset all posters in a Plex library"""
+    global current_process, current_mode
+
+    # Check if script is running
+    if current_process and current_process.poll() is None:
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot reset posters while script is running. Please stop the script first.",
+        )
+
+    if not SCRIPT_PATH.exists():
+        raise HTTPException(status_code=404, detail="Posterizarr.ps1 not found")
+
+    if not request.library or not request.library.strip():
+        raise HTTPException(status_code=400, detail="Library name is required")
+
+    # Determine PowerShell command
+    import platform
+
+    if platform.system() == "Windows":
+        ps_command = "pwsh"
+        try:
+            subprocess.run([ps_command, "-v"], capture_output=True, check=True)
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            ps_command = "powershell"
+            logger.info("pwsh not found, using powershell instead")
+    else:
+        ps_command = "pwsh"
+
+    # Build command with PosterReset switch and library parameter
+    command = [
+        ps_command,
+        "-File",
+        str(SCRIPT_PATH),
+        "-PosterReset",
+        "-LibraryToReset",
+        request.library.strip(),
+    ]
+
+    try:
+        logger.info(f"Resetting posters for library: {request.library}")
+        logger.info(f"Running command: {' '.join(command)}")
+
+        # Run the reset command
+        current_process = subprocess.Popen(
+            command,
+            cwd=str(BASE_DIR),
+            stdout=None,
+            stderr=None,
+            text=True,
+        )
+        current_mode = "reset"  # Set current mode to reset
+
+        logger.info(
+            f"Started poster reset for library '{request.library}' with PID {current_process.pid}"
+        )
+
+        return {
+            "success": True,
+            "message": f"Started resetting posters for library: {request.library}",
+            "pid": current_process.pid,
+        }
+    except FileNotFoundError as e:
+        error_msg = f"PowerShell not found. Please install PowerShell 7+ (pwsh) or ensure Windows PowerShell is in PATH. Error: {str(e)}"
+        logger.error(error_msg)
+        raise HTTPException(status_code=500, detail=error_msg)
+    except Exception as e:
+        logger.error(f"Error resetting posters: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
