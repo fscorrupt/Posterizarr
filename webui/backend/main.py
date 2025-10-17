@@ -720,6 +720,17 @@ def find_poster_in_assets(
                             if not image_file.exists():
                                 # Try without padding
                                 image_file = item / f"Season{match.group(1)}.jpg"
+                        else:
+                            # If no season number in title, look for any Season*.jpg file
+                            import glob
+
+                            season_files = list(item.glob("Season*.jpg"))
+                            if season_files:
+                                # Use the first Season*.jpg file found
+                                image_file = season_files[0]
+                                logger.info(
+                                    f"🔍 No season number in title, using first found: {image_file.name}"
+                                )
 
                     elif asset_type in ["TitleCard", "Title_Card", "Episode"]:
                         # Extract episode info from title (format: "S01E01 | Episode Title" or just "Episode Title")
