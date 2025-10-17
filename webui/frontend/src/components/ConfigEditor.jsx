@@ -1320,11 +1320,11 @@ function ConfigEditor() {
             {stringValue && (
               <button
                 onClick={() => setPreviewOverlay(stringValue)}
-                className="flex items-center gap-2 px-4 py-2 bg-theme-bg hover:bg-theme-hover border border-theme rounded-lg font-medium transition-all"
+                className="flex items-center gap-2 px-3 py-2 bg-theme-card hover:bg-theme-hover border border-theme rounded-lg transition-all"
                 title="Preview overlay image"
               >
-                <Eye className="w-4 h-4 text-theme-primary" />
-                <span className="text-sm">Preview</span>
+                <Eye className="w-4 h-4" />
+                <span className="text-sm text-theme-text">Preview</span>
               </button>
             )}
           </div>
@@ -1403,11 +1403,11 @@ function ConfigEditor() {
             {stringValue && (
               <button
                 onClick={() => setPreviewFont(stringValue)}
-                className="flex items-center gap-2 px-4 py-2 bg-theme-bg hover:bg-theme-hover border border-theme rounded-lg font-medium transition-all"
+                className="flex items-center gap-2 px-3 py-2 bg-theme-card hover:bg-theme-hover border border-theme rounded-lg transition-all"
                 title="Preview font"
               >
-                <Eye className="w-4 h-4 text-theme-primary" />
-                <span className="text-sm">Preview</span>
+                <Eye className="w-4 h-4" />
+                <span className="text-sm text-theme-text">Preview</span>
               </button>
             )}
           </div>
@@ -2837,23 +2837,29 @@ function ConfigEditor() {
           <button
             onClick={fetchConfig}
             disabled={loading}
-            className="flex items-center gap-2 px-5 py-2.5 bg-theme-card hover:bg-theme-hover border border-theme rounded-lg font-medium transition-all disabled:opacity-50 hover:scale-105 shadow-sm"
+            className="flex items-center gap-2 px-3 py-2 bg-theme-card hover:bg-theme-hover border border-theme rounded-lg transition-all disabled:opacity-50"
           >
-            <RefreshCw className={`w-5 h-5 ${loading ? "animate-spin" : ""}`} />
-            Reload
+            <RefreshCw
+              className={`w-4 h-4 text-theme-text ${
+                loading ? "animate-spin" : ""
+              }`}
+            />
+            <span className="text-sm text-theme-text">Reload</span>
           </button>
           <button
             onClick={saveConfig}
             disabled={saving}
-            className="flex items-center gap-2 px-6 py-2.5 bg-theme-primary hover:bg-theme-primary/90 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg font-medium transition-all shadow-lg hover:scale-105"
+            className="flex items-center gap-2 px-3 py-2 bg-theme-primary hover:bg-theme-primary/90 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg transition-all"
             title="Save configuration (Ctrl+Enter)"
           >
             {saving ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
+              <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
-              <Save className="w-5 h-5" />
+              <Save className="w-4 h-4" />
             )}
-            <span>{saving ? "Saving..." : "Save Changes"}</span>
+            <span className="text-sm text-white">
+              {saving ? "Saving..." : "Save Changes"}
+            </span>
             {!saving && (
               <span className="hidden sm:inline text-xs opacity-70 ml-1">
                 (Ctrl+↵)

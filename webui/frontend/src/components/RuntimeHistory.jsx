@@ -8,6 +8,7 @@ import {
   Tv,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   Database,
   TrendingUp,
 } from "lucide-react";
@@ -281,16 +282,19 @@ function RuntimeHistory() {
               </div>
               Summary (Last {summaryDays} Days)
             </h2>
-            <select
-              value={summaryDays}
-              onChange={(e) => setSummaryDays(Number(e.target.value))}
-              className="px-3 py-2 bg-theme-hover border border-theme rounded-lg text-theme-text text-sm focus:outline-none focus:border-theme-primary"
-            >
-              <option value={7}>7 Days</option>
-              <option value={30}>30 Days</option>
-              <option value={90}>90 Days</option>
-              <option value={365}>365 Days</option>
-            </select>
+            <div className="relative">
+              <select
+                value={summaryDays}
+                onChange={(e) => setSummaryDays(Number(e.target.value))}
+                className="appearance-none pl-3 pr-10 py-2 bg-theme-card hover:bg-theme-hover border border-theme rounded-lg text-theme-text text-sm focus:outline-none focus:border-theme-primary transition-all cursor-pointer"
+              >
+                <option value={7}>7 Days</option>
+                <option value={30}>30 Days</option>
+                <option value={90}>90 Days</option>
+                <option value={365}>365 Days</option>
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-muted pointer-events-none" />
+            </div>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -365,24 +369,27 @@ function RuntimeHistory() {
           </h2>
           <div className="flex items-center gap-3">
             {/* Mode Filter */}
-            <select
-              value={modeFilter || ""}
-              onChange={(e) => {
-                setModeFilter(e.target.value || null);
-                setCurrentPage(0);
-              }}
-              className="px-3 py-2 bg-theme-hover border border-theme rounded-lg text-theme-text text-sm focus:outline-none focus:border-theme-primary"
-            >
-              <option value="">All Modes</option>
-              <option value="normal">Normal</option>
-              <option value="testing">Testing</option>
-              <option value="manual">Manual</option>
-              <option value="scheduled">Scheduled</option>
-              <option value="backup">Backup</option>
-              <option value="syncjelly">Sync Jellyfin</option>
-              <option value="syncemby">Sync Emby</option>
-              <option value="reset">Reset</option>
-            </select>
+            <div className="relative">
+              <select
+                value={modeFilter || ""}
+                onChange={(e) => {
+                  setModeFilter(e.target.value || null);
+                  setCurrentPage(0);
+                }}
+                className="appearance-none pl-3 pr-10 py-2 bg-theme-card hover:bg-theme-hover border border-theme rounded-lg text-theme-text text-sm focus:outline-none focus:border-theme-primary transition-all cursor-pointer"
+              >
+                <option value="">All Modes</option>
+                <option value="normal">Normal</option>
+                <option value="testing">Testing</option>
+                <option value="manual">Manual</option>
+                <option value="scheduled">Scheduled</option>
+                <option value="backup">Backup</option>
+                <option value="syncjelly">Sync Jellyfin</option>
+                <option value="syncemby">Sync Emby</option>
+                <option value="reset">Reset</option>
+              </select>
+              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-muted pointer-events-none" />
+            </div>
 
             {/* Refresh Button */}
             <button
@@ -391,11 +398,13 @@ function RuntimeHistory() {
                 fetchSummary();
               }}
               disabled={refreshing}
-              className="flex items-center gap-2 px-4 py-2 text-theme-muted hover:text-theme-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:bg-theme-hover rounded-lg"
+              className="flex items-center gap-2 px-3 py-2 bg-theme-card hover:bg-theme-hover border border-theme rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               title="Refresh history"
             >
               <RefreshCw
-                className={`w-5 h-5 ${refreshing ? "animate-spin" : ""}`}
+                className={`w-4 h-4 text-theme-text ${
+                  refreshing ? "animate-spin" : ""
+                }`}
               />
             </button>
           </div>

@@ -264,23 +264,27 @@ function TestGallery() {
           <button
             onClick={() => fetchImages(true)}
             disabled={loading}
-            className="flex items-center gap-2 px-5 py-2.5 bg-theme-card hover:bg-theme-hover border border-theme disabled:opacity-50 disabled:cursor-not-allowed rounded-lg font-medium transition-all hover:scale-105 shadow-sm"
+            className="flex items-center gap-2 px-3 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-sm font-medium transition-all shadow-sm"
           >
-            <RefreshCw className={`w-5 h-5 ${loading ? "animate-spin" : ""}`} />
-            Refresh
+            <RefreshCw
+              className={`w-4 h-4 text-theme-primary ${
+                loading ? "animate-spin" : ""
+              }`}
+            />
+            <span className="text-theme-text">Refresh</span>
           </button>
 
           <button
             onClick={runTestMode}
             disabled={scriptLoading || status.running}
-            className="flex items-center gap-2 px-6 py-2.5 bg-theme-primary hover:bg-theme-primary/90 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg font-medium transition-all shadow-lg hover:scale-105"
+            className="flex items-center gap-2 px-3 py-2 bg-yellow-600 hover:bg-yellow-500 border border-yellow-700 hover:border-yellow-600 disabled:bg-gray-600 disabled:border-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg text-sm font-medium transition-all shadow-sm"
           >
             {scriptLoading ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
+              <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
-              <Play className="w-5 h-5" />
+              <Play className="w-4 h-4" />
             )}
-            Start Test Mode
+            <span>Start Test Mode</span>
           </button>
         </div>
       </div>
