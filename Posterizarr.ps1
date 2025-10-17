@@ -7567,7 +7567,33 @@ if ($Manual) {
             $response = Read-Host "Create Background? (y/n)"
             if ($response.ToLower() -eq 'y') { $BackgroundCard = $true }
         }
+
+        # Error handling for missing selection
+        if (-not ($SeasonPoster -or $TitleCard -or $CollectionCard -or $BackgroundCard)) {
+            Write-Entry -Message "No poster type selected. Please select at least one type." -Path $global:ScriptRoot\Logs\Manuallog.log -Color Red -log Error
+            if (Test-Path $CurrentlyRunning) {
+                Remove-Item -LiteralPath $CurrentlyRunning -Force
+            }
+            if ($global:UptimeKumaUrl) {
+                Send-UptimeKumaWebhook -status "down" -msg "No poster type selected"
+            }
+            Exit
+        }
     }
+
+    # Error handling for missing picture path
+    if ([string]::IsNullOrEmpty($PicturePath)) {
+        Write-Entry -Message "No picture path provided. A source picture is required." -Path $global:ScriptRoot\Logs\Manuallog.log -Color Red -log Error
+        if (Test-Path $CurrentlyRunning) {
+            Remove-Item -LiteralPath $CurrentlyRunning -Force
+        }
+        if ($global:UptimeKumaUrl) {
+            Send-UptimeKumaWebhook -status "down" -msg "Missing picture path"
+        }
+        Exit
+    }
+
+    # Starting to gather more info
     if ($CollectionCard) {
         if ($Titletext -eq $null) {
             $Titletext = Read-Host "Enter Movie/Show/Collection Title"
