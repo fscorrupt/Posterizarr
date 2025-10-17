@@ -7,11 +7,21 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List, Dict, Optional
 import logging
+import os
 
 logger = logging.getLogger(__name__)
 
+# Determine base directory based on environment
+IS_DOCKER = os.getenv("POSTERIZARR_NON_ROOT") == "TRUE"
+if IS_DOCKER:
+    BASE_DIR = Path("/config")
+else:
+    # Local: webui/backend/runtime_database.py -> project root (2 levels up)
+    BASE_DIR = Path(__file__).parent.parent.parent
+
 # Database path in the database folder
-DB_PATH = Path(__file__).parent.parent.parent / "database" / "runtime_stats.db"
+DATABASE_DIR = BASE_DIR / "database"
+DB_PATH = DATABASE_DIR / "runtime_stats.db"
 
 
 class RuntimeDatabase:
