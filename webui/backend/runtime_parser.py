@@ -39,6 +39,7 @@ def parse_runtime_from_log(log_path: Path, mode: str = "normal") -> Optional[Dic
         backgrounds = 0
         titlecards = 0
         errors = 0
+        fallback_images = 0
 
         # Parse from bottom to top to get latest run
         for line in reversed(last_lines):
@@ -100,6 +101,17 @@ def parse_runtime_from_log(log_path: Path, mode: str = "normal") -> Optional[Dic
                 if match:
                     errors = int(match.group(1))
 
+            # Look for: "'8' times the script took a fallback image"
+            if (
+                "times the script took a fallback image" in line
+                and fallback_images == 0
+            ):
+                match = re.search(
+                    r"'(\d+)'\s+times the script took a fallback image", line
+                )
+                if match:
+                    fallback_images = int(match.group(1))
+
             # Stop searching once we found everything from the same run
             if runtime_formatted and (
                 total_images > 0 or (posters + seasons + backgrounds + titlecards) > 0
@@ -115,6 +127,9 @@ def parse_runtime_from_log(log_path: Path, mode: str = "normal") -> Optional[Dic
         if total_images == 0 and (posters + seasons + backgrounds + titlecards) > 0:
             total_images = posters + seasons + backgrounds + titlecards
 
+        # Add fallback images to error count
+        total_errors = errors + fallback_images
+
         return {
             "mode": mode,
             "runtime_seconds": runtime_seconds,
@@ -124,7 +139,7 @@ def parse_runtime_from_log(log_path: Path, mode: str = "normal") -> Optional[Dic
             "seasons": seasons,
             "backgrounds": backgrounds,
             "titlecards": titlecards,
-            "errors": errors,
+            "errors": total_errors,
             "log_file": log_path.name,
         }
 

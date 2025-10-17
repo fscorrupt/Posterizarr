@@ -6505,6 +6505,8 @@ async def upload_asset_replacement(
                         "-File",
                         str(SCRIPT_PATH),
                         "-manual",
+                        "-PicturePath",
+                        str(full_asset_path),
                         "-Titletext",
                         final_title_text,
                         "-FolderName",
