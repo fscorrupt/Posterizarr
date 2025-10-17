@@ -710,21 +710,21 @@ function BackgroundsGallery() {
               <div className="flex justify-center gap-4">
                 <button
                   onClick={loadMore}
-                  className="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-theme-primary to-theme-primary/80 hover:from-theme-primary/90 hover:to-theme-primary/70 text-white rounded-xl font-semibold transition-all transform hover:scale-105 shadow-lg hover:shadow-xl"
+                  className="flex items-center gap-2 px-3 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
                 >
-                  <ChevronDown className="w-5 h-5" />
-                  Load More
-                  <span className="ml-1 px-3 py-1 bg-black/20 rounded-full text-sm font-bold">
+                  <ChevronDown className="w-4 h-4 text-theme-primary" />
+                  <span className="text-theme-text">Load More</span>
+                  <span className="ml-1 px-2 py-0.5 bg-theme-primary/20 rounded-full text-xs font-bold text-theme-primary">
                     {filteredImages.length - displayCount} remaining
                   </span>
                 </button>
                 <button
                   onClick={loadAll}
-                  className="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-theme-secondary to-theme-secondary/80 hover:from-theme-secondary/90 hover:to-theme-secondary/70 text-white rounded-xl font-semibold transition-all transform hover:scale-105 shadow-lg hover:shadow-xl"
+                  className="flex items-center gap-2 px-3 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
                 >
-                  <ChevronDown className="w-5 h-5" />
-                  Load All
-                  <span className="ml-1 px-3 py-1 bg-black/20 rounded-full text-sm font-bold">
+                  <ChevronDown className="w-4 h-4 text-theme-primary" />
+                  <span className="text-theme-text">Load All</span>
+                  <span className="ml-1 px-2 py-0.5 bg-theme-primary/20 rounded-full text-xs font-bold text-theme-primary">
                     {filteredImages.length} total
                   </span>
                 </button>
