@@ -52,11 +52,11 @@ From the UI, you can:
 
 By default (Docker Only), the UI is accessible at `http://localhost:8000`.
 
-The web UI comes pre-integrated in the Docker container. For other platforms like Windows or Linux, please see the [Manual Installation how-to](#ui-installation-(manual)).
+The web UI comes pre-integrated in the Docker container. For other platforms like Windows or Linux, please see the [Manual Installation how-to](#ui-installation-manual).
 
 <p align="center">
   <a href="https://github.com/fscorrupt/Posterizarr">
-    <img alt="Web UI Preview" width="80%" src="/images/PosterizarrUI.png">
+    <img alt="Web UI Preview" width="100%" src="/images/PosterizarrUI.png">
   </a>
 </p>
 
