@@ -19,6 +19,7 @@ import {
   EyeOff,
   Edit3,
   X,
+  GripVertical,
 } from "lucide-react";
 import SystemInfo from "./SystemInfo";
 import RuntimeStats from "./RuntimeStats";
@@ -100,6 +101,22 @@ function Dashboard() {
           logViewer: true,
         };
   });
+
+  // Card order settings
+  const [cardOrder, setCardOrder] = useState(() => {
+    const saved = localStorage.getItem("dashboard_card_order");
+    return saved
+      ? JSON.parse(saved)
+      : [
+          "statusCards",
+          "systemInfo",
+          "runtimeStats",
+          "recentAssets",
+          "logViewer",
+        ];
+  });
+
+  const [draggedItem, setDraggedItem] = useState(null);
 
   const fetchStatus = async (silent = false) => {
     if (!silent) {
@@ -417,6 +434,46 @@ function Dashboard() {
     saveVisibilitySettings(newSettings);
   };
 
+  // Save card order to localStorage
+  const saveCardOrder = (order) => {
+    setCardOrder(order);
+    localStorage.setItem("dashboard_card_order", JSON.stringify(order));
+  };
+
+  const handleDragStart = (e, index) => {
+    setDraggedItem(index);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e, index) => {
+    e.preventDefault();
+    if (draggedItem === null || draggedItem === index) return;
+
+    const newOrder = [...cardOrder];
+    const draggedCard = newOrder[draggedItem];
+    newOrder.splice(draggedItem, 1);
+    newOrder.splice(index, 0, draggedCard);
+
+    setDraggedItem(index);
+    setCardOrder(newOrder);
+  };
+
+  const handleDragEnd = () => {
+    if (draggedItem !== null) {
+      saveCardOrder(cardOrder);
+    }
+    setDraggedItem(null);
+  };
+
+  // Card labels for display
+  const cardLabels = {
+    statusCards: "Status Cards",
+    systemInfo: "System Information",
+    runtimeStats: "Runtime Statistics",
+    recentAssets: "Recent Assets",
+    logViewer: "Live Log Feed",
+  };
+
   const parseLogLine = (line) => {
     const cleanedLine = line.replace(/\x00/g, "").trim();
 
@@ -472,66 +529,14 @@ function Dashboard() {
     return colors[levelLower] || colors.default;
   };
 
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <h1 className="text-3xl font-bold text-theme-text flex items-center gap-3">
-            <Activity className="w-8 h-8 text-theme-primary" />
-            Monitor your Posterizarr instance
-          </h1>
-          <button
-            onClick={() => setShowCardsModal(true)}
-            className="flex items-center gap-2 px-3 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
-            title="Customize Dashboard"
-          >
-            <Edit3 className="w-4 h-4 text-theme-primary" />
-            <span className="text-theme-text">Customize</span>
-          </button>
-        </div>
-
-        {/* Quick Action: Go to Run Modes */}
-        {!status.running && (
-          <Link
-            to="/run-modes"
-            className="flex items-center gap-2 px-3 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
-          >
-            <Play className="w-4 h-4 text-theme-primary" />
-            <span className="text-theme-text">Run Script</span>
-          </Link>
-        )}
-      </div>
-
-      {/* Already Running Warning */}
-      {status.already_running_detected && (
-        <div className="bg-yellow-900/30 border-l-4 border-yellow-500 rounded-lg p-6 shadow-sm">
-          <div className="flex items-start gap-4">
-            <AlertTriangle className="w-6 h-6 text-yellow-400 flex-shrink-0 mt-1" />
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold text-yellow-400 mb-2">
-                Another Posterizarr Instance Already Running
-              </h3>
-              <p className="text-yellow-200 text-sm mb-4">
-                The script detected another instance. If this is a false
-                positive, delete the running file below.
-              </p>
-              <button
-                onClick={() => setDeleteConfirm(true)}
-                disabled={loading}
-                className="flex items-center gap-2 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-all text-sm shadow-sm"
-              >
-                <Trash2 className="w-4 h-4" />
-                Delete Running File
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Status Cards */}
-      {visibleCards.statusCards && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+  // Render cards in correct order
+  const renderDashboardCards = () => {
+    const cardComponents = {
+      statusCards: visibleCards.statusCards && (
+        <div
+          key="statusCards"
+          className="grid grid-cols-1 md:grid-cols-3 gap-6"
+        >
           {/* Script Status Card */}
           <div className="bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
             <div className="flex items-center justify-between">
@@ -649,41 +654,19 @@ function Dashboard() {
             </div>
           </div>
         </div>
-      )}
-
-      {/* System Information */}
-      {visibleCards.systemInfo && <SystemInfo />}
-
-      {/* Runtime Statistics */}
-      {visibleCards.runtimeStats && <RuntimeStats />}
-
-      {/*  Recently Created Assets */}
-      {visibleCards.recentAssets && <RecentAssets />}
-
-      {/* Running Script Controls */}
-      {status.running && (
-        <div className="bg-orange-950/40 rounded-xl p-6 border border-orange-600/50">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-orange-600/20">
-                <AlertCircle className="w-6 h-6 text-orange-400" />
-              </div>
-              <div>
-                <p className="font-medium text-orange-200 text-lg">
-                  Script is running
-                </p>
-                <p className="text-sm text-orange-300/80">
-                  Monitor progress in logs below or stop the script
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Log Viewer */}
-      {visibleCards.logViewer && (
-        <div className="bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
+      ),
+      systemInfo: visibleCards.systemInfo && <SystemInfo key="systemInfo" />,
+      runtimeStats: visibleCards.runtimeStats && (
+        <RuntimeStats key="runtimeStats" />
+      ),
+      recentAssets: visibleCards.recentAssets && (
+        <RecentAssets key="recentAssets" />
+      ),
+      logViewer: visibleCards.logViewer && (
+        <div
+          key="logViewer"
+          className="bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all shadow-sm"
+        >
           <div className="flex items-center justify-between mb-4">
             <div className="flex-1">
               <div className="flex items-center gap-3">
@@ -756,7 +739,6 @@ function Dashboard() {
                 ref={logContainerRef}
                 className="font-mono text-[11px] leading-relaxed max-h-96 overflow-y-auto"
               >
-                {/* Display all logs, but auto-scroll to bottom showing last 25 */}
                 {allLogs.map((line, index) => {
                   const parsed = parseLogLine(line);
 
@@ -829,6 +811,91 @@ function Dashboard() {
             </span>
           </div>
         </div>
+      ),
+    };
+
+    return cardOrder.map((cardKey) => cardComponents[cardKey]).filter(Boolean);
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <h1 className="text-3xl font-bold text-theme-text flex items-center gap-3">
+            <Activity className="w-8 h-8 text-theme-primary" />
+            Monitor your Posterizarr instance
+          </h1>
+          <button
+            onClick={() => setShowCardsModal(true)}
+            className="flex items-center gap-2 px-3 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
+            title="Customize Dashboard"
+          >
+            <Edit3 className="w-4 h-4 text-theme-primary" />
+            <span className="text-theme-text">Customize</span>
+          </button>
+        </div>
+
+        {/* Quick Action: Go to Run Modes */}
+        {!status.running && (
+          <Link
+            to="/run-modes"
+            className="flex items-center gap-2 px-3 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
+          >
+            <Play className="w-4 h-4 text-theme-primary" />
+            <span className="text-theme-text">Run Script</span>
+          </Link>
+        )}
+      </div>
+
+      {/* Already Running Warning */}
+      {status.already_running_detected && (
+        <div className="bg-yellow-900/30 border-l-4 border-yellow-500 rounded-lg p-6 shadow-sm">
+          <div className="flex items-start gap-4">
+            <AlertTriangle className="w-6 h-6 text-yellow-400 flex-shrink-0 mt-1" />
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-yellow-400 mb-2">
+                Another Posterizarr Instance Already Running
+              </h3>
+              <p className="text-yellow-200 text-sm mb-4">
+                The script detected another instance. If this is a false
+                positive, delete the running file below.
+              </p>
+              <button
+                onClick={() => setDeleteConfirm(true)}
+                disabled={loading}
+                className="flex items-center gap-2 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-all text-sm shadow-sm"
+              >
+                <Trash2 className="w-4 h-4" />
+                Delete Running File
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Dashboard Cards in Custom Order */}
+      {renderDashboardCards()}
+
+      {/* Running Script Controls */}
+      {status.running && (
+        <div className="bg-orange-950/40 rounded-xl p-6 border border-orange-600/50">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-orange-600/20">
+                <AlertCircle className="w-6 h-6 text-orange-400" />
+              </div>
+              <div>
+                <p className="font-medium text-orange-200 text-lg">
+                  Script is running
+                </p>
+                <p className="text-sm text-orange-300/80">
+                  Monitor progress in logs below or stop the script
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Danger Zone - Using DangerZone Component */}
@@ -872,108 +939,43 @@ function Dashboard() {
             {/* Modal Content */}
             <div className="p-6 space-y-4">
               <p className="text-sm text-theme-muted mb-4">
-                Show or hide dashboard sections
+                Show or hide dashboard sections • Drag to reorder
               </p>
 
-              {/* Status Cards Toggle */}
-              <label className="flex items-center justify-between p-3 bg-theme-hover rounded-lg cursor-pointer hover:bg-theme-hover/70 transition-colors">
-                <div className="flex items-center gap-3">
-                  {visibleCards.statusCards ? (
-                    <Eye className="w-5 h-5 text-green-400" />
-                  ) : (
-                    <EyeOff className="w-5 h-5 text-gray-500" />
-                  )}
-                  <span className="font-medium text-theme-text">
-                    Status Cards
-                  </span>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={visibleCards.statusCards}
-                  onChange={() => toggleCardVisibility("statusCards")}
-                  className="w-5 h-5 rounded border-theme-primary text-theme-primary focus:ring-theme-primary focus:ring-offset-0"
-                />
-              </label>
-
-              {/* System Info Toggle */}
-              <label className="flex items-center justify-between p-3 bg-theme-hover rounded-lg cursor-pointer hover:bg-theme-hover/70 transition-colors">
-                <div className="flex items-center gap-3">
-                  {visibleCards.systemInfo ? (
-                    <Eye className="w-5 h-5 text-green-400" />
-                  ) : (
-                    <EyeOff className="w-5 h-5 text-gray-500" />
-                  )}
-                  <span className="font-medium text-theme-text">
-                    System Information
-                  </span>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={visibleCards.systemInfo}
-                  onChange={() => toggleCardVisibility("systemInfo")}
-                  className="w-5 h-5 rounded border-theme-primary text-theme-primary focus:ring-theme-primary focus:ring-offset-0"
-                />
-              </label>
-
-              {/* Runtime Stats Toggle */}
-              <label className="flex items-center justify-between p-3 bg-theme-hover rounded-lg cursor-pointer hover:bg-theme-hover/70 transition-colors">
-                <div className="flex items-center gap-3">
-                  {visibleCards.runtimeStats ? (
-                    <Eye className="w-5 h-5 text-green-400" />
-                  ) : (
-                    <EyeOff className="w-5 h-5 text-gray-500" />
-                  )}
-                  <span className="font-medium text-theme-text">
-                    Runtime Statistics
-                  </span>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={visibleCards.runtimeStats}
-                  onChange={() => toggleCardVisibility("runtimeStats")}
-                  className="w-5 h-5 rounded border-theme-primary text-theme-primary focus:ring-theme-primary focus:ring-offset-0"
-                />
-              </label>
-
-              {/* Recent Assets Toggle */}
-              <label className="flex items-center justify-between p-3 bg-theme-hover rounded-lg cursor-pointer hover:bg-theme-hover/70 transition-colors">
-                <div className="flex items-center gap-3">
-                  {visibleCards.recentAssets ? (
-                    <Eye className="w-5 h-5 text-green-400" />
-                  ) : (
-                    <EyeOff className="w-5 h-5 text-gray-500" />
-                  )}
-                  <span className="font-medium text-theme-text">
-                    Recent Assets
-                  </span>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={visibleCards.recentAssets}
-                  onChange={() => toggleCardVisibility("recentAssets")}
-                  className="w-5 h-5 rounded border-theme-primary text-theme-primary focus:ring-theme-primary focus:ring-offset-0"
-                />
-              </label>
-
-              {/* Log Viewer Toggle */}
-              <label className="flex items-center justify-between p-3 bg-theme-hover rounded-lg cursor-pointer hover:bg-theme-hover/70 transition-colors">
-                <div className="flex items-center gap-3">
-                  {visibleCards.logViewer ? (
-                    <Eye className="w-5 h-5 text-green-400" />
-                  ) : (
-                    <EyeOff className="w-5 h-5 text-gray-500" />
-                  )}
-                  <span className="font-medium text-theme-text">
-                    Live Log Feed
-                  </span>
-                </div>
-                <input
-                  type="checkbox"
-                  checked={visibleCards.logViewer}
-                  onChange={() => toggleCardVisibility("logViewer")}
-                  className="w-5 h-5 rounded border-theme-primary text-theme-primary focus:ring-theme-primary focus:ring-offset-0"
-                />
-              </label>
+              {cardOrder.map((cardKey, index) => (
+                <label
+                  key={cardKey}
+                  draggable
+                  onDragStart={(e) => handleDragStart(e, index)}
+                  onDragOver={(e) => handleDragOver(e, index)}
+                  onDragEnd={handleDragEnd}
+                  className={`flex items-center justify-between p-3 bg-theme-hover rounded-lg cursor-move hover:bg-theme-hover/70 transition-all ${
+                    draggedItem === index ? "opacity-50 scale-95" : ""
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <GripVertical className="w-5 h-5 text-theme-muted flex-shrink-0" />
+                    {visibleCards[cardKey] ? (
+                      <Eye className="w-5 h-5 text-green-400 flex-shrink-0" />
+                    ) : (
+                      <EyeOff className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                    )}
+                    <span className="font-medium text-theme-text">
+                      {cardLabels[cardKey]}
+                    </span>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={visibleCards[cardKey]}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      toggleCardVisibility(cardKey);
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    className="w-5 h-5 rounded border-theme-primary text-theme-primary focus:ring-theme-primary focus:ring-offset-0 cursor-pointer"
+                  />
+                </label>
+              ))}
             </div>
 
             {/* Modal Footer */}
