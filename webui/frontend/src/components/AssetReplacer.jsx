@@ -498,6 +498,26 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
         body: formData,
       });
 
+      if (!response.ok) {
+        const contentType = response.headers.get("content-type");
+        let errorMessage = `Server error: ${response.status}`;
+        
+        if (contentType && contentType.includes("application/json")) {
+          try {
+            const errorData = await response.json();
+            errorMessage = errorData.detail || errorData.message || errorMessage;
+          } catch (e) {
+            // Failed to parse JSON error
+          }
+        } else {
+          // Non-JSON response (possibly HTML error page)
+          const text = await response.text();
+          console.error("Non-JSON response:", text.substring(0, 500));
+        }
+        
+        throw new Error(errorMessage);
+      }
+
       const data = await response.json();
 
       if (data.success) {
@@ -694,6 +714,26 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
       const response = await fetch(url, {
         method: "POST",
       });
+
+      if (!response.ok) {
+        const contentType = response.headers.get("content-type");
+        let errorMessage = `Server error: ${response.status}`;
+        
+        if (contentType && contentType.includes("application/json")) {
+          try {
+            const errorData = await response.json();
+            errorMessage = errorData.detail || errorData.message || errorMessage;
+          } catch (e) {
+            // Failed to parse JSON error
+          }
+        } else {
+          // Non-JSON response (possibly HTML error page)
+          const text = await response.text();
+          console.error("Non-JSON response:", text.substring(0, 500));
+        }
+        
+        throw new Error(errorMessage);
+      }
 
       const data = await response.json();
 
