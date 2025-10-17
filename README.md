@@ -745,6 +745,10 @@ The setup process is handled by a simple script that installs all necessary depe
         ```bash
         setup.ps1
         ```
+        or
+        ```bash
+        setup.bat
+        ```
     * **On Linux or macOS:**
         ```bash
         sh setup.sh
@@ -755,25 +759,26 @@ The setup process is handled by a simple script that installs all necessary depe
 
 After the setup is complete, you need to start the backend and frontend processes in **two separate terminals**.
 
-**Terminal 1: Start the Backend**
-```bash
-# Navigate to the backend directory
-cd webui/backend
-
-# Run the Python server
-python main.py
-```
-
 **Terminal 2: Start the Frontend**
 ```bash
 # Navigate to the frontend directory
 cd webui/frontend
 
 # Run the development server
-npm run dev
+npm run build
 ```
 
-Once both services are running, you can access the Posterizarr Web UI by opening your browser and navigating to: http://localhost:3000
+**Terminal 1: Start the Backend**
+```bash
+# Navigate to the backend directory
+cd webui/backend
+
+# Run the Python server
+python -m uvicorn main:app --host 0.0.0.0 --port 8000
+```
+
+
+Once both services are running, you can access the Posterizarr Web UI by opening your browser and navigating to: http://localhost:8000
 
 ### Testing Mode
 
