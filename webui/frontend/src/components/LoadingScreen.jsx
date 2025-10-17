@@ -1,29 +1,10 @@
 import React, { useState, useEffect } from "react";
-
-const LOADING_MESSAGES = [
-  "At least you're not on hold...",
-  "Loading your posters with style...",
-  "Convincing AI that your taste is impeccable...",
-  "Asking the hamsters to run faster...",
-  "Reticulating splines...",
-  "Calibrating flux capacitor...",
-  "Brewing fresh pixels...",
-  "Waking up the server hamsters...",
-  "Downloading more RAM...",
-  "Polishing your movie collection...",
-  "Teaching robots to appreciate art...",
-  "Consulting the magic 8-ball...",
-  "Summoning the poster spirits...",
-  "Making it look effortless...",
-  "99 little bugs in the code... wait, now 100...",
-  "Time is an illusion. Loading time doubly so...",
-  "Are we there yet?",
-  "Patience, young padawan...",
-  "Loading the loading screen...",
-  "This is taking longer than expected...",
-];
+import { useTranslation } from "react-i18next";
 
 function LoadingScreen() {
+  const { t } = useTranslation();
+  const LOADING_MESSAGES = t("loading.messages", { returnObjects: true });
+
   const [message, setMessage] = useState(
     LOADING_MESSAGES[Math.floor(Math.random() * LOADING_MESSAGES.length)]
   );
@@ -107,7 +88,7 @@ function LoadingScreen() {
           </span>
         </h2>
 
-        <p className="text-sm text-theme-muted">Initializing Posterizarr...</p>
+        <p className="text-sm text-theme-muted">{t("loading.initializing")}</p>
       </div>
     </div>
   );

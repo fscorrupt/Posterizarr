@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { ArrowUp, ArrowDown } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 function ScrollToButtons() {
+  const { t } = useTranslation();
   const [showButtons, setShowButtons] = useState(false);
   const [atTop, setAtTop] = useState(true);
   const [atBottom, setAtBottom] = useState(false);
@@ -49,8 +51,8 @@ function ScrollToButtons() {
         <button
           onClick={scrollToTop}
           className="p-3 bg-theme-primary hover:bg-theme-primary/90 text-white rounded-full shadow-lg hover:shadow-xl transition-all transform hover:scale-110"
-          title="Scroll to top"
-          aria-label="Scroll to top"
+          title={t("scrollButtons.scrollToTop")}
+          aria-label={t("scrollButtons.scrollToTop")}
         >
           <ArrowUp className="w-6 h-6" />
         </button>
@@ -59,8 +61,8 @@ function ScrollToButtons() {
         <button
           onClick={scrollToBottom}
           className="p-3 bg-theme-primary hover:bg-theme-primary/90 text-white rounded-full shadow-lg hover:shadow-xl transition-all transform hover:scale-110"
-          title="Scroll to bottom"
-          aria-label="Scroll to bottom"
+          title={t("scrollButtons.scrollToBottom")}
+          aria-label={t("scrollButtons.scrollToBottom")}
         >
           <ArrowDown className="w-6 h-6" />
         </button>

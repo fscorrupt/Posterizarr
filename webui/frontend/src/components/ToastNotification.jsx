@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { AlertCircle, CheckCircle, X, Info } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 /**
  * ToastNotification Component
@@ -13,6 +14,7 @@ const ToastNotification = ({
   duration = 3000,
   id,
 }) => {
+  const { t } = useTranslation();
   const [isExiting, setIsExiting] = useState(false);
 
   useEffect(() => {
@@ -43,7 +45,7 @@ const ToastNotification = ({
       titleColor: "text-green-500",
       textColor: "text-green-400",
       closeColor: "text-green-400 hover:text-green-300",
-      title: "Success",
+      title: t("toast.success"),
     },
     error: {
       bg: "bg-red-500/10",
@@ -54,7 +56,7 @@ const ToastNotification = ({
       titleColor: "text-red-500",
       textColor: "text-red-400",
       closeColor: "text-red-400 hover:text-red-300",
-      title: "Error",
+      title: t("toast.error"),
     },
     info: {
       bg: "bg-blue-500/10",
@@ -63,7 +65,7 @@ const ToastNotification = ({
       titleColor: "text-blue-500",
       textColor: "text-blue-400",
       closeColor: "text-blue-400 hover:text-blue-300",
-      title: "Info",
+      title: t("toast.info"),
     },
   };
 

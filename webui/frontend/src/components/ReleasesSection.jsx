@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { Calendar, Download, ExternalLink, Tag, Clock } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const API_URL = "/api";
 
 function ReleasesSection() {
+  const { t } = useTranslation();
   const [releases, setReleases] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -22,20 +24,20 @@ function ReleasesSection() {
         setReleases(data.releases);
         setError(null);
       } else {
-        setError(data.error || "Failed to fetch releases");
+        setError(data.error || t("releasesSection.fetchFailed"));
       }
     } catch (err) {
       console.error("Error fetching releases:", err);
-      setError("Failed to connect to API");
+      setError(t("releasesSection.fetchError"));
     } finally {
       setLoading(false);
     }
   };
 
   const formatDaysAgo = (daysAgo) => {
-    if (daysAgo === 0) return "Today";
-    if (daysAgo === 1) return "Yesterday";
-    return `${daysAgo} days ago`;
+    if (daysAgo === 0) return t("releasesSection.today");
+    if (daysAgo === 1) return t("releasesSection.yesterday");
+    return t("releasesSection.daysAgo", { days: daysAgo });
   };
 
   if (loading) {
@@ -43,7 +45,7 @@ function ReleasesSection() {
       <div className="bg-theme-card border border-theme rounded-lg p-6 space-y-4">
         <h2 className="text-2xl font-bold text-theme-text flex items-center gap-2">
           <Tag className="w-6 h-6 text-theme-primary" />
-          Releases
+          {t("releasesSection.title")}
         </h2>
         <div className="flex items-center justify-center py-8">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-theme-primary"></div>
@@ -57,9 +59,11 @@ function ReleasesSection() {
       <div className="bg-theme-card border border-theme rounded-lg p-6 space-y-4">
         <h2 className="text-2xl font-bold text-theme-text flex items-center gap-2">
           <Tag className="w-6 h-6 text-theme-primary" />
-          Releases
+          {t("releasesSection.title")}
         </h2>
-        <div className="text-red-400 text-sm">Error: {error}</div>
+        <div className="text-red-400 text-sm">
+          {t("releasesSection.error")}: {error}
+        </div>
       </div>
     );
   }
@@ -68,7 +72,7 @@ function ReleasesSection() {
     <div className="bg-theme-card border border-theme rounded-lg p-6 space-y-4">
       <h2 className="text-2xl font-bold text-theme-text flex items-center gap-2">
         <Tag className="w-6 h-6 text-theme-primary" />
-        Releases
+        {t("releasesSection.title")}
       </h2>
 
       <div className="space-y-2">
@@ -93,12 +97,12 @@ function ReleasesSection() {
                 </span>
                 {index === 0 && (
                   <span className="px-2 py-0.5 bg-green-500/20 text-green-400 rounded-full text-xs font-medium border border-green-500/30">
-                    Latest
+                    {t("releasesSection.latest")}
                   </span>
                 )}
                 {release.is_prerelease && (
                   <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 rounded-full text-xs font-medium border border-yellow-500/30">
-                    Pre-release
+                    {t("releasesSection.preRelease")}
                   </span>
                 )}
               </div>
@@ -112,7 +116,7 @@ function ReleasesSection() {
               className="flex items-center gap-2 px-4 py-2 bg-theme-primary/20 hover:bg-theme-primary/30 border border-theme-primary rounded-lg transition-all"
             >
               <span className="text-theme-text text-sm font-medium">
-                View Changelog
+                {t("releasesSection.viewChangelog")}
               </span>
               <ExternalLink className="w-4 h-4 text-theme-primary" />
             </a>
@@ -122,7 +126,7 @@ function ReleasesSection() {
 
       {releases.length === 0 && (
         <div className="text-center text-theme-muted py-8">
-          No releases found
+          {t("releasesSection.noReleases")}
         </div>
       )}
     </div>

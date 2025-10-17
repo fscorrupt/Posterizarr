@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { LayoutGrid, FolderTree } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import Gallery from "./Gallery";
 import BackgroundsGallery from "./BackgroundsGallery";
 import SeasonGallery from "./SeasonGallery";
@@ -8,6 +9,7 @@ import TitleCardGallery from "./TitleCardGallery";
 import FolderView from "./FolderView";
 
 function GalleryHub() {
+  const { t } = useTranslation();
   const location = useLocation();
 
   // View mode: 'grid' (default/current) or 'folder'
@@ -54,12 +56,12 @@ function GalleryHub() {
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-lg font-semibold text-theme-text mb-1">
-              View Mode
+              {t("galleryHub.viewMode")}
             </h3>
             <p className="text-sm text-theme-muted">
               {viewMode === "grid"
-                ? "Browse all assets by type (posters, backgrounds, seasons, titlecards)"
-                : "Browse assets by navigating through libraries and folders"}
+                ? t("galleryHub.gridDescription")
+                : t("galleryHub.folderDescription")}
             </p>
           </div>
           <div className="flex gap-2">
@@ -72,7 +74,9 @@ function GalleryHub() {
               }`}
             >
               <LayoutGrid className="w-4 h-4" />
-              <span className="text-sm font-medium">Grid View</span>
+              <span className="text-sm font-medium">
+                {t("galleryHub.gridView")}
+              </span>
             </button>
             <button
               onClick={() => setViewMode("folder")}
@@ -83,7 +87,9 @@ function GalleryHub() {
               }`}
             >
               <FolderTree className="w-4 h-4" />
-              <span className="text-sm font-medium">Folder View</span>
+              <span className="text-sm font-medium">
+                {t("galleryHub.folderView")}
+              </span>
             </button>
           </div>
         </div>

@@ -1,5 +1,6 @@
 import React from "react";
 import { AlertCircle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 /**
  * ConfirmDialog Component
@@ -9,13 +10,15 @@ const ConfirmDialog = ({
   isOpen,
   onClose,
   onConfirm,
-  title = "Confirm Action",
+  title,
   message,
   itemName,
-  confirmText = "Delete",
-  cancelText = "Cancel",
+  confirmText,
+  cancelText,
   type = "danger", // "danger" or "warning"
 }) => {
+  const { t } = useTranslation();
+
   if (!isOpen) return null;
 
   const handleConfirm = () => {
@@ -51,7 +54,7 @@ const ConfirmDialog = ({
           </div>
           <div>
             <h3 className="text-lg font-semibold text-theme-text mb-2">
-              {title}
+              {title || t("confirmDialog.title")}
             </h3>
             {message && (
               <p className="text-theme-muted text-sm mb-1">{message}</p>
@@ -69,13 +72,13 @@ const ConfirmDialog = ({
             onClick={onClose}
             className="px-4 py-2 bg-theme-hover hover:bg-theme-dark text-theme-text rounded-lg transition-colors"
           >
-            {cancelText}
+            {cancelText || t("confirmDialog.cancel")}
           </button>
           <button
             onClick={handleConfirm}
             className={`px-4 py-2 ${buttonColors[type]} text-white rounded-lg transition-colors`}
           >
-            {confirmText}
+            {confirmText || t("confirmDialog.confirm")}
           </button>
         </div>
       </div>

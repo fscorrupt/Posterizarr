@@ -12,9 +12,11 @@ import {
   Type,
   Filter,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { useToast } from "../context/ToastContext";
 
 const OverlayAssets = () => {
+  const { t } = useTranslation();
   const { showSuccess, showError } = useToast();
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -41,13 +43,13 @@ const OverlayAssets = () => {
         setFiles(data.files || []);
         setError(null);
       } else {
-        const errorMsg = "Failed to load overlay files";
+        const errorMsg = t("overlayAssets.loadFailed");
         setError(errorMsg);
         showError(errorMsg);
       }
     } catch (err) {
       console.error("Error loading overlay files:", err);
-      const errorMsg = "Failed to load overlay files: " + err.message;
+      const errorMsg = t("overlayAssets.loadError", { message: err.message });
       setError(errorMsg);
       showError(errorMsg);
     } finally {
@@ -86,15 +88,13 @@ const OverlayAssets = () => {
     ];
 
     if (!validExtensions.includes(fileExtension)) {
-      showError(
-        "Invalid file type. Only PNG, JPEG, TTF, OTF, WOFF, and WOFF2 files are allowed."
-      );
+      showError(t("overlayAssets.invalidFileType"));
       return;
     }
 
     // Validate file size (max 10MB)
     if (file.size > 10 * 1024 * 1024) {
-      showError("File size too large. Maximum size is 10MB.");
+      showError(t("overlayAssets.fileTooLarge"));
       return;
     }
 
@@ -114,20 +114,20 @@ const OverlayAssets = () => {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        const successMsg = data.message || "File uploaded successfully";
+        const successMsg = data.message || t("overlayAssets.uploadSuccess");
         setSuccess(successMsg);
         showSuccess(successMsg);
         await loadFiles(); // Reload file list
         // Reset file input
         event.target.value = "";
       } else {
-        const errorMsg = data.detail || "Failed to upload file";
+        const errorMsg = data.detail || t("overlayAssets.uploadFailed");
         setError(errorMsg);
         showError(errorMsg);
       }
     } catch (err) {
       console.error("Error uploading file:", err);
-      const errorMsg = "Failed to upload file: " + err.message;
+      const errorMsg = t("overlayAssets.uploadError", { message: err.message });
       setError(errorMsg);
       showError(errorMsg);
     } finally {
@@ -147,19 +147,19 @@ const OverlayAssets = () => {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        const successMsg = data.message || "File deleted successfully";
+        const successMsg = data.message || t("overlayAssets.deleteSuccess");
         setSuccess(successMsg);
         showSuccess(successMsg);
         await loadFiles(); // Reload file list
         setDeleteConfirm(null);
       } else {
-        const errorMsg = data.detail || "Failed to delete file";
+        const errorMsg = data.detail || t("overlayAssets.deleteFailed");
         setError(errorMsg);
         showError(errorMsg);
       }
     } catch (err) {
       console.error("Error deleting file:", err);
-      const errorMsg = "Failed to delete file: " + err.message;
+      const errorMsg = t("overlayAssets.deleteError", { message: err.message });
       setError(errorMsg);
       showError(errorMsg);
     }
@@ -188,10 +188,7 @@ const OverlayAssets = () => {
   return (
     <div className="max-w-7xl mx-auto">
       <div className="mb-6">
-        <p className="text-theme-muted">
-          Manage overlay files (Images: PNG, JPEG | Fonts: TTF, OTF, WOFF,
-          WOFF2)
-        </p>
+        <p className="text-theme-muted">{t("overlayAssets.description")}</p>
       </div>
 
       {/* Error Message */}
@@ -199,7 +196,9 @@ const OverlayAssets = () => {
         <div className="mb-6 bg-red-500/10 border border-red-500 rounded-lg p-4 flex items-start gap-3">
           <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
           <div className="flex-1">
-            <p className="text-red-500 font-medium">Error</p>
+            <p className="text-red-500 font-medium">
+              {t("notification.error")}
+            </p>
             <p className="text-red-400 text-sm mt-1">{error}</p>
           </div>
           <button
@@ -216,7 +215,9 @@ const OverlayAssets = () => {
         <div className="mb-6 bg-green-500/10 border border-green-500 rounded-lg p-4 flex items-start gap-3">
           <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
           <div className="flex-1">
-            <p className="text-green-500 font-medium">Success</p>
+            <p className="text-green-500 font-medium">
+              {t("notification.success")}
+            </p>
             <p className="text-green-400 text-sm mt-1">{success}</p>
           </div>
           <button
@@ -233,7 +234,7 @@ const OverlayAssets = () => {
         <div className="flex items-center gap-3 mb-4">
           <Upload className="w-5 h-5 text-theme-primary" />
           <h2 className="text-xl font-semibold text-theme-text">
-            Upload Overlay File
+            {t("overlayAssets.uploadTitle")}
           </h2>
         </div>
 
@@ -260,10 +261,12 @@ const OverlayAssets = () => {
               </div>
               <div>
                 <p className="text-theme-text font-medium mb-1">
-                  {uploading ? "Uploading..." : "Click to upload a file"}
+                  {uploading
+                    ? t("overlayAssets.uploading")
+                    : t("overlayAssets.clickToUpload")}
                 </p>
                 <p className="text-theme-muted text-sm">
-                  Images: PNG, JPEG (max 10MB) | Fonts: TTF, OTF, WOFF, WOFF2
+                  {t("overlayAssets.uploadHint")}
                 </p>
               </div>
             </div>
@@ -277,7 +280,7 @@ const OverlayAssets = () => {
           <div className="flex items-center gap-3">
             <FileImage className="w-5 h-5 text-theme-primary" />
             <h2 className="text-xl font-semibold text-theme-text">
-              Overlay Files
+              {t("overlayAssets.filesTitle")}
             </h2>
             <span className="px-2 py-1 bg-theme-primary/10 text-theme-primary text-sm font-medium rounded">
               {filteredFiles.length}
@@ -295,7 +298,7 @@ const OverlayAssets = () => {
                     : "text-theme-muted hover:text-theme-text"
                 }`}
               >
-                All ({files.length})
+                {t("overlayAssets.all")} ({files.length})
               </button>
               <button
                 onClick={() => setFilterType("image")}
@@ -305,7 +308,7 @@ const OverlayAssets = () => {
                     : "text-theme-muted hover:text-theme-text"
                 }`}
               >
-                Images ({imageCount})
+                {t("overlayAssets.images")} ({imageCount})
               </button>
               <button
                 onClick={() => setFilterType("font")}
@@ -315,7 +318,7 @@ const OverlayAssets = () => {
                     : "text-theme-muted hover:text-theme-text"
                 }`}
               >
-                Fonts ({fontCount})
+                {t("overlayAssets.fonts")} ({fontCount})
               </button>
             </div>
 
@@ -324,7 +327,9 @@ const OverlayAssets = () => {
               disabled={loading}
               className="px-4 py-2 bg-theme-primary/10 hover:bg-theme-primary/20 text-theme-primary rounded-lg transition-colors disabled:opacity-50"
             >
-              {loading ? "Loading..." : "Refresh"}
+              {loading
+                ? t("overlayAssets.loading")
+                : t("overlayAssets.refresh")}
             </button>
           </div>
         </div>
@@ -339,10 +344,10 @@ const OverlayAssets = () => {
               <>
                 <ImageIcon className="w-16 h-16 text-theme-muted mx-auto mb-4 opacity-50" />
                 <p className="text-theme-muted text-lg mb-2">
-                  No overlay files found
+                  {t("overlayAssets.noFiles")}
                 </p>
                 <p className="text-theme-muted text-sm">
-                  Upload your first overlay file to get started
+                  {t("overlayAssets.uploadFirst")}
                 </p>
               </>
             ) : (
@@ -353,10 +358,14 @@ const OverlayAssets = () => {
                   <Type className="w-16 h-16 text-theme-muted mx-auto mb-4 opacity-50" />
                 )}
                 <p className="text-theme-muted text-lg mb-2">
-                  No {filterType} files found
+                  {t("overlayAssets.noFilteredFiles", {
+                    type: t(`overlayAssets.${filterType}`),
+                  })}
                 </p>
                 <p className="text-theme-muted text-sm">
-                  Upload a {filterType} file or change the filter
+                  {t("overlayAssets.uploadOrChangeFilter", {
+                    type: t(`overlayAssets.${filterType}`),
+                  })}
                 </p>
               </>
             )}
@@ -423,14 +432,14 @@ const OverlayAssets = () => {
                     <button
                       onClick={() => setPreviewFile(file)}
                       className="p-3 bg-theme-primary hover:bg-theme-primary/80 rounded-lg transition-all hover:scale-110 shadow-lg"
-                      title="Preview"
+                      title={t("overlayAssets.preview")}
                     >
                       <Eye className="w-6 h-6 text-white" />
                     </button>
                     <button
                       onClick={() => setDeleteConfirm(file)}
                       className="p-3 bg-red-500 hover:bg-red-600 rounded-lg transition-all hover:scale-110 shadow-lg"
-                      title="Delete"
+                      title={t("overlayAssets.delete")}
                     >
                       <Trash2 className="w-6 h-6 text-white" />
                     </button>
@@ -438,7 +447,7 @@ const OverlayAssets = () => {
                       href={`/api/overlayfiles/preview/${file.name}`}
                       download={file.name}
                       className="p-3 bg-green-500 hover:bg-green-600 rounded-lg transition-all hover:scale-110 shadow-lg inline-block"
-                      title="Download"
+                      title={t("overlayAssets.download")}
                     >
                       <Download className="w-6 h-6 text-white" />
                     </a>
@@ -487,7 +496,9 @@ const OverlayAssets = () => {
                   <Type className="w-5 h-5 text-theme-primary" />
                 )}
                 <h3 className="text-lg font-semibold text-theme-text">
-                  {previewFile.type === "image" ? "Image" : "Font"} Preview
+                  {previewFile.type === "image"
+                    ? t("overlayAssets.imagePreview")
+                    : t("overlayAssets.fontPreview")}
                 </h3>
               </div>
               <button
@@ -501,7 +512,9 @@ const OverlayAssets = () => {
             {/* Modal Body */}
             <div className="p-6">
               <div className="mb-4">
-                <p className="text-sm text-theme-muted mb-1">Filename:</p>
+                <p className="text-sm text-theme-muted mb-1">
+                  {t("overlayAssets.filename")}:
+                </p>
                 <p className="text-theme-text font-mono bg-theme-bg px-3 py-2 rounded-lg border border-theme">
                   {previewFile.name}
                 </p>
@@ -539,7 +552,7 @@ const OverlayAssets = () => {
                     style={{ display: "none" }}
                   >
                     <AlertCircle className="w-12 h-12" />
-                    <p>Failed to load image</p>
+                    <p>{t("overlayAssets.failedToLoad")}</p>
                   </div>
                 </div>
               ) : (
@@ -549,7 +562,7 @@ const OverlayAssets = () => {
                     <div className="space-y-3">
                       <div>
                         <p className="text-xs text-theme-muted mb-1">
-                          Uppercase:
+                          {t("overlayAssets.uppercase")}:
                         </p>
                         <img
                           src={`/api/fonts/preview/${previewFile.name}?text=ABCDEFGHIJKLMNOPQRSTUVWXYZ&v=${previewFile.size}`}
@@ -560,7 +573,7 @@ const OverlayAssets = () => {
                       </div>
                       <div>
                         <p className="text-xs text-theme-muted mb-1">
-                          Lowercase:
+                          {t("overlayAssets.lowercase")}:
                         </p>
                         <img
                           src={`/api/fonts/preview/${previewFile.name}?text=abcdefghijklmnopqrstuvwxyz&v=${previewFile.size}`}
@@ -571,7 +584,7 @@ const OverlayAssets = () => {
                       </div>
                       <div>
                         <p className="text-xs text-theme-muted mb-1">
-                          Numbers:
+                          {t("overlayAssets.numbers")}:
                         </p>
                         <img
                           src={`/api/fonts/preview/${previewFile.name}?text=0123456789&v=${previewFile.size}`}
@@ -581,7 +594,9 @@ const OverlayAssets = () => {
                         />
                       </div>
                       <div>
-                        <p className="text-xs text-theme-muted mb-1">Sample:</p>
+                        <p className="text-xs text-theme-muted mb-1">
+                          {t("overlayAssets.sample")}:
+                        </p>
                         <img
                           src={`/api/fonts/preview/${previewFile.name}?text=The Quick Brown Fox&v=${previewFile.size}`}
                           alt="Sample text"
@@ -592,9 +607,17 @@ const OverlayAssets = () => {
                     </div>
                   </div>
                   <div className="text-xs text-theme-muted bg-theme-bg rounded-lg border border-theme p-3">
-                    <p className="font-semibold mb-2">Font Information:</p>
-                    <p>Type: {previewFile.extension.toUpperCase()}</p>
-                    <p>Size: {formatFileSize(previewFile.size)}</p>
+                    <p className="font-semibold mb-2">
+                      {t("overlayAssets.fontInfo")}:
+                    </p>
+                    <p>
+                      {t("overlayAssets.type")}:{" "}
+                      {previewFile.extension.toUpperCase()}
+                    </p>
+                    <p>
+                      {t("overlayAssets.size")}:{" "}
+                      {formatFileSize(previewFile.size)}
+                    </p>
                   </div>
                 </div>
               )}
@@ -605,7 +628,7 @@ const OverlayAssets = () => {
                   onClick={() => setPreviewFile(null)}
                   className="px-4 py-2 bg-theme-bg hover:bg-theme-hover border border-theme rounded-lg font-medium transition-all"
                 >
-                  Close
+                  {t("overlayAssets.close")}
                 </button>
               </div>
             </div>
@@ -629,10 +652,10 @@ const OverlayAssets = () => {
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-theme-text mb-2">
-                  Delete File
+                  {t("overlayAssets.deleteTitle")}
                 </h3>
                 <p className="text-theme-muted text-sm mb-1">
-                  Are you sure you want to delete this file?
+                  {t("overlayAssets.deleteConfirm")}
                 </p>
                 <p className="text-theme-text font-medium text-sm">
                   {deleteConfirm.name}
@@ -645,13 +668,13 @@ const OverlayAssets = () => {
                 onClick={() => setDeleteConfirm(null)}
                 className="px-4 py-2 bg-theme-hover hover:bg-theme-dark text-theme-text rounded-lg transition-colors"
               >
-                Cancel
+                {t("overlayAssets.cancel")}
               </button>
               <button
                 onClick={() => handleDelete(deleteConfirm.name)}
                 className="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
               >
-                Delete
+                {t("overlayAssets.delete")}
               </button>
             </div>
           </div>

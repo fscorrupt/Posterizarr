@@ -13,6 +13,7 @@ import {
 import CompactImageSizeSlider from "./CompactImageSizeSlider";
 import Notification from "./Notification";
 import { useToast } from "../context/ToastContext";
+import { useTranslation } from "react-i18next";
 import ConfirmDialog from "./ConfirmDialog";
 import AssetReplacer from "./AssetReplacer";
 import ScrollToButtons from "./ScrollToButtons";
@@ -20,6 +21,7 @@ import ScrollToButtons from "./ScrollToButtons";
 const API_URL = "/api";
 
 function TitleCardGallery() {
+  const { t } = useTranslation();
   const { showSuccess, showError, showInfo } = useToast();
   const [folders, setFolders] = useState([]);
   const [activeFolder, setActiveFolder] = useState(null);
@@ -92,17 +94,16 @@ function TitleCardGallery() {
 
         if (totalTitlecards > 0) {
           showSuccess(
-            `${foldersWithTitlecards} folder${
-              foldersWithTitlecards !== 1 ? "s" : ""
-            } loaded with ${totalTitlecards} titlecard${
-              totalTitlecards !== 1 ? "s" : ""
-            }`
+            t("titleCardGallery.success.foldersLoaded", {
+              folders: foldersWithTitlecards,
+              titlecards: totalTitlecards,
+            })
           );
         } else {
           showSuccess(
-            `${data.folders.length} folder${
-              data.folders.length !== 1 ? "s" : ""
-            } found with 0 titlecards`
+            t("titleCardGallery.success.foldersFound", {
+              count: data.folders.length,
+            })
           );
         }
       }
@@ -141,7 +142,10 @@ function TitleCardGallery() {
 
       if (showNotification && data.images && data.images.length > 0) {
         showSuccess(
-          `Loaded ${data.images.length} title cards from ${folder.name}`
+          t("titleCardGallery.success.titleCardsLoaded", {
+            count: data.images.length,
+            folder: folder.name,
+          })
         );
       }
     } catch (error) {
@@ -183,7 +187,9 @@ function TitleCardGallery() {
       const data = await response.json();
 
       if (data.success) {
-        showSuccess(`TitleCard "${imageName}" deleted successfully`);
+        showSuccess(
+          t("titleCardGallery.success.titleCardDeleted", { name: imageName })
+        );
 
         setImages(images.filter((img) => img.path !== imagePath));
 
@@ -229,10 +235,17 @@ function TitleCardGallery() {
 
         if (failedCount > 0) {
           showError(
-            `Deleted ${deletedCount} titlecard(s), but ${failedCount} failed.`
+            t("titleCardGallery.errors.bulkDeletePartial", {
+              deleted: deletedCount,
+              failed: failedCount,
+            })
           );
         } else {
-          showSuccess(`Successfully deleted ${deletedCount} titlecard(s)`);
+          showSuccess(
+            t("titleCardGallery.success.bulkDeleteSuccess", {
+              count: deletedCount,
+            })
+          );
         }
 
         // Remove deleted images from the list
@@ -323,7 +336,7 @@ function TitleCardGallery() {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold text-theme-text flex items-center gap-2">
               <Folder className="w-5 h-5 text-theme-primary" />
-              Folders
+              {t("titleCardGallery.folders")}
             </h2>
             <div className="flex items-center gap-3">
               {/* Compact Image Size Slider */}
@@ -351,12 +364,12 @@ function TitleCardGallery() {
                   {selectMode ? (
                     <>
                       <Square className="w-5 h-5" />
-                      Cancel Select
+                      {t("titleCardGallery.cancelSelect")}
                     </>
                   ) : (
                     <>
                       <CheckSquare className="w-5 h-5" />
-                      Select
+                      {t("titleCardGallery.select")}
                     </>
                   )}
                 </button>
@@ -377,7 +390,7 @@ function TitleCardGallery() {
                     loading || imagesLoading ? "animate-spin" : ""
                   }`}
                 />
-                Refresh
+                {t("titleCardGallery.refresh")}
               </button>
             </div>
           </div>
@@ -409,7 +422,9 @@ function TitleCardGallery() {
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type="text"
-                placeholder={`Search title cards in ${activeFolder.name}...`}
+                placeholder={t("titleCardGallery.searchPlaceholder", {
+                  folder: activeFolder.name,
+                })}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-12 pr-4 py-3 bg-theme-bg border border-theme-primary/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
@@ -422,7 +437,9 @@ function TitleCardGallery() {
       {loading ? (
         <div className="flex flex-col items-center justify-center py-32 bg-theme-card rounded-xl border border-theme">
           <RefreshCw className="w-12 h-12 animate-spin text-theme-primary mb-4" />
-          <p className="text-theme-muted">Loading folders...</p>
+          <p className="text-theme-muted">
+            {t("titleCardGallery.loadingFolders")}
+          </p>
         </div>
       ) : error ? (
         <div className="bg-red-950/40 rounded-xl p-8 border-2 border-red-600/50 text-center">
@@ -431,7 +448,7 @@ function TitleCardGallery() {
               <ImageIcon className="w-12 h-12 text-red-400" />
             </div>
             <h3 className="text-2xl font-semibold text-red-300 mb-2">
-              Error Loading Title Card Gallery
+              {t("titleCardGallery.errorLoadingTitle")}
             </h3>
             <p className="text-red-200 text-sm mb-6 max-w-md">{error}</p>
             <button
@@ -444,7 +461,7 @@ function TitleCardGallery() {
               className="flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 rounded-lg font-medium transition-all shadow-lg hover:scale-105"
             >
               <RefreshCw className="w-5 h-5" />
-              Try Again
+              {t("titleCardGallery.tryAgain")}
             </button>
           </div>
         </div>
@@ -455,18 +472,19 @@ function TitleCardGallery() {
               <Folder className="w-12 h-12 text-theme-primary" />
             </div>
             <h3 className="text-2xl font-semibold text-theme-text mb-2">
-              No Folders Found
+              {t("titleCardGallery.noFoldersTitle")}
             </h3>
             <p className="text-theme-muted max-w-md">
-              No folders found in assets directory. Please check your
-              configuration.
+              {t("titleCardGallery.noFoldersMessage")}
             </p>
           </div>
         </div>
       ) : imagesLoading ? (
         <div className="flex flex-col items-center justify-center py-32 bg-theme-card rounded-xl border border-theme">
           <RefreshCw className="w-12 h-12 animate-spin text-theme-primary mb-4" />
-          <p className="text-theme-muted">Loading title cards...</p>
+          <p className="text-theme-muted">
+            {t("titleCardGallery.loadingTitleCards")}
+          </p>
         </div>
       ) : filteredImages.length === 0 ? (
         <div className="bg-theme-card rounded-xl p-12 border border-theme text-center">
@@ -475,12 +493,16 @@ function TitleCardGallery() {
               <ImageIcon className="w-12 h-12 text-theme-primary" />
             </div>
             <h3 className="text-2xl font-semibold text-theme-text mb-2">
-              {searchTerm ? "No Matching Title Cards" : "No Title Cards Found"}
+              {searchTerm
+                ? t("titleCardGallery.noMatchingTitle")
+                : t("titleCardGallery.noTitleCardsTitle")}
             </h3>
             <p className="text-theme-muted max-w-md">
               {searchTerm
-                ? "Try adjusting your search terms to find what you're looking for"
-                : `No title cards found in ${activeFolder.name}`}
+                ? t("titleCardGallery.noMatchingMessage")
+                : t("titleCardGallery.noTitleCardsMessage", {
+                    folder: activeFolder.name,
+                  })}
             </p>
           </div>
         </div>
@@ -498,17 +520,19 @@ function TitleCardGallery() {
                     {selectedImages.length === displayedImages.length ? (
                       <>
                         <Square className="w-5 h-5" />
-                        Deselect All
+                        {t("titleCardGallery.deselectAll")}
                       </>
                     ) : (
                       <>
                         <CheckSquare className="w-5 h-5" />
-                        Select All
+                        {t("titleCardGallery.selectAll")}
                       </>
                     )}
                   </button>
                   <span className="text-theme-text font-medium">
-                    {selectedImages.length} selected
+                    {t("titleCardGallery.selected", {
+                      count: selectedImages.length,
+                    })}
                   </span>
                 </div>
                 <button
@@ -530,7 +554,9 @@ function TitleCardGallery() {
                       deletingImage === "bulk" ? "animate-spin" : ""
                     }`}
                   />
-                  Delete Selected ({selectedImages.length})
+                  {t("titleCardGallery.deleteSelected", {
+                    count: selectedImages.length,
+                  })}
                 </button>
               </div>
             </div>
@@ -539,12 +565,17 @@ function TitleCardGallery() {
           <div className="bg-theme-card rounded-xl p-4 border border-theme">
             <div className="flex items-center justify-between text-sm">
               <span className="text-theme-text font-medium">
-                Showing {displayedImages.length} of {filteredImages.length}{" "}
-                title cards in {activeFolder.name}
+                {t("titleCardGallery.showingCount", {
+                  displayed: displayedImages.length,
+                  total: filteredImages.length,
+                  folder: activeFolder.name,
+                })}
               </span>
               {images.length !== filteredImages.length && (
                 <span className="text-theme-primary font-semibold">
-                  Filtered from {images.length} total
+                  {t("titleCardGallery.filteredFrom", {
+                    total: images.length,
+                  })}
                 </span>
               )}
             </div>
@@ -693,7 +724,7 @@ function TitleCardGallery() {
               <div className="flex justify-center">
                 <div className="inline-flex items-center gap-3 px-6 py-3 bg-theme-card border border-theme-border rounded-xl shadow-md">
                   <label className="text-sm font-medium text-theme-text">
-                    Items per page:
+                    {t("titleCardGallery.itemsPerPage")}
                   </label>
                   <select
                     value={itemsPerPage}
@@ -718,9 +749,13 @@ function TitleCardGallery() {
                   className="flex items-center gap-2 px-3 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
                 >
                   <ChevronDown className="w-4 h-4 text-theme-primary" />
-                  <span className="text-theme-text">Load More</span>
+                  <span className="text-theme-text">
+                    {t("titleCardGallery.loadMore")}
+                  </span>
                   <span className="ml-1 px-2 py-0.5 bg-theme-primary/20 rounded-full text-xs font-bold text-theme-primary">
-                    {filteredImages.length - displayCount} remaining
+                    {t("titleCardGallery.remaining", {
+                      count: filteredImages.length - displayCount,
+                    })}
                   </span>
                 </button>
                 <button
@@ -728,9 +763,13 @@ function TitleCardGallery() {
                   className="flex items-center gap-2 px-3 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
                 >
                   <ChevronDown className="w-4 h-4 text-theme-primary" />
-                  <span className="text-theme-text">Load All</span>
+                  <span className="text-theme-text">
+                    {t("titleCardGallery.loadAll")}
+                  </span>
                   <span className="ml-1 px-2 py-0.5 bg-theme-primary/20 rounded-full text-xs font-bold text-theme-primary">
-                    {filteredImages.length} total
+                    {t("titleCardGallery.total", {
+                      count: filteredImages.length,
+                    })}
                   </span>
                 </button>
               </div>
@@ -766,7 +805,7 @@ function TitleCardGallery() {
                   className="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white flex items-center space-x-2"
                 >
                   <RefreshCw className="w-4 h-4" />
-                  <span>Replace</span>
+                  <span>{t("titleCardGallery.replace")}</span>
                 </button>
                 <button
                   onClick={(e) => {
@@ -788,7 +827,7 @@ function TitleCardGallery() {
                       deletingImage === selectedImage.path ? "animate-spin" : ""
                     }`}
                   />
-                  Delete
+                  {t("titleCardGallery.delete")}
                 </button>
               </div>
             </div>
@@ -808,23 +847,24 @@ function TitleCardGallery() {
                     <ImageIcon className="w-16 h-16 text-theme-primary" />
                   </div>
                   <p className="text-theme-text text-lg font-semibold mb-2">
-                    Image preview not available
+                    {t("titleCardGallery.imagePreviewNotAvailable")}
                   </p>
                   <p className="text-theme-muted text-sm">
-                    Use file explorer to view title card
+                    {t("titleCardGallery.useFileExplorer")}
                   </p>
                 </div>
               </div>
             </div>
             <div className="px-6 py-5 border-t-2 border-theme flex justify-between items-center bg-theme-card">
               <span className="text-sm text-theme-muted font-medium">
-                Size: {(selectedImage.size / 1024).toFixed(2)} KB
+                {t("titleCardGallery.size")}{" "}
+                {(selectedImage.size / 1024).toFixed(2)} KB
               </span>
               <button
                 onClick={() => setSelectedImage(null)}
                 className="px-6 py-2.5 bg-theme-primary hover:bg-theme-primary/90 rounded-lg text-sm font-medium transition-all text-white shadow-lg hover:scale-105"
               >
-                Close
+                {t("titleCardGallery.close")}
               </button>
             </div>
           </div>
@@ -847,16 +887,18 @@ function TitleCardGallery() {
         }}
         title={
           deleteConfirm?.bulk
-            ? "Delete Multiple Title Cards"
-            : "Delete Title Card"
+            ? t("titleCardGallery.deleteMultipleTitle")
+            : t("titleCardGallery.deleteSingleTitle")
         }
         message={
           deleteConfirm?.bulk
-            ? `Are you sure you want to delete ${deleteConfirm.count} selected title card(s)?`
-            : "Are you sure you want to delete this title card?"
+            ? t("titleCardGallery.deleteMultipleMessage", {
+                count: deleteConfirm.count,
+              })
+            : t("titleCardGallery.deleteSingleMessage")
         }
         itemName={deleteConfirm?.bulk ? undefined : deleteConfirm?.name}
-        confirmText="Delete"
+        confirmText={t("titleCardGallery.delete")}
         type="danger"
       />
 

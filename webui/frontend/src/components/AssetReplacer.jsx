@@ -9,6 +9,7 @@ import {
   Star,
   Image as ImageIcon,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import Notification from "./Notification";
 import { useToast } from "../context/ToastContext";
 
@@ -46,6 +47,7 @@ const waitForLogFile = async (logFileName, maxAttempts = 30, delayMs = 200) => {
 };
 
 function AssetReplacer({ asset, onClose, onSuccess }) {
+  const { t } = useTranslation();
   const { showSuccess, showError, showInfo } = useToast();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -365,7 +367,7 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
       // Override with manual search if enabled
       if (manualSearch) {
         if (!searchTitle.trim()) {
-          showError("Please enter a title to search for");
+          showError(t("assetReplacer.enterTitleError"));
           setLoading(false);
           return;
         }
@@ -394,17 +396,21 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
       if (data.success) {
         setPreviews(data.results);
         showSuccess(
-          `Found ${data.total_count} replacement options from ${
-            Object.keys(data.results).filter((k) => data.results[k].length > 0)
-              .length
-          } sources`
+          t("assetReplacer.foundReplacements", {
+            count: data.total_count,
+            sources: Object.keys(data.results).filter(
+              (k) => data.results[k].length > 0
+            ).length,
+          })
         );
         setActiveTab("previews");
       } else {
-        showError("Failed to fetch previews");
+        showError(t("assetReplacer.fetchPreviewsError"));
       }
     } catch (err) {
-      showError(`Error fetching previews: ${err.message}`);
+      showError(
+        t("assetReplacer.errorFetchingPreviews", { error: err.message })
+      );
       console.error("Error fetching previews:", err);
     } finally {
       setLoading(false);
@@ -417,7 +423,7 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
 
     // Validate file type
     if (!file.type.startsWith("image/")) {
-      showError("Please select an image file");
+      showError(t("assetReplacer.selectImageError"));
       return;
     }
 
@@ -438,17 +444,17 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
 
         // Validation
         if (!titleText || !titleText.trim()) {
-          showError("Please enter a title text for overlay processing");
+          showError(t("assetReplacer.enterTitleTextError"));
           setUploading(false);
           return;
         }
         if (!folderName || !folderName.trim()) {
-          showError("Please enter a folder name for overlay processing");
+          showError(t("assetReplacer.enterFolderNameError"));
           setUploading(false);
           return;
         }
         if (!libraryName || !libraryName.trim()) {
-          showError("Please enter a library name for overlay processing");
+          showError(t("assetReplacer.enterLibraryNameError"));
           setUploading(false);
           return;
         }
@@ -462,7 +468,7 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
         if (metadata.asset_type === "season") {
           const seasonPosterName = manualForm?.seasonPosterName;
           if (!seasonPosterName || !seasonPosterName.trim()) {
-            showError("Please enter a season number for overlay processing");
+            showError(t("assetReplacer.enterSeasonNumberError"));
             setUploading(false);
             return;
           }
@@ -475,12 +481,12 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
           const episodeTitleName = manualForm?.episodeTitleName;
 
           if (!episodeNumber || !episodeNumber.trim()) {
-            showError("Please enter an episode number for overlay processing");
+            showError(t("assetReplacer.enterEpisodeNumberError"));
             setUploading(false);
             return;
           }
           if (!episodeTitleName || !episodeTitleName.trim()) {
-            showError("Please enter an episode title for overlay processing");
+            showError(t("assetReplacer.enterEpisodeTitleError"));
             setUploading(false);
             return;
           }
@@ -501,11 +507,12 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
       if (!response.ok) {
         const contentType = response.headers.get("content-type");
         let errorMessage = `Server error: ${response.status}`;
-        
+
         if (contentType && contentType.includes("application/json")) {
           try {
             const errorData = await response.json();
-            errorMessage = errorData.detail || errorData.message || errorMessage;
+            errorMessage =
+              errorData.detail || errorData.message || errorMessage;
           } catch (e) {
             // Failed to parse JSON error
           }
@@ -514,7 +521,7 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
           const text = await response.text();
           console.error("Non-JSON response:", text.substring(0, 500));
         }
-        
+
         throw new Error(errorMessage);
       }
 
@@ -522,7 +529,7 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
 
       if (data.success) {
         if (data.manual_run_triggered) {
-          showSuccess("Asset replaced and queued for overlay processing! 🎨");
+          showSuccess(t("assetReplacer.replacedAndQueued"));
 
           // Call onSuccess to delete DB entry before navigating
           onSuccess?.();
@@ -542,17 +549,17 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
             navigate("/logs", { state: { logFile: "Manuallog.log" } });
           }
         } else {
-          showSuccess("Asset replaced successfully!");
+          showSuccess(t("assetReplacer.replacedSuccessfully"));
           setTimeout(() => {
             onSuccess?.();
             onClose();
           }, 2000);
         }
       } else {
-        showError("Failed to upload asset");
+        showError(t("assetReplacer.uploadError"));
       }
     } catch (err) {
-      showError(`Error uploading file: ${err.message}`);
+      showError(t("assetReplacer.errorUploadingFile", { error: err.message }));
       console.error("Error uploading file:", err);
     } finally {
       setUploading(false);
@@ -573,17 +580,17 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
       const libraryName = manualForm?.libraryname || metadata.library_name;
 
       if (!titleText || !titleText.trim()) {
-        showError("Please enter a title text for overlay processing");
+        showError(t("assetReplacer.enterTitleTextError"));
         setUploading(false);
         return;
       }
       if (!folderName || !folderName.trim()) {
-        showError("Please enter a folder name for overlay processing");
+        showError(t("assetReplacer.enterFolderNameError"));
         setUploading(false);
         return;
       }
       if (!libraryName || !libraryName.trim()) {
-        showError("Please enter a library name for overlay processing");
+        showError(t("assetReplacer.enterLibraryNameError"));
         setUploading(false);
         return;
       }
@@ -597,22 +604,22 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
       const seasonPosterName = manualForm?.seasonPosterName;
 
       if (!titleText || !titleText.trim()) {
-        showError("Please enter a title text for overlay processing");
+        showError(t("assetReplacer.enterTitleTextError"));
         setUploading(false);
         return;
       }
       if (!folderName || !folderName.trim()) {
-        showError("Please enter a folder name for overlay processing");
+        showError(t("assetReplacer.enterFolderNameError"));
         setUploading(false);
         return;
       }
       if (!libraryName || !libraryName.trim()) {
-        showError("Please enter a library name for overlay processing");
+        showError(t("assetReplacer.enterLibraryNameError"));
         setUploading(false);
         return;
       }
       if (!seasonPosterName || !seasonPosterName.trim()) {
-        showError("Please enter a season poster name for overlay processing");
+        showError(t("assetReplacer.enterSeasonPosterNameError"));
         setUploading(false);
         return;
       }
@@ -627,27 +634,27 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
       const episodeTitleName = manualForm?.episodeTitleName;
 
       if (!folderName || !folderName.trim()) {
-        showError("Please enter a folder name for overlay processing");
+        showError(t("assetReplacer.enterFolderNameError"));
         setUploading(false);
         return;
       }
       if (!libraryName || !libraryName.trim()) {
-        showError("Please enter a library name for overlay processing");
+        showError(t("assetReplacer.enterLibraryNameError"));
         setUploading(false);
         return;
       }
       if (!seasonPosterName || !seasonPosterName.trim()) {
-        showError("Please enter a season poster name for overlay processing");
+        showError(t("assetReplacer.enterSeasonPosterNameError"));
         setUploading(false);
         return;
       }
       if (!episodeNumber || !episodeNumber.trim()) {
-        showError("Please enter an episode number for overlay processing");
+        showError(t("assetReplacer.enterEpisodeNumberError"));
         setUploading(false);
         return;
       }
       if (!episodeTitleName || !episodeTitleName.trim()) {
-        showError("Please enter an episode title for overlay processing");
+        showError(t("assetReplacer.enterEpisodeTitleError"));
         setUploading(false);
         return;
       }
@@ -718,11 +725,12 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
       if (!response.ok) {
         const contentType = response.headers.get("content-type");
         let errorMessage = `Server error: ${response.status}`;
-        
+
         if (contentType && contentType.includes("application/json")) {
           try {
             const errorData = await response.json();
-            errorMessage = errorData.detail || errorData.message || errorMessage;
+            errorMessage =
+              errorData.detail || errorData.message || errorMessage;
           } catch (e) {
             // Failed to parse JSON error
           }
@@ -731,7 +739,7 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
           const text = await response.text();
           console.error("Non-JSON response:", text.substring(0, 500));
         }
-        
+
         throw new Error(errorMessage);
       }
 
@@ -739,7 +747,7 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
 
       if (data.success) {
         if (data.manual_run_triggered) {
-          showSuccess("Asset replaced and queued for overlay processing! 🎨");
+          showSuccess(t("assetReplacer.replacedAndQueued"));
 
           // Call onSuccess to delete DB entry before navigating
           onSuccess?.();
@@ -759,17 +767,17 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
             navigate("/logs", { state: { logFile: "Manuallog.log" } });
           }
         } else {
-          showSuccess("Asset replaced successfully!");
+          showSuccess(t("assetReplacer.replacedSuccessfully"));
           setTimeout(() => {
             onSuccess?.();
             onClose();
           }, 2000);
         }
       } else {
-        showError("Failed to replace asset");
+        showError(t("assetReplacer.replaceError"));
       }
     } catch (err) {
-      showError(`Error replacing asset: ${err.message}`);
+      showError(t("assetReplacer.errorReplacingAsset", { error: err.message }));
       console.error("Error replacing asset:", err);
     } finally {
       setUploading(false);
@@ -802,7 +810,7 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
                 <div className="p-2 rounded-lg bg-theme-primary/10">
                   <RefreshCw className="w-6 h-6 text-theme-primary" />
                 </div>
-                Replace Asset
+                {t("assetReplacer.title")}
               </h2>
               <p className="text-theme-text mt-2 text-lg font-medium">
                 {getDisplayName()}
@@ -830,7 +838,7 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
               }`}
             >
               <Upload className="w-4 h-4 inline mr-2" />
-              Upload Custom
+              {t("assetReplacer.uploadCustom")}
             </button>
             <button
               onClick={() => setActiveTab("previews")}
@@ -841,7 +849,7 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
               }`}
             >
               <ImageIcon className="w-4 h-4 inline mr-2" />
-              Service Previews
+              {t("assetReplacer.servicePreviews")}
               {totalPreviews > 0 && (
                 <span className="ml-2 px-2 py-0.5 bg-theme-primary/20 text-theme-primary rounded-full text-xs">
                   {totalPreviews}
@@ -858,14 +866,16 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
               <div className="border-2 border-dashed border-theme rounded-xl p-12 text-center">
                 <Upload className="w-16 h-16 text-theme-muted mx-auto mb-4" />
                 <h3 className="text-xl font-semibold text-theme-text mb-2">
-                  Upload Your Own Image
+                  {t("assetReplacer.uploadYourOwnImage")}
                 </h3>
                 <p className="text-theme-muted mb-6">
-                  Select a custom image to replace this asset
+                  {t("assetReplacer.selectCustomImage")}
                 </p>
                 <label className="inline-flex items-center gap-2 px-6 py-3 bg-theme-primary text-white rounded-lg hover:bg-opacity-90 transition-colors cursor-pointer">
                   <Upload className="w-5 h-5" />
-                  {uploading ? "Uploading..." : "Choose File"}
+                  {uploading
+                    ? t("assetReplacer.uploading")
+                    : t("assetReplacer.chooseFile")}
                   <input
                     type="file"
                     accept="image/*"
@@ -886,7 +896,9 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
                       onChange={(e) => setManualSearch(e.target.checked)}
                       className="w-4 h-4 rounded border-theme-muted text-theme-primary focus:ring-theme-primary"
                     />
-                    <span className="text-sm">Manual search by title</span>
+                    <span className="text-sm">
+                      {t("assetReplacer.manualSearchByTitle")}
+                    </span>
                   </label>
                 </div>
 
@@ -1189,8 +1201,8 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
                 <div className="text-center">
                   <p className="text-theme-muted mb-4">
                     {manualSearch
-                      ? "Search for assets:"
-                      : "Or fetch from services:"}
+                      ? t("assetReplacer.searchForAssets")
+                      : t("assetReplacer.orFetchFromServices")}
                   </p>
                   <button
                     onClick={fetchPreviews}
@@ -1198,7 +1210,9 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
                     className="inline-flex items-center gap-2 px-6 py-3 bg-theme-hover text-theme-text rounded-lg hover:bg-theme-primary hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Download className="w-5 h-5" />
-                    {loading ? "Loading..." : "Fetch from TMDB/TVDB/Fanart"}
+                    {loading
+                      ? t("common.loading")
+                      : t("assetReplacer.fetchFromServices")}
                   </button>
                 </div>
               </div>
@@ -1211,21 +1225,21 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
                 <div className="flex flex-col items-center justify-center py-12">
                   <RefreshCw className="w-12 h-12 animate-spin text-theme-primary mb-4" />
                   <p className="text-theme-muted">
-                    Fetching previews from services...
+                    {t("assetReplacer.fetchingPreviews")}
                   </p>
                 </div>
               ) : totalPreviews === 0 ? (
                 <div className="text-center py-12">
                   <ImageIcon className="w-16 h-16 text-theme-muted mx-auto mb-4" />
                   <p className="text-theme-muted mb-4">
-                    No previews loaded yet
+                    {t("assetReplacer.noPreviewsLoaded")}
                   </p>
                   <button
                     onClick={fetchPreviews}
                     className="inline-flex items-center gap-2 px-6 py-3 bg-theme-primary text-white rounded-lg hover:bg-opacity-90 transition-colors"
                   >
                     <Download className="w-5 h-5" />
-                    Fetch Previews
+                    {t("assetReplacer.fetchPreviews")}
                   </button>
                 </div>
               ) : (
@@ -1333,6 +1347,7 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
 }
 
 function PreviewCard({ preview, onSelect, disabled, isHorizontal = false }) {
+  const { t } = useTranslation();
   const { showSuccess, showError, showInfo } = useToast();
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
@@ -1373,7 +1388,7 @@ function PreviewCard({ preview, onSelect, disabled, isHorizontal = false }) {
             className="px-4 py-2 bg-theme-primary text-white rounded-lg hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             <Check className="w-4 h-4" />
-            Select
+            {t("assetReplacer.select")}
           </button>
         </div>
       </div>

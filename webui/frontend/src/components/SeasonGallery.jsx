@@ -13,6 +13,7 @@ import {
 import CompactImageSizeSlider from "./CompactImageSizeSlider";
 import Notification from "./Notification";
 import { useToast } from "../context/ToastContext";
+import { useTranslation } from "react-i18next";
 import ConfirmDialog from "./ConfirmDialog";
 import AssetReplacer from "./AssetReplacer";
 import ScrollToButtons from "./ScrollToButtons";
@@ -20,6 +21,7 @@ import ScrollToButtons from "./ScrollToButtons";
 const API_URL = "/api";
 
 function SeasonGallery() {
+  const { t } = useTranslation();
   const { showSuccess, showError, showInfo } = useToast();
   const [folders, setFolders] = useState([]);
   const [activeFolder, setActiveFolder] = useState(null);
@@ -92,17 +94,16 @@ function SeasonGallery() {
 
         if (totalSeasons > 0) {
           showSuccess(
-            `${foldersWithSeasons} folder${
-              foldersWithSeasons !== 1 ? "s" : ""
-            } loaded with ${totalSeasons} season poster${
-              totalSeasons !== 1 ? "s" : ""
-            }`
+            t("seasonGallery.foldersLoaded", {
+              folderCount: foldersWithSeasons,
+              seasonCount: totalSeasons,
+            })
           );
         } else {
           showSuccess(
-            `${data.folders.length} folder${
-              data.folders.length !== 1 ? "s" : ""
-            } found with 0 season posters`
+            t("seasonGallery.foldersFoundNoSeasons", {
+              count: data.folders.length,
+            })
           );
         }
       }
@@ -115,7 +116,7 @@ function SeasonGallery() {
       }
     } catch (error) {
       console.error("Error fetching folders:", error);
-      const errorMsg = error.message || "Failed to load folders";
+      const errorMsg = error.message || t("seasonGallery.errors.loadFolders");
       setError(errorMsg);
       showError(errorMsg);
     } finally {
@@ -138,12 +139,18 @@ function SeasonGallery() {
       setImages(data.images || []);
 
       if (showNotification && data.images && data.images.length > 0) {
-        showSuccess(`Loaded ${data.images.length} seasons from ${folder.name}`);
+        showSuccess(
+          t("seasonGallery.seasonsLoaded", {
+            count: data.images.length,
+            folderName: folder.name,
+          })
+        );
       }
     } catch (error) {
       console.error("Error fetching images:", error);
       const errorMsg =
-        error.message || `Failed to load images from ${folder.name}`;
+        error.message ||
+        t("seasonGallery.errors.loadImages", { folderName: folder.name });
       setError(errorMsg);
       showError(errorMsg);
       setImages([]);
@@ -179,7 +186,7 @@ function SeasonGallery() {
       const data = await response.json();
 
       if (data.success) {
-        showSuccess(`Season "${imageName}" deleted successfully`);
+        showSuccess(t("seasonGallery.deleteSuccess", { name: imageName }));
 
         setImages(images.filter((img) => img.path !== imagePath));
 
@@ -189,11 +196,13 @@ function SeasonGallery() {
 
         fetchFolders(false);
       } else {
-        throw new Error(data.message || "Failed to delete season");
+        throw new Error(data.message || t("seasonGallery.errors.deleteSeason"));
       }
     } catch (error) {
       console.error("Error deleting season:", error);
-      showError(`Error while deleting: ${error.message}`);
+      showError(
+        t("seasonGallery.errors.deleteError", { message: error.message })
+      );
     } finally {
       setDeletingImage(null);
     }
@@ -225,10 +234,15 @@ function SeasonGallery() {
 
         if (failedCount > 0) {
           showError(
-            `Deleted ${deletedCount} season(s), but ${failedCount} failed.`
+            t("seasonGallery.bulkDeletePartial", {
+              deletedCount,
+              failedCount,
+            })
           );
         } else {
-          showSuccess(`Successfully deleted ${deletedCount} season(s)`);
+          showSuccess(
+            t("seasonGallery.bulkDeleteSuccess", { count: deletedCount })
+          );
         }
 
         // Remove deleted images from the list
@@ -240,11 +254,13 @@ function SeasonGallery() {
 
         fetchFolders(false);
       } else {
-        throw new Error(data.message || "Failed to delete seasons");
+        throw new Error(data.message || t("seasonGallery.errors.bulkDelete"));
       }
     } catch (error) {
       console.error("Error deleting seasons:", error);
-      showError(`Error while deleting: ${error.message}`);
+      showError(
+        t("seasonGallery.errors.deleteError", { message: error.message })
+      );
     } finally {
       setDeletingImage(null);
     }
@@ -319,7 +335,7 @@ function SeasonGallery() {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold text-theme-text flex items-center gap-2">
               <Folder className="w-5 h-5 text-theme-primary" />
-              Folders
+              {t("seasonGallery.folders")}
             </h2>
             <div className="flex items-center gap-3">
               {/* Compact Image Size Slider */}
@@ -347,12 +363,12 @@ function SeasonGallery() {
                   {selectMode ? (
                     <>
                       <Square className="w-5 h-5" />
-                      Cancel Select
+                      {t("seasonGallery.cancelSelect")}
                     </>
                   ) : (
                     <>
                       <CheckSquare className="w-5 h-5" />
-                      Select
+                      {t("seasonGallery.select")}
                     </>
                   )}
                 </button>
@@ -373,7 +389,7 @@ function SeasonGallery() {
                     loading || imagesLoading ? "animate-spin" : ""
                   }`}
                 />
-                Refresh
+                {t("seasonGallery.refresh")}
               </button>
             </div>
           </div>
@@ -405,7 +421,9 @@ function SeasonGallery() {
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type="text"
-                placeholder={`Search seasons in ${activeFolder.name}...`}
+                placeholder={t("seasonGallery.searchPlaceholder", {
+                  folderName: activeFolder.name,
+                })}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-12 pr-4 py-3 bg-theme-bg border border-theme-primary/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
@@ -418,7 +436,9 @@ function SeasonGallery() {
       {loading ? (
         <div className="flex flex-col items-center justify-center py-32 bg-theme-card rounded-xl border border-theme">
           <RefreshCw className="w-12 h-12 animate-spin text-theme-primary mb-4" />
-          <p className="text-theme-muted">Loading folders...</p>
+          <p className="text-theme-muted">
+            {t("seasonGallery.loadingFolders")}
+          </p>
         </div>
       ) : error ? (
         <div className="bg-red-950/40 rounded-xl p-8 border-2 border-red-600/50 text-center">
@@ -427,7 +447,7 @@ function SeasonGallery() {
               <ImageIcon className="w-12 h-12 text-red-400" />
             </div>
             <h3 className="text-2xl font-semibold text-red-300 mb-2">
-              Error Loading Season Gallery
+              {t("seasonGallery.errorLoadingTitle")}
             </h3>
             <p className="text-red-200 text-sm mb-6 max-w-md">{error}</p>
             <button
@@ -440,7 +460,7 @@ function SeasonGallery() {
               className="flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 rounded-lg font-medium transition-all shadow-lg hover:scale-105"
             >
               <RefreshCw className="w-5 h-5" />
-              Try Again
+              {t("seasonGallery.tryAgain")}
             </button>
           </div>
         </div>
@@ -451,18 +471,19 @@ function SeasonGallery() {
               <Folder className="w-12 h-12 text-theme-primary" />
             </div>
             <h3 className="text-2xl font-semibold text-theme-text mb-2">
-              No Folders Found
+              {t("seasonGallery.noFoldersTitle")}
             </h3>
             <p className="text-theme-muted max-w-md">
-              No folders found in assets directory. Please check your
-              configuration.
+              {t("seasonGallery.noFoldersDescription")}
             </p>
           </div>
         </div>
       ) : imagesLoading ? (
         <div className="flex flex-col items-center justify-center py-32 bg-theme-card rounded-xl border border-theme">
           <RefreshCw className="w-12 h-12 animate-spin text-theme-primary mb-4" />
-          <p className="text-theme-muted">Loading seasons...</p>
+          <p className="text-theme-muted">
+            {t("seasonGallery.loadingSeasons")}
+          </p>
         </div>
       ) : filteredImages.length === 0 ? (
         <div className="bg-theme-card rounded-xl p-12 border border-theme text-center">
@@ -471,12 +492,16 @@ function SeasonGallery() {
               <ImageIcon className="w-12 h-12 text-theme-primary" />
             </div>
             <h3 className="text-2xl font-semibold text-theme-text mb-2">
-              {searchTerm ? "No Matching Seasons" : "No Seasons Found"}
+              {searchTerm
+                ? t("seasonGallery.noMatchingTitle")
+                : t("seasonGallery.noSeasonsTitle")}
             </h3>
             <p className="text-theme-muted max-w-md">
               {searchTerm
-                ? "Try adjusting your search terms to find what you're looking for"
-                : `No seasons found in ${activeFolder.name}`}
+                ? t("seasonGallery.noMatchingDescription")
+                : t("seasonGallery.noSeasonsDescription", {
+                    folderName: activeFolder.name,
+                  })}
             </p>
           </div>
         </div>
@@ -494,17 +519,19 @@ function SeasonGallery() {
                     {selectedImages.length === displayedImages.length ? (
                       <>
                         <Square className="w-5 h-5" />
-                        Deselect All
+                        {t("seasonGallery.deselectAll")}
                       </>
                     ) : (
                       <>
                         <CheckSquare className="w-5 h-5" />
-                        Select All
+                        {t("seasonGallery.selectAll")}
                       </>
                     )}
                   </button>
                   <span className="text-theme-text font-medium">
-                    {selectedImages.length} selected
+                    {t("seasonGallery.selectedCount", {
+                      count: selectedImages.length,
+                    })}
                   </span>
                 </div>
                 <button
@@ -526,7 +553,9 @@ function SeasonGallery() {
                       deletingImage === "bulk" ? "animate-spin" : ""
                     }`}
                   />
-                  Delete Selected ({selectedImages.length})
+                  {t("seasonGallery.deleteSelected", {
+                    count: selectedImages.length,
+                  })}
                 </button>
               </div>
             </div>
@@ -535,12 +564,17 @@ function SeasonGallery() {
           <div className="bg-theme-card rounded-xl p-4 border border-theme">
             <div className="flex items-center justify-between text-sm">
               <span className="text-theme-text font-medium">
-                Showing {displayedImages.length} of {filteredImages.length}{" "}
-                seasons in {activeFolder.name}
+                {t("seasonGallery.showing", {
+                  displayed: displayedImages.length,
+                  total: filteredImages.length,
+                  folderName: activeFolder.name,
+                })}
               </span>
               {images.length !== filteredImages.length && (
                 <span className="text-theme-primary font-semibold">
-                  Filtered from {images.length} total
+                  {t("seasonGallery.filteredFrom", {
+                    total: images.length,
+                  })}
                 </span>
               )}
             </div>
@@ -619,7 +653,7 @@ function SeasonGallery() {
                           ? "bg-gray-600 cursor-not-allowed"
                           : "bg-red-600/90 hover:bg-red-700 opacity-0 group-hover:opacity-100"
                       }`}
-                      title="Delete season"
+                      title={t("seasonGallery.deleteSeason")}
                     >
                       <Trash2
                         className={`w-4 h-4 text-white ${
@@ -635,7 +669,7 @@ function SeasonGallery() {
                         setReplacerOpen(true);
                       }}
                       className="absolute top-2 left-2 z-10 p-2 rounded-lg bg-blue-600/90 hover:bg-blue-700 opacity-0 group-hover:opacity-100 transition-all"
-                      title="Replace asset"
+                      title={t("seasonGallery.replaceAsset")}
                     >
                       <RefreshCw className="w-4 h-4 text-white" />
                     </button>
@@ -685,7 +719,7 @@ function SeasonGallery() {
               <div className="flex justify-center">
                 <div className="inline-flex items-center gap-3 px-6 py-3 bg-theme-card border border-theme-border rounded-xl shadow-md">
                   <label className="text-sm font-medium text-theme-text">
-                    Items per page:
+                    {t("seasonGallery.itemsPerPage")}
                   </label>
                   <select
                     value={itemsPerPage}
@@ -710,9 +744,13 @@ function SeasonGallery() {
                   className="flex items-center gap-2 px-3 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
                 >
                   <ChevronDown className="w-4 h-4 text-theme-primary" />
-                  <span className="text-theme-text">Load More</span>
+                  <span className="text-theme-text">
+                    {t("seasonGallery.loadMore")}
+                  </span>
                   <span className="ml-1 px-2 py-0.5 bg-theme-primary/20 rounded-full text-xs font-bold text-theme-primary">
-                    {filteredImages.length - displayCount} remaining
+                    {t("seasonGallery.remaining", {
+                      count: filteredImages.length - displayCount,
+                    })}
                   </span>
                 </button>
                 <button
@@ -720,9 +758,11 @@ function SeasonGallery() {
                   className="flex items-center gap-2 px-3 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
                 >
                   <ChevronDown className="w-4 h-4 text-theme-primary" />
-                  <span className="text-theme-text">Load All</span>
+                  <span className="text-theme-text">
+                    {t("seasonGallery.loadAll")}
+                  </span>
                   <span className="ml-1 px-2 py-0.5 bg-theme-primary/20 rounded-full text-xs font-bold text-theme-primary">
-                    {filteredImages.length} total
+                    {t("seasonGallery.total", { count: filteredImages.length })}
                   </span>
                 </button>
               </div>
@@ -754,7 +794,7 @@ function SeasonGallery() {
                   className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all bg-blue-600 hover:bg-blue-700 hover:scale-105"
                 >
                   <RefreshCw className="w-4 h-4" />
-                  Replace
+                  {t("seasonGallery.replace")}
                 </button>
                 <button
                   onClick={(e) => {
@@ -776,7 +816,7 @@ function SeasonGallery() {
                       deletingImage === selectedImage.path ? "animate-spin" : ""
                     }`}
                   />
-                  Delete
+                  {t("seasonGallery.delete")}
                 </button>
               </div>
             </div>
@@ -796,23 +836,25 @@ function SeasonGallery() {
                     <ImageIcon className="w-16 h-16 text-theme-primary" />
                   </div>
                   <p className="text-theme-text text-lg font-semibold mb-2">
-                    Image preview not available
+                    {t("seasonGallery.imageNotAvailable")}
                   </p>
                   <p className="text-theme-muted text-sm">
-                    Use file explorer to view season
+                    {t("seasonGallery.useFileExplorer")}
                   </p>
                 </div>
               </div>
             </div>
             <div className="px-6 py-5 border-t-2 border-theme flex justify-between items-center bg-theme-card">
               <span className="text-sm text-theme-muted font-medium">
-                Size: {(selectedImage.size / 1024).toFixed(2)} KB
+                {t("seasonGallery.size", {
+                  size: (selectedImage.size / 1024).toFixed(2),
+                })}
               </span>
               <button
                 onClick={() => setSelectedImage(null)}
                 className="px-6 py-2.5 bg-theme-primary hover:bg-theme-primary/90 rounded-lg text-sm font-medium transition-all text-white shadow-lg hover:scale-105"
               >
-                Close
+                {t("seasonGallery.close")}
               </button>
             </div>
           </div>
@@ -835,16 +877,18 @@ function SeasonGallery() {
         }}
         title={
           deleteConfirm?.bulk
-            ? "Delete Multiple Seasons"
-            : "Delete Season Poster"
+            ? t("seasonGallery.deleteMultipleTitle")
+            : t("seasonGallery.deleteSeasonTitle")
         }
         message={
           deleteConfirm?.bulk
-            ? `Are you sure you want to delete ${deleteConfirm.count} selected season(s)?`
-            : "Are you sure you want to delete this season poster?"
+            ? t("seasonGallery.deleteMultipleMessage", {
+                count: deleteConfirm.count,
+              })
+            : t("seasonGallery.deleteSeasonMessage")
         }
         itemName={deleteConfirm?.bulk ? undefined : deleteConfirm?.name}
-        confirmText="Delete"
+        confirmText={t("seasonGallery.delete")}
         type="danger"
       />
 
@@ -872,7 +916,7 @@ function SeasonGallery() {
             setTimeout(() => {
               fetchFolderImages(activeFolder, false);
             }, 500);
-            showSuccess("Asset replaced successfully!");
+            showSuccess(t("seasonGallery.assetReplaced"));
           }}
         />
       )}

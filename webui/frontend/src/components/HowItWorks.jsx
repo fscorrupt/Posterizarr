@@ -22,131 +22,113 @@ import {
   Eye,
   ExternalLink,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 function HowItWorks() {
+  const { t } = useTranslation();
   const [expandedStep, setExpandedStep] = useState(null);
 
   const workflowSteps = [
     {
       id: 1,
-      title: "Library Scanning",
+      title: t("howItWorks.steps.libraryScanning.title"),
       icon: Database,
-      description:
-        "Posterizarr autonomously scans your Plex, Jellyfin, or Emby server for libraries and media content.",
-      details: [
-        "Automatic library discovery",
-        "Multi-version support (theatrical cuts, director's cuts)",
-        "CSV export of media data",
-        "Library exclusion options",
-      ],
+      description: t("howItWorks.steps.libraryScanning.description"),
+      details: t("howItWorks.steps.libraryScanning.details", {
+        returnObjects: true,
+      }),
     },
     {
       id: 2,
-      title: "Artwork Discovery",
+      title: t("howItWorks.steps.artworkDiscovery.title"),
       icon: Globe,
-      description:
-        "Searches multiple sources for high-quality artwork based on your language preferences.",
-      details: [
-        "Sources: Fanart.tv, TMDB, TVDB, Plex, IMDb",
-        "Textless images prioritized",
-        "Configurable language ordering",
-        "Resolution filtering (2000x3000 posters, 3840x2160 backgrounds)",
-      ],
+      description: t("howItWorks.steps.artworkDiscovery.description"),
+      details: t("howItWorks.steps.artworkDiscovery.details", {
+        returnObjects: true,
+      }),
     },
     {
       id: 3,
-      title: "Image Processing",
+      title: t("howItWorks.steps.imageProcessing.title"),
       icon: Sparkles,
-      description:
-        "Transforms downloaded artwork with custom overlays, text, borders, and effects.",
-      details: [
-        "Automatic resizing to optimal dimensions",
-        "Custom overlay application",
-        "Text rendering with multiple fonts",
-        "Border and gradient effects",
-      ],
+      description: t("howItWorks.steps.imageProcessing.description"),
+      details: t("howItWorks.steps.imageProcessing.details", {
+        returnObjects: true,
+      }),
     },
     {
       id: 4,
-      title: "Asset Organization",
+      title: t("howItWorks.steps.assetOrganization.title"),
       icon: Layers,
-      description:
-        "Organizes processed assets using Kometa-compatible folder structure for seamless integration.",
-      details: [
-        "Kometa folder structure support",
-        "Library folder organization",
-        "Manual asset path priority",
-        "Asset cleanup for deleted media",
-      ],
+      description: t("howItWorks.steps.assetOrganization.description"),
+      details: t("howItWorks.steps.assetOrganization.details", {
+        returnObjects: true,
+      }),
     },
     {
       id: 5,
-      title: "Media Server Upload",
+      title: t("howItWorks.steps.mediaServerUpload.title"),
       icon: Upload,
-      description:
-        "Directly uploads finished artwork to your media server or stores for Kometa integration.",
-      details: [
-        "Direct upload to Plex/Jellyfin/Emby",
-        "Smart hash validation to skip duplicates",
-        "EXIF metadata tagging",
-        "Existing asset upload support",
-      ],
+      description: t("howItWorks.steps.mediaServerUpload.description"),
+      details: t("howItWorks.steps.mediaServerUpload.details", {
+        returnObjects: true,
+      }),
     },
   ];
 
   const supportedTypes = [
     {
       icon: FileImage,
-      title: "Movie/Show Posters",
-      description: "High-quality 2000x3000 posters",
+      title: t("howItWorks.assetTypes.posters.title"),
+      description: t("howItWorks.assetTypes.posters.description"),
     },
     {
       icon: Image,
-      title: "Backgrounds",
-      description: "Stunning 3840x2160 backgrounds",
+      title: t("howItWorks.assetTypes.backgrounds.title"),
+      description: t("howItWorks.assetTypes.backgrounds.description"),
     },
     {
       icon: Tv,
-      title: "Season Posters",
-      description: "Organized season artwork",
+      title: t("howItWorks.assetTypes.seasons.title"),
+      description: t("howItWorks.assetTypes.seasons.description"),
     },
     {
       icon: Film,
-      title: "Title Cards",
-      description: "Episode title cards in 16:9",
+      title: t("howItWorks.assetTypes.titleCards.title"),
+      description: t("howItWorks.assetTypes.titleCards.description"),
     },
   ];
 
   const keyFeatures = [
     {
       icon: Zap,
-      title: "Multi-Source Discovery",
-      text: "Searches Fanart.tv, TMDB, TVDB, Plex, and IMDb",
+      title: t("howItWorks.features.multiSource.title"),
+      text: t("howItWorks.features.multiSource.text"),
     },
     {
       icon: Palette,
-      title: "Custom Overlays",
-      text: "Apply borders, text, and gradient effects",
+      title: t("howItWorks.features.customOverlays.title"),
+      text: t("howItWorks.features.customOverlays.text"),
     },
     {
       icon: Shield,
-      title: "Smart Filtering",
-      text: "Resolution and language preference filtering",
+      title: t("howItWorks.features.smartFiltering.title"),
+      text: t("howItWorks.features.smartFiltering.text"),
     },
     {
       icon: RefreshCw,
-      title: "Auto-Sync",
-      text: "Sync artwork between media servers",
+      title: t("howItWorks.features.autoSync.title"),
+      text: t("howItWorks.features.autoSync.text"),
     },
     {
       icon: Layout,
-      title: "Kometa Compatible",
-      text: "Seamless integration with Kometa folder structure",
+      title: t("howItWorks.features.kometaCompatible.title"),
+      text: t("howItWorks.features.kometaCompatible.text"),
     },
     {
       icon: Server,
-      title: "Cross-Platform",
-      text: "Works on Docker, Linux, Windows, macOS, and ARM",
+      title: t("howItWorks.features.crossPlatform.title"),
+      text: t("howItWorks.features.crossPlatform.text"),
     },
   ];
 
@@ -159,11 +141,10 @@ function HowItWorks() {
           <img src="/logo.png" alt="Posterizarr" className="h-15 w-auto" />
         </div>
         <h1 className="text-4xl font-bold text-theme-text mb-4">
-          How Posterizarr Works
+          {t("howItWorks.header.title")}
         </h1>
         <p className="text-xl text-theme-muted max-w-3xl mx-auto">
-          Automated poster management for your media library with intelligent
-          overlay application and seamless integration
+          {t("howItWorks.header.subtitle")}
         </p>
       </div>
 
@@ -171,7 +152,7 @@ function HowItWorks() {
       <div className="bg-theme-card border border-theme rounded-lg p-6 space-y-6">
         <h2 className="text-2xl font-bold text-theme-text flex items-center gap-2">
           <Zap className="w-6 h-6 text-theme-primary" />
-          The Workflow
+          {t("howItWorks.workflow.title")}
         </h2>
 
         <div className="space-y-4">
@@ -252,7 +233,7 @@ function HowItWorks() {
       <div className="bg-theme-card border border-theme rounded-lg p-6 space-y-6">
         <h2 className="text-2xl font-bold text-theme-text flex items-center gap-2">
           <Image className="w-6 h-6 text-theme-primary" />
-          Supported Asset Types
+          {t("howItWorks.assetTypes.title")}
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -280,7 +261,7 @@ function HowItWorks() {
       <div className="bg-theme-card border border-theme rounded-lg p-6 space-y-6">
         <h2 className="text-2xl font-bold text-theme-text flex items-center gap-2">
           <Sparkles className="w-6 h-6 text-theme-primary" />
-          Key Features
+          {t("howItWorks.features.title")}
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -312,14 +293,14 @@ function HowItWorks() {
       <div className="bg-theme-card border border-theme rounded-lg p-6 space-y-6">
         <h2 className="text-2xl font-bold text-theme-text flex items-center gap-2">
           <Eye className="w-6 h-6 text-theme-primary" />
-          See It In Action
+          {t("howItWorks.showcase.title")}
         </h2>
 
         {/* Posterizarr Results */}
         <div className="space-y-4">
           <div>
             <h3 className="text-lg font-semibold text-theme-text mb-3">
-              Posterizarr Output
+              {t("howItWorks.showcase.posterizarrOutput")}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="group relative bg-theme-hover border border-theme rounded-lg overflow-hidden hover:border-theme-primary/50 transition-all">
@@ -338,15 +319,14 @@ function HowItWorks() {
               </div>
             </div>
             <p className="text-sm text-theme-muted mt-3">
-              High-quality artwork automatically downloaded and processed with
-              your custom overlays
+              {t("howItWorks.showcase.posterizarrDescription")}
             </p>
           </div>
 
           {/* Kometa Integration Results */}
           <div>
             <h3 className="text-lg font-semibold text-theme-text mb-3">
-              After Kometa Integration
+              {t("howItWorks.showcase.kometaIntegration")}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="group relative bg-theme-hover border border-theme rounded-lg overflow-hidden hover:border-theme-primary/50 transition-all">
@@ -365,8 +345,7 @@ function HowItWorks() {
               </div>
             </div>
             <p className="text-sm text-theme-muted mt-3">
-              Final results in your media server with additional Kometa overlays
-              applied
+              {t("howItWorks.showcase.kometaDescription")}
             </p>
           </div>
         </div>
@@ -375,12 +354,10 @@ function HowItWorks() {
       {/* Getting Started CTA */}
       <div className="bg-theme-card border border-theme rounded-lg p-6 space-y-4">
         <h2 className="text-2xl font-bold text-theme-text text-center">
-          Ready to Transform Your Library?
+          {t("howItWorks.cta.title")}
         </h2>
         <p className="text-theme-muted text-center">
-          Posterizarr handles everything from artwork discovery to media server
-          upload, giving you beautiful, consistent artwork across your entire
-          collection.
+          {t("howItWorks.cta.description")}
         </p>
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
           <a
@@ -389,7 +366,7 @@ function HowItWorks() {
             rel="noopener noreferrer"
             className="px-5 py-2.5 bg-theme-primary hover:bg-theme-primary-hover text-white rounded-lg font-medium transition-colors duration-200 flex items-center gap-2"
           >
-            View Installation Guide
+            {t("howItWorks.cta.installationGuide")}
             <ArrowRight className="w-4 h-4" />
           </a>
           <a
@@ -398,7 +375,7 @@ function HowItWorks() {
             rel="noopener noreferrer"
             className="px-5 py-2.5 bg-theme-hover hover:bg-theme-primary/20 text-theme-text rounded-lg font-medium transition-colors duration-200 flex items-center gap-2 border border-theme"
           >
-            View on GitHub
+            {t("howItWorks.cta.viewOnGitHub")}
             <ArrowRight className="w-4 h-4" />
           </a>
         </div>
@@ -408,53 +385,65 @@ function HowItWorks() {
       <div className="bg-theme-card border border-theme rounded-lg p-6 space-y-4">
         <h3 className="text-xl font-bold text-theme-text flex items-center gap-2">
           <Server className="w-6 h-6 text-theme-primary" />
-          Technical Highlights
+          {t("howItWorks.technical.title")}
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
           <div className="space-y-2">
             <div className="flex items-start gap-2">
               <CheckCircle className="w-4 h-4 text-theme-primary flex-shrink-0 mt-0.5" />
-              <span className="text-theme-text">
-                <strong>Smart Caching:</strong> Only creates missing artwork,
-                skipping existing assets
-              </span>
+              <span
+                className="text-theme-text"
+                dangerouslySetInnerHTML={{
+                  __html: t("howItWorks.technical.smartCaching"),
+                }}
+              />
             </div>
             <div className="flex items-start gap-2">
               <CheckCircle className="w-4 h-4 text-theme-primary flex-shrink-0 mt-0.5" />
-              <span className="text-theme-text">
-                <strong>Hash Validation:</strong> Prevents duplicate uploads
-                using EXIF metadata
-              </span>
+              <span
+                className="text-theme-text"
+                dangerouslySetInnerHTML={{
+                  __html: t("howItWorks.technical.hashValidation"),
+                }}
+              />
             </div>
             <div className="flex items-start gap-2">
               <CheckCircle className="w-4 h-4 text-theme-primary flex-shrink-0 mt-0.5" />
-              <span className="text-theme-text">
-                <strong>RTL Support:</strong> Right-to-left font rendering for
-                Arabic & Hebrew
-              </span>
+              <span
+                className="text-theme-text"
+                dangerouslySetInnerHTML={{
+                  __html: t("howItWorks.technical.rtlSupport"),
+                }}
+              />
             </div>
           </div>
           <div className="space-y-2">
             <div className="flex items-start gap-2">
               <CheckCircle className="w-4 h-4 text-theme-primary flex-shrink-0 mt-0.5" />
-              <span className="text-theme-text">
-                <strong>Backup Mode:</strong> Download and backup all existing
-                Plex artwork
-              </span>
+              <span
+                className="text-theme-text"
+                dangerouslySetInnerHTML={{
+                  __html: t("howItWorks.technical.backupMode"),
+                }}
+              />
             </div>
             <div className="flex items-start gap-2">
               <CheckCircle className="w-4 h-4 text-theme-primary flex-shrink-0 mt-0.5" />
-              <span className="text-theme-text">
-                <strong>Automated Cleanup:</strong> Removes assets when media is
-                deleted
-              </span>
+              <span
+                className="text-theme-text"
+                dangerouslySetInnerHTML={{
+                  __html: t("howItWorks.technical.automatedCleanup"),
+                }}
+              />
             </div>
             <div className="flex items-start gap-2">
               <CheckCircle className="w-4 h-4 text-theme-primary flex-shrink-0 mt-0.5" />
-              <span className="text-theme-text">
-                <strong>Multiple Triggers:</strong> Tautulli, Sonarr, Radarr
-                integration
-              </span>
+              <span
+                className="text-theme-text"
+                dangerouslySetInnerHTML={{
+                  __html: t("howItWorks.technical.multipleTriggers"),
+                }}
+              />
             </div>
           </div>
         </div>

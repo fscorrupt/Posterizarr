@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   Clock,
   Plus,
@@ -51,6 +52,7 @@ const waitForLogFile = async (logFileName, maxAttempts = 30, delayMs = 200) => {
 };
 
 const SchedulerSettings = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { showSuccess, showError } = useToast();
   const [config, setConfig] = useState(null);
@@ -163,7 +165,7 @@ const SchedulerSettings = () => {
       }
     } catch (error) {
       console.error("Error fetching scheduler data:", error);
-      showError("Failed to load scheduler data");
+      showError(t("schedulerSettings.errors.loadData"));
     } finally {
       setLoading(false);
     }
@@ -182,14 +184,20 @@ const SchedulerSettings = () => {
       const data = await response.json();
 
       if (data.success) {
-        showSuccess(`Scheduler ${config.enabled ? "disabled" : "enabled"}`);
+        showSuccess(
+          t(
+            `schedulerSettings.success.scheduler${
+              config.enabled ? "Disabled" : "Enabled"
+            }`
+          )
+        );
         await fetchSchedulerData();
       } else {
-        showError(data.detail || "Failed to update scheduler");
+        showError(data.detail || t("schedulerSettings.errors.updateScheduler"));
       }
     } catch (error) {
       console.error("Error toggling scheduler:", error);
-      showError("Failed to update scheduler");
+      showError(t("schedulerSettings.errors.updateScheduler"));
     } finally {
       setIsUpdating(false);
     }
@@ -199,7 +207,7 @@ const SchedulerSettings = () => {
     e.preventDefault();
 
     if (!newTime) {
-      showError("Please enter a time");
+      showError(t("schedulerSettings.errors.enterTime"));
       return;
     }
 
@@ -219,17 +227,17 @@ const SchedulerSettings = () => {
       const data = await response.json();
 
       if (data.success) {
-        showSuccess("Schedule added");
+        showSuccess(t("schedulerSettings.success.scheduleAdded"));
         setNewTime("");
         setNewDescription("");
         await new Promise((resolve) => setTimeout(resolve, 500));
         await fetchSchedulerData();
       } else {
-        showError(data.detail || "Failed to add schedule");
+        showError(data.detail || t("schedulerSettings.errors.addSchedule"));
       }
     } catch (error) {
       console.error("Error adding schedule:", error);
-      showError("Failed to add schedule");
+      showError(t("schedulerSettings.errors.addSchedule"));
     } finally {
       setIsUpdating(false);
     }
@@ -247,15 +255,15 @@ const SchedulerSettings = () => {
       const data = await response.json();
 
       if (data.success) {
-        showSuccess("Schedule removed");
+        showSuccess(t("schedulerSettings.success.scheduleRemoved"));
         await new Promise((resolve) => setTimeout(resolve, 500));
         await fetchSchedulerData();
       } else {
-        showError(data.detail || "Failed to remove schedule");
+        showError(data.detail || t("schedulerSettings.errors.removeSchedule"));
       }
     } catch (error) {
       console.error("Error removing schedule:", error);
-      showError("Failed to remove schedule");
+      showError(t("schedulerSettings.errors.removeSchedule"));
     } finally {
       setIsUpdating(false);
     }
@@ -279,15 +287,15 @@ const SchedulerSettings = () => {
       const data = await response.json();
 
       if (data.success) {
-        showSuccess("All schedules cleared");
+        showSuccess(t("schedulerSettings.success.allCleared"));
         await new Promise((resolve) => setTimeout(resolve, 500));
         await fetchSchedulerData();
       } else {
-        showError(data.detail || "Failed to clear schedules");
+        showError(data.detail || t("schedulerSettings.errors.clearSchedules"));
       }
     } catch (error) {
       console.error("Error clearing schedules:", error);
-      showError("Failed to clear schedules");
+      showError(t("schedulerSettings.errors.clearSchedules"));
     } finally {
       setIsUpdating(false);
     }
@@ -307,16 +315,16 @@ const SchedulerSettings = () => {
       const data = await response.json();
 
       if (data.success) {
-        showSuccess("Timezone updated");
+        showSuccess(t("schedulerSettings.success.timezoneUpdated"));
         setTimezone(newTimezone);
         await new Promise((resolve) => setTimeout(resolve, 500));
         await fetchSchedulerData();
       } else {
-        showError(data.detail || "Failed to update timezone");
+        showError(data.detail || t("schedulerSettings.errors.updateTimezone"));
       }
     } catch (error) {
       console.error("Error updating timezone:", error);
-      showError("Failed to update timezone");
+      showError(t("schedulerSettings.errors.updateTimezone"));
     } finally {
       setIsUpdating(false);
     }
@@ -337,15 +345,17 @@ const SchedulerSettings = () => {
 
       if (data.success) {
         showSuccess(
-          value ? "Will skip if already running" : "Will allow concurrent runs"
+          value
+            ? t("schedulerSettings.success.willSkip")
+            : t("schedulerSettings.success.willAllow")
         );
         await fetchSchedulerData();
       } else {
-        showError(data.detail || "Failed to update configuration");
+        showError(data.detail || t("schedulerSettings.errors.updateConfig"));
       }
     } catch (error) {
       console.error("Error updating config:", error);
-      showError("Failed to update configuration");
+      showError(t("schedulerSettings.errors.updateConfig"));
     } finally {
       setIsUpdating(false);
     }
@@ -376,7 +386,7 @@ const SchedulerSettings = () => {
 
       if (data.success) {
         console.log("✅ Success! Showing toast and navigating...");
-        showSuccess("Manual run triggered");
+        showSuccess(t("schedulerSettings.success.manualRunTriggered"));
 
         // Update status
         fetchSchedulerData();
@@ -396,11 +406,11 @@ const SchedulerSettings = () => {
         }
       } else {
         console.log("❌ Request failed:", data.detail);
-        showError(data.detail || "Failed to trigger run");
+        showError(data.detail || t("schedulerSettings.errors.triggerRun"));
       }
     } catch (error) {
       console.error("💥 Error in triggerNow:", error);
-      showError("Failed to trigger run");
+      showError(t("schedulerSettings.errors.triggerRun"));
     } finally {
       console.log("🏁 Finally block - setting isUpdating to false");
       setIsUpdating(false);
@@ -419,22 +429,24 @@ const SchedulerSettings = () => {
       const data = await response.json();
 
       if (data.success) {
-        showSuccess("Scheduler restarted");
+        showSuccess(t("schedulerSettings.success.schedulerRestarted"));
         await new Promise((resolve) => setTimeout(resolve, 500));
         await fetchSchedulerData();
       } else {
-        showError(data.detail || "Failed to restart scheduler");
+        showError(
+          data.detail || t("schedulerSettings.errors.restartScheduler")
+        );
       }
     } catch (error) {
       console.error("Error restarting scheduler:", error);
-      showError("Failed to restart scheduler");
+      showError(t("schedulerSettings.errors.restartScheduler"));
     } finally {
       setIsUpdating(false);
     }
   };
 
   const formatDateTime = (isoString) => {
-    if (!isoString) return "Never";
+    if (!isoString) return t("schedulerSettings.never");
     const date = new Date(isoString);
     return date.toLocaleString("de-DE", {
       dateStyle: "short",
@@ -447,7 +459,7 @@ const SchedulerSettings = () => {
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
           <Loader2 className="w-12 h-12 animate-spin text-theme-primary mx-auto mb-4" />
-          <p className="text-theme-muted">Loading scheduler settings...</p>
+          <p className="text-theme-muted">{t("schedulerSettings.loading")}</p>
         </div>
       </div>
     );
@@ -460,8 +472,8 @@ const SchedulerSettings = () => {
         isOpen={clearAllConfirm}
         onClose={() => setClearAllConfirm(false)}
         onConfirm={handleClearAllConfirm}
-        title="Clear All Schedules"
-        message="Are you sure you want to clear all schedules? This cannot be undone."
+        title={t("schedulerSettings.confirmClearAllTitle")}
+        message={t("schedulerSettings.confirmClearAllMessage")}
         type="danger"
       />
 
@@ -483,10 +495,10 @@ const SchedulerSettings = () => {
             <Power className="w-5 h-5" />
           )}
           {isUpdating
-            ? "Updating..."
+            ? t("schedulerSettings.updating")
             : config?.enabled
-            ? "Enabled"
-            : "Disabled"}
+            ? t("schedulerSettings.enabled")
+            : t("schedulerSettings.disabled")}
         </button>
       </div>
 
@@ -496,20 +508,10 @@ const SchedulerSettings = () => {
           <AlertCircle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
           <div className="flex-1">
             <h3 className="text-sm font-semibold text-blue-300 mb-2">
-              Container Users Only
+              {t("schedulerSettings.containerUsersOnly")}
             </h3>
             <p className="text-sm text-blue-200 leading-relaxed">
-              Please use only one scheduling option. Either use the runtime
-              environment variable{" "}
-              <code className="px-1.5 py-0.5 bg-theme-card rounded text-xs font-mono border border-theme">
-                RUN_TIME
-              </code>{" "}
-              for scheduling, or use the UI schedules. If you prefer to use the
-              UI schedules, set the environment variable to{" "}
-              <code className="px-1.5 py-0.5 bg-theme-card rounded text-xs font-mono border border-theme">
-                disabled
-              </code>
-              .
+              {t("schedulerSettings.containerUsersInfo")}
             </p>
           </div>
         </div>
@@ -521,7 +523,7 @@ const SchedulerSettings = () => {
         <div className="bg-theme-card rounded-xl shadow-sm border border-theme p-5 hover:border-theme-primary/50 transition-all">
           <div className="flex items-center gap-2 text-sm text-theme-muted mb-2">
             <Calendar className="w-4 h-4" />
-            Last Run
+            {t("schedulerSettings.lastRun")}
           </div>
           <div className="text-xl font-semibold text-theme-text">
             {formatDateTime(status?.last_run)}
@@ -532,7 +534,7 @@ const SchedulerSettings = () => {
         <div className="bg-theme-card rounded-xl shadow-sm border border-theme p-5 hover:border-theme-primary/50 transition-all">
           <div className="flex items-center gap-2 text-sm text-theme-muted mb-2">
             <Clock className="w-4 h-4" />
-            Next Run
+            {t("schedulerSettings.nextRun")}
           </div>
           <div className="text-xl font-semibold text-theme-text">
             {formatDateTime(status?.next_run)}
@@ -557,10 +559,10 @@ const SchedulerSettings = () => {
             />
             <span className="text-xl font-semibold text-theme-text">
               {status?.is_executing
-                ? "Running"
+                ? t("schedulerSettings.status.running")
                 : status?.running
-                ? "Active"
-                : "Inactive"}
+                ? t("schedulerSettings.status.active")
+                : t("schedulerSettings.status.inactive")}
             </span>
           </div>
         </div>
@@ -573,14 +575,14 @@ const SchedulerSettings = () => {
             <Settings className="w-6 h-6 text-theme-primary" />
           </div>
           <h2 className="text-xl font-semibold text-theme-primary">
-            Configuration
+            {t("schedulerSettings.configuration")}
           </h2>
         </div>
 
         {/* Timezone */}
         <div>
           <label className="block text-sm font-medium text-theme-text mb-2">
-            Timezone
+            {t("schedulerSettings.timezone")}
           </label>
           <select
             value={timezone}
@@ -600,10 +602,10 @@ const SchedulerSettings = () => {
         <div className="flex items-center justify-between p-4 bg-theme-bg rounded-lg border border-theme">
           <div>
             <label className="block text-sm font-medium text-theme-text">
-              Skip scheduled runs if already running
+              {t("schedulerSettings.skipIfRunning")}
             </label>
             <p className="text-sm text-theme-muted mt-1">
-              Prevents overlapping executions
+              {t("schedulerSettings.skipIfRunningDesc")}
             </p>
           </div>
           <label className="relative inline-flex items-center cursor-pointer">
@@ -630,7 +632,7 @@ const SchedulerSettings = () => {
             ) : (
               <RefreshCw className="w-5 h-5" />
             )}
-            Restart Scheduler
+            {t("schedulerSettings.restartScheduler")}
           </button>
           <button
             onClick={triggerNow}
@@ -642,7 +644,7 @@ const SchedulerSettings = () => {
             ) : (
               <Play className="w-5 h-5" />
             )}
-            Run Now
+            {t("schedulerSettings.runNow")}
           </button>
         </div>
       </div>
@@ -655,7 +657,7 @@ const SchedulerSettings = () => {
               <Clock className="w-6 h-6 text-theme-primary" />
             </div>
             <h2 className="text-xl font-semibold text-theme-primary">
-              Schedules
+              {t("schedulerSettings.schedules")}
             </h2>
           </div>
           {config?.schedules?.length > 0 && (
@@ -664,7 +666,7 @@ const SchedulerSettings = () => {
               disabled={isUpdating}
               className="text-sm text-red-400 hover:text-red-300 font-medium disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              Clear All
+              {t("schedulerSettings.clearAll")}
             </button>
           )}
         </div>
@@ -678,7 +680,7 @@ const SchedulerSettings = () => {
             type="text"
             value={newTime}
             onChange={(e) => setNewTime(e.target.value)}
-            placeholder="HH:MM (e.g., 14:30)"
+            placeholder={t("schedulerSettings.timePlaceholder")}
             disabled={isUpdating}
             className="flex-1 px-4 py-3 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             pattern="[0-2]?[0-9]:[0-5][0-9]"
@@ -687,7 +689,7 @@ const SchedulerSettings = () => {
             type="text"
             value={newDescription}
             onChange={(e) => setNewDescription(e.target.value)}
-            placeholder="Description (optional)"
+            placeholder={t("schedulerSettings.descriptionPlaceholder")}
             disabled={isUpdating}
             className="flex-1 px-4 py-3 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all"
           />
@@ -701,7 +703,7 @@ const SchedulerSettings = () => {
             ) : (
               <Plus className="w-5 h-5" />
             )}
-            Add
+            {t("schedulerSettings.add")}
           </button>
         </form>
 
@@ -732,7 +734,7 @@ const SchedulerSettings = () => {
                   onClick={() => removeSchedule(schedule.time)}
                   disabled={isUpdating}
                   className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  title="Remove schedule"
+                  title={t("schedulerSettings.removeSchedule")}
                 >
                   <Trash2 className="w-5 h-5" />
                 </button>
@@ -743,10 +745,10 @@ const SchedulerSettings = () => {
           <div className="text-center py-12 bg-theme-bg rounded-lg border border-theme">
             <Clock className="w-16 h-16 mx-auto mb-3 text-theme-muted opacity-30" />
             <p className="font-semibold text-theme-text mb-1">
-              No schedules configured
+              {t("schedulerSettings.noSchedulesConfigured")}
             </p>
             <p className="text-sm text-theme-muted">
-              Add a schedule above to get started
+              {t("schedulerSettings.addScheduleHint")}
             </p>
           </div>
         )}
@@ -758,7 +760,7 @@ const SchedulerSettings = () => {
           <div className="flex items-center gap-2 mb-3">
             <Zap className="w-5 h-5 text-theme-primary" />
             <h3 className="text-sm font-semibold text-theme-primary">
-              Active Jobs
+              {t("schedulerSettings.activeJobs")}
             </h3>
           </div>
           <div className="space-y-2">
@@ -768,7 +770,10 @@ const SchedulerSettings = () => {
                 className="text-sm text-theme-text bg-theme-card px-3 py-2 rounded-lg border border-theme"
               >
                 <span className="font-medium">{job.name}</span>
-                <span className="text-theme-muted"> - Next: </span>
+                <span className="text-theme-muted">
+                  {" "}
+                  - {t("schedulerSettings.next")}:{" "}
+                </span>
                 <span className="text-theme-primary font-medium">
                   {formatDateTime(job.next_run)}
                 </span>

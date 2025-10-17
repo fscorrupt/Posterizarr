@@ -21,6 +21,7 @@ import {
   X,
   GripVertical,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import SystemInfo from "./SystemInfo";
 import RuntimeStats from "./RuntimeStats";
 import DangerZone from "./DangerZone";
@@ -57,6 +58,7 @@ let cachedStatus = null;
 let cachedVersion = null;
 
 function Dashboard() {
+  const { t } = useTranslation();
   const { showSuccess, showError, showInfo } = useToast();
   const [status, setStatus] = useState(
     cachedStatus || {
@@ -467,11 +469,11 @@ function Dashboard() {
 
   // Card labels for display
   const cardLabels = {
-    statusCards: "Status Cards",
-    systemInfo: "System Information",
-    runtimeStats: "Runtime Statistics",
-    recentAssets: "Recent Assets",
-    logViewer: "Live Log Feed",
+    statusCards: t("dashboard.statusCards"),
+    systemInfo: t("dashboard.systemInfo"),
+    runtimeStats: t("dashboard.runtimeStats"),
+    recentAssets: t("dashboard.recentAssets"),
+    logViewer: t("dashboard.liveLogFeed"),
   };
 
   const parseLogLine = (line) => {
@@ -542,25 +544,28 @@ function Dashboard() {
             <div className="flex items-center justify-between">
               <div className="flex-1">
                 <p className="text-theme-muted text-sm mb-1 font-medium">
-                  Script Status
+                  {t("dashboard.scriptStatus")}
                 </p>
                 <p
                   className={`text-2xl font-bold mb-2 ${
                     status.running ? "text-green-400" : "text-theme-text"
                   }`}
                 >
-                  {status.running ? "Running" : "Stopped"}
+                  {status.running
+                    ? t("dashboard.running")
+                    : t("dashboard.stopped")}
                 </p>
                 {status.running && (
                   <div className="space-y-1">
                     {status.pid && (
                       <p className="text-sm text-theme-muted">
-                        PID: <span className="font-mono">{status.pid}</span>
+                        {t("dashboard.pid")}:{" "}
+                        <span className="font-mono">{status.pid}</span>
                       </p>
                     )}
                     {status.current_mode && (
                       <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-500/20 text-blue-300 border border-blue-500/30">
-                        Mode: {status.current_mode}
+                        {t("dashboard.mode")}: {status.current_mode}
                       </div>
                     )}
                   </div>
@@ -581,14 +586,16 @@ function Dashboard() {
             <div className="flex items-center justify-between">
               <div className="flex-1">
                 <p className="text-theme-muted text-sm mb-1 font-medium">
-                  Script File
+                  {t("dashboard.scriptFile")}
                 </p>
                 <p
                   className={`text-2xl font-bold mb-2 ${
                     status.script_exists ? "text-green-400" : "text-red-400"
                   }`}
                 >
-                  {status.script_exists ? "Found" : "Missing"}
+                  {status.script_exists
+                    ? t("dashboard.found")
+                    : t("dashboard.missing")}
                 </p>
                 {status.script_exists && (version.local || version.remote) && (
                   <div className="flex items-center gap-2 flex-wrap">
@@ -625,14 +632,16 @@ function Dashboard() {
             <div className="flex items-center justify-between">
               <div className="flex-1">
                 <p className="text-theme-muted text-sm mb-1 font-medium">
-                  Config File
+                  {t("dashboard.configFile")}
                 </p>
                 <p
                   className={`text-2xl font-bold mb-2 ${
                     status.config_exists ? "text-green-400" : "text-red-400"
                   }`}
                 >
-                  {status.config_exists ? "Found" : "Missing"}
+                  {status.config_exists
+                    ? t("dashboard.found")
+                    : t("dashboard.missing")}
                 </p>
                 {status.config_exists && (
                   <Link
@@ -640,7 +649,7 @@ function Dashboard() {
                     className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-theme-primary/20 hover:bg-theme-primary text-theme-primary hover:text-white border border-theme-primary/30 rounded-lg text-sm font-medium transition-all hover:scale-105 shadow-sm"
                   >
                     <Settings className="w-4 h-4" />
-                    EDIT
+                    {t("common.edit")}
                   </Link>
                 )}
               </div>
@@ -674,7 +683,7 @@ function Dashboard() {
                   <div className="p-2 rounded-lg bg-theme-primary/10">
                     <FileText className="w-5 h-5 text-theme-primary" />
                   </div>
-                  Live Log Feed
+                  {t("dashboard.liveLogFeed")}
                 </h2>
 
                 {wsConnected && (
@@ -691,14 +700,14 @@ function Dashboard() {
                   className="text-xs text-theme-muted mt-2"
                   style={{ marginLeft: "calc(2.25rem + 0.75rem)" }}
                 >
-                  Reading from:{" "}
+                  {t("dashboard.readingFrom")}:{" "}
                   <span className="font-mono text-theme-primary">
                     {status.current_mode
                       ? getLogFileForMode(status.current_mode)
                       : status.active_log}
                   </span>
                   <span className="ml-3 text-xs text-theme-muted/70">
-                    ({allLogs.length} lines loaded)
+                    ({allLogs.length} {t("dashboard.linesLoaded")})
                   </span>
                 </p>
               )}
@@ -725,10 +734,12 @@ function Dashboard() {
                     : "bg-theme-hover text-theme-muted border border-theme"
                 }`}
                 title={
-                  autoScroll ? "Auto-scroll enabled" : "Auto-scroll disabled"
+                  autoScroll
+                    ? t("dashboard.autoScrollEnabled")
+                    : t("dashboard.autoScrollDisabled")
                 }
               >
-                <span>Auto-scroll</span>
+                <span>{t("dashboard.autoScroll")}</span>
               </button>
             </div>
           </div>
@@ -787,12 +798,12 @@ function Dashboard() {
               <div className="px-4 py-12 text-center">
                 <FileText className="w-12 h-12 text-gray-600 mx-auto mb-3" />
                 <p className="text-gray-500 text-sm font-medium">
-                  No logs available
+                  {t("dashboard.noLogs")}
                 </p>
                 <p className="text-gray-600 text-xs mt-1">
                   {status.running
-                    ? "Waiting for logs..."
-                    : "Please start a run to see logs here"}
+                    ? t("dashboard.waitingForLogs")
+                    : t("dashboard.startRunToSeeLogs")}
                 </p>
               </div>
             )}
@@ -801,13 +812,14 @@ function Dashboard() {
           <div className="mt-3 flex items-center justify-between text-xs text-gray-600">
             <span className="flex items-center gap-2">
               <Clock className="w-3 h-3" />
-              Auto-refresh: {wsConnected ? "Live" : "1.5s"}
+              {t("dashboard.autoRefresh")}:{" "}
+              {wsConnected ? t("dashboard.live") : "1.5s"}
             </span>
             <span className="text-gray-500">
-              Last 25 entries •{" "}
+              {t("dashboard.lastEntries", { count: 25 })} •{" "}
               {status.current_mode
                 ? getLogFileForMode(status.current_mode)
-                : status.active_log || "No active log"}
+                : status.active_log || t("dashboard.noActiveLog")}
             </span>
           </div>
         </div>
@@ -824,15 +836,15 @@ function Dashboard() {
         <div className="flex items-center gap-3">
           <h1 className="text-3xl font-bold text-theme-text flex items-center gap-3">
             <Activity className="w-8 h-8 text-theme-primary" />
-            Monitor your Posterizarr instance
+            {t("dashboard.welcome")}
           </h1>
           <button
             onClick={() => setShowCardsModal(true)}
             className="flex items-center gap-2 px-3 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
-            title="Customize Dashboard"
+            title={t("dashboard.customize")}
           >
             <Edit3 className="w-4 h-4 text-theme-primary" />
-            <span className="text-theme-text">Customize</span>
+            <span className="text-theme-text">{t("dashboard.customize")}</span>
           </button>
         </div>
 
@@ -843,7 +855,7 @@ function Dashboard() {
             className="flex items-center gap-2 px-3 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
           >
             <Play className="w-4 h-4 text-theme-primary" />
-            <span className="text-theme-text">Run Script</span>
+            <span className="text-theme-text">{t("dashboard.runScript")}</span>
           </Link>
         )}
       </div>
@@ -855,11 +867,10 @@ function Dashboard() {
             <AlertTriangle className="w-6 h-6 text-yellow-400 flex-shrink-0 mt-1" />
             <div className="flex-1">
               <h3 className="text-lg font-semibold text-yellow-400 mb-2">
-                Another Posterizarr Instance Already Running
+                {t("dashboard.alreadyRunning")}
               </h3>
               <p className="text-yellow-200 text-sm mb-4">
-                The script detected another instance. If this is a false
-                positive, delete the running file below.
+                {t("dashboard.alreadyRunningDesc")}
               </p>
               <button
                 onClick={() => setDeleteConfirm(true)}
@@ -867,7 +878,7 @@ function Dashboard() {
                 className="flex items-center gap-2 px-4 py-2 bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-all text-sm shadow-sm"
               >
                 <Trash2 className="w-4 h-4" />
-                Delete Running File
+                {t("dashboard.deleteRunningFile")}
               </button>
             </div>
           </div>
@@ -926,7 +937,7 @@ function Dashboard() {
             <div className="flex items-center justify-between p-6 border-b border-theme">
               <h3 className="text-xl font-semibold text-theme-text flex items-center gap-2">
                 <Eye className="w-5 h-5 text-theme-primary" />
-                Customize Dashboard
+                {t("dashboard.customize")}
               </h3>
               <button
                 onClick={() => setShowCardsModal(false)}
@@ -939,7 +950,7 @@ function Dashboard() {
             {/* Modal Content */}
             <div className="p-6 space-y-4">
               <p className="text-sm text-theme-muted mb-4">
-                Show or hide dashboard sections • Drag to reorder
+                {t("dashboard.customizeDescription")}
               </p>
 
               {cardOrder.map((cardKey, index) => (
@@ -984,7 +995,7 @@ function Dashboard() {
                 onClick={() => setShowCardsModal(false)}
                 className="px-4 py-2 bg-theme-primary hover:bg-theme-primary/90 rounded-lg font-medium transition-all"
               >
-                Done
+                {t("common.done")}
               </button>
             </div>
           </div>

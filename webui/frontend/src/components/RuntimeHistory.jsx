@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Clock,
   RefreshCw,
@@ -22,6 +23,7 @@ let lastFetchTime = 0;
 const CACHE_DURATION = 30000; // 30 seconds
 
 function RuntimeHistory() {
+  const { t } = useTranslation();
   const [history, setHistory] = useState(cachedHistory);
   const [summary, setSummary] = useState(cachedSummary);
   const [migrationStatus, setMigrationStatus] = useState(cachedMigrationStatus);
@@ -216,16 +218,13 @@ function RuntimeHistory() {
             <div className="flex-1">
               <h3 className="text-blue-400 font-semibold mb-2 flex items-center gap-2">
                 <Database className="w-5 h-5" />
-                Historical Data Migration Available
+                {t("runtimeHistory.migrationAvailable")}
               </h3>
               <p className="text-blue-300 text-sm mb-3">
-                Runtime data from your existing log files can be imported into
-                the database. This will preserve historical statistics and make
-                them queryable.
+                {t("runtimeHistory.migrationDescription")}
               </p>
               <p className="text-blue-200 text-xs">
-                💡 Migration runs automatically on first database creation, or
-                you can trigger it manually below.
+                {t("runtimeHistory.migrationInfo")}
               </p>
             </div>
             <button
@@ -236,12 +235,12 @@ function RuntimeHistory() {
               {migrating ? (
                 <>
                   <RefreshCw className="w-4 h-4 animate-spin" />
-                  Migrating...
+                  {t("runtimeHistory.migrating")}
                 </>
               ) : (
                 <>
                   <Database className="w-4 h-4" />
-                  Run Migration
+                  {t("runtimeHistory.runMigration")}
                 </>
               )}
             </button>
@@ -257,24 +256,34 @@ function RuntimeHistory() {
               <div className="p-2 rounded-lg bg-theme-primary/10">
                 <TrendingUp className="w-5 h-5 text-theme-primary" />
               </div>
-              Summary (Last {summaryDays} Days)
+              {t("runtimeHistory.summary", { days: summaryDays })}
             </h2>
             <select
               value={summaryDays}
               onChange={(e) => setSummaryDays(Number(e.target.value))}
               className="px-3 py-2 bg-theme-hover border border-theme rounded-lg text-theme-text text-sm focus:outline-none focus:border-theme-primary"
             >
-              <option value={7}>7 Days</option>
-              <option value={30}>30 Days</option>
-              <option value={90}>90 Days</option>
-              <option value={365}>365 Days</option>
+              <option value={7}>
+                {t("runtimeHistory.days", { count: 7 })}
+              </option>
+              <option value={30}>
+                {t("runtimeHistory.days", { count: 30 })}
+              </option>
+              <option value={90}>
+                {t("runtimeHistory.days", { count: 90 })}
+              </option>
+              <option value={365}>
+                {t("runtimeHistory.days", { count: 365 })}
+              </option>
             </select>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {/* Total Runs */}
             <div className="p-4 bg-theme-hover rounded-lg border border-theme">
-              <p className="text-theme-muted text-xs mb-1">Total Runs</p>
+              <p className="text-theme-muted text-xs mb-1">
+                {t("runtimeHistory.totalRuns")}
+              </p>
               <p className="text-2xl font-bold text-theme-text">
                 {summary.total_runs}
               </p>
@@ -282,7 +291,9 @@ function RuntimeHistory() {
 
             {/* Total Images */}
             <div className="p-4 bg-theme-hover rounded-lg border border-theme">
-              <p className="text-theme-muted text-xs mb-1">Total Images</p>
+              <p className="text-theme-muted text-xs mb-1">
+                {t("runtimeHistory.totalImages")}
+              </p>
               <p className="text-2xl font-bold text-theme-primary">
                 {summary.total_images.toLocaleString()}
               </p>
@@ -290,7 +301,9 @@ function RuntimeHistory() {
 
             {/* Average Runtime */}
             <div className="p-4 bg-theme-hover rounded-lg border border-theme">
-              <p className="text-theme-muted text-xs mb-1">Avg Runtime</p>
+              <p className="text-theme-muted text-xs mb-1">
+                {t("runtimeHistory.avgRuntime")}
+              </p>
               <p className="text-2xl font-bold text-theme-text">
                 {summary.average_runtime_formatted}
               </p>
@@ -298,7 +311,9 @@ function RuntimeHistory() {
 
             {/* Total Errors */}
             <div className="p-4 bg-theme-hover rounded-lg border border-theme">
-              <p className="text-theme-muted text-xs mb-1">Total Errors</p>
+              <p className="text-theme-muted text-xs mb-1">
+                {t("runtimeHistory.totalErrors")}
+              </p>
               <p
                 className={`text-2xl font-bold ${
                   summary.total_errors > 0 ? "text-red-400" : "text-green-400"
@@ -313,7 +328,9 @@ function RuntimeHistory() {
           {summary.mode_counts &&
             Object.keys(summary.mode_counts).length > 0 && (
               <div className="mt-4 p-4 bg-theme-hover rounded-lg border border-theme">
-                <p className="text-theme-muted text-xs mb-3">Runs by Mode</p>
+                <p className="text-theme-muted text-xs mb-3">
+                  {t("runtimeHistory.runsByMode")}
+                </p>
                 <div className="flex flex-wrap gap-2">
                   {Object.entries(summary.mode_counts).map(([mode, count]) => (
                     <span
@@ -339,7 +356,7 @@ function RuntimeHistory() {
             <div className="p-2 rounded-lg bg-theme-primary/10">
               <Database className="w-5 h-5 text-theme-primary" />
             </div>
-            Runtime History
+            {t("runtimeHistory.title")}
           </h2>
           <div className="flex items-center gap-3">
             {/* Mode Filter */}
@@ -351,15 +368,23 @@ function RuntimeHistory() {
               }}
               className="px-3 py-2 bg-theme-hover border border-theme rounded-lg text-theme-text text-sm focus:outline-none focus:border-theme-primary"
             >
-              <option value="">All Modes</option>
-              <option value="normal">Normal</option>
-              <option value="testing">Testing</option>
-              <option value="manual">Manual</option>
-              <option value="scheduled">Scheduled</option>
-              <option value="backup">Backup</option>
-              <option value="syncjelly">Sync Jellyfin</option>
-              <option value="syncemby">Sync Emby</option>
-              <option value="reset">Reset</option>
+              <option value="">{t("runtimeHistory.allModes")}</option>
+              <option value="normal">{t("runtimeHistory.modes.normal")}</option>
+              <option value="testing">
+                {t("runtimeHistory.modes.testing")}
+              </option>
+              <option value="manual">{t("runtimeHistory.modes.manual")}</option>
+              <option value="scheduled">
+                {t("runtimeHistory.modes.scheduled")}
+              </option>
+              <option value="backup">{t("runtimeHistory.modes.backup")}</option>
+              <option value="syncjelly">
+                {t("runtimeHistory.modes.syncjelly")}
+              </option>
+              <option value="syncemby">
+                {t("runtimeHistory.modes.syncemby")}
+              </option>
+              <option value="reset">{t("runtimeHistory.modes.reset")}</option>
             </select>
 
             {/* Refresh Button */}
@@ -370,7 +395,7 @@ function RuntimeHistory() {
               }}
               disabled={refreshing}
               className="flex items-center gap-2 px-4 py-2 text-theme-muted hover:text-theme-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:bg-theme-hover rounded-lg"
-              title="Refresh history"
+              title={t("runtimeHistory.refreshHistory")}
             >
               <RefreshCw
                 className={`w-5 h-5 ${refreshing ? "animate-spin" : ""}`}
@@ -385,31 +410,31 @@ function RuntimeHistory() {
             <thead>
               <tr className="border-b border-theme">
                 <th className="text-left py-3 px-4 text-theme-muted text-sm font-medium">
-                  Timestamp
+                  {t("runtimeHistory.table.timestamp")}
                 </th>
                 <th className="text-left py-3 px-4 text-theme-muted text-sm font-medium">
-                  Mode
+                  {t("runtimeHistory.table.mode")}
                 </th>
                 <th className="text-left py-3 px-4 text-theme-muted text-sm font-medium">
-                  Runtime
+                  {t("runtimeHistory.table.runtime")}
                 </th>
                 <th className="text-right py-3 px-4 text-theme-muted text-sm font-medium">
-                  Images
+                  {t("runtimeHistory.table.images")}
                 </th>
                 <th className="text-right py-3 px-4 text-theme-muted text-sm font-medium">
-                  Posters
+                  {t("runtimeHistory.table.posters")}
                 </th>
                 <th className="text-right py-3 px-4 text-theme-muted text-sm font-medium">
-                  Seasons
+                  {t("runtimeHistory.table.seasons")}
                 </th>
                 <th className="text-right py-3 px-4 text-theme-muted text-sm font-medium">
-                  Backgrounds
+                  {t("runtimeHistory.table.backgrounds")}
                 </th>
                 <th className="text-right py-3 px-4 text-theme-muted text-sm font-medium">
-                  TitleCards
+                  {t("runtimeHistory.table.titlecards")}
                 </th>
                 <th className="text-right py-3 px-4 text-theme-muted text-sm font-medium">
-                  Errors
+                  {t("runtimeHistory.table.errors")}
                 </th>
               </tr>
             </thead>
@@ -418,7 +443,7 @@ function RuntimeHistory() {
                 <tr>
                   <td colSpan="9" className="text-center py-8">
                     <p className="text-theme-muted italic">
-                      No history entries found
+                      {t("runtimeHistory.noEntries")}
                     </p>
                   </td>
                 </tr>
@@ -475,7 +500,10 @@ function RuntimeHistory() {
         {/* Pagination */}
         <div className="flex items-center justify-between mt-6 pt-4 border-t border-theme">
           <p className="text-theme-muted text-sm">
-            Page {currentPage + 1} • Showing {history.length} entries
+            {t("runtimeHistory.pagination.page", {
+              page: currentPage + 1,
+              count: history.length,
+            })}
           </p>
           <div className="flex items-center gap-2">
             <button
@@ -484,14 +512,14 @@ function RuntimeHistory() {
               className="flex items-center gap-2 px-4 py-2 bg-theme-hover border border-theme rounded-lg text-theme-text hover:border-theme-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
               <ChevronLeft className="w-4 h-4" />
-              Previous
+              {t("runtimeHistory.pagination.previous")}
             </button>
             <button
               onClick={handleNextPage}
               disabled={history.length < limit}
               className="flex items-center gap-2 px-4 py-2 bg-theme-hover border border-theme rounded-lg text-theme-text hover:border-theme-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all"
             >
-              Next
+              {t("runtimeHistory.pagination.next")}
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>

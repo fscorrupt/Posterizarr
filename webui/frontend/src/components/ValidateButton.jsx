@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const API_URL = "/api";
 
@@ -12,6 +13,7 @@ const ValidateButton = ({
   onError,
   disabled = false,
 }) => {
+  const { t } = useTranslation();
   const [validating, setValidating] = useState(false);
   const [lastResult, setLastResult] = useState(null);
 
@@ -137,7 +139,7 @@ const ValidateButton = ({
       {validating ? (
         <>
           <Loader2 className="w-4 h-4 animate-spin" />
-          <span>Validating...</span>
+          <span>{t("validateButton.validating")}</span>
         </>
       ) : lastResult?.valid ? (
         <>

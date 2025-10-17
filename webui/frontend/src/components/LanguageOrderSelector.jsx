@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { ChevronDown, GripVertical, Plus, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 // ISO 639-1 language codes with common languages
 const COMMON_LANGUAGES = [
@@ -36,6 +37,7 @@ const COMMON_LANGUAGES = [
 ];
 
 const LanguageOrderSelector = ({ value = [], onChange, label, helpText }) => {
+  const { t } = useTranslation();
   const [selectedLanguages, setSelectedLanguages] = useState([]);
   const [draggedIndex, setDraggedIndex] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -129,7 +131,7 @@ const LanguageOrderSelector = ({ value = [], onChange, label, helpText }) => {
         {selectedLanguages.length === 0 ? (
           <div className="px-4 py-8 bg-theme-bg/50 border-2 border-dashed border-theme rounded-lg text-center">
             <p className="text-theme-muted text-sm">
-              No languages selected. Add languages using the dropdown below.
+              {t("languageOrderSelector.noLanguages")}
             </p>
           </div>
         ) : (
@@ -175,7 +177,7 @@ const LanguageOrderSelector = ({ value = [], onChange, label, helpText }) => {
                       ? "text-theme-muted/30 cursor-not-allowed"
                       : "text-theme-muted hover:text-theme-primary hover:bg-theme-primary/10"
                   }`}
-                  title="Move up"
+                  title={t("languageOrderSelector.moveUp")}
                 >
                   <svg
                     className="w-4 h-4"
@@ -199,7 +201,7 @@ const LanguageOrderSelector = ({ value = [], onChange, label, helpText }) => {
                       ? "text-theme-muted/30 cursor-not-allowed"
                       : "text-theme-muted hover:text-theme-primary hover:bg-theme-primary/10"
                   }`}
-                  title="Move down"
+                  title={t("languageOrderSelector.moveDown")}
                 >
                   <svg
                     className="w-4 h-4"
@@ -221,7 +223,7 @@ const LanguageOrderSelector = ({ value = [], onChange, label, helpText }) => {
               <button
                 onClick={() => removeLanguage(langCode)}
                 className="p-1.5 text-red-500 hover:bg-red-500/10 rounded transition-all flex-shrink-0"
-                title="Remove language"
+                title={t("languageOrderSelector.removeLanguage")}
               >
                 <X className="w-4 h-4" />
               </button>
@@ -239,7 +241,9 @@ const LanguageOrderSelector = ({ value = [], onChange, label, helpText }) => {
           >
             <div className="flex items-center gap-2">
               <Plus className="w-4 h-4" />
-              <span className="text-sm">Add Language</span>
+              <span className="text-sm">
+                {t("languageOrderSelector.addLanguage")}
+              </span>
             </div>
             <ChevronDown
               className={`w-4 h-4 transition-transform ${
@@ -284,7 +288,9 @@ const LanguageOrderSelector = ({ value = [], onChange, label, helpText }) => {
       {/* Order Summary */}
       {selectedLanguages.length > 0 && (
         <div className="px-4 py-3 bg-theme-bg/50 border border-theme rounded-lg">
-          <p className="text-xs text-theme-muted mb-1">Current Order:</p>
+          <p className="text-xs text-theme-muted mb-1">
+            {t("languageOrderSelector.currentOrder")}
+          </p>
           <p className="text-sm font-mono text-theme-text">
             {selectedLanguages.join(", ")}
           </p>

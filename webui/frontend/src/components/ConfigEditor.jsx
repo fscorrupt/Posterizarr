@@ -25,6 +25,7 @@ import {
   Expand,
   Minimize,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import ValidateButton from "./ValidateButton";
 import Notification from "./Notification";
 import LanguageOrderSelector from "./LanguageOrderSelector";
@@ -34,396 +35,835 @@ import { useToast } from "../context/ToastContext";
 const API_URL = "/api";
 
 // Comprehensive tooltip descriptions for all config variables
-const CONFIG_TOOLTIPS = {
-  // WebUI Settings
-  basicAuthEnabled:
-    "Enable Basic Authentication to protect the Web UI. Set to true to require username/password login (Default: false)",
-  basicAuthUsername:
-    "Username for Basic Authentication. Change this from the default 'admin' for better security (Default: admin)",
-  basicAuthPassword:
-    "Password for Basic Authentication. IMPORTANT: Change this from the default 'posterizarr' before enabling auth! (Default: posterizarr)",
-  // ApiPart
-  tvdbapi:
-    "Your TVDB Project API key. If you are a TVDB subscriber, you can append your PIN to the end of your API key in the format YourApiKey#YourPin",
-  tmdbtoken: "Your TMDB API Read Access Token (the really long one)",
-  FanartTvAPIKey: "Your Fanart.tv Personal API Key",
-  PlexToken: "Your Plex authentication token (Leave empty if not using Plex)",
-  JellyfinAPIKey:
-    "Your Jellyfin API key (You can create an API key from inside Jellyfin at Settings > Advanced > Api Keys)",
-  EmbyAPIKey:
-    "Your Emby API key (You can create an API key from inside Emby at Settings > Advanced > Api Keys)",
-  FavProvider:
-    "Set your preferred provider: tmdb (recommended), fanart, tvdb, or plex (not recommended for textless)",
-  tmdb_vote_sorting:
-    "Picture sorting via TMDB API: vote_average, vote_count, or primary (default TMDB view)",
-  PreferredLanguageOrder:
-    "Specify language preferences. Default is xx,en,de (xx is Textless). Use 2-digit ISO 3166-1 language codes. Setting to 'xx' only searches for textless posters",
-  PreferredSeasonLanguageOrder:
-    "Specify language preferences for seasons. Default is xx,en,de (xx is Textless). Use 2-digit ISO 3166-1 language codes",
-  PreferredBackgroundLanguageOrder:
-    "Specify language preferences for backgrounds. Default is PleaseFillMe (will take your poster lang order). Setting to 'xx' only searches for textless",
-  WidthHeightFilter:
-    "If set to true, an additional resolution filter will be applied to Posters/Backgrounds (TMDB and TVDB) and Titlecards (TMDB only)",
-  PosterMinWidth:
-    "Minimum poster width filter—greater than or equal to specified value (default: 2000)",
-  PosterMinHeight:
-    "Minimum poster height filter—greater than or equal to specified value (default: 3000)",
-  BgTcMinWidth:
-    "Minimum background/titlecard width filter—greater than or equal to specified value (default: 3840)",
-  BgTcMinHeight:
-    "Minimum background/titlecard height filter—greater than or equal to specified value (default: 2160)",
+const getConfigTooltips = (language) => {
+  const tooltips = {
+    en: {
+      // WebUI Settings
+      basicAuthEnabled:
+        "Enable Basic Authentication to protect the Web UI. Set to true to require username/password login (Default: false)",
+      basicAuthUsername:
+        "Username for Basic Authentication. Change this from the default 'admin' for better security (Default: admin)",
+      basicAuthPassword:
+        "Password for Basic Authentication. IMPORTANT: Change this from the default 'posterizarr' before enabling auth! (Default: posterizarr)",
+      // ApiPart
+      tvdbapi:
+        "Your TVDB Project API key. If you are a TVDB subscriber, you can append your PIN to the end of your API key in the format YourApiKey#YourPin",
+      tmdbtoken: "Your TMDB API Read Access Token (the really long one)",
+      FanartTvAPIKey: "Your Fanart.tv Personal API Key",
+      PlexToken:
+        "Your Plex authentication token (Leave empty if not using Plex)",
+      JellyfinAPIKey:
+        "Your Jellyfin API key (You can create an API key from inside Jellyfin at Settings > Advanced > Api Keys)",
+      EmbyAPIKey:
+        "Your Emby API key (You can create an API key from inside Emby at Settings > Advanced > Api Keys)",
+      FavProvider:
+        "Set your preferred provider: tmdb (recommended), fanart, tvdb, or plex (not recommended for textless)",
+      tmdb_vote_sorting:
+        "Picture sorting via TMDB API: vote_average, vote_count, or primary (default TMDB view)",
+      PreferredLanguageOrder:
+        "Specify language preferences. Default is xx,en,de (xx is Textless). Use 2-digit ISO 3166-1 language codes. Setting to 'xx' only searches for textless posters",
+      PreferredSeasonLanguageOrder:
+        "Specify language preferences for seasons. Default is xx,en,de (xx is Textless). Use 2-digit ISO 3166-1 language codes",
+      PreferredBackgroundLanguageOrder:
+        "Specify language preferences for backgrounds. Default is PleaseFillMe (will take your poster lang order). Setting to 'xx' only searches for textless",
+      WidthHeightFilter:
+        "If set to true, an additional resolution filter will be applied to Posters/Backgrounds (TMDB and TVDB) and Titlecards (TMDB only)",
+      PosterMinWidth:
+        "Minimum poster width filter—greater than or equal to specified value (default: 2000)",
+      PosterMinHeight:
+        "Minimum poster height filter—greater than or equal to specified value (default: 3000)",
+      BgTcMinWidth:
+        "Minimum background/titlecard width filter—greater than or equal to specified value (default: 3840)",
+      BgTcMinHeight:
+        "Minimum background/titlecard height filter—greater than or equal to specified value (default: 2160)",
 
-  // PlexPart
-  PlexLibstoExclude:
-    "Plex libraries, by name, to exclude from processing (comma-separated list)",
-  PlexUrl:
-    "Plex server URL (e.g., http://192.168.1.1:32400 or http://myplexserver.com:32400). This field is only enabled when Plex is selected as your active media server",
-  UsePlex:
-    "Enable Plex as your media server. NOTE: Only ONE media server can be active at a time (Plex, Jellyfin, or Emby)",
-  PlexUploadExistingAssets:
-    "If set to true, the script will check local assets and upload them to Plex, but only if Plex does not already have EXIF data from Posterizarr, Kometa, or TCM",
-  PlexUpload:
-    "If set to true, Posterizarr will directly upload the artwork to Plex (handy if you do not use Kometa)",
+      // PlexPart
+      PlexLibstoExclude:
+        "Plex libraries, by name, to exclude from processing (comma-separated list)",
+      PlexUrl:
+        "Plex server URL (e.g., http://192.168.1.1:32400 or http://myplexserver.com:32400). This field is only enabled when Plex is selected as your active media server",
+      UsePlex:
+        "Enable Plex as your media server. NOTE: Only ONE media server can be active at a time (Plex, Jellyfin, or Emby)",
+      PlexUploadExistingAssets:
+        "If set to true, the script will check local assets and upload them to Plex, but only if Plex does not already have EXIF data from Posterizarr, Kometa, or TCM",
+      PlexUpload:
+        "If set to true, Posterizarr will directly upload the artwork to Plex (handy if you do not use Kometa)",
 
-  // JellyfinPart
-  JellyfinLibstoExclude:
-    "Jellyfin libraries, by local folder name, to exclude from processing (comma-separated list)",
-  JellyfinUrl:
-    "Jellyfin server URL (e.g., http://192.168.1.1:8096 or http://myplexserver.com:8096). This field is enabled when either Jellyfin is selected as your active media server OR when JellySync is enabled",
-  UseJellyfin:
-    "Enable Jellyfin as your media server. NOTE: Only ONE media server can be active at a time (Plex, Jellyfin, or Emby)",
-  UseJellySync:
-    "Enable synchronization with your Jellyfin server. When enabled, the Jellyfin URL and API Key fields become available for configuration. NOTE: This toggle is disabled when Jellyfin is selected as the active media server",
-  JellyfinUploadExistingAssets:
-    "If set to true, the script will check local assets and upload them to Jellyfin, but only if Jellyfin does not already have EXIF data from Posterizarr, Kometa, or TCM. NOTE: This requires UseJellyfin to be enabled",
-  JellyfinReplaceThumbwithBackdrop:
-    "If set to true, the script will replace the Thumb picture with the backdrop image. This only occurs if BackgroundPosters is also set to true. NOTE: This requires UseJellyfin to be enabled",
+      // JellyfinPart
+      JellyfinLibstoExclude:
+        "Jellyfin libraries, by local folder name, to exclude from processing (comma-separated list)",
+      JellyfinUrl:
+        "Jellyfin server URL (e.g., http://192.168.1.1:8096 or http://myplexserver.com:8096). This field is enabled when either Jellyfin is selected as your active media server OR when JellySync is enabled",
+      UseJellyfin:
+        "Enable Jellyfin as your media server. NOTE: Only ONE media server can be active at a time (Plex, Jellyfin, or Emby)",
+      UseJellySync:
+        "Enable synchronization with your Jellyfin server. When enabled, the Jellyfin URL and API Key fields become available for configuration. NOTE: This toggle is disabled when Jellyfin is selected as the active media server",
+      JellyfinUploadExistingAssets:
+        "If set to true, the script will check local assets and upload them to Jellyfin, but only if Jellyfin does not already have EXIF data from Posterizarr, Kometa, or TCM. NOTE: This requires UseJellyfin to be enabled",
+      JellyfinReplaceThumbwithBackdrop:
+        "If set to true, the script will replace the Thumb picture with the backdrop image. This only occurs if BackgroundPosters is also set to true. NOTE: This requires UseJellyfin to be enabled",
 
-  // EmbyPart
-  EmbyLibstoExclude:
-    "Emby libraries, by local folder name, to exclude from processing (comma-separated list)",
-  EmbyUrl:
-    "Emby server URL (e.g., http://192.168.1.1:8096/emby or http://myplexserver.com:8096/emby). This field is enabled when either Emby is selected as your active media server OR when EmbySync is enabled",
-  UseEmby:
-    "Enable Emby as your media server. NOTE: Only ONE media server can be active at a time (Plex, Jellyfin, or Emby)",
-  UseEmbySync:
-    "Enable synchronization with your Emby server. When enabled, the Emby URL and API Key fields become available for configuration. NOTE: This toggle is disabled when Emby is selected as the active media server",
-  EmbyUploadExistingAssets:
-    "If set to true, the script will check local assets and upload them to Emby, but only if Emby does not already have EXIF data from Posterizarr, Kometa, or TCM. NOTE: This requires UseEmby to be enabled",
-  EmbyReplaceThumbwithBackdrop:
-    "If set to true, the script will replace the Thumb picture with the backdrop image. This only occurs if BackgroundPosters is also set to true. NOTE: This requires UseEmby to be enabled",
+      // EmbyPart
+      EmbyLibstoExclude:
+        "Emby libraries, by local folder name, to exclude from processing (comma-separated list)",
+      EmbyUrl:
+        "Emby server URL (e.g., http://192.168.1.1:8096/emby or http://myplexserver.com:8096/emby). This field is enabled when either Emby is selected as your active media server OR when EmbySync is enabled",
+      UseEmby:
+        "Enable Emby as your media server. NOTE: Only ONE media server can be active at a time (Plex, Jellyfin, or Emby)",
+      UseEmbySync:
+        "Enable synchronization with your Emby server. When enabled, the Emby URL and API Key fields become available for configuration. NOTE: This toggle is disabled when Emby is selected as the active media server",
+      EmbyUploadExistingAssets:
+        "If set to true, the script will check local assets and upload them to Emby, but only if Emby does not already have EXIF data from Posterizarr, Kometa, or TCM. NOTE: This requires UseEmby to be enabled",
+      EmbyReplaceThumbwithBackdrop:
+        "If set to true, the script will replace the Thumb picture with the backdrop image. This only occurs if BackgroundPosters is also set to true. NOTE: This requires UseEmby to be enabled",
 
-  // Notification
-  SendNotification:
-    "Set to true if you want to send notifications via Discord or Apprise, else false",
-  AppriseUrl:
-    "Only possible on Docker - URL for Apprise provider. See Apprise documentation for details",
-  Discord: "Discord Webhook URL for notifications",
-  DiscordUserName: "Username for the Discord webhook (default is Posterizarr)",
-  UseUptimeKuma: "Set to true if you want to send webhook to Uptime-Kuma",
-  UptimeKumaUrl: "Uptime-Kuma Webhook URL",
+      // Notification
+      SendNotification:
+        "Set to true if you want to send notifications via Discord or Apprise, else false",
+      AppriseUrl:
+        "Only possible on Docker - URL for Apprise provider. See Apprise documentation for details",
+      Discord: "Discord Webhook URL for notifications",
+      DiscordUserName:
+        "Username for the Discord webhook (default is Posterizarr)",
+      UseUptimeKuma: "Set to true if you want to send webhook to Uptime-Kuma",
+      UptimeKumaUrl: "Uptime-Kuma Webhook URL",
 
-  // PrerequisitePart
-  AssetPath:
-    "Path to store generated posters. On Docker, this should be /assets",
-  BackupPath: "Path to store/download Plex posters when using the backup mode",
-  ManualAssetPath:
-    "If assets are placed in this directory with the exact naming convention, they will be preferred (must follow same naming convention as /assets)",
-  SkipAddText:
-    "If set to true, Posterizarr will skip adding text to the poster if it is flagged as a 'Poster with text' by the provider",
-  FollowSymlink:
-    "If set to true, Posterizarr will follow symbolic links in the specified directories during hashtable creation",
-  ForceRunningDeletion:
-    "If set to true, Posterizarr will automatically delete the Running File. WARNING: May result in multiple concurrent runs sharing the same temp directory",
-  AutoUpdatePosterizarr:
-    "If set to true, Posterizarr will update itself to latest version (Only for non-Docker systems)",
-  show_skipped:
-    "If set to true, verbose logging of already created assets will be displayed. On large libraries, this may appear as if the script is hanging",
-  magickinstalllocation:
-    "The path to the ImageMagick installation where magick.exe is located. If using portable version, leave as './magick'. Container manages this automatically",
-  maxLogs:
-    "Number of Log folders you want to keep in RotatedLogs Folder (Log History)",
-  logLevel:
-    "Sets the verbosity of logging. 1 = Warning/Error. 2 = Info/Warning/Error (default). 3 = Info/Warning/Error/Debug (most verbose)",
-  font: "Default font file name for text overlays",
-  RTLFont:
-    "Right-to-Left font file name for RTL languages (Arabic, Hebrew, etc.)",
-  backgroundfont: "Font file name for background text",
-  titlecardfont: "Font file name for title card text",
-  collectionfont: "Font file name for collection titles",
-  overlayfile: "Default overlay file name (e.g., overlay.png)",
-  seasonoverlayfile: "Season poster overlay file name",
-  backgroundoverlayfile: "Background overlay file name",
-  titlecardoverlayfile: "Title Card overlay file name",
-  collectionoverlayfile: "Collection overlay file name",
-  poster4k:
-    "4K Poster overlay file name (overlay must match Poster dimensions 2000x3000)",
-  Poster1080p:
-    "1080p Poster overlay file name (overlay must match Poster dimensions 2000x3000)",
-  Background4k:
-    "4K Background overlay file name (overlay must match Background dimensions 3840x2160)",
-  Background1080p:
-    "1080p Background overlay file name (overlay must match Background dimensions 3840x2160)",
-  TC4k: "4K TitleCard overlay file name (overlay must match dimensions 3840x2160)",
-  TC1080p:
-    "1080p TitleCard overlay file name (overlay must match dimensions 3840x2160)",
-  UsePosterResolutionOverlays:
-    "Set to true to apply specific overlay with resolution for 4k/1080p posters. If you only want 4k, add your default overlay file also for Poster1080p",
-  UseBackgroundResolutionOverlays:
-    "Set to true to apply specific overlay with resolution for 4k/1080p backgrounds. If you only want 4k, add your default overlay file also for Background1080p",
-  UseTCResolutionOverlays:
-    "Set to true to apply specific overlay with resolution for 4k/1080p title cards. If you only want 4k, add your default overlay file for TC1080p",
-  LibraryFolders:
-    "Set to false for asset structure in one flat folder or true to split into library media folders like Kometa needs it",
-  Posters: "Set to true to create movie/show posters",
-  SeasonPosters: "Set to true to also create season posters",
-  BackgroundPosters: "Set to true to also create background posters",
-  TitleCards: "Set to true to also create title cards",
-  SkipTBA: "Set to true to skip TitleCard creation if the Title text is 'TBA'",
-  SkipJapTitle:
-    "Set to true to skip TitleCard creation if the Title text is Japanese or Chinese",
-  AssetCleanup:
-    "Set to true to cleanup Assets that are no longer in Plex. IMPORTANT: Risk of data loss from excluded libraries - ensure all active asset libraries are included",
-  AutoUpdateIM:
-    "Set to true to Auto-Update ImageMagick Portable Version (Does not work with Docker/Unraid). Warning: Untested versions may break things",
-  NewLineOnSpecificSymbols:
-    "Set to true to enable automatic insertion of a newline character at each occurrence of specific symbols in NewLineSymbols within the title text",
-  NewLineSymbols:
-    "A list of symbols that will trigger a newline insertion when NewLineOnSpecificSymbols is true. Separate each symbol with comma (e.g., ' - ', ':')",
-  DisableHashValidation:
-    "Set to true to skip hash validation (Default: false). Note: This may produce bloat, as every item will be re-uploaded to media servers",
-  DisableOnlineAssetFetch:
-    "Set to true to skip all online lookups and use only locally available assets (Default: false)",
+      // PrerequisitePart
+      AssetPath:
+        "Path to store generated posters. On Docker, this should be /assets",
+      BackupPath:
+        "Path to store/download Plex posters when using the backup mode",
+      ManualAssetPath:
+        "If assets are placed in this directory with the exact naming convention, they will be preferred (must follow same naming convention as /assets)",
+      SkipAddText:
+        "If set to true, Posterizarr will skip adding text to the poster if it is flagged as a 'Poster with text' by the provider",
+      FollowSymlink:
+        "If set to true, Posterizarr will follow symbolic links in the specified directories during hashtable creation",
+      ForceRunningDeletion:
+        "If set to true, Posterizarr will automatically delete the Running File. WARNING: May result in multiple concurrent runs sharing the same temp directory",
+      AutoUpdatePosterizarr:
+        "If set to true, Posterizarr will update itself to latest version (Only for non-Docker systems)",
+      show_skipped:
+        "If set to true, verbose logging of already created assets will be displayed. On large libraries, this may appear as if the script is hanging",
+      magickinstalllocation:
+        "The path to the ImageMagick installation where magick.exe is located. If using portable version, leave as './magick'. Container manages this automatically",
+      maxLogs:
+        "Number of Log folders you want to keep in RotatedLogs Folder (Log History)",
+      logLevel:
+        "Sets the verbosity of logging. 1 = Warning/Error. 2 = Info/Warning/Error (default). 3 = Info/Warning/Error/Debug (most verbose)",
+      font: "Default font file name for text overlays",
+      RTLFont:
+        "Right-to-Left font file name for RTL languages (Arabic, Hebrew, etc.)",
+      backgroundfont: "Font file name for background text",
+      titlecardfont: "Font file name for title card text",
+      collectionfont: "Font file name for collection titles",
+      overlayfile: "Default overlay file name (e.g., overlay.png)",
+      seasonoverlayfile: "Season poster overlay file name",
+      backgroundoverlayfile: "Background overlay file name",
+      titlecardoverlayfile: "Title Card overlay file name",
+      collectionoverlayfile: "Collection overlay file name",
+      poster4k:
+        "4K Poster overlay file name (overlay must match Poster dimensions 2000x3000)",
+      Poster1080p:
+        "1080p Poster overlay file name (overlay must match Poster dimensions 2000x3000)",
+      Background4k:
+        "4K Background overlay file name (overlay must match Background dimensions 3840x2160)",
+      Background1080p:
+        "1080p Background overlay file name (overlay must match Background dimensions 3840x2160)",
+      TC4k: "4K TitleCard overlay file name (overlay must match dimensions 3840x2160)",
+      TC1080p:
+        "1080p TitleCard overlay file name (overlay must match dimensions 3840x2160)",
+      UsePosterResolutionOverlays:
+        "Set to true to apply specific overlay with resolution for 4k/1080p posters. If you only want 4k, add your default overlay file also for Poster1080p",
+      UseBackgroundResolutionOverlays:
+        "Set to true to apply specific overlay with resolution for 4k/1080p backgrounds. If you only want 4k, add your default overlay file also for Background1080p",
+      UseTCResolutionOverlays:
+        "Set to true to apply specific overlay with resolution for 4k/1080p title cards. If you only want 4k, add your default overlay file for TC1080p",
+      LibraryFolders:
+        "Set to false for asset structure in one flat folder or true to split into library media folders like Kometa needs it",
+      Posters: "Set to true to create movie/show posters",
+      SeasonPosters: "Set to true to also create season posters",
+      BackgroundPosters: "Set to true to also create background posters",
+      TitleCards: "Set to true to also create title cards",
+      SkipTBA:
+        "Set to true to skip TitleCard creation if the Title text is 'TBA'",
+      SkipJapTitle:
+        "Set to true to skip TitleCard creation if the Title text is Japanese or Chinese",
+      AssetCleanup:
+        "Set to true to cleanup Assets that are no longer in Plex. IMPORTANT: Risk of data loss from excluded libraries - ensure all active asset libraries are included",
+      AutoUpdateIM:
+        "Set to true to Auto-Update ImageMagick Portable Version (Does not work with Docker/Unraid). Warning: Untested versions may break things",
+      NewLineOnSpecificSymbols:
+        "Set to true to enable automatic insertion of a newline character at each occurrence of specific symbols in NewLineSymbols within the title text",
+      NewLineSymbols:
+        "A list of symbols that will trigger a newline insertion when NewLineOnSpecificSymbols is true. Separate each symbol with comma (e.g., ' - ', ':')",
+      DisableHashValidation:
+        "Set to true to skip hash validation (Default: false). Note: This may produce bloat, as every item will be re-uploaded to media servers",
+      DisableOnlineAssetFetch:
+        "Set to true to skip all online lookups and use only locally available assets (Default: false)",
 
-  // OverlayPart
-  ImageProcessing:
-    "Set to true if you want the ImageMagick part (text, overlay and/or border); if false, it only downloads the posters",
-  outputQuality:
-    "Image output quality (default is 92%). Setting to 100% doubles the image size",
+      // OverlayPart
+      ImageProcessing:
+        "Set to true if you want the ImageMagick part (text, overlay and/or border); if false, it only downloads the posters",
+      outputQuality:
+        "Image output quality (default is 92%). Setting to 100% doubles the image size",
 
-  // PosterOverlayPart
-  PosterFontAllCaps: "Set to true for all caps text on posters, else false",
-  PosterAddBorder: "Set to true to add a border to the poster image",
-  PosterAddText: "Set to true to add text to the poster image",
-  PosterAddOverlay:
-    "Set to true to add the defined overlay file to the poster image",
-  PosterFontcolor: "Color of font text on posters (e.g., #FFFFFF for white)",
-  PosterBordercolor: "Color of border on posters (e.g., #000000 for black)",
-  PosterMinPointSize: "Minimum size of text in poster (in points)",
-  PosterMaxPointSize: "Maximum size of text in poster (in points)",
-  PosterBorderwidth: "Border width in pixels",
-  PosterMaxWidth: "Maximum width of text box on poster",
-  PosterMaxHeight: "Maximum height of text box on poster",
-  PosterTextOffset:
-    "Text box offset from the bottom of the picture (use +200 or -150 format)",
-  PosterAddTextStroke: "Set to true to add stroke/outline to text",
-  PosterStrokecolor: "Color of text stroke/outline (e.g., #000000 for black)",
-  PosterStrokewidth: "Stroke width in pixels",
-  PosterLineSpacing: "Adjust the height between lines of text (Default is 0)",
-  PosterTextGravity:
-    "Specifies the text alignment within the textbox (Default is south = bottom center)",
+      // PosterOverlayPart
+      PosterFontAllCaps: "Set to true for all caps text on posters, else false",
+      PosterAddBorder: "Set to true to add a border to the poster image",
+      PosterAddText: "Set to true to add text to the poster image",
+      PosterAddOverlay:
+        "Set to true to add the defined overlay file to the poster image",
+      PosterFontcolor:
+        "Color of font text on posters (e.g., #FFFFFF for white)",
+      PosterBordercolor: "Color of border on posters (e.g., #000000 for black)",
+      PosterMinPointSize: "Minimum size of text in poster (in points)",
+      PosterMaxPointSize: "Maximum size of text in poster (in points)",
+      PosterBorderwidth: "Border width in pixels",
+      PosterMaxWidth: "Maximum width of text box on poster",
+      PosterMaxHeight: "Maximum height of text box on poster",
+      PosterTextOffset:
+        "Text box offset from the bottom of the picture (use +200 or -150 format)",
+      PosterAddTextStroke: "Set to true to add stroke/outline to text",
+      PosterStrokecolor:
+        "Color of text stroke/outline (e.g., #000000 for black)",
+      PosterStrokewidth: "Stroke width in pixels",
+      PosterLineSpacing:
+        "Adjust the height between lines of text (Default is 0)",
+      PosterTextGravity:
+        "Specifies the text alignment within the textbox (Default is south = bottom center)",
 
-  // SeasonPosterOverlayPart
-  SeasonPosterFontAllCaps:
-    "Set to true for all caps text on season posters, else false",
-  SeasonPosterAddBorder:
-    "Set to true to add a border to the season poster image",
-  SeasonPosterAddText: "Set to true to add text to the season poster image",
-  SeasonPosterAddOverlay:
-    "Set to true to add the defined overlay file to the season poster image",
-  SeasonPosterFontcolor: "Color of font text on season posters",
-  SeasonPosterBordercolor: "Color of border on season posters",
-  SeasonPosterMinPointSize: "Minimum size of text in season poster",
-  SeasonPosterMaxPointSize: "Maximum size of text in season poster",
-  SeasonPosterBorderwidth: "Border width in pixels for season posters",
-  SeasonPosterMaxWidth: "Maximum width of text box on season poster",
-  SeasonPosterMaxHeight: "Maximum height of text box on season poster",
-  SeasonPosterTextOffset:
-    "Text box offset from the bottom of the season poster (use +200 or -150 format)",
-  SeasonPosterAddTextStroke:
-    "Set to true to add stroke/outline to text on season posters",
-  SeasonPosterStrokecolor: "Color of text stroke/outline on season posters",
-  SeasonPosterStrokewidth: "Stroke width in pixels for season posters",
-  SeasonPosterLineSpacing:
-    "Adjust the height between lines of text on season posters (Default is 0)",
-  SeasonPosterShowFallback:
-    "Set to true if you want to fallback to show poster if no season poster was found",
-  SeasonPosterTextGravity:
-    "Specifies the text alignment within the textbox on season posters (Default is south)",
+      // SeasonPosterOverlayPart
+      SeasonPosterFontAllCaps:
+        "Set to true for all caps text on season posters, else false",
+      SeasonPosterAddBorder:
+        "Set to true to add a border to the season poster image",
+      SeasonPosterAddText: "Set to true to add text to the season poster image",
+      SeasonPosterAddOverlay:
+        "Set to true to add the defined overlay file to the season poster image",
+      SeasonPosterFontcolor: "Color of font text on season posters",
+      SeasonPosterBordercolor: "Color of border on season posters",
+      SeasonPosterMinPointSize: "Minimum size of text in season poster",
+      SeasonPosterMaxPointSize: "Maximum size of text in season poster",
+      SeasonPosterBorderwidth: "Border width in pixels for season posters",
+      SeasonPosterMaxWidth: "Maximum width of text box on season poster",
+      SeasonPosterMaxHeight: "Maximum height of text box on season poster",
+      SeasonPosterTextOffset:
+        "Text box offset from the bottom of the season poster (use +200 or -150 format)",
+      SeasonPosterAddTextStroke:
+        "Set to true to add stroke/outline to text on season posters",
+      SeasonPosterStrokecolor: "Color of text stroke/outline on season posters",
+      SeasonPosterStrokewidth: "Stroke width in pixels for season posters",
+      SeasonPosterLineSpacing:
+        "Adjust the height between lines of text on season posters (Default is 0)",
+      SeasonPosterShowFallback:
+        "Set to true if you want to fallback to show poster if no season poster was found",
+      SeasonPosterTextGravity:
+        "Specifies the text alignment within the textbox on season posters (Default is south)",
 
-  // BackgroundOverlayPart
-  BackgroundFontAllCaps:
-    "Set to true for all caps text on backgrounds, else false",
-  BackgroundAddOverlay:
-    "Set to true to add the defined background overlay file to the background image",
-  BackgroundAddBorder: "Set to true to add a border to the background image",
-  BackgroundAddText: "Set to true to add text to the background image",
-  BackgroundFontcolor: "Color of font text on backgrounds",
-  BackgroundBordercolor: "Color of border on backgrounds",
-  BackgroundMinPointSize: "Minimum size of text in background image",
-  BackgroundMaxPointSize: "Maximum size of text in background image",
-  BackgroundBorderwidth: "Border width in pixels for backgrounds",
-  BackgroundMaxWidth: "Maximum width of text box in background image",
-  BackgroundMaxHeight: "Maximum height of text box in background image",
-  BackgroundTextOffset:
-    "Text box offset from the bottom of the background image (use +200 or -150 format)",
-  BackgroundAddTextStroke:
-    "Set to true to add stroke/outline to text on backgrounds",
-  BackgroundStrokecolor: "Color of text stroke/outline on backgrounds",
-  BackgroundStrokewidth: "Stroke width in pixels for backgrounds",
-  BackgroundLineSpacing:
-    "Adjust the height between lines of text on backgrounds (Default is 0)",
-  BackgroundTextGravity:
-    "Specifies the text alignment within the textbox on backgrounds (Default is south)",
+      // BackgroundOverlayPart
+      BackgroundFontAllCaps:
+        "Set to true for all caps text on backgrounds, else false",
+      BackgroundAddOverlay:
+        "Set to true to add the defined background overlay file to the background image",
+      BackgroundAddBorder:
+        "Set to true to add a border to the background image",
+      BackgroundAddText: "Set to true to add text to the background image",
+      BackgroundFontcolor: "Color of font text on backgrounds",
+      BackgroundBordercolor: "Color of border on backgrounds",
+      BackgroundMinPointSize: "Minimum size of text in background image",
+      BackgroundMaxPointSize: "Maximum size of text in background image",
+      BackgroundBorderwidth: "Border width in pixels for backgrounds",
+      BackgroundMaxWidth: "Maximum width of text box in background image",
+      BackgroundMaxHeight: "Maximum height of text box in background image",
+      BackgroundTextOffset:
+        "Text box offset from the bottom of the background image (use +200 or -150 format)",
+      BackgroundAddTextStroke:
+        "Set to true to add stroke/outline to text on backgrounds",
+      BackgroundStrokecolor: "Color of text stroke/outline on backgrounds",
+      BackgroundStrokewidth: "Stroke width in pixels for backgrounds",
+      BackgroundLineSpacing:
+        "Adjust the height between lines of text on backgrounds (Default is 0)",
+      BackgroundTextGravity:
+        "Specifies the text alignment within the textbox on backgrounds (Default is south)",
 
-  // TitleCardOverlayPart
-  TitleCardUseBackgroundAsTitleCard:
-    "Set to true if you prefer show background as TitleCard (default is false, which uses episode image)",
-  TitleCardAddOverlay:
-    "Set to true to add the defined TitleCard overlay file to the TitleCard image",
-  TitleCardAddBorder: "Set to true to add a border to the TitleCard image",
-  TitleCardBordercolor: "Color of border on title cards",
-  TitleCardBorderwidth: "Border width in pixels for title cards",
-  TitleCardBackgroundFallback:
-    "Set to false if you want to skip Background fallback for TitleCard images if no TitleCard was found",
+      // TitleCardOverlayPart
+      TitleCardUseBackgroundAsTitleCard:
+        "Set to true if you prefer show background as TitleCard (default is false, which uses episode image)",
+      TitleCardAddOverlay:
+        "Set to true to add the defined TitleCard overlay file to the TitleCard image",
+      TitleCardAddBorder: "Set to true to add a border to the TitleCard image",
+      TitleCardBordercolor: "Color of border on title cards",
+      TitleCardBorderwidth: "Border width in pixels for title cards",
+      TitleCardBackgroundFallback:
+        "Set to false if you want to skip Background fallback for TitleCard images if no TitleCard was found",
 
-  // TitleCardTitleTextPart
-  TitleCardTitleFontAllCaps:
-    "Set to true for all caps episode title text on title cards, else false",
-  TitleCardTitleAddEPTitleText:
-    "Set to true to add episode title text to the TitleCard image",
-  TitleCardTitleFontcolor: "Color of episode title font text on title cards",
-  TitleCardTitleMinPointSize:
-    "Minimum size of episode title text in TitleCard image",
-  TitleCardTitleMaxPointSize:
-    "Maximum size of episode title text in TitleCard image",
-  TitleCardTitleMaxWidth:
-    "Maximum width of episode title text box in TitleCard image",
-  TitleCardTitleMaxHeight:
-    "Maximum height of episode title text box in TitleCard image",
-  TitleCardTitleTextOffset:
-    "Episode title text box offset from the bottom of the TitleCard image (use +200 or -150 format)",
-  TitleCardTitleAddTextStroke:
-    "Set to true to add stroke/outline to episode title text on title cards",
-  TitleCardTitleStrokecolor:
-    "Color of episode title text stroke/outline on title cards",
-  TitleCardTitleStrokewidth:
-    "Stroke width in pixels for episode title text on title cards",
-  TitleCardTitleLineSpacing:
-    "Adjust the height between lines of episode title text on title cards (Default is 0)",
-  TitleCardTitleTextGravity:
-    "Specifies the episode title text alignment within the textbox on title cards (Default is south)",
+      // TitleCardTitleTextPart
+      TitleCardTitleFontAllCaps:
+        "Set to true for all caps episode title text on title cards, else false",
+      TitleCardTitleAddEPTitleText:
+        "Set to true to add episode title text to the TitleCard image",
+      TitleCardTitleFontcolor:
+        "Color of episode title font text on title cards",
+      TitleCardTitleMinPointSize:
+        "Minimum size of episode title text in TitleCard image",
+      TitleCardTitleMaxPointSize:
+        "Maximum size of episode title text in TitleCard image",
+      TitleCardTitleMaxWidth:
+        "Maximum width of episode title text box in TitleCard image",
+      TitleCardTitleMaxHeight:
+        "Maximum height of episode title text box in TitleCard image",
+      TitleCardTitleTextOffset:
+        "Episode title text box offset from the bottom of the TitleCard image (use +200 or -150 format)",
+      TitleCardTitleAddTextStroke:
+        "Set to true to add stroke/outline to episode title text on title cards",
+      TitleCardTitleStrokecolor:
+        "Color of episode title text stroke/outline on title cards",
+      TitleCardTitleStrokewidth:
+        "Stroke width in pixels for episode title text on title cards",
+      TitleCardTitleLineSpacing:
+        "Adjust the height between lines of episode title text on title cards (Default is 0)",
+      TitleCardTitleTextGravity:
+        "Specifies the episode title text alignment within the textbox on title cards (Default is south)",
 
-  // TitleCardEPTextPart
-  TitleCardEPSeasonTCText:
-    "You can specify the default text for 'Season' that appears on TitleCard (e.g., 'STAFFEL' for German, 'SÄSONG' for Swedish)",
-  TitleCardEPEpisodeTCText:
-    "You can specify the default text for 'Episode' that appears on TitleCard (e.g., 'EPISODE', 'AVSNITT' for Swedish)",
-  TitleCardEPFontAllCaps:
-    "Set to true for all caps episode number text on title cards, else false",
-  TitleCardEPAddEPText:
-    "Set to true to add episode number text (Season X • Episode Y) to the TitleCard image",
-  TitleCardEPFontcolor: "Color of episode number font text on title cards",
-  TitleCardEPMinPointSize:
-    "Minimum size of episode number text in TitleCard image",
-  TitleCardEPMaxPointSize:
-    "Maximum size of episode number text in TitleCard image",
-  TitleCardEPMaxWidth:
-    "Maximum width of episode number text box in TitleCard image",
-  TitleCardEPMaxHeight:
-    "Maximum height of episode number text box in TitleCard image",
-  TitleCardEPTextOffset:
-    "Episode number text box offset from the bottom of the TitleCard image (use +200 or -150 format)",
-  TitleCardEPAddTextStroke:
-    "Set to true to add stroke/outline to episode number text on title cards",
-  TitleCardEPStrokecolor:
-    "Color of episode number text stroke/outline on title cards",
-  TitleCardEPStrokewidth:
-    "Stroke width in pixels for episode number text on title cards",
-  TitleCardEPLineSpacing:
-    "Adjust the height between lines of episode number text on title cards (Default is 0)",
-  TitleCardEPTextGravity:
-    "Specifies the episode number text alignment within the textbox on title cards (Default is south)",
+      // TitleCardEPTextPart
+      TitleCardEPSeasonTCText:
+        "You can specify the default text for 'Season' that appears on TitleCard (e.g., 'STAFFEL' for German, 'SÄSONG' for Swedish)",
+      TitleCardEPEpisodeTCText:
+        "You can specify the default text for 'Episode' that appears on TitleCard (e.g., 'EPISODE', 'AVSNITT' for Swedish)",
+      TitleCardEPFontAllCaps:
+        "Set to true for all caps episode number text on title cards, else false",
+      TitleCardEPAddEPText:
+        "Set to true to add episode number text (Season X • Episode Y) to the TitleCard image",
+      TitleCardEPFontcolor: "Color of episode number font text on title cards",
+      TitleCardEPMinPointSize:
+        "Minimum size of episode number text in TitleCard image",
+      TitleCardEPMaxPointSize:
+        "Maximum size of episode number text in TitleCard image",
+      TitleCardEPMaxWidth:
+        "Maximum width of episode number text box in TitleCard image",
+      TitleCardEPMaxHeight:
+        "Maximum height of episode number text box in TitleCard image",
+      TitleCardEPTextOffset:
+        "Episode number text box offset from the bottom of the TitleCard image (use +200 or -150 format)",
+      TitleCardEPAddTextStroke:
+        "Set to true to add stroke/outline to episode number text on title cards",
+      TitleCardEPStrokecolor:
+        "Color of episode number text stroke/outline on title cards",
+      TitleCardEPStrokewidth:
+        "Stroke width in pixels for episode number text on title cards",
+      TitleCardEPLineSpacing:
+        "Adjust the height between lines of episode number text on title cards (Default is 0)",
+      TitleCardEPTextGravity:
+        "Specifies the episode number text alignment within the textbox on title cards (Default is south)",
 
-  // ShowTitleOnSeasonPosterPart
-  ShowTitleAddShowTitletoSeason:
-    "If set to true, it will add show title to season poster (Default: false)",
-  ShowTitleFontAllCaps:
-    "Set to true for all caps show title text on season posters, else false",
-  ShowTitleAddTextStroke:
-    "Set to true to add stroke/outline to show title text on season posters",
-  ShowTitleStrokecolor:
-    "Color of show title text stroke/outline on season posters",
-  ShowTitleStrokewidth:
-    "Stroke width in pixels for show title text on season posters",
-  ShowTitleFontcolor: "Color of show title font text on season posters",
-  ShowTitleMinPointSize: "Minimum size of show title text on season posters",
-  ShowTitleMaxPointSize: "Maximum size of show title text on season posters",
-  ShowTitleMaxWidth: "Maximum width of show title text box on season posters",
-  ShowTitleMaxHeight: "Maximum height of show title text box on season posters",
-  ShowTitleTextOffset:
-    "Show title text box offset from the bottom of the season poster (use +200 or -150 format)",
-  ShowTitleLineSpacing:
-    "Adjust the height between lines of show title text on season posters (Default is 0)",
-  ShowTitleTextGravity:
-    "Specifies the show title text alignment within the textbox on season posters (Default is south)",
+      // ShowTitleOnSeasonPosterPart
+      ShowTitleAddShowTitletoSeason:
+        "If set to true, it will add show title to season poster (Default: false)",
+      ShowTitleFontAllCaps:
+        "Set to true for all caps show title text on season posters, else false",
+      ShowTitleAddTextStroke:
+        "Set to true to add stroke/outline to show title text on season posters",
+      ShowTitleStrokecolor:
+        "Color of show title text stroke/outline on season posters",
+      ShowTitleStrokewidth:
+        "Stroke width in pixels for show title text on season posters",
+      ShowTitleFontcolor: "Color of show title font text on season posters",
+      ShowTitleMinPointSize:
+        "Minimum size of show title text on season posters",
+      ShowTitleMaxPointSize:
+        "Maximum size of show title text on season posters",
+      ShowTitleMaxWidth:
+        "Maximum width of show title text box on season posters",
+      ShowTitleMaxHeight:
+        "Maximum height of show title text box on season posters",
+      ShowTitleTextOffset:
+        "Show title text box offset from the bottom of the season poster (use +200 or -150 format)",
+      ShowTitleLineSpacing:
+        "Adjust the height between lines of show title text on season posters (Default is 0)",
+      ShowTitleTextGravity:
+        "Specifies the show title text alignment within the textbox on season posters (Default is south)",
 
-  // CollectionTitlePosterPart
-  CollectionTitleAddCollectionTitle:
-    "Set to true to add collection title text to collection posters",
-  CollectionTitleCollectionTitle:
-    "The text to display as collection title (e.g., 'COLLECTION', 'SAMMLUNG')",
-  CollectionTitleFontAllCaps:
-    "Set to true for all caps collection title text, else false",
-  CollectionTitleAddTextStroke:
-    "Set to true to add stroke/outline to collection title text",
-  CollectionTitleStrokecolor: "Color of collection title text stroke/outline",
-  CollectionTitleStrokewidth:
-    "Stroke width in pixels for collection title text",
-  CollectionTitleFontcolor: "Color of collection title font text",
-  CollectionTitleMinPointSize: "Minimum size of collection title text",
-  CollectionTitleMaxPointSize: "Maximum size of collection title text",
-  CollectionTitleMaxWidth: "Maximum width of collection title text box",
-  CollectionTitleMaxHeight: "Maximum height of collection title text box",
-  CollectionTitleTextOffset:
-    "Collection title text box offset from the bottom of the poster (use +200 or -150 format)",
-  CollectionTitleLineSpacing:
-    "Adjust the height between lines of collection title text (Default is 0)",
-  CollectionTitleTextGravity:
-    "Specifies the collection title text alignment within the textbox (Default is south)",
+      // CollectionTitlePosterPart
+      CollectionTitleAddCollectionTitle:
+        "Set to true to add collection title text to collection posters",
+      CollectionTitleCollectionTitle:
+        "The text to display as collection title (e.g., 'COLLECTION', 'SAMMLUNG')",
+      CollectionTitleFontAllCaps:
+        "Set to true for all caps collection title text, else false",
+      CollectionTitleAddTextStroke:
+        "Set to true to add stroke/outline to collection title text",
+      CollectionTitleStrokecolor:
+        "Color of collection title text stroke/outline",
+      CollectionTitleStrokewidth:
+        "Stroke width in pixels for collection title text",
+      CollectionTitleFontcolor: "Color of collection title font text",
+      CollectionTitleMinPointSize: "Minimum size of collection title text",
+      CollectionTitleMaxPointSize: "Maximum size of collection title text",
+      CollectionTitleMaxWidth: "Maximum width of collection title text box",
+      CollectionTitleMaxHeight: "Maximum height of collection title text box",
+      CollectionTitleTextOffset:
+        "Collection title text box offset from the bottom of the poster (use +200 or -150 format)",
+      CollectionTitleLineSpacing:
+        "Adjust the height between lines of collection title text (Default is 0)",
+      CollectionTitleTextGravity:
+        "Specifies the collection title text alignment within the textbox (Default is south)",
 
-  // CollectionPosterOverlayPart
-  CollectionPosterFontAllCaps:
-    "Set to true for all caps text on collection posters, else false",
-  CollectionPosterAddBorder:
-    "Set to true to add a border to the collection poster image",
-  CollectionPosterAddText:
-    "Set to true to add text to the collection poster image",
-  CollectionPosterAddTextStroke:
-    "Set to true to add stroke/outline to text on collection posters",
-  CollectionPosterStrokecolor:
-    "Color of text stroke/outline on collection posters",
-  CollectionPosterStrokewidth: "Stroke width in pixels for collection posters",
-  CollectionPosterAddOverlay:
-    "Set to true to add the defined overlay file to the collection poster image",
-  CollectionPosterFontcolor: "Color of font text on collection posters",
-  CollectionPosterBordercolor: "Color of border on collection posters",
-  CollectionPosterMinPointSize: "Minimum size of text in collection poster",
-  CollectionPosterMaxPointSize: "Maximum size of text in collection poster",
-  CollectionPosterBorderwidth: "Border width in pixels for collection posters",
-  CollectionPosterMaxWidth: "Maximum width of text box on collection poster",
-  CollectionPosterMaxHeight: "Maximum height of text box on collection poster",
-  CollectionPosterTextOffset:
-    "Text box offset from the bottom of the collection poster (use +200 or -150 format)",
-  CollectionPosterLineSpacing:
-    "Adjust the height between lines of text on collection posters (Default is 0)",
-  CollectionPosterTextGravity:
-    "Specifies the text alignment within the textbox on collection posters (Default is south)",
+      // CollectionPosterOverlayPart
+      CollectionPosterFontAllCaps:
+        "Set to true for all caps text on collection posters, else false",
+      CollectionPosterAddBorder:
+        "Set to true to add a border to the collection poster image",
+      CollectionPosterAddText:
+        "Set to true to add text to the collection poster image",
+      CollectionPosterAddTextStroke:
+        "Set to true to add stroke/outline to text on collection posters",
+      CollectionPosterStrokecolor:
+        "Color of text stroke/outline on collection posters",
+      CollectionPosterStrokewidth:
+        "Stroke width in pixels for collection posters",
+      CollectionPosterAddOverlay:
+        "Set to true to add the defined overlay file to the collection poster image",
+      CollectionPosterFontcolor: "Color of font text on collection posters",
+      CollectionPosterBordercolor: "Color of border on collection posters",
+      CollectionPosterMinPointSize: "Minimum size of text in collection poster",
+      CollectionPosterMaxPointSize: "Maximum size of text in collection poster",
+      CollectionPosterBorderwidth:
+        "Border width in pixels for collection posters",
+      CollectionPosterMaxWidth:
+        "Maximum width of text box on collection poster",
+      CollectionPosterMaxHeight:
+        "Maximum height of text box on collection poster",
+      CollectionPosterTextOffset:
+        "Text box offset from the bottom of the collection poster (use +200 or -150 format)",
+      CollectionPosterLineSpacing:
+        "Adjust the height between lines of text on collection posters (Default is 0)",
+      CollectionPosterTextGravity:
+        "Specifies the text alignment within the textbox on collection posters (Default is south)",
+    },
+    de: {
+      // WebUI Settings
+      basicAuthEnabled:
+        "Aktivieren Sie die Basis-Authentifizierung zum Schutz der Web-UI. Setzen Sie auf true, um Benutzername/Passwort-Anmeldung zu erfordern (Standard: false)",
+      basicAuthUsername:
+        "Benutzername für Basis-Authentifizierung. Ändern Sie dies vom Standard 'admin' für bessere Sicherheit (Standard: admin)",
+      basicAuthPassword:
+        "Passwort für Basis-Authentifizierung. WICHTIG: Ändern Sie dies vom Standard 'posterizarr', bevor Sie die Authentifizierung aktivieren! (Standard: posterizarr)",
+      // ApiPart
+      tvdbapi:
+        "Ihr TVDB Project API-Schlüssel. Wenn Sie ein TVDB-Abonnent sind, können Sie Ihre PIN am Ende Ihres API-Schlüssels im Format IhrApiKey#IhrPin anhängen",
+      tmdbtoken: "Ihr TMDB API Read Access Token (der sehr lange)",
+      FanartTvAPIKey: "Ihr Fanart.tv Personal API-Schlüssel",
+      PlexToken:
+        "Ihr Plex-Authentifizierungstoken (Leer lassen, wenn Plex nicht verwendet wird)",
+      JellyfinAPIKey:
+        "Ihr Jellyfin API-Schlüssel (Sie können einen API-Schlüssel in Jellyfin erstellen unter Einstellungen > Erweitert > Api-Schlüssel)",
+      EmbyAPIKey:
+        "Ihr Emby API-Schlüssel (Sie können einen API-Schlüssel in Emby erstellen unter Einstellungen > Erweitert > Api-Schlüssel)",
+      FavProvider:
+        "Setzen Sie Ihren bevorzugten Anbieter: tmdb (empfohlen), fanart, tvdb oder plex (nicht empfohlen für textlos)",
+      tmdb_vote_sorting:
+        "Bildsortierung über TMDB API: vote_average, vote_count oder primary (Standard-TMDB-Ansicht)",
+      PreferredLanguageOrder:
+        "Sprachpräferenzen festlegen. Standard ist xx,en,de (xx ist Textlos). Verwenden Sie 2-stellige ISO 3166-1 Sprachcodes. Einstellung auf 'xx' sucht nur nach textlosen Postern",
+      PreferredSeasonLanguageOrder:
+        "Sprachpräferenzen für Staffeln festlegen. Standard ist xx,en,de (xx ist Textlos). Verwenden Sie 2-stellige ISO 3166-1 Sprachcodes",
+      PreferredBackgroundLanguageOrder:
+        "Sprachpräferenzen für Hintergründe festlegen. Standard ist PleaseFillMe (übernimmt Ihre Poster-Sprachreihenfolge). Einstellung auf 'xx' sucht nur nach textlosen",
+      WidthHeightFilter:
+        "Wenn auf true gesetzt, wird ein zusätzlicher Auflösungsfilter auf Poster/Hintergründe (TMDB und TVDB) und Titelkarten (nur TMDB) angewendet",
+      PosterMinWidth:
+        "Mindestbreite für Poster-Filter – größer oder gleich dem angegebenen Wert (Standard: 2000)",
+      PosterMinHeight:
+        "Mindesthöhe für Poster-Filter – größer oder gleich dem angegebenen Wert (Standard: 3000)",
+      BgTcMinWidth:
+        "Mindestbreite für Hintergrund/Titelkarten-Filter – größer oder gleich dem angegebenen Wert (Standard: 3840)",
+      BgTcMinHeight:
+        "Mindesthöhe für Hintergrund/Titelkarten-Filter – größer oder gleich dem angegebenen Wert (Standard: 2160)",
+
+      // PlexPart
+      PlexLibstoExclude:
+        "Plex-Bibliotheken, nach Namen, die von der Verarbeitung ausgeschlossen werden sollen (kommagetrennte Liste)",
+      PlexUrl:
+        "Plex-Server-URL (z.B. http://192.168.1.1:32400 oder http://meinplexserver.com:32400). Dieses Feld ist nur aktiviert, wenn Plex als aktiver Medienserver ausgewählt ist",
+      UsePlex:
+        "Plex als Medienserver aktivieren. HINWEIS: Nur EIN Medienserver kann gleichzeitig aktiv sein (Plex, Jellyfin oder Emby)",
+      PlexUploadExistingAssets:
+        "Wenn auf true gesetzt, prüft das Skript lokale Assets und lädt sie zu Plex hoch, aber nur wenn Plex noch keine EXIF-Daten von Posterizarr, Kometa oder TCM hat",
+      PlexUpload:
+        "Wenn auf true gesetzt, lädt Posterizarr die Grafiken direkt zu Plex hoch (praktisch, wenn Sie Kometa nicht verwenden)",
+
+      // JellyfinPart
+      JellyfinLibstoExclude:
+        "Jellyfin-Bibliotheken, nach lokalem Ordnernamen, die von der Verarbeitung ausgeschlossen werden sollen (kommagetrennte Liste)",
+      JellyfinUrl:
+        "Jellyfin-Server-URL (z.B. http://192.168.1.1:8096 oder http://meinplexserver.com:8096). Dieses Feld ist aktiviert, wenn entweder Jellyfin als aktiver Medienserver ausgewählt ist ODER wenn JellySync aktiviert ist",
+      UseJellyfin:
+        "Jellyfin als Medienserver aktivieren. HINWEIS: Nur EIN Medienserver kann gleichzeitig aktiv sein (Plex, Jellyfin oder Emby)",
+      UseJellySync:
+        "Synchronisation mit Ihrem Jellyfin-Server aktivieren. Wenn aktiviert, werden die Felder Jellyfin-URL und API-Schlüssel für die Konfiguration verfügbar. HINWEIS: Dieser Schalter ist deaktiviert, wenn Jellyfin als aktiver Medienserver ausgewählt ist",
+      JellyfinUploadExistingAssets:
+        "Wenn auf true gesetzt, prüft das Skript lokale Assets und lädt sie zu Jellyfin hoch, aber nur wenn Jellyfin noch keine EXIF-Daten von Posterizarr, Kometa oder TCM hat. HINWEIS: Dies erfordert, dass UseJellyfin aktiviert ist",
+      JellyfinReplaceThumbwithBackdrop:
+        "Wenn auf true gesetzt, ersetzt das Skript das Thumb-Bild durch das Backdrop-Bild. Dies geschieht nur, wenn BackgroundPosters ebenfalls auf true gesetzt ist. HINWEIS: Dies erfordert, dass UseJellyfin aktiviert ist",
+
+      // EmbyPart
+      EmbyLibstoExclude:
+        "Emby-Bibliotheken, nach lokalem Ordnernamen, die von der Verarbeitung ausgeschlossen werden sollen (kommagetrennte Liste)",
+      EmbyUrl:
+        "Emby-Server-URL (z.B. http://192.168.1.1:8096/emby oder http://meinplexserver.com:8096/emby). Dieses Feld ist aktiviert, wenn entweder Emby als aktiver Medienserver ausgewählt ist ODER wenn EmbySync aktiviert ist",
+      UseEmby:
+        "Emby als Medienserver aktivieren. HINWEIS: Nur EIN Medienserver kann gleichzeitig aktiv sein (Plex, Jellyfin oder Emby)",
+      UseEmbySync:
+        "Synchronisation mit Ihrem Emby-Server aktivieren. Wenn aktiviert, werden die Felder Emby-URL und API-Schlüssel für die Konfiguration verfügbar. HINWEIS: Dieser Schalter ist deaktiviert, wenn Emby als aktiver Medienserver ausgewählt ist",
+      EmbyUploadExistingAssets:
+        "Wenn auf true gesetzt, prüft das Skript lokale Assets und lädt sie zu Emby hoch, aber nur wenn Emby noch keine EXIF-Daten von Posterizarr, Kometa oder TCM hat. HINWEIS: Dies erfordert, dass UseEmby aktiviert ist",
+      EmbyReplaceThumbwithBackdrop:
+        "Wenn auf true gesetzt, ersetzt das Skript das Thumb-Bild durch das Backdrop-Bild. Dies geschieht nur, wenn BackgroundPosters ebenfalls auf true gesetzt ist. HINWEIS: Dies erfordert, dass UseEmby aktiviert ist",
+
+      // Notification
+      SendNotification:
+        "Auf true setzen, wenn Sie Benachrichtigungen per Discord oder Apprise senden möchten, sonst false",
+      AppriseUrl:
+        "Nur auf Docker möglich - URL für Apprise-Anbieter. Siehe Apprise-Dokumentation für Details",
+      Discord: "Discord Webhook-URL für Benachrichtigungen",
+      DiscordUserName:
+        "Benutzername für den Discord-Webhook (Standard ist Posterizarr)",
+      UseUptimeKuma:
+        "Auf true setzen, wenn Sie Webhook an Uptime-Kuma senden möchten",
+      UptimeKumaUrl: "Uptime-Kuma Webhook-URL",
+
+      // PrerequisitePart
+      AssetPath:
+        "Pfad zum Speichern generierter Poster. Auf Docker sollte dies /assets sein",
+      BackupPath:
+        "Pfad zum Speichern/Herunterladen von Plex-Postern im Backup-Modus",
+      ManualAssetPath:
+        "Wenn Assets in diesem Verzeichnis mit der exakten Namenskonvention platziert werden, werden sie bevorzugt (muss dieselbe Namenskonvention wie /assets befolgen)",
+      SkipAddText:
+        "Wenn auf true gesetzt, überspringt Posterizarr das Hinzufügen von Text zum Poster, wenn es vom Anbieter als 'Poster mit Text' gekennzeichnet ist",
+      FollowSymlink:
+        "Wenn auf true gesetzt, folgt Posterizarr symbolischen Links in den angegebenen Verzeichnissen während der Hashtabellen-Erstellung",
+      ForceRunningDeletion:
+        "Wenn auf true gesetzt, löscht Posterizarr automatisch die Running-Datei. WARNUNG: Kann dazu führen, dass mehrere gleichzeitige Läufe dasselbe Temp-Verzeichnis teilen",
+      AutoUpdatePosterizarr:
+        "Wenn auf true gesetzt, aktualisiert sich Posterizarr selbst auf die neueste Version (Nur für Nicht-Docker-Systeme)",
+      show_skipped:
+        "Wenn auf true gesetzt, wird ausführliches Logging bereits erstellter Assets angezeigt. Bei großen Bibliotheken kann es so aussehen, als ob das Skript hängt",
+      magickinstalllocation:
+        "Der Pfad zur ImageMagick-Installation, wo sich magick.exe befindet. Wenn Sie die portable Version verwenden, lassen Sie './magick'. Container verwalten dies automatisch",
+      maxLogs:
+        "Anzahl der Log-Ordner, die Sie im RotatedLogs-Ordner behalten möchten (Log-Historie)",
+      logLevel:
+        "Setzt die Ausführlichkeit des Loggings. 1 = Warnung/Fehler. 2 = Info/Warnung/Fehler (Standard). 3 = Info/Warnung/Fehler/Debug (am ausführlichsten)",
+      font: "Standard-Schriftartdatei für Text-Overlays",
+      RTLFont:
+        "Rechts-nach-Links-Schriftartdatei für RTL-Sprachen (Arabisch, Hebräisch, etc.)",
+      backgroundfont: "Schriftartdatei für Hintergrundtext",
+      titlecardfont: "Schriftartdatei für Titelkarten-Text",
+      collectionfont: "Schriftartdatei für Sammlungstitel",
+      overlayfile: "Standard-Overlay-Dateiname (z.B. overlay.png)",
+      seasonoverlayfile: "Staffelposter-Overlay-Dateiname",
+      backgroundoverlayfile: "Hintergrund-Overlay-Dateiname",
+      titlecardoverlayfile: "Titelkarten-Overlay-Dateiname",
+      collectionoverlayfile: "Sammlungs-Overlay-Dateiname",
+      poster4k:
+        "4K-Poster-Overlay-Dateiname (Overlay muss Poster-Dimensionen 2000x3000 entsprechen)",
+      Poster1080p:
+        "1080p-Poster-Overlay-Dateiname (Overlay muss Poster-Dimensionen 2000x3000 entsprechen)",
+      Background4k:
+        "4K-Hintergrund-Overlay-Dateiname (Overlay muss Hintergrund-Dimensionen 3840x2160 entsprechen)",
+      Background1080p:
+        "1080p-Hintergrund-Overlay-Dateiname (Overlay muss Hintergrund-Dimensionen 3840x2160 entsprechen)",
+      TC4k: "4K-Titelkarten-Overlay-Dateiname (Overlay muss Dimensionen 3840x2160 entsprechen)",
+      TC1080p:
+        "1080p-Titelkarten-Overlay-Dateiname (Overlay muss Dimensionen 3840x2160 entsprechen)",
+      UsePosterResolutionOverlays:
+        "Auf true setzen, um spezifisches Overlay mit Auflösung für 4k/1080p-Poster anzuwenden. Wenn Sie nur 4k möchten, fügen Sie Ihre Standard-Overlay-Datei auch für Poster1080p hinzu",
+      UseBackgroundResolutionOverlays:
+        "Auf true setzen, um spezifisches Overlay mit Auflösung für 4k/1080p-Hintergründe anzuwenden. Wenn Sie nur 4k möchten, fügen Sie Ihre Standard-Overlay-Datei auch für Background1080p hinzu",
+      UseTCResolutionOverlays:
+        "Auf true setzen, um spezifisches Overlay mit Auflösung für 4k/1080p-Titelkarten anzuwenden. Wenn Sie nur 4k möchten, fügen Sie Ihre Standard-Overlay-Datei für TC1080p hinzu",
+      LibraryFolders:
+        "Auf false setzen für Asset-Struktur in einem flachen Ordner oder auf true, um in Bibliotheks-Medienordner aufzuteilen, wie Kometa es benötigt",
+      Posters: "Auf true setzen, um Film-/Serienposter zu erstellen",
+      SeasonPosters: "Auf true setzen, um auch Staffelposter zu erstellen",
+      BackgroundPosters:
+        "Auf true setzen, um auch Hintergrundposter zu erstellen",
+      TitleCards: "Auf true setzen, um auch Titelkarten zu erstellen",
+      SkipTBA:
+        "Auf true setzen, um Titelkarten-Erstellung zu überspringen, wenn der Titeltext 'TBA' ist",
+      SkipJapTitle:
+        "Auf true setzen, um Titelkarten-Erstellung zu überspringen, wenn der Titeltext Japanisch oder Chinesisch ist",
+      AssetCleanup:
+        "Auf true setzen, um Assets zu bereinigen, die nicht mehr in Plex sind. WICHTIG: Risiko von Datenverlust durch ausgeschlossene Bibliotheken - stellen Sie sicher, dass alle aktiven Asset-Bibliotheken eingeschlossen sind",
+      AutoUpdateIM:
+        "Auf true setzen, um ImageMagick Portable Version automatisch zu aktualisieren (Funktioniert nicht mit Docker/Unraid). Warnung: Ungetestete Versionen können Probleme verursachen",
+      NewLineOnSpecificSymbols:
+        "Auf true setzen, um automatisches Einfügen eines Zeilenumbruchs bei jedem Vorkommen bestimmter Symbole in NewLineSymbols innerhalb des Titeltexts zu aktivieren",
+      NewLineSymbols:
+        "Eine Liste von Symbolen, die einen Zeilenumbruch auslösen, wenn NewLineOnSpecificSymbols true ist. Trennen Sie jedes Symbol mit Komma (z.B. ' - ', ':')",
+      DisableHashValidation:
+        "Auf true setzen, um Hash-Validierung zu überspringen (Standard: false). Hinweis: Dies kann Bloat erzeugen, da jedes Element erneut auf Medienserver hochgeladen wird",
+      DisableOnlineAssetFetch:
+        "Auf true setzen, um alle Online-Lookups zu überspringen und nur lokal verfügbare Assets zu verwenden (Standard: false)",
+
+      // OverlayPart
+      ImageProcessing:
+        "Auf true setzen, wenn Sie den ImageMagick-Teil (Text, Overlay und/oder Rahmen) möchten; wenn false, werden nur die Poster heruntergeladen",
+      outputQuality:
+        "Bild-Ausgabequalität (Standard ist 92%). Einstellung auf 100% verdoppelt die Bildgröße",
+
+      // PosterOverlayPart
+      PosterFontAllCaps:
+        "Auf true setzen für Großbuchstaben-Text auf Postern, sonst false",
+      PosterAddBorder:
+        "Auf true setzen, um einen Rahmen zum Posterbild hinzuzufügen",
+      PosterAddText: "Auf true setzen, um Text zum Posterbild hinzuzufügen",
+      PosterAddOverlay:
+        "Auf true setzen, um die definierte Overlay-Datei zum Posterbild hinzuzufügen",
+      PosterFontcolor:
+        "Farbe des Schrifttexts auf Postern (z.B. #FFFFFF für Weiß)",
+      PosterBordercolor:
+        "Farbe des Rahmens auf Postern (z.B. #000000 für Schwarz)",
+      PosterMinPointSize: "Minimale Textgröße im Poster (in Punkten)",
+      PosterMaxPointSize: "Maximale Textgröße im Poster (in Punkten)",
+      PosterBorderwidth: "Rahmenbreite in Pixeln",
+      PosterMaxWidth: "Maximale Breite der Textbox auf dem Poster",
+      PosterMaxHeight: "Maximale Höhe der Textbox auf dem Poster",
+      PosterTextOffset:
+        "Textbox-Versatz vom unteren Rand des Bildes (Format +200 oder -150 verwenden)",
+      PosterAddTextStroke:
+        "Auf true setzen, um Kontur/Umrandung zum Text hinzuzufügen",
+      PosterStrokecolor:
+        "Farbe der Textkontur/Umrandung (z.B. #000000 für Schwarz)",
+      PosterStrokewidth: "Konturbreite in Pixeln",
+      PosterLineSpacing: "Höhe zwischen Textzeilen anpassen (Standard ist 0)",
+      PosterTextGravity:
+        "Gibt die Textausrichtung innerhalb der Textbox an (Standard ist south = unten zentriert)",
+
+      // SeasonPosterOverlayPart
+      SeasonPosterFontAllCaps:
+        "Auf true setzen für Großbuchstaben-Text auf Staffelpostern, sonst false",
+      SeasonPosterAddBorder:
+        "Auf true setzen, um einen Rahmen zum Staffelposterbild hinzuzufügen",
+      SeasonPosterAddText:
+        "Auf true setzen, um Text zum Staffelposterbild hinzuzufügen",
+      SeasonPosterAddOverlay:
+        "Auf true setzen, um die definierte Overlay-Datei zum Staffelposterbild hinzuzufügen",
+      SeasonPosterFontcolor: "Farbe des Schrifttexts auf Staffelpostern",
+      SeasonPosterBordercolor: "Farbe des Rahmens auf Staffelpostern",
+      SeasonPosterMinPointSize: "Minimale Textgröße im Staffelposter",
+      SeasonPosterMaxPointSize: "Maximale Textgröße im Staffelposter",
+      SeasonPosterBorderwidth: "Rahmenbreite in Pixeln für Staffelposter",
+      SeasonPosterMaxWidth: "Maximale Breite der Textbox auf dem Staffelposter",
+      SeasonPosterMaxHeight: "Maximale Höhe der Textbox auf dem Staffelposter",
+      SeasonPosterTextOffset:
+        "Textbox-Versatz vom unteren Rand des Staffelposters (Format +200 oder -150 verwenden)",
+      SeasonPosterAddTextStroke:
+        "Auf true setzen, um Kontur/Umrandung zum Text auf Staffelpostern hinzuzufügen",
+      SeasonPosterStrokecolor:
+        "Farbe der Textkontur/Umrandung auf Staffelpostern",
+      SeasonPosterStrokewidth: "Konturbreite in Pixeln für Staffelposter",
+      SeasonPosterLineSpacing:
+        "Höhe zwischen Textzeilen auf Staffelpostern anpassen (Standard ist 0)",
+      SeasonPosterShowFallback:
+        "Auf true setzen, wenn Sie auf Serienposter zurückgreifen möchten, wenn kein Staffelposter gefunden wurde",
+      SeasonPosterTextGravity:
+        "Gibt die Textausrichtung innerhalb der Textbox auf Staffelpostern an (Standard ist south)",
+
+      // BackgroundOverlayPart
+      BackgroundFontAllCaps:
+        "Auf true setzen für Großbuchstaben-Text auf Hintergründen, sonst false",
+      BackgroundAddOverlay:
+        "Auf true setzen, um die definierte Hintergrund-Overlay-Datei zum Hintergrundbild hinzuzufügen",
+      BackgroundAddBorder:
+        "Auf true setzen, um einen Rahmen zum Hintergrundbild hinzuzufügen",
+      BackgroundAddText:
+        "Auf true setzen, um Text zum Hintergrundbild hinzuzufügen",
+      BackgroundFontcolor: "Farbe des Schrifttexts auf Hintergründen",
+      BackgroundBordercolor: "Farbe des Rahmens auf Hintergründen",
+      BackgroundMinPointSize: "Minimale Textgröße im Hintergrundbild",
+      BackgroundMaxPointSize: "Maximale Textgröße im Hintergrundbild",
+      BackgroundBorderwidth: "Rahmenbreite in Pixeln für Hintergründe",
+      BackgroundMaxWidth: "Maximale Breite der Textbox im Hintergrundbild",
+      BackgroundMaxHeight: "Maximale Höhe der Textbox im Hintergrundbild",
+      BackgroundTextOffset:
+        "Textbox-Versatz vom unteren Rand des Hintergrundbildes (Format +200 oder -150 verwenden)",
+      BackgroundAddTextStroke:
+        "Auf true setzen, um Kontur/Umrandung zum Text auf Hintergründen hinzuzufügen",
+      BackgroundStrokecolor: "Farbe der Textkontur/Umrandung auf Hintergründen",
+      BackgroundStrokewidth: "Konturbreite in Pixeln für Hintergründe",
+      BackgroundLineSpacing:
+        "Höhe zwischen Textzeilen auf Hintergründen anpassen (Standard ist 0)",
+      BackgroundTextGravity:
+        "Gibt die Textausrichtung innerhalb der Textbox auf Hintergründen an (Standard ist south)",
+
+      // TitleCardOverlayPart
+      TitleCardUseBackgroundAsTitleCard:
+        "Auf true setzen, wenn Sie Serien-Hintergrund als Titelkarte bevorzugen (Standard ist false, welches Episodenbild verwendet)",
+      TitleCardAddOverlay:
+        "Auf true setzen, um die definierte Titelkarten-Overlay-Datei zum Titelkartenbild hinzuzufügen",
+      TitleCardAddBorder:
+        "Auf true setzen, um einen Rahmen zum Titelkartenbild hinzuzufügen",
+      TitleCardBordercolor: "Farbe des Rahmens auf Titelkarten",
+      TitleCardBorderwidth: "Rahmenbreite in Pixeln für Titelkarten",
+      TitleCardBackgroundFallback:
+        "Auf false setzen, wenn Sie Hintergrund-Fallback für Titelkartenbilder überspringen möchten, wenn keine Titelkarte gefunden wurde",
+
+      // TitleCardTitleTextPart
+      TitleCardTitleFontAllCaps:
+        "Auf true setzen für Großbuchstaben-Episodentiteltext auf Titelkarten, sonst false",
+      TitleCardTitleAddEPTitleText:
+        "Auf true setzen, um Episodentiteltext zum Titelkartenbild hinzuzufügen",
+      TitleCardTitleFontcolor:
+        "Farbe des Episodentitel-Schrifttexts auf Titelkarten",
+      TitleCardTitleMinPointSize:
+        "Minimale Größe des Episodentiteltexts im Titelkartenbild",
+      TitleCardTitleMaxPointSize:
+        "Maximale Größe des Episodentiteltexts im Titelkartenbild",
+      TitleCardTitleMaxWidth:
+        "Maximale Breite der Episodentitel-Textbox im Titelkartenbild",
+      TitleCardTitleMaxHeight:
+        "Maximale Höhe der Episodentitel-Textbox im Titelkartenbild",
+      TitleCardTitleTextOffset:
+        "Episodentitel-Textbox-Versatz vom unteren Rand des Titelkartenbildes (Format +200 oder -150 verwenden)",
+      TitleCardTitleAddTextStroke:
+        "Auf true setzen, um Kontur/Umrandung zum Episodentiteltext auf Titelkarten hinzuzufügen",
+      TitleCardTitleStrokecolor:
+        "Farbe der Episodentiteltext-Kontur/Umrandung auf Titelkarten",
+      TitleCardTitleStrokewidth:
+        "Konturbreite in Pixeln für Episodentiteltext auf Titelkarten",
+      TitleCardTitleLineSpacing:
+        "Höhe zwischen Zeilen des Episodentiteltexts auf Titelkarten anpassen (Standard ist 0)",
+      TitleCardTitleTextGravity:
+        "Gibt die Episodentiteltext-Ausrichtung innerhalb der Textbox auf Titelkarten an (Standard ist south)",
+
+      // TitleCardEPTextPart
+      TitleCardEPSeasonTCText:
+        "Sie können den Standardtext für 'Season' festlegen, der auf Titelkarten erscheint (z.B. 'STAFFEL' für Deutsch, 'SÄSONG' für Schwedisch)",
+      TitleCardEPEpisodeTCText:
+        "Sie können den Standardtext für 'Episode' festlegen, der auf Titelkarten erscheint (z.B. 'EPISODE', 'AVSNITT' für Schwedisch)",
+      TitleCardEPFontAllCaps:
+        "Auf true setzen für Großbuchstaben-Episodennummerntext auf Titelkarten, sonst false",
+      TitleCardEPAddEPText:
+        "Auf true setzen, um Episodennummerntext (Staffel X • Episode Y) zum Titelkartenbild hinzuzufügen",
+      TitleCardEPFontcolor:
+        "Farbe des Episodennummern-Schrifttexts auf Titelkarten",
+      TitleCardEPMinPointSize:
+        "Minimale Größe des Episodennummerntexts im Titelkartenbild",
+      TitleCardEPMaxPointSize:
+        "Maximale Größe des Episodennummerntexts im Titelkartenbild",
+      TitleCardEPMaxWidth:
+        "Maximale Breite der Episodennummern-Textbox im Titelkartenbild",
+      TitleCardEPMaxHeight:
+        "Maximale Höhe der Episodennummern-Textbox im Titelkartenbild",
+      TitleCardEPTextOffset:
+        "Episodennummern-Textbox-Versatz vom unteren Rand des Titelkartenbildes (Format +200 oder -150 verwenden)",
+      TitleCardEPAddTextStroke:
+        "Auf true setzen, um Kontur/Umrandung zum Episodennummerntext auf Titelkarten hinzuzufügen",
+      TitleCardEPStrokecolor:
+        "Farbe der Episodennummerntext-Kontur/Umrandung auf Titelkarten",
+      TitleCardEPStrokewidth:
+        "Konturbreite in Pixeln für Episodennummerntext auf Titelkarten",
+      TitleCardEPLineSpacing:
+        "Höhe zwischen Zeilen des Episodennummerntexts auf Titelkarten anpassen (Standard ist 0)",
+      TitleCardEPTextGravity:
+        "Gibt die Episodennummerntext-Ausrichtung innerhalb der Textbox auf Titelkarten an (Standard ist south)",
+
+      // ShowTitleOnSeasonPosterPart
+      ShowTitleAddShowTitletoSeason:
+        "Wenn auf true gesetzt, wird Serientitel zum Staffelposter hinzugefügt (Standard: false)",
+      ShowTitleFontAllCaps:
+        "Auf true setzen für Großbuchstaben-Serientiteltext auf Staffelpostern, sonst false",
+      ShowTitleAddTextStroke:
+        "Auf true setzen, um Kontur/Umrandung zum Serientiteltext auf Staffelpostern hinzuzufügen",
+      ShowTitleStrokecolor:
+        "Farbe der Serientiteltext-Kontur/Umrandung auf Staffelpostern",
+      ShowTitleStrokewidth:
+        "Konturbreite in Pixeln für Serientiteltext auf Staffelpostern",
+      ShowTitleFontcolor:
+        "Farbe des Serientitel-Schrifttexts auf Staffelpostern",
+      ShowTitleMinPointSize:
+        "Minimale Größe des Serientiteltexts auf Staffelpostern",
+      ShowTitleMaxPointSize:
+        "Maximale Größe des Serientiteltexts auf Staffelpostern",
+      ShowTitleMaxWidth:
+        "Maximale Breite der Serientitel-Textbox auf Staffelpostern",
+      ShowTitleMaxHeight:
+        "Maximale Höhe der Serientitel-Textbox auf Staffelpostern",
+      ShowTitleTextOffset:
+        "Serientitel-Textbox-Versatz vom unteren Rand des Staffelposters (Format +200 oder -150 verwenden)",
+      ShowTitleLineSpacing:
+        "Höhe zwischen Zeilen des Serientiteltexts auf Staffelpostern anpassen (Standard ist 0)",
+      ShowTitleTextGravity:
+        "Gibt die Serientiteltext-Ausrichtung innerhalb der Textbox auf Staffelpostern an (Standard ist south)",
+
+      // CollectionTitlePosterPart
+      CollectionTitleAddCollectionTitle:
+        "Auf true setzen, um Sammlungstiteltext zu Sammlungspostern hinzuzufügen",
+      CollectionTitleCollectionTitle:
+        "Der als Sammlungstitel anzuzeigende Text (z.B. 'COLLECTION', 'SAMMLUNG')",
+      CollectionTitleFontAllCaps:
+        "Auf true setzen für Großbuchstaben-Sammlungstiteltext, sonst false",
+      CollectionTitleAddTextStroke:
+        "Auf true setzen, um Kontur/Umrandung zum Sammlungstiteltext hinzuzufügen",
+      CollectionTitleStrokecolor:
+        "Farbe der Sammlungstiteltext-Kontur/Umrandung",
+      CollectionTitleStrokewidth:
+        "Konturbreite in Pixeln für Sammlungstiteltext",
+      CollectionTitleFontcolor: "Farbe des Sammlungstitel-Schrifttexts",
+      CollectionTitleMinPointSize: "Minimale Größe des Sammlungstiteltexts",
+      CollectionTitleMaxPointSize: "Maximale Größe des Sammlungstiteltexts",
+      CollectionTitleMaxWidth: "Maximale Breite der Sammlungstitel-Textbox",
+      CollectionTitleMaxHeight: "Maximale Höhe der Sammlungstitel-Textbox",
+      CollectionTitleTextOffset:
+        "Sammlungstitel-Textbox-Versatz vom unteren Rand des Posters (Format +200 oder -150 verwenden)",
+      CollectionTitleLineSpacing:
+        "Höhe zwischen Zeilen des Sammlungstiteltexts anpassen (Standard ist 0)",
+      CollectionTitleTextGravity:
+        "Gibt die Sammlungstiteltext-Ausrichtung innerhalb der Textbox an (Standard ist south)",
+
+      // CollectionPosterOverlayPart
+      CollectionPosterFontAllCaps:
+        "Auf true setzen für Großbuchstaben-Text auf Sammlungspostern, sonst false",
+      CollectionPosterAddBorder:
+        "Auf true setzen, um einen Rahmen zum Sammlungsposterbild hinzuzufügen",
+      CollectionPosterAddText:
+        "Auf true setzen, um Text zum Sammlungsposterbild hinzuzufügen",
+      CollectionPosterAddTextStroke:
+        "Auf true setzen, um Kontur/Umrandung zum Text auf Sammlungspostern hinzuzufügen",
+      CollectionPosterStrokecolor:
+        "Farbe der Textkontur/Umrandung auf Sammlungspostern",
+      CollectionPosterStrokewidth: "Konturbreite in Pixeln für Sammlungsposter",
+      CollectionPosterAddOverlay:
+        "Auf true setzen, um die definierte Overlay-Datei zum Sammlungsposterbild hinzuzufügen",
+      CollectionPosterFontcolor: "Farbe des Schrifttexts auf Sammlungspostern",
+      CollectionPosterBordercolor: "Farbe des Rahmens auf Sammlungspostern",
+      CollectionPosterMinPointSize: "Minimale Textgröße im Sammlungsposter",
+      CollectionPosterMaxPointSize: "Maximale Textgröße im Sammlungsposter",
+      CollectionPosterBorderwidth: "Rahmenbreite in Pixeln für Sammlungsposter",
+      CollectionPosterMaxWidth:
+        "Maximale Breite der Textbox auf dem Sammlungsposter",
+      CollectionPosterMaxHeight:
+        "Maximale Höhe der Textbox auf dem Sammlungsposter",
+      CollectionPosterTextOffset:
+        "Textbox-Versatz vom unteren Rand des Sammlungsposters (Format +200 oder -150 verwenden)",
+      CollectionPosterLineSpacing:
+        "Höhe zwischen Textzeilen auf Sammlungspostern anpassen (Standard ist 0)",
+      CollectionPosterTextGravity:
+        "Gibt die Textausrichtung innerhalb der Textbox auf Sammlungspostern an (Standard ist south)",
+    },
+  };
+
+  return tooltips[language] || tooltips.en;
 };
 
 function ConfigEditor() {
+  const { t, i18n } = useTranslation();
   const location = useLocation();
   const { showSuccess, showError, showInfo } = useToast();
+  const CONFIG_TOOLTIPS = getConfigTooltips(i18n.language);
   const [config, setConfig] = useState(null);
   const [uiGroups, setUiGroups] = useState(null);
   const [displayNames, setDisplayNames] = useState({});
@@ -2802,7 +3242,7 @@ function ConfigEditor() {
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
           <Loader2 className="w-12 h-12 animate-spin text-theme-primary mx-auto mb-4" />
-          <p className="text-theme-muted">Loading configuration...</p>
+          <p className="text-theme-muted">{t("configEditor.loadingConfig")}</p>
         </div>
       </div>
     );
@@ -2813,7 +3253,7 @@ function ConfigEditor() {
       <div className="bg-red-950/40 rounded-xl p-6 border-2 border-red-600/50 text-center">
         <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
         <p className="text-red-300 text-lg font-semibold mb-2">
-          Error Loading Configuration
+          {t("configEditor.errorLoadingConfig")}
         </p>
         <p className="text-red-200 mb-4">{error}</p>
         <button
@@ -2821,7 +3261,7 @@ function ConfigEditor() {
           className="px-6 py-2.5 bg-red-600 hover:bg-red-700 rounded-lg font-medium transition-all shadow-lg hover:scale-105"
         >
           <RefreshCw className="w-5 h-5 inline mr-2" />
-          Retry
+          {t("configEditor.retry")}
         </button>
       </div>
     );
@@ -2844,13 +3284,15 @@ function ConfigEditor() {
                 loading ? "animate-spin" : ""
               }`}
             />
-            <span className="text-sm text-theme-text">Reload</span>
+            <span className="text-sm text-theme-text">
+              {t("configEditor.reload")}
+            </span>
           </button>
           <button
             onClick={saveConfig}
             disabled={saving}
             className="flex items-center gap-2 px-3 py-2 bg-theme-primary hover:bg-theme-primary/90 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg transition-all"
-            title="Save configuration (Ctrl+Enter)"
+            title={t("configEditor.saveConfigTitle")}
           >
             {saving ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -2858,7 +3300,9 @@ function ConfigEditor() {
               <Save className="w-4 h-4" />
             )}
             <span className="text-sm text-white">
-              {saving ? "Saving..." : "Save Changes"}
+              {saving
+                ? t("configEditor.saving")
+                : t("configEditor.saveChanges")}
             </span>
             {!saving && (
               <span className="hidden sm:inline text-xs opacity-70 ml-1">
@@ -2877,7 +3321,7 @@ function ConfigEditor() {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search settings by name or value..."
+            placeholder={t("configEditor.searchPlaceholder")}
             className="w-full pl-12 pr-4 py-3 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
           />
           {searchQuery && (
@@ -2891,7 +3335,7 @@ function ConfigEditor() {
         </div>
         {searchQuery && (
           <p className="text-sm text-theme-muted mt-2">
-            Filtering settings matching "{searchQuery}"
+            {t("configEditor.filteringSettings", { query: searchQuery })}
           </p>
         )}
       </div>
@@ -2906,15 +3350,16 @@ function ConfigEditor() {
                   (groupName) => getFilteredFieldsForGroup(groupName).length > 0
                 ).length
               }{" "}
-              section
-              {getFilteredGroupsByTab(activeTab).filter(
-                (groupName) => getFilteredFieldsForGroup(groupName).length > 0
-              ).length !== 1
-                ? "s"
-                : ""}
+              {t("configEditor.section", {
+                count: getFilteredGroupsByTab(activeTab).filter(
+                  (groupName) => getFilteredFieldsForGroup(groupName).length > 0
+                ).length,
+              })}
             </span>
             {searchQuery && (
-              <span className="ml-2 text-theme-muted text-sm">(filtered)</span>
+              <span className="ml-2 text-theme-muted text-sm">
+                ({t("configEditor.filtered")})
+              </span>
             )}
           </div>
           <div className="flex gap-2">
@@ -2932,7 +3377,7 @@ function ConfigEditor() {
               className="flex items-center gap-1 px-3 py-2 text-sm bg-theme-hover hover:bg-theme-primary/20 border border-theme hover:border-theme-primary rounded-lg transition-all font-medium"
             >
               <Expand className="w-4 h-4" />
-              Expand All
+              {t("configEditor.expandAll")}
             </button>
             <button
               onClick={() => {
@@ -2941,7 +3386,7 @@ function ConfigEditor() {
               className="flex items-center gap-1 px-3 py-2 text-sm bg-theme-hover hover:bg-theme-primary/20 border border-theme hover:border-theme-primary rounded-lg transition-all font-medium"
             >
               <Minimize className="w-4 h-4" />
-              Collapse All
+              {t("configEditor.collapseAll")}
             </button>
           </div>
         </div>
@@ -3187,17 +3632,19 @@ function ConfigEditor() {
           <div className="bg-theme-card rounded-xl p-12 border border-theme text-center">
             <Search className="w-12 h-12 text-theme-muted mx-auto mb-4 opacity-50" />
             <h3 className="text-xl font-semibold text-theme-text mb-2">
-              No settings found
+              {t("configEditor.noSettingsFound")}
             </h3>
             <p className="text-theme-muted mb-4">
-              No settings match your search "{searchQuery}" in the {activeTab}{" "}
-              section
+              {t("configEditor.noSettingsMatch", {
+                query: searchQuery,
+                tab: activeTab,
+              })}
             </p>
             <button
               onClick={() => setSearchQuery("")}
               className="px-4 py-2 bg-theme-primary hover:bg-theme-primary/90 rounded-lg font-medium transition-all"
             >
-              Clear Search
+              {t("configEditor.clearSearch")}
             </button>
           </div>
         )}
@@ -3218,7 +3665,7 @@ function ConfigEditor() {
               <div className="flex items-center gap-3">
                 <Image className="w-5 h-5 text-theme-primary" />
                 <h3 className="text-lg font-semibold text-theme-text">
-                  Overlay Preview
+                  {t("configEditor.overlayPreview")}
                 </h3>
               </div>
               <button
@@ -3232,7 +3679,9 @@ function ConfigEditor() {
             {/* Modal Content */}
             <div className="p-6">
               <div className="mb-4">
-                <p className="text-sm text-theme-muted mb-1">Filename:</p>
+                <p className="text-sm text-theme-muted mb-1">
+                  {t("configEditor.filename")}:
+                </p>
                 <p className="text-theme-text font-mono bg-theme-bg px-3 py-2 rounded-lg border border-theme">
                   {previewOverlay}
                 </p>
@@ -3271,7 +3720,7 @@ function ConfigEditor() {
                   style={{ display: "none" }}
                 >
                   <AlertCircle className="w-12 h-12" />
-                  <p>Failed to load image</p>
+                  <p>{t("configEditor.failedLoadImage")}</p>
                 </div>
               </div>
 
@@ -3281,7 +3730,7 @@ function ConfigEditor() {
                   onClick={() => setPreviewOverlay(null)}
                   className="px-4 py-2 bg-theme-bg hover:bg-theme-hover border border-theme rounded-lg font-medium transition-all"
                 >
-                  Close
+                  {t("common.close")}
                 </button>
               </div>
             </div>
@@ -3304,7 +3753,7 @@ function ConfigEditor() {
               <div className="flex items-center gap-3">
                 <Type className="w-5 h-5 text-theme-primary" />
                 <h3 className="text-lg font-semibold text-theme-text">
-                  Font Preview
+                  {t("configEditor.fontPreview")}
                 </h3>
               </div>
               <button
@@ -3318,7 +3767,9 @@ function ConfigEditor() {
             {/* Modal Content */}
             <div className="p-6">
               <div className="mb-4">
-                <p className="text-sm text-theme-muted mb-1">Filename:</p>
+                <p className="text-sm text-theme-muted mb-1">
+                  {t("configEditor.filename")}:
+                </p>
                 <p className="text-theme-text font-mono bg-theme-bg px-3 py-2 rounded-lg border border-theme">
                   {previewFont}
                 </p>
@@ -3330,7 +3781,7 @@ function ConfigEditor() {
                   <div className="space-y-3">
                     <div>
                       <p className="text-xs text-theme-muted mb-1">
-                        Uppercase:
+                        {t("configEditor.uppercase")}:
                       </p>
                       <img
                         src={`${API_URL}/fonts/preview/${encodeURIComponent(
@@ -3346,7 +3797,7 @@ function ConfigEditor() {
                     </div>
                     <div>
                       <p className="text-xs text-theme-muted mb-1">
-                        Lowercase:
+                        {t("configEditor.lowercase")}:
                       </p>
                       <img
                         src={`${API_URL}/fonts/preview/${encodeURIComponent(
@@ -3361,7 +3812,9 @@ function ConfigEditor() {
                       />
                     </div>
                     <div>
-                      <p className="text-xs text-theme-muted mb-1">Numbers:</p>
+                      <p className="text-xs text-theme-muted mb-1">
+                        {t("configEditor.numbers")}:
+                      </p>
                       <img
                         src={`${API_URL}/fonts/preview/${encodeURIComponent(
                           previewFont
@@ -3375,7 +3828,9 @@ function ConfigEditor() {
                       />
                     </div>
                     <div>
-                      <p className="text-xs text-theme-muted mb-1">Sample:</p>
+                      <p className="text-xs text-theme-muted mb-1">
+                        {t("configEditor.sample")}:
+                      </p>
                       <img
                         src={`${API_URL}/fonts/preview/${encodeURIComponent(
                           previewFont
@@ -3398,7 +3853,7 @@ function ConfigEditor() {
                   onClick={() => setPreviewFont(null)}
                   className="px-4 py-2 bg-theme-bg hover:bg-theme-hover border border-theme rounded-lg font-medium transition-all"
                 >
-                  Close
+                  {t("common.close")}
                 </button>
               </div>
             </div>

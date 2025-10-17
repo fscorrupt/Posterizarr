@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import {
   Activity,
   Play,
@@ -31,6 +32,7 @@ import { useSidebar } from "../context/SidebarContext";
 import { useTheme } from "../context/ThemeContext";
 
 const Sidebar = () => {
+  const { t } = useTranslation();
   const location = useLocation();
   const { isCollapsed, setIsCollapsed } = useSidebar();
   const { theme, setTheme, themes } = useTheme();
@@ -101,58 +103,88 @@ const Sidebar = () => {
   }));
 
   const navItems = [
-    { path: "/", label: "Dashboard", icon: Activity },
-    { path: "/run-modes", label: "Run Modes", icon: Play },
-    { path: "/runtime-history", label: "Runtime History", icon: TrendingUp },
+    { path: "/", label: t("nav.dashboard"), icon: Activity },
+    { path: "/run-modes", label: t("nav.runModes"), icon: Play },
+    {
+      path: "/runtime-history",
+      label: t("nav.runtimeHistory"),
+      icon: TrendingUp,
+    },
     {
       path: "/gallery",
-      label: "Assets",
+      label: t("nav.assets"),
       icon: Image,
       hasSubItems: true,
       subItems:
         // In Folder View: Only show "Posters" tab, in Grid View: show all tabs
         viewMode === "folder"
-          ? [{ path: "/gallery/posters", label: "Posters", icon: Image }]
+          ? [
+              {
+                path: "/gallery/posters",
+                label: t("assets.posters"),
+                icon: Image,
+              },
+            ]
           : [
-              { path: "/gallery/posters", label: "Posters", icon: Image },
+              {
+                path: "/gallery/posters",
+                label: t("assets.posters"),
+                icon: Image,
+              },
               {
                 path: "/gallery/backgrounds",
-                label: "Backgrounds",
+                label: t("assets.backgrounds"),
                 icon: Layers,
               },
-              { path: "/gallery/seasons", label: "Seasons", icon: Film },
-              { path: "/gallery/titlecards", label: "Title Cards", icon: Tv },
+              {
+                path: "/gallery/seasons",
+                label: t("assets.seasons"),
+                icon: Film,
+              },
+              {
+                path: "/gallery/titlecards",
+                label: t("assets.titleCards"),
+                icon: Tv,
+              },
             ],
     },
     {
       path: "/asset-overview",
-      label: "Missing Assets",
+      label: t("nav.assetOverview"),
       icon: AlertTriangle,
       badge: missingAssetsCount,
     },
-    { path: "/overlay-assets", label: "Overlay Assets", icon: FileImage },
-    { path: "/test-gallery", label: "Test Assets", icon: Image },
+    { path: "/overlay-assets", label: t("nav.overlayAssets"), icon: FileImage },
+    { path: "/test-gallery", label: t("nav.test"), icon: Image },
     {
       path: "/config",
-      label: "Config",
+      label: t("nav.config"),
       icon: Settings,
       hasSubItems: true,
       subItems: [
         { path: "/config/webui", label: "WebUI", icon: Lock },
-        { path: "/config/general", label: "General", icon: Settings },
+        {
+          path: "/config/general",
+          label: t("nav.generalSettings"),
+          icon: Settings,
+        },
         { path: "/config/services", label: "Media Servers", icon: Database },
         { path: "/config/api", label: "Service APIs", icon: Settings },
-        { path: "/config/languages", label: "Languages", icon: Type },
+        { path: "/config/languages", label: t("nav.library"), icon: Type },
         { path: "/config/visuals", label: "Visuals", icon: Palette },
         { path: "/config/overlays", label: "Overlays", icon: Palette },
         { path: "/config/collections", label: "Collections", icon: Type },
-        { path: "/config/notifications", label: "Notifications", icon: Bell },
+        {
+          path: "/config/notifications",
+          label: t("nav.notifications"),
+          icon: Bell,
+        },
       ],
     },
-    { path: "/scheduler", label: "Scheduler", icon: Clock },
-    { path: "/logs", label: "Logs", icon: FileText },
-    { path: "/how-it-works", label: "How It Works", icon: Lightbulb },
-    { path: "/about", label: "About", icon: Info },
+    { path: "/scheduler", label: t("nav.scheduler"), icon: Clock },
+    { path: "/logs", label: t("nav.logs"), icon: FileText },
+    { path: "/how-it-works", label: t("nav.howItWorks"), icon: Lightbulb },
+    { path: "/about", label: t("nav.about"), icon: Info },
   ];
 
   const isInAssetsSection = location.pathname.startsWith("/gallery");

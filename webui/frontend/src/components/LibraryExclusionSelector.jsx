@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { X, RefreshCw, Loader2, AlertCircle, Check } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const LibraryExclusionSelector = ({
   value = [],
@@ -10,6 +11,7 @@ const LibraryExclusionSelector = ({
   config, // Full config object to get connection details
   disabled = false, // New prop for disabled state
 }) => {
+  const { t } = useTranslation();
   const [excludedLibraries, setExcludedLibraries] = useState([]);
   const [availableLibraries, setAvailableLibraries] = useState([]);
   const [loadingLibraries, setLoadingLibraries] = useState(false);
@@ -51,7 +53,7 @@ const LibraryExclusionSelector = ({
 
     const serverConfig = getMediaServerConfig();
     if (!serverConfig) {
-      setError("Media server configuration not found");
+      setError(t("libraryExclusion.configNotFound"));
       setLoadingLibraries(false);
       return;
     }
@@ -73,11 +75,11 @@ const LibraryExclusionSelector = ({
         setLibrariesFetched(true);
         setError(null);
       } else {
-        setError(data.error || "Failed to fetch libraries");
+        setError(data.error || t("libraryExclusion.fetchFailed"));
         setAvailableLibraries([]);
       }
     } catch (err) {
-      setError(`Error fetching libraries: ${err.message}`);
+      setError(t("libraryExclusion.fetchError", { message: err.message }));
       setAvailableLibraries([]);
     } finally {
       setLoadingLibraries(false);
@@ -135,16 +137,14 @@ const LibraryExclusionSelector = ({
           <AlertCircle className="w-5 h-5 text-theme-muted flex-shrink-0 mt-0.5" />
           <div className="flex-1">
             <p className="text-sm text-theme-muted font-medium">
-              Library selection is currently disabled
+              {t("libraryExclusion.disabled")}
             </p>
             <p className="text-xs text-theme-muted/80 mt-1">
-              Enable{" "}
-              {mediaServerType.charAt(0).toUpperCase() +
-                mediaServerType.slice(1)}{" "}
-              server or{" "}
-              {mediaServerType.charAt(0).toUpperCase() +
-                mediaServerType.slice(1)}
-              Sync to access this feature
+              {t("libraryExclusion.disabledHint", {
+                server:
+                  mediaServerType.charAt(0).toUpperCase() +
+                  mediaServerType.slice(1),
+              })}
             </p>
           </div>
         </div>
@@ -165,7 +165,9 @@ const LibraryExclusionSelector = ({
             <RefreshCw className="w-4 h-4" />
           )}
           <span className="text-sm">
-            {librariesFetched ? "Refresh Libraries" : "Fetch Libraries"}
+            {librariesFetched
+              ? t("libraryExclusion.refreshLibraries")
+              : t("libraryExclusion.fetchLibraries")}
           </span>
         </button>
 
@@ -176,14 +178,14 @@ const LibraryExclusionSelector = ({
               className="flex items-center gap-2 px-4 py-2 bg-theme-bg hover:bg-theme-hover border border-theme rounded-lg font-medium transition-all text-sm"
             >
               <Check className="w-4 h-4" />
-              Include All
+              {t("libraryExclusion.includeAll")}
             </button>
             <button
               onClick={excludeAll}
               className="flex items-center gap-2 px-4 py-2 bg-theme-bg hover:bg-theme-hover border border-theme rounded-lg font-medium transition-all text-sm"
             >
               <X className="w-4 h-4" />
-              Exclude All
+              {t("libraryExclusion.excludeAll")}
             </button>
           </>
         )}
@@ -195,7 +197,7 @@ const LibraryExclusionSelector = ({
           <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" />
           <div className="flex-1">
             <p className="text-sm text-red-400 font-medium">
-              Failed to fetch libraries
+              {t("libraryExclusion.errorTitle")}
             </p>
             <p className="text-xs text-red-400/80 mt-1">{error}</p>
           </div>
@@ -208,7 +210,9 @@ const LibraryExclusionSelector = ({
           <div className="text-center">
             <Loader2 className="w-8 h-8 animate-spin text-theme-primary mx-auto mb-2" />
             <p className="text-sm text-theme-muted">
-              Fetching libraries from {mediaServerType}...
+              {t("libraryExclusion.fetching", {
+                server: mediaServerType,
+              })}
             </p>
           </div>
         </div>
@@ -220,7 +224,7 @@ const LibraryExclusionSelector = ({
         availableLibraries.length > 0 && (
           <div className="space-y-2">
             <p className="text-sm text-theme-muted">
-              Select libraries to <strong>exclude</strong> from processing:
+              {t("libraryExclusion.selectToExclude")}
             </p>
             <div className="space-y-2 max-h-96 overflow-y-auto">
               {availableLibraries.map((library) => {
@@ -257,12 +261,12 @@ const LibraryExclusionSelector = ({
                       {isExcluded ? (
                         <div className="flex items-center gap-1.5 text-red-400 text-sm font-medium">
                           <X className="w-4 h-4" />
-                          <span>Excluded</span>
+                          <span>{t("libraryExclusion.excluded")}</span>
                         </div>
                       ) : (
                         <div className="flex items-center gap-1.5 text-green-400 text-sm font-medium">
                           <Check className="w-4 h-4" />
-                          <span>Included</span>
+                          <span>{t("libraryExclusion.included")}</span>
                         </div>
                       )}
                     </div>
@@ -277,9 +281,11 @@ const LibraryExclusionSelector = ({
       {!loadingLibraries && !librariesFetched && (
         <div className="px-4 py-8 bg-theme-bg/50 border-2 border-dashed border-theme rounded-lg text-center">
           <p className="text-theme-muted text-sm">
-            Click "Fetch Libraries" to load libraries from your{" "}
-            {mediaServerType.charAt(0).toUpperCase() + mediaServerType.slice(1)}{" "}
-            server.
+            {t("libraryExclusion.clickToFetch", {
+              server:
+                mediaServerType.charAt(0).toUpperCase() +
+                mediaServerType.slice(1),
+            })}
           </p>
         </div>
       )}
@@ -291,7 +297,7 @@ const LibraryExclusionSelector = ({
         !error && (
           <div className="px-4 py-8 bg-theme-bg/50 border border-theme rounded-lg text-center">
             <p className="text-theme-muted text-sm">
-              No movie or TV show libraries found on this server.
+              {t("libraryExclusion.noLibraries")}
             </p>
           </div>
         )}
@@ -300,7 +306,9 @@ const LibraryExclusionSelector = ({
       {excludedLibraries.length > 0 && (
         <div className="px-4 py-3 bg-theme-bg/50 border border-theme rounded-lg">
           <p className="text-xs text-theme-muted mb-2">
-            Excluded Libraries ({excludedLibraries.length}):
+            {t("libraryExclusion.excludedCount", {
+              count: excludedLibraries.length,
+            })}
           </p>
           <div className="flex flex-wrap gap-2">
             {excludedLibraries.map((libName) => (

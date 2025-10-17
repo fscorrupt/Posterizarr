@@ -10,9 +10,11 @@ import {
   Search,
   Replace,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import AssetReplacer from "./AssetReplacer";
 
 const AssetOverview = () => {
+  const { t } = useTranslation();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -29,7 +31,7 @@ const AssetOverview = () => {
     setError(null);
     try {
       const response = await fetch("/api/assets/overview");
-      if (!response.ok) throw new Error("Failed to fetch asset overview");
+      if (!response.ok) throw new Error(t("assetOverview.fetchError"));
       const result = await response.json();
       setData(result);
     } catch (err) {
@@ -327,7 +329,7 @@ const AssetOverview = () => {
 
     if (asset.DownloadSource === "N/A") {
       tags.push({
-        label: "Missing Asset",
+        label: t("assetOverview.missingAsset"),
         color: "bg-red-500/20 text-red-400 border-red-500/30",
       });
     }
@@ -346,7 +348,7 @@ const AssetOverview = () => {
 
       if (langNormalized !== primaryNormalized) {
         tags.push({
-          label: "Not Primary Language",
+          label: t("assetOverview.notPrimaryLanguage"),
           color: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
         });
         isLanguageIssue = true;
@@ -355,7 +357,7 @@ const AssetOverview = () => {
       // No primary language set, anything that's not Textless/xx is non-primary
       if (!["textless", "xx"].includes(asset.Language.toLowerCase())) {
         tags.push({
-          label: "Not Primary Language",
+          label: t("assetOverview.notPrimaryLanguage"),
           color: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
         });
         isLanguageIssue = true;
@@ -387,7 +389,7 @@ const AssetOverview = () => {
 
         if (!isPrimaryProvider) {
           tags.push({
-            label: "Not Primary Provider",
+            label: t("assetOverview.notPrimaryProvider"),
             color: "bg-orange-500/20 text-orange-400 border-orange-500/30",
           });
         }
@@ -396,13 +398,13 @@ const AssetOverview = () => {
 
     if (asset.TextTruncated && asset.TextTruncated.toLowerCase() === "true") {
       tags.push({
-        label: "Truncated Text",
+        label: t("assetOverview.truncatedText"),
         color: "bg-purple-500/20 text-purple-400 border-purple-500/30",
       });
     }
     if (asset.Manual && asset.Manual.toLowerCase() === "true") {
       tags.push({
-        label: "Manual",
+        label: t("assetOverview.manual"),
         color: "bg-blue-500/20 text-blue-400 border-blue-500/30",
       });
     }
@@ -417,7 +419,7 @@ const AssetOverview = () => {
     return [
       {
         key: "assets_with_issues",
-        label: "Assets with Issues",
+        label: t("assetOverview.assetsWithIssues"),
         count: data.categories.assets_with_issues.count,
         icon: AlertTriangle,
         color: "text-yellow-400",
@@ -427,7 +429,7 @@ const AssetOverview = () => {
       },
       {
         key: "missing_assets",
-        label: "Missing Assets",
+        label: t("assetOverview.missingAssets"),
         count: data.categories.missing_assets.count,
         icon: FileQuestion,
         color: "text-red-400",
@@ -437,7 +439,7 @@ const AssetOverview = () => {
       },
       {
         key: "non_primary_lang",
-        label: "Non-Primary Lang",
+        label: t("assetOverview.nonPrimaryLang"),
         count: data.categories.non_primary_lang.count,
         icon: Globe,
         color: "text-yellow-400",
@@ -447,7 +449,7 @@ const AssetOverview = () => {
       },
       {
         key: "non_primary_provider",
-        label: "Non-Primary Provider",
+        label: t("assetOverview.nonPrimaryProvider"),
         count: data.categories.non_primary_provider.count,
         icon: Database,
         color: "text-orange-400",
@@ -457,7 +459,7 @@ const AssetOverview = () => {
       },
       {
         key: "truncated_text",
-        label: "Truncated Text",
+        label: t("assetOverview.truncatedTextCategory"),
         count: data.categories.truncated_text.count,
         icon: Type,
         color: "text-purple-400",
@@ -473,7 +475,7 @@ const AssetOverview = () => {
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <RefreshCw className="w-12 h-12 animate-spin text-theme-primary mx-auto mb-4" />
-          <p className="text-theme-muted">Loading asset overview...</p>
+          <p className="text-theme-muted">{t("assetOverview.loading")}</p>
         </div>
       </div>
     );
@@ -486,7 +488,7 @@ const AssetOverview = () => {
           <AlertTriangle className="w-6 h-6 text-red-400" />
           <div>
             <h3 className="text-lg font-semibold text-red-400">
-              Error Loading Data
+              {t("assetOverview.errorLoadingData")}
             </h3>
             <p className="text-red-300/80">{error}</p>
           </div>
@@ -503,11 +505,11 @@ const AssetOverview = () => {
           <div className="flex items-center gap-3">
             <AlertTriangle className="w-8 h-8 text-orange-400" />
             <h1 className="text-3xl font-bold text-theme-text">
-              Asset Overview
+              {t("assetOverview.title")}
             </h1>
           </div>
           <p className="text-theme-muted mt-2">
-            Overview of all assets with detailed categorization
+            {t("assetOverview.description")}
           </p>
         </div>
         <button
@@ -515,7 +517,7 @@ const AssetOverview = () => {
           className="flex items-center gap-2 px-3 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
         >
           <RefreshCw className="w-4 h-4 text-theme-primary" />
-          <span className="text-theme-text">Refresh</span>
+          <span className="text-theme-text">{t("common.refresh")}</span>
         </button>
       </div>
 
@@ -564,7 +566,7 @@ const AssetOverview = () => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-theme-muted" />
             <input
               type="text"
-              placeholder="Search by title or path..."
+              placeholder={t("assetOverview.searchPlaceholder")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary"
@@ -579,7 +581,7 @@ const AssetOverview = () => {
           >
             {types.map((type) => (
               <option key={type} value={type}>
-                {type}
+                {type === "All Types" ? t("assetOverview.allTypes") : type}
               </option>
             ))}
           </select>
@@ -592,7 +594,9 @@ const AssetOverview = () => {
           >
             {libraries.map((lib) => (
               <option key={lib} value={lib}>
-                {lib}
+                {lib === "All Libraries"
+                  ? t("assetOverview.allLibraries")
+                  : lib}
               </option>
             ))}
           </select>
@@ -603,7 +607,9 @@ const AssetOverview = () => {
             onChange={(e) => setSelectedCategory(e.target.value)}
             className="px-4 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-primary"
           >
-            <option value="All Categories">All Categories</option>
+            <option value="All Categories">
+              {t("assetOverview.allCategories")}
+            </option>
             {categoryCards.map((card) => (
               <option key={card.key} value={card.label}>
                 {card.label}
@@ -617,7 +623,7 @@ const AssetOverview = () => {
       <div className="bg-theme-card border border-theme rounded-lg p-6">
         <h2 className="text-xl font-bold text-theme-text mb-4">
           {selectedCategory === "All Categories"
-            ? "All Assets"
+            ? t("assetOverview.allAssets")
             : selectedCategory}
           <span className="text-theme-muted ml-2">
             ({filteredAssets.length})
@@ -627,7 +633,9 @@ const AssetOverview = () => {
         {filteredAssets.length === 0 ? (
           <div className="text-center py-12">
             <FileQuestion className="w-16 h-16 text-theme-muted mx-auto mb-4" />
-            <p className="text-theme-muted">No assets found</p>
+            <p className="text-theme-muted">
+              {t("assetOverview.noAssetsFound")}
+            </p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -645,17 +653,23 @@ const AssetOverview = () => {
                         {asset.Title}
                       </h3>
                       <div className="flex items-center gap-2 mt-1 text-sm text-theme-muted">
-                        <span className="font-medium">Type:</span>
+                        <span className="font-medium">
+                          {t("assetOverview.type")}:
+                        </span>
                         <span className="bg-theme-card px-2 py-0.5 rounded">
                           {asset.Type || "N/A"}
                         </span>
                         <span className="mx-2">•</span>
-                        <span className="font-medium">Language:</span>
+                        <span className="font-medium">
+                          {t("assetOverview.language")}:
+                        </span>
                         <span className="bg-theme-card px-2 py-0.5 rounded">
                           {asset.Language || "N/A"}
                         </span>
                         <span className="mx-2">•</span>
-                        <span className="font-medium">Source:</span>
+                        <span className="font-medium">
+                          {t("assetOverview.source")}:
+                        </span>
                         <span className="bg-theme-card px-2 py-0.5 rounded">
                           {asset.DownloadSource || "N/A"}
                         </span>
@@ -669,7 +683,7 @@ const AssetOverview = () => {
                               rel="noopener noreferrer"
                               className="text-sm text-theme-primary hover:underline"
                             >
-                              View Source
+                              {t("assetOverview.viewSource")}
                             </a>
                           </div>
                         )}
@@ -692,10 +706,10 @@ const AssetOverview = () => {
                       <button
                         onClick={() => handleReplace(asset)}
                         className="flex items-center gap-2 px-4 py-2 bg-theme-primary hover:bg-theme-primary/80 text-white rounded-lg transition-colors whitespace-nowrap"
-                        title="Replace this asset"
+                        title={t("assetOverview.replaceTooltip")}
                       >
                         <Replace className="w-4 h-4" />
-                        Replace
+                        {t("assetOverview.replace")}
                       </button>
                     </div>
                   </div>

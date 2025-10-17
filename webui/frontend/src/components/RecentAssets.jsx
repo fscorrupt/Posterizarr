@@ -14,6 +14,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import Notification from "./Notification";
 import { useToast } from "../context/ToastContext";
 import CompactImageSizeSlider from "./CompactImageSizeSlider";
@@ -23,6 +24,7 @@ const API_URL = "/api";
 let cachedAssets = null;
 
 function RecentAssets() {
+  const { t } = useTranslation();
   const { showSuccess, showError, showInfo } = useToast();
   const [assets, setAssets] = useState(cachedAssets || []);
   const [loading, setLoading] = useState(false); // No initial loading if cached
@@ -65,12 +67,12 @@ function RecentAssets() {
         setAssets(data.assets);
         setError(null);
       } else {
-        const errorMsg = data.error || "Failed to load recent assets";
+        const errorMsg = data.error || t("recentAssets.loadError");
         setError(errorMsg);
         showError(errorMsg);
       }
     } catch (err) {
-      const errorMsg = err.message || "Failed to load recent assets";
+      const errorMsg = err.message || t("recentAssets.loadError");
       setError(errorMsg);
       showError(errorMsg);
       console.error("Error fetching recent assets:", err);
@@ -263,7 +265,7 @@ function RecentAssets() {
           <div className="p-2 rounded-lg bg-theme-primary/10">
             <FileImage className="w-5 h-5 text-theme-primary" />
           </div>
-          Recently Created Assets
+          {t("dashboard.recentAssets")}
         </h2>
 
         <div className="flex items-center gap-3">
@@ -281,12 +283,12 @@ function RecentAssets() {
             onClick={() => fetchRecentAssets()}
             disabled={refreshing}
             className="flex items-center gap-2 px-4 py-2 text-theme-muted hover:text-theme-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:bg-theme-hover rounded-lg"
-            title="Refresh recent assets"
+            title={t("recentAssets.refreshTooltip")}
           >
             <RefreshCw
               className={`w-5 h-5 ${refreshing ? "animate-spin" : ""}`}
             />
-            <span className="text-sm font-medium">Refresh</span>
+            <span className="text-sm font-medium">{t("common.refresh")}</span>
           </button>
         </div>
       </div>
@@ -341,7 +343,7 @@ function RecentAssets() {
       ) : displayedAssets.length === 0 ? (
         <div className="text-center py-8 text-theme-muted">
           <FileImage className="w-16 h-16 mx-auto mb-4 opacity-50" />
-          <p>No recent assets found</p>
+          <p>{t("recentAssets.noAssets")}</p>
         </div>
       ) : (
         <>

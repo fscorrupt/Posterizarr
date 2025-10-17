@@ -22,6 +22,7 @@ import {
   X,
   ExternalLink,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import ConfirmDialog from "./ConfirmDialog";
 import DangerZone from "./DangerZone";
 import { useToast } from "../context/ToastContext";
@@ -81,6 +82,7 @@ const waitForLogFile = async (logFileName, maxAttempts = 30, delayMs = 200) => {
 // ============================================================================
 const TMDBPosterSearchModal = React.memo(
   ({ tmdbSearch, setTmdbSearch, manualForm, setManualForm, showSuccess }) => {
+    const { t } = useTranslation();
     const scrollRef = React.useRef(null);
     const [localDisplayedCount, setLocalDisplayedCount] = React.useState(10);
 
@@ -116,7 +118,7 @@ const TMDBPosterSearchModal = React.memo(
         episodeNumber: "",
         displayedCount: 10,
       });
-      showSuccess("Poster URL set! 🎨");
+      showSuccess(t("runModes.tmdb.posterSelected"));
     };
 
     if (!tmdbSearch.showModal) return null;
@@ -130,10 +132,16 @@ const TMDBPosterSearchModal = React.memo(
               <ImageIcon className="w-6 h-6 mr-3 text-white" />
               <h3 className="text-xl font-bold text-white">
                 {manualForm.posterType === "season"
-                  ? `Season ${tmdbSearch.seasonNumber} Posters (${tmdbSearch.results.length})`
+                  ? t("runModes.tmdb.seasonResults", {
+                      season: tmdbSearch.seasonNumber,
+                    }) + ` (${tmdbSearch.results.length})`
                   : manualForm.posterType === "titlecard"
-                  ? `Episode ${tmdbSearch.seasonNumber}x${tmdbSearch.episodeNumber} Images (${tmdbSearch.results.length})`
-                  : `TMDB Poster Results (${tmdbSearch.results.length})`}
+                  ? t("runModes.tmdb.episodeResults", {
+                      season: tmdbSearch.seasonNumber,
+                      episode: tmdbSearch.episodeNumber,
+                    }) + ` (${tmdbSearch.results.length})`
+                  : t("runModes.tmdb.results") +
+                    ` (${tmdbSearch.results.length})`}
               </h3>
             </div>
             <button
@@ -149,7 +157,7 @@ const TMDBPosterSearchModal = React.memo(
             {tmdbSearch.results.length === 0 ? (
               <div className="text-center py-12 text-theme-muted">
                 <ImageIcon className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                <p>No posters found. Try a different search term.</p>
+                <p>{t("runModes.tmdb.noResults")}</p>
               </div>
             ) : (
               <>
@@ -186,12 +194,12 @@ const TMDBPosterSearchModal = React.memo(
                             )}
                             {poster.type === "episode_still" && (
                               <span className="bg-purple-600 px-2 py-1 rounded text-xs text-white">
-                                EPISODE STILL
+                                {t("runModes.tmdb.episodeStill")}
                               </span>
                             )}
                             {poster.type === "season_poster" && (
                               <span className="bg-green-600 px-2 py-1 rounded text-xs text-white">
-                                SEASON POSTER
+                                {t("runModes.tmdb.seasonPoster")}
                               </span>
                             )}
                           </div>
@@ -208,9 +216,10 @@ const TMDBPosterSearchModal = React.memo(
                       className="px-6 py-3 bg-theme-primary hover:bg-theme-primary/90 text-white rounded-lg font-medium transition-all shadow-lg flex items-center gap-2 mx-auto"
                     >
                       <RefreshCw className="w-5 h-5" />
-                      Load More (
-                      {tmdbSearch.results.length - localDisplayedCount}{" "}
-                      remaining)
+                      {t("runModes.tmdb.loadMore", {
+                        remaining:
+                          tmdbSearch.results.length - localDisplayedCount,
+                      })}
                     </button>
                   </div>
                 )}
@@ -221,7 +230,7 @@ const TMDBPosterSearchModal = React.memo(
           {/* Footer */}
           <div className="bg-theme-bg px-6 py-4 rounded-b-xl border-t border-theme flex-shrink-0">
             <p className="text-sm text-theme-muted text-center">
-              Click on a poster to select it for your manual poster creation
+              {t("runModes.tmdb.clickToSelect")}
             </p>
           </div>
         </div>
@@ -231,6 +240,7 @@ const TMDBPosterSearchModal = React.memo(
 );
 
 function RunModes() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { showSuccess, showError, showInfo } = useToast();
   const [loading, setLoading] = useState(false);
@@ -334,7 +344,7 @@ function RunModes() {
 
   const runScript = async (mode) => {
     if (status.running) {
-      showError("Script is already running! Please stop it first.");
+      showError(t("runModes.scriptRunning"));
       return;
     }
 
@@ -347,7 +357,7 @@ function RunModes() {
       const data = await response.json();
 
       if (data.success) {
-        showSuccess(`Started in ${mode} mode`);
+        showSuccess(t("runModes.startedMode", { mode }));
         fetchStatus();
 
         // ✨ Weiterleitung zum LogViewer mit der richtigen Log-Datei
@@ -377,19 +387,19 @@ function RunModes() {
 
   const runManualMode = async () => {
     if (status.running) {
-      showError("Script is already running! Please stop it first.");
+      showError(t("runModes.scriptRunning"));
       return;
     }
 
     // Validation - Check if file was uploaded or URL/path provided
     if (!uploadedFile && !manualForm.picturePath.trim()) {
-      showError("Please upload an image or provide a URL/path!");
+      showError(t("runModes.validation.imageRequired"));
       return;
     }
 
     // Title text is only required for non-titlecard types
     if (manualForm.posterType !== "titlecard" && !manualForm.titletext.trim()) {
-      showError("Title Text is required!");
+      showError(t("runModes.validation.titleRequired"));
       return;
     }
 
@@ -398,12 +408,12 @@ function RunModes() {
       manualForm.posterType !== "collection" &&
       !manualForm.folderName.trim()
     ) {
-      showError("Folder Name is required!");
+      showError(t("runModes.validation.folderRequired"));
       return;
     }
 
     if (!manualForm.libraryName.trim()) {
-      showError("Library Name is required!");
+      showError(t("runModes.validation.libraryRequired"));
       return;
     }
 
@@ -411,22 +421,22 @@ function RunModes() {
       manualForm.posterType === "season" &&
       !manualForm.seasonPosterName.trim()
     ) {
-      showError("Season Poster Name is required for season posters!");
+      showError(t("runModes.validation.seasonRequired"));
       return;
     }
 
     // Title card validation
     if (manualForm.posterType === "titlecard") {
       if (!manualForm.epTitleName.trim()) {
-        showError("Episode Title is required for title cards!");
+        showError(t("runModes.validation.episodeTitleRequired"));
         return;
       }
       if (!manualForm.seasonPosterName.trim()) {
-        showError("Season Name is required for title cards!");
+        showError(t("runModes.validation.seasonNameRequired"));
         return;
       }
       if (!manualForm.episodeNumber.trim()) {
-        showError("Episode Number is required for title cards!");
+        showError(t("runModes.validation.episodeNumberRequired"));
         return;
       }
     }
@@ -501,7 +511,7 @@ function RunModes() {
         const data = await response.json();
 
         if (data.success) {
-          showSuccess("Manual mode started successfully!");
+          showSuccess(t("runModes.manualModeSuccess"));
           // Reset form
           setManualForm({
             picturePath: "",
@@ -545,14 +555,12 @@ function RunModes() {
 
   const resetPosters = async () => {
     if (status.running) {
-      showError(
-        "Cannot reset posters while script is running. Please stop it first."
-      );
+      showError(t("runModes.reset.stopFirst"));
       return;
     }
 
     if (!resetLibrary.trim()) {
-      showError("Library name is required!");
+      showError(t("runModes.validation.libraryNameRequired"));
       return;
     }
 
@@ -594,7 +602,7 @@ function RunModes() {
       const data = await response.json();
 
       if (data.success) {
-        showSuccess("Script stopped");
+        showSuccess(t("runModes.stop.stopped"));
         fetchStatus();
       } else {
         showError(`Error: ${data.message}`);
@@ -611,24 +619,24 @@ function RunModes() {
   // ============================================================================
   const searchTMDBPosters = async () => {
     if (!tmdbSearch.query.trim()) {
-      showError("Please enter a title or TMDB ID!");
+      showError(t("runModes.validation.tmdbQueryRequired"));
       return;
     }
 
     // Validation for Season Poster
     if (manualForm.posterType === "season" && !tmdbSearch.seasonNumber) {
-      showError("Please enter a season number!");
+      showError(t("runModes.validation.seasonNumberRequired"));
       return;
     }
 
     // Validation for Title Cards
     if (manualForm.posterType === "titlecard") {
       if (!tmdbSearch.seasonNumber) {
-        showError("Please enter a season number!");
+        showError(t("runModes.validation.seasonNumberRequired"));
         return;
       }
       if (!tmdbSearch.episodeNumber) {
-        showError("Please enter an episode number!");
+        showError(t("runModes.validation.episodeInfoRequired"));
         return;
       }
     }
@@ -725,7 +733,7 @@ function RunModes() {
             <div className="flex items-center">
               <Cloud className="w-6 h-6 mr-3 text-white" />
               <h3 className="text-xl font-bold text-white">
-                Jellyfin Sync Mode
+                {t("runModes.jellyfin.title")}
               </h3>
             </div>
             <button
@@ -740,17 +748,16 @@ function RunModes() {
           <div className="p-6 space-y-4">
             <div className="bg-orange-900/20 border-l-4 border-orange-500 p-4 rounded">
               <p className="text-orange-200 font-medium mb-2">
-                🔄 Sync all artwork from Plex to Jellyfin
+                {t("runModes.jellyfin.syncInfo")}
               </p>
               <p className="text-orange-100 text-sm">
-                This mode will synchronize every artwork you have in Plex to
-                your Jellyfin server.
+                {t("runModes.jellyfin.description")}
               </p>
             </div>
 
             <div className="space-y-3">
               <h4 className="font-semibold text-theme-primary text-lg">
-                How Jellyfin Sync works:
+                {t("runModes.jellyfin.howItWorks")}
               </h4>
 
               <ul className="space-y-3 text-theme-text">
@@ -760,11 +767,10 @@ function RunModes() {
                   </span>
                   <div>
                     <strong className="text-theme-primary">
-                      Library Names Must Match
+                      {t("runModes.jellyfin.step1Title")}
                     </strong>
                     <p className="text-sm text-theme-muted mt-1">
-                      The script requires that library names in Plex and
-                      Jellyfin match exactly for the sync to work.
+                      {t("runModes.jellyfin.step1Text")}
                     </p>
                   </div>
                 </li>
@@ -775,11 +781,10 @@ function RunModes() {
                   </span>
                   <div>
                     <strong className="text-theme-primary">
-                      Hash Calculation
+                      {t("runModes.jellyfin.step2Title")}
                     </strong>
                     <p className="text-sm text-theme-muted mt-1">
-                      The script calculates the hash of artwork from both
-                      servers to determine if there are differences.
+                      {t("runModes.jellyfin.step2Text")}
                     </p>
                   </div>
                 </li>
@@ -789,10 +794,11 @@ function RunModes() {
                     3
                   </span>
                   <div>
-                    <strong className="text-theme-primary">Smart Sync</strong>
+                    <strong className="text-theme-primary">
+                      {t("runModes.jellyfin.step3Title")}
+                    </strong>
                     <p className="text-sm text-theme-muted mt-1">
-                      Only syncs artwork if the hashes don't match, saving time
-                      and bandwidth.
+                      {t("runModes.jellyfin.step3Text")}
                     </p>
                   </div>
                 </li>
@@ -800,17 +806,13 @@ function RunModes() {
 
               <div className="bg-blue-900/20 border-l-4 border-blue-500 p-4 rounded mt-4">
                 <p className="text-blue-200 text-sm">
-                  💡 <strong>Tip:</strong> This is handy if you want to run the
-                  sync after a Kometa run, so you have Kometa overlayed images
-                  in Jellyfin.
+                  {t("runModes.jellyfin.tip")}
                 </p>
               </div>
 
               <div className="bg-yellow-900/20 border-l-4 border-yellow-500 p-4 rounded mt-4">
                 <p className="text-yellow-200 text-sm">
-                  ⚠️ <strong>Important:</strong> Make sure both UseJellyfin and
-                  UsePlex are set to true in your config.json, and that library
-                  names match exactly.
+                  {t("runModes.jellyfin.important")}
                 </p>
               </div>
             </div>
@@ -824,7 +826,7 @@ function RunModes() {
                 className="flex items-center justify-center px-6 py-3 bg-theme-bg hover:bg-theme-hover border border-theme rounded-lg font-medium transition-all text-theme-text shadow-lg"
               >
                 <ExternalLink className="w-5 h-5 mr-2" />
-                View Full Documentation
+                {t("runModes.viewDocumentation")}
               </a>
             </div>
           </div>
@@ -835,7 +837,7 @@ function RunModes() {
               onClick={() => setShowJellyfinSyncModal(false)}
               className="px-6 py-2 bg-theme-card hover:bg-theme-hover border border-theme rounded-lg font-medium transition-all"
             >
-              Cancel
+              {t("runModes.jellyfin.cancel")}
             </button>
             <button
               onClick={startJellyfinSync}
@@ -843,7 +845,7 @@ function RunModes() {
               className="px-6 py-2 bg-theme-primary hover:bg-theme-primary/90 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-all text-white flex items-center shadow-lg"
             >
               <RefreshCw className="w-5 h-5 mr-2" />
-              Start Jellyfin Sync
+              {t("runModes.jellyfin.start")}
             </button>
           </div>
         </div>
@@ -867,7 +869,9 @@ function RunModes() {
           <div className="bg-theme-primary px-6 py-4 rounded-t-xl flex items-center justify-between">
             <div className="flex items-center">
               <Cloud className="w-6 h-6 mr-3 text-white" />
-              <h3 className="text-xl font-bold text-white">Emby Sync Mode</h3>
+              <h3 className="text-xl font-bold text-white">
+                {t("runModes.emby.title")}
+              </h3>
             </div>
             <button
               onClick={() => setShowEmbySyncModal(false)}
@@ -881,17 +885,16 @@ function RunModes() {
           <div className="p-6 space-y-4">
             <div className="bg-orange-900/20 border-l-4 border-orange-500 p-4 rounded">
               <p className="text-orange-200 font-medium mb-2">
-                🔄 Sync all artwork from Plex to Emby
+                {t("runModes.emby.syncInfo")}
               </p>
               <p className="text-orange-100 text-sm">
-                This mode will synchronize every artwork you have in Plex to
-                your Emby server.
+                {t("runModes.emby.description")}
               </p>
             </div>
 
             <div className="space-y-3">
               <h4 className="font-semibold text-theme-primary text-lg">
-                How Emby Sync works:
+                {t("runModes.emby.howItWorks")}
               </h4>
 
               <ul className="space-y-3 text-theme-text">
@@ -901,11 +904,10 @@ function RunModes() {
                   </span>
                   <div>
                     <strong className="text-theme-primary">
-                      Library Names Must Match
+                      {t("runModes.emby.step1Title")}
                     </strong>
                     <p className="text-sm text-theme-muted mt-1">
-                      The script requires that library names in Plex and Emby
-                      match exactly for the sync to work.
+                      {t("runModes.emby.step1Text")}
                     </p>
                   </div>
                 </li>
@@ -916,11 +918,10 @@ function RunModes() {
                   </span>
                   <div>
                     <strong className="text-theme-primary">
-                      Hash Calculation
+                      {t("runModes.emby.step2Title")}
                     </strong>
                     <p className="text-sm text-theme-muted mt-1">
-                      The script calculates the hash of artwork from both
-                      servers to determine if there are differences.
+                      {t("runModes.emby.step2Text")}
                     </p>
                   </div>
                 </li>
@@ -930,10 +931,11 @@ function RunModes() {
                     3
                   </span>
                   <div>
-                    <strong className="text-theme-primary">Smart Sync</strong>
+                    <strong className="text-theme-primary">
+                      {t("runModes.emby.step3Title")}
+                    </strong>
                     <p className="text-sm text-theme-muted mt-1">
-                      Only syncs artwork if the hashes don't match, saving time
-                      and bandwidth.
+                      {t("runModes.emby.step3Text")}
                     </p>
                   </div>
                 </li>
@@ -941,17 +943,13 @@ function RunModes() {
 
               <div className="bg-blue-900/20 border-l-4 border-blue-500 p-4 rounded mt-4">
                 <p className="text-blue-200 text-sm">
-                  💡 <strong>Tip:</strong> This is handy if you want to run the
-                  sync after a Kometa run, so you have Kometa overlayed images
-                  in Emby.
+                  {t("runModes.emby.tip")}
                 </p>
               </div>
 
               <div className="bg-yellow-900/20 border-l-4 border-yellow-500 p-4 rounded mt-4">
                 <p className="text-yellow-200 text-sm">
-                  ⚠️ <strong>Important:</strong> Make sure both UseEmby and
-                  UsePlex are set to true in your config.json, and that library
-                  names match exactly.
+                  {t("runModes.emby.important")}
                 </p>
               </div>
             </div>
@@ -965,7 +963,7 @@ function RunModes() {
                 className="flex items-center justify-center px-6 py-3 bg-theme-bg hover:bg-theme-hover border border-theme rounded-lg font-medium transition-all text-theme-text shadow-lg"
               >
                 <ExternalLink className="w-5 h-5 mr-2" />
-                View Full Documentation
+                {t("runModes.viewDocumentation")}
               </a>
             </div>
           </div>
@@ -976,7 +974,7 @@ function RunModes() {
               onClick={() => setShowEmbySyncModal(false)}
               className="px-6 py-2 bg-theme-card hover:bg-theme-hover border border-theme rounded-lg font-medium transition-all"
             >
-              Cancel
+              {t("runModes.emby.cancel")}
             </button>
             <button
               onClick={startEmbySync}
@@ -984,7 +982,7 @@ function RunModes() {
               className="px-6 py-2 bg-theme-primary hover:bg-theme-primary/90 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-all text-white flex items-center shadow-lg"
             >
               <RefreshCw className="w-5 h-5 mr-2" />
-              Start Emby Sync
+              {t("runModes.emby.start")}
             </button>
           </div>
         </div>
@@ -999,26 +997,25 @@ function RunModes() {
       case "titlecard": // Title Card uses the same hints as Season
         return {
           folderName: {
-            label: "Folder Name",
-            placeholder: "Breaking Bad (2008)",
-            description:
-              'Show folder name as seen by Plex (e.g., "Breaking Bad (2008)")',
+            label: t("runModes.hints.folderNameLabel"),
+            placeholder: t("runModes.hints.tvShowPlaceholder"),
+            description: t("runModes.hints.tvShowDescription"),
           },
           libraryName: {
-            placeholder: "TV Shows",
-            description: 'Plex library for shows (e.g., "TV Shows")',
+            placeholder: t("runModes.hints.tvLibraryPlaceholder"),
+            description: t("runModes.hints.tvLibraryDescription"),
           },
         };
       case "collection":
         return {
           folderName: {
-            label: "Collection Name",
-            placeholder: "James Bond Collection",
-            description: "The name of the collection in Plex",
+            label: t("runModes.hints.collectionLabel"),
+            placeholder: t("runModes.hints.collectionPlaceholder"),
+            description: t("runModes.hints.collectionDescription"),
           },
           libraryName: {
-            placeholder: "Movies",
-            description: 'Plex library for collections (e.g., "Movies")',
+            placeholder: t("runModes.hints.movieLibraryPlaceholder"),
+            description: t("runModes.hints.collectionLibraryDescription"),
           },
         };
       case "background":
@@ -1026,27 +1023,25 @@ function RunModes() {
         if (manualForm.mediaTypeSelection === "tv") {
           return {
             folderName: {
-              label: "Folder Name",
-              placeholder: "Breaking Bad (2008)",
-              description:
-                'Show folder name as seen by Plex (e.g., "Breaking Bad (2008)")',
+              label: t("runModes.hints.folderNameLabel"),
+              placeholder: t("runModes.hints.tvShowPlaceholder"),
+              description: t("runModes.hints.tvShowDescription"),
             },
             libraryName: {
-              placeholder: "TV Shows",
-              description: 'Plex library for shows (e.g., "TV Shows")',
+              placeholder: t("runModes.hints.tvLibraryPlaceholder"),
+              description: t("runModes.hints.tvLibraryDescription"),
             },
           };
         } else {
           return {
             folderName: {
-              label: "Folder Name",
-              placeholder: "The Martian (2015)",
-              description:
-                'Movie folder name as seen by Plex (e.g., "The Martian (2015)")',
+              label: t("runModes.hints.folderNameLabel"),
+              placeholder: t("runModes.hints.moviePlaceholder"),
+              description: t("runModes.hints.movieDescription"),
             },
             libraryName: {
-              placeholder: "Movies",
-              description: 'Plex library for movies (e.g., "Movies")',
+              placeholder: t("runModes.hints.movieLibraryPlaceholder"),
+              description: t("runModes.hints.movieLibraryDescription"),
             },
           };
         }
@@ -1055,41 +1050,38 @@ function RunModes() {
         if (manualForm.mediaTypeSelection === "tv") {
           return {
             folderName: {
-              label: "Folder Name",
-              placeholder: "Breaking Bad (2008)",
-              description:
-                'Show folder name as seen by Plex (e.g., "Breaking Bad (2008)")',
+              label: t("runModes.hints.folderNameLabel"),
+              placeholder: t("runModes.hints.tvShowPlaceholder"),
+              description: t("runModes.hints.tvShowDescription"),
             },
             libraryName: {
-              placeholder: "TV Shows",
-              description: 'Plex library for shows (e.g., "TV Shows")',
+              placeholder: t("runModes.hints.tvLibraryPlaceholder"),
+              description: t("runModes.hints.tvLibraryDescription"),
             },
           };
         } else {
           return {
             folderName: {
-              label: "Folder Name",
-              placeholder: "The Martian (2015)",
-              description:
-                'Movie folder name as seen by Plex (e.g., "The Martian (2015)")',
+              label: t("runModes.hints.folderNameLabel"),
+              placeholder: t("runModes.hints.moviePlaceholder"),
+              description: t("runModes.hints.movieDescription"),
             },
             libraryName: {
-              placeholder: "Movies",
-              description: 'Plex library for movies (e.g., "Movies")',
+              placeholder: t("runModes.hints.movieLibraryPlaceholder"),
+              description: t("runModes.hints.movieLibraryDescription"),
             },
           };
         }
       default:
         return {
           folderName: {
-            label: "Folder Name",
-            placeholder: "The Martian (2015)",
-            description:
-              'Media folder name as seen by Plex (e.g., "The Martian (2015)")',
+            label: t("runModes.hints.folderNameLabel"),
+            placeholder: t("runModes.hints.moviePlaceholder"),
+            description: t("runModes.hints.defaultDescription"),
           },
           libraryName: {
-            placeholder: "Movies",
-            description: 'Plex library for movies (e.g., "Movies")',
+            placeholder: t("runModes.hints.movieLibraryPlaceholder"),
+            description: t("runModes.hints.movieLibraryDescription"),
           },
         };
     }
@@ -1104,8 +1096,8 @@ function RunModes() {
         isOpen={resetConfirm}
         onClose={() => setResetConfirm(false)}
         onConfirm={handleResetConfirm}
-        title="Reset Posters"
-        message={`Are you sure you want to reset ALL posters in "${resetLibrary}"? This action CANNOT be undone!\n\nAre you absolutely sure?`}
+        title={t("runModes.reset.confirmTitle")}
+        message={t("runModes.reset.confirmMessage", { library: resetLibrary })}
         type="danger"
       />
 
@@ -1128,10 +1120,12 @@ function RunModes() {
           <div className="flex items-center gap-3 bg-theme-card px-4 py-2 rounded-lg border border-theme-primary/50">
             <Loader2 className="w-5 h-5 text-theme-primary animate-spin" />
             <div>
-              <div className="text-sm font-medium text-theme-text">Running</div>
+              <div className="text-sm font-medium text-theme-text">
+                {t("runModes.status.scriptRunning")}
+              </div>
               {status.current_mode && (
                 <div className="text-xs text-theme-muted">
-                  Mode: {status.current_mode}
+                  {t("runModes.status.mode")} {status.current_mode}
                 </div>
               )}
             </div>
@@ -1146,9 +1140,11 @@ function RunModes() {
             <div className="flex items-center gap-3">
               <AlertCircle className="w-5 h-5 text-orange-400" />
               <div>
-                <p className="font-medium text-orange-200">Script is running</p>
+                <p className="font-medium text-orange-200">
+                  {t("runModes.status.running")}
+                </p>
                 <p className="text-sm text-orange-300/80">
-                  Stop the script before running another mode
+                  {t("runModes.status.stopFirst")}
                 </p>
               </div>
             </div>
@@ -1158,7 +1154,7 @@ function RunModes() {
               className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-700 disabled:cursor-not-allowed rounded-lg font-medium transition-all"
             >
               <Square className="w-4 h-4" />
-              Stop Script
+              {t("runModes.status.stopButton")}
             </button>
           </div>
         </div>
@@ -1168,7 +1164,7 @@ function RunModes() {
       <div className="bg-theme-card rounded-xl p-6 border border-theme">
         <h2 className="text-xl font-semibold text-theme-text mb-4 flex items-center gap-2">
           <Play className="w-5 h-5 text-theme-primary" />
-          Quick Run Modes
+          {t("runModes.quickRun.title")}
         </h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -1179,9 +1175,11 @@ function RunModes() {
             className="flex flex-col items-center justify-center p-6 bg-theme-hover hover:bg-theme-primary/20 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg border border-theme-primary/30 hover:border-theme-primary transition-all group"
           >
             <Play className="w-8 h-8 text-theme-primary mb-3 group-hover:scale-110 transition-transform" />
-            <h3 className="font-semibold text-theme-text mb-1">Normal Mode</h3>
+            <h3 className="font-semibold text-theme-text mb-1">
+              {t("runModes.quickRun.normal.title")}
+            </h3>
             <p className="text-sm text-theme-muted text-center">
-              Run Posterizarr normally
+              {t("runModes.quickRun.normal.description")}
             </p>
           </button>
 
@@ -1192,9 +1190,11 @@ function RunModes() {
             className="flex flex-col items-center justify-center p-6 bg-theme-hover hover:bg-theme-primary/20 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg border border-theme-primary/30 hover:border-theme-primary transition-all group"
           >
             <TestTube className="w-8 h-8 text-blue-400 mb-3 group-hover:scale-110 transition-transform" />
-            <h3 className="font-semibold text-theme-text mb-1">Testing Mode</h3>
+            <h3 className="font-semibold text-theme-text mb-1">
+              {t("runModes.quickRun.testing.title")}
+            </h3>
             <p className="text-sm text-theme-muted text-center">
-              Generate sample posters
+              {t("runModes.quickRun.testing.description")}
             </p>
           </button>
 
@@ -1205,9 +1205,11 @@ function RunModes() {
             className="flex flex-col items-center justify-center p-6 bg-theme-hover hover:bg-theme-primary/20 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg border border-theme-primary/30 hover:border-theme-primary transition-all group"
           >
             <Save className="w-8 h-8 text-orange-400 mb-3 group-hover:scale-110 transition-transform" />
-            <h3 className="font-semibold text-theme-text mb-1">Backup Mode</h3>
+            <h3 className="font-semibold text-theme-text mb-1">
+              {t("runModes.quickRun.backup.title")}
+            </h3>
             <p className="text-sm text-theme-muted text-center">
-              Backup existing posters
+              {t("runModes.quickRun.backup.description")}
             </p>
           </button>
 
@@ -1219,10 +1221,10 @@ function RunModes() {
           >
             <RefreshCw className="w-8 h-8 text-purple-400 mb-3 group-hover:scale-110 transition-transform" />
             <h3 className="font-semibold text-theme-text mb-1">
-              Sync Jellyfin
+              {t("runModes.quickRun.syncJellyfin.title")}
             </h3>
             <p className="text-sm text-theme-muted text-center">
-              Sync posters to Jellyfin
+              {t("runModes.quickRun.syncJellyfin.description")}
             </p>
           </button>
 
@@ -1233,9 +1235,11 @@ function RunModes() {
             className="flex flex-col items-center justify-center p-6 bg-theme-hover hover:bg-theme-primary/20 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg border border-theme-primary/30 hover:border-theme-primary transition-all group"
           >
             <RefreshCw className="w-8 h-8 text-green-400 mb-3 group-hover:scale-110 transition-transform" />
-            <h3 className="font-semibold text-theme-text mb-1">Sync Emby</h3>
+            <h3 className="font-semibold text-theme-text mb-1">
+              {t("runModes.quickRun.syncEmby.title")}
+            </h3>
             <p className="text-sm text-theme-muted text-center">
-              Sync posters to Emby
+              {t("runModes.quickRun.syncEmby.description")}
             </p>
           </button>
         </div>
@@ -1250,11 +1254,10 @@ function RunModes() {
           </div>
           <div>
             <h2 className="text-xl font-semibold text-theme-text">
-              Manual Mode (Semi-Automated)
+              {t("runModes.manual.title")}
             </h2>
             <p className="text-sm text-theme-muted">
-              Create or replace posters manually with full control over search,
-              source, and metadata.
+              {t("runModes.manual.description")}
             </p>
           </div>
         </div>
@@ -1264,7 +1267,7 @@ function RunModes() {
           {/*CORRECT PLACEMENT: Buttons are the first item in the form*/}
           <div>
             <label className="block text-sm font-medium text-theme-text mb-2">
-              Poster Type
+              {t("runModes.manual.posterType")}
             </label>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
               <button
@@ -1279,7 +1282,7 @@ function RunModes() {
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 <Film className="w-5 h-5" />
-                Poster
+                {t("runModes.manual.types.poster")}
               </button>
               <button
                 onClick={() =>
@@ -1293,7 +1296,7 @@ function RunModes() {
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 <Tv className="w-5 h-5" />
-                Season
+                {t("runModes.manual.types.season")}
               </button>
               <button
                 onClick={() =>
@@ -1307,7 +1310,7 @@ function RunModes() {
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 <Clapperboard className="w-5 h-5" />
-                Title Card
+                {t("runModes.manual.types.titleCard")}
               </button>
               <button
                 onClick={() =>
@@ -1321,7 +1324,7 @@ function RunModes() {
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 <ImageIcon className="w-5 h-5" />
-                Background
+                {t("runModes.manual.types.background")}
               </button>
               <button
                 onClick={() =>
@@ -1335,7 +1338,7 @@ function RunModes() {
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
                 <FolderHeart className="w-5 h-5" />
-                Collection
+                {t("runModes.manual.types.collection")}
               </button>
             </div>
           </div>
@@ -1345,7 +1348,7 @@ function RunModes() {
             manualForm.posterType === "background") && (
             <div>
               <label className="block text-sm font-medium text-theme-text mb-2">
-                Media Type
+                {t("runModes.manual.mediaType")}
               </label>
               <div className="grid grid-cols-2 gap-3">
                 <button
@@ -1363,7 +1366,7 @@ function RunModes() {
                   } disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   <Film className="w-5 h-5" />
-                  Movie
+                  {t("runModes.manual.mediaTypes.movie")}
                 </button>
                 <button
                   onClick={() =>
@@ -1377,11 +1380,11 @@ function RunModes() {
                   } disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   <Tv className="w-5 h-5" />
-                  TV Show
+                  {t("runModes.manual.mediaTypes.tv")}
                 </button>
               </div>
               <p className="text-xs text-theme-muted mt-1">
-                Select whether you're searching for a movie or TV show poster
+                {t("runModes.manual.mediaTypeHint")}
               </p>
             </div>
           )}
@@ -1391,26 +1394,28 @@ function RunModes() {
             <div className="flex items-center mb-3">
               <Cloud className="w-5 h-5 text-theme-primary mr-2" />
               <h3 className="font-semibold text-theme-text">
-                Search TMDB for{" "}
-                {manualForm.posterType === "season"
-                  ? "Season Posters"
-                  : manualForm.posterType === "titlecard"
-                  ? "Episode Images"
-                  : manualForm.posterType === "standard"
-                  ? `${
-                      manualForm.mediaTypeSelection === "tv"
-                        ? "TV Show"
-                        : "Movie"
-                    } Posters`
-                  : "Posters"}
+                {t("runModes.manual.tmdbSearchTitle", {
+                  type:
+                    manualForm.posterType === "season"
+                      ? t("runModes.manual.tmdbTypeSeasonPosters")
+                      : manualForm.posterType === "titlecard"
+                      ? t("runModes.manual.tmdbTypeEpisodeImages")
+                      : manualForm.posterType === "standard"
+                      ? `${
+                          manualForm.mediaTypeSelection === "tv"
+                            ? t("runModes.manual.tmdbTypeTvPosters")
+                            : t("runModes.manual.tmdbTypeMoviePosters")
+                        }`
+                      : t("runModes.manual.tmdbTypePosters"),
+                })}
               </h3>
             </div>
             <p className="text-xs text-theme-muted mb-3">
               {manualForm.posterType === "season"
-                ? "Search for season-specific posters from TMDB"
+                ? t("runModes.manual.tmdbHintSeason")
                 : manualForm.posterType === "titlecard"
-                ? "Search for episode stills/screenshots from TMDB"
-                : "Search by title or TMDB ID to find posters directly from TMDB"}
+                ? t("runModes.manual.tmdbHintTitleCard")
+                : t("runModes.manual.tmdbHintStandard")}
             </p>
 
             {/* Hauptsuche */}
@@ -1424,7 +1429,7 @@ function RunModes() {
                 onKeyPress={(e) => {
                   if (e.key === "Enter") searchTMDBPosters();
                 }}
-                placeholder="Enter movie/show title or TMDB ID..."
+                placeholder={t("runModes.manual.tmdbSearchPlaceholder")}
                 disabled={loading || status.running || tmdbSearch.searching}
                 className="flex-1 px-4 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary disabled:opacity-50 disabled:cursor-not-allowed"
               />
@@ -1436,12 +1441,12 @@ function RunModes() {
                 {tmdbSearch.searching ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Searching...
+                    {t("runModes.manual.tmdbSearching")}
                   </>
                 ) : (
                   <>
                     <ImageIcon className="w-4 h-4" />
-                    Search
+                    {t("runModes.manual.tmdbSearchButton")}
                   </>
                 )}
               </button>
@@ -1454,7 +1459,8 @@ function RunModes() {
                 {/* Season Number */}
                 <div>
                   <label className="block text-xs font-medium text-theme-text mb-1">
-                    Season Number <span className="text-red-400">*</span>
+                    {t("runModes.manual.seasonName")}{" "}
+                    <span className="text-red-400">*</span>
                   </label>
                   <input
                     type="number"
@@ -1476,7 +1482,8 @@ function RunModes() {
                 {manualForm.posterType === "titlecard" && (
                   <div>
                     <label className="block text-xs font-medium text-theme-text mb-1">
-                      Episode Number <span className="text-red-400">*</span>
+                      {t("runModes.manual.episodeNumber")}{" "}
+                      <span className="text-red-400">*</span>
                     </label>
                     <input
                       type="number"
@@ -1504,14 +1511,10 @@ function RunModes() {
               manualForm.posterType === "titlecard") && (
               <div className="mt-2 text-xs text-theme-muted">
                 {manualForm.posterType === "season" && (
-                  <p>
-                    💡 Enter the season number to find season-specific posters
-                  </p>
+                  <p>{t("runModes.tmdb.seasonNumberHint")}</p>
                 )}
                 {manualForm.posterType === "titlecard" && (
-                  <p>
-                    💡 Enter season and episode numbers to find episode stills
-                  </p>
+                  <p>{t("runModes.tmdb.episodeNumberHint")}</p>
                 )}
               </div>
             )}
@@ -1520,7 +1523,8 @@ function RunModes() {
           {/* Picture Path */}
           <div>
             <label className="block text-sm font-medium text-theme-text mb-2">
-              Picture Source <span className="text-red-400">*</span>
+              {t("runModes.manual.pictureSource")}{" "}
+              <span className="text-red-400">*</span>
             </label>
 
             {/* Upload Section */}
@@ -1540,7 +1544,9 @@ function RunModes() {
                   }`}
                 >
                   <FolderOpen className="w-5 h-5" />
-                  {uploadedFile ? "File Selected" : "Upload Image"}
+                  {uploadedFile
+                    ? t("runModes.manual.fileSelected")
+                    : t("runModes.manual.uploadImage")}
                 </label>
                 <input
                   id="file-upload"
@@ -1586,7 +1592,9 @@ function RunModes() {
               {/* Divider */}
               <div className="flex items-center gap-3">
                 <div className="flex-1 border-t border-theme"></div>
-                <span className="text-xs text-theme-muted uppercase">or</span>
+                <span className="text-xs text-theme-muted uppercase">
+                  {t("runModes.manual.or")}
+                </span>
                 <div className="flex-1 border-t border-theme"></div>
               </div>
 
@@ -1600,15 +1608,14 @@ function RunModes() {
                     clearUploadedFile();
                   }
                 }}
-                placeholder="Or enter URL/path: C:\path\to\image.jpg or https://url.to/image.jpg"
+                placeholder={t("runModes.manual.urlPlaceholder")}
                 disabled={loading || status.running || uploadedFile}
                 className="w-full px-4 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
 
             <p className="text-xs text-theme-muted mt-2">
-              Upload a local image file or enter a direct URL/path to the source
-              image
+              {t("runModes.manual.uploadHint")}
             </p>
           </div>
 
@@ -1616,7 +1623,8 @@ function RunModes() {
           {manualForm.posterType !== "titlecard" && (
             <div>
               <label className="block text-sm font-medium text-theme-text mb-2">
-                Title Text <span className="text-red-400">*</span>
+                {t("runModes.manual.titleText")}{" "}
+                <span className="text-red-400">*</span>
               </label>
               <input
                 type="text"
@@ -1624,12 +1632,12 @@ function RunModes() {
                 onChange={(e) =>
                   setManualForm({ ...manualForm, titletext: e.target.value })
                 }
-                placeholder="The Martian"
+                placeholder={t("runModes.manual.titlePlaceholder")}
                 disabled={loading || status.running}
                 className="w-full px-4 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary disabled:opacity-50 disabled:cursor-not-allowed"
               />
               <p className="text-xs text-theme-muted mt-1">
-                Title to display on the poster
+                {t("runModes.manual.titleHint")}
               </p>
             </div>
           )}
@@ -1659,7 +1667,8 @@ function RunModes() {
           {/* Library Name Field - Required for all poster types */}
           <div>
             <label className="block text-sm font-medium text-theme-text mb-2">
-              Library Name <span className="text-red-400">*</span>
+              {t("runModes.manual.libraryName")}{" "}
+              <span className="text-red-400">*</span>
             </label>
             <input
               type="text"
@@ -1681,7 +1690,8 @@ function RunModes() {
           {manualForm.posterType === "season" && (
             <div>
               <label className="block text-sm font-medium text-theme-text mb-2">
-                Season Poster Name <span className="text-red-400">*</span>
+                {t("runModes.manual.seasonPosterName")}{" "}
+                <span className="text-red-400">*</span>
               </label>
               <input
                 type="text"
@@ -1692,12 +1702,12 @@ function RunModes() {
                     seasonPosterName: e.target.value,
                   })
                 }
-                placeholder="Season 1"
+                placeholder={t("runModes.manual.seasonPlaceholder")}
                 disabled={loading || status.running}
                 className="w-full px-4 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary disabled:opacity-50 disabled:cursor-not-allowed"
               />
               <p className="text-xs text-theme-muted mt-1">
-                Season name (e.g., "Season 1", "Staffel 2", "Specials")
+                {t("runModes.manual.seasonHint")}
               </p>
             </div>
           )}
@@ -1707,7 +1717,8 @@ function RunModes() {
             <>
               <div>
                 <label className="block text-sm font-medium text-theme-text mb-2">
-                  Episode Title <span className="text-red-400">*</span>
+                  {t("runModes.manual.episodeTitle")}{" "}
+                  <span className="text-red-400">*</span>
                 </label>
                 <input
                   type="text"
@@ -1718,17 +1729,18 @@ function RunModes() {
                       epTitleName: e.target.value,
                     })
                   }
-                  placeholder="Ozymandias"
+                  placeholder={t("runModes.manual.episodeTitlePlaceholder")}
                   disabled={loading || status.running}
                   className="w-full px-4 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary disabled:opacity-50 disabled:cursor-not-allowed"
                 />
                 <p className="text-xs text-theme-muted mt-1">
-                  Episode title name (e.g., "Ozymandias", "Pilot")
+                  {t("runModes.manual.episodeTitleHint")}
                 </p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-theme-text mb-2">
-                  Season Name <span className="text-red-400">*</span>
+                  {t("runModes.manual.seasonName")}{" "}
+                  <span className="text-red-400">*</span>
                 </label>
                 <input
                   type="text"
@@ -1739,17 +1751,18 @@ function RunModes() {
                       seasonPosterName: e.target.value,
                     })
                   }
-                  placeholder="Season 5"
+                  placeholder={t("runModes.manual.seasonNamePlaceholder")}
                   disabled={loading || status.running}
                   className="w-full px-4 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary disabled:opacity-50 disabled:cursor-not-allowed"
                 />
                 <p className="text-xs text-theme-muted mt-1">
-                  Season name (e.g., "Season 5", "Staffel 1")
+                  {t("runModes.manual.seasonNameHint")}
                 </p>
               </div>
               <div>
                 <label className="block text-sm font-medium text-theme-text mb-2">
-                  Episode Number <span className="text-red-400">*</span>
+                  {t("runModes.manual.episodeNumber")}{" "}
+                  <span className="text-red-400">*</span>
                 </label>
                 <input
                   type="text"
@@ -1760,12 +1773,12 @@ function RunModes() {
                       episodeNumber: e.target.value,
                     })
                   }
-                  placeholder="14"
+                  placeholder={t("runModes.manual.episodeNumberPlaceholder")}
                   disabled={loading || status.running}
                   className="w-full px-4 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary disabled:opacity-50 disabled:cursor-not-allowed"
                 />
                 <p className="text-xs text-theme-muted mt-1">
-                  Episode number (e.g., "14", "1")
+                  {t("runModes.manual.episodeNumberHint")}
                 </p>
               </div>
             </>
@@ -1780,12 +1793,12 @@ function RunModes() {
             {loading ? (
               <>
                 <Loader2 className="w-5 h-5" />
-                Processing...
+                {t("runModes.manual.processing")}
               </>
             ) : (
               <>
                 <Play className="w-5 h-5" />
-                Run Manual Mode
+                {t("runModes.manual.runButton")}
               </>
             )}
           </button>
@@ -1796,14 +1809,14 @@ function RunModes() {
           <div className="flex items-start">
             <AlertCircle className="w-5 h-5 text-blue-400 mr-3 mt-0.5 flex-shrink-0" />
             <div className="text-sm text-blue-200 w-full">
-              <p className="font-semibold mb-1">How Manual Mode works:</p>
+              <p className="font-semibold mb-1">
+                {t("runModes.manual.howItWorks")}
+              </p>
               <ul className="list-disc list-inside space-y-1 text-blue-300/90">
-                <li>
-                  The source picture is moved (if local) or downloaded (if URL)
-                </li>
-                <li>Image is edited with your configured overlays and text</li>
-                <li>Final poster is placed in the asset location</li>
-                <li>Poster is synced to your media server</li>
+                <li>{t("runModes.manual.step1")}</li>
+                <li>{t("runModes.manual.step2")}</li>
+                <li>{t("runModes.manual.step3")}</li>
+                <li>{t("runModes.manual.step4")}</li>
               </ul>
 
               {/* Documentation Link */}
@@ -1815,7 +1828,7 @@ function RunModes() {
                   className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600/30 hover:bg-blue-600/50 border border-blue-500/50 rounded-lg font-medium transition-all text-blue-100 hover:text-white"
                 >
                   <ExternalLink className="w-4 h-4" />
-                  View Full Documentation
+                  {t("runModes.viewDocumentation")}
                 </a>
               </div>
             </div>
@@ -1831,10 +1844,10 @@ function RunModes() {
           </div>
           <div>
             <h2 className="text-xl font-semibold text-red-300">
-              Reset Posters
+              {t("runModes.reset.title")}
             </h2>
             <p className="text-sm text-red-200">
-              Reset all posters in a Plex library to default
+              {t("runModes.reset.description")}
             </p>
           </div>
         </div>
@@ -1843,12 +1856,10 @@ function RunModes() {
           <div className="flex items-start">
             <AlertCircle className="w-5 h-5 text-red-400 mr-3 mt-0.5 flex-shrink-0" />
             <div className="text-sm text-red-200">
-              <p className="font-semibold mb-1">⚠️ Warning:</p>
-              <p>
-                This will reset ALL posters in the specified library. This
-                action CANNOT be undone! The script must be stopped before
-                resetting posters.
+              <p className="font-semibold mb-1">
+                {t("runModes.reset.warning")}
               </p>
+              <p>{t("runModes.reset.warningText")}</p>
             </div>
           </div>
         </div>
@@ -1858,7 +1869,7 @@ function RunModes() {
             type="text"
             value={resetLibrary}
             onChange={(e) => setResetLibrary(e.target.value)}
-            placeholder="Enter library name (e.g., Movies, TV Shows)"
+            placeholder={t("runModes.reset.placeholder")}
             disabled={loading || status.running}
             className="flex-1 px-4 py-3 bg-theme-card border border-red-500/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 disabled:bg-gray-800 disabled:cursor-not-allowed disabled:opacity-50 transition-all"
           />
@@ -1868,7 +1879,7 @@ function RunModes() {
             className="flex items-center justify-center gap-2 px-6 py-3 bg-red-700 hover:bg-red-800 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg font-medium transition-all border border-red-600 whitespace-nowrap shadow-sm"
           >
             <RotateCcw className="w-5 h-5" />
-            Reset Posters
+            {t("runModes.reset.button")}
           </button>
         </div>
       </div>

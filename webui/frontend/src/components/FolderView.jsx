@@ -14,6 +14,7 @@ import {
   Square,
   Check,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import CompactImageSizeSlider from "./CompactImageSizeSlider";
 import Notification from "./Notification";
 import { useToast } from "../context/ToastContext";
@@ -24,6 +25,7 @@ import ScrollToButtons from "./ScrollToButtons";
 const API_URL = "/api";
 
 function FolderView() {
+  const { t } = useTranslation();
   const { showSuccess, showError, showInfo } = useToast();
   const [currentPath, setCurrentPath] = useState([]); // Navigation breadcrumb
   const [folders, setFolders] = useState([]); // Current level folders
@@ -152,7 +154,7 @@ function FolderView() {
     showSuccess(null);
     showError(null);
     await loadCurrentLevel();
-    showSuccess("Content refreshed successfully");
+    showSuccess(t("folderView.refreshSuccess"));
   };
 
   const deletePoster = async (imagePath, imageName) => {
@@ -170,7 +172,7 @@ function FolderView() {
       const data = await response.json();
 
       if (data.success) {
-        showSuccess(`Successfully deleted ${imageName}`);
+        showSuccess(t("folderView.deleteSuccess", { name: imageName }));
 
         // Close modal if open
         if (selectedImage && selectedImage.path === imagePath) {
@@ -184,7 +186,9 @@ function FolderView() {
       }
     } catch (error) {
       console.error("Error deleting image:", error);
-      showError(error.message || `Failed to delete ${imageName}`);
+      showError(
+        error.message || t("folderView.deleteError", { name: imageName })
+      );
     } finally {
       setDeletingImage(null);
       setDeleteConfirm(null);
@@ -262,17 +266,11 @@ function FolderView() {
     cancelSelectMode();
 
     if (successCount > 0) {
-      showSuccess(
-        `Successfully deleted ${successCount} asset${
-          successCount !== 1 ? "s" : ""
-        }`
-      );
+      showSuccess(t("folderView.bulkDeleteSuccess", { count: successCount }));
     }
 
     if (failCount > 0) {
-      showError(
-        `Failed to delete ${failCount} asset${failCount !== 1 ? "s" : ""}`
-      );
+      showError(t("folderView.bulkDeleteError", { count: failCount }));
     }
 
     // Reload current level
@@ -341,16 +339,15 @@ function FolderView() {
 
     if (successCount > 0) {
       showSuccess(
-        `Successfully processed ${successCount} folder${
-          successCount !== 1 ? "s" : ""
-        } (${totalDeleted} assets deleted)`
+        t("folderView.bulkDeleteFoldersSuccess", {
+          folderCount: successCount,
+          assetCount: totalDeleted,
+        })
       );
     }
 
     if (failCount > 0) {
-      showError(
-        `Failed to process ${failCount} folder${failCount !== 1 ? "s" : ""}`
-      );
+      showError(t("folderView.bulkDeleteFoldersError", { count: failCount }));
     }
 
     // Reload current level
@@ -434,24 +431,28 @@ function FolderView() {
         }}
         title={
           deleteConfirm?.bulkFolders
-            ? "Delete All Assets in Selected Folders"
+            ? t("folderView.deleteAllAssetsTitle")
             : deleteConfirm?.bulk
-            ? "Delete Multiple Assets"
-            : "Delete Asset"
+            ? t("folderView.deleteMultipleTitle")
+            : t("folderView.deleteAssetTitle")
         }
         message={
           deleteConfirm?.bulkFolders
-            ? `Are you sure you want to delete ALL assets in ${deleteConfirm.count} selected folder(s)? This will delete all posters, backgrounds, seasons, and title cards within these folders.`
+            ? t("folderView.deleteAllAssetsMessage", {
+                count: deleteConfirm.count,
+              })
             : deleteConfirm?.bulk
-            ? `Are you sure you want to delete ${deleteConfirm.count} selected asset(s)?`
-            : "Are you sure you want to delete this asset?"
+            ? t("folderView.deleteMultipleMessage", {
+                count: deleteConfirm.count,
+              })
+            : t("folderView.deleteAssetMessage")
         }
         itemName={
           deleteConfirm?.bulk || deleteConfirm?.bulkFolders
             ? undefined
             : deleteConfirm?.name
         }
-        confirmText="Delete"
+        confirmText={t("folderView.deleteButton")}
         type="danger"
       />
 
@@ -464,7 +465,9 @@ function FolderView() {
             className="flex items-center gap-2 px-3 py-2 bg-theme-hover hover:bg-theme-primary/70 border border-theme-border rounded-lg transition-all"
           >
             <Home className="w-4 h-4" />
-            <span className="text-sm font-medium text-theme-text">Assets</span>
+            <span className="text-sm font-medium text-theme-text">
+              {t("folderView.assets")}
+            </span>
           </button>
 
           {currentPath.map((folder, index) => (
@@ -493,10 +496,10 @@ function FolderView() {
                 type="text"
                 placeholder={
                   currentPath.length === 0
-                    ? "Search libraries..."
+                    ? t("folderView.searchLibraries")
                     : currentPath.length === 1
-                    ? "Search items..."
-                    : "Search assets..."
+                    ? t("folderView.searchItems")
+                    : t("folderView.searchAssets")
                 }
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -533,7 +536,9 @@ function FolderView() {
                         className="flex items-center gap-2 px-4 py-2 bg-theme-hover hover:bg-theme-primary/70 border border-theme-border rounded-lg transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <CheckSquare className="w-5 h-5" />
-                        Select All ({filteredFolders.length})
+                        {t("folderView.selectAll", {
+                          count: filteredFolders.length,
+                        })}
                       </button>
                       <button
                         onClick={deselectAllFolders}
@@ -541,7 +546,7 @@ function FolderView() {
                         className="flex items-center gap-2 px-4 py-2 bg-theme-hover hover:bg-theme-primary/70 border border-theme-border rounded-lg transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <Square className="w-5 h-5" />
-                        Deselect All
+                        {t("folderView.deselectAll")}
                       </button>
                       {selectedFolders.length > 0 && (
                         <button
@@ -561,7 +566,9 @@ function FolderView() {
                                 : ""
                             }`}
                           />
-                          Delete All Assets ({selectedFolders.length})
+                          {t("folderView.deleteAllAssets", {
+                            count: selectedFolders.length,
+                          })}
                         </button>
                       )}
                     </>
@@ -579,7 +586,9 @@ function FolderView() {
                         className="flex items-center gap-2 px-4 py-2 bg-theme-hover hover:bg-theme-primary/70 border border-theme-border rounded-lg transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <CheckSquare className="w-5 h-5" />
-                        Select All ({filteredAssets.length})
+                        {t("folderView.selectAll", {
+                          count: filteredAssets.length,
+                        })}
                       </button>
                       <button
                         onClick={deselectAllAssets}
@@ -587,7 +596,7 @@ function FolderView() {
                         className="flex items-center gap-2 px-4 py-2 bg-theme-hover hover:bg-theme-primary/70 border border-theme-border rounded-lg transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <Square className="w-5 h-5" />
-                        Deselect All
+                        {t("folderView.deselectAll")}
                       </button>
                       {selectedAssets.length > 0 && (
                         <button
@@ -605,7 +614,9 @@ function FolderView() {
                               deletingImage === "bulk" ? "animate-spin" : ""
                             }`}
                           />
-                          Delete ({selectedAssets.length})
+                          {t("folderView.delete", {
+                            count: selectedAssets.length,
+                          })}
                         </button>
                       )}
                     </>
@@ -629,12 +640,12 @@ function FolderView() {
                 {selectMode ? (
                   <>
                     <Square className="w-5 h-5" />
-                    Cancel Select
+                    {t("folderView.cancelSelect")}
                   </>
                 ) : (
                   <>
                     <CheckSquare className="w-5 h-5" />
-                    Select
+                    {t("folderView.select")}
                   </>
                 )}
               </button>
@@ -647,7 +658,7 @@ function FolderView() {
             className="flex items-center gap-2 px-4 py-2 bg-theme-primary hover:bg-theme-primary/90 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg transition-all font-medium shadow-lg"
           >
             <RefreshCw className={`w-5 h-5 ${loading ? "animate-spin" : ""}`} />
-            <span>Refresh</span>
+            <span>{t("folderView.refresh")}</span>
           </button>
         </div>
       </div>
@@ -657,7 +668,7 @@ function FolderView() {
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
             <div className="w-12 h-12 border-4 border-theme-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-theme-muted">Loading...</p>
+            <p className="text-theme-muted">{t("folderView.loading")}</p>
           </div>
         </div>
       ) : (
@@ -712,25 +723,47 @@ function FolderView() {
                         <div className="text-xs text-theme-muted space-y-1">
                           {currentPath.length === 0 && (
                             <>
-                              <div>Total: {folder.total_count || 0} assets</div>
+                              <div>
+                                {t("folderView.total", {
+                                  count: folder.total_count || 0,
+                                })}
+                              </div>
                               {folder.poster_count > 0 && (
-                                <div>Posters: {folder.poster_count}</div>
+                                <div>
+                                  {t("folderView.posters", {
+                                    count: folder.poster_count,
+                                  })}
+                                </div>
                               )}
                               {folder.background_count > 0 && (
                                 <div>
-                                  Backgrounds: {folder.background_count}
+                                  {t("folderView.backgrounds", {
+                                    count: folder.background_count,
+                                  })}
                                 </div>
                               )}
                               {folder.season_count > 0 && (
-                                <div>Seasons: {folder.season_count}</div>
+                                <div>
+                                  {t("folderView.seasons", {
+                                    count: folder.season_count,
+                                  })}
+                                </div>
                               )}
                               {folder.titlecard_count > 0 && (
-                                <div>Episodes: {folder.titlecard_count}</div>
+                                <div>
+                                  {t("folderView.episodes", {
+                                    count: folder.titlecard_count,
+                                  })}
+                                </div>
                               )}
                             </>
                           )}
                           {currentPath.length === 1 && folder.asset_count && (
-                            <div>{folder.asset_count} assets</div>
+                            <div>
+                              {t("folderView.assetsCount", {
+                                count: folder.asset_count,
+                              })}
+                            </div>
                           )}
                         </div>
                       </div>
@@ -807,7 +840,7 @@ function FolderView() {
                             setReplacerOpen(true);
                           }}
                           className="absolute top-2 left-2 z-10 p-2 rounded-lg transition-all bg-blue-600/90 hover:bg-blue-700 opacity-0 group-hover:opacity-100"
-                          title="Replace image"
+                          title={t("folderView.replaceImage")}
                         >
                           <RefreshCw className="w-4 h-4 text-white" />
                         </button>
@@ -829,7 +862,7 @@ function FolderView() {
                               ? "bg-gray-600 cursor-not-allowed"
                               : "bg-red-600/90 hover:bg-red-700 opacity-0 group-hover:opacity-100"
                           }`}
-                          title="Delete image"
+                          title={t("folderView.deleteImage")}
                         >
                           <Trash2
                             className={`w-4 h-4 text-white ${
@@ -864,17 +897,17 @@ function FolderView() {
               <Folder className="w-16 h-16 text-theme-muted mx-auto mb-4" />
               <h3 className="text-lg font-medium text-theme-text mb-2">
                 {searchTerm
-                  ? "No results found"
+                  ? t("folderView.noResults")
                   : currentPath.length === 0
-                  ? "No libraries found"
+                  ? t("folderView.noLibraries")
                   : currentPath.length === 1
-                  ? "No items found"
-                  : "No assets found"}
+                  ? t("folderView.noItems")
+                  : t("folderView.noAssets")}
               </h3>
               <p className="text-theme-muted">
                 {searchTerm
-                  ? "Try adjusting your search terms"
-                  : "This folder is empty"}
+                  ? t("folderView.adjustSearch")
+                  : t("folderView.emptyFolder")}
               </p>
             </div>
           )}
@@ -917,7 +950,7 @@ function FolderView() {
                   className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all bg-blue-600 hover:bg-blue-700 hover:scale-105"
                 >
                   <RefreshCw className="w-4 h-4" />
-                  Replace
+                  {t("folderView.replace")}
                 </button>
                 <button
                   onClick={(e) => {
@@ -939,7 +972,7 @@ function FolderView() {
                       deletingImage === selectedImage.path ? "animate-spin" : ""
                     }`}
                   />
-                  Delete
+                  {t("folderView.delete")}
                 </button>
               </div>
             </div>
@@ -961,10 +994,10 @@ function FolderView() {
                     <ImageIcon className="w-16 h-16 text-theme-primary" />
                   </div>
                   <p className="text-theme-text text-lg font-semibold mb-2">
-                    Image preview not available
+                    {t("folderView.previewNotAvailable")}
                   </p>
                   <p className="text-theme-muted text-sm">
-                    Use file explorer to view image
+                    {t("folderView.useFileExplorer")}
                   </p>
                 </div>
               </div>
@@ -973,13 +1006,13 @@ function FolderView() {
             {/* Modal Footer */}
             <div className="px-6 py-5 border-t-2 border-theme bg-theme-card flex justify-between items-center">
               <span className="text-sm text-theme-muted font-medium">
-                Size: {formatFileSize(selectedImage.size)}
+                {t("folderView.size")}: {formatFileSize(selectedImage.size)}
               </span>
               <button
                 onClick={() => setSelectedImage(null)}
                 className="px-6 py-2.5 bg-theme-primary hover:bg-theme-primary/90 rounded-lg text-sm font-medium transition-all text-white shadow-lg hover:scale-105"
               >
-                Close
+                {t("folderView.close")}
               </button>
             </div>
           </div>

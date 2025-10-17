@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   RefreshCw,
   Image as ImageIcon,
@@ -19,6 +20,7 @@ import ScrollToButtons from "./ScrollToButtons";
 const API_URL = "/api";
 
 function TestGallery() {
+  const { t } = useTranslation();
   const { showSuccess, showError, showInfo } = useToast();
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -87,11 +89,13 @@ function TestGallery() {
       setImages(data.images || []);
 
       if (showToast && data.images && data.images.length > 0) {
-        showSuccess(`Loaded ${data.images.length} test files`);
+        showSuccess(
+          t("testGallery.success.filesLoaded", { count: data.images.length })
+        );
       }
     } catch (error) {
       console.error("Error fetching test images:", error);
-      const errorMsg = error.message || "Failed to load test gallery";
+      const errorMsg = error.message || t("testGallery.errors.loadFailed");
       setError(errorMsg);
       showError(errorMsg);
       setImages([]);
@@ -112,7 +116,7 @@ function TestGallery() {
 
   const runTestMode = async () => {
     if (status.running) {
-      showError("Script is already running! Please stop it first.");
+      showError(t("testGallery.errors.scriptRunning"));
       return;
     }
 
@@ -124,13 +128,17 @@ function TestGallery() {
       const data = await response.json();
 
       if (data.success) {
-        showSuccess("Test Mode started successfully!");
+        showSuccess(t("testGallery.success.testModeStarted"));
         fetchStatus();
       } else {
-        showError(`Error: ${data.message}`);
+        showError(
+          t("testGallery.errors.withMessage", { message: data.message })
+        );
       }
     } catch (error) {
-      showError(`Error: ${error.message}`);
+      showError(
+        t("testGallery.errors.withMessage", { message: error.message })
+      );
     } finally {
       setScriptLoading(false);
     }
@@ -194,7 +202,7 @@ function TestGallery() {
                   : "bg-theme-bg text-theme-muted border border-theme"
               }`}
             >
-              {isExpanded ? "Open" : "Closed"}
+              {isExpanded ? t("testGallery.open") : t("testGallery.closed")}
             </span>
             {isExpanded ? (
               <ChevronUp className="w-6 h-6 text-theme-primary transition-transform" />
@@ -231,7 +239,7 @@ function TestGallery() {
                   >
                     <ImageIcon className="w-12 h-12 mb-2" />
                     <span className="text-xs text-center">
-                      Preview unavailable
+                      {t("testGallery.previewUnavailable")}
                     </span>
                   </div>
                 </div>
@@ -271,7 +279,7 @@ function TestGallery() {
                 loading ? "animate-spin" : ""
               }`}
             />
-            <span className="text-theme-text">Refresh</span>
+            <span className="text-theme-text">{t("testGallery.refresh")}</span>
           </button>
 
           <button
@@ -284,7 +292,7 @@ function TestGallery() {
             ) : (
               <Play className="w-4 h-4" />
             )}
-            <span>Start Test Mode</span>
+            <span>{t("testGallery.startTestMode")}</span>
           </button>
         </div>
       </div>
@@ -295,9 +303,12 @@ function TestGallery() {
           <div className="flex items-center gap-3">
             <Loader2 className="w-5 h-5 text-orange-400 animate-spin" />
             <div>
-              <p className="font-medium text-orange-200">Script is running</p>
+              <p className="font-medium text-orange-200">
+                {t("testGallery.scriptRunning")}
+              </p>
               <p className="text-sm text-orange-300/80">
-                Mode: {status.current_mode || "Unknown"}
+                {t("testGallery.mode")}:{" "}
+                {status.current_mode || t("testGallery.unknown")}
               </p>
             </div>
           </div>
@@ -311,7 +322,7 @@ function TestGallery() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-theme-muted" />
             <input
               type="text"
-              placeholder="Search test files..."
+              placeholder={t("testGallery.searchPlaceholder")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-3 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
@@ -324,14 +335,14 @@ function TestGallery() {
         <div className="flex items-center justify-center py-32">
           <div className="text-center">
             <Loader2 className="w-12 h-12 animate-spin text-theme-primary mx-auto mb-4" />
-            <p className="text-theme-muted">Loading test gallery...</p>
+            <p className="text-theme-muted">{t("testGallery.loading")}</p>
           </div>
         </div>
       ) : error ? (
         <div className="bg-red-950/40 rounded-xl p-6 border-2 border-red-600/50 text-center shadow-sm">
           <ImageIcon className="w-16 h-16 text-red-400 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-red-300 mb-2">
-            Error Loading Test Gallery
+            {t("testGallery.errorLoadingTitle")}
           </h3>
           <p className="text-red-200">{error}</p>
         </div>
@@ -339,12 +350,12 @@ function TestGallery() {
         <div className="bg-theme-card border border-theme rounded-xl p-12 text-center shadow-sm">
           <ImageIcon className="w-16 h-16 text-theme-muted mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-theme-text mb-2">
-            No Test Files Found
+            {t("testGallery.noFilesTitle")}
           </h3>
           <p className="text-theme-muted text-sm">
             {searchTerm
-              ? "No test files match your search"
-              : "Run the script in Testing mode to generate sample files"}
+              ? t("testGallery.noFilesSearchHint")
+              : t("testGallery.noFilesHint")}
           </p>
         </div>
       ) : (
@@ -354,15 +365,15 @@ function TestGallery() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <span className="text-theme-text">
-                  Total:{" "}
+                  {t("testGallery.total")}:{" "}
                   <span className="font-bold text-theme-primary text-lg">
                     {filteredImages.length}
                   </span>{" "}
-                  Test files
+                  {t("testGallery.testFiles")}
                 </span>
                 {images.length !== filteredImages.length && (
                   <span className="ml-2 text-theme-muted text-sm bg-theme-bg px-2 py-1 rounded">
-                    (filtered from {images.length} total)
+                    {t("testGallery.filteredFrom", { total: images.length })}
                   </span>
                 )}
               </div>
@@ -379,7 +390,7 @@ function TestGallery() {
                   className="flex items-center gap-1 px-3 py-2 text-sm bg-theme-hover hover:bg-theme-primary/20 border border-theme hover:border-theme-primary rounded-lg transition-all font-medium"
                 >
                   <Expand className="w-4 h-4" />
-                  Expand All
+                  {t("testGallery.expandAll")}
                 </button>
                 <button
                   onClick={() =>
@@ -393,7 +404,7 @@ function TestGallery() {
                   className="flex items-center gap-1 px-3 py-2 text-sm bg-theme-hover hover:bg-theme-primary/20 border border-theme hover:border-theme-primary rounded-lg transition-all font-medium"
                 >
                   <Minimize className="w-4 h-4" />
-                  Collapse All
+                  {t("testGallery.collapseAll")}
                 </button>
               </div>
             </div>
@@ -401,31 +412,31 @@ function TestGallery() {
 
           {/* Kategorien */}
           <CategorySection
-            title="Posters"
+            title={t("testGallery.categories.posters")}
             images={categorizedImages.posters}
             categoryKey="posters"
-            description="Test posters (PosterTextless.jpg)"
+            description={t("testGallery.categories.postersDesc")}
           />
 
           <CategorySection
-            title="Backgrounds"
+            title={t("testGallery.categories.backgrounds")}
             images={categorizedImages.backgrounds}
             categoryKey="backgrounds"
-            description="Test backgrounds (BackgroundTextless.jpg)"
+            description={t("testGallery.categories.backgroundsDesc")}
           />
 
           <CategorySection
-            title="Season Posters"
+            title={t("testGallery.categories.seasonPosters")}
             images={categorizedImages.seasonPosters}
             categoryKey="seasonPosters"
-            description="Test season posters (SeasonPosterTextless.jpg)"
+            description={t("testGallery.categories.seasonPostersDesc")}
           />
 
           <CategorySection
-            title="Title Cards"
+            title={t("testGallery.categories.titleCards")}
             images={categorizedImages.titleCards}
             categoryKey="titleCards"
-            description="Test title cards (Short/Medium/Long Text, CAPS variants)"
+            description={t("testGallery.categories.titleCardsDesc")}
           />
         </>
       )}
@@ -473,7 +484,7 @@ function TestGallery() {
               >
                 <ImageIcon className="w-24 h-24 text-theme-muted mx-auto mb-4" />
                 <p className="text-theme-muted text-sm">
-                  Image preview not available
+                  {t("testGallery.imagePreviewNotAvailable")}
                 </p>
               </div>
             </div>
@@ -481,13 +492,14 @@ function TestGallery() {
             {/* Modal Footer */}
             <div className="bg-theme-bg px-6 py-4 rounded-b-xl flex justify-between items-center border-t-2 border-theme">
               <span className="text-sm text-theme-muted font-medium">
-                Size: {(selectedImage.size / 1024).toFixed(2)} KB
+                {t("testGallery.size")}:{" "}
+                {(selectedImage.size / 1024).toFixed(2)} KB
               </span>
               <button
                 onClick={() => setSelectedImage(null)}
                 className="px-6 py-2 bg-theme-primary hover:bg-theme-primary/90 rounded-lg text-sm font-medium transition-all text-white shadow-lg"
               >
-                Close
+                {t("testGallery.close")}
               </button>
             </div>
           </div>

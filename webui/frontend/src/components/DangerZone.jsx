@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { AlertTriangle, Square, Zap, Trash2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import ConfirmDialog from "./ConfirmDialog";
 
 const API_URL = "/api";
@@ -11,6 +12,7 @@ const DangerZone = ({
   onSuccess,
   onError,
 }) => {
+  const { t } = useTranslation();
   const [forceKillConfirm, setForceKillConfirm] = useState(false);
   const [deleteFileConfirm, setDeleteFileConfirm] = useState(false);
 
@@ -25,17 +27,17 @@ const DangerZone = ({
       if (data.success) {
         // More user-friendly message instead of "Stopped: manual"
         const message = data.message.includes("Stopped:")
-          ? "Script stopped successfully"
+          ? t("dangerZone.stopSuccess")
           : data.message;
 
         if (onSuccess) onSuccess(message);
         if (onStatusUpdate) onStatusUpdate();
       } else {
-        if (onError) onError(data.message || "Failed to stop script");
+        if (onError) onError(data.message || t("dangerZone.stopError"));
       }
     } catch (error) {
       console.error("Error stopping script:", error);
-      if (onError) onError(`Error stopping script: ${error.message}`);
+      if (onError) onError(t("dangerZone.stopError") + `: ${error.message}`);
     }
   };
 
@@ -50,17 +52,18 @@ const DangerZone = ({
       if (data.success) {
         // More user-friendly message instead of "Force killed: manual"
         const message = data.message.includes("Force killed:")
-          ? "Script force killed successfully"
+          ? t("dangerZone.forceKillSuccess")
           : data.message;
 
         if (onSuccess) onSuccess(message);
         if (onStatusUpdate) onStatusUpdate();
       } else {
-        if (onError) onError(data.message || "Failed to force kill script");
+        if (onError) onError(data.message || t("dangerZone.forceKillError"));
       }
     } catch (error) {
       console.error("Error force killing script:", error);
-      if (onError) onError(`Error force killing script: ${error.message}`);
+      if (onError)
+        onError(t("dangerZone.forceKillError") + `: ${error.message}`);
     }
   };
 
@@ -86,15 +89,14 @@ const DangerZone = ({
       const data = await response.json();
 
       if (data.success) {
-        if (onSuccess)
-          onSuccess(data.message || "Running file deleted successfully");
+        if (onSuccess) onSuccess(data.message || t("dashboard.deleteSuccess"));
         if (onStatusUpdate) onStatusUpdate();
       } else {
-        if (onError) onError(data.message || "Failed to delete running file");
+        if (onError) onError(data.message || t("dashboard.deleteError"));
       }
     } catch (error) {
       console.error("Error deleting running file:", error);
-      if (onError) onError(`Error deleting running file: ${error.message}`);
+      if (onError) onError(t("dashboard.deleteError") + `: ${error.message}`);
     }
   };
 
@@ -105,10 +107,10 @@ const DangerZone = ({
           <AlertTriangle className="w-6 h-6 text-red-400" />
         </div>
         <div>
-          <h2 className="text-xl font-semibold text-red-400">Danger Zone</h2>
-          <p className="text-red-200 text-sm mt-1">
-            These actions are potentially destructive
-          </p>
+          <h2 className="text-xl font-semibold text-red-400">
+            {t("dashboard.dangerZone")}
+          </h2>
+          <p className="text-red-200 text-sm mt-1">{t("dangerZone.warning")}</p>
         </div>
       </div>
 
@@ -120,7 +122,7 @@ const DangerZone = ({
           className="flex items-center justify-center gap-2 px-4 py-3 bg-red-600 hover:bg-red-700 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg font-medium transition-all border border-red-500 shadow-sm hover:scale-[1.02]"
         >
           <Square className="w-5 h-5" />
-          Stop Script
+          {t("dashboard.stop")}
         </button>
 
         <button
@@ -129,7 +131,7 @@ const DangerZone = ({
           className="flex items-center justify-center gap-2 px-4 py-3 bg-red-800 hover:bg-red-900 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg font-medium transition-all border border-red-600 shadow-sm hover:scale-[1.02]"
         >
           <Zap className="w-5 h-5" />
-          Force Kill
+          {t("dangerZone.forceKill")}
         </button>
 
         <button
@@ -138,7 +140,7 @@ const DangerZone = ({
           className="flex items-center justify-center gap-2 px-4 py-3 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg font-medium transition-all border border-orange-500 shadow-sm hover:scale-[1.02]"
         >
           <Trash2 className="w-5 h-5" />
-          Delete Running File
+          {t("dashboard.deleteRunningFile")}
         </button>
       </div>
 
@@ -147,9 +149,9 @@ const DangerZone = ({
         isOpen={forceKillConfirm}
         onClose={() => setForceKillConfirm(false)}
         onConfirm={forceKillScript}
-        title="Force Kill Script"
-        message="Force kill will immediately terminate the script. This should only be used when normal stop doesn't work."
-        confirmText="Force Kill"
+        title={t("dangerZone.forceKillTitle")}
+        message={t("dangerZone.forceKillMessage")}
+        confirmText={t("dangerZone.forceKill")}
         type="danger"
       />
 
@@ -157,9 +159,9 @@ const DangerZone = ({
         isOpen={deleteFileConfirm}
         onClose={() => setDeleteFileConfirm(false)}
         onConfirm={deleteRunningFile}
-        title="Delete Running File"
-        message="This will delete the running.txt file. Only do this if no script is actually running."
-        confirmText="Delete"
+        title={t("dashboard.deleteConfirmTitle")}
+        message={t("dashboard.deleteConfirmMessage")}
+        confirmText={t("common.delete")}
         type="warning"
       />
     </div>

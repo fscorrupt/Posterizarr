@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import { AlertCircle, CheckCircle, X, Info } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 /**
  * Notification Component
@@ -7,6 +8,7 @@ import { AlertCircle, CheckCircle, X, Info } from "lucide-react";
  * with auto-dismiss functionality
  */
 const Notification = ({ type = "info", message, onClose, duration = 2000 }) => {
+  const { t } = useTranslation();
   useEffect(() => {
     if (duration > 0) {
       const timer = setTimeout(() => {
@@ -28,7 +30,7 @@ const Notification = ({ type = "info", message, onClose, duration = 2000 }) => {
       titleColor: "text-green-500",
       textColor: "text-green-400",
       closeColor: "text-green-400 hover:text-green-300",
-      title: "Success",
+      title: t("notification.success"),
     },
     error: {
       bg: "bg-red-500/10",
@@ -39,7 +41,7 @@ const Notification = ({ type = "info", message, onClose, duration = 2000 }) => {
       titleColor: "text-red-500",
       textColor: "text-red-400",
       closeColor: "text-red-400 hover:text-red-300",
-      title: "Error",
+      title: t("notification.error"),
     },
     info: {
       bg: "bg-blue-500/10",
@@ -48,7 +50,7 @@ const Notification = ({ type = "info", message, onClose, duration = 2000 }) => {
       titleColor: "text-blue-500",
       textColor: "text-blue-400",
       closeColor: "text-blue-400 hover:text-blue-300",
-      title: "Info",
+      title: t("notification.info"),
     },
   };
 

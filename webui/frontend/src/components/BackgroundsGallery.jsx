@@ -9,6 +9,7 @@ import {
   CheckSquare,
   Square,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import CompactImageSizeSlider from "./CompactImageSizeSlider";
 import Notification from "./Notification";
 import { useToast } from "../context/ToastContext";
@@ -19,6 +20,7 @@ import ScrollToButtons from "./ScrollToButtons";
 const API_URL = "/api";
 
 function BackgroundsGallery() {
+  const { t } = useTranslation();
   const { showSuccess, showError, showInfo } = useToast();
   const [folders, setFolders] = useState([]);
   const [activeFolder, setActiveFolder] = useState(null);
@@ -91,17 +93,16 @@ function BackgroundsGallery() {
 
         if (totalBackgrounds > 0) {
           showSuccess(
-            `${foldersWithBackgrounds} folder${
-              foldersWithBackgrounds !== 1 ? "s" : ""
-            } loaded with ${totalBackgrounds} background${
-              totalBackgrounds !== 1 ? "s" : ""
-            }`
+            t("backgroundsGallery.foldersLoaded", {
+              folders: foldersWithBackgrounds,
+              backgrounds: totalBackgrounds,
+            })
           );
         } else {
           showSuccess(
-            `${data.folders.length} folder${
-              data.folders.length !== 1 ? "s" : ""
-            } found with 0 backgrounds`
+            t("backgroundsGallery.foldersFoundEmpty", {
+              count: data.folders.length,
+            })
           );
         }
       }
@@ -116,7 +117,8 @@ function BackgroundsGallery() {
       }
     } catch (error) {
       console.error("Error fetching folders:", error);
-      const errorMsg = error.message || "Failed to load folders";
+      const errorMsg =
+        error.message || t("backgroundsGallery.failedLoadFolders");
       setError(errorMsg);
       showError(errorMsg);
     } finally {
@@ -140,13 +142,17 @@ function BackgroundsGallery() {
 
       if (showNotification && data.images && data.images.length > 0) {
         showSuccess(
-          `Loaded ${data.images.length} backgrounds from ${folder.name}`
+          t("backgroundsGallery.loadedFromFolder", {
+            count: data.images.length,
+            folder: folder.name,
+          })
         );
       }
     } catch (error) {
       console.error("Error fetching images:", error);
       const errorMsg =
-        error.message || `Failed to load images from ${folder.name}`;
+        error.message ||
+        t("backgroundsGallery.failedLoadImages", { folder: folder.name });
       setError(errorMsg);
       showError(errorMsg);
       setImages([]);
@@ -176,13 +182,15 @@ function BackgroundsGallery() {
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.detail || "Failed to delete background");
+        throw new Error(
+          data.detail || t("backgroundsGallery.failedDeleteBackground")
+        );
       }
 
       const data = await response.json();
 
       if (data.success) {
-        showSuccess(`Background "${imageName}" deleted successfully`);
+        showSuccess(t("backgroundsGallery.deleteSuccess", { name: imageName }));
 
         setImages(images.filter((img) => img.path !== imagePath));
 
@@ -192,11 +200,13 @@ function BackgroundsGallery() {
 
         fetchFolders(false);
       } else {
-        throw new Error(data.message || "Failed to delete background");
+        throw new Error(
+          data.message || t("backgroundsGallery.failedDeleteBackground")
+        );
       }
     } catch (error) {
       console.error("Error deleting background:", error);
-      showError(`Error while deleting: ${error.message}`);
+      showError(t("backgroundsGallery.deleteError", { error: error.message }));
     } finally {
       setDeletingImage(null);
     }
@@ -217,7 +227,9 @@ function BackgroundsGallery() {
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.detail || "Failed to delete backgrounds");
+        throw new Error(
+          data.detail || t("backgroundsGallery.failedBulkDelete")
+        );
       }
 
       const data = await response.json();
@@ -228,10 +240,15 @@ function BackgroundsGallery() {
 
         if (failedCount > 0) {
           showError(
-            `Deleted ${deletedCount} background(s), but ${failedCount} failed.`
+            t("backgroundsGallery.bulkDeletePartial", {
+              deleted: deletedCount,
+              failed: failedCount,
+            })
           );
         } else {
-          showSuccess(`Successfully deleted ${deletedCount} background(s)`);
+          showSuccess(
+            t("backgroundsGallery.bulkDeleteSuccess", { count: deletedCount })
+          );
         }
 
         // Remove deleted images from the list
@@ -243,11 +260,13 @@ function BackgroundsGallery() {
 
         fetchFolders(false);
       } else {
-        throw new Error(data.message || "Failed to delete backgrounds");
+        throw new Error(
+          data.message || t("backgroundsGallery.failedBulkDelete")
+        );
       }
     } catch (error) {
       console.error("Error deleting backgrounds:", error);
-      showError(`Error while deleting: ${error.message}`);
+      showError(t("backgroundsGallery.deleteError", { error: error.message }));
     } finally {
       setDeletingImage(null);
     }
@@ -322,7 +341,7 @@ function BackgroundsGallery() {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold text-theme-text flex items-center gap-2">
               <Folder className="w-5 h-5 text-theme-primary" />
-              Folders
+              {t("backgroundsGallery.folders")}
             </h2>
             <div className="flex items-center gap-3">
               {/* Compact Image Size Slider */}
@@ -350,12 +369,12 @@ function BackgroundsGallery() {
                   {selectMode ? (
                     <>
                       <Square className="w-5 h-5" />
-                      Cancel Select
+                      {t("backgroundsGallery.cancelSelect")}
                     </>
                   ) : (
                     <>
                       <CheckSquare className="w-5 h-5" />
-                      Select
+                      {t("backgroundsGallery.select")}
                     </>
                   )}
                 </button>
@@ -376,7 +395,7 @@ function BackgroundsGallery() {
                     loading || imagesLoading ? "animate-spin" : ""
                   }`}
                 />
-                Refresh
+                {t("common.refresh")}
               </button>
             </div>
           </div>
@@ -408,7 +427,9 @@ function BackgroundsGallery() {
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
               <input
                 type="text"
-                placeholder={`Search backgrounds in ${activeFolder.name}...`}
+                placeholder={t("backgroundsGallery.searchPlaceholder", {
+                  folder: activeFolder.name,
+                })}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-12 pr-4 py-3 bg-theme-bg border border-theme-primary/50 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all"
@@ -421,7 +442,9 @@ function BackgroundsGallery() {
       {loading ? (
         <div className="flex flex-col items-center justify-center py-32 bg-theme-card rounded-xl border border-theme">
           <RefreshCw className="w-12 h-12 animate-spin text-theme-primary mb-4" />
-          <p className="text-theme-muted">Loading folders...</p>
+          <p className="text-theme-muted">
+            {t("backgroundsGallery.loadingFolders")}
+          </p>
         </div>
       ) : error ? (
         <div className="bg-red-950/40 rounded-xl p-8 border-2 border-red-600/50 text-center">
@@ -430,7 +453,7 @@ function BackgroundsGallery() {
               <Layers className="w-12 h-12 text-red-400" />
             </div>
             <h3 className="text-2xl font-semibold text-red-300 mb-2">
-              Error Loading Background Gallery
+              {t("backgroundsGallery.errorTitle")}
             </h3>
             <p className="text-red-200 text-sm mb-6 max-w-md">{error}</p>
             <button
@@ -443,7 +466,7 @@ function BackgroundsGallery() {
               className="flex items-center gap-2 px-6 py-3 bg-red-600 hover:bg-red-700 rounded-lg font-medium transition-all shadow-lg hover:scale-105"
             >
               <RefreshCw className="w-5 h-5" />
-              Try Again
+              {t("backgroundsGallery.tryAgain")}
             </button>
           </div>
         </div>
@@ -454,18 +477,19 @@ function BackgroundsGallery() {
               <Folder className="w-12 h-12 text-theme-primary" />
             </div>
             <h3 className="text-2xl font-semibold text-theme-text mb-2">
-              No Folders Found
+              {t("backgroundsGallery.noFoldersTitle")}
             </h3>
             <p className="text-theme-muted max-w-md">
-              No folders found in assets directory. Please check your
-              configuration.
+              {t("backgroundsGallery.noFoldersDescription")}
             </p>
           </div>
         </div>
       ) : imagesLoading ? (
         <div className="flex flex-col items-center justify-center py-32 bg-theme-card rounded-xl border border-theme">
           <RefreshCw className="w-12 h-12 animate-spin text-theme-primary mb-4" />
-          <p className="text-theme-muted">Loading backgrounds...</p>
+          <p className="text-theme-muted">
+            {t("backgroundsGallery.loadingBackgrounds")}
+          </p>
         </div>
       ) : filteredImages.length === 0 ? (
         <div className="bg-theme-card rounded-xl p-12 border border-theme text-center">
@@ -474,12 +498,16 @@ function BackgroundsGallery() {
               <Layers className="w-12 h-12 text-theme-primary" />
             </div>
             <h3 className="text-2xl font-semibold text-theme-text mb-2">
-              {searchTerm ? "No Matching Backgrounds" : "No Backgrounds Found"}
+              {searchTerm
+                ? t("backgroundsGallery.noMatchingTitle")
+                : t("backgroundsGallery.noBackgroundsTitle")}
             </h3>
             <p className="text-theme-muted max-w-md">
               {searchTerm
-                ? "Try adjusting your search terms to find what you're looking for"
-                : `No backgrounds found in ${activeFolder.name}`}
+                ? t("backgroundsGallery.noMatchingDescription")
+                : t("backgroundsGallery.noBackgroundsDescription", {
+                    folder: activeFolder.name,
+                  })}
             </p>
           </div>
         </div>
@@ -497,17 +525,19 @@ function BackgroundsGallery() {
                     {selectedImages.length === displayedImages.length ? (
                       <>
                         <Square className="w-5 h-5" />
-                        Deselect All
+                        {t("backgroundsGallery.deselectAll")}
                       </>
                     ) : (
                       <>
                         <CheckSquare className="w-5 h-5" />
-                        Select All
+                        {t("backgroundsGallery.selectAll")}
                       </>
                     )}
                   </button>
                   <span className="text-theme-text font-medium">
-                    {selectedImages.length} selected
+                    {t("backgroundsGallery.selectedCount", {
+                      count: selectedImages.length,
+                    })}
                   </span>
                 </div>
                 <button
@@ -529,7 +559,9 @@ function BackgroundsGallery() {
                       deletingImage === "bulk" ? "animate-spin" : ""
                     }`}
                   />
-                  Delete Selected ({selectedImages.length})
+                  {t("backgroundsGallery.deleteSelected", {
+                    count: selectedImages.length,
+                  })}
                 </button>
               </div>
             </div>
@@ -538,12 +570,17 @@ function BackgroundsGallery() {
           <div className="bg-theme-card rounded-xl p-4 border border-theme">
             <div className="flex items-center justify-between text-sm">
               <span className="text-theme-text font-medium">
-                Showing {displayedImages.length} of {filteredImages.length}{" "}
-                backgrounds in {activeFolder.name}
+                {t("backgroundsGallery.showingCount", {
+                  displayed: displayedImages.length,
+                  filtered: filteredImages.length,
+                  folder: activeFolder.name,
+                })}
               </span>
               {images.length !== filteredImages.length && (
                 <span className="text-theme-primary font-semibold">
-                  Filtered from {images.length} total
+                  {t("backgroundsGallery.filteredFrom", {
+                    total: images.length,
+                  })}
                 </span>
               )}
             </div>
@@ -622,7 +659,7 @@ function BackgroundsGallery() {
                           ? "bg-gray-600 cursor-not-allowed"
                           : "bg-red-600/90 hover:bg-red-700 opacity-0 group-hover:opacity-100"
                       }`}
-                      title="Delete background"
+                      title={t("backgroundsGallery.deleteTooltip")}
                     >
                       <Trash2
                         className={`w-4 h-4 text-white ${
@@ -638,7 +675,7 @@ function BackgroundsGallery() {
                         setReplacerOpen(true);
                       }}
                       className="absolute top-2 left-2 z-10 p-2 rounded-lg bg-blue-600/90 hover:bg-blue-700 opacity-0 group-hover:opacity-100 transition-all"
-                      title="Replace asset"
+                      title={t("backgroundsGallery.replaceTooltip")}
                     >
                       <RefreshCw className="w-4 h-4 text-white" />
                     </button>
@@ -688,7 +725,7 @@ function BackgroundsGallery() {
               <div className="flex justify-center">
                 <div className="inline-flex items-center gap-3 px-6 py-3 bg-theme-card border border-theme-border rounded-xl shadow-md">
                   <label className="text-sm font-medium text-theme-text">
-                    Items per page:
+                    {t("backgroundsGallery.itemsPerPage")}
                   </label>
                   <select
                     value={itemsPerPage}
@@ -713,9 +750,13 @@ function BackgroundsGallery() {
                   className="flex items-center gap-2 px-3 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
                 >
                   <ChevronDown className="w-4 h-4 text-theme-primary" />
-                  <span className="text-theme-text">Load More</span>
+                  <span className="text-theme-text">
+                    {t("backgroundsGallery.loadMore")}
+                  </span>
                   <span className="ml-1 px-2 py-0.5 bg-theme-primary/20 rounded-full text-xs font-bold text-theme-primary">
-                    {filteredImages.length - displayCount} remaining
+                    {t("backgroundsGallery.remaining", {
+                      count: filteredImages.length - displayCount,
+                    })}
                   </span>
                 </button>
                 <button
@@ -723,9 +764,13 @@ function BackgroundsGallery() {
                   className="flex items-center gap-2 px-3 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
                 >
                   <ChevronDown className="w-4 h-4 text-theme-primary" />
-                  <span className="text-theme-text">Load All</span>
+                  <span className="text-theme-text">
+                    {t("backgroundsGallery.loadAll")}
+                  </span>
                   <span className="ml-1 px-2 py-0.5 bg-theme-primary/20 rounded-full text-xs font-bold text-theme-primary">
-                    {filteredImages.length} total
+                    {t("backgroundsGallery.total", {
+                      count: filteredImages.length,
+                    })}
                   </span>
                 </button>
               </div>
@@ -757,7 +802,7 @@ function BackgroundsGallery() {
                   className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all bg-blue-600 hover:bg-blue-700 hover:scale-105"
                 >
                   <RefreshCw className="w-4 h-4" />
-                  Replace
+                  {t("backgroundsGallery.replace")}
                 </button>
                 <button
                   onClick={(e) => {
@@ -779,7 +824,7 @@ function BackgroundsGallery() {
                       deletingImage === selectedImage.path ? "animate-spin" : ""
                     }`}
                   />
-                  Delete
+                  {t("common.delete")}
                 </button>
               </div>
             </div>
@@ -799,23 +844,25 @@ function BackgroundsGallery() {
                     <Layers className="w-16 h-16 text-theme-primary" />
                   </div>
                   <p className="text-theme-text text-lg font-semibold mb-2">
-                    Image preview not available
+                    {t("backgroundsGallery.previewNotAvailable")}
                   </p>
                   <p className="text-theme-muted text-sm">
-                    Use file explorer to view background
+                    {t("backgroundsGallery.useFileExplorer")}
                   </p>
                 </div>
               </div>
             </div>
             <div className="px-6 py-5 border-t-2 border-theme flex justify-between items-center bg-theme-card">
               <span className="text-sm text-theme-muted font-medium">
-                Size: {(selectedImage.size / 1024).toFixed(2)} KB
+                {t("backgroundsGallery.size", {
+                  size: (selectedImage.size / 1024).toFixed(2),
+                })}
               </span>
               <button
                 onClick={() => setSelectedImage(null)}
                 className="px-6 py-2.5 bg-theme-primary hover:bg-theme-primary/90 rounded-lg text-sm font-medium transition-all text-white shadow-lg hover:scale-105"
               >
-                Close
+                {t("common.close")}
               </button>
             </div>
           </div>
@@ -838,16 +885,18 @@ function BackgroundsGallery() {
         }}
         title={
           deleteConfirm?.bulk
-            ? "Delete Multiple Backgrounds"
-            : "Delete Background"
+            ? t("backgroundsGallery.deleteMultipleTitle")
+            : t("backgroundsGallery.deleteSingleTitle")
         }
         message={
           deleteConfirm?.bulk
-            ? `Are you sure you want to delete ${deleteConfirm.count} selected background(s)?`
-            : "Are you sure you want to delete this background?"
+            ? t("backgroundsGallery.deleteMultipleMessage", {
+                count: deleteConfirm.count,
+              })
+            : t("backgroundsGallery.deleteSingleMessage")
         }
         itemName={deleteConfirm?.bulk ? undefined : deleteConfirm?.name}
-        confirmText="Delete"
+        confirmText={t("common.delete")}
         type="danger"
       />
 
@@ -875,7 +924,7 @@ function BackgroundsGallery() {
             setTimeout(() => {
               fetchFolderImages(activeFolder, false);
             }, 500);
-            showSuccess("Asset replaced successfully!");
+            showSuccess(t("backgroundsGallery.replaceSuccess"));
           }}
         />
       )}

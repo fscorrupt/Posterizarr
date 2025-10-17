@@ -1,7 +1,9 @@
 import React, { useState } from "react";
 import { Lock, User, Eye, EyeOff, AlertCircle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 function LoginScreen({ onLoginSuccess }) {
+  const { t } = useTranslation();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -27,13 +29,13 @@ function LoginScreen({ onLoginSuccess }) {
         sessionStorage.setItem("auth_credentials", credentials);
         onLoginSuccess(credentials);
       } else if (response.status === 401) {
-        setError("Invalid username or password");
+        setError(t("auth.invalidCredentials"));
       } else {
-        setError("Login failed. Please try again.");
+        setError(t("auth.loginError"));
       }
     } catch (err) {
       console.error("Login error:", err);
-      setError("Connection error. Please try again.");
+      setError(t("auth.connectionError"));
     } finally {
       setLoading(false);
     }
@@ -54,7 +56,7 @@ function LoginScreen({ onLoginSuccess }) {
           <h1 className="text-3xl font-bold text-theme-text mb-2">
             Posterizarr
           </h1>
-          <p className="text-theme-muted">Sign in to continue</p>
+          <p className="text-theme-muted">{t("auth.signInToContinue")}</p>
         </div>
 
         {/* Login Card */}
@@ -74,7 +76,7 @@ function LoginScreen({ onLoginSuccess }) {
                 htmlFor="username"
                 className="block text-sm font-medium text-theme-text mb-2"
               >
-                Username
+                {t("auth.username")}
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -86,7 +88,7 @@ function LoginScreen({ onLoginSuccess }) {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="block w-full pl-10 pr-4 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-theme-primary focus:border-theme-primary text-white font-medium placeholder-gray-500 transition-all"
-                  placeholder="Enter your username"
+                  placeholder={t("auth.enterUsername")}
                   required
                   autoComplete="username"
                   autoFocus
@@ -100,7 +102,7 @@ function LoginScreen({ onLoginSuccess }) {
                 htmlFor="password"
                 className="block text-sm font-medium text-theme-text mb-2"
               >
-                Password
+                {t("auth.password")}
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -112,7 +114,7 @@ function LoginScreen({ onLoginSuccess }) {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="block w-full pl-10 pr-12 py-3 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-theme-primary focus:border-theme-primary text-white font-medium placeholder-gray-500 transition-all"
-                  placeholder="Enter your password"
+                  placeholder={t("auth.enterPassword")}
                   required
                   autoComplete="current-password"
                 />
@@ -139,12 +141,12 @@ function LoginScreen({ onLoginSuccess }) {
               {loading ? (
                 <>
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  <span>Signing in...</span>
+                  <span>{t("auth.signingIn")}</span>
                 </>
               ) : (
                 <>
                   <Lock className="w-5 h-5" />
-                  <span>Sign In</span>
+                  <span>{t("auth.signIn")}</span>
                 </>
               )}
             </button>

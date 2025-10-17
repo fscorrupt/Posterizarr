@@ -8,12 +8,14 @@ import {
   Tv,
   Calendar,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const API_URL = "/api";
 
 let cachedRuntimeStats = null;
 
 function RuntimeStats() {
+  const { t } = useTranslation();
   const [runtimeStats, setRuntimeStats] = useState(
     cachedRuntimeStats || {
       runtime: null,
@@ -112,36 +114,31 @@ function RuntimeStats() {
           <div className="p-2 rounded-lg bg-theme-primary/10">
             <Clock className="w-5 h-5 text-theme-primary" />
           </div>
-          Last Run Statistics
+          {t("dashboard.runtimeStats")}
         </h2>
         <button
           onClick={() => fetchRuntimeStats()}
           disabled={refreshing}
           className="flex items-center gap-2 px-4 py-2 text-theme-muted hover:text-theme-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all hover:bg-theme-hover rounded-lg"
-          title="Refresh runtime stats"
+          title={t("runtimeStats.refreshTooltip")}
         >
           <RefreshCw
             className={`w-5 h-5 ${refreshing ? "animate-spin" : ""}`}
           />
-          <span className="text-sm font-medium">Refresh</span>
+          <span className="text-sm font-medium">{t("common.refresh")}</span>
         </button>
       </div>
 
       {!hasData ? (
         <div className="text-center py-8">
-          <p className="text-theme-muted italic">
-            No runtime data available yet. Run the script to see statistics.
-          </p>
+          <p className="text-theme-muted italic">{t("runtimeStats.noData")}</p>
 
           {/* Migration Info for empty state */}
           {migrationStatus && !migrationStatus.is_migrated && (
             <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
               <p className="text-blue-400 text-sm">
-                💡 <strong>Tip:</strong> Historical runtime data from your logs
-                can be automatically imported.
-                <br />
-                The migration will run automatically on next startup, or you can
-                trigger it manually from the Runtime History page.
+                💡 <strong>{t("runtimeStats.migrationTip")}</strong>{" "}
+                {t("runtimeStats.migrationDesc")}
               </p>
             </div>
           )}
@@ -154,7 +151,9 @@ function RuntimeStats() {
               <div className="flex items-center justify-between text-sm">
                 {runtimeStats.mode && (
                   <div className="flex items-center gap-2">
-                    <span className="text-theme-muted">Mode:</span>
+                    <span className="text-theme-muted">
+                      {t("dashboard.mode")}:
+                    </span>
                     <span className="font-medium text-theme-primary capitalize">
                       {runtimeStats.mode}
                     </span>
@@ -162,7 +161,9 @@ function RuntimeStats() {
                 )}
                 {runtimeStats.timestamp && (
                   <div className="flex items-center gap-2">
-                    <span className="text-theme-muted">Last Run:</span>
+                    <span className="text-theme-muted">
+                      {t("dashboard.lastRun")}:
+                    </span>
                     <span className="font-medium text-theme-text">
                       {new Date(runtimeStats.timestamp).toLocaleString()}
                     </span>
@@ -177,7 +178,7 @@ function RuntimeStats() {
             <div className="flex items-center justify-between">
               <div className="flex-1">
                 <p className="text-theme-muted text-sm mb-1 font-medium">
-                  Execution Time
+                  {t("runtimeStats.executionTime")}
                 </p>
                 <p className="text-3xl font-bold text-theme-primary">
                   {runtimeStats.runtime}
@@ -196,7 +197,7 @@ function RuntimeStats() {
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <p className="text-theme-muted text-xs mb-1 font-medium">
-                    Total Images
+                    {t("runtimeStats.totalImages")}
                   </p>
                   <p className="text-2xl font-bold text-theme-text">
                     {runtimeStats.total_images}
@@ -213,7 +214,7 @@ function RuntimeStats() {
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <p className="text-theme-muted text-xs mb-1 font-medium">
-                    Posters
+                    {t("assets.posters")}
                   </p>
                   <p className="text-2xl font-bold text-theme-text">
                     {runtimeStats.posters}
@@ -230,7 +231,7 @@ function RuntimeStats() {
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <p className="text-theme-muted text-xs mb-1 font-medium">
-                    Seasons
+                    {t("assets.seasons")}
                   </p>
                   <p className="text-2xl font-bold text-theme-text">
                     {runtimeStats.seasons}
@@ -247,7 +248,7 @@ function RuntimeStats() {
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <p className="text-theme-muted text-xs mb-1 font-medium">
-                    Backgrounds
+                    {t("assets.backgrounds")}
                   </p>
                   <p className="text-2xl font-bold text-theme-text">
                     {runtimeStats.backgrounds}
@@ -264,7 +265,7 @@ function RuntimeStats() {
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <p className="text-theme-muted text-xs mb-1 font-medium">
-                    TitleCards
+                    {t("assets.titleCards")}
                   </p>
                   <p className="text-2xl font-bold text-theme-text">
                     {runtimeStats.titlecards}
@@ -281,7 +282,7 @@ function RuntimeStats() {
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <p className="text-theme-muted text-xs mb-1 font-medium">
-                    Errors
+                    {t("runtimeStats.errors")}
                   </p>
                   <p
                     className={`text-2xl font-bold ${
@@ -320,7 +321,7 @@ function RuntimeStats() {
                   <Calendar className="w-5 h-5 text-theme-primary" />
                 </div>
                 <h3 className="text-lg font-semibold text-theme-text">
-                  Scheduled Runs
+                  {t("runtimeStats.scheduledRuns")}
                 </h3>
               </div>
 
@@ -331,7 +332,7 @@ function RuntimeStats() {
                     <div className="flex items-center gap-2">
                       <Clock className="w-4 h-4 text-theme-primary" />
                       <span className="text-sm font-medium text-theme-text">
-                        Next Run:
+                        {t("runtimeStats.nextRun")}:
                       </span>
                     </div>
                     <span className="text-sm font-bold text-theme-primary">
@@ -347,7 +348,7 @@ function RuntimeStats() {
                   runtimeStats.scheduler.schedules.length > 0 && (
                     <div className="p-3 bg-theme-hover rounded-lg">
                       <p className="text-xs text-theme-muted mb-2 font-medium">
-                        Configured Schedule Times:
+                        {t("runtimeStats.configuredSchedules")}:
                       </p>
                       <div className="flex flex-wrap gap-2">
                         {runtimeStats.scheduler.schedules.map(
@@ -364,7 +365,7 @@ function RuntimeStats() {
                       </div>
                       {runtimeStats.scheduler.timezone && (
                         <p className="text-xs text-theme-muted mt-2">
-                          Timezone:{" "}
+                          {t("runtimeStats.timezone")}:{" "}
                           <span className="font-mono text-theme-text">
                             {runtimeStats.scheduler.timezone}
                           </span>
