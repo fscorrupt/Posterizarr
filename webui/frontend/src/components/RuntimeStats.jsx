@@ -23,6 +23,9 @@ function RuntimeStats() {
       backgrounds: 0,
       titlecards: 0,
       errors: 0,
+      mode: null,
+      timestamp: null,
+      source: null,
       scheduler: {
         enabled: false,
         schedules: [],
@@ -33,6 +36,23 @@ function RuntimeStats() {
   );
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [migrationStatus, setMigrationStatus] = useState(null);
+
+  const fetchMigrationStatus = async () => {
+    try {
+      const response = await fetch(
+        `${API_URL}/runtime-history/migration-status`
+      );
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setMigrationStatus(data);
+        }
+      }
+    } catch (error) {
+      console.debug("Could not fetch migration status:", error);
+    }
+  };
 
   const fetchRuntimeStats = async (silent = false) => {
     if (!silent) {
@@ -63,6 +83,7 @@ function RuntimeStats() {
   useEffect(() => {
     // Fetch on mount (silent mode)
     fetchRuntimeStats(true);
+    fetchMigrationStatus();
 
     // Refresh every 30 seconds (silent)
     const interval = setInterval(() => fetchRuntimeStats(true), 30 * 1000);
@@ -111,9 +132,46 @@ function RuntimeStats() {
           <p className="text-theme-muted italic">
             No runtime data available yet. Run the script to see statistics.
           </p>
+
+          {/* Migration Info for empty state */}
+          {migrationStatus && !migrationStatus.is_migrated && (
+            <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+              <p className="text-blue-400 text-sm">
+                💡 <strong>Tip:</strong> Historical runtime data from your logs
+                can be automatically imported.
+                <br />
+                The migration will run automatically on next startup, or you can
+                trigger it manually from the Runtime History page.
+              </p>
+            </div>
+          )}
         </div>
       ) : (
         <>
+          {/* Run Info - Mode and Timestamp */}
+          {(runtimeStats.mode || runtimeStats.timestamp) && (
+            <div className="mb-4 p-3 bg-theme-hover rounded-lg border border-theme">
+              <div className="flex items-center justify-between text-sm">
+                {runtimeStats.mode && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-theme-muted">Mode:</span>
+                    <span className="font-medium text-theme-primary capitalize">
+                      {runtimeStats.mode}
+                    </span>
+                  </div>
+                )}
+                {runtimeStats.timestamp && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-theme-muted">Last Run:</span>
+                    <span className="font-medium text-theme-text">
+                      {new Date(runtimeStats.timestamp).toLocaleString()}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Runtime Card */}
           <div className="bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all shadow-sm mb-6">
             <div className="flex items-center justify-between">

@@ -26,6 +26,7 @@ import SchedulerSettings from "./components/SchedulerSettings";
 import RunModes from "./components/RunModes";
 import OverlayAssets from "./components/OverlayAssets";
 import AssetOverview from "./components/AssetOverview";
+import RuntimeHistory from "./components/RuntimeHistory";
 import Sidebar from "./components/Sidebar";
 import TopNavbar from "./components/TopNavbar";
 import LoginScreen from "./components/LoginScreen";
@@ -132,6 +133,7 @@ function AppContent() {
                 <Route path="/overlay-assets" element={<OverlayAssets />} />
                 <Route path="/asset-overview" element={<AssetOverview />} />
                 <Route path="/test-gallery" element={<TestGallery />} />
+                <Route path="/runtime-history" element={<RuntimeHistory />} />
 
                 <Route
                   path="/gallery"

@@ -28,3 +28,4 @@ scheduler.json
 /uploads
 /Overlayfiles
 database/imagechoices.db
+*.db

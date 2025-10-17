@@ -205,6 +205,20 @@ except ImportError as e:
         f"Database module not available: {e}. Database features will be disabled."
     )
 
+# Import runtime database module
+try:
+    from runtime_database import runtime_db
+    from runtime_parser import parse_runtime_from_log, save_runtime_to_db
+
+    RUNTIME_DB_AVAILABLE = True
+    logger.info("Runtime database module loaded successfully")
+except ImportError as e:
+    RUNTIME_DB_AVAILABLE = False
+    runtime_db = None
+    logger.warning(
+        f"Runtime database not available: {e}. Runtime tracking will be disabled."
+    )
+
 current_process: Optional[subprocess.Popen] = None
 current_mode: Optional[str] = None
 scheduler: Optional["PosterizarrScheduler"] = None
@@ -3066,6 +3080,30 @@ async def get_status():
             except Exception as e:
                 logger.error(f"❌ Error importing ImageChoices.csv to database: {e}")
 
+            # Save runtime statistics to database
+            if RUNTIME_DB_AVAILABLE:
+                try:
+                    # Determine which log file was used
+                    mode_log_map = {
+                        "normal": "Scriptlog.log",
+                        "testing": "Testinglog.log",
+                        "manual": "Manuallog.log",
+                        "backup": "Scriptlog.log",
+                        "syncjelly": "Scriptlog.log",
+                        "syncemby": "Scriptlog.log",
+                        "reset": "Scriptlog.log",
+                    }
+                    log_filename = mode_log_map.get(current_mode, "Scriptlog.log")
+                    log_path = LOGS_DIR / log_filename
+
+                    if log_path.exists():
+                        save_runtime_to_db(log_path, current_mode or "normal")
+                        logger.info(
+                            f"✅ Runtime statistics saved to database for {current_mode} mode"
+                        )
+                except Exception as e:
+                    logger.error(f"❌ Error saving runtime to database: {e}")
+
     scheduler_is_running = False
     scheduler_pid = None
     if SCHEDULER_AVAILABLE and scheduler:
@@ -3103,6 +3141,20 @@ async def get_status():
                     logger.error(
                         f"❌ Error importing ImageChoices.csv to database: {e}"
                     )
+
+                # Save runtime statistics to database for scheduler runs
+                if RUNTIME_DB_AVAILABLE:
+                    try:
+                        log_path = LOGS_DIR / "Scriptlog.log"
+                        if log_path.exists():
+                            save_runtime_to_db(log_path, "scheduled")
+                            logger.info(
+                                "✅ Runtime statistics saved to database for scheduled run"
+                            )
+                    except Exception as e:
+                        logger.error(
+                            f"❌ Error saving scheduler runtime to database: {e}"
+                        )
 
     # Combined running status
     is_running = manual_is_running or scheduler_is_running
@@ -3206,10 +3258,54 @@ async def delete_running_file():
 @app.get("/api/runtime-stats")
 async def get_runtime_stats():
     """
-    Get last runtime statistics from Scriptlog.log
-    Returns the last execution time, total images, and poster counts
+    Get last runtime statistics from database
+    Falls back to Scriptlog.log if database is not available
     """
     try:
+        # Try to get from database first
+        if RUNTIME_DB_AVAILABLE and runtime_db:
+            latest = runtime_db.get_latest_runtime()
+
+            if latest:
+                # Get scheduler information if available
+                scheduler_info = {
+                    "enabled": False,
+                    "schedules": [],
+                    "next_run": None,
+                    "timezone": None,
+                }
+
+                if SCHEDULER_AVAILABLE and scheduler:
+                    try:
+                        status = scheduler.get_status()
+                        scheduler_info = {
+                            "enabled": status.get("enabled", False),
+                            "schedules": status.get("schedules", []),
+                            "next_run": status.get("next_run"),
+                            "timezone": status.get("timezone"),
+                        }
+                    except Exception as e:
+                        logger.warning(f"Could not get scheduler info: {e}")
+
+                return {
+                    "success": True,
+                    "runtime": latest.get("runtime_formatted"),
+                    "total_images": latest.get("total_images", 0),
+                    "posters": latest.get("posters", 0),
+                    "seasons": latest.get("seasons", 0),
+                    "backgrounds": latest.get("backgrounds", 0),
+                    "titlecards": latest.get("titlecards", 0),
+                    "errors": latest.get("errors", 0),
+                    "mode": latest.get("mode"),
+                    "timestamp": latest.get("timestamp"),
+                    "scheduler": scheduler_info,
+                    "source": "database",
+                }
+
+        # Fallback to log file parsing (legacy behavior)
+        logger.warning(
+            "Runtime database not available, falling back to log file parsing"
+        )
         scriptlog_path = LOGS_DIR / "Scriptlog.log"
 
         if not scriptlog_path.exists():
@@ -3345,6 +3441,7 @@ async def get_runtime_stats():
             "titlecards": titlecards,
             "errors": errors,
             "scheduler": scheduler_info,
+            "source": "logfile",
         }
 
     except Exception as e:
@@ -3365,7 +3462,234 @@ async def get_runtime_stats():
                 "next_run": None,
                 "timezone": None,
             },
+            "source": "error",
         }
+
+
+@app.get("/api/runtime-history")
+async def get_runtime_history(
+    limit: int = Query(50, ge=1, le=500),
+    offset: int = Query(0, ge=0),
+    mode: Optional[str] = Query(None),
+):
+    """
+    Get runtime history with pagination
+
+    Args:
+        limit: Maximum number of entries to return (1-500)
+        offset: Number of entries to skip
+        mode: Filter by mode (optional)
+    """
+    try:
+        if not RUNTIME_DB_AVAILABLE or not runtime_db:
+            return {
+                "success": False,
+                "message": "Runtime database not available",
+                "history": [],
+            }
+
+        history = runtime_db.get_runtime_history(limit=limit, offset=offset, mode=mode)
+
+        return {
+            "success": True,
+            "history": history,
+            "count": len(history),
+            "limit": limit,
+            "offset": offset,
+            "mode_filter": mode,
+        }
+
+    except Exception as e:
+        logger.error(f"Error getting runtime history: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/runtime-summary")
+async def get_runtime_summary(days: int = Query(30, ge=1, le=365)):
+    """
+    Get summary statistics for the last N days
+
+    Args:
+        days: Number of days to include (1-365)
+    """
+    try:
+        if not RUNTIME_DB_AVAILABLE or not runtime_db:
+            return {
+                "success": False,
+                "message": "Runtime database not available",
+                "summary": {},
+            }
+
+        summary = runtime_db.get_runtime_stats_summary(days=days)
+
+        return {
+            "success": True,
+            "summary": summary,
+        }
+
+    except Exception as e:
+        logger.error(f"Error getting runtime summary: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/api/runtime-history/cleanup")
+async def cleanup_old_runtime_entries(days: int = Query(90, ge=30, le=365)):
+    """
+    Delete runtime entries older than specified days
+
+    Args:
+        days: Keep entries from the last N days (30-365)
+    """
+    try:
+        if not RUNTIME_DB_AVAILABLE or not runtime_db:
+            return {
+                "success": False,
+                "message": "Runtime database not available",
+            }
+
+        deleted_count = runtime_db.delete_old_entries(days=days)
+
+        return {
+            "success": True,
+            "deleted_count": deleted_count,
+            "message": f"Deleted {deleted_count} entries older than {days} days",
+        }
+
+    except Exception as e:
+        logger.error(f"Error cleaning up runtime history: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/runtime-history/migrate")
+async def migrate_runtime_data_from_logs():
+    """
+    Migrate runtime data from existing log files to database
+    This endpoint can be used to manually trigger migration (automatic migration runs on first DB creation)
+    """
+    try:
+        if not RUNTIME_DB_AVAILABLE or not runtime_db:
+            return {
+                "success": False,
+                "message": "Runtime database not available",
+            }
+
+        # Check if already migrated
+        if runtime_db._is_migrated():
+            return {
+                "success": True,
+                "already_migrated": True,
+                "message": "Migration was already performed. Database contains migrated data.",
+            }
+
+        logger.info("🔄 Starting manual runtime data migration from logs...")
+
+        # Import logs from current and rotated directories
+        rotated_logs_dir = BASE_DIR / "RotatedLogs"
+        log_files_to_check = []
+
+        # Current logs
+        current_logs = [
+            ("Scriptlog.log", "normal"),
+            ("Testinglog.log", "testing"),
+            ("Manuallog.log", "manual"),
+        ]
+
+        for log_file, mode in current_logs:
+            log_path = LOGS_DIR / log_file
+            if log_path.exists():
+                log_files_to_check.append((log_path, mode))
+
+        # Rotated logs (if they exist)
+        if rotated_logs_dir.exists():
+            logger.info(f"Checking rotated logs in {rotated_logs_dir}")
+            for rotation_dir in rotated_logs_dir.iterdir():
+                if rotation_dir.is_dir():
+                    for log_file, mode in current_logs:
+                        log_path = rotation_dir / log_file
+                        if log_path.exists():
+                            log_files_to_check.append((log_path, mode))
+
+        imported_count = 0
+        skipped_count = 0
+        error_count = 0
+
+        for log_path, mode in log_files_to_check:
+            try:
+                runtime_data = parse_runtime_from_log(log_path, mode)
+
+                if runtime_data:
+                    runtime_db.add_runtime_entry(**runtime_data)
+                    imported_count += 1
+                else:
+                    skipped_count += 1
+
+            except Exception as e:
+                logger.error(f"Error processing {log_path}: {e}")
+                error_count += 1
+
+        logger.info(
+            f"✅ Migration complete: {imported_count} imported, {skipped_count} skipped, {error_count} errors"
+        )
+
+        # Mark as migrated
+        runtime_db._mark_as_migrated(imported_count)
+
+        return {
+            "success": True,
+            "imported": imported_count,
+            "skipped": skipped_count,
+            "errors": error_count,
+            "message": f"Migrated {imported_count} runtime entries from log files",
+        }
+
+    except Exception as e:
+        logger.error(f"Error migrating runtime data: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/runtime-history/migration-status")
+async def get_migration_status():
+    """
+    Get migration status information
+    """
+    try:
+        if not RUNTIME_DB_AVAILABLE or not runtime_db:
+            return {
+                "success": False,
+                "message": "Runtime database not available",
+            }
+
+        is_migrated = runtime_db._is_migrated()
+
+        # Get migration info
+        migration_info = {}
+        try:
+            import sqlite3
+
+            conn = sqlite3.connect(runtime_db.db_path)
+            cursor = conn.cursor()
+
+            cursor.execute("SELECT key, value, updated_at FROM migration_info")
+            for row in cursor.fetchall():
+                migration_info[row[0]] = {"value": row[1], "updated_at": row[2]}
+
+            conn.close()
+        except Exception as e:
+            logger.debug(f"Could not fetch migration info: {e}")
+
+        # Get current entry count
+        entry_count = len(runtime_db.get_runtime_history(limit=1000000))
+
+        return {
+            "success": True,
+            "is_migrated": is_migrated,
+            "migration_info": migration_info,
+            "total_entries": entry_count,
+        }
+
+    except Exception as e:
+        logger.error(f"Error getting migration status: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/api/tmdb/search-posters")

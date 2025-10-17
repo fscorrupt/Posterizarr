@@ -24,6 +24,7 @@ import {
   FileImage,
   Lightbulb,
   AlertTriangle,
+  TrendingUp,
 } from "lucide-react";
 import VersionBadge from "./VersionBadge";
 import { useSidebar } from "../context/SidebarContext";
@@ -102,6 +103,7 @@ const Sidebar = () => {
   const navItems = [
     { path: "/", label: "Dashboard", icon: Activity },
     { path: "/run-modes", label: "Run Modes", icon: Play },
+    { path: "/runtime-history", label: "Runtime History", icon: TrendingUp },
     {
       path: "/gallery",
       label: "Assets",
