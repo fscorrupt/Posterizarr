@@ -778,7 +778,7 @@
     "enabled": "Enabled",
     "disabled": "Disabled",
     "containerUsersOnly": "Container Users Only",
-    "containerUsersInfo": "Please use only one scheduling option. Either use the runtime environment variable RUN_TIME for scheduling, or use the UI schedules. If you prefer to use the UI schedules, set the environment variable to disabled.",
+    "containerUsersInfo": "Check your container settings or compose file BEFORE enabling the button here. Use the container runtime environment variable RUN_TIME for scheduling, or use the UI schedules by enabling the scheduler on this page.",
     "lastRun": "Last Run",
     "nextRun": "Next Run",
     "never": "Never",

@@ -3345,11 +3345,6 @@ function ConfigEditor() {
         <div className="flex items-center justify-between">
           <div className="text-theme-text">
             <span className="font-medium">
-              {
-                getFilteredGroupsByTab(activeTab).filter(
-                  (groupName) => getFilteredFieldsForGroup(groupName).length > 0
-                ).length
-              }{" "}
               {t("configEditor.section", {
                 count: getFilteredGroupsByTab(activeTab).filter(
                   (groupName) => getFilteredFieldsForGroup(groupName).length > 0
