@@ -156,10 +156,6 @@ function Gallery() {
   };
 
   const formatDisplayPath = (path) => {
-    const parts = path.split(/[\\/]/);
-    if (parts.length > 1) {
-      return parts.slice(1).join("/");
-    }
     return path;
   };
 
@@ -628,10 +624,10 @@ function Gallery() {
                         });
                       }}
                       disabled={deletingImage === image.path}
-                      className={`absolute top-2 right-2 z-10 p-2 rounded-lg transition-all ${
+                      className={`absolute top-2 right-2 z-10 p-2 rounded-lg transition-all shadow-lg backdrop-blur-sm ${
                         deletingImage === image.path
-                          ? "bg-gray-600 cursor-not-allowed"
-                          : "bg-red-600/90 hover:bg-red-700 opacity-0 group-hover:opacity-100"
+                          ? "bg-theme-muted cursor-not-allowed opacity-70"
+                          : "bg-red-600/95 hover:bg-red-700 opacity-0 group-hover:opacity-100 hover:scale-110 active:scale-95"
                       }`}
                       title={t("gallery.deletePoster")}
                     >
@@ -648,7 +644,7 @@ function Gallery() {
                         setAssetToReplace(image);
                         setReplacerOpen(true);
                       }}
-                      className="absolute top-2 left-2 z-10 p-2 rounded-lg bg-blue-600/90 hover:bg-blue-700 opacity-0 group-hover:opacity-100 transition-all"
+                      className="absolute top-2 left-2 z-10 p-2 rounded-lg bg-theme-primary/95 hover:bg-theme-primary opacity-0 group-hover:opacity-100 transition-all shadow-lg backdrop-blur-sm hover:scale-110 active:scale-95"
                       title={t("gallery.replaceAsset")}
                     >
                       <RefreshCw className="w-4 h-4 text-white" />
@@ -683,7 +679,7 @@ function Gallery() {
                     className="text-sm text-theme-text truncate"
                     title={formatDisplayPath(image.path)}
                   >
-                    {formatDisplayPath(image.path)}
+                    {image.path.split(/[\\/]/).slice(-2, -1)[0] || image.name}
                   </p>
                   <p className="text-xs text-theme-muted mt-1">
                     {(image.size / 1024).toFixed(2)} KB
@@ -760,46 +756,18 @@ function Gallery() {
             className="bg-theme-card rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden shadow-2xl border-2 border-theme-primary"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="px-6 py-4 border-b-2 border-theme flex justify-between items-center bg-theme-card">
-              <h3 className="text-xl font-bold text-theme-text truncate flex-1 mr-4">
-                {formatDisplayPath(selectedImage.path)}
+            {/* Header */}
+            <div className="px-6 py-4 border-b border-theme-hover bg-gradient-to-r from-theme-card to-theme-hover">
+              <h3 className="text-xl font-bold text-theme-text mb-1">
+                {selectedImage.path.split(/[\\/]/).slice(-2, -1)[0] ||
+                  "Unknown"}
               </h3>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setAssetToReplace(selectedImage);
-                    setReplacerOpen(true);
-                  }}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all bg-blue-600 hover:bg-blue-700 hover:scale-105"
-                >
-                  <RefreshCw className="w-4 h-4" />
-                  {t("gallery.replace")}
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setDeleteConfirm({
-                      path: selectedImage.path,
-                      name: selectedImage.name,
-                    });
-                  }}
-                  disabled={deletingImage === selectedImage.path}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
-                    deletingImage === selectedImage.path
-                      ? "bg-gray-600 cursor-not-allowed"
-                      : "bg-red-600 hover:bg-red-700 hover:scale-105"
-                  }`}
-                >
-                  <Trash2
-                    className={`w-4 h-4 ${
-                      deletingImage === selectedImage.path ? "animate-spin" : ""
-                    }`}
-                  />
-                  {t("gallery.delete")}
-                </button>
-              </div>
+              <p className="text-sm text-theme-muted truncate">
+                {formatDisplayPath(selectedImage.path)}
+              </p>
             </div>
+
+            {/* Image Content */}
             <div className="p-6 bg-theme-bg flex items-center justify-center">
               <div className="max-h-[65vh] flex items-center justify-center">
                 <img
@@ -824,16 +792,63 @@ function Gallery() {
                 </div>
               </div>
             </div>
-            <div className="px-6 py-5 border-t-2 border-theme flex justify-between items-center bg-theme-card">
-              <span className="text-sm text-theme-muted font-medium">
-                {t("gallery.size")}: {(selectedImage.size / 1024).toFixed(2)} KB
-              </span>
-              <button
-                onClick={() => setSelectedImage(null)}
-                className="px-6 py-2.5 bg-theme-primary hover:bg-theme-primary/90 rounded-lg text-sm font-medium transition-all text-white shadow-lg hover:scale-105"
-              >
-                {t("gallery.close")}
-              </button>
+
+            {/* Footer with Actions */}
+            <div className="px-6 py-4 border-t border-theme-hover bg-theme-card">
+              <div className="flex items-center justify-between gap-4">
+                {/* File Size Info */}
+                <span className="text-sm text-theme-muted font-medium">
+                  {t("gallery.size")}: {(selectedImage.size / 1024).toFixed(2)}{" "}
+                  KB
+                </span>
+
+                {/* Action Buttons */}
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setAssetToReplace(selectedImage);
+                      setReplacerOpen(true);
+                    }}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors bg-theme-primary text-white hover:bg-theme-primary/90"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                    {t("gallery.replace")}
+                  </button>
+
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDeleteConfirm({
+                        path: selectedImage.path,
+                        name: selectedImage.name,
+                      });
+                    }}
+                    disabled={deletingImage === selectedImage.path}
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors ${
+                      deletingImage === selectedImage.path
+                        ? "bg-theme-muted cursor-not-allowed opacity-50"
+                        : "bg-red-600 hover:bg-red-700 text-white"
+                    }`}
+                  >
+                    <Trash2
+                      className={`w-4 h-4 ${
+                        deletingImage === selectedImage.path
+                          ? "animate-spin"
+                          : ""
+                      }`}
+                    />
+                    {t("gallery.delete")}
+                  </button>
+
+                  <button
+                    onClick={() => setSelectedImage(null)}
+                    className="px-5 py-2.5 bg-theme-hover hover:bg-theme-hover/80 rounded-lg font-medium transition-colors text-theme-text border border-theme-hover"
+                  >
+                    {t("gallery.close")}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>

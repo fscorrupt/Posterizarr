@@ -46,6 +46,9 @@ function FolderView() {
   const [replacerOpen, setReplacerOpen] = useState(false);
   const [assetToReplace, setAssetToReplace] = useState(null);
 
+  // Cache busting timestamp for force-reloading images after replacement
+  const [cacheBuster, setCacheBuster] = useState(Date.now());
+
   // Image size state with localStorage (2-10 range, default 5)
   const [imageSize, setImageSize] = useState(() => {
     const saved = localStorage.getItem("folder-view-image-size");
@@ -820,7 +823,7 @@ function FolderView() {
                       )} relative flex-shrink-0`}
                     >
                       <img
-                        src={asset.url}
+                        src={`${asset.url}?t=${cacheBuster}`}
                         alt={asset.name}
                         className="w-full h-full object-cover"
                         loading="lazy"
@@ -839,7 +842,7 @@ function FolderView() {
                             });
                             setReplacerOpen(true);
                           }}
-                          className="absolute top-2 left-2 z-10 p-2 rounded-lg transition-all bg-blue-600/90 hover:bg-blue-700 opacity-0 group-hover:opacity-100"
+                          className="absolute top-2 left-2 z-10 p-2 rounded-lg bg-theme-primary/95 hover:bg-theme-primary opacity-0 group-hover:opacity-100 transition-all shadow-lg backdrop-blur-sm hover:scale-110 active:scale-95"
                           title={t("folderView.replaceImage")}
                         >
                           <RefreshCw className="w-4 h-4 text-white" />
@@ -857,10 +860,10 @@ function FolderView() {
                             });
                           }}
                           disabled={deletingImage === asset.path}
-                          className={`absolute top-2 right-2 z-10 p-2 rounded-lg transition-all ${
+                          className={`absolute top-2 right-2 z-10 p-2 rounded-lg transition-all shadow-lg backdrop-blur-sm ${
                             deletingImage === asset.path
-                              ? "bg-gray-600 cursor-not-allowed"
-                              : "bg-red-600/90 hover:bg-red-700 opacity-0 group-hover:opacity-100"
+                              ? "bg-theme-muted cursor-not-allowed opacity-70"
+                              : "bg-red-600/95 hover:bg-red-700 opacity-0 group-hover:opacity-100 hover:scale-110 active:scale-95"
                           }`}
                           title={t("folderView.deleteImage")}
                         >
@@ -925,63 +928,22 @@ function FolderView() {
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal Header */}
-            <div className="px-6 py-4 border-b-2 border-theme flex justify-between items-center bg-theme-card">
-              <div className="flex-1 min-w-0 mr-4">
-                <h3 className="text-xl font-bold text-theme-text truncate">
-                  {selectedImage.name}
-                </h3>
-                <p className="text-sm text-theme-muted mt-1 truncate">
-                  {currentPath.join(" / ")}
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setAssetToReplace({
-                      path: selectedImage.path,
-                      url: selectedImage.url,
-                      name: selectedImage.name,
-                      type: getAssetType(selectedImage.name),
-                    });
-                    setReplacerOpen(true);
-                    setSelectedImage(null); // Close the preview modal
-                  }}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all bg-blue-600 hover:bg-blue-700 hover:scale-105"
-                >
-                  <RefreshCw className="w-4 h-4" />
-                  {t("folderView.replace")}
-                </button>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setDeleteConfirm({
-                      path: selectedImage.path,
-                      name: selectedImage.name,
-                    });
-                  }}
-                  disabled={deletingImage === selectedImage.path}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
-                    deletingImage === selectedImage.path
-                      ? "bg-gray-600 cursor-not-allowed"
-                      : "bg-red-600 hover:bg-red-700 hover:scale-105"
-                  }`}
-                >
-                  <Trash2
-                    className={`w-4 h-4 ${
-                      deletingImage === selectedImage.path ? "animate-spin" : ""
-                    }`}
-                  />
-                  {t("folderView.delete")}
-                </button>
-              </div>
+            <div className="px-6 py-4 border-b border-theme-hover bg-gradient-to-r from-theme-card to-theme-hover">
+              <h3 className="text-xl font-bold text-theme-text mb-1">
+                {currentPath.length > 0
+                  ? currentPath[currentPath.length - 1]
+                  : "Unknown"}
+              </h3>
+              <p className="text-sm text-theme-muted truncate">
+                /{currentPath.join("/")}/{selectedImage.name}
+              </p>
             </div>
 
             {/* Modal Content - Image */}
             <div className="p-6 bg-theme-bg flex items-center justify-center">
               <div className="max-h-[65vh] flex items-center justify-center">
                 <img
-                  src={selectedImage.url}
+                  src={`${selectedImage.url}?t=${cacheBuster}`}
                   alt={selectedImage.name}
                   className="max-w-full max-h-[65vh] object-contain rounded-lg shadow-2xl"
                   onError={(e) => {
@@ -1004,16 +966,66 @@ function FolderView() {
             </div>
 
             {/* Modal Footer */}
-            <div className="px-6 py-5 border-t-2 border-theme bg-theme-card flex justify-between items-center">
-              <span className="text-sm text-theme-muted font-medium">
-                {t("folderView.size")}: {formatFileSize(selectedImage.size)}
-              </span>
-              <button
-                onClick={() => setSelectedImage(null)}
-                className="px-6 py-2.5 bg-theme-primary hover:bg-theme-primary/90 rounded-lg text-sm font-medium transition-all text-white shadow-lg hover:scale-105"
-              >
-                {t("folderView.close")}
-              </button>
+            <div className="px-6 py-4 border-t border-theme-hover bg-theme-card">
+              <div className="flex items-center justify-between gap-4">
+                {/* File Size Info */}
+                <span className="text-sm text-theme-muted font-medium">
+                  {t("folderView.size")}: {formatFileSize(selectedImage.size)}
+                </span>
+
+                {/* Action Buttons */}
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setAssetToReplace({
+                        path: selectedImage.path,
+                        url: selectedImage.url,
+                        name: selectedImage.name,
+                        type: getAssetType(selectedImage.name),
+                      });
+                      setReplacerOpen(true);
+                      setSelectedImage(null); // Close the preview modal
+                    }}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors bg-theme-primary text-white hover:bg-theme-primary/90"
+                  >
+                    <RefreshCw className="w-4 h-4" />
+                    {t("folderView.replace")}
+                  </button>
+
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDeleteConfirm({
+                        path: selectedImage.path,
+                        name: selectedImage.name,
+                      });
+                    }}
+                    disabled={deletingImage === selectedImage.path}
+                    className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors ${
+                      deletingImage === selectedImage.path
+                        ? "bg-theme-muted cursor-not-allowed opacity-50"
+                        : "bg-red-600 hover:bg-red-700 text-white"
+                    }`}
+                  >
+                    <Trash2
+                      className={`w-4 h-4 ${
+                        deletingImage === selectedImage.path
+                          ? "animate-spin"
+                          : ""
+                      }`}
+                    />
+                    {t("folderView.deleteButton")}
+                  </button>
+
+                  <button
+                    onClick={() => setSelectedImage(null)}
+                    className="px-5 py-2.5 bg-theme-hover hover:bg-theme-hover/80 rounded-lg font-medium transition-colors text-theme-text border border-theme-hover"
+                  >
+                    {t("folderView.close")}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1097,10 +1109,22 @@ function FolderView() {
             setAssetToReplace(null);
           }}
           onSuccess={() => {
+            // Force cache refresh by updating timestamp
+            setCacheBuster(Date.now());
+
+            // Update selectedImage if it's still open to show the new image
+            if (selectedImage && assetToReplace) {
+              setSelectedImage({
+                ...selectedImage,
+                url: `${selectedImage.url.split("?")[0]}?t=${Date.now()}`,
+              });
+            }
+
             // Refetch images after successful replacement
             setTimeout(() => {
               loadCurrentLevel();
             }, 500);
+            showSuccess(t("folderView.assetReplaced"));
           }}
         />
       )}
