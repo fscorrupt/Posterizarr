@@ -366,7 +366,7 @@ const AssetOverview = () => {
         };
 
         const patterns = providerPatterns[primaryProvider] || [primaryProvider];
-        
+
         // Check if DownloadSource contains the primary provider
         const isDownloadFromPrimaryProvider = patterns.some((pattern) =>
           downloadSource.toLowerCase().includes(pattern)

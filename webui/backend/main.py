@@ -7158,19 +7158,17 @@ async def get_assets_overview():
             # OR FavProviderLink is missing
             download_source = record_dict.get("DownloadSource")
             provider_link = record_dict.get("FavProviderLink", "")
-            
+
             is_download_missing = (
                 download_source == "false"
                 or download_source == False
                 or not download_source
             )
-            
+
             is_provider_link_missing = (
-                provider_link == "false"
-                or provider_link == False
-                or not provider_link
+                provider_link == "false" or provider_link == False or not provider_link
             )
-            
+
             if is_download_missing or is_provider_link_missing:
                 missing_assets.append(record_dict)
                 has_issue = True
@@ -7211,13 +7209,15 @@ async def get_assets_overview():
                         "plex": ["plex"],
                     }
 
-                    patterns = provider_patterns.get(primary_provider, [primary_provider])
-                    
+                    patterns = provider_patterns.get(
+                        primary_provider, [primary_provider]
+                    )
+
                     # Check if DownloadSource contains the primary provider
                     is_download_from_primary = any(
                         pattern in download_source.lower() for pattern in patterns
                     )
-                    
+
                     # Check if FavProviderLink contains the primary provider
                     is_fav_link_from_primary = any(
                         pattern in provider_link.lower() for pattern in patterns
