@@ -26,6 +26,7 @@ import {
   Lightbulb,
   AlertTriangle,
   TrendingUp,
+  Zap,
 } from "lucide-react";
 import VersionBadge from "./VersionBadge";
 import { useSidebar } from "../context/SidebarContext";
@@ -184,6 +185,7 @@ const Sidebar = () => {
     { path: "/scheduler", label: t("nav.scheduler"), icon: Clock },
     { path: "/logs", label: t("nav.logs"), icon: FileText },
     { path: "/how-it-works", label: t("nav.howItWorks"), icon: Lightbulb },
+    { path: "/auto-triggers", label: t("nav.autoTriggers"), icon: Zap },
     { path: "/about", label: t("nav.about"), icon: Info },
   ];
 
