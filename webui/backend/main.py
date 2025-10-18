@@ -7155,24 +7155,28 @@ async def get_assets_overview():
             has_issue = False
 
             # Missing Assets: DownloadSource == "false" (string) or False (boolean) or empty
+            # OR FavProviderLink is missing
             download_source = record_dict.get("DownloadSource")
-            if (
+            provider_link = record_dict.get("FavProviderLink", "")
+            
+            is_download_missing = (
                 download_source == "false"
                 or download_source == False
                 or not download_source
-            ):
+            )
+            
+            is_provider_link_missing = (
+                provider_link == "false"
+                or provider_link == False
+                or not provider_link
+            )
+            
+            if is_download_missing or is_provider_link_missing:
                 missing_assets.append(record_dict)
                 has_issue = True
 
-            # Check if Fallback was used (general error indicator)
-            fallback_value = str(record_dict.get("Fallback", "")).lower()
-            is_fallback = fallback_value == "true"
-
             # Non-Primary Language: Check language against config
-            # Fallback=true can indicate language fallback OR provider fallback
-            # We need to check the actual language to determine if it's a language issue
             language = record_dict.get("Language", "")
-            provider_link = record_dict.get("FavProviderLink", "")
 
             if language and primary_language:
                 # Normalize: "Textless" = "xx", case-insensitive
@@ -7194,25 +7198,10 @@ async def get_assets_overview():
                     non_primary_lang.append(record_dict)
                     has_issue = True
 
-            # Non-Primary Provider: Check if Fallback=true AND it's NOT a language issue
-            # If Fallback=true but language is correct, then it must be a provider fallback
-            if is_fallback:
-                # Check if this is a provider issue by looking at the provider link
-                is_language_issue = False
-
-                if language and primary_language:
-                    lang_normalized = (
-                        "xx" if language.lower() == "textless" else language.lower()
-                    )
-                    primary_normalized = (
-                        "xx"
-                        if primary_language.lower() == "textless"
-                        else primary_language.lower()
-                    )
-                    is_language_issue = lang_normalized != primary_normalized
-
-                # If Fallback=true but language is correct, it's a provider issue
-                if not is_language_issue:
+            # Non-Primary Provider: Check if DownloadSource OR FavProviderLink don't match primary provider
+            # Only check if we have both DownloadSource AND FavProviderLink
+            if not is_download_missing and not is_provider_link_missing:
+                if primary_provider:
                     # Check if provider link contains the primary provider
                     # Map provider names to their URL patterns
                     provider_patterns = {
@@ -7222,29 +7211,20 @@ async def get_assets_overview():
                         "plex": ["plex"],
                     }
 
-                    is_primary_provider = False
-                    if (
-                        primary_provider
-                        and provider_link
-                        and provider_link != "false"
-                        and provider_link != False
-                    ):
-                        # Check if any pattern for the primary provider is in the link
-                        patterns = provider_patterns.get(
-                            primary_provider, [primary_provider]
-                        )
-                        is_primary_provider = any(
-                            pattern in provider_link.lower() for pattern in patterns
-                        )
+                    patterns = provider_patterns.get(primary_provider, [primary_provider])
+                    
+                    # Check if DownloadSource contains the primary provider
+                    is_download_from_primary = any(
+                        pattern in download_source.lower() for pattern in patterns
+                    )
+                    
+                    # Check if FavProviderLink contains the primary provider
+                    is_fav_link_from_primary = any(
+                        pattern in provider_link.lower() for pattern in patterns
+                    )
 
-                    # If not from primary provider, add to non_primary_provider
-                    # Check that provider_link is not "false" (string), False (boolean), or empty
-                    if (
-                        not is_primary_provider
-                        and provider_link
-                        and provider_link != "false"
-                        and provider_link != False
-                    ):
+                    # Show as non-primary if EITHER DownloadSource OR FavProviderLink is not from primary provider
+                    if not is_download_from_primary or not is_fav_link_from_primary:
                         non_primary_provider.append(record_dict)
                         has_issue = True
 

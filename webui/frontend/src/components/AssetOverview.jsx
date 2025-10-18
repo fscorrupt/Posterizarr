@@ -352,6 +352,7 @@ const AssetOverview = () => {
     }
 
     // 2. NON-PRIMARY PROVIDER CHECK
+    // Check if DownloadSource OR FavProviderLink don't match the primary provider
     // Only check if we have both DownloadSource AND FavProviderLink
     if (!isDownloadMissing && !isProviderLinkMissing) {
       const primaryProvider = data?.config?.primary_provider || "";
@@ -365,11 +366,19 @@ const AssetOverview = () => {
         };
 
         const patterns = providerPatterns[primaryProvider] || [primaryProvider];
-        const isPrimaryProvider = patterns.some((pattern) =>
+        
+        // Check if DownloadSource contains the primary provider
+        const isDownloadFromPrimaryProvider = patterns.some((pattern) =>
+          downloadSource.toLowerCase().includes(pattern)
+        );
+
+        // Check if FavProviderLink contains the primary provider
+        const isFavLinkFromPrimaryProvider = patterns.some((pattern) =>
           providerLink.toLowerCase().includes(pattern)
         );
 
-        if (!isPrimaryProvider) {
+        // Show badge if EITHER DownloadSource OR FavProviderLink is not from primary provider
+        if (!isDownloadFromPrimaryProvider || !isFavLinkFromPrimaryProvider) {
           tags.push({
             label: t("assetOverview.notPrimaryProvider"),
             color: "bg-orange-500/20 text-orange-400 border-orange-500/30",
