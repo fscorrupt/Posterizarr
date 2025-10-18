@@ -6550,31 +6550,103 @@ async def upload_asset_replacement(
     Optionally process with overlays using Manual Run
     """
     try:
-        # Validate asset path exists
-        full_asset_path = ASSETS_DIR / asset_path
-        if not full_asset_path.exists():
-            raise HTTPException(status_code=404, detail="Asset not found")
+        logger.info(f"Asset replacement upload request received")
+        logger.info(f"  Asset path: {asset_path}")
+        logger.info(f"  File: {file.filename}")
+        logger.info(f"  Content type: {file.content_type}")
+        logger.info(f"  Process with overlays: {process_with_overlays}")
 
-        # Read uploaded file
-        contents = await file.read()
+        # Validate file upload
+        if not file or not file.filename:
+            logger.error("No file uploaded")
+            raise HTTPException(status_code=400, detail="No file uploaded")
 
-        # Validate it's an image
+        # Validate file type - check both content type and extension
+        allowed_extensions = [".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tiff"]
+        file_extension = Path(file.filename).suffix.lower()
+
+        if file_extension not in allowed_extensions:
+            logger.error(f"Invalid file extension: {file_extension}")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid file type. Allowed: {', '.join(allowed_extensions)}",
+            )
+
+        # Validate content type
         if not file.content_type or not file.content_type.startswith("image/"):
+            logger.error(f"Invalid content type: {file.content_type}")
             raise HTTPException(status_code=400, detail="File must be an image")
 
-        # Create backup of original
-        backup_path = full_asset_path.with_suffix(full_asset_path.suffix + ".backup")
-        if full_asset_path.exists() and not backup_path.exists():
-            import shutil
+        # Validate and sanitize asset path
+        try:
+            # Normalize the path to handle different path separators
+            normalized_path = Path(asset_path)
+            full_asset_path = (ASSETS_DIR / normalized_path).resolve()
 
-            shutil.copy2(full_asset_path, backup_path)
-            logger.info(f"Created backup: {backup_path}")
+            # Security: Ensure the path doesn't escape ASSETS_DIR
+            if not str(full_asset_path).startswith(str(ASSETS_DIR.resolve())):
+                logger.error(f"Path traversal attempt detected: {asset_path}")
+                raise HTTPException(status_code=400, detail="Invalid asset path")
+
+            # Check if asset exists
+            if not full_asset_path.exists():
+                logger.error(f"Asset not found: {full_asset_path}")
+                raise HTTPException(
+                    status_code=404, detail=f"Asset not found: {asset_path}"
+                )
+
+            logger.info(f"Full asset path: {full_asset_path}")
+
+        except (ValueError, OSError) as e:
+            logger.error(f"Invalid asset path '{asset_path}': {e}")
+            raise HTTPException(status_code=400, detail=f"Invalid asset path: {str(e)}")
+
+        # Ensure parent directory exists
+        full_asset_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Read uploaded file
+        try:
+            contents = await file.read()
+            logger.info(f"File read successfully: {len(contents)} bytes")
+        except Exception as e:
+            logger.error(f"Error reading uploaded file: {e}")
+            raise HTTPException(status_code=400, detail=f"Error reading file: {str(e)}")
+
+        # Validate file size
+        if len(contents) == 0:
+            logger.error("Uploaded file is empty")
+            raise HTTPException(status_code=400, detail="Uploaded file is empty")
+
+        # Create backup of original
+        try:
+            backup_path = full_asset_path.with_suffix(
+                full_asset_path.suffix + ".backup"
+            )
+            if full_asset_path.exists() and not backup_path.exists():
+                import shutil
+
+                shutil.copy2(full_asset_path, backup_path)
+                logger.info(f"Created backup: {backup_path}")
+        except Exception as e:
+            logger.warning(f"Failed to create backup (continuing anyway): {e}")
 
         # Save new image
-        with open(full_asset_path, "wb") as f:
-            f.write(contents)
-
-        logger.info(f"Replaced asset: {asset_path} (size: {len(contents)} bytes)")
+        try:
+            with open(full_asset_path, "wb") as f:
+                f.write(contents)
+            logger.info(f"Replaced asset: {asset_path} (size: {len(contents)} bytes)")
+        except PermissionError as e:
+            logger.error(f"Permission denied writing to {full_asset_path}: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Permission denied: Unable to write to file. Check file permissions.",
+            )
+        except OSError as e:
+            logger.error(f"OS error writing to {full_asset_path}: {e}")
+            raise HTTPException(status_code=500, detail=f"File system error: {str(e)}")
+        except Exception as e:
+            logger.error(f"Unexpected error writing file: {e}")
+            raise HTTPException(status_code=500, detail=f"Error saving file: {str(e)}")
 
         result = {
             "success": True,
@@ -6591,6 +6663,7 @@ async def upload_asset_replacement(
                 # Parse asset path to extract info
                 # Format: LibraryName/FolderName/poster.jpg, Season01.jpg, or S01E01.jpg
                 path_parts = Path(asset_path).parts
+                logger.info(f"Path parts: {path_parts} (length: {len(path_parts)})")
 
                 if len(path_parts) >= 3:
                     # Use provided library_name and folder_name if available, otherwise extract from path
@@ -6600,6 +6673,10 @@ async def upload_asset_replacement(
                     final_library_name = library_name or extracted_library_name
                     final_folder_name = folder_name or extracted_folder_name
                     final_title_text = title_text or extracted_folder_name
+
+                    logger.info(
+                        f"Overlay parameters - Library: {final_library_name}, Folder: {final_folder_name}, Title: {final_title_text}"
+                    )
 
                     # Determine poster type from filename
                     filename = Path(asset_path).name.lower()
@@ -6682,8 +6759,12 @@ async def upload_asset_replacement(
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error uploading asset replacement: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        import traceback
+
+        error_details = traceback.format_exc()
+        logger.error(f"Unexpected error uploading asset replacement: {e}")
+        logger.error(f"Traceback:\n{error_details}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 
 @app.post("/api/assets/replace-from-url")
