@@ -11,6 +11,8 @@ const LanguageSwitcher = ({ compact = false }) => {
     { code: "en", name: "English", flag: "EN" },
     { code: "de", name: "Deutsch", flag: "DE" },
     { code: "fr", name: "Français", flag: "FR" },
+    { code: "it", name: "Italiano", flag: "IT" },
+    { code: "pt", name: "Português", flag: "PT" },
   ];
 
   const currentLanguage =

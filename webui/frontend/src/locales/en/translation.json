@@ -312,6 +312,7 @@
     "logs": "Logs",
     "about": "About",
     "howItWorks": "How It Works",
+    "autoTriggers": "Auto Triggers",
     "assetOverview": "Asset Overview",
     "assetReplacer": "Asset Replacer",
     "overlayAssets": "Overlay Assets",
@@ -1255,7 +1256,10 @@
     "title": "Language",
     "selectLanguage": "Select Language",
     "de": "Deutsch",
-    "en": "English"
+    "en": "English",
+    "fr": "Français",
+    "it": "Italiano",
+    "pt": "Português"
   },
   "notifications": {
     "success": "Success",
@@ -1409,5 +1413,292 @@
     "deleteMultipleMessage": "Are you sure you want to delete {{count}} selected asset(s)?",
     "deleteAssetMessage": "Are you sure you want to delete this asset?",
     "deleteButton": "Delete"
+  },
+  "autoTriggers": {
+    "header": {
+      "title": "Auto Triggers",
+      "subtitle": "Set up automatic poster creation when new media is added to your library"
+    },
+    "tabs": {
+      "tautulli": {
+        "description": "Trigger on Plex library events"
+      },
+      "sonarr": {
+        "description": "Trigger on TV show imports"
+      },
+      "radarr": {
+        "description": "Trigger on movie imports"
+      }
+    },
+    "setupSteps": "Setup Steps",
+    "howItWorks": "How It Works",
+    "copyCode": "Copy to clipboard",
+    "resources": {
+      "title": "Additional Resources",
+      "tautulliWiki": "Tautulli Custom Scripts Wiki",
+      "sonarrWiki": "Sonarr Connect Settings Documentation",
+      "radarrWiki": "Radarr Connect Settings Documentation",
+      "triggerScript": "View trigger.py on GitHub",
+      "arrTriggerScript": "View ArrTrigger.sh on GitHub"
+    },
+    "tautulli": {
+      "selectMode": "Select Your Environment",
+      "requirements": {
+        "title": "Requirements",
+        "docker": "Tautulli and Posterizarr must both be running as Docker containers",
+        "windows": "Tautulli and Posterizarr must be installed on the same Windows system"
+      },
+      "docker": {
+        "description": "For containerized environments",
+        "steps": [
+          {
+            "title": "Mount Posterizarr Directory to Tautulli",
+            "description": "Tautulli needs access to the Posterizarr directory to execute the trigger script.",
+            "warning": "⚠️ The mount path is case-sensitive and must be exactly /posterizarr",
+            "code": [
+              {
+                "label": "Add this volume mount to your Tautulli docker-compose.yml:",
+                "content": "volumes:\n  - \"/opt/appdata/posterizarr:/posterizarr:rw\""
+              }
+            ]
+          },
+          {
+            "title": "Download the Trigger Script",
+            "description": "Download trigger.py from GitHub and place it in your Tautulli scripts directory.",
+            "substeps": [
+              "Download from: https://github.com/cyb3rgh05t/posterizarr/blob/main/trigger.py",
+              "Place in Tautulli script directory (see Tautulli Wiki for location)",
+              "Set executable permissions: chmod +x trigger.py"
+            ]
+          },
+          {
+            "title": "Configure Tautulli Notification Agent",
+            "description": "Create a new Script notification agent in Tautulli.",
+            "substeps": [
+              "Go to Settings → Notification Agents",
+              "Click 'Add a new notification agent' and select 'Script'",
+              "Select trigger.py from your script folder",
+              "Add a description (optional)"
+            ]
+          },
+          {
+            "title": "Set Triggers",
+            "description": "Configure when the script should run.",
+            "substeps": [
+              "Go to the 'Triggers' tab",
+              "Scroll down and enable 'Recently Added'"
+            ]
+          },
+          {
+            "title": "Set Conditions",
+            "description": "Define which media types should trigger the script.",
+            "substeps": [
+              "Go to the 'Conditions' tab",
+              "Set Media Type to: episode, movie, show, season",
+              "Optionally exclude libraries (e.g., YouTube) that don't have TMDB/TVDB IDs"
+            ]
+          },
+          {
+            "title": "Configure Arguments",
+            "description": "Set the required arguments for the script to work properly.",
+            "info": "Do not modify this argument - the script requires this exact format",
+            "code": [
+              {
+                "label": "Go to Arguments tab → Expand 'Recently Added' → Paste:",
+                "content": "<movie>RatingKey \"{rating_key}\" mediatype \"{media_type}\"</movie><show>RatingKey \"{rating_key}\" mediatype \"{media_type}\"</show><season>parentratingkey \"{parent_rating_key}\" mediatype \"{media_type}\"</season><episode>RatingKey \"{rating_key}\" parentratingkey \"{parent_rating_key}\" grandparentratingkey \"{grandparent_rating_key}\" mediatype \"{media_type}\"</episode>"
+              }
+            ]
+          }
+        ]
+      },
+      "windows": {
+        "description": "For Windows installations",
+        "steps": [
+          {
+            "title": "Configure Tautulli Notification Agent",
+            "description": "Create a new Script notification agent in Tautulli.",
+            "substeps": [
+              "Go to Settings → Notification Agents",
+              "Click 'Add a new notification agent' and select 'Script'",
+              "Select Posterizarr.ps1 from your Posterizarr folder",
+              "Set script timeout to 0 (unlimited) - default 30 seconds will kill the script",
+              "Add a description (optional)"
+            ]
+          },
+          {
+            "title": "Set Triggers",
+            "description": "Configure when the script should run.",
+            "substeps": [
+              "Go to the 'Triggers' tab",
+              "Scroll down and enable 'Recently Added'"
+            ]
+          },
+          {
+            "title": "Set Conditions",
+            "description": "Define which media types should trigger the script.",
+            "substeps": [
+              "Go to the 'Conditions' tab",
+              "Set Media Type to: episode, movie, show, season",
+              "Optionally exclude libraries (e.g., YouTube) that don't have TMDB/TVDB IDs"
+            ]
+          },
+          {
+            "title": "Configure Arguments",
+            "description": "Set the required arguments for the script to work properly.",
+            "info": "Do not modify this argument - the script requires this exact format",
+            "code": [
+              {
+                "label": "Go to Arguments tab → Expand 'Recently Added' → Paste:",
+                "content": "<movie>RatingKey \"{rating_key}\" mediatype \"{media_type}\"</movie><show>RatingKey \"{rating_key}\" mediatype \"{media_type}\"</show><season>parentratingkey \"{parent_rating_key}\" mediatype \"{media_type}\"</season><episode>RatingKey \"{rating_key}\" parentratingkey \"{parent_rating_key}\" grandparentratingkey \"{grandparent_rating_key}\" mediatype \"{media_type}\"</episode>"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "sonarr": {
+      "requirements": {
+        "title": "Requirements",
+        "description": "Sonarr and Posterizarr must both be running as Docker containers"
+      },
+      "howItWorks": [
+        "Sonarr creates a .posterizarr file in the watcher directory when a file is imported",
+        "The file contains metadata about the imported episode",
+        "Posterizarr monitors this directory for new files",
+        "When detected, Posterizarr waits up to 5 minutes (based on file age)",
+        "Then reads the file and triggers a poster creation run for that specific item"
+      ],
+      "steps": [
+        {
+          "title": "Mount Posterizarr Directory to Sonarr",
+          "description": "Sonarr needs write access to the Posterizarr watcher directory.",
+          "warning": "⚠️ The mount path is case-sensitive and must be exactly /posterizarr",
+          "code": [
+            {
+              "label": "Add this volume mount to your Sonarr docker-compose.yml:",
+              "content": "volumes:\n  - \"/opt/appdata/posterizarr:/posterizarr:rw\""
+            }
+          ]
+        },
+        {
+          "title": "Download the Trigger Script",
+          "description": "Download ArrTrigger.sh from GitHub and place it in your Sonarr scripts directory.",
+          "substeps": [
+            "Download from: https://github.com/cyb3rgh05t/posterizarr/blob/main/ArrTrigger.sh",
+            "Example: Create /opt/appdata/sonarr/scripts/ directory",
+            "Place ArrTrigger.sh in this directory",
+            "Set executable permissions: chmod +x ArrTrigger.sh"
+          ]
+        },
+        {
+          "title": "Configure Sonarr Connect Settings",
+          "description": "Add a custom script connection in Sonarr.",
+          "substeps": [
+            "Go to Settings → Connect",
+            "Click the '+' button and select 'Custom Script'",
+            "Give it a name (e.g., 'Posterizarr Trigger')"
+          ]
+        },
+        {
+          "title": "Set Notification Trigger",
+          "description": "Configure when the script should execute.",
+          "substeps": [
+            "Under 'Notification Triggers', enable ONLY 'On Import'",
+            "Disable all other triggers"
+          ]
+        },
+        {
+          "title": "Set Script Path",
+          "description": "Point Sonarr to the trigger script.",
+          "info": "The path should be relative to your Sonarr container's file system",
+          "code": [
+            {
+              "label": "Set Path to:",
+              "content": "/config/scripts/ArrTrigger.sh"
+            }
+          ]
+        },
+        {
+          "title": "Test and Save",
+          "description": "Verify the configuration works correctly.",
+          "substeps": [
+            "Click 'Test' to ensure Sonarr can execute the script",
+            "If successful, click 'Save'"
+          ]
+        }
+      ]
+    },
+    "radarr": {
+      "requirements": {
+        "title": "Requirements",
+        "description": "Radarr and Posterizarr must both be running as Docker containers"
+      },
+      "howItWorks": [
+        "Radarr creates a .posterizarr file in the watcher directory when a file is imported",
+        "The file contains metadata about the imported movie",
+        "Posterizarr monitors this directory for new files",
+        "When detected, Posterizarr waits up to 5 minutes (based on file age)",
+        "Then reads the file and triggers a poster creation run for that specific item"
+      ],
+      "steps": [
+        {
+          "title": "Mount Posterizarr Directory to Radarr",
+          "description": "Radarr needs write access to the Posterizarr watcher directory.",
+          "warning": "⚠️ The mount path is case-sensitive and must be exactly /posterizarr",
+          "code": [
+            {
+              "label": "Add this volume mount to your Radarr docker-compose.yml:",
+              "content": "volumes:\n  - \"/opt/appdata/posterizarr:/posterizarr:rw\""
+            }
+          ]
+        },
+        {
+          "title": "Download the Trigger Script",
+          "description": "Download ArrTrigger.sh from GitHub and place it in your Radarr scripts directory.",
+          "substeps": [
+            "Download from: https://github.com/cyb3rgh05t/posterizarr/blob/main/ArrTrigger.sh",
+            "Example: Create /opt/appdata/radarr/scripts/ directory",
+            "Place ArrTrigger.sh in this directory",
+            "Set executable permissions: chmod +x ArrTrigger.sh"
+          ]
+        },
+        {
+          "title": "Configure Radarr Connect Settings",
+          "description": "Add a custom script connection in Radarr.",
+          "substeps": [
+            "Go to Settings → Connect",
+            "Click the '+' button and select 'Custom Script'",
+            "Give it a name (e.g., 'Posterizarr Trigger')"
+          ]
+        },
+        {
+          "title": "Set Notification Trigger",
+          "description": "Configure when the script should execute.",
+          "substeps": [
+            "Under 'Notification Triggers', enable ONLY 'On Import'",
+            "Disable all other triggers"
+          ]
+        },
+        {
+          "title": "Set Script Path",
+          "description": "Point Radarr to the trigger script.",
+          "info": "The path should be relative to your Radarr container's file system",
+          "code": [
+            {
+              "label": "Set Path to:",
+              "content": "/config/scripts/ArrTrigger.sh"
+            }
+          ]
+        },
+        {
+          "title": "Test and Save",
+          "description": "Verify the configuration works correctly.",
+          "substeps": [
+            "Click 'Test' to ensure Radarr can execute the script",
+            "If successful, click 'Save'"
+          ]
+        }
+      ]
+    }
   }
 }

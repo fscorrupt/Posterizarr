@@ -312,6 +312,7 @@
     "logs": "Journaux",
     "about": "À propos",
     "howItWorks": "Fonctionnement",
+    "autoTriggers": "Déclencheurs automatiques",
     "assetOverview": "Aperçu des ressources",
     "assetReplacer": "Remplacement de ressource",
     "overlayAssets": "Ressources de superposition",
@@ -1255,7 +1256,10 @@
     "title": "Langue",
     "selectLanguage": "Sélectionner la langue",
     "de": "Deutsch",
-    "en": "English"
+    "en": "English",
+    "fr": "Français",
+    "it": "Italiano",
+    "pt": "Português"
   },
   "notifications": {
     "success": "Succès",
@@ -1409,5 +1413,292 @@
     "deleteMultipleMessage": "Êtes-vous sûr de vouloir supprimer {{count}} ressource(s) sélectionnée(s) ?",
     "deleteAssetMessage": "Êtes-vous sûr de vouloir supprimer cette ressource ?",
     "deleteButton": "Supprimer"
+  },
+  "autoTriggers": {
+    "header": {
+      "title": "Déclencheurs automatiques",
+      "subtitle": "Configurez la création automatique d'affiches lorsque de nouveaux médias sont ajoutés à votre bibliothèque"
+    },
+    "tabs": {
+      "tautulli": {
+        "description": "Déclenchement sur les événements de la bibliothèque Plex"
+      },
+      "sonarr": {
+        "description": "Déclenchement sur les importations de séries TV"
+      },
+      "radarr": {
+        "description": "Déclenchement sur les importations de films"
+      }
+    },
+    "setupSteps": "Étapes de configuration",
+    "howItWorks": "Comment ça fonctionne",
+    "copyCode": "Copier dans le presse-papiers",
+    "resources": {
+      "title": "Ressources supplémentaires",
+      "tautulliWiki": "Wiki des scripts personnalisés Tautulli",
+      "sonarrWiki": "Documentation des paramètres Connect de Sonarr",
+      "radarrWiki": "Documentation des paramètres Connect de Radarr",
+      "triggerScript": "Voir trigger.py sur GitHub",
+      "arrTriggerScript": "Voir ArrTrigger.sh sur GitHub"
+    },
+    "tautulli": {
+      "selectMode": "Sélectionnez votre environnement",
+      "requirements": {
+        "title": "Prérequis",
+        "docker": "Tautulli et Posterizarr doivent tous deux être exécutés en tant que conteneurs Docker",
+        "windows": "Tautulli et Posterizarr doivent être installés sur le même système Windows"
+      },
+      "docker": {
+        "description": "Pour les environnements conteneurisés",
+        "steps": [
+          {
+            "title": "Monter le répertoire Posterizarr sur Tautulli",
+            "description": "Tautulli a besoin d'accéder au répertoire Posterizarr pour exécuter le script de déclenchement.",
+            "warning": "⚠️ Le chemin de montage est sensible à la casse et doit être exactement /posterizarr",
+            "code": [
+              {
+                "label": "Ajoutez ce montage de volume à votre docker-compose.yml de Tautulli :",
+                "content": "volumes:\n  - \"/opt/appdata/posterizarr:/posterizarr:rw\""
+              }
+            ]
+          },
+          {
+            "title": "Télécharger le script de déclenchement",
+            "description": "Téléchargez trigger.py depuis GitHub et placez-le dans votre répertoire de scripts Tautulli.",
+            "substeps": [
+              "Téléchargez depuis : https://github.com/cyb3rgh05t/posterizarr/blob/main/trigger.py",
+              "Placez dans le répertoire de scripts Tautulli (voir Wiki Tautulli pour l'emplacement)",
+              "Définir les permissions d'exécution : chmod +x trigger.py"
+            ]
+          },
+          {
+            "title": "Configurer l'agent de notification Tautulli",
+            "description": "Créez un nouvel agent de notification Script dans Tautulli.",
+            "substeps": [
+              "Allez dans Paramètres → Agents de notification",
+              "Cliquez sur 'Ajouter un nouvel agent de notification' et sélectionnez 'Script'",
+              "Sélectionnez trigger.py depuis votre dossier de scripts",
+              "Ajoutez une description (facultatif)"
+            ]
+          },
+          {
+            "title": "Définir les déclencheurs",
+            "description": "Configurez quand le script doit être exécuté.",
+            "substeps": [
+              "Allez dans l'onglet 'Déclencheurs'",
+              "Faites défiler vers le bas et activez 'Récemment ajouté'"
+            ]
+          },
+          {
+            "title": "Définir les conditions",
+            "description": "Définissez quels types de médias doivent déclencher le script.",
+            "substeps": [
+              "Allez dans l'onglet 'Conditions'",
+              "Définissez Type de média sur : episode, movie, show, season",
+              "Excluez éventuellement les bibliothèques (ex : YouTube) qui n'ont pas d'ID TMDB/TVDB"
+            ]
+          },
+          {
+            "title": "Configurer les arguments",
+            "description": "Définissez les arguments requis pour que le script fonctionne correctement.",
+            "info": "Ne modifiez pas cet argument - le script nécessite exactement ce format",
+            "code": [
+              {
+                "label": "Allez dans l'onglet Arguments → Développez 'Récemment ajouté' → Collez :",
+                "content": "<movie>RatingKey \"{rating_key}\" mediatype \"{media_type}\"</movie><show>RatingKey \"{rating_key}\" mediatype \"{media_type}\"</show><season>parentratingkey \"{parent_rating_key}\" mediatype \"{media_type}\"</season><episode>RatingKey \"{rating_key}\" parentratingkey \"{parent_rating_key}\" grandparentratingkey \"{grandparent_rating_key}\" mediatype \"{media_type}\"</episode>"
+              }
+            ]
+          }
+        ]
+      },
+      "windows": {
+        "description": "Pour les installations Windows",
+        "steps": [
+          {
+            "title": "Configurer l'agent de notification Tautulli",
+            "description": "Créez un nouvel agent de notification Script dans Tautulli.",
+            "substeps": [
+              "Allez dans Paramètres → Agents de notification",
+              "Cliquez sur 'Ajouter un nouvel agent de notification' et sélectionnez 'Script'",
+              "Sélectionnez Posterizarr.ps1 depuis votre dossier Posterizarr",
+              "Définissez le délai d'attente du script sur 0 (illimité) - les 30 secondes par défaut tueraient le script",
+              "Ajoutez une description (facultatif)"
+            ]
+          },
+          {
+            "title": "Définir les déclencheurs",
+            "description": "Configurez quand le script doit être exécuté.",
+            "substeps": [
+              "Allez dans l'onglet 'Déclencheurs'",
+              "Faites défiler vers le bas et activez 'Récemment ajouté'"
+            ]
+          },
+          {
+            "title": "Définir les conditions",
+            "description": "Définissez quels types de médias doivent déclencher le script.",
+            "substeps": [
+              "Allez dans l'onglet 'Conditions'",
+              "Définissez Type de média sur : episode, movie, show, season",
+              "Excluez éventuellement les bibliothèques (ex : YouTube) qui n'ont pas d'ID TMDB/TVDB"
+            ]
+          },
+          {
+            "title": "Configurer les arguments",
+            "description": "Définissez les arguments requis pour que le script fonctionne correctement.",
+            "info": "Ne modifiez pas cet argument - le script nécessite exactement ce format",
+            "code": [
+              {
+                "label": "Allez dans l'onglet Arguments → Développez 'Récemment ajouté' → Collez :",
+                "content": "<movie>RatingKey \"{rating_key}\" mediatype \"{media_type}\"</movie><show>RatingKey \"{rating_key}\" mediatype \"{media_type}\"</show><season>parentratingkey \"{parent_rating_key}\" mediatype \"{media_type}\"</season><episode>RatingKey \"{rating_key}\" parentratingkey \"{parent_rating_key}\" grandparentratingkey \"{grandparent_rating_key}\" mediatype \"{media_type}\"</episode>"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "sonarr": {
+      "requirements": {
+        "title": "Prérequis",
+        "description": "Sonarr et Posterizarr doivent tous deux être exécutés en tant que conteneurs Docker"
+      },
+      "howItWorks": [
+        "Sonarr crée un fichier .posterizarr dans le répertoire watcher lorsqu'un fichier est importé",
+        "Le fichier contient des métadonnées sur l'épisode importé",
+        "Posterizarr surveille ce répertoire pour les nouveaux fichiers",
+        "Une fois détecté, Posterizarr attend jusqu'à 5 minutes (en fonction de l'âge du fichier)",
+        "Puis lit le fichier et déclenche une exécution de création d'affiches pour cet élément spécifique"
+      ],
+      "steps": [
+        {
+          "title": "Monter le répertoire Posterizarr sur Sonarr",
+          "description": "Sonarr a besoin d'un accès en écriture au répertoire watcher de Posterizarr.",
+          "warning": "⚠️ Le chemin de montage est sensible à la casse et doit être exactement /posterizarr",
+          "code": [
+            {
+              "label": "Ajoutez ce montage de volume à votre docker-compose.yml de Sonarr :",
+              "content": "volumes:\n  - \"/opt/appdata/posterizarr:/posterizarr:rw\""
+            }
+          ]
+        },
+        {
+          "title": "Télécharger le script de déclenchement",
+          "description": "Téléchargez ArrTrigger.sh depuis GitHub et placez-le dans votre répertoire de scripts Sonarr.",
+          "substeps": [
+            "Téléchargez depuis : https://github.com/cyb3rgh05t/posterizarr/blob/main/ArrTrigger.sh",
+            "Exemple : Créez le répertoire /opt/appdata/sonarr/scripts/",
+            "Placez ArrTrigger.sh dans ce répertoire",
+            "Définir les permissions d'exécution : chmod +x ArrTrigger.sh"
+          ]
+        },
+        {
+          "title": "Configurer les paramètres Connect de Sonarr",
+          "description": "Ajoutez une connexion de script personnalisé dans Sonarr.",
+          "substeps": [
+            "Allez dans Paramètres → Connect",
+            "Cliquez sur le bouton '+' et sélectionnez 'Script personnalisé'",
+            "Donnez-lui un nom (ex : 'Posterizarr Trigger')"
+          ]
+        },
+        {
+          "title": "Définir le déclencheur de notification",
+          "description": "Configurez quand le script doit être exécuté.",
+          "substeps": [
+            "Sous 'Déclencheurs de notification', activez UNIQUEMENT 'À l'importation'",
+            "Désactivez tous les autres déclencheurs"
+          ]
+        },
+        {
+          "title": "Définir le chemin du script",
+          "description": "Pointez Sonarr vers le script de déclenchement.",
+          "info": "Le chemin doit être relatif au système de fichiers du conteneur Sonarr",
+          "code": [
+            {
+              "label": "Définissez Chemin sur :",
+              "content": "/config/scripts/ArrTrigger.sh"
+            }
+          ]
+        },
+        {
+          "title": "Tester et enregistrer",
+          "description": "Vérifiez que la configuration fonctionne correctement.",
+          "substeps": [
+            "Cliquez sur 'Test' pour vous assurer que Sonarr peut exécuter le script",
+            "Si réussi, cliquez sur 'Enregistrer'"
+          ]
+        }
+      ]
+    },
+    "radarr": {
+      "requirements": {
+        "title": "Prérequis",
+        "description": "Radarr et Posterizarr doivent tous deux être exécutés en tant que conteneurs Docker"
+      },
+      "howItWorks": [
+        "Radarr crée un fichier .posterizarr dans le répertoire watcher lorsqu'un fichier est importé",
+        "Le fichier contient des métadonnées sur le film importé",
+        "Posterizarr surveille ce répertoire pour les nouveaux fichiers",
+        "Une fois détecté, Posterizarr attend jusqu'à 5 minutes (en fonction de l'âge du fichier)",
+        "Puis lit le fichier et déclenche une exécution de création d'affiches pour cet élément spécifique"
+      ],
+      "steps": [
+        {
+          "title": "Monter le répertoire Posterizarr sur Radarr",
+          "description": "Radarr a besoin d'un accès en écriture au répertoire watcher de Posterizarr.",
+          "warning": "⚠️ Le chemin de montage est sensible à la casse et doit être exactement /posterizarr",
+          "code": [
+            {
+              "label": "Ajoutez ce montage de volume à votre docker-compose.yml de Radarr :",
+              "content": "volumes:\n  - \"/opt/appdata/posterizarr:/posterizarr:rw\""
+            }
+          ]
+        },
+        {
+          "title": "Télécharger le script de déclenchement",
+          "description": "Téléchargez ArrTrigger.sh depuis GitHub et placez-le dans votre répertoire de scripts Radarr.",
+          "substeps": [
+            "Téléchargez depuis : https://github.com/cyb3rgh05t/posterizarr/blob/main/ArrTrigger.sh",
+            "Exemple : Créez le répertoire /opt/appdata/radarr/scripts/",
+            "Placez ArrTrigger.sh dans ce répertoire",
+            "Définir les permissions d'exécution : chmod +x ArrTrigger.sh"
+          ]
+        },
+        {
+          "title": "Configurer les paramètres Connect de Radarr",
+          "description": "Ajoutez une connexion de script personnalisé dans Radarr.",
+          "substeps": [
+            "Allez dans Paramètres → Connect",
+            "Cliquez sur le bouton '+' et sélectionnez 'Script personnalisé'",
+            "Donnez-lui un nom (ex : 'Posterizarr Trigger')"
+          ]
+        },
+        {
+          "title": "Définir le déclencheur de notification",
+          "description": "Configurez quand le script doit être exécuté.",
+          "substeps": [
+            "Sous 'Déclencheurs de notification', activez UNIQUEMENT 'À l'importation'",
+            "Désactivez tous les autres déclencheurs"
+          ]
+        },
+        {
+          "title": "Définir le chemin du script",
+          "description": "Pointez Radarr vers le script de déclenchement.",
+          "info": "Le chemin doit être relatif au système de fichiers du conteneur Radarr",
+          "code": [
+            {
+              "label": "Définissez Chemin sur :",
+              "content": "/config/scripts/ArrTrigger.sh"
+            }
+          ]
+        },
+        {
+          "title": "Tester et enregistrer",
+          "description": "Vérifiez que la configuration fonctionne correctement.",
+          "substeps": [
+            "Cliquez sur 'Test' pour vous assurer que Radarr peut exécuter le script",
+            "Si réussi, cliquez sur 'Enregistrer'"
+          ]
+        }
+      ]
+    }
   }
 }
