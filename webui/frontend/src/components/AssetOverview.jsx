@@ -702,35 +702,39 @@ const AssetOverview = () => {
                         <span className="font-medium">
                           {t("assetOverview.source")}:
                         </span>
-                        <span className="bg-theme-card px-2 py-0.5 rounded">
-                          {asset.DownloadSource &&
-                          asset.DownloadSource !== "false" &&
-                          asset.DownloadSource !== false
-                            ? asset.DownloadSource.length > 50
-                              ? `${asset.DownloadSource.substring(0, 50)}...`
-                              : asset.DownloadSource
-                            : "Missing"}
-                        </span>
-                      </div>
-                      {asset.FavProviderLink &&
+                        {asset.FavProviderLink &&
                         asset.FavProviderLink !== "false" &&
-                        asset.FavProviderLink !== false && (
-                          <div className="mt-2">
-                            <a
-                              href={asset.FavProviderLink}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-sm text-theme-primary hover:underline"
-                            >
-                              {t("assetOverview.viewSource")}
-                            </a>
-                          </div>
+                        asset.FavProviderLink !== false ? (
+                          <a
+                            href={asset.FavProviderLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="bg-theme-card px-2 py-0.5 rounded text-theme-primary hover:text-theme-primary/80 hover:underline transition-colors"
+                            title={asset.DownloadSource || "View Source"}
+                          >
+                            {asset.DownloadSource &&
+                            asset.DownloadSource !== "false" &&
+                            asset.DownloadSource !== false
+                              ? asset.DownloadSource.length > 50
+                                ? `${asset.DownloadSource.substring(0, 50)}...`
+                                : asset.DownloadSource
+                              : "View Source"}
+                          </a>
+                        ) : (
+                          <span className="bg-theme-card px-2 py-0.5 rounded">
+                            {asset.DownloadSource &&
+                            asset.DownloadSource !== "false" &&
+                            asset.DownloadSource !== false
+                              ? asset.DownloadSource.length > 50
+                                ? `${asset.DownloadSource.substring(0, 50)}...`
+                                : asset.DownloadSource
+                              : "Missing"}
+                          </span>
                         )}
-                    </div>
+                      </div>
 
-                    {/* Tags and Replace Button */}
-                    <div className="flex items-start gap-3">
-                      <div className="flex flex-wrap gap-2 max-w-md">
+                      {/* Tags */}
+                      <div className="flex flex-wrap gap-2 mt-3">
                         {tags.map((tag, index) => (
                           <span
                             key={index}
@@ -740,14 +744,16 @@ const AssetOverview = () => {
                           </span>
                         ))}
                       </div>
+                    </div>
 
-                      {/* Replace Button */}
+                    {/* Replace Button */}
+                    <div className="flex items-start">
                       <button
                         onClick={() => handleReplace(asset)}
-                        className="flex items-center gap-2 px-4 py-2 bg-theme-primary hover:bg-theme-primary/80 text-white rounded-lg transition-colors whitespace-nowrap"
+                        className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-theme-text transition-all whitespace-nowrap shadow-sm"
                         title={t("assetOverview.replaceTooltip")}
                       >
-                        <Replace className="w-4 h-4" />
+                        <Replace className="w-4 h-4 text-theme-primary" />
                         {t("assetOverview.replace")}
                       </button>
                     </div>
