@@ -3,6 +3,7 @@
 *.jpg
 *.xlsm
 *.otf
+*.db
 
 #
 .env
@@ -27,5 +28,4 @@ scheduler.json
 /assets
 /uploads
 /Overlayfiles
-database/imagechoices.db
-*.db
+/webui tests-infos

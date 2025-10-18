@@ -62,6 +62,8 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
 
   const [activeTab, setActiveTab] = useState("upload");
   const [processWithOverlays, setProcessWithOverlays] = useState(false);
+  const [uploadedImage, setUploadedImage] = useState(null);
+  const [activeProviderTab, setActiveProviderTab] = useState("tmdb"); // Provider tabs: tmdb, tvdb, fanart
 
   // Manual form for editable parameters (overlay processing)
   const [manualForm, setManualForm] = useState({
@@ -595,6 +597,16 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
             ).length,
           })
         );
+
+        // Auto-switch to first provider with results
+        if (sortedResults.tmdb.length > 0) {
+          setActiveProviderTab("tmdb");
+        } else if (sortedResults.tvdb.length > 0) {
+          setActiveProviderTab("tvdb");
+        } else if (sortedResults.fanart.length > 0) {
+          setActiveProviderTab("fanart");
+        }
+
         setActiveTab("previews");
       } else {
         showError(t("assetReplacer.fetchPreviewsError"));
@@ -618,6 +630,13 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
       showError(t("assetReplacer.selectImageError"));
       return;
     }
+
+    // Show preview of uploaded image
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setUploadedImage(reader.result);
+    };
+    reader.readAsDataURL(file);
 
     setUploading(true);
     showError(null);
@@ -1054,51 +1073,225 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-6">
           {activeTab === "upload" && (
-            <div className="max-w-2xl mx-auto">
-              <div className="border-2 border-dashed border-theme rounded-xl p-12 text-center">
-                <Upload className="w-16 h-16 text-theme-muted mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-theme-text mb-2">
-                  {t("assetReplacer.uploadYourOwnImage")}
-                </h3>
-                <p className="text-theme-muted mb-6">
-                  {t("assetReplacer.selectCustomImage")}
-                </p>
-                <label className="inline-flex items-center gap-2 px-6 py-3 bg-theme-primary text-white rounded-lg hover:bg-opacity-90 transition-colors cursor-pointer">
-                  <Upload className="w-5 h-5" />
-                  {uploading
-                    ? t("assetReplacer.uploading")
-                    : t("assetReplacer.chooseFile")}
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileUpload}
-                    className="hidden"
-                    disabled={uploading}
-                  />
-                </label>
-              </div>
+            <div className="max-w-3xl mx-auto space-y-6">
+              {/* Process with Overlays Toggle */}
+              {(metadata.asset_type === "poster" ||
+                metadata.asset_type === "background" ||
+                metadata.asset_type === "season" ||
+                metadata.asset_type === "titlecard") && (
+                <div className="bg-theme-hover border border-theme rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex-1">
+                      <h4 className="text-sm font-medium text-theme-text">
+                        Process with overlays after replace
+                      </h4>
+                      <p className="text-xs text-theme-muted mt-0.5">
+                        Applies borders, overlays & text to the replaced asset
+                        based on overlay settings.
+                      </p>
+                    </div>
+                    <button
+                      onClick={() =>
+                        setProcessWithOverlays(!processWithOverlays)
+                      }
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-theme-primary focus:ring-offset-2 focus:ring-offset-theme-bg ${
+                        processWithOverlays ? "bg-theme-primary" : "bg-gray-600"
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          processWithOverlays
+                            ? "translate-x-6"
+                            : "translate-x-1"
+                        }`}
+                      />
+                    </button>
+                  </div>
 
-              <div className="mt-8">
-                {/* Manual Search Toggle */}
-                <div className="mb-4 flex items-center justify-center gap-2">
-                  <label className="flex items-center gap-2 text-theme-text cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={manualSearch}
-                      onChange={(e) => setManualSearch(e.target.checked)}
-                      className="w-4 h-4 rounded border-theme-muted text-theme-primary focus:ring-theme-primary"
-                    />
-                    <span className="text-sm">
+                  {/* Parameter Inputs - Shown when overlay processing is enabled */}
+                  {processWithOverlays && (
+                    <div className="mt-4 pt-4 border-t border-theme space-y-3">
+                      <div className="text-center mb-3">
+                        <p className="text-xs font-medium text-theme-text">
+                          📝 Manual Run Parameters
+                        </p>
+                      </div>
+
+                      {/* Title Text - For all types except titlecard */}
+                      {metadata.asset_type !== "titlecard" && (
+                        <div>
+                          <label className="block text-xs font-medium text-theme-text mb-1">
+                            Title Text *
+                          </label>
+                          <input
+                            type="text"
+                            value={manualForm?.titletext || ""}
+                            onChange={(e) =>
+                              setManualForm({
+                                ...manualForm,
+                                titletext: e.target.value,
+                              })
+                            }
+                            placeholder="e.g., A Shaun the Sheep Movie"
+                            className="w-full px-2 py-1.5 text-sm bg-theme-bg border border-theme rounded text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary"
+                          />
+                        </div>
+                      )}
+
+                      {/* Folder Name */}
+                      {metadata.asset_type !== "collection" && (
+                        <div>
+                          <label className="block text-xs font-medium text-theme-text mb-1">
+                            Folder Name *
+                          </label>
+                          <input
+                            type="text"
+                            value={manualForm?.foldername || ""}
+                            onChange={(e) =>
+                              setManualForm({
+                                ...manualForm,
+                                foldername: e.target.value,
+                              })
+                            }
+                            placeholder="e.g., Movie Name (2019) {tmdb-123}"
+                            className="w-full px-2 py-1.5 text-sm bg-theme-bg border border-theme rounded text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary"
+                          />
+                        </div>
+                      )}
+
+                      {/* Library Name */}
+                      <div>
+                        <label className="block text-xs font-medium text-theme-text mb-1">
+                          Library Name *
+                        </label>
+                        <input
+                          type="text"
+                          value={manualForm?.libraryname || ""}
+                          onChange={(e) =>
+                            setManualForm({
+                              ...manualForm,
+                              libraryname: e.target.value,
+                            })
+                          }
+                          placeholder="e.g., 4K"
+                          className="w-full px-2 py-1.5 text-sm bg-theme-bg border border-theme rounded text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary"
+                        />
+                      </div>
+
+                      {/* Season Number - For season posters */}
+                      {metadata.asset_type === "season" && (
+                        <div>
+                          <label className="block text-xs font-medium text-theme-text mb-1">
+                            Season Poster Name *
+                          </label>
+                          <input
+                            type="text"
+                            value={manualForm.seasonPosterName}
+                            onChange={(e) =>
+                              setManualForm({
+                                ...manualForm,
+                                seasonPosterName: e.target.value,
+                              })
+                            }
+                            placeholder="e.g., Season 01"
+                            className="w-full px-2 py-1.5 text-sm bg-theme-bg border border-theme rounded text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary"
+                          />
+                        </div>
+                      )}
+
+                      {/* TitleCard-specific fields */}
+                      {metadata.asset_type === "titlecard" && (
+                        <>
+                          <div>
+                            <label className="block text-xs font-medium text-theme-text mb-1">
+                              Episode Title *
+                            </label>
+                            <input
+                              type="text"
+                              value={manualForm.episodeTitleName}
+                              onChange={(e) =>
+                                setManualForm({
+                                  ...manualForm,
+                                  episodeTitleName: e.target.value,
+                                })
+                              }
+                              placeholder="e.g., Pilot"
+                              className="w-full px-2 py-1.5 text-sm bg-theme-bg border border-theme rounded text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-medium text-theme-text mb-1">
+                              Season Number *
+                            </label>
+                            <input
+                              type="text"
+                              value={manualForm.seasonPosterName}
+                              onChange={(e) =>
+                                setManualForm({
+                                  ...manualForm,
+                                  seasonPosterName: e.target.value,
+                                })
+                              }
+                              placeholder="e.g., 01"
+                              className="w-full px-2 py-1.5 text-sm bg-theme-bg border border-theme rounded text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-medium text-theme-text mb-1">
+                              Episode Number *
+                            </label>
+                            <input
+                              type="text"
+                              value={manualForm.episodeNumber}
+                              onChange={(e) =>
+                                setManualForm({
+                                  ...manualForm,
+                                  episodeNumber: e.target.value,
+                                })
+                              }
+                              placeholder="e.g., 01"
+                              className="w-full px-2 py-1.5 text-sm bg-theme-bg border border-theme rounded text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary"
+                            />
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Manual Search Toggle */}
+              <div className="bg-theme-hover border border-theme rounded-lg p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex-1">
+                    <h4 className="text-sm font-medium text-theme-text">
                       {t("assetReplacer.manualSearchByTitle")}
-                    </span>
-                  </label>
+                    </h4>
+                    <p className="text-xs text-theme-muted mt-0.5">
+                      Search for assets instead of using detected metadata
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setManualSearch(!manualSearch)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-theme-primary focus:ring-offset-2 focus:ring-offset-theme-bg ${
+                      manualSearch ? "bg-theme-primary" : "bg-gray-600"
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                        manualSearch ? "translate-x-6" : "translate-x-1"
+                      }`}
+                    />
+                  </button>
                 </div>
 
                 {/* Manual Search Fields */}
                 {manualSearch && (
-                  <div className="mb-4 bg-theme-card border border-theme rounded-lg p-4 space-y-3">
+                  <div className="mt-4 pt-4 border-t border-theme space-y-3">
                     <div>
-                      <label className="block text-sm font-medium text-theme-text mb-1">
+                      <label className="block text-xs font-medium text-theme-text mb-1">
                         Title *
                       </label>
                       <input
@@ -1106,11 +1299,11 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
                         value={searchTitle}
                         onChange={(e) => setSearchTitle(e.target.value)}
                         placeholder="Enter movie/show title..."
-                        className="w-full px-3 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary"
+                        className="w-full px-2 py-1.5 text-sm bg-theme-bg border border-theme rounded text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-theme-text mb-1">
+                      <label className="block text-xs font-medium text-theme-text mb-1">
                         Year (optional)
                       </label>
                       <input
@@ -1120,7 +1313,7 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
                         placeholder="2024"
                         min="1900"
                         max="2100"
-                        className="w-full px-3 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary"
+                        className="w-full px-2 py-1.5 text-sm bg-theme-bg border border-theme rounded text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary"
                       />
                     </div>
 
@@ -1129,7 +1322,7 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
                       metadata.asset_type === "titlecard") && (
                       <>
                         <div>
-                          <label className="block text-sm font-medium text-theme-text mb-1">
+                          <label className="block text-xs font-medium text-theme-text mb-1">
                             Season Number *
                           </label>
                           <input
@@ -1143,13 +1336,13 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
                             }
                             placeholder="1"
                             min="0"
-                            className="w-full px-3 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary"
+                            className="w-full px-2 py-1.5 text-sm bg-theme-bg border border-theme rounded text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary"
                           />
                         </div>
 
                         {metadata.asset_type === "titlecard" && (
                           <div>
-                            <label className="block text-sm font-medium text-theme-text mb-1">
+                            <label className="block text-xs font-medium text-theme-text mb-1">
                               Episode Number *
                             </label>
                             <input
@@ -1163,250 +1356,107 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
                               }
                               placeholder="1"
                               min="0"
-                              className="w-full px-3 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary"
+                              className="w-full px-2 py-1.5 text-sm bg-theme-bg border border-theme rounded text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary"
                             />
                           </div>
                         )}
                       </>
                     )}
 
-                    <p className="text-xs text-theme-muted">
-                      This will search for assets instead of using the detected
-                      metadata
-                    </p>
-                  </div>
-                )}
-
-                {/* Process with Overlays Toggle - For poster, background, season, and titlecard assets */}
-                {(metadata.asset_type === "poster" ||
-                  metadata.asset_type === "background" ||
-                  metadata.asset_type === "season" ||
-                  metadata.asset_type === "titlecard") && (
-                  <div className="mb-4">
-                    <div className="flex items-center justify-center gap-2 mb-3">
-                      <label className="flex items-center gap-2 text-theme-text cursor-pointer group">
-                        <input
-                          type="checkbox"
-                          checked={processWithOverlays}
-                          onChange={(e) =>
-                            setProcessWithOverlays(e.target.checked)
-                          }
-                          className="w-4 h-4 rounded border-theme-muted text-theme-primary focus:ring-theme-primary"
-                        />
-                        <span className="text-sm flex items-center gap-1">
-                          Process with overlays after replace
-                          <span className="text-xs text-theme-muted ml-1">
-                            (applies borders, overlays & text)
-                          </span>
-                        </span>
-                      </label>
+                    {/* Fetch Button inside Manual Search */}
+                    <div className="pt-3 border-t border-theme">
+                      <button
+                        onClick={fetchPreviews}
+                        disabled={loading}
+                        className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-theme-primary text-white rounded-lg hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                      >
+                        <Download className="w-4 h-4" />
+                        {loading
+                          ? t("common.loading")
+                          : t("assetReplacer.fetchFromServices")}
+                      </button>
                     </div>
-
-                    {/* Parameter Inputs - Shown when overlay processing is enabled for ANY type */}
-                    {processWithOverlays && (
-                      <div className="bg-theme-hover border border-theme rounded-lg p-4 max-w-2xl mx-auto space-y-4">
-                        <div className="text-center mb-3">
-                          <p className="text-sm font-medium text-theme-text">
-                            📝 Manual Run Parameters (adjust if needed)
-                          </p>
-                          <p className="text-xs text-theme-muted mt-1">
-                            Automatically run Manual Mode to add overlays, text,
-                            and other processing to the replaced asset
-                          </p>
-                        </div>
-
-                        {/* Title Text - For all types except titlecard */}
-                        {metadata.asset_type !== "titlecard" && (
-                          <div>
-                            <label className="block text-sm font-medium text-theme-text mb-2">
-                              Title Text *
-                            </label>
-                            <input
-                              type="text"
-                              value={manualForm?.titletext || ""}
-                              onChange={(e) =>
-                                setManualForm({
-                                  ...manualForm,
-                                  titletext: e.target.value,
-                                })
-                              }
-                              placeholder="e.g., A Shaun the Sheep Movie Farmageddon"
-                              className="w-full px-3 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary"
-                            />
-                            <p className="text-xs text-theme-muted mt-1">
-                              The title to display on the {metadata.asset_type}
-                            </p>
-                          </div>
-                        )}
-
-                        {/* Folder Name - NOT for collection */}
-                        {metadata.asset_type !== "collection" && (
-                          <div>
-                            <label className="block text-sm font-medium text-theme-text mb-2">
-                              Folder Name *
-                            </label>
-                            <input
-                              type="text"
-                              value={manualForm?.foldername || ""}
-                              onChange={(e) =>
-                                setManualForm({
-                                  ...manualForm,
-                                  foldername: e.target.value,
-                                })
-                              }
-                              placeholder="e.g., A Shaun the Sheep Movie Farmageddon (2019) {tmdb-422803}"
-                              className="w-full px-3 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary"
-                            />
-                            <p className="text-xs text-theme-muted mt-1">
-                              📁 Automatically detected from asset path
-                            </p>
-                          </div>
-                        )}
-
-                        {/* Library Name - For all types */}
-                        <div>
-                          <label className="block text-sm font-medium text-theme-text mb-2">
-                            Library Name *
-                          </label>
-                          <input
-                            type="text"
-                            value={manualForm?.libraryname || ""}
-                            onChange={(e) =>
-                              setManualForm({
-                                ...manualForm,
-                                libraryname: e.target.value,
-                              })
-                            }
-                            placeholder="e.g., 4K"
-                            className="w-full px-3 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary"
-                          />
-                          <p className="text-xs text-theme-muted mt-1">
-                            📚 Parent folder of the asset (e.g., TV, "4K",
-                            "Movies")
-                          </p>
-                        </div>
-
-                        {/* Season Number - For season posters */}
-                        {metadata.asset_type === "season" && (
-                          <div>
-                            <label className="block text-sm font-medium text-theme-text mb-2">
-                              Season Poster Name *
-                            </label>
-                            <input
-                              type="text"
-                              value={manualForm.seasonPosterName}
-                              onChange={(e) =>
-                                setManualForm({
-                                  ...manualForm,
-                                  seasonPosterName: e.target.value,
-                                })
-                              }
-                              placeholder="e.g., Season 01 or Season 1"
-                              className="w-full px-3 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary"
-                            />
-                            <p className="text-xs text-theme-muted mt-1">
-                              Format: "Season 01" or "Season 1"
-                            </p>
-                          </div>
-                        )}
-
-                        {/* TitleCard-specific: Episode Title, Season Name, Episode Number */}
-                        {metadata.asset_type === "titlecard" && (
-                          <>
-                            <div>
-                              <label className="block text-sm font-medium text-theme-text mb-2">
-                                Episode Title *
-                              </label>
-                              <input
-                                type="text"
-                                value={manualForm.episodeTitleName}
-                                onChange={(e) =>
-                                  setManualForm({
-                                    ...manualForm,
-                                    episodeTitleName: e.target.value,
-                                  })
-                                }
-                                placeholder="e.g., Pilot"
-                                className="w-full px-3 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary"
-                              />
-                              <p className="text-xs text-theme-muted mt-1">
-                                The title of the episode
-                              </p>
-                            </div>
-
-                            <div>
-                              <label className="block text-sm font-medium text-theme-text mb-2">
-                                Season Poster Name *
-                              </label>
-                              <input
-                                type="text"
-                                value={manualForm.seasonPosterName}
-                                onChange={(e) =>
-                                  setManualForm({
-                                    ...manualForm,
-                                    seasonPosterName: e.target.value,
-                                  })
-                                }
-                                placeholder="e.g., 01 or 1"
-                                className="w-full px-3 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary"
-                              />
-                              <p className="text-xs text-theme-muted mt-1">
-                                Season number (e.g., "01" or "1")
-                              </p>
-                            </div>
-
-                            <div>
-                              <label className="block text-sm font-medium text-theme-text mb-2">
-                                Episode Number *
-                              </label>
-                              <input
-                                type="text"
-                                value={manualForm.episodeNumber}
-                                onChange={(e) =>
-                                  setManualForm({
-                                    ...manualForm,
-                                    episodeNumber: e.target.value,
-                                  })
-                                }
-                                placeholder="e.g., 01 or 1"
-                                className="w-full px-3 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-theme-muted focus:outline-none focus:ring-2 focus:ring-theme-primary"
-                              />
-                              <p className="text-xs text-theme-muted mt-1">
-                                Episode number (e.g., "01" or "1")
-                              </p>
-                            </div>
-                          </>
-                        )}
-
-                        <div className="pt-2 border-t border-theme">
-                          <p className="text-xs text-blue-400 flex items-center gap-1">
-                            ℹ️ After replacing the asset, a Manual Run will be
-                            triggered with these parameters to process overlays
-                            and text
-                          </p>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 )}
+              </div>
 
-                <div className="text-center">
-                  <p className="text-theme-muted mb-4">
+              {/* Upload Section */}
+              <div className="bg-theme-card border border-theme rounded-lg p-6">
+                <div className="flex items-start gap-4">
+                  {/* Upload Area */}
+                  <div className="flex-1">
+                    <h3 className="text-lg font-semibold text-theme-text mb-3">
+                      {t("assetReplacer.uploadYourOwnImage")}
+                    </h3>
+                    <label className="block border-2 border-dashed border-theme rounded-lg p-6 text-center cursor-pointer hover:border-theme-primary transition-colors">
+                      <Upload className="w-10 h-10 text-theme-muted mx-auto mb-2" />
+                      <p className="text-sm text-theme-muted mb-3">
+                        {t("assetReplacer.selectCustomImage")}
+                      </p>
+                      <span className="inline-flex items-center gap-2 px-4 py-2 bg-theme-primary text-white rounded-lg hover:bg-opacity-90 transition-colors text-sm">
+                        <Upload className="w-4 h-4" />
+                        {uploading
+                          ? t("assetReplacer.uploading")
+                          : t("assetReplacer.chooseFile")}
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileUpload}
+                        className="hidden"
+                        disabled={uploading}
+                      />
+                    </label>
+                  </div>
+
+                  {/* Preview of Uploaded Image */}
+                  {uploadedImage && (
+                    <div className="w-48 flex-shrink-0">
+                      <p className="text-xs font-medium text-theme-text mb-2">
+                        Preview:
+                      </p>
+                      <div
+                        className={`relative bg-theme rounded-lg overflow-hidden border border-theme ${
+                          useHorizontalLayout ? "aspect-[16/9]" : "aspect-[2/3]"
+                        }`}
+                      >
+                        <img
+                          src={uploadedImage}
+                          alt="Upload preview"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-theme"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-4 bg-theme-bg text-theme-muted">
                     {manualSearch
                       ? t("assetReplacer.searchForAssets")
                       : t("assetReplacer.orFetchFromServices")}
-                  </p>
-                  <button
-                    onClick={fetchPreviews}
-                    disabled={loading}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-theme-hover text-theme-text rounded-lg hover:bg-theme-primary hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <Download className="w-5 h-5" />
-                    {loading
-                      ? t("common.loading")
-                      : t("assetReplacer.fetchFromServices")}
-                  </button>
+                  </span>
                 </div>
+              </div>
+
+              {/* Fetch Previews Button */}
+              <div className="text-center">
+                <button
+                  onClick={fetchPreviews}
+                  disabled={loading}
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-theme-hover text-theme-text rounded-lg hover:bg-theme-primary hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Download className="w-5 h-5" />
+                  {loading
+                    ? t("common.loading")
+                    : t("assetReplacer.fetchFromServices")}
+                </button>
               </div>
             </div>
           )}
@@ -1435,99 +1485,188 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
                   </button>
                 </div>
               ) : (
-                <div className="space-y-6">
-                  {/* TMDB Results */}
-                  {previews.tmdb.length > 0 && (
-                    <div>
-                      <h3 className="text-lg font-semibold text-theme-text mb-4 flex items-center gap-2">
-                        <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-lg text-sm font-medium">
+                <div>
+                  {/* Provider Tabs */}
+                  <div className="border-b border-theme mb-6">
+                    <div className="flex gap-2">
+                      {/* TMDB Tab */}
+                      <button
+                        onClick={() => setActiveProviderTab("tmdb")}
+                        className={`px-4 py-3 font-medium transition-colors border-b-2 ${
+                          activeProviderTab === "tmdb"
+                            ? "text-blue-400 border-blue-400 bg-blue-500/10"
+                            : "text-theme-muted border-transparent hover:text-theme-text hover:bg-theme-hover"
+                        }`}
+                      >
+                        <span className="flex items-center gap-2">
                           TMDB
+                          {previews.tmdb.length > 0 && (
+                            <span
+                              className={`px-2 py-0.5 rounded-full text-xs ${
+                                activeProviderTab === "tmdb"
+                                  ? "bg-blue-500/30 text-blue-300"
+                                  : "bg-theme-primary/20 text-theme-primary"
+                              }`}
+                            >
+                              {previews.tmdb.length}
+                            </span>
+                          )}
                         </span>
-                        <span className="text-theme-muted text-sm">
-                          ({previews.tmdb.length} results)
-                        </span>
-                      </h3>
-                      <div
-                        className={
-                          useHorizontalLayout
-                            ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
-                            : "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
-                        }
-                      >
-                        {previews.tmdb.map((preview, index) => (
-                          <PreviewCard
-                            key={`tmdb-${index}`}
-                            preview={preview}
-                            onSelect={() => handleSelectPreview(preview)}
-                            disabled={uploading}
-                            isHorizontal={useHorizontalLayout}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                      </button>
 
-                  {/* TVDB Results */}
-                  {previews.tvdb.length > 0 && (
-                    <div>
-                      <h3 className="text-lg font-semibold text-theme-text mb-4 flex items-center gap-2">
-                        <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-lg text-sm font-medium">
+                      {/* TVDB Tab */}
+                      <button
+                        onClick={() => setActiveProviderTab("tvdb")}
+                        className={`px-4 py-3 font-medium transition-colors border-b-2 ${
+                          activeProviderTab === "tvdb"
+                            ? "text-green-400 border-green-400 bg-green-500/10"
+                            : "text-theme-muted border-transparent hover:text-theme-text hover:bg-theme-hover"
+                        }`}
+                      >
+                        <span className="flex items-center gap-2">
                           TVDB
+                          {previews.tvdb.length > 0 && (
+                            <span
+                              className={`px-2 py-0.5 rounded-full text-xs ${
+                                activeProviderTab === "tvdb"
+                                  ? "bg-green-500/30 text-green-300"
+                                  : "bg-theme-primary/20 text-theme-primary"
+                              }`}
+                            >
+                              {previews.tvdb.length}
+                            </span>
+                          )}
                         </span>
-                        <span className="text-theme-muted text-sm">
-                          ({previews.tvdb.length} results)
-                        </span>
-                      </h3>
-                      <div
-                        className={
-                          useHorizontalLayout
-                            ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
-                            : "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
-                        }
-                      >
-                        {previews.tvdb.map((preview, index) => (
-                          <PreviewCard
-                            key={`tvdb-${index}`}
-                            preview={preview}
-                            onSelect={() => handleSelectPreview(preview)}
-                            disabled={uploading}
-                            isHorizontal={useHorizontalLayout}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                      </button>
 
-                  {/* Fanart Results */}
-                  {previews.fanart.length > 0 && (
-                    <div>
-                      <h3 className="text-lg font-semibold text-theme-text mb-4 flex items-center gap-2">
-                        <span className="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-lg text-sm font-medium">
-                          Fanart.tv
-                        </span>
-                        <span className="text-theme-muted text-sm">
-                          ({previews.fanart.length} results)
-                        </span>
-                      </h3>
-                      <div
-                        className={
-                          useHorizontalLayout
-                            ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
-                            : "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
-                        }
+                      {/* Fanart.tv Tab */}
+                      <button
+                        onClick={() => setActiveProviderTab("fanart")}
+                        className={`px-4 py-3 font-medium transition-colors border-b-2 ${
+                          activeProviderTab === "fanart"
+                            ? "text-purple-400 border-purple-400 bg-purple-500/10"
+                            : "text-theme-muted border-transparent hover:text-theme-text hover:bg-theme-hover"
+                        }`}
                       >
-                        {previews.fanart.map((preview, index) => (
-                          <PreviewCard
-                            key={`fanart-${index}`}
-                            preview={preview}
-                            onSelect={() => handleSelectPreview(preview)}
-                            disabled={uploading}
-                            isHorizontal={useHorizontalLayout}
-                          />
-                        ))}
-                      </div>
+                        <span className="flex items-center gap-2">
+                          Fanart.tv
+                          {previews.fanart.length > 0 && (
+                            <span
+                              className={`px-2 py-0.5 rounded-full text-xs ${
+                                activeProviderTab === "fanart"
+                                  ? "bg-purple-500/30 text-purple-300"
+                                  : "bg-theme-primary/20 text-theme-primary"
+                              }`}
+                            >
+                              {previews.fanart.length}
+                            </span>
+                          )}
+                        </span>
+                      </button>
                     </div>
-                  )}
+                  </div>
+
+                  {/* Provider Content */}
+                  <div>
+                    {/* TMDB Content */}
+                    {activeProviderTab === "tmdb" && (
+                      <div>
+                        {previews.tmdb.length > 0 ? (
+                          <div
+                            className={
+                              useHorizontalLayout
+                                ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+                                : "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
+                            }
+                          >
+                            {previews.tmdb.map((preview, index) => (
+                              <PreviewCard
+                                key={`tmdb-${index}`}
+                                preview={preview}
+                                onSelect={() => handleSelectPreview(preview)}
+                                disabled={uploading}
+                                isHorizontal={useHorizontalLayout}
+                              />
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-12">
+                            <ImageIcon className="w-12 h-12 text-theme-muted mx-auto mb-3" />
+                            <p className="text-theme-muted">
+                              No TMDB results found
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* TVDB Content */}
+                    {activeProviderTab === "tvdb" && (
+                      <div>
+                        {previews.tvdb.length > 0 ? (
+                          <div
+                            className={
+                              useHorizontalLayout
+                                ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+                                : "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
+                            }
+                          >
+                            {previews.tvdb.map((preview, index) => (
+                              <PreviewCard
+                                key={`tvdb-${index}`}
+                                preview={preview}
+                                onSelect={() => handleSelectPreview(preview)}
+                                disabled={uploading}
+                                isHorizontal={useHorizontalLayout}
+                              />
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-12">
+                            <ImageIcon className="w-12 h-12 text-theme-muted mx-auto mb-3" />
+                            <p className="text-theme-muted">
+                              No TVDB results found
+                            </p>
+                            <p className="text-xs text-theme-muted mt-2">
+                              TVDB is mainly for TV shows
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* Fanart.tv Content */}
+                    {activeProviderTab === "fanart" && (
+                      <div>
+                        {previews.fanart.length > 0 ? (
+                          <div
+                            className={
+                              useHorizontalLayout
+                                ? "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+                                : "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"
+                            }
+                          >
+                            {previews.fanart.map((preview, index) => (
+                              <PreviewCard
+                                key={`fanart-${index}`}
+                                preview={preview}
+                                onSelect={() => handleSelectPreview(preview)}
+                                disabled={uploading}
+                                isHorizontal={useHorizontalLayout}
+                              />
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-12">
+                            <ImageIcon className="w-12 h-12 text-theme-muted mx-auto mb-3" />
+                            <p className="text-theme-muted">
+                              No Fanart.tv results found
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
@@ -1540,12 +1679,14 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
 
 function PreviewCard({ preview, onSelect, disabled, isHorizontal = false }) {
   const { t } = useTranslation();
-  const { showSuccess, showError, showInfo } = useToast();
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
 
   return (
-    <div className="group relative bg-theme-hover rounded-lg overflow-hidden border border-theme hover:border-theme-primary transition-all">
+    <div
+      className="group relative bg-theme-hover rounded-lg overflow-hidden border border-theme hover:border-theme-primary transition-all cursor-pointer"
+      onClick={disabled ? undefined : onSelect}
+    >
       <div
         className={`relative bg-theme ${
           isHorizontal ? "aspect-[16/9]" : "aspect-[2/3]"
@@ -1564,7 +1705,7 @@ function PreviewCard({ preview, onSelect, disabled, isHorizontal = false }) {
           <img
             src={preview.url}
             alt="Preview"
-            className={`w-full h-full object-cover transition-opacity ${
+            className={`w-full h-full object-cover group-hover:scale-105 transition-all duration-300 ${
               imageLoaded ? "opacity-100" : "opacity-0"
             }`}
             onLoad={() => setImageLoaded(true)}
@@ -1572,37 +1713,74 @@ function PreviewCard({ preview, onSelect, disabled, isHorizontal = false }) {
           />
         )}
 
-        {/* Hover overlay */}
-        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-          <button
-            onClick={onSelect}
-            disabled={disabled}
-            className="px-4 py-2 bg-theme-primary text-white rounded-lg hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-          >
-            <Check className="w-4 h-4" />
-            {t("assetReplacer.select")}
-          </button>
-        </div>
-      </div>
+        {/* Hover overlay with metadata */}
+        <div className="absolute inset-0 bg-black/75 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-4 text-center">
+          {/* Select Button */}
+          <Check className="w-10 h-10 text-green-400 mb-3" />
 
-      {/* Info badges */}
-      <div className="p-2 space-y-1">
-        {preview.language && (
-          <div className="text-xs px-2 py-1 bg-theme-primary/20 text-theme-primary rounded inline-block">
-            {preview.language.toUpperCase()}
+          {/* Source Badge */}
+          <div
+            className={`px-3 py-1 rounded-full text-xs font-semibold mb-2 ${
+              preview.source === "TMDB"
+                ? "bg-blue-500 text-white"
+                : preview.source === "TVDB"
+                ? "bg-green-500 text-white"
+                : preview.source === "Fanart.tv"
+                ? "bg-purple-500 text-white"
+                : "bg-gray-500 text-white"
+            }`}
+          >
+            {preview.source}
           </div>
-        )}
-        {preview.vote_average > 0 && (
-          <div className="text-xs px-2 py-1 bg-yellow-500/20 text-yellow-400 rounded inline-block ml-1">
-            <Star className="w-3 h-3 inline mr-1" />
-            {preview.vote_average.toFixed(1)}
+
+          {/* Metadata Badges */}
+          <div className="flex flex-wrap gap-1.5 justify-center mt-2">
+            {/* Language */}
+            {preview.language && (
+              <span className="bg-theme-primary px-2 py-1 rounded text-xs text-white font-medium">
+                {preview.language.toUpperCase()}
+              </span>
+            )}
+
+            {/* Vote Average (TMDB/TVDB) */}
+            {preview.vote_average !== undefined && preview.vote_average > 0 && (
+              <span className="bg-yellow-500 px-2 py-1 rounded text-xs text-white font-medium flex items-center gap-1">
+                <Star className="w-3 h-3" />
+                {preview.vote_average.toFixed(1)}
+              </span>
+            )}
+
+            {/* Likes (Fanart.tv) */}
+            {preview.likes !== undefined && preview.likes > 0 && (
+              <span className="bg-red-500 px-2 py-1 rounded text-xs text-white font-medium">
+                ❤️ {preview.likes}
+              </span>
+            )}
+
+            {/* Asset Type */}
+            {preview.type && (
+              <span className="bg-gray-600 px-2 py-1 rounded text-xs text-white font-medium">
+                {preview.type === "episode_still"
+                  ? "Episode"
+                  : preview.type === "season_poster"
+                  ? "Season"
+                  : preview.type === "backdrop"
+                  ? "Backdrop"
+                  : preview.type === "poster"
+                  ? "Poster"
+                  : preview.type}
+              </span>
+            )}
           </div>
-        )}
-        {preview.likes > 0 && (
-          <div className="text-xs px-2 py-1 bg-red-500/20 text-red-400 rounded inline-block ml-1">
-            ❤️ {preview.likes}
-          </div>
-        )}
+
+          {/* Select Text */}
+          <p className="text-white text-sm font-semibold mt-3 flex items-center gap-2">
+            <Check className="w-4 h-4" />
+            {disabled
+              ? t("assetReplacer.uploading")
+              : t("assetReplacer.select")}
+          </p>
+        </div>
       </div>
     </div>
   );

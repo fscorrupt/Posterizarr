@@ -66,9 +66,19 @@ SUBDIRS_TO_CREATE = [
     "database",
 ]
 
-# Creating all directories in a single loop
+# Creating all directories in a single loop with better error handling
 for subdir in SUBDIRS_TO_CREATE:
-    (BASE_DIR / subdir).mkdir(parents=True, exist_ok=True)
+    try:
+        subdir_path = BASE_DIR / subdir
+        subdir_path.mkdir(parents=True, exist_ok=True)
+        # Test write permissions
+        test_file = subdir_path / ".write_test"
+        test_file.touch()
+        test_file.unlink()
+    except PermissionError as e:
+        print(f"⚠️  WARNING: No write permission for {subdir}: {e}", file=sys.stderr)
+    except Exception as e:
+        print(f"⚠️  WARNING: Could not create directory {subdir}: {e}", file=sys.stderr)
 
 CONFIG_PATH = BASE_DIR / "config.json"
 CONFIG_EXAMPLE_PATH = BASE_DIR / "config.example.json"
@@ -228,6 +238,63 @@ db: Optional["ImageChoicesDB"] = None
 cache_refresh_task = None
 cache_refresh_running = False
 cache_scan_in_progress = False
+
+
+def check_directory_permissions(
+    directory: Path, directory_name: str = "directory"
+) -> dict:
+    """
+    Check if a directory is accessible and writable.
+    Returns diagnostic information for troubleshooting upload issues.
+
+    Args:
+        directory: Path to check
+        directory_name: Human-readable name for logging
+
+    Returns:
+        dict with keys: exists, readable, writable, error
+    """
+    result = {
+        "path": str(directory),
+        "name": directory_name,
+        "exists": False,
+        "readable": False,
+        "writable": False,
+        "error": None,
+        "platform": sys.platform,
+        "is_docker": IS_DOCKER,
+    }
+
+    try:
+        result["exists"] = directory.exists()
+
+        if result["exists"]:
+            # Test read permissions
+            try:
+                list(directory.iterdir())
+                result["readable"] = True
+            except PermissionError:
+                result["error"] = f"No read permission for {directory_name}"
+            except Exception as e:
+                result["error"] = f"Cannot read {directory_name}: {str(e)}"
+
+            # Test write permissions
+            try:
+                test_file = directory / ".write_test_diagnostic"
+                test_file.touch()
+                test_file.unlink()
+                result["writable"] = True
+            except PermissionError:
+                result["error"] = f"No write permission for {directory_name}"
+            except Exception as e:
+                result["error"] = f"Cannot write to {directory_name}: {str(e)}"
+        else:
+            result["error"] = f"{directory_name} does not exist"
+
+    except Exception as e:
+        result["error"] = f"Error checking {directory_name}: {str(e)}"
+
+    return result
 
 
 def import_imagechoices_to_db():
@@ -1378,6 +1445,28 @@ async def get_overlay_files():
 async def upload_overlay_file(file: UploadFile = File(...)):
     """Upload a new overlay file to Overlayfiles directory"""
     try:
+        # Ensure directory exists with permission check
+        try:
+            OVERLAYFILES_DIR.mkdir(parents=True, exist_ok=True)
+            # Test write permissions
+            test_file = OVERLAYFILES_DIR / ".write_test"
+            test_file.touch()
+            test_file.unlink()
+        except PermissionError:
+            logger.error(
+                f"No write permission for Overlayfiles directory: {OVERLAYFILES_DIR}"
+            )
+            raise HTTPException(
+                status_code=500,
+                detail=f"No write permission for Overlayfiles directory. Check Docker/NAS/Unraid volume permissions.",
+            )
+        except Exception as e:
+            logger.error(f"Error accessing Overlayfiles directory: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Cannot access Overlayfiles directory: {str(e)}",
+            )
+
         # Validate file type - images and fonts
         allowed_extensions = {
             ".png",
@@ -1414,10 +1503,33 @@ async def upload_overlay_file(file: UploadFile = File(...)):
                 detail=f"File '{safe_filename}' already exists. Please rename or delete the existing file first.",
             )
 
-        # Write file
-        content = await file.read()
-        with open(file_path, "wb") as f:
-            f.write(content)
+        # Write file with better error handling
+        try:
+            content = await file.read()
+            if len(content) == 0:
+                raise HTTPException(status_code=400, detail="Uploaded file is empty")
+
+            with open(file_path, "wb") as f:
+                f.write(content)
+
+            # Verify file was written
+            if not file_path.exists() or file_path.stat().st_size == 0:
+                raise HTTPException(
+                    status_code=500, detail="File was not saved successfully"
+                )
+
+        except PermissionError as e:
+            logger.error(f"Permission denied writing overlay file: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Permission denied: Unable to write file. Check folder permissions on your system (Docker/NAS/Unraid).",
+            )
+        except OSError as e:
+            logger.error(f"OS error writing overlay file: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"File system error: {str(e)}. Check disk space and permissions.",
+            )
 
         logger.info(f"Uploaded overlay file: {safe_filename} ({len(content)} bytes)")
 
@@ -1431,6 +1543,9 @@ async def upload_overlay_file(file: UploadFile = File(...)):
         raise
     except Exception as e:
         logger.error(f"Error uploading overlay file: {e}")
+        import traceback
+
+        logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -1538,6 +1653,28 @@ async def get_font_files():
 async def upload_font_file(file: UploadFile = File(...)):
     """Upload a new font file to Overlayfiles directory"""
     try:
+        # Ensure directory exists with permission check
+        try:
+            OVERLAYFILES_DIR.mkdir(parents=True, exist_ok=True)
+            # Test write permissions
+            test_file = OVERLAYFILES_DIR / ".write_test"
+            test_file.touch()
+            test_file.unlink()
+        except PermissionError:
+            logger.error(
+                f"No write permission for Overlayfiles directory: {OVERLAYFILES_DIR}"
+            )
+            raise HTTPException(
+                status_code=500,
+                detail=f"No write permission for Overlayfiles directory. Check Docker/NAS/Unraid volume permissions.",
+            )
+        except Exception as e:
+            logger.error(f"Error accessing Overlayfiles directory: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Cannot access Overlayfiles directory: {str(e)}",
+            )
+
         # Validate file type
         allowed_extensions = {".ttf", ".otf", ".woff", ".woff2"}
         file_ext = Path(file.filename).suffix.lower()
@@ -1566,10 +1703,33 @@ async def upload_font_file(file: UploadFile = File(...)):
                 detail=f"File '{safe_filename}' already exists. Please rename or delete the existing file first.",
             )
 
-        # Write file
-        content = await file.read()
-        with open(file_path, "wb") as f:
-            f.write(content)
+        # Write file with better error handling
+        try:
+            content = await file.read()
+            if len(content) == 0:
+                raise HTTPException(status_code=400, detail="Uploaded file is empty")
+
+            with open(file_path, "wb") as f:
+                f.write(content)
+
+            # Verify file was written
+            if not file_path.exists() or file_path.stat().st_size == 0:
+                raise HTTPException(
+                    status_code=500, detail="File was not saved successfully"
+                )
+
+        except PermissionError as e:
+            logger.error(f"Permission denied writing font file: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Permission denied: Unable to write file. Check folder permissions on your system (Docker/NAS/Unraid).",
+            )
+        except OSError as e:
+            logger.error(f"OS error writing font file: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"File system error: {str(e)}. Check disk space and permissions.",
+            )
 
         logger.info(f"Uploaded font file: {safe_filename} ({len(content)} bytes)")
 
@@ -1583,6 +1743,9 @@ async def upload_font_file(file: UploadFile = File(...)):
         raise
     except Exception as e:
         logger.error(f"Error uploading font file: {e}")
+        import traceback
+
+        logger.error(traceback.format_exc())
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -3059,6 +3222,65 @@ async def get_system_info():
     return system_info
 
 
+@app.get("/api/upload-diagnostics")
+async def get_upload_diagnostics():
+    """
+    Get diagnostic information about upload directories and permissions.
+    Useful for troubleshooting upload issues on Docker/NAS/Unraid/Windows/Linux.
+    """
+    import platform
+
+    diagnostics = {
+        "platform": platform.system(),
+        "is_docker": IS_DOCKER,
+        "python_version": sys.version,
+        "directories": {},
+        "environment": {
+            "DOCKER_ENV": os.environ.get("DOCKER_ENV", "not set"),
+            "POSTERIZARR_NON_ROOT": os.environ.get("POSTERIZARR_NON_ROOT", "not set"),
+        },
+    }
+
+    # Check all upload-related directories
+    directories_to_check = {
+        "BASE_DIR": BASE_DIR,
+        "UPLOADS_DIR": UPLOADS_DIR,
+        "OVERLAYFILES_DIR": OVERLAYFILES_DIR,
+        "ASSETS_DIR": ASSETS_DIR,
+        "LOGS_DIR": LOGS_DIR,
+        "TEMP_DIR": TEMP_DIR,
+    }
+
+    for name, directory in directories_to_check.items():
+        diagnostics["directories"][name] = check_directory_permissions(directory, name)
+
+    # Add user/group information on Unix systems
+    if platform.system() in ["Linux", "Darwin"]:
+        try:
+            import pwd
+            import grp
+
+            diagnostics["user"] = {
+                "uid": os.getuid(),
+                "gid": os.getgid(),
+                "username": pwd.getpwuid(os.getuid()).pw_name,
+                "groupname": grp.getgrgid(os.getgid()).gr_name,
+            }
+        except Exception as e:
+            diagnostics["user"] = {"error": str(e)}
+
+    # Check if running with elevated privileges on Windows
+    if platform.system() == "Windows":
+        try:
+            import ctypes
+
+            diagnostics["is_admin"] = ctypes.windll.shell32.IsUserAnAdmin() != 0
+        except Exception as e:
+            diagnostics["is_admin"] = f"Unable to determine: {str(e)}"
+
+    return diagnostics
+
+
 @app.get("/api/status")
 async def get_status():
     """Get script status with last log lines from appropriate log file"""
@@ -4471,19 +4693,74 @@ async def run_manual_mode_upload(
             )
 
     try:
-        # Create uploads directory if it doesn't exist
-        UPLOADS_DIR.mkdir(exist_ok=True)
+        # Create uploads directory if it doesn't exist with permission check
+        try:
+            UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+            # Verify write permissions
+            test_file = UPLOADS_DIR / ".write_test"
+            test_file.touch()
+            test_file.unlink()
+        except PermissionError as e:
+            logger.error(f"No write permission for uploads directory: {UPLOADS_DIR}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"No write permission for uploads directory. This may be a Docker/NAS permission issue. Please check folder permissions.",
+            )
+        except Exception as e:
+            logger.error(f"Error creating uploads directory: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Cannot create uploads directory: {str(e)}",
+            )
 
         # Generate unique filename with timestamp
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        safe_filename = f"{timestamp}_{file.filename}"
+        # Sanitize filename to prevent path traversal and special characters
+        safe_name = "".join(
+            c for c in file.filename if c.isalnum() or c in "._- "
+        ).strip()
+        if not safe_name:
+            safe_name = "upload.jpg"
+        safe_filename = f"{timestamp}_{safe_name}"
         upload_path = UPLOADS_DIR / safe_filename
 
         # Save uploaded file to uploads directory
         logger.info(f"Saving uploaded file to: {upload_path}")
-        with open(upload_path, "wb") as buffer:
+        logger.info(f"Upload directory: {UPLOADS_DIR.resolve()}")
+        logger.info(f"Is Docker: {IS_DOCKER}")
+
+        try:
             content = await file.read()
-            buffer.write(content)
+            if len(content) == 0:
+                raise HTTPException(status_code=400, detail="Uploaded file is empty")
+
+            with open(upload_path, "wb") as buffer:
+                buffer.write(content)
+
+            # Verify file was written
+            if not upload_path.exists():
+                raise HTTPException(
+                    status_code=500, detail="File was not saved successfully"
+                )
+
+            actual_size = upload_path.stat().st_size
+            if actual_size != len(content):
+                logger.warning(
+                    f"File size mismatch: expected {len(content)}, got {actual_size}"
+                )
+
+        except PermissionError as e:
+            logger.error(f"Permission denied writing file: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Permission denied: Unable to write uploaded file. Check Docker/NAS/Unraid volume permissions.",
+            )
+        except OSError as e:
+            logger.error(f"OS error writing file: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"File system error: {str(e)}. This may be a Docker volume mount issue.",
+            )
 
         logger.info(f"File saved successfully: {upload_path} ({len(content)} bytes)")
 
@@ -6237,19 +6514,33 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
         with open(CONFIG_PATH, "r", encoding="utf-8") as f:
             grouped_config = json.load(f)
 
-        # Get API tokens
+        # Get API tokens - support multiple key name variants
         if CONFIG_MAPPER_AVAILABLE:
             flat_config = flatten_config(grouped_config)
             tmdb_token = flat_config.get("tmdbtoken", "")
-            tvdb_api_key = flat_config.get("tvdbapikey", "")
+            # Support both "tvdbapikey" and "tvdbapi" for TVDB
+            tvdb_api_key = flat_config.get("tvdbapikey") or flat_config.get(
+                "tvdbapi", ""
+            )
             tvdb_pin = flat_config.get("tvdbpin", "")
-            fanart_api_key = flat_config.get("fanartapikey", "")
+            # Support both "fanartapikey" and "FanartTvAPIKey" for Fanart.tv
+            fanart_api_key = (
+                flat_config.get("fanartapikey")
+                or flat_config.get("fanarttvapikey")
+                or flat_config.get("FanartTvAPIKey", "")
+            )
         else:
             api_part = grouped_config.get("ApiPart", {})
             tmdb_token = api_part.get("tmdbtoken", "")
-            tvdb_api_key = api_part.get("tvdbapikey", "")
+            # Support both "tvdbapikey" and "tvdbapi" for TVDB
+            tvdb_api_key = api_part.get("tvdbapikey") or api_part.get("tvdbapi", "")
             tvdb_pin = api_part.get("tvdbpin", "")
-            fanart_api_key = api_part.get("fanartapikey", "")
+            # Support both "fanartapikey" and "FanartTvAPIKey" for Fanart.tv
+            fanart_api_key = (
+                api_part.get("fanartapikey")
+                or api_part.get("fanarttvapikey")
+                or api_part.get("FanartTvAPIKey", "")
+            )
 
         results = {"tmdb": [], "tvdb": [], "fanart": []}
 
@@ -6316,9 +6607,21 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
         else:
             logger.info(f"✅ Using provided TMDB ID: {tmdb_id_to_use}")
 
-        # ========== TMDB ==========
-        if tmdb_token and tmdb_id_to_use:
+        # Create async tasks for parallel fetching - AFTER IDs are resolved
+        async def fetch_tmdb():
+            """Fetch TMDB assets asynchronously"""
+            if not tmdb_token:
+                logger.warning("⚠️ TMDB: No API token configured")
+                return []
+
+            if not tmdb_id_to_use:
+                logger.warning("⚠️ TMDB: No TMDB ID available")
+                return []
+
             try:
+                logger.info(
+                    f"🎬 TMDB: Fetching {request.asset_type} for ID: {tmdb_id_to_use}"
+                )
                 headers = {
                     "Authorization": f"Bearer {tmdb_token}",
                     "Content-Type": "application/json",
@@ -6326,18 +6629,18 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
 
                 media_endpoint = "movie" if request.media_type == "movie" else "tv"
 
-                if (
-                    request.asset_type == "titlecard"
-                    and request.season_number
-                    and request.episode_number
-                ):
-                    # Episode stills
-                    url = f"https://api.themoviedb.org/3/tv/{tmdb_id_to_use}/season/{request.season_number}/episode/{request.episode_number}/images"
-                    response = requests.get(url, headers=headers, timeout=10)
-                    if response.status_code == 200:
-                        data = response.json()
-                        for still in data.get("stills", []):
-                            results["tmdb"].append(
+                async with httpx.AsyncClient(timeout=10.0) as client:
+                    if (
+                        request.asset_type == "titlecard"
+                        and request.season_number
+                        and request.episode_number
+                    ):
+                        # Episode stills
+                        url = f"https://api.themoviedb.org/3/tv/{tmdb_id_to_use}/season/{request.season_number}/episode/{request.episode_number}/images"
+                        response = await client.get(url, headers=headers)
+                        if response.status_code == 200:
+                            data = response.json()
+                            return [
                                 {
                                     "url": f"https://image.tmdb.org/t/p/w500{still.get('file_path')}",
                                     "original_url": f"https://image.tmdb.org/t/p/original{still.get('file_path')}",
@@ -6345,16 +6648,16 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                                     "type": "episode_still",
                                     "vote_average": still.get("vote_average", 0),
                                 }
-                            )
+                                for still in data.get("stills", [])
+                            ]
 
-                elif request.asset_type == "season" and request.season_number:
-                    # Season posters
-                    url = f"https://api.themoviedb.org/3/tv/{tmdb_id_to_use}/season/{request.season_number}/images"
-                    response = requests.get(url, headers=headers, timeout=10)
-                    if response.status_code == 200:
-                        data = response.json()
-                        for poster in data.get("posters", []):
-                            results["tmdb"].append(
+                    elif request.asset_type == "season" and request.season_number:
+                        # Season posters
+                        url = f"https://api.themoviedb.org/3/tv/{tmdb_id_to_use}/season/{request.season_number}/images"
+                        response = await client.get(url, headers=headers)
+                        if response.status_code == 200:
+                            data = response.json()
+                            return [
                                 {
                                     "url": f"https://image.tmdb.org/t/p/w500{poster.get('file_path')}",
                                     "original_url": f"https://image.tmdb.org/t/p/original{poster.get('file_path')}",
@@ -6363,16 +6666,16 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                                     "language": poster.get("iso_639_1"),
                                     "vote_average": poster.get("vote_average", 0),
                                 }
-                            )
+                                for poster in data.get("posters", [])
+                            ]
 
-                elif request.asset_type == "background":
-                    # Backgrounds
-                    url = f"https://api.themoviedb.org/3/{media_endpoint}/{tmdb_id_to_use}/images"
-                    response = requests.get(url, headers=headers, timeout=10)
-                    if response.status_code == 200:
-                        data = response.json()
-                        for backdrop in data.get("backdrops", []):
-                            results["tmdb"].append(
+                    elif request.asset_type == "background":
+                        # Backgrounds
+                        url = f"https://api.themoviedb.org/3/{media_endpoint}/{tmdb_id_to_use}/images"
+                        response = await client.get(url, headers=headers)
+                        if response.status_code == 200:
+                            data = response.json()
+                            return [
                                 {
                                     "url": f"https://image.tmdb.org/t/p/w500{backdrop.get('file_path')}",
                                     "original_url": f"https://image.tmdb.org/t/p/original{backdrop.get('file_path')}",
@@ -6381,16 +6684,18 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                                     "language": backdrop.get("iso_639_1"),
                                     "vote_average": backdrop.get("vote_average", 0),
                                 }
-                            )
+                                for backdrop in data.get("backdrops", [])
+                            ]
 
-                else:
-                    # Standard posters
-                    url = f"https://api.themoviedb.org/3/{media_endpoint}/{tmdb_id_to_use}/images"
-                    response = requests.get(url, headers=headers, timeout=10)
-                    if response.status_code == 200:
-                        data = response.json()
-                        for poster in data.get("posters", []):
-                            results["tmdb"].append(
+                    else:
+                        # Standard posters
+                        url = f"https://api.themoviedb.org/3/{media_endpoint}/{tmdb_id_to_use}/images"
+                        logger.info(f"🎬 TMDB Poster URL: {url}")
+                        response = await client.get(url, headers=headers)
+                        logger.info(f"🎬 TMDB Response Status: {response.status_code}")
+                        if response.status_code == 200:
+                            data = response.json()
+                            return [
                                 {
                                     "url": f"https://image.tmdb.org/t/p/w500{poster.get('file_path')}",
                                     "original_url": f"https://image.tmdb.org/t/p/original{poster.get('file_path')}",
@@ -6399,28 +6704,43 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                                     "language": poster.get("iso_639_1"),
                                     "vote_average": poster.get("vote_average", 0),
                                 }
-                            )
+                                for poster in data.get("posters", [])
+                            ]
 
             except Exception as e:
                 logger.error(f"Error fetching TMDB assets: {e}")
 
-        # ========== TVDB ==========
-        if tvdb_api_key and request.tvdb_id:
+            return []
+
+        async def fetch_tvdb():
+            """Fetch TVDB assets asynchronously"""
+            if not tvdb_api_key:
+                logger.warning("⚠️ TVDB: No API key configured")
+                return []
+
+            if not request.tvdb_id:
+                logger.info(
+                    f"ℹ️ TVDB: No TVDB ID provided (media_type={request.media_type}) - skipping"
+                )
+                return []
+
             try:
-                # First, login to get token
+                logger.info(
+                    f"📺 TVDB: Fetching artwork for series ID: {request.tvdb_id}"
+                )
                 async with httpx.AsyncClient(timeout=10.0) as client:
                     login_url = "https://api4.thetvdb.com/v4/login"
                     body = {"apikey": tvdb_api_key}
                     if tvdb_pin:
                         body["pin"] = tvdb_pin
 
-                    headers = {
+                    headers_tvdb = {
                         "accept": "application/json",
                         "Content-Type": "application/json",
                     }
 
                     login_response = await client.post(
-                        login_url, json=body, headers=headers
+                        login_url, json=body, headers=headers_tvdb
                     )
 
                     if login_response.status_code == 200:
@@ -6452,32 +6772,52 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                                     "artworks", []
                                 )
 
-                                for artwork in artworks:
-                                    results["tvdb"].append(
-                                        {
-                                            "url": artwork.get("image"),
-                                            "original_url": artwork.get("image"),
-                                            "source": "TVDB",
-                                            "type": request.asset_type,
-                                            "language": artwork.get("language"),
-                                        }
-                                    )
+                                return [
+                                    {
+                                        "url": artwork.get("image"),
+                                        "original_url": artwork.get("image"),
+                                        "source": "TVDB",
+                                        "type": request.asset_type,
+                                        "language": artwork.get("language"),
+                                    }
+                                    for artwork in artworks
+                                ]
 
             except Exception as e:
                 logger.error(f"Error fetching TVDB assets: {e}")
 
-        # ========== Fanart.tv ==========
-        if fanart_api_key and (tmdb_id_to_use or request.tvdb_id):
+            return []
+
+        async def fetch_fanart():
+            """Fetch Fanart.tv assets asynchronously"""
+            if not fanart_api_key:
+                logger.warning("⚠️ Fanart.tv: No API key configured")
+                return []
+
+            if not (tmdb_id_to_use or request.tvdb_id):
+                logger.warning("⚠️ Fanart.tv: No TMDB ID or TVDB ID available")
+                return []
+
             try:
                 if request.media_type == "movie" and tmdb_id_to_use:
                     url = f"https://webservice.fanart.tv/v3/movies/{tmdb_id_to_use}?api_key={fanart_api_key}"
+                    logger.info(
+                        f"🎨 Fanart.tv Movie URL: {url.replace(fanart_api_key, 'API_KEY')}"
+                    )
                 elif request.media_type == "tv" and request.tvdb_id:
                     url = f"https://webservice.fanart.tv/v3/tv/{request.tvdb_id}?api_key={fanart_api_key}"
+                    logger.info(
+                        f"🎨 Fanart.tv TV URL: {url.replace(fanart_api_key, 'API_KEY')}"
+                    )
                 else:
-                    url = None
+                    logger.warning(
+                        f"⚠️ Fanart.tv: Cannot determine URL - media_type={request.media_type}, tmdb_id={tmdb_id_to_use}, tvdb_id={request.tvdb_id}"
+                    )
+                    return []
 
-                if url:
-                    response = requests.get(url, timeout=10)
+                async with httpx.AsyncClient(timeout=10.0) as client:
+                    response = await client.get(url)
+                    logger.info(f"🎨 Fanart.tv Response Status: {response.status_code}")
                     if response.status_code == 200:
                         data = response.json()
 
@@ -6497,10 +6837,10 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                         else:
                             fanart_keys = []
 
+                        items = []
                         for key in fanart_keys:
-                            items = data.get(key, [])
-                            for item in items:
-                                results["fanart"].append(
+                            for item in data.get(key, []):
+                                items.append(
                                     {
                                         "url": item.get("url"),
                                         "original_url": item.get("url"),
@@ -6510,9 +6850,33 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                                         "likes": item.get("likes", 0),
                                     }
                                 )
+                        return items
 
             except Exception as e:
                 logger.error(f"Error fetching Fanart.tv assets: {e}")
+
+            return []
+
+        # Fetch from all providers in parallel
+        logger.info("🚀 Fetching assets from all providers in parallel...")
+        tmdb_results, tvdb_results, fanart_results = await asyncio.gather(
+            fetch_tmdb(), fetch_tvdb(), fetch_fanart(), return_exceptions=True
+        )
+
+        # Handle exceptions from gather
+        if isinstance(tmdb_results, Exception):
+            logger.error(f"TMDB fetch failed: {tmdb_results}")
+            tmdb_results = []
+        if isinstance(tvdb_results, Exception):
+            logger.error(f"TVDB fetch failed: {tvdb_results}")
+            tvdb_results = []
+        if isinstance(fanart_results, Exception):
+            logger.error(f"Fanart fetch failed: {fanart_results}")
+            fanart_results = []
+
+        results["tmdb"] = tmdb_results
+        results["tvdb"] = tvdb_results
+        results["fanart"] = fanart_results
 
         # Count total results
         total_count = sum(len(results[source]) for source in results)
@@ -6579,14 +6943,25 @@ async def upload_asset_replacement(
 
         # Validate and sanitize asset path
         try:
-            # Normalize the path to handle different path separators
+            # Normalize the path to handle different path separators (Windows/Linux/Docker)
             normalized_path = Path(asset_path)
-            full_asset_path = (ASSETS_DIR / normalized_path).resolve()
 
-            # Security: Ensure the path doesn't escape ASSETS_DIR
-            if not str(full_asset_path).startswith(str(ASSETS_DIR.resolve())):
-                logger.error(f"Path traversal attempt detected: {asset_path}")
-                raise HTTPException(status_code=400, detail="Invalid asset path")
+            # Handle absolute paths (for assets outside app root)
+            if normalized_path.is_absolute():
+                full_asset_path = normalized_path.resolve()
+                logger.info(f"Using absolute asset path: {full_asset_path}")
+            else:
+                full_asset_path = (ASSETS_DIR / normalized_path).resolve()
+                logger.info(f"Using relative asset path: {full_asset_path}")
+
+            # Security: For relative paths, ensure they don't escape ASSETS_DIR
+            if not normalized_path.is_absolute():
+                if not str(full_asset_path).startswith(str(ASSETS_DIR.resolve())):
+                    logger.error(f"Path traversal attempt detected: {asset_path}")
+                    raise HTTPException(
+                        status_code=400,
+                        detail="Invalid asset path - path traversal not allowed",
+                    )
 
             # Check if asset exists
             if not full_asset_path.exists():
@@ -6596,13 +6971,33 @@ async def upload_asset_replacement(
                 )
 
             logger.info(f"Full asset path: {full_asset_path}")
+            logger.info(f"Is Docker: {IS_DOCKER}, Assets Dir: {ASSETS_DIR}")
 
         except (ValueError, OSError) as e:
             logger.error(f"Invalid asset path '{asset_path}': {e}")
             raise HTTPException(status_code=400, detail=f"Invalid asset path: {str(e)}")
 
-        # Ensure parent directory exists
-        full_asset_path.parent.mkdir(parents=True, exist_ok=True)
+        # Ensure parent directory exists with permission check
+        try:
+            full_asset_path.parent.mkdir(parents=True, exist_ok=True)
+            # Test write permissions in parent directory
+            test_file = full_asset_path.parent / ".write_test"
+            test_file.touch()
+            test_file.unlink()
+        except PermissionError as e:
+            logger.error(
+                f"No write permission for asset directory: {full_asset_path.parent}"
+            )
+            raise HTTPException(
+                status_code=500,
+                detail=f"No write permission for asset directory. On Docker/NAS/Unraid, ensure volume is mounted with write permissions (e.g., /assets:/assets:rw).",
+            )
+        except OSError as e:
+            logger.error(f"OS error accessing asset directory: {e}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Cannot access asset directory: {str(e)}. Check if the path exists and is accessible.",
+            )
 
         # Read uploaded file
         try:
@@ -6634,18 +7029,40 @@ async def upload_asset_replacement(
         try:
             with open(full_asset_path, "wb") as f:
                 f.write(contents)
+
+            # Verify file was written correctly
+            if not full_asset_path.exists():
+                raise HTTPException(
+                    status_code=500, detail="File was not saved successfully"
+                )
+
+            actual_size = full_asset_path.stat().st_size
+            if actual_size != len(contents):
+                logger.error(
+                    f"File size mismatch: expected {len(contents)}, got {actual_size}"
+                )
+                raise HTTPException(
+                    status_code=500, detail="File was not saved completely"
+                )
+
             logger.info(f"Replaced asset: {asset_path} (size: {len(contents)} bytes)")
         except PermissionError as e:
             logger.error(f"Permission denied writing to {full_asset_path}: {e}")
             raise HTTPException(
                 status_code=500,
-                detail=f"Permission denied: Unable to write to file. Check file permissions.",
+                detail=f"Permission denied: Unable to write to file. On Docker/NAS/Unraid, check that user has write permissions (uid/gid mapping).",
             )
         except OSError as e:
             logger.error(f"OS error writing to {full_asset_path}: {e}")
-            raise HTTPException(status_code=500, detail=f"File system error: {str(e)}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"File system error: {str(e)}. Check disk space, mount points, and file system health (especially on NAS/RAID systems).",
+            )
         except Exception as e:
             logger.error(f"Unexpected error writing file: {e}")
+            import traceback
+
+            logger.error(traceback.format_exc())
             raise HTTPException(status_code=500, detail=f"Error saving file: {str(e)}")
 
         result = {
