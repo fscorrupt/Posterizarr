@@ -323,8 +323,10 @@ class ImageChoicesDB:
 
                         # If Manual field is empty in CSV, determine from download_source
                         if not manual:
-                            manual = "N/A"
-                            if download_source == "N/A" or (
+                            # Manual is "false" by default (automatic run)
+                            manual = "false"
+                            # Check if it's a local file path (indicates manual upload)
+                            if download_source == "false" or (
                                 download_source
                                 and (
                                     download_source.startswith("C:")
@@ -332,7 +334,7 @@ class ImageChoicesDB:
                                     or download_source.startswith("\\")
                                 )
                             ):
-                                manual = "Yes"
+                                manual = "true"
 
                         self.insert_choice(
                             title=title,

@@ -7154,8 +7154,13 @@ async def get_assets_overview():
 
             has_issue = False
 
-            # Missing Assets: DownloadSource == "N/A"
-            if record_dict.get("DownloadSource") == "N/A":
+            # Missing Assets: DownloadSource == "false" (string) or False (boolean) or empty
+            download_source = record_dict.get("DownloadSource")
+            if (
+                download_source == "false"
+                or download_source == False
+                or not download_source
+            ):
                 missing_assets.append(record_dict)
                 has_issue = True
 
@@ -7218,7 +7223,12 @@ async def get_assets_overview():
                     }
 
                     is_primary_provider = False
-                    if primary_provider and provider_link and provider_link != "N/A":
+                    if (
+                        primary_provider
+                        and provider_link
+                        and provider_link != "false"
+                        and provider_link != False
+                    ):
                         # Check if any pattern for the primary provider is in the link
                         patterns = provider_patterns.get(
                             primary_provider, [primary_provider]
@@ -7228,7 +7238,13 @@ async def get_assets_overview():
                         )
 
                     # If not from primary provider, add to non_primary_provider
-                    if not is_primary_provider and provider_link != "N/A":
+                    # Check that provider_link is not "false" (string), False (boolean), or empty
+                    if (
+                        not is_primary_provider
+                        and provider_link
+                        and provider_link != "false"
+                        and provider_link != False
+                    ):
                         non_primary_provider.append(record_dict)
                         has_issue = True
 

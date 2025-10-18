@@ -256,7 +256,9 @@ const AssetOverview = () => {
   // Get unique types and libraries for filters (excluding Manual entries)
   const types = useMemo(() => {
     const nonManualAssets = allAssets.filter(
-      (asset) => !asset.Manual || asset.Manual.toLowerCase() !== "true"
+      (asset) =>
+        !asset.Manual ||
+        (asset.Manual.toLowerCase() !== "true" && asset.Manual !== true)
     );
     const uniqueTypes = new Set(
       nonManualAssets.map((a) => a.Type).filter(Boolean)
@@ -266,7 +268,9 @@ const AssetOverview = () => {
 
   const libraries = useMemo(() => {
     const nonManualAssets = allAssets.filter(
-      (asset) => !asset.Manual || asset.Manual.toLowerCase() !== "true"
+      (asset) =>
+        !asset.Manual ||
+        (asset.Manual.toLowerCase() !== "true" && asset.Manual !== true)
     );
     const uniqueLibs = new Set(
       nonManualAssets.map((a) => a.LibraryName).filter(Boolean)
@@ -288,9 +292,11 @@ const AssetOverview = () => {
       assets = data.categories[categoryKey]?.assets || [];
     }
 
-    // Filter out Manual entries (Manual === "true")
+    // Filter out Manual entries (Manual === "true" or true)
     assets = assets.filter(
-      (asset) => !asset.Manual || asset.Manual.toLowerCase() !== "true"
+      (asset) =>
+        !asset.Manual ||
+        (asset.Manual.toLowerCase() !== "true" && asset.Manual !== true)
     );
 
     // Apply search filter
@@ -327,54 +333,30 @@ const AssetOverview = () => {
   const getAssetTags = (asset) => {
     const tags = [];
 
-    if (asset.DownloadSource === "N/A") {
+    // 1. MISSING ASSET CHECK
+    // Missing if: DownloadSource is false/empty OR FavProviderLink is false/empty
+    const downloadSource = asset.DownloadSource;
+    const providerLink = asset.FavProviderLink;
+
+    const isDownloadMissing =
+      downloadSource === "false" || downloadSource === false || !downloadSource;
+
+    const isProviderLinkMissing =
+      providerLink === "false" || providerLink === false || !providerLink;
+
+    if (isDownloadMissing || isProviderLinkMissing) {
       tags.push({
         label: t("assetOverview.missingAsset"),
         color: "bg-red-500/20 text-red-400 border-red-500/30",
       });
     }
 
-    // Check if there's a language issue
-    let isLanguageIssue = false;
-    if (asset.Language && data?.config?.primary_language) {
-      const langNormalized =
-        asset.Language.toLowerCase() === "textless"
-          ? "xx"
-          : asset.Language.toLowerCase();
-      const primaryNormalized =
-        data.config.primary_language.toLowerCase() === "textless"
-          ? "xx"
-          : data.config.primary_language.toLowerCase();
-
-      if (langNormalized !== primaryNormalized) {
-        tags.push({
-          label: t("assetOverview.notPrimaryLanguage"),
-          color: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-        });
-        isLanguageIssue = true;
-      }
-    } else if (asset.Language && !data?.config?.primary_language) {
-      // No primary language set, anything that's not Textless/xx is non-primary
-      if (!["textless", "xx"].includes(asset.Language.toLowerCase())) {
-        tags.push({
-          label: t("assetOverview.notPrimaryLanguage"),
-          color: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
-        });
-        isLanguageIssue = true;
-      }
-    }
-
-    // Provider check: Only if Fallback=true AND it's NOT a language issue
-    if (
-      asset.Fallback &&
-      asset.Fallback.toLowerCase() === "true" &&
-      !isLanguageIssue
-    ) {
-      // Check if provider is not primary
-      const providerLink = asset.FavProviderLink || "";
+    // 2. NON-PRIMARY PROVIDER CHECK
+    // Only check if we have both DownloadSource AND FavProviderLink
+    if (!isDownloadMissing && !isProviderLinkMissing) {
       const primaryProvider = data?.config?.primary_provider || "";
 
-      if (primaryProvider && providerLink && providerLink !== "N/A") {
+      if (primaryProvider) {
         const providerPatterns = {
           tmdb: ["tmdb", "themoviedb"],
           tvdb: ["tvdb", "thetvdb"],
@@ -396,16 +378,53 @@ const AssetOverview = () => {
       }
     }
 
-    if (asset.TextTruncated && asset.TextTruncated.toLowerCase() === "true") {
+    // 3. NON-PRIMARY LANGUAGE CHECK
+    // Language is either a valid language code/string or "false" (string)
+    if (
+      asset.Language &&
+      asset.Language !== "false" &&
+      asset.Language !== false &&
+      data?.config?.primary_language
+    ) {
+      const langNormalized =
+        asset.Language.toLowerCase() === "textless"
+          ? "xx"
+          : asset.Language.toLowerCase();
+      const primaryNormalized =
+        data.config.primary_language.toLowerCase() === "textless"
+          ? "xx"
+          : data.config.primary_language.toLowerCase();
+
+      if (langNormalized !== primaryNormalized) {
+        tags.push({
+          label: t("assetOverview.notPrimaryLanguage"),
+          color: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+        });
+      }
+    } else if (
+      asset.Language &&
+      asset.Language !== "false" &&
+      asset.Language !== false &&
+      !data?.config?.primary_language
+    ) {
+      // No primary language set, anything that's not Textless/xx is non-primary
+      if (!["textless", "xx"].includes(asset.Language.toLowerCase())) {
+        tags.push({
+          label: t("assetOverview.notPrimaryLanguage"),
+          color: "bg-yellow-500/20 text-yellow-400 border-yellow-500/30",
+        });
+      }
+    }
+
+    // 4. TRUNCATED TEXT CHECK
+    if (
+      asset.TextTruncated &&
+      (asset.TextTruncated.toLowerCase() === "true" ||
+        asset.TextTruncated === true)
+    ) {
       tags.push({
         label: t("assetOverview.truncatedText"),
         color: "bg-purple-500/20 text-purple-400 border-purple-500/30",
-      });
-    }
-    if (asset.Manual && asset.Manual.toLowerCase() === "true") {
-      tags.push({
-        label: t("assetOverview.manual"),
-        color: "bg-blue-500/20 text-blue-400 border-blue-500/30",
       });
     }
 
@@ -657,25 +676,36 @@ const AssetOverview = () => {
                           {t("assetOverview.type")}:
                         </span>
                         <span className="bg-theme-card px-2 py-0.5 rounded">
-                          {asset.Type || "N/A"}
+                          {asset.Type || "Unknown"}
                         </span>
                         <span className="mx-2">•</span>
                         <span className="font-medium">
                           {t("assetOverview.language")}:
                         </span>
                         <span className="bg-theme-card px-2 py-0.5 rounded">
-                          {asset.Language || "N/A"}
+                          {asset.Language &&
+                          asset.Language !== "false" &&
+                          asset.Language !== false
+                            ? asset.Language
+                            : "Unknown"}
                         </span>
                         <span className="mx-2">•</span>
                         <span className="font-medium">
                           {t("assetOverview.source")}:
                         </span>
                         <span className="bg-theme-card px-2 py-0.5 rounded">
-                          {asset.DownloadSource || "N/A"}
+                          {asset.DownloadSource &&
+                          asset.DownloadSource !== "false" &&
+                          asset.DownloadSource !== false
+                            ? asset.DownloadSource.length > 50
+                              ? `${asset.DownloadSource.substring(0, 50)}...`
+                              : asset.DownloadSource
+                            : "Missing"}
                         </span>
                       </div>
                       {asset.FavProviderLink &&
-                        asset.FavProviderLink !== "N/A" && (
+                        asset.FavProviderLink !== "false" &&
+                        asset.FavProviderLink !== false && (
                           <div className="mt-2">
                             <a
                               href={asset.FavProviderLink}
