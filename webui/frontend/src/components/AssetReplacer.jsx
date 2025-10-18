@@ -76,13 +76,8 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
 
   // Extract metadata from asset
   const extractMetadata = () => {
-    // Try to extract IDs from path/filename
-    // Format: "Movie Name (Year) {tmdb-12345}" or "{tvdb-67890}"
-    const tmdbMatch = asset.path?.match(/\{tmdb-(\d+)\}/);
-    const tvdbMatch = asset.path?.match(/\{tvdb-(\d+)\}/);
-
-    // Extract title and year from path
-    // Format examples: "Movie Name (2024) {tmdb-12345}" or "Show Name (2020) {tvdb-67890}"
+    // Extract metadata from path - NO ID extraction, just path information
+    // We'll let users search manually by title + year
     let title = null;
     let year = null;
     let folderName = null;
@@ -146,89 +141,107 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
           const showFolder = pathSegments[showFolderIndex];
           folderName = showFolder; // Store the full folder name
 
-          // Extract title and year from show folder: "Show Name (2020) {tvdb-123}"
-          const showMatch = showFolder.match(/^(.+?)\s*\((\d{4})\)\s*\{/);
+          // Extract title and year - remove ALL tags {xxx-yyy}
+          // Pattern: "Show Name (2020) {tmdb-123}" or "Show Name (2020) {imdb-tt123}{tvdb-456}"
+          const cleanFolder = showFolder.replace(/\s*\{[^}]+\}/g, "").trim();
+
+          // Now extract title and year
+          const showMatch = cleanFolder.match(/^(.+?)\s*\((\d{4})\)\s*$/);
           if (showMatch) {
             title = showMatch[1].trim();
             year = parseInt(showMatch[2]);
           } else {
-            // Fallback: clean the folder name
-            title = showFolder
-              .replace(/\s*\(\d{4}\)\s*/, "")
-              .replace(/\s*\{[^}]+\}\s*/, "")
-              .trim();
-
-            // Try to extract year separately
-            const yearMatch = showFolder.match(/\((\d{4})\)/);
+            // Fallback: try to extract year separately
+            const yearMatch = cleanFolder.match(/\((\d{4})\)/);
             if (yearMatch) {
               year = parseInt(yearMatch[1]);
+              title = cleanFolder.replace(/\s*\(\d{4}\)\s*/, "").trim();
+            } else {
+              title = cleanFolder;
             }
           }
         }
       }
     } else {
       // For movies/posters/backgrounds: extract from the main folder/file
-      // Try to extract title and year from common patterns
-      const titleYearMatch = asset.path?.match(
-        /[\/\\]([^\/\\]+?)\s*\((\d{4})\)\s*\{/
-      );
-      if (titleYearMatch) {
-        folderName = titleYearMatch[0].replace(/^[\/\\]/, "").trim(); // Store folder with ID
-        title = titleYearMatch[1].trim();
-        year = parseInt(titleYearMatch[2]);
+      // Find folder with year pattern (ignoring ALL tags)
+      if (pathSegments && pathSegments.length > 0) {
+        for (let i = pathSegments.length - 1; i >= 0; i--) {
+          const segment = pathSegments[i];
+          // Check if this segment has a year pattern
+          if (segment.match(/\(\d{4}\)/)) {
+            folderName = segment;
 
-        // Extract the full folder name for movies
-        if (pathSegments && pathSegments.length > 0) {
-          for (let i = pathSegments.length - 1; i >= 0; i--) {
-            if (pathSegments[i].match(/\{(tvdb|tmdb)-\d+\}/)) {
-              folderName = pathSegments[i];
-              break;
+            // Clean the folder name from ALL tags
+            const cleanSegment = segment.replace(/\s*\{[^}]+\}/g, "").trim();
+
+            // Extract title and year
+            const match = cleanSegment.match(/^(.+?)\s*\((\d{4})\)\s*$/);
+            if (match) {
+              title = match[1].trim();
+              year = parseInt(match[2]);
+            } else {
+              // Fallback
+              const yearMatch = cleanSegment.match(/\((\d{4})\)/);
+              if (yearMatch) {
+                year = parseInt(yearMatch[1]);
+                title = cleanSegment.replace(/\s*\(\d{4}\)\s*/, "").trim();
+              } else {
+                title = cleanSegment;
+              }
             }
+            break;
           }
         }
-      } else {
-        // Fallback: Try just year in parentheses
-        const yearMatch = asset.path?.match(/\((\d{4})\)/);
-        if (yearMatch) {
-          year = parseInt(yearMatch[1]);
-        }
 
-        // Try to extract title from last folder/file segment
-        if (pathSegments && pathSegments.length > 0) {
-          const lastSegment = pathSegments[pathSegments.length - 1];
-          // Check if it's a file (has extension)
-          const isFile = lastSegment.match(/\.[^.]+$/);
-          const folderSegment =
-            isFile && pathSegments.length > 1
-              ? pathSegments[pathSegments.length - 2]
-              : lastSegment;
+        // If no folder with year found, try fallback
+        if (!folderName) {
+          const yearMatch = asset.path?.match(/\((\d{4})\)/);
+          if (yearMatch) {
+            year = parseInt(yearMatch[1]);
+          }
 
-          folderName = folderSegment;
+          // Try to extract title from last folder/file segment
+          if (pathSegments && pathSegments.length > 0) {
+            const lastSegment = pathSegments[pathSegments.length - 1];
+            // Check if it's a file (has extension)
+            const isFile = lastSegment.match(/\.[^.]+$/);
+            const folderSegment =
+              isFile && pathSegments.length > 1
+                ? pathSegments[pathSegments.length - 2]
+                : lastSegment;
 
-          // Remove year, ID tags, and file extension
-          const cleanTitle = folderSegment
-            .replace(/\s*\(\d{4}\)\s*/, "")
-            .replace(/\s*\{[^}]+\}\s*/, "")
-            .replace(/\.[^.]+$/, "")
-            .trim();
-          if (cleanTitle) {
-            title = cleanTitle;
+            folderName = folderSegment;
+
+            // Remove year and ALL ID tags, and file extension
+            const cleanTitle = folderSegment
+              .replace(/\s*\(\d{4}\)\s*/, "")
+              .replace(/\s*\{[^}]+\}/g, "")
+              .replace(/\.[^.]+$/, "")
+              .trim();
+            if (cleanTitle) {
+              title = cleanTitle;
+            }
           }
         }
       }
     }
 
-    // Determine media type
-    const isMovie = asset.path?.includes("4K") || asset.type === "movie";
-    const mediaType = isMovie ? "movie" : "tv";
+    // Determine media type - check for TV indicators (Season folders, episode patterns, or TV in path)
+    const hasSeason = asset.path?.match(/Season\d+/i);
+    const hasEpisode = asset.path?.match(/S\d+E\d+/i);
+    const hasTVFolder = asset.path?.match(/[\/\\](TV|Series)[\/\\]/i);
+    const isTV = hasSeason || hasEpisode || hasTVFolder || asset.type === "tv";
+    const mediaType = isTV ? "tv" : "movie";
 
     // Extract season/episode numbers
     const seasonMatch = asset.path?.match(/Season(\d+)/);
     const episodeMatch = asset.path?.match(/S(\d+)E(\d+)/);
 
     return {
-      tmdb_id: tmdbMatch ? tmdbMatch[1] : null,
-      tvdb_id: tvdbMatch ? tvdbMatch[1] : null,
+      // NO ID extraction - users will search manually
+      tmdb_id: null,
+      tvdb_id: null,
       title: title,
       year: year,
       folder_name: folderName,
@@ -245,16 +258,24 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
   };
 
   // Determine if we should use horizontal layout (backgrounds and titlecards)
-  const metadata = extractMetadata();
+  // Use useMemo to recalculate metadata only when asset changes
+  const metadata = React.useMemo(() => extractMetadata(), [asset]);
   const useHorizontalLayout =
     metadata.asset_type === "background" || metadata.asset_type === "titlecard";
 
   // Manual search state - initialize with detected metadata
   const [manualSearch, setManualSearch] = useState(false);
-  const [searchTitle, setSearchTitle] = useState(metadata.title || "");
-  const [searchYear, setSearchYear] = useState(
-    metadata.year ? String(metadata.year) : ""
-  );
+  const [searchTitle, setSearchTitle] = useState("");
+  const [searchYear, setSearchYear] = useState("");
+
+  // Update search fields when metadata changes (when switching assets)
+  useEffect(() => {
+    setSearchTitle(metadata.title || "");
+    setSearchYear(metadata.year ? String(metadata.year) : "");
+    // Reset previews when switching to a new asset
+    setPreviews({ tmdb: [], tvdb: [], fanart: [] });
+    setSelectedPreview(null);
+  }, [metadata]);
 
   // Initialize season number from metadata
   useEffect(() => {
@@ -371,11 +392,12 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
           setLoading(false);
           return;
         }
+
         metadata = {
           ...metadata,
           title: searchTitle.trim(),
           year: searchYear ? parseInt(searchYear) : null,
-          tmdb_id: null, // Clear ID to force search by title
+          tmdb_id: null,
           tvdb_id: null,
         };
       }

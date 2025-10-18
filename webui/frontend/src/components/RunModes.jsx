@@ -277,6 +277,7 @@ function RunModes() {
   // TMDB Poster Search State
   const [tmdbSearch, setTmdbSearch] = useState({
     query: "",
+    year: "", // Year for search (required for numeric titles)
     mediaType: "standard",
     searching: false,
     results: [],
@@ -286,6 +287,8 @@ function RunModes() {
     episodeNumber: "",
     // Pagination
     displayedCount: 10, // Start with 10 items
+    // Search by ID toggle
+    searchByID: false, // When true, treat query as TMDB ID
   });
 
   useEffect(() => {
@@ -623,6 +626,14 @@ function RunModes() {
       return;
     }
 
+    // Validation for numeric titles - require year to avoid treating them as IDs
+    // UNLESS the user explicitly enabled "Search by ID" mode
+    const isNumericTitle = /^\d+$/.test(tmdbSearch.query.trim());
+    if (isNumericTitle && !tmdbSearch.year && !tmdbSearch.searchByID) {
+      showError(t("runModes.validation.yearRequiredForNumericTitle"));
+      return;
+    }
+
     // Validation for Season Poster
     if (manualForm.posterType === "season" && !tmdbSearch.seasonNumber) {
       showError(t("runModes.validation.seasonNumberRequired"));
@@ -669,6 +680,11 @@ function RunModes() {
         media_type: mediaType,
         poster_type: manualForm.posterType,
       };
+
+      // Add year if provided
+      if (tmdbSearch.year) {
+        requestBody.year = parseInt(tmdbSearch.year);
+      }
 
       // Add Season/Episode if available
       if (tmdbSearch.seasonNumber) {
@@ -1419,37 +1435,125 @@ function RunModes() {
             </p>
 
             {/* Hauptsuche */}
-            <div className="flex gap-2 mb-3">
-              <input
-                type="text"
-                value={tmdbSearch.query}
-                onChange={(e) =>
-                  setTmdbSearch({ ...tmdbSearch, query: e.target.value })
-                }
-                onKeyPress={(e) => {
-                  if (e.key === "Enter") searchTMDBPosters();
-                }}
-                placeholder={t("runModes.manual.tmdbSearchPlaceholder")}
-                disabled={loading || status.running || tmdbSearch.searching}
-                className="flex-1 px-4 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary disabled:opacity-50 disabled:cursor-not-allowed"
-              />
-              <button
-                onClick={searchTMDBPosters}
-                disabled={loading || status.running || tmdbSearch.searching}
-                className="flex items-center gap-2 px-4 py-2 bg-theme-primary hover:bg-theme-primary/90 disabled:bg-gray-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {tmdbSearch.searching ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    {t("runModes.manual.tmdbSearching")}
-                  </>
-                ) : (
-                  <>
-                    <ImageIcon className="w-4 h-4" />
-                    {t("runModes.manual.tmdbSearchButton")}
-                  </>
+            <div className="space-y-3 mb-3">
+              {/* Title/ID Search Input with Toggle */}
+              <div>
+                <div className="flex items-center gap-2 mb-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={tmdbSearch.searchByID}
+                      onChange={(e) =>
+                        setTmdbSearch({
+                          ...tmdbSearch,
+                          searchByID: e.target.checked,
+                        })
+                      }
+                      disabled={
+                        loading || status.running || tmdbSearch.searching
+                      }
+                      className="w-4 h-4 text-theme-primary bg-theme-bg border-theme rounded focus:ring-theme-primary focus:ring-2 disabled:opacity-50"
+                    />
+                    <span className="text-sm text-theme-text">
+                      {t("runModes.manual.searchByIdLabel")}
+                    </span>
+                  </label>
+                  {tmdbSearch.searchByID && (
+                    <span className="text-xs text-theme-muted">
+                      ({t("runModes.manual.searchByIdHint")})
+                    </span>
+                  )}
+                </div>
+                {tmdbSearch.searchByID && (
+                  <div className="text-xs text-yellow-600 dark:text-yellow-500 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded px-3 py-2">
+                    ⚠️ {t("runModes.manual.searchByIdWarning")}
+                  </div>
                 )}
-              </button>
+                <input
+                  type="text"
+                  value={tmdbSearch.query}
+                  onChange={(e) =>
+                    setTmdbSearch({ ...tmdbSearch, query: e.target.value })
+                  }
+                  onKeyPress={(e) => {
+                    if (e.key === "Enter") searchTMDBPosters();
+                  }}
+                  placeholder={
+                    tmdbSearch.searchByID
+                      ? t("runModes.manual.tmdbIdPlaceholder")
+                      : t("runModes.manual.tmdbSearchPlaceholder")
+                  }
+                  disabled={loading || status.running || tmdbSearch.searching}
+                  className="w-full px-4 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+              </div>
+
+              {/* Year Input */}
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <label className="block text-xs font-medium text-theme-text mb-1">
+                    {t("runModes.manual.yearLabel")}
+                    {/^\d+$/.test(tmdbSearch.query.trim()) &&
+                      !tmdbSearch.searchByID && (
+                        <span
+                          className="ml-1 text-yellow-500"
+                          title={t(
+                            "runModes.validation.yearRequiredForNumericTitle"
+                          )}
+                        >
+                          *
+                        </span>
+                      )}
+                  </label>
+                  <input
+                    type="number"
+                    value={tmdbSearch.year}
+                    onChange={(e) =>
+                      setTmdbSearch({ ...tmdbSearch, year: e.target.value })
+                    }
+                    onKeyPress={(e) => {
+                      if (e.key === "Enter") searchTMDBPosters();
+                    }}
+                    placeholder="2024"
+                    min="1900"
+                    max="2100"
+                    disabled={
+                      loading ||
+                      status.running ||
+                      tmdbSearch.searching ||
+                      tmdbSearch.searchByID
+                    }
+                    className={`w-full px-4 py-2 bg-theme-bg border rounded-lg text-theme-text placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-theme-primary disabled:opacity-50 disabled:cursor-not-allowed ${
+                      /^\d+$/.test(tmdbSearch.query.trim()) &&
+                      !tmdbSearch.year &&
+                      !tmdbSearch.searchByID
+                        ? "border-yellow-500 ring-2 ring-yellow-500/20"
+                        : "border-theme"
+                    }`}
+                  />
+                </div>
+
+                {/* Search Button */}
+                <div className="self-end">
+                  <button
+                    onClick={searchTMDBPosters}
+                    disabled={loading || status.running || tmdbSearch.searching}
+                    className="flex items-center gap-2 px-4 py-2 bg-theme-primary hover:bg-theme-primary/90 disabled:bg-gray-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed whitespace-nowrap"
+                  >
+                    {tmdbSearch.searching ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        {t("runModes.manual.tmdbSearching")}
+                      </>
+                    ) : (
+                      <>
+                        <ImageIcon className="w-4 h-4" />
+                        {t("runModes.manual.tmdbSearchButton")}
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
             </div>
 
             {/* Season/Episode Eingaben (nur wenn relevant) */}

@@ -1182,6 +1182,7 @@ class TMDBSearchRequest(BaseModel):
     query: str  # Can be title or TMDB ID
     media_type: str = "movie"  # "movie" or "tv"
     poster_type: str = "standard"  # "standard", "season", "titlecard"
+    year: Optional[int] = None  # Year for search (required for numeric titles)
     season_number: Optional[int] = None  # For season posters and titlecards
     episode_number: Optional[int] = None  # For titlecards only
 
@@ -3848,23 +3849,59 @@ async def search_tmdb_posters(request: TMDBSearchRequest):
         results = []
         tmdb_id = None
 
+        # Log the incoming request for debugging
+        logger.info(f"📥 TMDB Search Request:")
+        logger.info(f"   Query: '{request.query}'")
+        logger.info(f"   Media Type: {request.media_type}")
+        logger.info(f"   Poster Type: {request.poster_type}")
+        logger.info(f"   Year: {request.year}")
+        logger.info(f"   Is Digit: {request.query.isdigit()}")
+
         # Step 1: Get TMDB ID (if not already provided)
-        if request.query.isdigit():
+        # Only treat as ID if it's purely numeric AND no year is provided
+        # If year is provided, always search by title (even for numeric titles like "1917", "2012")
+        if request.query.isdigit() and not request.year:
+            # Query is a TMDB ID (only if no year specified)
             tmdb_id = request.query
+            logger.info(f"🔢 Using query as TMDB ID: {tmdb_id}")
         else:
-            # Search by title to get TMDB ID
+            # Query is a title - search for it (including numeric titles like "1917" if year provided)
             search_url = f"https://api.themoviedb.org/3/search/{request.media_type}"
             search_params = {"query": request.query, "page": 1}
+
+            logger.info(
+                f"🔍 Searching TMDB for: '{request.query}' (media_type: {request.media_type})"
+            )
+
+            # Add year parameter if provided
+            if request.year:
+                if request.media_type == "movie":
+                    search_params["year"] = request.year
+                    logger.info(f"   Adding year filter: {request.year}")
+                elif request.media_type == "tv":
+                    search_params["first_air_date_year"] = request.year
+                    logger.info(f"   Adding first_air_date_year filter: {request.year}")
+
             search_response = requests.get(
                 search_url, headers=headers, params=search_params, timeout=10
             )
 
+            logger.info(f"   TMDB Response Status: {search_response.status_code}")
+
             if search_response.status_code == 200:
                 search_data = search_response.json()
                 search_results = search_data.get("results", [])
+                logger.info(f"   Found {len(search_results)} results")
                 if search_results:
                     tmdb_id = search_results[0].get("id")
+                    result_title = search_results[0].get(
+                        "title" if request.media_type == "movie" else "name"
+                    )
+                    logger.info(
+                        f"   Using first result: ID={tmdb_id}, Title='{result_title}'"
+                    )
                 else:
+                    logger.warning(f"   No results found for '{request.query}'")
                     return {
                         "success": True,
                         "posters": [],
@@ -3886,12 +3923,32 @@ async def search_tmdb_posters(request: TMDBSearchRequest):
         # Step 2: Get item details (for title)
         media_endpoint = "movie" if request.media_type == "movie" else "tv"
         details_url = f"https://api.themoviedb.org/3/{media_endpoint}/{tmdb_id}"
+        logger.info(f"📋 Fetching details from: {details_url}")
         details_response = requests.get(details_url, headers=headers, timeout=10)
-        details = details_response.json() if details_response.status_code == 200 else {}
+        logger.info(f"   Response Status: {details_response.status_code}")
 
-        base_title = (
-            details.get("title") or details.get("name") or f"TMDB ID: {tmdb_id}"
-        )
+        if details_response.status_code == 200:
+            details = details_response.json()
+            base_title = (
+                details.get("title") or details.get("name") or f"TMDB ID: {tmdb_id}"
+            )
+            logger.info(f"   Title: '{base_title}'")
+        else:
+            details = {}
+            base_title = f"TMDB ID: {tmdb_id}"
+            logger.warning(
+                f"   Failed to fetch details: {details_response.status_code}"
+            )
+            if details_response.status_code == 404:
+                logger.error(
+                    f"   ❌ TMDB ID {tmdb_id} not found for media_type '{request.media_type}'"
+                )
+                return {
+                    "success": True,
+                    "posters": [],
+                    "count": 0,
+                    "message": f"TMDB ID {tmdb_id} not found. Make sure the media type (movie/tv) is correct.",
+                }
 
         # Step 3: Fetch appropriate images based on poster_type
         if request.poster_type == "titlecard":
@@ -6163,6 +6220,16 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
     Returns a list of preview images from all available sources
     """
     try:
+        # DEBUG: Log incoming request
+        logger.info(f"🔍 Asset replacement request:")
+        logger.info(f"  Asset Path: {request.asset_path}")
+        logger.info(f"  Media Type: {request.media_type}")
+        logger.info(f"  Asset Type: {request.asset_type}")
+        logger.info(f"  Title: {request.title}")
+        logger.info(f"  Year: {request.year}")
+        logger.info(f"  TMDB ID: {request.tmdb_id}")
+        logger.info(f"  TVDB ID: {request.tvdb_id}")
+
         # Load config to get API keys
         if not CONFIG_PATH.exists():
             raise HTTPException(status_code=404, detail="Config file not found")
@@ -6200,27 +6267,54 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                 search_endpoint = "movie" if media_type == "movie" else "tv"
                 url = f"https://api.themoviedb.org/3/search/{search_endpoint}"
                 params = {"query": title}
+
                 if year and media_type == "movie":
                     params["year"] = year
                 elif year and media_type == "tv":
                     params["first_air_date_year"] = year
 
+                logger.info(f"🔎 TMDB API Request: {url}")
+                logger.info(f"   Params: {params}")
+
                 response = requests.get(url, headers=headers, params=params, timeout=10)
+                logger.info(f"   Response Status: {response.status_code}")
+
                 if response.status_code == 200:
                     data = response.json()
                     results = data.get("results", [])
+                    logger.info(f"   Results Count: {len(results)}")
                     if results:
-                        return str(results[0].get("id"))
+                        result_id = str(results[0].get("id"))
+                        result_title = results[0].get(
+                            "title" if media_type == "movie" else "name"
+                        )
+                        logger.info(
+                            f"   First Result: ID={result_id}, Title='{result_title}'"
+                        )
+                        return result_id
+                    else:
+                        logger.warning(f"   No results found in TMDB response")
             except Exception as e:
-                print(f"Error searching TMDB by title: {e}")
+                logger.error(f"Error searching TMDB by title: {e}")
             return None
 
-        # If no TMDB ID provided but we have title, try to search for it
+        # Determine TMDB ID - simple approach: use provided ID or search by title
         tmdb_id_to_use = request.tmdb_id
+
+        # If no TMDB ID and we have title, search for it
         if not tmdb_id_to_use and request.title and tmdb_token:
+            logger.info(
+                f"🔍 Searching TMDB for title: '{request.title}' (year: {request.year})"
+            )
             tmdb_id_to_use = await search_tmdb_id(
                 request.title, request.year, request.media_type
             )
+            if tmdb_id_to_use:
+                logger.info(f"✅ Found TMDB ID: {tmdb_id_to_use}")
+            else:
+                logger.warning(f"❌ No TMDB ID found for: '{request.title}'")
+        else:
+            logger.info(f"✅ Using provided TMDB ID: {tmdb_id_to_use}")
 
         # ========== TMDB ==========
         if tmdb_token and tmdb_id_to_use:

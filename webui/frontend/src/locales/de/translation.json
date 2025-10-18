@@ -16,7 +16,8 @@
       "tmdbQueryRequired": "Bitte gib einen Suchtitel oder TMDB ID ein!",
       "seasonNumberRequired": "Bitte gib eine Seasonnummer ein!",
       "episodeInfoRequired": "Bitte gib Season- und Episodennummer ein!",
-      "libraryNameRequired": "Bitte gib einen Bibliotheksnamen ein!"
+      "libraryNameRequired": "Bitte gib einen Bibliotheksnamen ein!",
+      "yearRequiredForNumericTitle": "Jahr ist erforderlich für numerische Titel (z.B. '2012', '1917', '365 Days')"
     },
     "reset": {
       "stopFirst": "Das Skript muss vor dem Zurücksetzen der Poster gestoppt werden!",
@@ -136,6 +137,12 @@
       "tmdbHintTitleCard": "Suche nach TV-Serien auf TMDB, um Episoden-Standbilder zu finden",
       "tmdbHintStandard": "Suche nach Filmen oder TV-Serien auf TMDB, um Poster zu finden",
       "tmdbSearchPlaceholder": "Titel oder TMDB ID eingeben...",
+      "tmdbIdPlaceholder": "TMDB ID eingeben (z.B. 530915 für '1917')...",
+      "searchByIdLabel": "Nach TMDB ID suchen",
+      "searchByIdHint": "Jahr nicht erforderlich bei ID-Suche",
+      "searchByIdWarning": "Stelle sicher, dass der richtige Medientyp (Film oder TV) für die TMDB ID ausgewählt ist",
+      "yearLabel": "Jahr (optional)",
+      "numericTitleWarning": "Numerischer Titel erkannt - Jahr ist für genaue Suche erforderlich",
       "tmdbSearchButton": "Suchen",
       "tmdbSearching": "Suche...",
       "howItWorks": "Wie der manuelle Modus funktioniert:",

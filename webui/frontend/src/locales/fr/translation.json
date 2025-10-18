@@ -16,7 +16,8 @@
       "tmdbQueryRequired": "Veuillez entrer un titre de recherche ou un ID TMDB !",
       "seasonNumberRequired": "Veuillez entrer un numéro de saison !",
       "episodeInfoRequired": "Veuillez entrer les numéros de saison et d'épisode !",
-      "libraryNameRequired": "Veuillez entrer un nom de bibliothèque !"
+      "libraryNameRequired": "Veuillez entrer un nom de bibliothèque !",
+      "yearRequiredForNumericTitle": "L'année est requise pour les titres numériques (ex : '2012', '1917', '365 Days')"
     },
     "reset": {
       "stopFirst": "Le script doit être arrêté avant de réinitialiser les affiches !",
@@ -136,6 +137,12 @@
       "tmdbHintTitleCard": "Recherchez des séries TV sur TMDB pour trouver des captures d'épisode",
       "tmdbHintStandard": "Recherchez des films ou des séries TV sur TMDB pour trouver des affiches",
       "tmdbSearchPlaceholder": "Entrez un titre ou un ID TMDB...",
+      "tmdbIdPlaceholder": "Entrez l'ID TMDB (ex : 530915 pour '1917')...",
+      "searchByIdLabel": "Rechercher par ID TMDB",
+      "searchByIdHint": "Année non requise lors de la recherche par ID",
+      "searchByIdWarning": "Assurez-vous de sélectionner le bon type de média (Film ou TV) pour l'ID TMDB",
+      "yearLabel": "Année (optionnel)",
+      "numericTitleWarning": "Titre numérique détecté - L'année est requise pour une recherche précise",
       "tmdbSearchButton": "Rechercher",
       "tmdbSearching": "Recherche en cours...",
       "howItWorks": "Comment fonctionne le mode manuel :",

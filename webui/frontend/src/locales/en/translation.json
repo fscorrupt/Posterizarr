@@ -16,7 +16,8 @@
       "tmdbQueryRequired": "Please enter a search title or TMDB ID!",
       "seasonNumberRequired": "Please enter a season number!",
       "episodeInfoRequired": "Please enter season and episode numbers!",
-      "libraryNameRequired": "Please enter a library name!"
+      "libraryNameRequired": "Please enter a library name!",
+      "yearRequiredForNumericTitle": "Year is required for numeric titles (e.g., '2012', '1917', '365 Days')"
     },
     "reset": {
       "stopFirst": "The script must be stopped before resetting posters!",
@@ -136,6 +137,12 @@
       "tmdbHintTitleCard": "Search for TV shows on TMDB to find episode stills",
       "tmdbHintStandard": "Search for movies or TV shows on TMDB to find posters",
       "tmdbSearchPlaceholder": "Enter title or TMDB ID...",
+      "tmdbIdPlaceholder": "Enter TMDB ID (e.g., 530915 for '1917')...",
+      "searchByIdLabel": "Search by TMDB ID",
+      "searchByIdHint": "Year not required when searching by ID",
+      "searchByIdWarning": "Make sure to select the correct media type (Movie or TV) for the TMDB ID",
+      "yearLabel": "Year (optional)",
+      "numericTitleWarning": "Numeric title detected - Year is required for accurate search",
       "tmdbSearchButton": "Search",
       "tmdbSearching": "Searching...",
       "howItWorks": "How Manual Mode works:",
