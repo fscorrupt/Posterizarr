@@ -138,7 +138,7 @@ function HowItWorks() {
       {/* Header */}
       <div className="text-center mb-12">
         <div className="flex justify-center mb-4">
-          <img src="/logo.png" alt="Posterizarr" className="h-15 w-auto" />
+          <img src="/logo.png" alt="Posterizarr" className="h-12 w-auto" />
         </div>
         <h1 className="text-4xl font-bold text-theme-text mb-4">
           {t("howItWorks.header.title")}

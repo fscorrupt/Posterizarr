@@ -56,10 +56,10 @@ function AutoTriggers() {
     <div className="px-4 py-6 space-y-8">
       {/* Header */}
       <div className="text-center mb-12">
-        <div className="flex justify-center mb-4">
-          <div className="w-20 h-20 rounded-2xl bg-theme-primary/10 border-2 border-theme-primary/30 flex items-center justify-center">
-            <Zap className="w-10 h-10 text-theme-primary" />
-          </div>
+        <div className="flex justify-center gap-4 mb-4">
+          <img src="/sonarr.png" alt="Sonarr" className="h-16 w-auto" />
+          <img src="/radarr.png" alt="Radarr" className="h-16 w-auto" />
+          <img src="/tautulli.png" alt="Tautulli" className="h-16 w-auto" />
         </div>
         <h1 className="text-4xl font-bold text-theme-text mb-4">
           {t("autoTriggers.header.title")}
@@ -73,8 +73,12 @@ function AutoTriggers() {
       <div className="bg-theme-card border border-theme rounded-lg p-2">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
           {tabs.map((tab) => {
-            const Icon = tab.icon;
             const isActive = activeTab === tab.id;
+            const logoMap = {
+              tautulli: "/tautulli2.png",
+              sonarr: "/sonarr.png",
+              radarr: "/radarr.png",
+            };
 
             return (
               <button
@@ -87,7 +91,11 @@ function AutoTriggers() {
                 }`}
               >
                 <div className="flex items-center justify-center gap-3 mb-2">
-                  <Icon className="w-5 h-5" />
+                  <img
+                    src={logoMap[tab.id]}
+                    alt={tab.label}
+                    className="w-6 h-6 object-contain"
+                  />
                   <span className="font-semibold text-lg">{tab.label}</span>
                 </div>
                 <p className="text-xs opacity-80">{tab.description}</p>
@@ -148,11 +156,19 @@ function TautulliContent() {
             }`}
           >
             <div className="flex items-center gap-3 mb-2">
-              <Server
-                className={`w-6 h-6 ${
+              <div
+                className={`w-8 h-8 ${
                   mode === "docker" ? "text-theme-primary" : "text-theme-muted"
                 }`}
-              />
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M13.983 11.078h2.119a.186.186 0 00.186-.185V9.006a.186.186 0 00-.186-.186h-2.119a.185.185 0 00-.185.185v1.888c0 .102.083.185.185.185m-2.954-5.43h2.118a.186.186 0 00.186-.186V3.574a.186.186 0 00-.186-.185h-2.118a.185.185 0 00-.185.185v1.888c0 .102.082.185.185.185m0 2.716h2.118a.187.187 0 00.186-.186V6.29a.186.186 0 00-.186-.185h-2.118a.185.185 0 00-.185.185v1.887c0 .102.082.185.185.186m-2.93 0h2.12a.186.186 0 00.184-.186V6.29a.185.185 0 00-.185-.185H8.1a.185.185 0 00-.185.185v1.887c0 .102.083.185.185.186m-2.964 0h2.119a.186.186 0 00.185-.186V6.29a.185.185 0 00-.185-.185H5.136a.186.186 0 00-.186.185v1.887c0 .102.084.185.186.186m5.893 2.715h2.118a.186.186 0 00.186-.185V9.006a.186.186 0 00-.186-.186h-2.118a.185.185 0 00-.185.185v1.888c0 .102.082.185.185.185m-2.93 0h2.12a.185.185 0 00.184-.185V9.006a.185.185 0 00-.184-.186h-2.12a.185.185 0 00-.184.185v1.888c0 .102.083.185.185.185m-2.964 0h2.119a.185.185 0 00.185-.185V9.006a.185.185 0 00-.184-.186h-2.12a.186.186 0 00-.186.186v1.887c0 .102.084.185.186.185m-2.92 0h2.12a.185.185 0 00.184-.185V9.006a.185.185 0 00-.184-.186h-2.12a.185.185 0 00-.184.185v1.888c0 .102.082.185.185.185M23.763 9.89c-.065-.051-.672-.51-1.954-.51-.338 0-.676.03-1.01.09-.248-1.827-1.66-2.66-1.775-2.742l-.353-.19-.23.352c-.331.498-.556 1.078-.62 1.68-.047.434-.014.87.1 1.289-.326.177-.77.34-1.486.388H.91a.9.9 0 00-.91.907c.002.864.245 1.71.705 2.455.47.774 1.155 1.41 1.98 1.844 1.02.53 2.15.794 3.29.77 5.74 0 9.956-2.64 11.963-7.476.776.01 2.463 0 3.327-1.633l.066-.186-.138-.103z" />
+                </svg>
+              </div>
               <span
                 className={`font-semibold text-lg ${
                   mode === "docker" ? "text-theme-text" : "text-theme-muted"
@@ -175,11 +191,19 @@ function TautulliContent() {
             }`}
           >
             <div className="flex items-center gap-3 mb-2">
-              <Terminal
-                className={`w-6 h-6 ${
+              <div
+                className={`w-8 h-8 ${
                   mode === "windows" ? "text-theme-primary" : "text-theme-muted"
                 }`}
-              />
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801" />
+                </svg>
+              </div>
               <span
                 className={`font-semibold text-lg ${
                   mode === "windows" ? "text-theme-text" : "text-theme-muted"
