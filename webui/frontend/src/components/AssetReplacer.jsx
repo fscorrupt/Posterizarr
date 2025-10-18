@@ -1023,10 +1023,28 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
                 </div>
                 {t("assetReplacer.title")}
               </h2>
-              <p className="text-theme-text mt-2 text-lg font-medium">
-                {getDisplayName()}
+              <p className="text-xl font-bold text-theme-text mt-3">
+                {asset.path.split(/[\\/]/).slice(-2, -1)[0] || "Unknown"}
               </p>
-              <p className="text-theme-muted text-sm mt-1">{asset.name}</p>
+              <p className="text-sm text-theme-muted truncate mt-1">
+                {asset.path}
+              </p>
+              <p className="text-sm text-theme-muted mt-1">
+                {metadata.asset_type === "poster" &&
+                  metadata.media_type === "movie" &&
+                  "Movie Poster"}
+                {metadata.asset_type === "poster" &&
+                  metadata.media_type === "tv" &&
+                  "Show Poster"}
+                {metadata.asset_type === "background" &&
+                  metadata.media_type === "movie" &&
+                  "Movie Background"}
+                {metadata.asset_type === "background" &&
+                  metadata.media_type === "tv" &&
+                  "Show Background"}
+                {metadata.asset_type === "season" && "Season Poster"}
+                {metadata.asset_type === "titlecard" && "Episode Title Card"}
+              </p>
             </div>
             <button
               onClick={onClose}
