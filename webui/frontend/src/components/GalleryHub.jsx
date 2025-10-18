@@ -51,43 +51,43 @@ function GalleryHub() {
 
   return (
     <div className="space-y-4">
-      {/* View Mode Toggle */}
-      <div className="bg-theme-card border border-theme-border rounded-lg p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-semibold text-theme-text mb-1">
+      {/* View Mode Toggle - Responsive */}
+      <div className="bg-theme-card border border-theme-border rounded-lg p-3 sm:p-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
+          <div className="flex-1 min-w-0">
+            <h3 className="text-base sm:text-lg font-semibold text-theme-text mb-1">
               {t("galleryHub.viewMode")}
             </h3>
-            <p className="text-sm text-theme-muted">
+            <p className="text-xs sm:text-sm text-theme-muted line-clamp-2 sm:line-clamp-none">
               {viewMode === "grid"
                 ? t("galleryHub.gridDescription")
                 : t("galleryHub.folderDescription")}
             </p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-shrink-0">
             <button
               onClick={() => setViewMode("grid")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg transition-all ${
                 viewMode === "grid"
                   ? "bg-theme-primary text-white"
                   : "bg-theme-hover hover:bg-theme-primary/70 border border-theme-border text-theme-text"
               }`}
             >
-              <LayoutGrid className="w-4 h-4" />
-              <span className="text-sm font-medium">
+              <LayoutGrid className="w-4 h-4 flex-shrink-0" />
+              <span className="text-xs sm:text-sm font-medium whitespace-nowrap">
                 {t("galleryHub.gridView")}
               </span>
             </button>
             <button
               onClick={() => setViewMode("folder")}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${
+              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg transition-all ${
                 viewMode === "folder"
                   ? "bg-theme-primary text-white"
                   : "bg-theme-hover hover:bg-theme-primary/70 border border-theme-border text-theme-text"
               }`}
             >
-              <FolderTree className="w-4 h-4" />
-              <span className="text-sm font-medium">
+              <FolderTree className="w-4 h-4 flex-shrink-0" />
+              <span className="text-xs sm:text-sm font-medium whitespace-nowrap">
                 {t("galleryHub.folderView")}
               </span>
             </button>

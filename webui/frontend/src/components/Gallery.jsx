@@ -57,18 +57,18 @@ function Gallery() {
   });
 
   // Grid column classes based on size (2-10 columns)
-  // Mobile always shows 2 columns, desktop shows the selected amount
+  // Mobile: 2 columns, Tablet (md): 3-4 columns depending on size, Desktop (lg): full size selection
   const getGridClass = (size) => {
     const classes = {
-      2: "grid-cols-2 lg:grid-cols-2",
-      3: "grid-cols-2 lg:grid-cols-3",
-      4: "grid-cols-2 lg:grid-cols-4",
-      5: "grid-cols-2 lg:grid-cols-5",
-      6: "grid-cols-2 lg:grid-cols-6",
-      7: "grid-cols-2 lg:grid-cols-7",
-      8: "grid-cols-2 lg:grid-cols-8",
-      9: "grid-cols-2 lg:grid-cols-9",
-      10: "grid-cols-2 lg:grid-cols-10",
+      2: "grid-cols-2 md:grid-cols-2 lg:grid-cols-2",
+      3: "grid-cols-2 md:grid-cols-3 lg:grid-cols-3",
+      4: "grid-cols-2 md:grid-cols-3 lg:grid-cols-4",
+      5: "grid-cols-2 md:grid-cols-4 lg:grid-cols-5",
+      6: "grid-cols-2 md:grid-cols-4 lg:grid-cols-6",
+      7: "grid-cols-2 md:grid-cols-5 lg:grid-cols-7",
+      8: "grid-cols-2 md:grid-cols-5 lg:grid-cols-8",
+      9: "grid-cols-2 md:grid-cols-6 lg:grid-cols-9",
+      10: "grid-cols-2 md:grid-cols-6 lg:grid-cols-10",
     };
     return classes[size] || classes[5];
   };
@@ -317,13 +317,15 @@ function Gallery() {
 
       {/* Folder Tabs */}
       {folders.length > 0 && (
-        <div className="bg-theme-card rounded-lg border border-theme-border p-4">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold text-theme-text flex items-center gap-2">
+        <div className="bg-theme-card rounded-lg border border-theme-border p-3 sm:p-4">
+          {/* Header with Controls - Stack on mobile */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0 mb-4">
+            <h2 className="text-lg sm:text-xl font-semibold text-theme-text flex items-center gap-2">
               <Folder className="w-5 h-5 text-theme-primary" />
               {t("gallery.folders")}
             </h2>
-            <div className="flex items-center gap-3">
+            {/* Controls - wrap on small screens */}
+            <div className="flex flex-wrap items-center gap-2">
               {/* Compact Image Size Slider */}
               <CompactImageSizeSlider
                 value={imageSize}
@@ -340,7 +342,7 @@ function Gallery() {
                       setSelectMode(true);
                     }
                   }}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all shadow-lg ${
+                  className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-all shadow-lg ${
                     selectMode
                       ? "bg-orange-600 hover:bg-orange-700"
                       : "bg-theme-primary hover:bg-theme-primary/90"
@@ -348,13 +350,21 @@ function Gallery() {
                 >
                   {selectMode ? (
                     <>
-                      <Square className="w-5 h-5" />
-                      {t("gallery.cancelSelect")}
+                      <Square className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                      <span className="hidden sm:inline">
+                        {t("gallery.cancelSelect")}
+                      </span>
+                      <span className="sm:hidden">
+                        {t("gallery.cancel") || "Cancel"}
+                      </span>
                     </>
                   ) : (
                     <>
-                      <CheckSquare className="w-5 h-5" />
-                      {t("gallery.select")}
+                      <CheckSquare className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                      <span className="hidden sm:inline">
+                        {t("gallery.select")}
+                      </span>
+                      <span className="sm:hidden">{t("gallery.select")}</span>
                     </>
                   )}
                 </button>
@@ -368,17 +378,18 @@ function Gallery() {
                   }
                 }}
                 disabled={loading || imagesLoading}
-                className="flex items-center gap-2 px-4 py-2 bg-theme-primary hover:bg-theme-primary/90 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-all shadow-lg"
+                className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 bg-theme-primary hover:bg-theme-primary/90 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg text-sm font-medium transition-all shadow-lg"
               >
                 <RefreshCw
-                  className={`w-5 h-5 ${
+                  className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 ${
                     loading || imagesLoading ? "animate-spin" : ""
                   }`}
                 />
-                {t("gallery.refresh")}
+                <span className="hidden sm:inline">{t("gallery.refresh")}</span>
               </button>
             </div>
           </div>
+          {/* Folder buttons */}
           <div className="flex flex-wrap gap-2 mb-4">
             {folders
               .filter((folder) => folder.poster_count > 0)
@@ -386,14 +397,16 @@ function Gallery() {
                 <button
                   key={folder.path}
                   onClick={() => setActiveFolder(folder)}
-                  className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-all whitespace-nowrap shadow-sm ${
+                  className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap shadow-sm ${
                     activeFolder?.path === folder.path
                       ? "bg-theme-primary text-white scale-105"
                       : "bg-theme-hover text-theme-text hover:bg-theme-primary/70 hover:scale-105"
                   }`}
                 >
                   <Folder className="w-4 h-4 flex-shrink-0" />
-                  {folder.name}
+                  <span className="truncate max-w-[120px] sm:max-w-none">
+                    {folder.name}
+                  </span>
                   <span className="ml-1 px-2 py-0.5 bg-black/20 rounded-full text-xs font-semibold">
                     {folder.poster_count}
                   </span>
@@ -487,28 +500,32 @@ function Gallery() {
         </div>
       ) : (
         <>
-          {/* Selection controls */}
+          {/* Selection controls - Responsive */}
           {selectMode && (
-            <div className="bg-theme-card rounded-xl p-4 border border-theme-primary">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
+            <div className="bg-theme-card rounded-xl p-3 sm:p-4 border border-theme-primary">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-4">
                   <button
                     onClick={toggleSelectAll}
-                    className="flex items-center gap-2 px-4 py-2 bg-theme-primary hover:bg-theme-primary/90 rounded-lg font-medium transition-all"
+                    className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 bg-theme-primary hover:bg-theme-primary/90 rounded-lg text-sm font-medium transition-all"
                   >
                     {selectedImages.length === displayedImages.length ? (
                       <>
-                        <Square className="w-5 h-5" />
-                        {t("gallery.deselectAll")}
+                        <Square className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                        <span className="text-sm sm:text-base">
+                          {t("gallery.deselectAll")}
+                        </span>
                       </>
                     ) : (
                       <>
-                        <CheckSquare className="w-5 h-5" />
-                        {t("gallery.selectAll")}
+                        <CheckSquare className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                        <span className="text-sm sm:text-base">
+                          {t("gallery.selectAll")}
+                        </span>
                       </>
                     )}
                   </button>
-                  <span className="text-theme-text font-medium">
+                  <span className="text-sm sm:text-base text-theme-text font-medium">
                     {t("gallery.selected", { count: selectedImages.length })}
                   </span>
                 </div>
@@ -524,16 +541,18 @@ function Gallery() {
                   disabled={
                     selectedImages.length === 0 || deletingImage === "bulk"
                   }
-                  className="flex items-center gap-2 px-6 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg font-medium transition-all"
+                  className="flex items-center gap-1.5 sm:gap-2 px-4 sm:px-6 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg text-sm font-medium transition-all"
                 >
                   <Trash2
-                    className={`w-5 h-5 ${
+                    className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 ${
                       deletingImage === "bulk" ? "animate-spin" : ""
                     }`}
                   />
-                  {t("gallery.deleteSelected", {
-                    count: selectedImages.length,
-                  })}
+                  <span className="text-sm sm:text-base">
+                    {t("gallery.deleteSelected", {
+                      count: selectedImages.length,
+                    })}
+                  </span>
                 </button>
               </div>
             </div>

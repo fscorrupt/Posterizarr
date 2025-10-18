@@ -126,8 +126,9 @@ function AppContent() {
             isCollapsed ? "md:ml-20" : "md:ml-64"
           }`}
         >
-          <div className="md:pt-0 pt-14">
-            <div className="py-6 px-4 sm:px-6 lg:px-8">
+          {/* Extra padding on mobile for sidebar menu */}
+          <div className="md:pt-0">
+            <div className="py-4 sm:py-6 px-3 sm:px-4 lg:px-8">
               <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/run-modes" element={<RunModes />} />
