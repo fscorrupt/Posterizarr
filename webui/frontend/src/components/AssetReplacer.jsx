@@ -54,6 +54,11 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
   const [uploading, setUploading] = useState(false);
   const [previews, setPreviews] = useState({ tmdb: [], tvdb: [], fanart: [] });
   const [selectedPreview, setSelectedPreview] = useState(null);
+  const [languageOrder, setLanguageOrder] = useState({
+    poster: [],
+    background: [],
+    season: [],
+  });
 
   const [activeTab, setActiveTab] = useState("upload");
   const [processWithOverlays, setProcessWithOverlays] = useState(false);
@@ -277,6 +282,73 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
     setSelectedPreview(null);
   }, [metadata]);
 
+  // Fetch language order preferences from config
+  useEffect(() => {
+    const fetchLanguageOrder = async () => {
+      try {
+        const response = await fetch(`${API_URL}/config`);
+        if (response.ok) {
+          const data = await response.json();
+
+          console.log("🔍 Raw config response:", data);
+
+          // Handle both flat and grouped config structures
+          let configSource;
+          if (data.using_flat_structure) {
+            // Flat structure: config keys are directly in data.config
+            configSource = data.config || {};
+            console.log("📦 Using flat config structure");
+          } else {
+            // Grouped structure: config keys are under ApiPart
+            configSource = data.config?.ApiPart || data.ApiPart || {};
+            console.log("📦 Using grouped config structure");
+          }
+
+          // Process PreferredBackgroundLanguageOrder - handle "PleaseFillMe"
+          let backgroundOrder =
+            configSource.PreferredBackgroundLanguageOrder ||
+            configSource.preferredbackgroundlanguageorder ||
+            [];
+
+          let posterOrder =
+            configSource.PreferredLanguageOrder ||
+            configSource.preferredlanguageorder ||
+            [];
+
+          let seasonOrder =
+            configSource.PreferredSeasonLanguageOrder ||
+            configSource.preferredseasonlanguageorder ||
+            [];
+
+          if (
+            backgroundOrder.length === 1 &&
+            backgroundOrder[0] === "PleaseFillMe"
+          ) {
+            // Use poster language order as fallback
+            backgroundOrder = posterOrder;
+          }
+
+          setLanguageOrder({
+            poster: posterOrder,
+            background: backgroundOrder,
+            season: seasonOrder,
+          });
+
+          console.log("📋 Loaded language preferences:", {
+            poster: posterOrder,
+            background: backgroundOrder,
+            season: seasonOrder,
+            rawBackground: configSource.PreferredBackgroundLanguageOrder,
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching language order config:", error);
+      }
+    };
+
+    fetchLanguageOrder();
+  }, []);
+
   // Initialize season number from metadata
   useEffect(() => {
     if (metadata.season_number) {
@@ -378,6 +450,81 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
     return asset.name || "Unknown Asset";
   };
 
+  // Sort previews by preferred language order
+  const sortByLanguagePreference = (previews, assetType) => {
+    // Determine which language order to use
+    let preferredOrder = [];
+    if (assetType === "background" || assetType === "titlecard") {
+      preferredOrder = languageOrder.background;
+    } else if (assetType === "season") {
+      preferredOrder = languageOrder.season;
+    } else {
+      // poster or default
+      preferredOrder = languageOrder.poster;
+    }
+
+    // If no language order configured, return as-is
+    if (!preferredOrder || preferredOrder.length === 0) {
+      console.log(
+        `⚠️ No language order configured for ${assetType}, returning unsorted`
+      );
+      return previews;
+    }
+
+    // Normalize preferred order to lowercase for case-insensitive comparison
+    const normalizedOrder = preferredOrder.map((lang) => lang.toLowerCase());
+
+    console.log(
+      `🔤 Sorting ${assetType} (${previews.length} items) by language order:`,
+      preferredOrder
+    );
+
+    const sorted = [...previews].sort((a, b) => {
+      // Normalize languages to lowercase, handle null/undefined
+      const langA = (a.language || "null").toLowerCase();
+      const langB = (b.language || "null").toLowerCase();
+
+      // Get priority indices (lower = higher priority)
+      const priorityA = normalizedOrder.indexOf(langA);
+      const priorityB = normalizedOrder.indexOf(langB);
+
+      console.log(
+        `  Comparing: ${a.language} (${langA}, priority: ${priorityA}) vs ${b.language} (${langB}, priority: ${priorityB})`
+      );
+
+      // If both languages are in the preferred order, sort by their position
+      if (priorityA !== -1 && priorityB !== -1) {
+        return priorityA - priorityB;
+      }
+
+      // If only A is in preferred order, it comes first
+      if (priorityA !== -1) return -1;
+
+      // If only B is in preferred order, it comes first
+      if (priorityB !== -1) return 1;
+
+      // For languages not in the preferred order, maintain original order
+      // But prioritize by vote_average if available
+      if (a.vote_average !== undefined && b.vote_average !== undefined) {
+        return b.vote_average - a.vote_average;
+      }
+
+      // Otherwise by likes (for Fanart)
+      if (a.likes !== undefined && b.likes !== undefined) {
+        return b.likes - a.likes;
+      }
+
+      return 0;
+    });
+
+    console.log(
+      `✅ Sorted result - first 5 languages:`,
+      sorted.slice(0, 5).map((p) => p.language)
+    );
+
+    return sorted;
+  };
+
   const fetchPreviews = async () => {
     setLoading(true);
     showError(null);
@@ -416,12 +563,35 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
       const data = await response.json();
 
       if (data.success) {
-        setPreviews(data.results);
+        console.log("📥 Received results from API:");
+        console.log("  TMDB:", data.results.tmdb?.length || 0, "items");
+        console.log("  TVDB:", data.results.tvdb?.length || 0, "items");
+        console.log("  Fanart:", data.results.fanart?.length || 0, "items");
+        console.log("  Asset type:", metadata.asset_type);
+        console.log("  Current language order:", languageOrder);
+
+        // Sort each source's results by language preference
+        const sortedResults = {
+          tmdb: sortByLanguagePreference(
+            data.results.tmdb || [],
+            metadata.asset_type
+          ),
+          tvdb: sortByLanguagePreference(
+            data.results.tvdb || [],
+            metadata.asset_type
+          ),
+          fanart: sortByLanguagePreference(
+            data.results.fanart || [],
+            metadata.asset_type
+          ),
+        };
+
+        setPreviews(sortedResults);
         showSuccess(
           t("assetReplacer.foundReplacements", {
             count: data.total_count,
-            sources: Object.keys(data.results).filter(
-              (k) => data.results[k].length > 0
+            sources: Object.keys(sortedResults).filter(
+              (k) => sortedResults[k].length > 0
             ).length,
           })
         );
