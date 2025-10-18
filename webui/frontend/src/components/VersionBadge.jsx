@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { AlertCircle, Info, CheckCircle } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 const API_URL = "/api";
 const REPO_URL = "https://github.com/fscorrupt/Posterizarr/releases/latest";
@@ -7,6 +8,7 @@ const REPO_URL = "https://github.com/fscorrupt/Posterizarr/releases/latest";
 let cachedVersionData = { version: null, isOutOfDate: false };
 
 function VersionBadge() {
+  const { t } = useTranslation();
   const [isOutOfDate, setIsOutOfDate] = useState(cachedVersionData.isOutOfDate);
   const [version, setVersion] = useState(cachedVersionData.version);
   const [showTooltip, setShowTooltip] = useState(false);
@@ -86,7 +88,7 @@ function VersionBadge() {
             {!isOutOfDate && (
               <span className="px-2 py-0.5 bg-green-500/20 text-green-400 rounded-full text-xs font-medium border border-green-500/30 flex items-center gap-1">
                 <CheckCircle className="w-3 h-3" />
-                Up to Date
+                {t("versionBadge.upToDate")}
               </span>
             )}
           </div>
@@ -97,21 +99,21 @@ function VersionBadge() {
       {showTooltip && (
         <div className="absolute bottom-full left-0 mb-2 w-48 bg-theme-card border border-theme rounded-lg shadow-lg p-3 z-50">
           <p className="text-xs text-theme-text font-medium mb-1">
-            Version: {version}
+            {t("versionBadge.version")}: {version}
           </p>
           {isOutOfDate && (
             <>
               <p className="text-xs text-orange-300 mb-2">
-                ⚠️ Update available!
+                {t("versionBadge.updateAvailable")}
               </p>
               <p className="text-xs text-theme-muted">
-                Click here to get to the Github Releases.
+                {t("versionBadge.clickForReleases")}
               </p>
             </>
           )}
           {!isOutOfDate && (
             <p className="text-xs text-green-400">
-              ✓ Current version installed
+              {t("versionBadge.currentVersion")}
             </p>
           )}
         </div>

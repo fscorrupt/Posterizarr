@@ -12,7 +12,9 @@ import {
   Activity,
   Square,
 } from "lucide-react";
-import toast, { Toaster } from "react-hot-toast";
+import { useTranslation } from "react-i18next";
+import Notification from "./Notification";
+import { useToast } from "../context/ToastContext";
 
 const API_URL = "/api";
 const isDev = import.meta.env.DEV;
@@ -27,6 +29,8 @@ const getWebSocketURL = (logFile) => {
 };
 
 function LogViewer() {
+  const { t } = useTranslation();
+  const { showSuccess, showError, showInfo } = useToast();
   const location = useLocation();
   const [logs, setLogs] = useState([]);
   const [availableLogs, setAvailableLogs] = useState([]);
@@ -40,6 +44,7 @@ function LogViewer() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [loading, setLoading] = useState(false); // ✨ NEW: Loading state for stop button
+
   const [status, setStatus] = useState({
     running: false,
     current_mode: null,
@@ -94,22 +99,13 @@ function LogViewer() {
       const data = await response.json();
 
       if (data.success) {
-        toast.success("Script stopped successfully", {
-          duration: 3000,
-          position: "top-right",
-        });
+        showSuccess(t("logViewer.scriptStopped"));
         fetchStatus(); // Refresh status
       } else {
-        toast.error(`Error: ${data.message}`, {
-          duration: 4000,
-          position: "top-right",
-        });
+        showError(t("logViewer.error", { message: data.message }));
       }
     } catch (error) {
-      toast.error(`Error: ${error.message}`, {
-        duration: 5000,
-        position: "top-right",
-      });
+      showError(t("logViewer.error", { message: error.message }));
     } finally {
       setLoading(false);
     }
@@ -157,18 +153,12 @@ function LogViewer() {
       setAvailableLogs(data.logs);
 
       if (showToast) {
-        toast.success("Log files refreshed", {
-          duration: 2000,
-          position: "top-right",
-        });
+        showSuccess(t("logViewer.logsRefreshed"));
       }
     } catch (error) {
       console.error("Error fetching log files:", error);
       if (showToast) {
-        toast.error("Failed to refresh log files", {
-          duration: 3000,
-          position: "top-right",
-        });
+        showError(t("logViewer.refreshFailed"));
       }
     } finally {
       setTimeout(() => setIsRefreshing(false), 500);
@@ -183,10 +173,7 @@ function LogViewer() {
       setLogs(strippedContent);
     } catch (error) {
       console.error("Error fetching log:", error);
-      toast.error(`Failed to load ${logName}`, {
-        duration: 3000,
-        position: "top-right",
-      });
+      showError(t("logViewer.loadFailed", { name: logName }));
     }
   };
 
@@ -258,10 +245,7 @@ function LogViewer() {
               console.log(`Accepting backend log switch to: ${data.log_file}`);
               setSelectedLog(data.log_file);
               currentLogFileRef.current = data.log_file;
-              toast.info(`Switched to ${data.log_file}`, {
-                duration: 2000,
-                position: "top-right",
-              });
+              showInfo(t("logViewer.switchedTo", { file: data.log_file }));
             } else {
               console.log(
                 `Ignoring backend log switch - user manually selected ${selectedLog}`
@@ -269,10 +253,7 @@ function LogViewer() {
             }
           } else if (data.type === "error") {
             console.error("WebSocket error message:", data.message);
-            toast.error(data.message, {
-              duration: 3000,
-              position: "top-right",
-            });
+            showError(data.message);
           }
         } catch (error) {
           console.error("Error parsing WebSocket message:", error);
@@ -291,10 +272,7 @@ function LogViewer() {
         if (!event.wasClean) {
           setIsReconnecting(true);
 
-          toast.error("Live feed disconnected. Reconnecting...", {
-            duration: 2000,
-            position: "top-right",
-          });
+          showError(t("logViewer.disconnected"));
 
           reconnectTimeoutRef.current = setTimeout(() => {
             console.log(`🔄 Reconnecting to ${currentLogFileRef.current}...`);
@@ -339,10 +317,7 @@ function LogViewer() {
       );
       setSelectedLog(location.state.logFile);
 
-      toast.success(`Switched to ${location.state.logFile}`, {
-        duration: 2000,
-        position: "top-right",
-      });
+      showSuccess(t("logViewer.switchedTo", { file: location.state.logFile }));
     }
   }, [location.state?.logFile]);
 
@@ -380,10 +355,7 @@ function LogViewer() {
 
   const clearLogs = () => {
     setLogs([]);
-    toast.success("Logs cleared", {
-      duration: 2000,
-      position: "top-right",
-    });
+    showSuccess(t("logViewer.logsCleared"));
   };
 
   const downloadLogs = async () => {
@@ -405,16 +377,10 @@ function LogViewer() {
       a.click();
       URL.revokeObjectURL(url);
 
-      toast.success("Log file downloaded", {
-        duration: 2000,
-        position: "top-right",
-      });
+      showSuccess(t("logViewer.downloaded"));
     } catch (error) {
       console.error("Error downloading complete log file:", error);
-      toast.error("Failed to download log file", {
-        duration: 3000,
-        position: "top-right",
-      });
+      showError(t("logViewer.downloadFailed"));
     }
   };
 
@@ -423,21 +389,21 @@ function LogViewer() {
       return {
         color: "bg-green-400",
         icon: Wifi,
-        text: "Live",
+        text: t("logViewer.status.live"),
         ringColor: "ring-green-400/30",
       };
     } else if (isReconnecting) {
       return {
         color: "bg-yellow-400",
         icon: Wifi,
-        text: "Reconnecting...",
+        text: t("logViewer.status.reconnecting"),
         ringColor: "ring-yellow-400/30",
       };
     } else {
       return {
         color: "bg-red-400",
         icon: WifiOff,
-        text: "Disconnected",
+        text: t("logViewer.status.disconnected"),
         ringColor: "ring-red-400/30",
       };
     }
@@ -448,19 +414,8 @@ function LogViewer() {
 
   return (
     <div className="space-y-6">
-      <Toaster />
-
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-theme-text flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-theme-primary/10">
-              <FileText className="w-8 h-8 text-theme-primary" />
-            </div>
-            View and monitor your Posterizarr logs in real-time
-          </h1>
-        </div>
-
+      <div className="flex items-center justify-end">
         {/* Connection Status Badge */}
         <div
           className={`flex items-center gap-3 px-4 py-2 rounded-lg bg-theme-card border ${
@@ -502,14 +457,16 @@ function LogViewer() {
                 <Activity className="w-5 h-5 text-orange-400" />
               </div>
               <div>
-                <p className="font-medium text-orange-200">Script is running</p>
+                <p className="font-medium text-orange-200">
+                  {t("logViewer.scriptRunning")}
+                </p>
                 <p className="text-sm text-orange-300/80">
                   {status.current_mode && (
                     <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-500/20 text-orange-200 mr-2">
-                      Mode: {status.current_mode}
+                      {t("logViewer.mode")}: {status.current_mode}
                     </span>
                   )}
-                  Stop the script before running another mode
+                  {t("logViewer.stopBeforeRunning")}
                 </p>
               </div>
             </div>
@@ -523,7 +480,7 @@ function LogViewer() {
               ) : (
                 <Square className="w-4 h-4" />
               )}
-              Stop Script
+              {t("logViewer.stopScript")}
             </button>
           </div>
         </div>
@@ -535,7 +492,7 @@ function LogViewer() {
           {/* Log Selector */}
           <div className="flex-1 w-full lg:max-w-md">
             <label className="block text-sm font-medium text-theme-text mb-2">
-              Select Log File
+              {t("logViewer.selectLogFile")}
             </label>
             <div className="relative" ref={dropdownRef}>
               <button
@@ -603,7 +560,7 @@ function LogViewer() {
                 className="w-4 h-4 rounded bg-theme-card border border-theme accent-theme-primary"
               />
               <span className="text-sm text-theme-text font-medium">
-                Auto-scroll
+                {t("logViewer.autoScroll")}
               </span>
             </label>
 
@@ -616,7 +573,7 @@ function LogViewer() {
               <RefreshCw
                 className={`w-4 h-4 ${isRefreshing ? "animate-spin" : ""}`}
               />
-              Refresh
+              {t("logViewer.refresh")}
             </button>
 
             {/* Download Button */}
@@ -625,7 +582,7 @@ function LogViewer() {
               className="flex items-center gap-2 px-4 py-2 bg-theme-primary hover:bg-theme-primary/90 rounded-lg text-sm font-medium transition-all hover:scale-[1.02] shadow-sm"
             >
               <Download className="w-4 h-4" />
-              Download
+              {t("logViewer.download")}
             </button>
 
             {/* Clear Button */}
@@ -634,7 +591,7 @@ function LogViewer() {
               className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm font-medium transition-all hover:scale-[1.02] shadow-sm"
             >
               <Trash2 className="w-4 h-4" />
-              Clear
+              {t("logViewer.clear")}
             </button>
           </div>
         </div>
@@ -653,22 +610,24 @@ function LogViewer() {
                 {selectedLog}
               </h3>
               <p className="text-xs text-theme-muted">
-                Showing last 1000 entries
+                {t("logViewer.showingLast")}
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2 text-xs text-theme-muted">
-            <span className="font-mono">{logs.length} entries</span>
+            <span className="font-mono">
+              {t("logViewer.entries", { count: logs.length })}
+            </span>
             {connected && (
               <div className="flex items-center gap-1.5 px-2 py-1 bg-green-500/10 border border-green-500/30 rounded text-green-400">
                 <CheckCircle className="w-3 h-3" />
-                <span>Live</span>
+                <span>{t("logViewer.status.live")}</span>
               </div>
             )}
             {isReconnecting && (
               <div className="flex items-center gap-1.5 px-2 py-1 bg-yellow-500/10 border border-yellow-500/30 rounded text-yellow-400 animate-pulse">
                 <RefreshCw className="w-3 h-3 animate-spin" />
-                <span>Reconnecting</span>
+                <span>{t("logViewer.status.reconnecting")}</span>
               </div>
             )}
           </div>
@@ -684,10 +643,10 @@ function LogViewer() {
             <div className="flex flex-col items-center justify-center h-full text-center">
               <FileText className="w-16 h-16 text-gray-700 mb-4" />
               <p className="text-gray-500 font-medium mb-2">
-                No logs to display
+                {t("logViewer.noLogs")}
               </p>
               <p className="text-gray-600 text-sm">
-                Start a script or select a different log file
+                {t("logViewer.startScript")}
               </p>
             </div>
           ) : (
@@ -736,20 +695,26 @@ function LogViewer() {
         {/* Footer */}
         <div className="bg-theme-bg px-6 py-3 border-t border-theme flex items-center justify-between text-xs text-theme-muted">
           <div className="flex items-center gap-4">
-            <span className="font-mono">{logs.length} log entries</span>
+            <span className="font-mono">
+              {t("logViewer.logEntries", { count: logs.length })}
+            </span>
             <span>•</span>
-            <span>Auto-scroll: {autoScroll ? "On" : "Off"}</span>
+            <span>
+              {t("logViewer.autoScrollStatus", {
+                status: autoScroll ? t("logViewer.on") : t("logViewer.off"),
+              })}
+            </span>
           </div>
           {connected && (
             <div className="flex items-center gap-2 text-green-400">
               <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
-              <span>Receiving live updates</span>
+              <span>{t("logViewer.receivingUpdates")}</span>
             </div>
           )}
           {isReconnecting && (
             <div className="flex items-center gap-2 text-yellow-400">
               <RefreshCw className="w-3 h-3 animate-spin" />
-              <span>Reconnecting...</span>
+              <span>{t("logViewer.status.reconnecting")}</span>
             </div>
           )}
         </div>

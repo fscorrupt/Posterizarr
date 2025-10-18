@@ -1,4 +1,5 @@
 import React from "react";
+import { useTranslation } from "react-i18next";
 
 /**
  * CompactImageSizeSlider - A minimal slider for controlling image grid size

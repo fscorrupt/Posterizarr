@@ -1,0 +1,7 @@
+# Ignore all font preview images
+*.png
+*.jpg
+*.jpeg
+
+# Keep this .gitignore file
+!.gitignore
