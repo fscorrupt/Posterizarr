@@ -1,8 +1,9 @@
 """
-Utility module for parsing runtime statistics from log files
+Utility module for parsing runtime statistics from log files and JSON files
 """
 
 import re
+import json
 from pathlib import Path
 from typing import Dict, Optional
 import logging
@@ -169,3 +170,207 @@ def save_runtime_to_db(log_path: Path, mode: str = "normal"):
 
     except Exception as e:
         logger.error(f"Error saving runtime to database: {e}")
+
+
+def parse_runtime_from_json(json_path: Path, mode: str = None) -> Optional[Dict]:
+    """
+    Parse runtime statistics from a JSON file
+
+    Supported JSON files:
+    - normal.json
+    - manual.json
+    - test.json
+    - tautulli.json
+    - arr.json
+    - jellysync.json
+    - embysync.json
+    - backup.json
+    - replace.json
+
+    Args:
+        json_path: Path to the JSON file
+        mode: The run mode (will be inferred from filename if not provided)
+
+    Returns:
+        Dictionary with parsed runtime data or None if parsing failed
+    """
+    try:
+        if not json_path.exists():
+            logger.warning(f"JSON file not found: {json_path}")
+            return None
+
+        # Infer mode from filename if not provided
+        if mode is None:
+            filename = json_path.stem.lower()  # Get filename without extension
+            mode = filename  # Use filename as mode (e.g., "normal", "manual", "test")
+
+        # Read JSON file
+        with open(json_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        # Parse runtime
+        runtime_formatted = data.get("Runtime", "00:00:00")
+        runtime_seconds = _parse_runtime_to_seconds(runtime_formatted)
+
+        # Parse image counts
+        total_images = (
+            data.get("Posters", 0)
+            + data.get("Backgrounds", 0)
+            + data.get("Titlecards", 0)
+            + data.get("Seasons", 0)
+        )
+
+        # Build the result dictionary
+        result = {
+            "mode": mode,
+            "runtime_seconds": runtime_seconds,
+            "runtime_formatted": runtime_formatted,
+            "total_images": total_images,
+            "posters": data.get("Posters", 0),
+            "seasons": data.get("Seasons", 0),
+            "backgrounds": data.get("Backgrounds", 0),
+            "titlecards": data.get("Titlecards", 0),
+            "collections": data.get("Collections", 0),
+            "errors": data.get("Errors", 0),
+            "tba_skipped": data.get("TBA Skipped", 0),
+            "jap_chines_skipped": data.get("Jap/Chines Skipped", 0),
+            "notification_sent": data.get("Notification Sent", False),
+            "uptime_kuma": str(data.get("Uptime Kuma", "")),
+            "images_cleared": data.get("Images cleared", 0),
+            "folders_cleared": data.get("Folders Cleared", 0),
+            "space_saved": data.get("Space saved", ""),
+            "script_version": data.get("Script Version", ""),
+            "im_version": data.get("IM Version", ""),
+            "start_time": data.get("Start time", ""),
+            "end_time": data.get("End Time", ""),
+            "log_file": json_path.name,
+        }
+
+        logger.info(
+            f"Successfully parsed {json_path.name}: {runtime_formatted}, {total_images} images"
+        )
+        return result
+
+    except json.JSONDecodeError as e:
+        logger.error(f"Invalid JSON in {json_path}: {e}")
+        return None
+    except Exception as e:
+        logger.error(f"Error parsing runtime from JSON: {e}")
+        return None
+
+
+def _parse_runtime_to_seconds(runtime_str: str) -> int:
+    """
+    Convert runtime string to seconds
+
+    Supports formats:
+    - "00:27:43" (HH:MM:SS)
+    - "0h 27m 43s"
+    - "27m 43s"
+
+    Args:
+        runtime_str: Runtime string
+
+    Returns:
+        Total seconds
+    """
+    try:
+        # Format: "00:27:43"
+        if ":" in runtime_str:
+            parts = runtime_str.split(":")
+            if len(parts) == 3:
+                hours, minutes, seconds = map(int, parts)
+                return hours * 3600 + minutes * 60 + seconds
+            elif len(parts) == 2:
+                minutes, seconds = map(int, parts)
+                return minutes * 60 + seconds
+
+        # Format: "0h 27m 43s"
+        hours = 0
+        minutes = 0
+        seconds = 0
+
+        hour_match = re.search(r"(\d+)h", runtime_str)
+        if hour_match:
+            hours = int(hour_match.group(1))
+
+        min_match = re.search(r"(\d+)m", runtime_str)
+        if min_match:
+            minutes = int(min_match.group(1))
+
+        sec_match = re.search(r"(\d+)s", runtime_str)
+        if sec_match:
+            seconds = int(sec_match.group(1))
+
+        return hours * 3600 + minutes * 60 + seconds
+
+    except Exception as e:
+        logger.warning(f"Could not parse runtime '{runtime_str}': {e}")
+        return 0
+
+
+def import_json_to_db(logs_dir: Path = None):
+    """
+    Import runtime data from all JSON files in Logs directory to database
+
+    This function looks for:
+    - normal.json
+    - manual.json
+    - test.json
+    - tautulli.json
+    - arr.json
+    - jellysync.json
+    - embysync.json
+    - backup.json
+    - replace.json
+
+    Args:
+        logs_dir: Path to Logs directory (auto-detected if not provided)
+    """
+    try:
+        from runtime_database import runtime_db
+        import os
+
+        # Auto-detect logs directory if not provided
+        if logs_dir is None:
+            IS_DOCKER = os.getenv("POSTERIZARR_NON_ROOT") == "TRUE"
+            if IS_DOCKER:
+                BASE_DIR = Path("/config")
+            else:
+                BASE_DIR = Path(__file__).parent.parent.parent
+            logs_dir = BASE_DIR / "Logs"
+
+        if not logs_dir.exists():
+            logger.warning(f"Logs directory not found: {logs_dir}")
+            return
+
+        # Define JSON files to check
+        json_files = [
+            ("normal.json", "normal"),
+            ("manual.json", "manual"),
+            ("test.json", "testing"),
+            ("tautulli.json", "tautulli"),
+            ("arr.json", "arr"),
+            ("jellysync.json", "syncjelly"),
+            ("embysync.json", "syncemby"),
+            ("backup.json", "backup"),
+            ("replace.json", "replace"),
+        ]
+
+        imported_count = 0
+
+        for json_file, mode in json_files:
+            json_path = logs_dir / json_file
+
+            if json_path.exists():
+                runtime_data = parse_runtime_from_json(json_path, mode)
+
+                if runtime_data:
+                    runtime_db.add_runtime_entry(**runtime_data)
+                    imported_count += 1
+                    logger.info(f"✅ Imported {json_file} to database")
+
+        logger.info(f"✅ JSON import complete: {imported_count} files imported")
+
+    except Exception as e:
+        logger.error(f"Error importing JSON files to database: {e}")

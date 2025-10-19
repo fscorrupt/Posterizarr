@@ -3673,157 +3673,37 @@ async def delete_running_file():
 async def get_runtime_stats():
     """
     Get last runtime statistics from database
-    Falls back to Scriptlog.log if database is not available
     """
     try:
-        # Try to get from database first
-        if RUNTIME_DB_AVAILABLE and runtime_db:
-            latest = runtime_db.get_latest_runtime()
-
-            if latest:
-                # Get scheduler information if available
-                scheduler_info = {
-                    "enabled": False,
-                    "schedules": [],
-                    "next_run": None,
-                    "timezone": None,
-                }
-
-                if SCHEDULER_AVAILABLE and scheduler:
-                    try:
-                        status = scheduler.get_status()
-                        scheduler_info = {
-                            "enabled": status.get("enabled", False),
-                            "schedules": status.get("schedules", []),
-                            "next_run": status.get("next_run"),
-                            "timezone": status.get("timezone"),
-                        }
-                    except Exception as e:
-                        logger.warning(f"Could not get scheduler info: {e}")
-
-                return {
-                    "success": True,
-                    "runtime": latest.get("runtime_formatted"),
-                    "total_images": latest.get("total_images", 0),
-                    "posters": latest.get("posters", 0),
-                    "seasons": latest.get("seasons", 0),
-                    "backgrounds": latest.get("backgrounds", 0),
-                    "titlecards": latest.get("titlecards", 0),
-                    "errors": latest.get("errors", 0),
-                    "mode": latest.get("mode"),
-                    "timestamp": latest.get("timestamp"),
-                    "scheduler": scheduler_info,
-                    "source": "database",
-                }
-
-        # Fallback to log file parsing (legacy behavior)
-        logger.warning(
-            "Runtime database not available, falling back to log file parsing"
-        )
-        scriptlog_path = LOGS_DIR / "Scriptlog.log"
-
-        if not scriptlog_path.exists():
+        if not RUNTIME_DB_AVAILABLE or not runtime_db:
             return {
                 "success": False,
-                "message": "Scriptlog.log not found",
+                "message": "Runtime database not available",
                 "runtime": None,
                 "total_images": 0,
                 "posters": 0,
                 "seasons": 0,
                 "backgrounds": 0,
                 "titlecards": 0,
+                "collections": 0,
                 "errors": 0,
             }
 
-        # Read last 100 lines to find the runtime info
-        with open(scriptlog_path, "r", encoding="utf-8", errors="ignore") as f:
-            lines = f.readlines()
-            last_lines = lines[-100:] if len(lines) > 100 else lines
+        latest = runtime_db.get_latest_runtime()
 
-        runtime = None
-        total_images = 0
-        posters = 0
-        seasons = 0
-        backgrounds = 0
-        titlecards = 0
-        errors = 0
-
-        # Parse from bottom to top to get latest run
-        for line in reversed(last_lines):
-            # Look for: "Script execution time: 0h 1m 23s"
-            if "Script execution time:" in line and runtime is None:
-                import re
-
-                match = re.search(r"(\d+)h\s*(\d+)m\s*(\d+)s", line)
-                if match:
-                    hours = int(match.group(1))
-                    minutes = int(match.group(2))
-                    seconds = int(match.group(3))
-                    runtime = f"{hours}h {minutes}m {seconds}s"
-
-            # Look for: "Finished, Total images downloaded: 42" OR "Finished, Total images created: 42"
-            if (
-                "Total images downloaded:" in line or "Total images created:" in line
-            ) and total_images == 0:
-                import re
-
-                match = re.search(r"Total images (?:downloaded|created):\s*(\d+)", line)
-                if match:
-                    total_images = int(match.group(1))
-
-            # Look for: "Show/Movie Posters created: 127| Season images created: 0 | Background images created: 127 | TitleCards created: 0"
-            # OR: "Show/Movie Posters downloaded: 10| Season images downloaded: 5 | Background images downloaded: 3 | TitleCards downloaded: 2"
-            if (
-                "Show/Movie Posters created:" in line
-                or "Show/Movie Posters downloaded:" in line
-            ) and posters == 0:
-                import re
-
-                # Posters (support both "created" and "downloaded")
-                poster_match = re.search(
-                    r"Show/Movie Posters (?:created|downloaded):\s*(\d+)", line
-                )
-                if poster_match:
-                    posters = int(poster_match.group(1))
-
-                # Seasons
-                season_match = re.search(
-                    r"Season images (?:created|downloaded):\s*(\d+)", line
-                )
-                if season_match:
-                    seasons = int(season_match.group(1))
-
-                # Backgrounds
-                bg_match = re.search(
-                    r"Background images (?:created|downloaded):\s*(\d+)", line
-                )
-                if bg_match:
-                    backgrounds = int(bg_match.group(1))
-
-                # TitleCards
-                tc_match = re.search(
-                    r"TitleCards (?:created|downloaded):\s*(\d+)", line
-                )
-                if tc_match:
-                    titlecards = int(tc_match.group(1))
-
-            # Look for: "During execution '5' Errors occurred"
-            if "Errors occurred" in line and errors == 0:
-                import re
-
-                match = re.search(r"execution\s+'(\d+)'\s+Errors", line)
-                if match:
-                    errors = int(match.group(1))
-
-            # Stop searching once we found everything from the same run
-            if runtime and (
-                total_images > 0 or (posters + seasons + backgrounds + titlecards) > 0
-            ):
-                break
-
-        # If total_images was not found but we have individual counts, calculate it
-        if total_images == 0 and (posters + seasons + backgrounds + titlecards) > 0:
-            total_images = posters + seasons + backgrounds + titlecards
+        if not latest:
+            return {
+                "success": False,
+                "message": "No runtime data available. Please run the script or import JSON files.",
+                "runtime": None,
+                "total_images": 0,
+                "posters": 0,
+                "seasons": 0,
+                "backgrounds": 0,
+                "titlecards": 0,
+                "collections": 0,
+                "errors": 0,
+            }
 
         # Get scheduler information if available
         scheduler_info = {
@@ -3847,15 +3727,29 @@ async def get_runtime_stats():
 
         return {
             "success": True,
-            "runtime": runtime,
-            "total_images": total_images,
-            "posters": posters,
-            "seasons": seasons,
-            "backgrounds": backgrounds,
-            "titlecards": titlecards,
-            "errors": errors,
+            "runtime": latest.get("runtime_formatted"),
+            "total_images": latest.get("total_images", 0),
+            "posters": latest.get("posters", 0),
+            "seasons": latest.get("seasons", 0),
+            "backgrounds": latest.get("backgrounds", 0),
+            "titlecards": latest.get("titlecards", 0),
+            "collections": latest.get("collections", 0),
+            "errors": latest.get("errors", 0),
+            "tba_skipped": latest.get("tba_skipped", 0),
+            "jap_chines_skipped": latest.get("jap_chines_skipped", 0),
+            "notification_sent": latest.get("notification_sent", 0) == 1,
+            "uptime_kuma": latest.get("uptime_kuma"),
+            "images_cleared": latest.get("images_cleared", 0),
+            "folders_cleared": latest.get("folders_cleared", 0),
+            "space_saved": latest.get("space_saved"),
+            "script_version": latest.get("script_version"),
+            "im_version": latest.get("im_version"),
+            "start_time": latest.get("start_time"),
+            "end_time": latest.get("end_time"),
+            "mode": latest.get("mode"),
+            "timestamp": latest.get("timestamp"),
             "scheduler": scheduler_info,
-            "source": "logfile",
+            "source": "database",
         }
 
     except Exception as e:
@@ -3869,14 +3763,8 @@ async def get_runtime_stats():
             "seasons": 0,
             "backgrounds": 0,
             "titlecards": 0,
+            "collections": 0,
             "errors": 0,
-            "scheduler": {
-                "enabled": False,
-                "schedules": [],
-                "next_run": None,
-                "timezone": None,
-            },
-            "source": "error",
         }
 
 
@@ -4088,20 +3976,62 @@ async def get_migration_status():
                 migration_info[row[0]] = {"value": row[1], "updated_at": row[2]}
 
             conn.close()
-        except Exception as e:
-            logger.debug(f"Could not fetch migration info: {e}")
 
-        # Get current entry count
-        entry_count = len(runtime_db.get_runtime_history(limit=1000000))
+        except Exception as e:
+            logger.debug(f"Could not get migration info: {e}")
 
         return {
             "success": True,
             "is_migrated": is_migrated,
             "migration_info": migration_info,
-            "total_entries": entry_count,
         }
 
     except Exception as e:
+        logger.error(f"Error getting migration status: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/runtime-history/import-json")
+async def import_json_runtime_data():
+    """
+    Import runtime data from JSON files in Logs directory
+
+    Looks for and imports from:
+    - normal.json
+    - manual.json
+    - test.json
+    - tautulli.json
+    - arr.json
+    - jellysync.json
+    - embysync.json
+    - backup.json
+    - replace.json
+    """
+    try:
+        if not RUNTIME_DB_AVAILABLE or not runtime_db:
+            return {
+                "success": False,
+                "message": "Runtime database not available",
+            }
+
+        from runtime_parser import import_json_to_db
+
+        # Import JSON files
+        import_json_to_db(LOGS_DIR)
+
+        return {
+            "success": True,
+            "message": "JSON files imported successfully",
+        }
+
+    except Exception as e:
+        logger.error(f"Error importing JSON runtime data: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+        # =========================================================================
+        # Admin Endpoints
+        # =========================================================================
+
         logger.error(f"Error getting migration status: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 

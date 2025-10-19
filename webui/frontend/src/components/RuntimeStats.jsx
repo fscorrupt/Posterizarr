@@ -24,7 +24,19 @@ function RuntimeStats() {
       seasons: 0,
       backgrounds: 0,
       titlecards: 0,
+      collections: 0,
       errors: 0,
+      tba_skipped: 0,
+      jap_chines_skipped: 0,
+      notification_sent: false,
+      uptime_kuma: null,
+      images_cleared: 0,
+      folders_cleared: 0,
+      space_saved: null,
+      script_version: null,
+      im_version: null,
+      start_time: null,
+      end_time: null,
       mode: null,
       timestamp: null,
       source: null,
@@ -277,6 +289,25 @@ function RuntimeStats() {
               </div>
             </div>
 
+            {/* Collections */}
+            {runtimeStats.collections > 0 && (
+              <div className="bg-theme-card rounded-xl p-4 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <p className="text-theme-muted text-xs mb-1 font-medium">
+                      {t("assets.collections")}
+                    </p>
+                    <p className="text-2xl font-bold text-theme-text">
+                      {runtimeStats.collections}
+                    </p>
+                  </div>
+                  <div className="p-2 rounded-lg bg-yellow-500/10">
+                    <Film className="w-8 h-8 text-yellow-400" />
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Errors */}
             <div className="bg-theme-card rounded-xl p-4 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
               <div className="flex items-center justify-between">
@@ -312,6 +343,101 @@ function RuntimeStats() {
               </div>
             </div>
           </div>
+
+          {/* Additional Info Section */}
+          {(runtimeStats.tba_skipped > 0 ||
+            runtimeStats.jap_chines_skipped > 0 ||
+            runtimeStats.images_cleared > 0 ||
+            runtimeStats.space_saved) && (
+            <div className="mt-6 bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
+              <h3 className="text-lg font-semibold text-theme-text mb-4">
+                {t("runtimeStats.additionalInfo")}
+              </h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {runtimeStats.tba_skipped > 0 && (
+                  <div className="p-3 bg-theme-hover rounded-lg">
+                    <p className="text-theme-muted text-xs mb-1">
+                      {t("runtimeStats.tbaSkipped")}
+                    </p>
+                    <p className="text-xl font-bold text-theme-text">
+                      {runtimeStats.tba_skipped}
+                    </p>
+                  </div>
+                )}
+                {runtimeStats.jap_chines_skipped > 0 && (
+                  <div className="p-3 bg-theme-hover rounded-lg">
+                    <p className="text-theme-muted text-xs mb-1">
+                      {t("runtimeStats.japChinesSkipped")}
+                    </p>
+                    <p className="text-xl font-bold text-theme-text">
+                      {runtimeStats.jap_chines_skipped}
+                    </p>
+                  </div>
+                )}
+                {runtimeStats.images_cleared > 0 && (
+                  <div className="p-3 bg-theme-hover rounded-lg">
+                    <p className="text-theme-muted text-xs mb-1">
+                      {t("runtimeStats.imagesCleared")}
+                    </p>
+                    <p className="text-xl font-bold text-theme-text">
+                      {runtimeStats.images_cleared}
+                    </p>
+                  </div>
+                )}
+                {runtimeStats.folders_cleared > 0 && (
+                  <div className="p-3 bg-theme-hover rounded-lg">
+                    <p className="text-theme-muted text-xs mb-1">
+                      {t("runtimeStats.foldersCleared")}
+                    </p>
+                    <p className="text-xl font-bold text-theme-text">
+                      {runtimeStats.folders_cleared}
+                    </p>
+                  </div>
+                )}
+                {runtimeStats.space_saved && (
+                  <div className="p-3 bg-theme-hover rounded-lg">
+                    <p className="text-theme-muted text-xs mb-1">
+                      {t("runtimeStats.spaceSaved")}
+                    </p>
+                    <p className="text-xl font-bold text-green-400">
+                      {runtimeStats.space_saved}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Version Information */}
+          {(runtimeStats.script_version || runtimeStats.im_version) && (
+            <div className="mt-6 bg-theme-card rounded-xl p-6 border border-theme hover:border-theme-primary/50 transition-all shadow-sm">
+              <h3 className="text-lg font-semibold text-theme-text mb-4">
+                {t("runtimeStats.versionInfo")}
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                {runtimeStats.script_version && (
+                  <div className="p-3 bg-theme-hover rounded-lg">
+                    <p className="text-theme-muted text-xs mb-1">
+                      {t("runtimeStats.scriptVersion")}
+                    </p>
+                    <p className="text-lg font-bold text-theme-primary">
+                      {runtimeStats.script_version}
+                    </p>
+                  </div>
+                )}
+                {runtimeStats.im_version && (
+                  <div className="p-3 bg-theme-hover rounded-lg">
+                    <p className="text-theme-muted text-xs mb-1">
+                      {t("runtimeStats.imVersion")}
+                    </p>
+                    <p className="text-lg font-bold text-theme-primary">
+                      {runtimeStats.im_version}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Scheduler Information */}
           {runtimeStats.scheduler && runtimeStats.scheduler.enabled && (

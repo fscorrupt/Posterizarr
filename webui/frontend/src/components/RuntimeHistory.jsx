@@ -30,6 +30,7 @@ function RuntimeHistory() {
   const [loading, setLoading] = useState(!cachedHistory.length);
   const [refreshing, setRefreshing] = useState(false);
   const [migrating, setMigrating] = useState(false);
+  const [importing, setImporting] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
   const [limit] = useState(20);
   const [modeFilter, setModeFilter] = useState(null);
@@ -164,6 +165,36 @@ function RuntimeHistory() {
       alert("Error triggering migration. Check console for details.");
     } finally {
       setMigrating(false);
+    }
+  };
+
+  const triggerJsonImport = async () => {
+    if (importing) return;
+
+    setImporting(true);
+    try {
+      const response = await fetch(`${API_URL}/runtime-history/import-json`, {
+        method: "POST",
+      });
+
+      if (!response.ok) {
+        console.error("Failed to import JSON files:", response.status);
+        alert("Failed to import JSON files. Check console for details.");
+        return;
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        alert("JSON files imported successfully!");
+        // Refresh all data
+        fetchHistory();
+        fetchSummary();
+      }
+    } catch (error) {
+      console.error("Error importing JSON files:", error);
+      alert("Error importing JSON files. Check console for details.");
+    } finally {
+      setImporting(false);
     }
   };
 
@@ -322,6 +353,30 @@ function RuntimeHistory() {
                 {summary.total_errors}
               </p>
             </div>
+
+            {/* Total Collections (if available) */}
+            {summary.total_collections > 0 && (
+              <div className="p-4 bg-theme-hover rounded-lg border border-theme">
+                <p className="text-theme-muted text-xs mb-1">
+                  {t("runtimeHistory.totalCollections")}
+                </p>
+                <p className="text-2xl font-bold text-theme-text">
+                  {summary.total_collections}
+                </p>
+              </div>
+            )}
+
+            {/* Space Saved (if available) */}
+            {summary.total_space_saved && (
+              <div className="p-4 bg-theme-hover rounded-lg border border-theme">
+                <p className="text-theme-muted text-xs mb-1">
+                  {t("runtimeHistory.totalSpaceSaved")}
+                </p>
+                <p className="text-2xl font-bold text-green-400">
+                  {summary.total_space_saved}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Mode Counts */}
@@ -359,6 +414,26 @@ function RuntimeHistory() {
             {t("runtimeHistory.title")}
           </h2>
           <div className="flex items-center gap-3">
+            {/* Import JSON Button */}
+            <button
+              onClick={triggerJsonImport}
+              disabled={importing}
+              className="flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              title={t("runtimeHistory.importJson")}
+            >
+              {importing ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  {t("runtimeHistory.importing")}
+                </>
+              ) : (
+                <>
+                  <Database className="w-4 h-4" />
+                  {t("runtimeHistory.importJson")}
+                </>
+              )}
+            </button>
+
             {/* Mode Filter */}
             <select
               value={modeFilter || ""}
@@ -434,6 +509,9 @@ function RuntimeHistory() {
                   {t("runtimeHistory.table.titlecards")}
                 </th>
                 <th className="text-right py-3 px-4 text-theme-muted text-sm font-medium">
+                  {t("runtimeHistory.table.collections")}
+                </th>
+                <th className="text-right py-3 px-4 text-theme-muted text-sm font-medium">
                   {t("runtimeHistory.table.errors")}
                 </th>
               </tr>
@@ -441,7 +519,7 @@ function RuntimeHistory() {
             <tbody>
               {history.length === 0 ? (
                 <tr>
-                  <td colSpan="9" className="text-center py-8">
+                  <td colSpan="10" className="text-center py-8">
                     <p className="text-theme-muted italic">
                       {t("runtimeHistory.noEntries")}
                     </p>
@@ -482,6 +560,9 @@ function RuntimeHistory() {
                     </td>
                     <td className="py-3 px-4 text-right text-theme-muted text-sm">
                       {entry.titlecards}
+                    </td>
+                    <td className="py-3 px-4 text-right text-theme-muted text-sm">
+                      {entry.collections || 0}
                     </td>
                     <td
                       className={`py-3 px-4 text-right text-sm font-medium ${

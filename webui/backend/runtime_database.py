@@ -57,13 +57,55 @@ class RuntimeDatabase:
                     seasons INTEGER DEFAULT 0,
                     backgrounds INTEGER DEFAULT 0,
                     titlecards INTEGER DEFAULT 0,
+                    collections INTEGER DEFAULT 0,
                     errors INTEGER DEFAULT 0,
+                    tba_skipped INTEGER DEFAULT 0,
+                    jap_chines_skipped INTEGER DEFAULT 0,
+                    notification_sent INTEGER DEFAULT 0,
+                    uptime_kuma TEXT,
+                    images_cleared INTEGER DEFAULT 0,
+                    folders_cleared INTEGER DEFAULT 0,
+                    space_saved TEXT,
+                    script_version TEXT,
+                    im_version TEXT,
+                    start_time TEXT,
+                    end_time TEXT,
                     log_file TEXT,
                     status TEXT DEFAULT 'completed',
                     notes TEXT
                 )
             """
             )
+
+            # Add migration for new columns (for existing databases)
+            try:
+                # Check if columns exist, if not add them
+                cursor.execute("PRAGMA table_info(runtime_stats)")
+                existing_columns = [row[1] for row in cursor.fetchall()]
+
+                new_columns = {
+                    "collections": "INTEGER DEFAULT 0",
+                    "tba_skipped": "INTEGER DEFAULT 0",
+                    "jap_chines_skipped": "INTEGER DEFAULT 0",
+                    "notification_sent": "INTEGER DEFAULT 0",
+                    "uptime_kuma": "TEXT",
+                    "images_cleared": "INTEGER DEFAULT 0",
+                    "folders_cleared": "INTEGER DEFAULT 0",
+                    "space_saved": "TEXT",
+                    "script_version": "TEXT",
+                    "im_version": "TEXT",
+                    "start_time": "TEXT",
+                    "end_time": "TEXT",
+                }
+
+                for col_name, col_type in new_columns.items():
+                    if col_name not in existing_columns:
+                        cursor.execute(
+                            f"ALTER TABLE runtime_stats ADD COLUMN {col_name} {col_type}"
+                        )
+                        logger.info(f"Added column '{col_name}' to runtime_stats table")
+            except Exception as e:
+                logger.debug(f"Column migration check: {e}")
 
             # Create index for faster queries
             cursor.execute(
@@ -151,7 +193,7 @@ class RuntimeDatabase:
             logger.error(f"Error marking migration: {e}")
 
     def _auto_migrate(self):
-        """Automatically migrate runtime data from existing log files"""
+        """Automatically migrate runtime data from existing log files and JSON files"""
         try:
             # Determine base directory
             import os
@@ -174,59 +216,85 @@ class RuntimeDatabase:
                 self._mark_as_migrated(0)
                 return
 
-            logger.info("🔄 Starting automatic runtime data migration from logs...")
-
-            # Import parser function
-            from runtime_parser import parse_runtime_from_log
-
-            # Check for rotated logs
-            rotated_logs_dir = BASE_DIR / "RotatedLogs"
-            log_files_to_check = []
-
-            # Current logs
-            current_logs = [
-                ("Scriptlog.log", "normal"),
-                ("Testinglog.log", "testing"),
-                ("Manuallog.log", "manual"),
-            ]
-
-            for log_file, mode in current_logs:
-                log_path = LOGS_DIR / log_file
-                if log_path.exists():
-                    log_files_to_check.append((log_path, mode))
-
-            # Rotated logs (if they exist)
-            if rotated_logs_dir.exists():
-                logger.info(f"Checking rotated logs in {rotated_logs_dir}")
-                for rotation_dir in rotated_logs_dir.iterdir():
-                    if rotation_dir.is_dir():
-                        for log_file, mode in current_logs:
-                            log_path = rotation_dir / log_file
-                            if log_path.exists():
-                                log_files_to_check.append((log_path, mode))
-
-            if not log_files_to_check:
-                logger.info("No log files found to migrate")
-                self._mark_as_migrated(0)
-                return
+            logger.info("🔄 Starting automatic runtime data migration...")
 
             imported_count = 0
             skipped_count = 0
 
-            for log_path, mode in log_files_to_check:
-                try:
-                    runtime_data = parse_runtime_from_log(log_path, mode)
+            # First, try to import from JSON files (preferred method)
+            from runtime_parser import parse_runtime_from_json
 
-                    if runtime_data:
-                        self.add_runtime_entry(**runtime_data)
-                        imported_count += 1
-                        logger.debug(f"  ✅ Imported from {log_path.name}")
-                    else:
+            json_files = [
+                ("normal.json", "normal"),
+                ("manual.json", "manual"),
+                ("test.json", "testing"),
+                ("tautulli.json", "tautulli"),
+                ("arr.json", "arr"),
+                ("jellysync.json", "syncjelly"),
+                ("embysync.json", "syncemby"),
+                ("backup.json", "backup"),
+                ("replace.json", "replace"),
+            ]
+
+            logger.info("📄 Checking for JSON files...")
+            for json_file, mode in json_files:
+                json_path = LOGS_DIR / json_file
+                if json_path.exists():
+                    try:
+                        runtime_data = parse_runtime_from_json(json_path, mode)
+                        if runtime_data:
+                            self.add_runtime_entry(**runtime_data)
+                            imported_count += 1
+                            logger.info(f"  ✅ Imported from {json_file}")
+                    except Exception as e:
+                        logger.debug(f"  ⏭️  Skipped {json_file}: {e}")
                         skipped_count += 1
 
-                except Exception as e:
-                    logger.debug(f"  ⏭️  Skipped {log_path.name}: {e}")
-                    skipped_count += 1
+            # Fallback: Import from log files if no JSON files found
+            if imported_count == 0:
+                logger.info("📋 No JSON files found, checking log files...")
+                from runtime_parser import parse_runtime_from_log
+
+                # Check for rotated logs
+                rotated_logs_dir = BASE_DIR / "RotatedLogs"
+                log_files_to_check = []
+
+                # Current logs
+                current_logs = [
+                    ("Scriptlog.log", "normal"),
+                    ("Testinglog.log", "testing"),
+                    ("Manuallog.log", "manual"),
+                ]
+
+                for log_file, mode in current_logs:
+                    log_path = LOGS_DIR / log_file
+                    if log_path.exists():
+                        log_files_to_check.append((log_path, mode))
+
+                # Rotated logs (if they exist)
+                if rotated_logs_dir.exists():
+                    logger.info(f"Checking rotated logs in {rotated_logs_dir}")
+                    for rotation_dir in rotated_logs_dir.iterdir():
+                        if rotation_dir.is_dir():
+                            for log_file, mode in current_logs:
+                                log_path = rotation_dir / log_file
+                                if log_path.exists():
+                                    log_files_to_check.append((log_path, mode))
+
+                for log_path, mode in log_files_to_check:
+                    try:
+                        runtime_data = parse_runtime_from_log(log_path, mode)
+
+                        if runtime_data:
+                            self.add_runtime_entry(**runtime_data)
+                            imported_count += 1
+                            logger.debug(f"  ✅ Imported from {log_path.name}")
+                        else:
+                            skipped_count += 1
+
+                    except Exception as e:
+                        logger.debug(f"  ⏭️  Skipped {log_path.name}: {e}")
+                        skipped_count += 1
 
             logger.info(
                 f"✅ Auto-migration complete: {imported_count} imported, {skipped_count} skipped"
@@ -250,7 +318,19 @@ class RuntimeDatabase:
         seasons: int = 0,
         backgrounds: int = 0,
         titlecards: int = 0,
+        collections: int = 0,
         errors: int = 0,
+        tba_skipped: int = 0,
+        jap_chines_skipped: int = 0,
+        notification_sent: bool = False,
+        uptime_kuma: str = None,
+        images_cleared: int = 0,
+        folders_cleared: int = 0,
+        space_saved: str = None,
+        script_version: str = None,
+        im_version: str = None,
+        start_time: str = None,
+        end_time: str = None,
         log_file: str = None,
         status: str = "completed",
         notes: str = None,
@@ -271,9 +351,11 @@ class RuntimeDatabase:
                 """
                 INSERT INTO runtime_stats (
                     timestamp, mode, runtime_seconds, runtime_formatted,
-                    total_images, posters, seasons, backgrounds, titlecards,
-                    errors, log_file, status, notes
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    total_images, posters, seasons, backgrounds, titlecards, collections,
+                    errors, tba_skipped, jap_chines_skipped, notification_sent, uptime_kuma,
+                    images_cleared, folders_cleared, space_saved, script_version, im_version,
+                    start_time, end_time, log_file, status, notes
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
                 (
                     timestamp,
@@ -285,7 +367,19 @@ class RuntimeDatabase:
                     seasons,
                     backgrounds,
                     titlecards,
+                    collections,
                     errors,
+                    tba_skipped,
+                    jap_chines_skipped,
+                    1 if notification_sent else 0,
+                    uptime_kuma,
+                    images_cleared,
+                    folders_cleared,
+                    space_saved,
+                    script_version,
+                    im_version,
+                    start_time,
+                    end_time,
                     log_file,
                     status,
                     notes,
