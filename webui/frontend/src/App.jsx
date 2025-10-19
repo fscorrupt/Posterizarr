@@ -10,6 +10,10 @@ import { ThemeProvider } from "./context/ThemeContext";
 import { SidebarProvider, useSidebar } from "./context/SidebarContext";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { ToastProvider } from "./context/ToastContext";
+import {
+  DashboardLoadingProvider,
+  useDashboardLoading,
+} from "./context/DashboardLoadingContext";
 
 // Setup fetch interceptor BEFORE any other imports that might use fetch
 import { setupFetchInterceptor } from "./utils/fetchInterceptor";
@@ -37,19 +41,27 @@ import uiLogger from "./utils/uiLogger";
 function AppContent() {
   const { isCollapsed } = useSidebar();
   const { isAuthenticated, loading, login, isAuthEnabled } = useAuth();
+  const { isDashboardFullyLoaded, resetLoading } = useDashboardLoading();
   const location = useLocation();
   const [showLoadingScreen, setShowLoadingScreen] = useState(false);
   const [hasLoggedIn, setHasLoggedIn] = useState(false);
   const hasShownStartupScreen = React.useRef(false);
+  const isDashboardRoute =
+    location.pathname === "/" || location.pathname === "/dashboard";
 
   // Scroll to top on route change
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, [location.pathname]);
+
+    // Reset dashboard loading state when navigating away from dashboard
+    if (!isDashboardRoute) {
+      resetLoading();
+    }
+  }, [location.pathname, isDashboardRoute, resetLoading]);
 
   useEffect(() => {
-    console.log("✅ Posterizarr UI started - UI-Logger active");
-    console.info("📊 UI logs will be saved to FrontendUI.log");
+    console.log("Posterizarr UI started - UI-Logger active");
+    console.info(" UI logs will be saved to FrontendUI.log");
 
     return () => {
       // uiLogger.destroy();
@@ -66,14 +78,21 @@ function AppContent() {
       isAuthEnabled === false &&
       !hasShownStartupScreen.current
     ) {
-      // Auth is disabled, show loading screen briefly for smooth startup
+      // Auth is disabled, show loading screen until dashboard is fully loaded
       hasShownStartupScreen.current = true;
       setShowLoadingScreen(true);
-      setTimeout(() => {
-        setShowLoadingScreen(false);
-      }, 1500); // Shorter duration when no auth
     }
   }, [isAuthenticated, hasLoggedIn, loading, isAuthEnabled]);
+
+  // Hide loading screen when dashboard is fully loaded (only on dashboard route)
+  useEffect(() => {
+    if (isDashboardRoute && isDashboardFullyLoaded && showLoadingScreen) {
+      // Add a small delay for smooth transition
+      setTimeout(() => {
+        setShowLoadingScreen(false);
+      }, 300);
+    }
+  }, [isDashboardRoute, isDashboardFullyLoaded, showLoadingScreen]);
 
   // Handle login success with loading screen
   const handleLoginSuccess = (credentials) => {
@@ -81,10 +100,8 @@ function AppContent() {
     setHasLoggedIn(true);
     login(credentials);
 
-    // Show loading screen for 2-3 seconds while UI loads in background
-    setTimeout(() => {
-      setShowLoadingScreen(false);
-    }, 2500);
+    // Loading screen will be hidden when dashboard fully loads
+    // No timeout needed - controlled by dashboard loading state
   };
 
   // Show loading spinner while checking auth status on initial load
@@ -206,7 +223,9 @@ function App() {
         <AuthProvider>
           <SidebarProvider>
             <ToastProvider>
-              <AppContent />
+              <DashboardLoadingProvider>
+                <AppContent />
+              </DashboardLoadingProvider>
             </ToastProvider>
           </SidebarProvider>
         </AuthProvider>

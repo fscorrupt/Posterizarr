@@ -22,6 +22,7 @@ import {
   GripVertical,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useDashboardLoading } from "../context/DashboardLoadingContext";
 import SystemInfo from "./SystemInfo";
 import RuntimeStats from "./RuntimeStats";
 import DangerZone from "./DangerZone";
@@ -60,6 +61,7 @@ let cachedVersion = null;
 function Dashboard() {
   const { t } = useTranslation();
   const { showSuccess, showError, showInfo } = useToast();
+  const { startLoading, finishLoading } = useDashboardLoading();
   const [status, setStatus] = useState(
     cachedStatus || {
       running: false,
@@ -119,6 +121,7 @@ function Dashboard() {
   });
 
   const [draggedItem, setDraggedItem] = useState(null);
+  const hasInitiallyLoaded = useRef(false);
 
   const fetchStatus = async (silent = false) => {
     if (!silent) {
@@ -135,11 +138,19 @@ function Dashboard() {
       if (data.last_logs && data.last_logs.length > 0) {
         setAllLogs(data.last_logs);
       }
+
+      // Mark dashboard as loaded after first successful fetch
+      if (!hasInitiallyLoaded.current) {
+        hasInitiallyLoaded.current = true;
+        finishLoading("dashboard");
+      }
     } catch (error) {
       console.error("Error fetching status:", error);
     } finally {
       if (!silent) {
-        setTimeout(() => setIsRefreshing(false), 500);
+        setTimeout(() => {
+          setIsRefreshing(false);
+        }, 500);
       }
     }
   };
@@ -160,18 +171,18 @@ function Dashboard() {
             setVersion(cachedData);
             if (!silent) {
               console.log(
-                "✅ Using cached version data (age: " +
+                "Using cached version data (age: " +
                   Math.round(age / 1000 / 60) +
                   " minutes)"
               );
             }
             return;
           } else if (!silent) {
-            console.log("🔄 Version cache expired, fetching new data...");
+            console.log("Version cache expired, fetching new data...");
           }
         }
       } else if (!silent) {
-        console.log("🔄 Force refresh version data...");
+        console.log("Force refresh version data...");
       }
 
       // Fetch from API
@@ -185,7 +196,7 @@ function Dashboard() {
 
       const data = await response.json();
       if (!silent) {
-        console.log("📦 Version data received from API:", data);
+        console.log("Version data received from API:", data);
       }
 
       if (data.local || data.remote) {
@@ -207,7 +218,7 @@ function Dashboard() {
         localStorage.setItem("posterizarr_version_time", Date.now().toString());
 
         if (!silent) {
-          console.log("💾 Version data cached in localStorage");
+          console.log("Version data cached in localStorage");
         }
       } else {
         if (!silent) {
@@ -237,7 +248,7 @@ function Dashboard() {
       const ws = new WebSocket(wsURL);
 
       ws.onopen = () => {
-        console.log(`✅ Dashboard WebSocket connected to ${logFile}`);
+        console.log(`Dashboard WebSocket connected to ${logFile}`);
         setWsConnected(true);
       };
 
@@ -254,7 +265,7 @@ function Dashboard() {
               last_logs: [...prev.last_logs.slice(-24), data.content],
             }));
           } else if (data.type === "log_file_changed") {
-            console.log(`🔄 Backend switched to: ${data.log_file}`);
+            console.log(`Backend switched to: ${data.log_file}`);
             // Clear logs when switching log files
             setAllLogs([]);
             disconnectDashboardWebSocket();
@@ -301,6 +312,8 @@ function Dashboard() {
   };
 
   useEffect(() => {
+    // Register dashboard as loading and fetch initial data
+    startLoading("dashboard");
     fetchStatus(true);
     fetchVersion(true); // Uses cache if < 24h old, fetches new if older
 
@@ -320,7 +333,7 @@ function Dashboard() {
       clearInterval(versionInterval);
       disconnectDashboardWebSocket();
     };
-  }, []);
+  }, [startLoading]);
 
   useEffect(() => {
     if (status.running && !wsRef.current) {
@@ -334,7 +347,7 @@ function Dashboard() {
     if (status.running && status.current_mode && wsRef.current) {
       const expectedLogFile = getLogFileForMode(status.current_mode);
       console.log(
-        `🔄 Mode changed to ${status.current_mode}, expected log: ${expectedLogFile}`
+        `Mode changed to ${status.current_mode}, expected log: ${expectedLogFile}`
       );
 
       disconnectDashboardWebSocket();
