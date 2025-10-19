@@ -85,12 +85,19 @@ function AppContent() {
   }, [isAuthenticated, hasLoggedIn, loading, isAuthEnabled]);
 
   // Hide loading screen when dashboard is fully loaded (only on dashboard route)
+  // OR immediately hide if we're on a non-dashboard route
   useEffect(() => {
-    if (isDashboardRoute && isDashboardFullyLoaded && showLoadingScreen) {
-      // Add a small delay for smooth transition
-      setTimeout(() => {
+    if (showLoadingScreen) {
+      if (isDashboardRoute && isDashboardFullyLoaded) {
+        // Dashboard is ready - hide loading screen
+        setTimeout(() => {
+          setShowLoadingScreen(false);
+        }, 300);
+      } else if (!isDashboardRoute) {
+        // We're not on dashboard - hide loading screen immediately
+        // This fixes the bug where reload on other pages causes loading screen to hang
         setShowLoadingScreen(false);
-      }, 300);
+      }
     }
   }, [isDashboardRoute, isDashboardFullyLoaded, showLoadingScreen]);
 
