@@ -6687,14 +6687,14 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
         logger.info(f"  TMDB ID: {request.tmdb_id}")
         logger.info(f"  TVDB ID: {request.tvdb_id}")
 
-        # Load config to get API keys
+        # Load config to get API keys and language preferences
         if not CONFIG_PATH.exists():
             raise HTTPException(status_code=404, detail="Config file not found")
 
         with open(CONFIG_PATH, "r", encoding="utf-8") as f:
             grouped_config = json.load(f)
 
-        # Get API tokens - support multiple key name variants
+        # Get API tokens and language preferences - support multiple key name variants
         if CONFIG_MAPPER_AVAILABLE:
             flat_config = flatten_config(grouped_config)
             tmdb_token = flat_config.get("tmdbtoken", "")
@@ -6709,6 +6709,14 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                 or flat_config.get("fanarttvapikey")
                 or flat_config.get("FanartTvAPIKey", "")
             )
+            # Get language preferences
+            preferred_language_order = flat_config.get("PreferredLanguageOrder", "")
+            preferred_season_language_order = flat_config.get(
+                "PreferredSeasonLanguageOrder", ""
+            )
+            preferred_background_language_order = flat_config.get(
+                "PreferredBackgroundLanguageOrder", ""
+            )
         else:
             api_part = grouped_config.get("ApiPart", {})
             tmdb_token = api_part.get("tmdbtoken", "")
@@ -6721,6 +6729,104 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                 or api_part.get("fanarttvapikey")
                 or api_part.get("FanartTvAPIKey", "")
             )
+
+            # Try to get language preferences from different possible locations
+            preferred_language_order = grouped_config.get("PreferredLanguageOrder", "")
+            preferred_season_language_order = grouped_config.get(
+                "PreferredSeasonLanguageOrder", ""
+            )
+            preferred_background_language_order = grouped_config.get(
+                "PreferredBackgroundLanguageOrder", ""
+            )
+
+            # If not found at root, try in ApiPart
+            if not preferred_language_order and isinstance(
+                grouped_config.get("ApiPart"), dict
+            ):
+                preferred_language_order = grouped_config["ApiPart"].get(
+                    "PreferredLanguageOrder", ""
+                )
+            if not preferred_season_language_order and isinstance(
+                grouped_config.get("ApiPart"), dict
+            ):
+                preferred_season_language_order = grouped_config["ApiPart"].get(
+                    "PreferredSeasonLanguageOrder", ""
+                )
+            if not preferred_background_language_order and isinstance(
+                grouped_config.get("ApiPart"), dict
+            ):
+                preferred_background_language_order = grouped_config["ApiPart"].get(
+                    "PreferredBackgroundLanguageOrder", ""
+                )
+
+        # Parse language preferences (handle both string and list formats)
+        def parse_language_order(value):
+            """Convert language order to list, handling both string and list inputs"""
+            if not value:
+                return []
+            if isinstance(value, list):
+                # Already a list, just clean up entries
+                return [lang.strip() for lang in value if lang and str(lang).strip()]
+            if isinstance(value, str):
+                # String format, split by comma
+                return [lang.strip() for lang in value.split(",") if lang.strip()]
+            return []
+
+        language_order_list = parse_language_order(preferred_language_order)
+        season_language_order_list = parse_language_order(
+            preferred_season_language_order
+        )
+        background_language_order_list = parse_language_order(
+            preferred_background_language_order
+        )
+
+        logger.info(
+            f"📋 Language preferences loaded - Standard: {language_order_list}, Season: {season_language_order_list}, Background: {background_language_order_list}"
+        )
+
+        # Helper function to filter and sort by language preference
+        def filter_and_sort_by_language(items_list, preferred_languages):
+            """
+            Sort items based on preferred language order.
+            Preferred languages come first in order, then all other languages.
+
+            Args:
+                items_list: List of item dicts with 'language' field
+                preferred_languages: List of language codes in order of preference (e.g., ['de', 'en', 'xx'])
+
+            Returns:
+                Sorted list of items (preferred languages first, then others)
+            """
+            if not preferred_languages or not items_list:
+                return items_list
+
+            # Normalize language codes to lowercase
+            preferred_languages = [
+                lang.lower().strip() for lang in preferred_languages if lang
+            ]
+
+            # Group items by language
+            language_groups = {lang: [] for lang in preferred_languages}
+            language_groups["other"] = []  # For languages not in preferences
+
+            for item in items_list:
+                item_lang = (item.get("language") or "xx").lower()
+
+                # Check if item language matches any preferred language
+                if item_lang in preferred_languages:
+                    language_groups[item_lang].append(item)
+                else:
+                    language_groups["other"].append(item)
+
+            # Build result list in order of preference, then add other languages
+            result = []
+            for lang in preferred_languages:
+                result.extend(language_groups[lang])
+
+            # Add other languages at the end
+            result.extend(language_groups["other"])
+
+            return result
 
         results = {"tmdb": [], "tvdb": [], "fanart": []}
 
@@ -7058,11 +7164,55 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
         results["tvdb"] = tvdb_results
         results["fanart"] = fanart_results
 
-        # Count total results
+        # Apply language filtering based on asset type
+        logger.info(
+            f"🔤 Applying language filtering for asset_type: {request.asset_type}"
+        )
+
+        if request.asset_type == "season":
+            # Filter season posters by PreferredSeasonLanguageOrder
+            logger.info(f"   Using season language order: {season_language_order_list}")
+            results["tmdb"] = filter_and_sort_by_language(
+                results["tmdb"], season_language_order_list
+            )
+            results["tvdb"] = filter_and_sort_by_language(
+                results["tvdb"], season_language_order_list
+            )
+            results["fanart"] = filter_and_sort_by_language(
+                results["fanart"], season_language_order_list
+            )
+        elif request.asset_type == "background" or request.asset_type == "titlecard":
+            # Filter backgrounds and titlecards by PreferredBackgroundLanguageOrder
+            logger.info(
+                f"   Using background language order: {background_language_order_list}"
+            )
+            results["tmdb"] = filter_and_sort_by_language(
+                results["tmdb"], background_language_order_list
+            )
+            results["tvdb"] = filter_and_sort_by_language(
+                results["tvdb"], background_language_order_list
+            )
+            results["fanart"] = filter_and_sort_by_language(
+                results["fanart"], background_language_order_list
+            )
+        else:
+            # Filter standard posters by PreferredLanguageOrder
+            logger.info(f"   Using standard language order: {language_order_list}")
+            results["tmdb"] = filter_and_sort_by_language(
+                results["tmdb"], language_order_list
+            )
+            results["tvdb"] = filter_and_sort_by_language(
+                results["tvdb"], language_order_list
+            )
+            results["fanart"] = filter_and_sort_by_language(
+                results["fanart"], language_order_list
+            )
+
+        # Count total results after filtering
         total_count = sum(len(results[source]) for source in results)
 
         logger.info(
-            f"Fetched {total_count} replacement options: "
+            f"✅ After language filtering: {total_count} results - "
             f"TMDB={len(results['tmdb'])}, TVDB={len(results['tvdb'])}, Fanart={len(results['fanart'])}"
         )
 
