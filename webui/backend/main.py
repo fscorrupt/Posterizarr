@@ -215,6 +215,18 @@ except ImportError as e:
         f"Database module not available: {e}. Database features will be disabled."
     )
 
+# Import config database module
+try:
+    from config_database import ConfigDB
+
+    CONFIG_DATABASE_AVAILABLE = True
+    logger.info("Config database module loaded successfully")
+except ImportError as e:
+    CONFIG_DATABASE_AVAILABLE = False
+    logger.warning(
+        f"Config database not available: {e}. Config database will be disabled."
+    )
+
 # Import runtime database module
 try:
     from runtime_database import runtime_db
@@ -233,6 +245,7 @@ current_process: Optional[subprocess.Popen] = None
 current_mode: Optional[str] = None
 scheduler: Optional["PosterizarrScheduler"] = None
 db: Optional["ImageChoicesDB"] = None
+config_db: Optional["ConfigDB"] = None
 
 # Initialize cache variables early to prevent race conditions
 cache_refresh_task = None
@@ -1062,7 +1075,7 @@ class SPAMiddleware(BaseHTTPMiddleware):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Lifespan event handler for startup and shutdown"""
-    global scheduler, db
+    global scheduler, db, config_db
 
     # Startup: Pre-populate asset cache
     logger.info("Starting Posterizarr Web UI Backend")
@@ -1070,6 +1083,22 @@ async def lifespan(app: FastAPI):
 
     # Start background cache refresh
     start_cache_refresh_background()
+
+    # Initialize config database if available
+    if CONFIG_DATABASE_AVAILABLE:
+        try:
+            logger.info("📊 Initializing config database...")
+            CONFIG_DB_PATH = DATABASE_DIR / "config.db"
+
+            config_db = ConfigDB(CONFIG_DB_PATH, CONFIG_PATH)
+            config_db.initialize()
+
+            logger.info(f"✅ Config database ready: {CONFIG_DB_PATH}")
+        except Exception as e:
+            logger.error(f"❌ Failed to initialize config database: {e}")
+            config_db = None
+    else:
+        logger.info("Config database module not available, skipping initialization")
 
     # Initialize database if available
     if DATABASE_AVAILABLE:
@@ -1150,6 +1179,13 @@ async def lifespan(app: FastAPI):
             logger.info("Database connection closed")
         except Exception as e:
             logger.error(f"Error closing database: {e}")
+
+    if config_db:
+        try:
+            config_db.close()
+            logger.info("Config database connection closed")
+        except Exception as e:
+            logger.error(f"Error closing config database: {e}")
 
     logger.info("Shutting down Posterizarr Web UI Backend")
 
@@ -1385,9 +1421,153 @@ async def update_config(data: ConfigUpdate):
 
             logger.info("Config saved successfully (grouped structure)")
 
+        # Also update config database if available
+        if CONFIG_DATABASE_AVAILABLE and config_db:
+            try:
+                # Sync the updated config to database
+                config_db.import_from_json()
+                logger.info("Config database synced with updated config.json")
+            except Exception as db_error:
+                logger.warning(f"Could not sync config database: {db_error}")
+
         return {"success": True, "message": "Config updated successfully"}
     except Exception as e:
         logger.error(f"Error updating config: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# ============================================================================
+# CONFIG DATABASE ENDPOINTS
+# ============================================================================
+
+
+@app.get("/api/config-db/status")
+async def get_config_db_status():
+    """Get config database status and statistics"""
+    try:
+        if not CONFIG_DATABASE_AVAILABLE or not config_db:
+            return {
+                "success": False,
+                "available": False,
+                "message": "Config database not available",
+            }
+
+        # Get all sections and count
+        sections = config_db.get_all_sections()
+
+        # Get metadata
+        cursor = config_db.connection.cursor()
+        cursor.execute(
+            "SELECT * FROM config_metadata ORDER BY last_sync_time DESC LIMIT 1"
+        )
+        metadata_row = cursor.fetchone()
+
+        metadata = None
+        if metadata_row:
+            metadata = {
+                "last_sync_time": metadata_row[1],
+                "config_file_path": metadata_row[2],
+                "sync_status": metadata_row[3],
+                "sync_message": metadata_row[4],
+            }
+
+        # Count total entries
+        cursor.execute("SELECT COUNT(*) FROM config")
+        total_entries = cursor.fetchone()[0]
+
+        return {
+            "success": True,
+            "available": True,
+            "database_path": str(config_db.db_path),
+            "sections": sections,
+            "section_count": len(sections),
+            "total_entries": total_entries,
+            "metadata": metadata,
+        }
+    except Exception as e:
+        logger.error(f"Error getting config database status: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/config-db/section/{section}")
+async def get_config_db_section(section: str):
+    """Get all values from a specific config section"""
+    try:
+        if not CONFIG_DATABASE_AVAILABLE or not config_db:
+            raise HTTPException(status_code=503, detail="Config database not available")
+
+        section_data = config_db.get_section(section)
+
+        return {"success": True, "section": section, "data": section_data}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting config section: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/config-db/value/{section}/{key}")
+async def get_config_db_value(section: str, key: str):
+    """Get a specific config value"""
+    try:
+        if not CONFIG_DATABASE_AVAILABLE or not config_db:
+            raise HTTPException(status_code=503, detail="Config database not available")
+
+        value = config_db.get_value(section, key)
+
+        if value is None:
+            raise HTTPException(
+                status_code=404, detail=f"Config value not found: {section}.{key}"
+            )
+
+        return {"success": True, "section": section, "key": key, "value": value}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting config value: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/config-db/sync")
+async def sync_config_db():
+    """Manually trigger sync from config.json to config database"""
+    try:
+        if not CONFIG_DATABASE_AVAILABLE or not config_db:
+            raise HTTPException(status_code=503, detail="Config database not available")
+
+        success = config_db.import_from_json()
+
+        if success:
+            return {
+                "success": True,
+                "message": "Config database synced successfully with config.json",
+            }
+        else:
+            return {
+                "success": False,
+                "message": "Config database sync completed with warnings",
+            }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error syncing config database: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/config-db/export")
+async def export_config_db():
+    """Export config database to JSON format"""
+    try:
+        if not CONFIG_DATABASE_AVAILABLE or not config_db:
+            raise HTTPException(status_code=503, detail="Config database not available")
+
+        config_data = config_db.export_to_json()
+
+        return {"success": True, "config": config_data}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error exporting config database: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
