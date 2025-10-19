@@ -1085,7 +1085,7 @@ async def lifespan(app: FastAPI):
     # Initialize config database if available
     if CONFIG_DATABASE_AVAILABLE:
         try:
-            logger.info(" Initializing config database...")
+            logger.info("Initializing config database...")
             CONFIG_DB_PATH = DATABASE_DIR / "config.db"
 
             config_db = ConfigDB(CONFIG_DB_PATH, CONFIG_PATH)
@@ -1101,7 +1101,7 @@ async def lifespan(app: FastAPI):
     # Initialize database if available
     if DATABASE_AVAILABLE:
         try:
-            logger.info(" Initializing imagechoices database...")
+            logger.info("Initializing imagechoices database...")
 
             # Check if database exists before initialization
             db_existed_before = IMAGECHOICES_DB_PATH.exists()
@@ -1127,9 +1127,9 @@ async def lifespan(app: FastAPI):
                                 "No records imported from CSV (all empty or invalid)"
                             )
                     except Exception as csv_error:
-                        logger.warning(f" Could not import existing CSV: {csv_error}")
+                        logger.warning(f"Could not import existing CSV: {csv_error}")
                 else:
-                    logger.info("ℹNo existing CSV found - database initialized empty")
+                    logger.info("No existing CSV found - database initialized empty")
 
             # Check if database has any records
             try:
@@ -6060,7 +6060,7 @@ async def get_recent_assets():
         # Get all assets from database (already sorted by id DESC - newest first)
         db_records = db.get_all_choices()
 
-        logger.info(f" Found {len(db_records)} total assets in database")
+        logger.info(f"Found {len(db_records)} total assets in database")
 
         # If no assets found, return early
         if not db_records:
@@ -6138,7 +6138,7 @@ async def get_recent_assets():
                     logger.debug(f"⏭️  Skipping asset (poster not found): {title}")
 
         logger.info(
-            f"✨ Returning {len(recent_assets)} most recent assets with existing images from database"
+            f"Returning {len(recent_assets)} most recent assets with existing images from database"
         )
 
         return {

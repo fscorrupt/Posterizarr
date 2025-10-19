@@ -431,9 +431,9 @@ class ConfigDB:
         db_exists = self.db_path.exists()
 
         if db_exists:
-            logger.info(f" Config database already exists: {self.db_path}")
+            logger.info(f"Config database already exists: {self.db_path}")
         else:
-            logger.info(f" Creating new config database: {self.db_path}")
+            logger.info(f"Creating new config database: {self.db_path}")
 
         self.connect()
         self.create_tables()
@@ -448,4 +448,4 @@ class ConfigDB:
             else:
                 logger.info(f"Config database synced with config.json")
         else:
-            logger.warning(f" Config database sync had issues")
+            logger.warning(f"Config database sync had issues")

@@ -361,7 +361,6 @@ function RunModes() {
         showSuccess(t("runModes.startedMode", { mode }));
         fetchStatus();
 
-        // ✨ Weiterleitung zum LogViewer mit der richtigen Log-Datei
         const logFile = getLogFileForMode(mode);
         console.log(`Waiting for log file: ${logFile}`);
 

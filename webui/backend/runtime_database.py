@@ -130,7 +130,7 @@ class RuntimeDatabase:
             conn.close()
 
             if is_new_database:
-                logger.info(f"✨ Runtime database created at {self.db_path}")
+                logger.info(f"Runtime database created at {self.db_path}")
                 # Auto-run migration for new database
                 self._auto_migrate()
             else:

@@ -18,12 +18,12 @@ export function DashboardLoadingProvider({ children }) {
 
   // Register a component as loading
   const startLoading = useCallback((componentName) => {
-    console.log(` Dashboard Loading: START ${componentName}`);
+    console.log(`Dashboard Loading: START ${componentName}`);
     setLoadingComponents((prev) => {
       const next = new Set(prev);
       next.add(componentName);
       const componentList = Array.from(next).join(", ");
-      console.log(` Current loading components: [${componentList}]`);
+      console.log(`Current loading components: [${componentList}]`);
       return next;
     });
     setIsDashboardFullyLoaded(false);
@@ -37,11 +37,11 @@ export function DashboardLoadingProvider({ children }) {
       next.delete(componentName);
 
       const componentList = Array.from(next).join(", ");
-      console.log(` Remaining loading components: [${componentList}]`);
+      console.log(`Remaining loading components: [${componentList}]`);
 
       // If this was the last component, mark dashboard as fully loaded
       if (next.size === 0) {
-        console.log(` Dashboard fully loaded!`);
+        console.log(`Dashboard fully loaded!`);
         setIsDashboardFullyLoaded(true);
       }
 

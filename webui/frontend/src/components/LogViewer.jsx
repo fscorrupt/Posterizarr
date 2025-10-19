@@ -43,7 +43,7 @@ function LogViewer() {
   const [isReconnecting, setIsReconnecting] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [loading, setLoading] = useState(false); // ✨ NEW: Loading state for stop button
+  const [loading, setLoading] = useState(false);
 
   const [status, setStatus] = useState({
     running: false,
@@ -54,7 +54,7 @@ function LogViewer() {
   const wsRef = useRef(null);
   const dropdownRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
-  const currentLogFileRef = useRef(initialLogFile); // ✨ Initialize with passed log file
+  const currentLogFileRef = useRef(initialLogFile); // Initialize with passed log file
 
   const parseLogLine = (line) => {
     const cleanedLine = line.replace(/\x00/g, "").trim();
