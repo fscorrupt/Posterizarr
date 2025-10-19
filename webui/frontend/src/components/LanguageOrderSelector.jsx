@@ -237,7 +237,7 @@ const LanguageOrderSelector = ({ value = [], onChange, label, helpText }) => {
         <div className="relative">
           <button
             onClick={() => setDropdownOpen(!dropdownOpen)}
-            className="w-full flex items-center justify-between gap-2 px-4 py-2.5 bg-theme-primary/20 hover:bg-theme-primary/30 border border-theme-primary/30 rounded-lg font-medium transition-all"
+            className="w-full flex items-center justify-between gap-2 px-4 py-3 bg-theme-bg hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-theme-text text-sm font-medium transition-all shadow-sm"
           >
             <div className="flex items-center gap-2">
               <Plus className="w-4 h-4" />
@@ -262,12 +262,15 @@ const LanguageOrderSelector = ({ value = [], onChange, label, helpText }) => {
               />
 
               {/* Dropdown Content */}
-              <div className="absolute z-20 w-full mt-2 bg-theme-bg border border-theme rounded-lg shadow-xl max-h-64 overflow-y-auto">
+              <div
+                className="absolute z-20 w-full mt-2 bg-theme-card border border-theme-primary rounded-lg shadow-xl max-h-64 overflow-y-auto"
+                style={{ scrollbarWidth: "thin" }}
+              >
                 {availableLanguages.map((lang) => (
                   <button
                     key={lang.code}
                     onClick={() => addLanguage(lang.code)}
-                    className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-theme-hover transition-all text-left"
+                    className="w-full flex items-center gap-3 px-4 py-3 hover:bg-theme-primary/20 transition-all text-left border-b border-theme last:border-b-0"
                   >
                     <span className="font-mono text-sm text-theme-primary font-semibold w-8">
                       {lang.code}

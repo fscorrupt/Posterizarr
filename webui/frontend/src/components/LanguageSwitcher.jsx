@@ -48,26 +48,30 @@ const LanguageSwitcher = ({ compact = false }) => {
         </button>
 
         {isOpen && (
-          <div className="absolute right-0 mt-2 w-48 bg-theme-card border border-theme rounded-lg shadow-xl z-50 overflow-hidden">
+          <div className="absolute right-0 mt-2 w-48 bg-theme-card border border-theme-primary rounded-lg shadow-xl z-50 overflow-hidden">
             {languages.map((lang) => (
               <button
                 key={lang.code}
                 onClick={() => handleLanguageChange(lang.code)}
-                className={`w-full flex items-center justify-between px-4 py-3 hover:bg-theme-hover transition-colors ${
-                  i18n.language === lang.code ? "bg-theme-hover" : ""
+                className={`w-full flex items-center justify-between px-4 py-3 transition-colors ${
+                  i18n.language === lang.code
+                    ? "bg-theme-primary text-white"
+                    : "text-theme-text hover:bg-theme-primary/20"
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <span className="text-sm font-bold text-theme-primary">
+                  <span
+                    className={`text-sm font-bold ${
+                      i18n.language === lang.code
+                        ? "text-white"
+                        : "text-theme-primary"
+                    }`}
+                  >
                     {lang.flag}
                   </span>
-                  <span className="text-sm font-medium text-theme-text">
-                    {lang.name}
-                  </span>
+                  <span className="text-sm font-medium">{lang.name}</span>
                 </div>
-                {i18n.language === lang.code && (
-                  <Check className="w-4 h-4 text-[var(--theme-primary)]" />
-                )}
+                {i18n.language === lang.code && <Check className="w-4 h-4" />}
               </button>
             ))}
           </div>
@@ -94,26 +98,30 @@ const LanguageSwitcher = ({ compact = false }) => {
       </button>
 
       {isOpen && (
-        <div className="absolute left-0 right-0 mt-2 bg-theme-card border border-theme rounded-lg shadow-xl z-50 overflow-hidden">
+        <div className="absolute left-0 right-0 mt-2 bg-theme-card border border-theme-primary rounded-lg shadow-xl z-50 overflow-hidden">
           {languages.map((lang) => (
             <button
               key={lang.code}
               onClick={() => handleLanguageChange(lang.code)}
-              className={`w-full flex items-center justify-between px-4 py-3 hover:bg-theme-hover transition-colors ${
-                i18n.language === lang.code ? "bg-theme-hover" : ""
+              className={`w-full flex items-center justify-between px-4 py-3 transition-colors ${
+                i18n.language === lang.code
+                  ? "bg-theme-primary text-white"
+                  : "text-theme-text hover:bg-theme-primary/20"
               }`}
             >
               <div className="flex items-center gap-3">
-                <span className="text-sm font-bold text-theme-primary">
+                <span
+                  className={`text-sm font-bold ${
+                    i18n.language === lang.code
+                      ? "text-white"
+                      : "text-theme-primary"
+                  }`}
+                >
                   {lang.flag}
                 </span>
-                <span className="text-sm font-medium text-theme-text">
-                  {lang.name}
-                </span>
+                <span className="text-sm font-medium">{lang.name}</span>
               </div>
-              {i18n.language === lang.code && (
-                <Check className="w-4 h-4 text-[var(--theme-primary)]" />
-              )}
+              {i18n.language === lang.code && <Check className="w-4 h-4" />}
             </button>
           ))}
         </div>

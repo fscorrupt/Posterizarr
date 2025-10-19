@@ -886,6 +886,52 @@ function ConfigEditor() {
   const [useJellySync, setUseJellySync] = useState(false);
   const [useEmbySync, setUseEmbySync] = useState(false);
 
+  // Dropdown states - using object to handle multiple instances per field type
+  const [openDropdowns, setOpenDropdowns] = useState({});
+  const [dropdownPositions, setDropdownPositions] = useState({}); // Track if dropdown opens up or down
+  const dropdownRefs = useRef({});
+
+  const toggleDropdown = (key) => {
+    // Calculate position before toggling if dropdown is about to open
+    if (!openDropdowns[key]) {
+      const ref = dropdownRefs.current[key];
+      if (ref) {
+        const shouldOpenUp = calculateDropdownPosition({ current: ref });
+        setDropdownPositions((prev) => ({
+          ...prev,
+          [key]: shouldOpenUp,
+        }));
+      }
+    }
+
+    setOpenDropdowns((prev) => ({
+      ...prev,
+      [key]: !prev[key],
+    }));
+  };
+
+  const closeDropdown = (key) => {
+    setOpenDropdowns((prev) => ({
+      ...prev,
+      [key]: false,
+    }));
+  };
+
+  const isDropdownOpen = (key) => openDropdowns[key] || false;
+  const isDropdownUp = (key) => dropdownPositions[key] || false;
+
+  // Legacy single dropdown states for non-repeating fields
+  const [favProviderDropdownOpen, setFavProviderDropdownOpen] = useState(false);
+  const [tmdbSortingDropdownOpen, setTmdbSortingDropdownOpen] = useState(false);
+  const [logLevelDropdownOpen, setLogLevelDropdownOpen] = useState(false);
+  const [favProviderDropdownUp, setFavProviderDropdownUp] = useState(false);
+  const [tmdbSortingDropdownUp, setTmdbSortingDropdownUp] = useState(false);
+  const [logLevelDropdownUp, setLogLevelDropdownUp] = useState(false);
+
+  const favProviderDropdownRef = useRef(null);
+  const tmdbSortingDropdownRef = useRef(null);
+  const logLevelDropdownRef = useRef(null);
+
   // List of overlay file fields
   const OVERLAY_FILE_FIELDS = [
     "overlayfile",
@@ -1070,6 +1116,53 @@ function ConfigEditor() {
       setExpandedGroups(newExpandedState);
     }
   }, [searchQuery, activeTab]);
+
+  // Function to calculate dropdown position
+  const calculateDropdownPosition = (ref) => {
+    if (!ref || !ref.current) return false;
+
+    const rect = ref.current.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceAbove = rect.top;
+
+    // If more space above than below, open upward
+    return spaceAbove > spaceBelow;
+  };
+
+  // Click-outside detection for dropdowns
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      // Check dynamic dropdowns (overlay, font, gravity, color)
+      Object.keys(dropdownRefs.current).forEach((key) => {
+        const ref = dropdownRefs.current[key];
+        if (ref && !ref.contains(event.target)) {
+          closeDropdown(key);
+        }
+      });
+
+      // Check static dropdowns
+      if (
+        favProviderDropdownRef.current &&
+        !favProviderDropdownRef.current.contains(event.target)
+      ) {
+        setFavProviderDropdownOpen(false);
+      }
+      if (
+        tmdbSortingDropdownRef.current &&
+        !tmdbSortingDropdownRef.current.contains(event.target)
+      ) {
+        setTmdbSortingDropdownOpen(false);
+      }
+      if (
+        logLevelDropdownRef.current &&
+        !logLevelDropdownRef.current.contains(event.target)
+      ) {
+        setLogLevelDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const fetchConfig = async () => {
     setLoading(true);
@@ -1708,25 +1801,73 @@ function ConfigEditor() {
     if (OVERLAY_FILE_FIELDS.includes(key)) {
       const stringValue =
         value === null || value === undefined ? "" : String(value);
+      const dropdownKey = `overlay-${fieldKey}`;
 
       return (
         <div className="space-y-2">
           <div className="flex gap-2">
             {/* Dropdown */}
-            <div className="relative flex-1">
-              <select
-                value={stringValue}
-                onChange={(e) => updateValue(fieldKey, e.target.value)}
-                className="w-full h-[42px] px-4 py-2.5 pr-10 bg-theme-bg border border-theme rounded-lg text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all cursor-pointer appearance-none"
+            <div
+              className="relative flex-1"
+              ref={(el) => (dropdownRefs.current[dropdownKey] = el)}
+            >
+              <button
+                onClick={() => toggleDropdown(dropdownKey)}
+                className="w-full h-[42px] px-4 py-2.5 pr-10 bg-theme-bg border border-theme rounded-lg text-theme-text hover:bg-theme-hover hover:border-theme-primary/50 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all cursor-pointer shadow-sm flex items-center justify-between"
               >
-                <option value="">-- Select Overlay File --</option>
-                {overlayFiles.map((file) => (
-                  <option key={file.name} value={file.name}>
-                    {file.name}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-theme-muted pointer-events-none" />
+                <span
+                  className={
+                    stringValue ? "text-theme-text" : "text-theme-muted"
+                  }
+                >
+                  {stringValue || "-- Select Overlay File --"}
+                </span>
+                <ChevronDown
+                  className={`w-5 h-5 text-theme-muted transition-transform ${
+                    isDropdownOpen(dropdownKey) ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+
+              {isDropdownOpen(dropdownKey) && (
+                <div
+                  className={`absolute z-50 left-0 right-0 ${
+                    isDropdownUp(dropdownKey)
+                      ? "bottom-full mb-2"
+                      : "top-full mt-2"
+                  } bg-theme-card border border-theme-primary rounded-lg shadow-xl max-h-60 overflow-y-auto`}
+                >
+                  <button
+                    onClick={() => {
+                      updateValue(fieldKey, "");
+                      closeDropdown(dropdownKey);
+                    }}
+                    className={`w-full px-4 py-2 text-sm transition-all text-left ${
+                      !stringValue
+                        ? "bg-theme-primary text-white"
+                        : "text-theme-text hover:bg-theme-primary/30"
+                    }`}
+                  >
+                    -- Select Overlay File --
+                  </button>
+                  {overlayFiles.map((file) => (
+                    <button
+                      key={file.name}
+                      onClick={() => {
+                        updateValue(fieldKey, file.name);
+                        closeDropdown(dropdownKey);
+                      }}
+                      className={`w-full px-4 py-2 text-sm transition-all text-left ${
+                        stringValue === file.name
+                          ? "bg-theme-primary text-white"
+                          : "text-theme-text hover:bg-theme-primary/30"
+                      }`}
+                    >
+                      {file.name}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Upload Button */}
@@ -1791,25 +1932,73 @@ function ConfigEditor() {
     if (FONT_FILE_FIELDS.includes(key)) {
       const stringValue =
         value === null || value === undefined ? "" : String(value);
+      const dropdownKey = `font-${fieldKey}`;
 
       return (
         <div className="space-y-2">
           <div className="flex gap-2">
             {/* Dropdown */}
-            <div className="relative flex-1">
-              <select
-                value={stringValue}
-                onChange={(e) => updateValue(fieldKey, e.target.value)}
-                className="w-full h-[42px] px-4 py-2.5 pr-10 bg-theme-bg border border-theme rounded-lg text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all cursor-pointer appearance-none"
+            <div
+              className="relative flex-1"
+              ref={(el) => (dropdownRefs.current[dropdownKey] = el)}
+            >
+              <button
+                onClick={() => toggleDropdown(dropdownKey)}
+                className="w-full h-[42px] px-4 py-2.5 pr-10 bg-theme-bg border border-theme rounded-lg text-theme-text hover:bg-theme-hover hover:border-theme-primary/50 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all cursor-pointer shadow-sm flex items-center justify-between"
               >
-                <option value="">-- Select Font File --</option>
-                {fontFiles.map((file) => (
-                  <option key={file} value={file}>
-                    {file}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-theme-muted pointer-events-none" />
+                <span
+                  className={
+                    stringValue ? "text-theme-text" : "text-theme-muted"
+                  }
+                >
+                  {stringValue || "-- Select Font File --"}
+                </span>
+                <ChevronDown
+                  className={`w-5 h-5 text-theme-muted transition-transform ${
+                    isDropdownOpen(dropdownKey) ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+
+              {isDropdownOpen(dropdownKey) && (
+                <div
+                  className={`absolute z-50 left-0 right-0 ${
+                    isDropdownUp(dropdownKey)
+                      ? "bottom-full mb-2"
+                      : "top-full mt-2"
+                  } bg-theme-card border border-theme-primary rounded-lg shadow-xl max-h-60 overflow-y-auto`}
+                >
+                  <button
+                    onClick={() => {
+                      updateValue(fieldKey, "");
+                      closeDropdown(dropdownKey);
+                    }}
+                    className={`w-full px-4 py-2 text-sm transition-all text-left ${
+                      !stringValue
+                        ? "bg-theme-primary text-white"
+                        : "text-theme-text hover:bg-theme-primary/30"
+                    }`}
+                  >
+                    -- Select Font File --
+                  </button>
+                  {fontFiles.map((file) => (
+                    <button
+                      key={file}
+                      onClick={() => {
+                        updateValue(fieldKey, file);
+                        closeDropdown(dropdownKey);
+                      }}
+                      className={`w-full px-4 py-2 text-sm transition-all text-left ${
+                        stringValue === file
+                          ? "bg-theme-primary text-white"
+                          : "text-theme-text hover:bg-theme-primary/30"
+                      }`}
+                    >
+                      {file}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Upload Button */}
@@ -2196,19 +2385,49 @@ function ConfigEditor() {
 
       return (
         <div className="space-y-2">
-          <div className="relative">
-            <select
-              value={stringValue.toLowerCase()}
-              onChange={(e) => updateValue(fieldKey, e.target.value)}
-              className="w-full h-[42px] px-4 py-2.5 pr-10 bg-theme-bg border border-theme rounded-lg text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all cursor-pointer appearance-none"
+          <div className="relative" ref={favProviderDropdownRef}>
+            <button
+              onClick={() => {
+                const shouldOpenUp = calculateDropdownPosition(
+                  favProviderDropdownRef
+                );
+                setFavProviderDropdownUp(shouldOpenUp);
+                setFavProviderDropdownOpen(!favProviderDropdownOpen);
+              }}
+              className="w-full h-[42px] px-4 py-2.5 pr-10 bg-theme-bg border border-theme rounded-lg text-theme-text hover:bg-theme-hover hover:border-theme-primary/50 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all cursor-pointer shadow-sm flex items-center justify-between"
             >
-              {providerOptions.map((option) => (
-                <option key={option} value={option}>
-                  {option.toUpperCase()}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-theme-muted pointer-events-none" />
+              <span>{stringValue.toUpperCase()}</span>
+              <ChevronDown
+                className={`w-5 h-5 text-theme-muted transition-transform ${
+                  favProviderDropdownOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+
+            {favProviderDropdownOpen && (
+              <div
+                className={`absolute z-50 left-0 right-0 ${
+                  favProviderDropdownUp ? "bottom-full mb-2" : "top-full mt-2"
+                } bg-theme-card border border-theme-primary rounded-lg shadow-xl overflow-hidden`}
+              >
+                {providerOptions.map((option) => (
+                  <button
+                    key={option}
+                    onClick={() => {
+                      updateValue(fieldKey, option);
+                      setFavProviderDropdownOpen(false);
+                    }}
+                    className={`w-full px-4 py-2 text-sm transition-all text-left ${
+                      stringValue.toLowerCase() === option
+                        ? "bg-theme-primary text-white"
+                        : "text-theme-text hover:bg-theme-primary/30"
+                    }`}
+                  >
+                    {option.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           <p className="text-xs text-theme-muted">
             Select your preferred metadata provider (recommended: TMDB)
@@ -2227,19 +2446,52 @@ function ConfigEditor() {
 
       return (
         <div className="space-y-2">
-          <div className="relative">
-            <select
-              value={stringValue}
-              onChange={(e) => updateValue(fieldKey, e.target.value)}
-              className="w-full h-[42px] px-4 py-2.5 pr-10 bg-theme-bg border border-theme rounded-lg text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all cursor-pointer appearance-none"
+          <div className="relative" ref={tmdbSortingDropdownRef}>
+            <button
+              onClick={() => {
+                const shouldOpenUp = calculateDropdownPosition(
+                  tmdbSortingDropdownRef
+                );
+                setTmdbSortingDropdownUp(shouldOpenUp);
+                setTmdbSortingDropdownOpen(!tmdbSortingDropdownOpen);
+              }}
+              className="w-full h-[42px] px-4 py-2.5 pr-10 bg-theme-bg border border-theme rounded-lg text-theme-text hover:bg-theme-hover hover:border-theme-primary/50 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all cursor-pointer shadow-sm flex items-center justify-between"
             >
-              {sortingOptions.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-theme-muted pointer-events-none" />
+              <span>
+                {sortingOptions.find((opt) => opt.value === stringValue)
+                  ?.label || "Select sorting"}
+              </span>
+              <ChevronDown
+                className={`w-5 h-5 text-theme-muted transition-transform ${
+                  tmdbSortingDropdownOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+
+            {tmdbSortingDropdownOpen && (
+              <div
+                className={`absolute z-50 left-0 right-0 ${
+                  tmdbSortingDropdownUp ? "bottom-full mb-2" : "top-full mt-2"
+                } bg-theme-card border border-theme-primary rounded-lg shadow-xl overflow-hidden`}
+              >
+                {sortingOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => {
+                      updateValue(fieldKey, option.value);
+                      setTmdbSortingDropdownOpen(false);
+                    }}
+                    className={`w-full px-4 py-2 text-sm transition-all text-left ${
+                      stringValue === option.value
+                        ? "bg-theme-primary text-white"
+                        : "text-theme-text hover:bg-theme-primary/30"
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           <p className="text-xs text-theme-muted">
             Picture sorting method via TMDB API
@@ -2750,24 +3002,59 @@ function ConfigEditor() {
     // ============ LOG LEVEL (1, 2, or 3) ============
     if (key === "logLevel") {
       const numValue = String(stringValue || "2");
+      const logLevelOptions = [
+        { value: "1", label: "1 - Warning/Error messages only" },
+        { value: "2", label: "2 - Info/Warning/Error messages (Default)" },
+        { value: "3", label: "3 - Info/Warning/Error/Debug (Most verbose)" },
+      ];
 
       return (
         <div className="space-y-2">
-          <div className="relative">
-            <select
-              value={numValue}
-              onChange={(e) => updateValue(fieldKey, e.target.value)}
-              className="w-full h-[42px] px-4 py-2.5 pr-10 bg-theme-bg border border-theme rounded-lg text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all cursor-pointer appearance-none"
+          <div className="relative" ref={logLevelDropdownRef}>
+            <button
+              onClick={() => {
+                const shouldOpenUp =
+                  calculateDropdownPosition(logLevelDropdownRef);
+                setLogLevelDropdownUp(shouldOpenUp);
+                setLogLevelDropdownOpen(!logLevelDropdownOpen);
+              }}
+              className="w-full h-[42px] px-4 py-2.5 pr-10 bg-theme-bg border border-theme rounded-lg text-theme-text hover:bg-theme-hover hover:border-theme-primary/50 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all cursor-pointer shadow-sm flex items-center justify-between"
             >
-              <option value="1">1 - Warning/Error messages only</option>
-              <option value="2">
-                2 - Info/Warning/Error messages (Default)
-              </option>
-              <option value="3">
-                3 - Info/Warning/Error/Debug (Most verbose)
-              </option>
-            </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-theme-muted pointer-events-none" />
+              <span>
+                {logLevelOptions.find((opt) => opt.value === numValue)?.label ||
+                  "Select log level"}
+              </span>
+              <ChevronDown
+                className={`w-5 h-5 text-theme-muted transition-transform ${
+                  logLevelDropdownOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+
+            {logLevelDropdownOpen && (
+              <div
+                className={`absolute z-50 left-0 right-0 ${
+                  logLevelDropdownUp ? "bottom-full mb-2" : "top-full mt-2"
+                } bg-theme-card border border-theme-primary rounded-lg shadow-xl overflow-hidden`}
+              >
+                {logLevelOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => {
+                      updateValue(fieldKey, option.value);
+                      setLogLevelDropdownOpen(false);
+                    }}
+                    className={`w-full px-4 py-2 text-sm transition-all text-left ${
+                      numValue === option.value
+                        ? "bg-theme-primary text-white"
+                        : "text-theme-text hover:bg-theme-primary/30"
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           <p className="text-xs text-theme-muted">
             Logging verbosity: 1 = Warning/Error, 2 = Info/Warning/Error
@@ -2781,29 +3068,72 @@ function ConfigEditor() {
     if (keyLower.includes("gravity") || keyLower.endsWith("textgravity")) {
       const gravityValue = String(stringValue || "South");
       const disabled = isFieldDisabled(key, groupName);
+      const gravityOptions = [
+        { value: "NorthWest", label: "NorthWest (Top Left)" },
+        { value: "North", label: "North (Top Center)" },
+        { value: "NorthEast", label: "NorthEast (Top Right)" },
+        { value: "West", label: "West (Middle Left)" },
+        { value: "Center", label: "Center (Middle Center)" },
+        { value: "East", label: "East (Middle Right)" },
+        { value: "SouthWest", label: "SouthWest (Bottom Left)" },
+        { value: "South", label: "South (Bottom Center)" },
+        { value: "SouthEast", label: "SouthEast (Bottom Right)" },
+      ];
+
+      const dropdownKey = `gravity-${fieldKey}`;
 
       return (
         <div className="space-y-2">
-          <div className="relative">
-            <select
-              value={gravityValue}
-              onChange={(e) => updateValue(fieldKey, e.target.value)}
+          <div
+            className="relative"
+            ref={(el) => (dropdownRefs.current[dropdownKey] = el)}
+          >
+            <button
+              onClick={() => !disabled && toggleDropdown(dropdownKey)}
               disabled={disabled}
-              className={`w-full h-[42px] px-4 py-2.5 pr-10 bg-theme-bg border border-theme rounded-lg text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all cursor-pointer appearance-none ${
-                disabled ? "opacity-50 cursor-not-allowed" : ""
+              className={`w-full h-[42px] px-4 py-2.5 pr-10 bg-theme-bg border border-theme rounded-lg text-theme-text hover:bg-theme-hover hover:border-theme-primary/50 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all cursor-pointer shadow-sm flex items-center justify-between ${
+                disabled
+                  ? "opacity-50 cursor-not-allowed hover:bg-theme-bg hover:border-theme"
+                  : ""
               }`}
             >
-              <option value="NorthWest">NorthWest (Top Left)</option>
-              <option value="North">North (Top Center)</option>
-              <option value="NorthEast">NorthEast (Top Right)</option>
-              <option value="West">West (Middle Left)</option>
-              <option value="Center">Center (Middle Center)</option>
-              <option value="East">East (Middle Right)</option>
-              <option value="SouthWest">SouthWest (Bottom Left)</option>
-              <option value="South">South (Bottom Center)</option>
-              <option value="SouthEast">SouthEast (Bottom Right)</option>
-            </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-theme-muted pointer-events-none" />
+              <span>
+                {gravityOptions.find((opt) => opt.value === gravityValue)
+                  ?.label || gravityValue}
+              </span>
+              <ChevronDown
+                className={`w-5 h-5 text-theme-muted transition-transform ${
+                  isDropdownOpen(dropdownKey) ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+
+            {isDropdownOpen(dropdownKey) && !disabled && (
+              <div
+                className={`absolute z-50 left-0 right-0 ${
+                  isDropdownUp(dropdownKey)
+                    ? "bottom-full mb-2"
+                    : "top-full mt-2"
+                } bg-theme-card border border-theme-primary rounded-lg shadow-xl max-h-60 overflow-y-auto`}
+              >
+                {gravityOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => {
+                      updateValue(fieldKey, option.value);
+                      closeDropdown(dropdownKey);
+                    }}
+                    className={`w-full px-4 py-2 text-sm transition-all text-left ${
+                      gravityValue === option.value
+                        ? "bg-theme-primary text-white"
+                        : "text-theme-text hover:bg-theme-primary/30"
+                    }`}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           <p className="text-xs text-theme-muted">
             Text alignment position within the text box
@@ -3004,7 +3334,35 @@ function ConfigEditor() {
 
           {currentInputType === "name" ? (
             // Color Name Dropdown
-            <div className="relative">
+            <div
+              className="relative"
+              ref={(el) => (dropdownRefs.current[`color-${fieldKey}`] = el)}
+            >
+              <button
+                onClick={() => !disabled && toggleDropdown(`color-${fieldKey}`)}
+                disabled={disabled}
+                className={`w-full h-[42px] pl-12 pr-10 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text hover:bg-theme-hover hover:border-theme-primary/50 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all cursor-pointer shadow-sm flex items-center justify-between ${
+                  disabled
+                    ? "opacity-50 cursor-not-allowed hover:bg-theme-bg hover:border-theme"
+                    : ""
+                }`}
+              >
+                <span
+                  className={
+                    stringValue ? "text-theme-text" : "text-theme-muted"
+                  }
+                >
+                  {stringValue
+                    ? stringValue.charAt(0).toUpperCase() + stringValue.slice(1)
+                    : "-- Select Color --"}
+                </span>
+                <ChevronDown
+                  className={`w-5 h-5 text-theme-muted transition-transform ${
+                    isDropdownOpen(`color-${fieldKey}`) ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+
               {stringValue && (
                 <div
                   className="absolute left-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded border-2 border-gray-400 shadow-sm pointer-events-none z-10"
@@ -3012,22 +3370,50 @@ function ConfigEditor() {
                   title={stringValue}
                 />
               )}
-              <select
-                value={stringValue.toLowerCase()}
-                onChange={(e) => updateValue(fieldKey, e.target.value)}
-                disabled={disabled}
-                className={`w-full h-[42px] pl-12 pr-10 py-2.5 bg-theme-bg border border-theme rounded-lg text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary transition-all cursor-pointer appearance-none ${
-                  disabled ? "opacity-50 cursor-not-allowed" : ""
-                }`}
-              >
-                <option value="">-- Select Color --</option>
-                {colorNames.map((color) => (
-                  <option key={color} value={color}>
-                    {color.charAt(0).toUpperCase() + color.slice(1)}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-theme-muted pointer-events-none" />
+
+              {isDropdownOpen(`color-${fieldKey}`) && !disabled && (
+                <div
+                  className={`absolute z-50 left-0 right-0 ${
+                    isDropdownUp(`color-${fieldKey}`)
+                      ? "bottom-full mb-2"
+                      : "top-full mt-2"
+                  } bg-theme-card border border-theme-primary rounded-lg shadow-xl max-h-60 overflow-y-auto`}
+                >
+                  <button
+                    onClick={() => {
+                      updateValue(fieldKey, "");
+                      closeDropdown(`color-${fieldKey}`);
+                    }}
+                    className={`w-full px-4 py-2 text-sm transition-all text-left ${
+                      !stringValue
+                        ? "bg-theme-primary text-white"
+                        : "text-theme-text hover:bg-theme-primary/30"
+                    }`}
+                  >
+                    -- Select Color --
+                  </button>
+                  {colorNames.map((color) => (
+                    <button
+                      key={color}
+                      onClick={() => {
+                        updateValue(fieldKey, color);
+                        closeDropdown(`color-${fieldKey}`);
+                      }}
+                      className={`w-full px-4 py-2 text-sm transition-all text-left flex items-center gap-2 ${
+                        stringValue.toLowerCase() === color
+                          ? "bg-theme-primary text-white"
+                          : "text-theme-text hover:bg-theme-primary/30"
+                      }`}
+                    >
+                      <div
+                        className="w-4 h-4 rounded border border-gray-400"
+                        style={{ backgroundColor: color }}
+                      />
+                      {color.charAt(0).toUpperCase() + color.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           ) : (
             // Hex Color Picker

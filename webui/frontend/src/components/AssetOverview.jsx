@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import {
   AlertTriangle,
   Globe,
@@ -9,6 +9,7 @@ import {
   RefreshCw,
   Search,
   Replace,
+  ChevronDown,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import AssetReplacer from "./AssetReplacer";
@@ -24,6 +25,21 @@ const AssetOverview = () => {
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [selectedAsset, setSelectedAsset] = useState(null);
   const [showReplacer, setShowReplacer] = useState(false);
+
+  // Dropdown states
+  const [typeDropdownOpen, setTypeDropdownOpen] = useState(false);
+  const [libraryDropdownOpen, setLibraryDropdownOpen] = useState(false);
+  const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
+
+  // Dropdown position states (true = opens upward, false = opens downward)
+  const [typeDropdownUp, setTypeDropdownUp] = useState(false);
+  const [libraryDropdownUp, setLibraryDropdownUp] = useState(false);
+  const [categoryDropdownUp, setCategoryDropdownUp] = useState(false);
+
+  // Refs for click outside detection
+  const typeDropdownRef = useRef(null);
+  const libraryDropdownRef = useRef(null);
+  const categoryDropdownRef = useRef(null);
 
   // Fetch data from API
   const fetchData = async () => {
@@ -43,6 +59,47 @@ const AssetOverview = () => {
 
   useEffect(() => {
     fetchData();
+  }, []);
+
+  // Function to calculate dropdown position
+  const calculateDropdownPosition = (ref) => {
+    if (!ref.current) return false;
+
+    const rect = ref.current.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceAbove = rect.top;
+
+    // If more space above than below, open upward
+    return spaceAbove > spaceBelow;
+  };
+
+  // Click outside detection for dropdowns
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        typeDropdownRef.current &&
+        !typeDropdownRef.current.contains(event.target)
+      ) {
+        setTypeDropdownOpen(false);
+      }
+      if (
+        libraryDropdownRef.current &&
+        !libraryDropdownRef.current.contains(event.target)
+      ) {
+        setLibraryDropdownOpen(false);
+      }
+      if (
+        categoryDropdownRef.current &&
+        !categoryDropdownRef.current.contains(event.target)
+      ) {
+        setCategoryDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, []);
 
   // Handle opening the replacer
@@ -602,48 +659,165 @@ const AssetOverview = () => {
           </div>
 
           {/* Type Filter */}
-          <select
-            value={selectedType}
-            onChange={(e) => setSelectedType(e.target.value)}
-            className="px-4 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-primary"
-          >
-            {types.map((type) => (
-              <option key={type} value={type}>
-                {type === "All Types" ? t("assetOverview.allTypes") : type}
-              </option>
-            ))}
-          </select>
+          <div className="relative" ref={typeDropdownRef}>
+            <button
+              onClick={() => {
+                const shouldOpenUp = calculateDropdownPosition(typeDropdownRef);
+                setTypeDropdownUp(shouldOpenUp);
+                setTypeDropdownOpen(!typeDropdownOpen);
+              }}
+              className="w-full px-4 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text text-sm flex items-center justify-between hover:bg-theme-hover hover:border-theme-primary/50 transition-all shadow-sm"
+            >
+              <span className="font-medium">
+                {selectedType === "All Types"
+                  ? t("assetOverview.allTypes")
+                  : selectedType}
+              </span>
+              <ChevronDown
+                className={`w-4 h-4 transition-transform ${
+                  typeDropdownOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+
+            {typeDropdownOpen && (
+              <div
+                className={`absolute z-50 w-full ${
+                  typeDropdownUp ? "bottom-full mb-2" : "top-full mt-2"
+                } bg-theme-card border border-theme-primary rounded-lg shadow-xl max-h-60 overflow-y-auto`}
+              >
+                {types.map((type) => (
+                  <button
+                    key={type}
+                    onClick={() => {
+                      setSelectedType(type);
+                      setTypeDropdownOpen(false);
+                    }}
+                    className={`w-full px-4 py-3 text-left text-sm transition-all ${
+                      selectedType === type
+                        ? "bg-theme-primary text-white"
+                        : "text-theme-text hover:bg-theme-primary/30 hover:border-theme-primary/20"
+                    }`}
+                  >
+                    {type === "All Types" ? t("assetOverview.allTypes") : type}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Library Filter */}
-          <select
-            value={selectedLibrary}
-            onChange={(e) => setSelectedLibrary(e.target.value)}
-            className="px-4 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-primary"
-          >
-            {libraries.map((lib) => (
-              <option key={lib} value={lib}>
-                {lib === "All Libraries"
+          <div className="relative" ref={libraryDropdownRef}>
+            <button
+              onClick={() => {
+                const shouldOpenUp =
+                  calculateDropdownPosition(libraryDropdownRef);
+                setLibraryDropdownUp(shouldOpenUp);
+                setLibraryDropdownOpen(!libraryDropdownOpen);
+              }}
+              className="w-full px-4 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text text-sm flex items-center justify-between hover:bg-theme-hover hover:border-theme-primary/50 transition-all shadow-sm"
+            >
+              <span className="font-medium">
+                {selectedLibrary === "All Libraries"
                   ? t("assetOverview.allLibraries")
-                  : lib}
-              </option>
-            ))}
-          </select>
+                  : selectedLibrary}
+              </span>
+              <ChevronDown
+                className={`w-4 h-4 transition-transform ${
+                  libraryDropdownOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+
+            {libraryDropdownOpen && (
+              <div
+                className={`absolute z-50 w-full ${
+                  libraryDropdownUp ? "bottom-full mb-2" : "top-full mt-2"
+                } bg-theme-card border border-theme-primary rounded-lg shadow-xl max-h-60 overflow-y-auto`}
+              >
+                {libraries.map((lib) => (
+                  <button
+                    key={lib}
+                    onClick={() => {
+                      setSelectedLibrary(lib);
+                      setLibraryDropdownOpen(false);
+                    }}
+                    className={`w-full px-4 py-3 text-left text-sm transition-all ${
+                      selectedLibrary === lib
+                        ? "bg-theme-primary text-white"
+                        : "text-theme-text hover:bg-theme-primary/30 hover:border-theme-primary/20"
+                    }`}
+                  >
+                    {lib === "All Libraries"
+                      ? t("assetOverview.allLibraries")
+                      : lib}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Category Filter */}
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="px-4 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-primary"
-          >
-            <option value="All Categories">
-              {t("assetOverview.allCategories")}
-            </option>
-            {categoryCards.map((card) => (
-              <option key={card.key} value={card.label}>
-                {card.label}
-              </option>
-            ))}
-          </select>
+          <div className="relative" ref={categoryDropdownRef}>
+            <button
+              onClick={() => {
+                const shouldOpenUp =
+                  calculateDropdownPosition(categoryDropdownRef);
+                setCategoryDropdownUp(shouldOpenUp);
+                setCategoryDropdownOpen(!categoryDropdownOpen);
+              }}
+              className="w-full px-4 py-2 bg-theme-bg border border-theme rounded-lg text-theme-text text-sm flex items-center justify-between hover:bg-theme-hover hover:border-theme-primary/50 transition-all shadow-sm"
+            >
+              <span className="font-medium">
+                {selectedCategory === "All Categories"
+                  ? t("assetOverview.allCategories")
+                  : selectedCategory}
+              </span>
+              <ChevronDown
+                className={`w-4 h-4 transition-transform ${
+                  categoryDropdownOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+
+            {categoryDropdownOpen && (
+              <div
+                className={`absolute z-50 w-full ${
+                  categoryDropdownUp ? "bottom-full mb-2" : "top-full mt-2"
+                } bg-theme-card border border-theme-primary rounded-lg shadow-xl max-h-60 overflow-y-auto`}
+              >
+                <button
+                  onClick={() => {
+                    setSelectedCategory("All Categories");
+                    setCategoryDropdownOpen(false);
+                  }}
+                  className={`w-full px-4 py-3 text-left text-sm transition-all ${
+                    selectedCategory === "All Categories"
+                      ? "bg-theme-primary text-white"
+                      : "text-theme-text hover:bg-theme-primary/30 hover:border-theme-primary/20"
+                  }`}
+                >
+                  {t("assetOverview.allCategories")}
+                </button>
+                {categoryCards.map((card) => (
+                  <button
+                    key={card.key}
+                    onClick={() => {
+                      setSelectedCategory(card.label);
+                      setCategoryDropdownOpen(false);
+                    }}
+                    className={`w-full px-4 py-3 text-left text-sm transition-all ${
+                      selectedCategory === card.label
+                        ? "bg-theme-primary text-white"
+                        : "text-theme-text hover:bg-theme-primary/30 hover:border-theme-primary/20"
+                    }`}
+                  >
+                    {card.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

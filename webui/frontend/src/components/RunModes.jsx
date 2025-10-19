@@ -1440,20 +1440,31 @@ function RunModes() {
               <div>
                 <div className="flex items-center gap-2 mb-2">
                   <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={tmdbSearch.searchByID}
-                      onChange={(e) =>
+                    <button
+                      type="button"
+                      onClick={() =>
                         setTmdbSearch({
                           ...tmdbSearch,
-                          searchByID: e.target.checked,
+                          searchByID: !tmdbSearch.searchByID,
                         })
                       }
                       disabled={
                         loading || status.running || tmdbSearch.searching
                       }
-                      className="w-4 h-4 text-theme-primary bg-theme-bg border-theme rounded focus:ring-theme-primary focus:ring-2 disabled:opacity-50"
-                    />
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-theme-primary focus:ring-offset-2 focus:ring-offset-theme-bg disabled:opacity-50 disabled:cursor-not-allowed ${
+                        tmdbSearch.searchByID
+                          ? "bg-theme-primary"
+                          : "bg-gray-600"
+                      }`}
+                    >
+                      <span
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                          tmdbSearch.searchByID
+                            ? "translate-x-6"
+                            : "translate-x-1"
+                        }`}
+                      />
+                    </button>
                     <span className="text-sm text-theme-text">
                       {t("runModes.manual.searchByIdLabel")}
                     </span>

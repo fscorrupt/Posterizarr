@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Clock,
@@ -11,6 +11,7 @@ import {
   ChevronRight,
   Database,
   TrendingUp,
+  ChevronDown,
 } from "lucide-react";
 
 const API_URL = "/api";
@@ -35,6 +36,14 @@ function RuntimeHistory() {
   const [limit] = useState(20);
   const [modeFilter, setModeFilter] = useState(null);
   const [summaryDays, setSummaryDays] = useState(30);
+
+  // Dropdown states
+  const [summaryDaysDropdownOpen, setSummaryDaysDropdownOpen] = useState(false);
+  const [modeFilterDropdownOpen, setModeFilterDropdownOpen] = useState(false);
+  const [summaryDaysDropdownUp, setSummaryDaysDropdownUp] = useState(false);
+  const [modeFilterDropdownUp, setModeFilterDropdownUp] = useState(false);
+  const summaryDaysDropdownRef = useRef(null);
+  const modeFilterDropdownRef = useRef(null);
 
   const fetchHistory = async (silent = false) => {
     if (!silent) {
@@ -204,6 +213,41 @@ function RuntimeHistory() {
     fetchMigrationStatus();
   }, [currentPage, modeFilter, summaryDays]);
 
+  // Function to calculate dropdown position
+  const calculateDropdownPosition = (ref) => {
+    if (!ref.current) return false;
+
+    const rect = ref.current.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceAbove = rect.top;
+
+    // If more space above than below, open upward
+    return spaceAbove > spaceBelow;
+  };
+
+  // Click outside detection for dropdowns
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        summaryDaysDropdownRef.current &&
+        !summaryDaysDropdownRef.current.contains(event.target)
+      ) {
+        setSummaryDaysDropdownOpen(false);
+      }
+      if (
+        modeFilterDropdownRef.current &&
+        !modeFilterDropdownRef.current.contains(event.target)
+      ) {
+        setModeFilterDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   const handlePreviousPage = () => {
     if (currentPage > 0) {
       setCurrentPage(currentPage - 1);
@@ -289,24 +333,50 @@ function RuntimeHistory() {
               </div>
               {t("runtimeHistory.summary", { days: summaryDays })}
             </h2>
-            <select
-              value={summaryDays}
-              onChange={(e) => setSummaryDays(Number(e.target.value))}
-              className="px-3 py-2 bg-theme-hover border border-theme rounded-lg text-theme-text text-sm focus:outline-none focus:border-theme-primary"
-            >
-              <option value={7}>
-                {t("runtimeHistory.days", { count: 7 })}
-              </option>
-              <option value={30}>
-                {t("runtimeHistory.days", { count: 30 })}
-              </option>
-              <option value={90}>
-                {t("runtimeHistory.days", { count: 90 })}
-              </option>
-              <option value={365}>
-                {t("runtimeHistory.days", { count: 365 })}
-              </option>
-            </select>
+            <div className="relative" ref={summaryDaysDropdownRef}>
+              <button
+                onClick={() => {
+                  const shouldOpenUp = calculateDropdownPosition(
+                    summaryDaysDropdownRef
+                  );
+                  setSummaryDaysDropdownUp(shouldOpenUp);
+                  setSummaryDaysDropdownOpen(!summaryDaysDropdownOpen);
+                }}
+                className="px-3 py-2 bg-theme-hover border border-theme rounded-lg text-theme-text text-sm hover:bg-theme-bg hover:border-theme-primary/50 focus:outline-none focus:border-theme-primary focus:ring-2 focus:ring-theme-primary transition-all shadow-sm flex items-center gap-2"
+              >
+                <span>{t("runtimeHistory.days", { count: summaryDays })}</span>
+                <ChevronDown
+                  className={`w-4 h-4 transition-transform ${
+                    summaryDaysDropdownOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+
+              {summaryDaysDropdownOpen && (
+                <div
+                  className={`absolute z-50 right-0 ${
+                    summaryDaysDropdownUp ? "bottom-full mb-2" : "top-full mt-2"
+                  } bg-theme-card border border-theme-primary rounded-lg shadow-xl overflow-hidden min-w-[120px] max-h-60 overflow-y-auto`}
+                >
+                  {[7, 30, 90].map((value) => (
+                    <button
+                      key={value}
+                      onClick={() => {
+                        setSummaryDays(value);
+                        setSummaryDaysDropdownOpen(false);
+                      }}
+                      className={`w-full px-4 py-2 text-sm transition-all text-left ${
+                        summaryDays === value
+                          ? "bg-theme-primary text-white"
+                          : "text-theme-text hover:bg-theme-primary/30 hover:border-theme-primary/20"
+                      }`}
+                    >
+                      {t("runtimeHistory.days", { count: value })}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -414,53 +484,79 @@ function RuntimeHistory() {
             {t("runtimeHistory.title")}
           </h2>
           <div className="flex items-center gap-3">
-            {/* Import JSON Button */}
-            <button
-              onClick={triggerJsonImport}
-              disabled={importing}
-              className="flex items-center gap-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              title={t("runtimeHistory.importJson")}
-            >
-              {importing ? (
-                <>
-                  <RefreshCw className="w-4 h-4 animate-spin" />
-                  {t("runtimeHistory.importing")}
-                </>
-              ) : (
-                <>
-                  <Database className="w-4 h-4" />
-                  {t("runtimeHistory.importJson")}
-                </>
-              )}
-            </button>
-
             {/* Mode Filter */}
-            <select
-              value={modeFilter || ""}
-              onChange={(e) => {
-                setModeFilter(e.target.value || null);
-                setCurrentPage(0);
-              }}
-              className="px-3 py-2 bg-theme-hover border border-theme rounded-lg text-theme-text text-sm focus:outline-none focus:border-theme-primary"
-            >
-              <option value="">{t("runtimeHistory.allModes")}</option>
-              <option value="normal">{t("runtimeHistory.modes.normal")}</option>
-              <option value="testing">
-                {t("runtimeHistory.modes.testing")}
-              </option>
-              <option value="manual">{t("runtimeHistory.modes.manual")}</option>
-              <option value="scheduled">
-                {t("runtimeHistory.modes.scheduled")}
-              </option>
-              <option value="backup">{t("runtimeHistory.modes.backup")}</option>
-              <option value="syncjelly">
-                {t("runtimeHistory.modes.syncjelly")}
-              </option>
-              <option value="syncemby">
-                {t("runtimeHistory.modes.syncemby")}
-              </option>
-              <option value="reset">{t("runtimeHistory.modes.reset")}</option>
-            </select>
+            <div className="relative" ref={modeFilterDropdownRef}>
+              <button
+                onClick={() => {
+                  const shouldOpenUp = calculateDropdownPosition(
+                    modeFilterDropdownRef
+                  );
+                  setModeFilterDropdownUp(shouldOpenUp);
+                  setModeFilterDropdownOpen(!modeFilterDropdownOpen);
+                }}
+                className="px-3 py-2 bg-theme-hover border border-theme rounded-lg text-theme-text text-sm hover:bg-theme-bg hover:border-theme-primary/50 focus:outline-none focus:border-theme-primary focus:ring-2 focus:ring-theme-primary transition-all shadow-sm flex items-center gap-2"
+              >
+                <span>
+                  {modeFilter
+                    ? t(`runtimeHistory.modes.${modeFilter}`)
+                    : t("runtimeHistory.allModes")}
+                </span>
+                <ChevronDown
+                  className={`w-4 h-4 transition-transform ${
+                    modeFilterDropdownOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+
+              {modeFilterDropdownOpen && (
+                <div
+                  className={`absolute z-50 right-0 ${
+                    modeFilterDropdownUp ? "bottom-full mb-2" : "top-full mt-2"
+                  } bg-theme-card border border-theme-primary rounded-lg shadow-xl overflow-hidden min-w-[180px] max-h-60 overflow-y-auto`}
+                >
+                  <button
+                    onClick={() => {
+                      setModeFilter(null);
+                      setCurrentPage(0);
+                      setModeFilterDropdownOpen(false);
+                    }}
+                    className={`w-full px-4 py-2 text-sm transition-all text-left ${
+                      !modeFilter
+                        ? "bg-theme-primary text-white"
+                        : "text-theme-text hover:bg-theme-primary/30 hover:border-theme-primary/20"
+                    }`}
+                  >
+                    {t("runtimeHistory.allModes")}
+                  </button>
+                  {[
+                    "normal",
+                    "testing",
+                    "manual",
+                    "scheduled",
+                    "backup",
+                    "syncjelly",
+                    "syncemby",
+                    "reset",
+                  ].map((mode) => (
+                    <button
+                      key={mode}
+                      onClick={() => {
+                        setModeFilter(mode);
+                        setCurrentPage(0);
+                        setModeFilterDropdownOpen(false);
+                      }}
+                      className={`w-full px-4 py-2 text-sm transition-all text-left ${
+                        modeFilter === mode
+                          ? "bg-theme-primary text-white"
+                          : "text-theme-text hover:bg-theme-primary/30 hover:border-theme-primary/20"
+                      }`}
+                    >
+                      {t(`runtimeHistory.modes.${mode}`)}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
             {/* Refresh Button */}
             <button
@@ -485,7 +581,7 @@ function RuntimeHistory() {
             <thead>
               <tr className="border-b border-theme">
                 <th className="text-left py-3 px-4 text-theme-muted text-sm font-medium">
-                  {t("runtimeHistory.table.timestamp")}
+                  Start Time
                 </th>
                 <th className="text-left py-3 px-4 text-theme-muted text-sm font-medium">
                   {t("runtimeHistory.table.mode")}
@@ -532,7 +628,9 @@ function RuntimeHistory() {
                     className="border-b border-theme hover:bg-theme-hover transition-colors"
                   >
                     <td className="py-3 px-4 text-theme-text text-sm">
-                      {new Date(entry.timestamp).toLocaleString()}
+                      {entry.StartTime
+                        ? new Date(entry.StartTime).toLocaleString()
+                        : "N/A"}
                     </td>
                     <td className="py-3 px-4">
                       <span

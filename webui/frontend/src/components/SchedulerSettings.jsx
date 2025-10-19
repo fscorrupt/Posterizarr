@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
@@ -13,6 +13,7 @@ import {
   Loader2,
   Settings,
   Zap,
+  ChevronDown,
 } from "lucide-react";
 import Notification from "./Notification";
 import { useToast } from "../context/ToastContext";
@@ -64,6 +65,11 @@ const SchedulerSettings = () => {
   const [isUpdating, setIsUpdating] = useState(false);
 
   const [clearAllConfirm, setClearAllConfirm] = useState(false);
+
+  // Dropdown state and ref
+  const [timezoneDropdownOpen, setTimezoneDropdownOpen] = useState(false);
+  const [timezoneDropdownUp, setTimezoneDropdownUp] = useState(false);
+  const timezoneDropdownRef = useRef(null);
 
   // Common timezones - comprehensive list
   const timezones = [
@@ -143,6 +149,32 @@ const SchedulerSettings = () => {
     fetchSchedulerData();
     const interval = setInterval(fetchSchedulerData, 30000);
     return () => clearInterval(interval);
+  }, []);
+
+  // Function to calculate dropdown position
+  const calculateDropdownPosition = (ref) => {
+    if (!ref.current) return false;
+
+    const rect = ref.current.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceAbove = rect.top;
+
+    // If more space above than below, open upward
+    return spaceAbove > spaceBelow;
+  };
+
+  // Click-outside detection for dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        timezoneDropdownRef.current &&
+        !timezoneDropdownRef.current.contains(event.target)
+      ) {
+        setTimezoneDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const fetchSchedulerData = async () => {
@@ -584,18 +616,52 @@ const SchedulerSettings = () => {
           <label className="block text-sm font-medium text-theme-text mb-2">
             {t("schedulerSettings.timezone")}
           </label>
-          <select
-            value={timezone}
-            onChange={(e) => updateTimezone(e.target.value)}
-            disabled={isUpdating}
-            className="w-full px-4 py-3 bg-theme-bg border border-theme rounded-lg text-theme-text focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-          >
-            {timezones.map((tz) => (
-              <option key={tz} value={tz}>
-                {tz}
-              </option>
-            ))}
-          </select>
+          <div className="relative" ref={timezoneDropdownRef}>
+            <button
+              onClick={() => {
+                if (!isUpdating) {
+                  const shouldOpenUp =
+                    calculateDropdownPosition(timezoneDropdownRef);
+                  setTimezoneDropdownUp(shouldOpenUp);
+                  setTimezoneDropdownOpen(!timezoneDropdownOpen);
+                }
+              }}
+              disabled={isUpdating}
+              className="w-full px-4 py-3 bg-theme-bg border border-theme rounded-lg text-theme-text hover:bg-theme-hover hover:border-theme-primary/50 focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-theme-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm flex items-center justify-between"
+            >
+              <span>{timezone}</span>
+              <ChevronDown
+                className={`w-5 h-5 text-theme-muted transition-transform ${
+                  timezoneDropdownOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
+
+            {timezoneDropdownOpen && !isUpdating && (
+              <div
+                className={`absolute z-50 left-0 right-0 ${
+                  timezoneDropdownUp ? "bottom-full mb-2" : "top-full mt-2"
+                } bg-theme-card border border-theme-primary rounded-lg shadow-xl max-h-80 overflow-y-auto`}
+              >
+                {timezones.map((tz) => (
+                  <button
+                    key={tz}
+                    onClick={() => {
+                      updateTimezone(tz);
+                      setTimezoneDropdownOpen(false);
+                    }}
+                    className={`w-full px-4 py-2 text-sm transition-all text-left ${
+                      timezone === tz
+                        ? "bg-theme-primary text-white"
+                        : "text-theme-text hover:bg-theme-primary/30 hover:border-theme-primary/20"
+                    }`}
+                  >
+                    {tz}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Skip if running */}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Layers,
   Folder,
@@ -47,6 +47,12 @@ function BackgroundsGallery() {
   // Asset replacer state
   const [replacerOpen, setReplacerOpen] = useState(false);
   const [assetToReplace, setAssetToReplace] = useState(null);
+
+  // Dropdown state
+  const [itemsPerPageDropdownOpen, setItemsPerPageDropdownOpen] =
+    useState(false);
+  const [itemsPerPageDropdownUp, setItemsPerPageDropdownUp] = useState(false);
+  const itemsPerPageDropdownRef = useRef(null);
 
   // Cache busting timestamp for force-reloading images after replacement
   const [cacheBuster, setCacheBuster] = useState(Date.now());
@@ -161,6 +167,35 @@ function BackgroundsGallery() {
       setImagesLoading(false);
     }
   };
+
+  // Function to calculate dropdown position
+  const calculateDropdownPosition = (ref) => {
+    if (!ref.current) return false;
+
+    const rect = ref.current.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceAbove = rect.top;
+
+    // If more space above than below, open upward
+    return spaceAbove > spaceBelow;
+  };
+
+  // Click outside detection for dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        itemsPerPageDropdownRef.current &&
+        !itemsPerPageDropdownRef.current.contains(event.target)
+      ) {
+        setItemsPerPageDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   const formatDisplayPath = (path) => {
     return path;
@@ -724,19 +759,52 @@ function BackgroundsGallery() {
                   <label className="text-sm font-medium text-theme-text">
                     {t("backgroundsGallery.itemsPerPage")}
                   </label>
-                  <select
-                    value={itemsPerPage}
-                    onChange={(e) =>
-                      handleItemsPerPageChange(parseInt(e.target.value))
-                    }
-                    className="px-4 py-2 bg-theme-bg text-theme-text border border-theme-border rounded-lg text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-theme-primary focus:border-transparent transition-all cursor-pointer hover:bg-theme-card"
-                  >
-                    <option value={25}>25</option>
-                    <option value={50}>50</option>
-                    <option value={100}>100</option>
-                    <option value={200}>200</option>
-                    <option value={500}>500</option>
-                  </select>
+                  <div className="relative" ref={itemsPerPageDropdownRef}>
+                    <button
+                      onClick={() => {
+                        const shouldOpenUp = calculateDropdownPosition(
+                          itemsPerPageDropdownRef
+                        );
+                        setItemsPerPageDropdownUp(shouldOpenUp);
+                        setItemsPerPageDropdownOpen(!itemsPerPageDropdownOpen);
+                      }}
+                      className="px-4 py-2 bg-theme-bg text-theme-text border border-theme-border rounded-lg text-sm font-semibold hover:bg-theme-hover hover:border-theme-primary/50 focus:outline-none focus:ring-2 focus:ring-theme-primary transition-all cursor-pointer shadow-sm flex items-center gap-2"
+                    >
+                      <span>{itemsPerPage}</span>
+                      <ChevronDown
+                        className={`w-4 h-4 transition-transform ${
+                          itemsPerPageDropdownOpen ? "rotate-180" : ""
+                        }`}
+                      />
+                    </button>
+
+                    {itemsPerPageDropdownOpen && (
+                      <div
+                        className={`absolute z-50 right-0 ${
+                          itemsPerPageDropdownUp
+                            ? "bottom-full mb-2"
+                            : "top-full mt-2"
+                        } bg-theme-card border border-theme-primary rounded-lg shadow-xl overflow-hidden min-w-[80px] max-h-60 overflow-y-auto`}
+                      >
+                        {[25, 50, 100, 200, 500].map((value) => (
+                          <button
+                            key={value}
+                            onClick={() => {
+                              handleItemsPerPageChange(value);
+                              setItemsPerPageDropdownOpen(false);
+                            }}
+                            className={`w-full px-4 py-2 text-sm transition-all text-center ${
+                              itemsPerPage === value
+                                ? "bg-theme-primary text-white"
+                                : "text-theme-text hover:bg-theme-primary/30 hover:border-theme-primary/20"
+                            }`}
+                          >
+                            {value}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
