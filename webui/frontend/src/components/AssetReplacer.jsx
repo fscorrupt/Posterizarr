@@ -148,9 +148,15 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
           const showFolder = pathSegments[showFolderIndex];
           folderName = showFolder; // Store the full folder name
 
-          // Extract title and year - remove ALL tags {xxx-yyy}
-          // Pattern: "Show Name (2020) {tmdb-123}" or "Show Name (2020) {imdb-tt123}{tvdb-456}"
-          const cleanFolder = showFolder.replace(/\s*\{[^}]+\}/g, "").trim();
+          // Extract title and year - remove ALL ID tags in various formats:
+          // {tmdb-123}, {tvdb-456}, {imdb-tt123}, [tmdb-123], [tvdb-456], (tmdb-123), (xxx-yyy), etc.
+          // Pattern: "Show Name (2020) {tmdb-123}" or "Show Name (2020) [imdb-tt123][tvdb-456]" or "Show Name (2020) (tmdb-123)"
+          let cleanFolder = showFolder
+            .replace(/\s*\{[^}]+\}/g, "") // Remove {xxx-yyy}
+            .replace(/\s*\[[^\]]+\]/g, "") // Remove [xxx-yyy]
+            .replace(/\s*\((tmdb|tvdb|imdb)-[^)]+\)/gi, "") // Remove (tmdb-xxx), (tvdb-xxx), (imdb-xxx)
+            .replace(/\s*\([a-z]+-[^)]+\)/gi, "") // Remove generic (xxx-yyy) format
+            .trim();
 
           // Now extract title and year
           const showMatch = cleanFolder.match(/^(.+?)\s*\((\d{4})\)\s*$/);
@@ -179,8 +185,14 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
           if (segment.match(/\(\d{4}\)/)) {
             folderName = segment;
 
-            // Clean the folder name from ALL tags
-            const cleanSegment = segment.replace(/\s*\{[^}]+\}/g, "").trim();
+            // Clean the folder name from ALL ID tags in various formats:
+            // {tmdb-123}, [tvdb-456], (imdb-tt123), (xxx-yyy), etc.
+            let cleanSegment = segment
+              .replace(/\s*\{[^}]+\}/g, "") // Remove {xxx-yyy}
+              .replace(/\s*\[[^\]]+\]/g, "") // Remove [xxx-yyy]
+              .replace(/\s*\((tmdb|tvdb|imdb)-[^)]+\)/gi, "") // Remove (tmdb-xxx), (tvdb-xxx), (imdb-xxx)
+              .replace(/\s*\([a-z]+-[^)]+\)/gi, "") // Remove generic (xxx-yyy) format
+              .trim();
 
             // Extract title and year
             const match = cleanSegment.match(/^(.+?)\s*\((\d{4})\)\s*$/);
@@ -220,10 +232,14 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
 
             folderName = folderSegment;
 
-            // Remove year and ALL ID tags, and file extension
+            // Remove year and ALL ID tags (in various bracket formats), and file extension
+            // Filters: {tmdb-123}, [tvdb-456], (imdb-tt123), (xxx-yyy), etc.
             const cleanTitle = folderSegment
               .replace(/\s*\(\d{4}\)\s*/, "")
-              .replace(/\s*\{[^}]+\}/g, "")
+              .replace(/\s*\{[^}]+\}/g, "") // Remove {xxx-yyy}
+              .replace(/\s*\[[^\]]+\]/g, "") // Remove [xxx-yyy]
+              .replace(/\s*\((tmdb|tvdb|imdb)-[^)]+\)/gi, "") // Remove (tmdb-xxx), (tvdb-xxx), (imdb-xxx)
+              .replace(/\s*\([a-z]+-[^)]+\)/gi, "") // Remove generic (xxx-yyy) format
               .replace(/\.[^.]+$/, "")
               .trim();
             if (cleanTitle) {
@@ -1011,25 +1027,25 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
   const totalPreviews = Object.values(previews).flat().length;
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-theme-card rounded-xl border border-theme max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-0 sm:p-4">
+      <div className="bg-theme-card rounded-none sm:rounded-xl border-0 sm:border border-theme max-w-6xl w-full h-full sm:h-auto sm:max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="border-b border-theme p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex-1 mr-4">
-              <h2 className="text-2xl font-bold text-theme-text flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-theme-primary/10">
-                  <RefreshCw className="w-6 h-6 text-theme-primary" />
+        <div className="border-b border-theme p-4 sm:p-6">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <h2 className="text-lg sm:text-2xl font-bold text-theme-text flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 rounded-lg bg-theme-primary/10">
+                  <RefreshCw className="w-4 h-4 sm:w-6 sm:h-6 text-theme-primary" />
                 </div>
-                {t("assetReplacer.title")}
+                <span className="break-words">{t("assetReplacer.title")}</span>
               </h2>
-              <p className="text-xl font-bold text-theme-text mt-3">
+              <p className="text-base sm:text-xl font-bold text-theme-text mt-2 sm:mt-3 break-words">
                 {asset.path.split(/[\\/]/).slice(-2, -1)[0] || "Unknown"}
               </p>
-              <p className="text-sm text-theme-muted truncate mt-1">
+              <p className="text-xs sm:text-sm text-theme-muted break-all mt-1">
                 {asset.path}
               </p>
-              <p className="text-sm text-theme-muted mt-1">
+              <p className="text-xs sm:text-sm text-theme-muted mt-1">
                 {metadata.asset_type === "poster" &&
                   metadata.media_type === "movie" &&
                   "Movie Poster"}
@@ -1048,7 +1064,7 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-theme-hover rounded-lg transition-colors"
+              className="flex-shrink-0 p-2 hover:bg-theme-hover rounded-lg transition-colors"
             >
               <X className="w-5 h-5 text-theme-muted" />
             </button>
@@ -1056,31 +1072,37 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
         </div>
 
         {/* Tabs */}
-        <div className="border-b border-theme px-6">
-          <div className="flex gap-4">
+        <div className="border-b border-theme px-4 sm:px-6">
+          <div className="flex gap-2 sm:gap-4 -mb-px overflow-x-auto">
             <button
               onClick={() => setActiveTab("upload")}
-              className={`px-4 py-3 font-medium transition-colors border-b-2 ${
+              className={`px-3 sm:px-4 py-2 sm:py-3 font-medium transition-colors border-b-2 whitespace-nowrap text-sm sm:text-base ${
                 activeTab === "upload"
                   ? "text-theme-primary border-theme-primary"
                   : "text-theme-muted border-transparent hover:text-theme-text"
               }`}
             >
-              <Upload className="w-4 h-4 inline mr-2" />
-              {t("assetReplacer.uploadCustom")}
+              <Upload className="w-3.5 h-3.5 sm:w-4 sm:h-4 inline mr-1.5 sm:mr-2" />
+              <span className="hidden sm:inline">
+                {t("assetReplacer.uploadCustom")}
+              </span>
+              <span className="sm:hidden">Upload</span>
             </button>
             <button
               onClick={() => setActiveTab("previews")}
-              className={`px-4 py-3 font-medium transition-colors border-b-2 ${
+              className={`px-3 sm:px-4 py-2 sm:py-3 font-medium transition-colors border-b-2 whitespace-nowrap text-sm sm:text-base ${
                 activeTab === "previews"
                   ? "text-theme-primary border-theme-primary"
                   : "text-theme-muted border-transparent hover:text-theme-text"
               }`}
             >
-              <ImageIcon className="w-4 h-4 inline mr-2" />
-              {t("assetReplacer.servicePreviews")}
+              <ImageIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 inline mr-1.5 sm:mr-2" />
+              <span className="hidden sm:inline">
+                {t("assetReplacer.servicePreviews")}
+              </span>
+              <span className="sm:hidden">Previews</span>
               {totalPreviews > 0 && (
-                <span className="ml-2 px-2 py-0.5 bg-theme-primary/20 text-theme-primary rounded-full text-xs">
+                <span className="ml-1.5 sm:ml-2 px-1.5 sm:px-2 py-0.5 bg-theme-primary/20 text-theme-primary rounded-full text-xs">
                   {totalPreviews}
                 </span>
               )}
@@ -1089,21 +1111,21 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
           {activeTab === "upload" && (
-            <div className="max-w-3xl mx-auto space-y-6">
+            <div className="max-w-3xl mx-auto space-y-4 sm:space-y-6">
               {/* Process with Overlays Toggle */}
               {(metadata.asset_type === "poster" ||
                 metadata.asset_type === "background" ||
                 metadata.asset_type === "season" ||
                 metadata.asset_type === "titlecard") && (
-                <div className="bg-theme-hover border border-theme rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex-1">
-                      <h4 className="text-sm font-medium text-theme-text">
+                <div className="bg-theme-hover border border-theme rounded-lg p-3 sm:p-4">
+                  <div className="flex items-start sm:items-center justify-between gap-3 mb-2">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-xs sm:text-sm font-medium text-theme-text break-words">
                         Process with overlays after replace
                       </h4>
-                      <p className="text-xs text-theme-muted mt-0.5">
+                      <p className="text-xs text-theme-muted mt-0.5 leading-relaxed">
                         Applies borders, overlays & text to the replaced asset
                         based on overlay settings.
                       </p>
@@ -1112,7 +1134,7 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
                       onClick={() =>
                         setProcessWithOverlays(!processWithOverlays)
                       }
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-theme-primary focus:ring-offset-2 focus:ring-offset-theme-bg ${
+                      className={`flex-shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-theme-primary focus:ring-offset-2 focus:ring-offset-theme-bg ${
                         processWithOverlays ? "bg-theme-primary" : "bg-gray-600"
                       }`}
                     >
@@ -1281,19 +1303,19 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
               )}
 
               {/* Manual Search Toggle */}
-              <div className="bg-theme-hover border border-theme rounded-lg p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex-1">
-                    <h4 className="text-sm font-medium text-theme-text">
+              <div className="bg-theme-hover border border-theme rounded-lg p-3 sm:p-4">
+                <div className="flex items-start sm:items-center justify-between gap-3 mb-2">
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-xs sm:text-sm font-medium text-theme-text break-words">
                       {t("assetReplacer.manualSearchByTitle")}
                     </h4>
-                    <p className="text-xs text-theme-muted mt-0.5">
+                    <p className="text-xs text-theme-muted mt-0.5 leading-relaxed">
                       Search for assets instead of using detected metadata
                     </p>
                   </div>
                   <button
                     onClick={() => setManualSearch(!manualSearch)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-theme-primary focus:ring-offset-2 focus:ring-offset-theme-bg ${
+                    className={`flex-shrink-0 relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-theme-primary focus:ring-offset-2 focus:ring-offset-theme-bg ${
                       manualSearch ? "bg-theme-primary" : "bg-gray-600"
                     }`}
                   >
@@ -1386,9 +1408,9 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
                       <button
                         onClick={fetchPreviews}
                         disabled={loading}
-                        className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-theme-primary text-white rounded-lg hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+                        className="w-full inline-flex items-center justify-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 text-theme-text rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm shadow-sm"
                       >
-                        <Download className="w-4 h-4" />
+                        <Download className="w-4 h-4 text-theme-primary" />
                         {loading
                           ? t("common.loading")
                           : t("assetReplacer.fetchFromServices")}
@@ -1399,20 +1421,20 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
               </div>
 
               {/* Upload Section */}
-              <div className="bg-theme-card border border-theme rounded-lg p-6">
-                <div className="flex items-start gap-4">
+              <div className="bg-theme-card border border-theme rounded-lg p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
                   {/* Upload Area */}
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-theme-text mb-3">
+                  <div className="flex-1 w-full">
+                    <h3 className="text-base sm:text-lg font-semibold text-theme-text mb-3">
                       {t("assetReplacer.uploadYourOwnImage")}
                     </h3>
-                    <label className="block border-2 border-dashed border-theme rounded-lg p-6 text-center cursor-pointer hover:border-theme-primary transition-colors">
-                      <Upload className="w-10 h-10 text-theme-muted mx-auto mb-2" />
-                      <p className="text-sm text-theme-muted mb-3">
+                    <label className="block border-2 border-dashed border-theme rounded-lg p-4 sm:p-6 text-center cursor-pointer hover:border-theme-primary transition-colors">
+                      <Upload className="w-8 h-8 sm:w-10 sm:h-10 text-theme-muted mx-auto mb-2" />
+                      <p className="text-xs sm:text-sm text-theme-muted mb-2 sm:mb-3">
                         {t("assetReplacer.selectCustomImage")}
                       </p>
-                      <span className="inline-flex items-center gap-2 px-4 py-2 bg-theme-primary text-white rounded-lg hover:bg-opacity-90 transition-colors text-sm">
-                        <Upload className="w-4 h-4" />
+                      <span className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 text-theme-text rounded-lg transition-all text-xs sm:text-sm shadow-sm">
+                        <Upload className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-theme-primary" />
                         {uploading
                           ? t("assetReplacer.uploading")
                           : t("assetReplacer.chooseFile")}
@@ -1429,13 +1451,15 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
 
                   {/* Preview of Uploaded Image */}
                   {uploadedImage && (
-                    <div className="w-48 flex-shrink-0">
+                    <div className="w-full sm:w-48 flex-shrink-0">
                       <p className="text-xs font-medium text-theme-text mb-2">
                         Preview:
                       </p>
                       <div
-                        className={`relative bg-theme rounded-lg overflow-hidden border border-theme ${
-                          useHorizontalLayout ? "aspect-[16/9]" : "aspect-[2/3]"
+                        className={`relative bg-theme rounded-lg overflow-hidden border border-theme mx-auto ${
+                          useHorizontalLayout
+                            ? "aspect-[16/9] max-w-xs"
+                            : "aspect-[2/3] max-w-[12rem]"
                         }`}
                       >
                         <img
@@ -1454,8 +1478,8 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-theme"></div>
                 </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-4 bg-theme-bg text-theme-muted">
+                <div className="relative flex justify-center text-xs sm:text-sm">
+                  <span className="px-3 sm:px-4 bg-theme-bg text-theme-muted">
                     {manualSearch
                       ? t("assetReplacer.searchForAssets")
                       : t("assetReplacer.orFetchFromServices")}
@@ -1468,9 +1492,9 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
                 <button
                   onClick={fetchPreviews}
                   disabled={loading}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-theme-hover text-theme-text rounded-lg hover:bg-theme-primary hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="inline-flex items-center justify-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 text-theme-text rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm text-sm sm:text-base w-full sm:w-auto"
                 >
-                  <Download className="w-5 h-5" />
+                  <Download className="w-4 h-4 sm:w-5 sm:h-5 text-theme-primary" />
                   {loading
                     ? t("common.loading")
                     : t("assetReplacer.fetchFromServices")}
@@ -1496,9 +1520,9 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
                   </p>
                   <button
                     onClick={fetchPreviews}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-theme-primary text-white rounded-lg hover:bg-opacity-90 transition-colors"
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 text-theme-text rounded-lg transition-all shadow-sm"
                   >
-                    <Download className="w-5 h-5" />
+                    <Download className="w-5 h-5 text-theme-primary" />
                     {t("assetReplacer.fetchPreviews")}
                   </button>
                 </div>
