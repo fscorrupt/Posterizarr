@@ -12,6 +12,8 @@ import {
   Database,
   TrendingUp,
   ChevronDown,
+  X,
+  Info,
 } from "lucide-react";
 
 const API_URL = "/api";
@@ -22,6 +24,30 @@ let cachedSummary = null;
 let cachedMigrationStatus = null;
 let lastFetchTime = 0;
 const CACHE_DURATION = 30000; // 30 seconds
+
+// Helper function to parse dates in multiple formats
+const parseDateTime = (dateStr) => {
+  if (!dateStr) return null;
+
+  // Try ISO format first
+  let date = new Date(dateStr);
+  if (!isNaN(date.getTime())) {
+    return date;
+  }
+
+  // Try German format: "19.10.2025 05:14:22"
+  const germanFormat = /^(\d{2})\.(\d{2})\.(\d{4})\s+(\d{2}):(\d{2}):(\d{2})$/;
+  const match = dateStr.match(germanFormat);
+  if (match) {
+    const [, day, month, year, hour, minute, second] = match;
+    date = new Date(year, month - 1, day, hour, minute, second);
+    if (!isNaN(date.getTime())) {
+      return date;
+    }
+  }
+
+  return null;
+};
 
 function RuntimeHistory() {
   const { t } = useTranslation();
@@ -36,6 +62,8 @@ function RuntimeHistory() {
   const [limit] = useState(20);
   const [modeFilter, setModeFilter] = useState(null);
   const [summaryDays, setSummaryDays] = useState(30);
+  const [selectedEntry, setSelectedEntry] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
 
   // Dropdown states
   const [summaryDaysDropdownOpen, setSummaryDaysDropdownOpen] = useState(false);
@@ -625,12 +653,18 @@ function RuntimeHistory() {
                 history.map((entry) => (
                   <tr
                     key={entry.id}
-                    className="border-b border-theme hover:bg-theme-hover transition-colors"
+                    onClick={() => {
+                      setSelectedEntry(entry);
+                      setShowDetailModal(true);
+                    }}
+                    className="border-b border-theme hover:bg-theme-hover transition-colors cursor-pointer"
+                    title={t("runtimeHistory.clickForDetails")}
                   >
                     <td className="py-3 px-4 text-theme-text text-sm">
-                      {entry.StartTime
-                        ? new Date(entry.StartTime).toLocaleString()
-                        : "N/A"}
+                      {(() => {
+                        const date = parseDateTime(entry.start_time);
+                        return date ? date.toLocaleString() : "N/A";
+                      })()}
                     </td>
                     <td className="py-3 px-4">
                       <span
@@ -704,6 +738,331 @@ function RuntimeHistory() {
           </div>
         </div>
       </div>
+
+      {/* Detail Modal */}
+      {showDetailModal && selectedEntry && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+          onClick={() => setShowDetailModal(false)}
+        >
+          <div
+            className="bg-theme-card rounded-xl border border-theme-primary max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="sticky top-0 bg-theme-card border-b border-theme p-6 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-theme-primary/10">
+                  <Info className="w-6 h-6 text-theme-primary" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-theme-text">
+                    {t("runtimeHistory.detailTitle")}
+                  </h2>
+                  <p className="text-sm text-theme-muted">
+                    {(() => {
+                      const date = parseDateTime(selectedEntry.start_time);
+                      return date ? date.toLocaleString() : "N/A";
+                    })()}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowDetailModal(false)}
+                className="p-2 rounded-lg hover:bg-theme-hover transition-colors"
+              >
+                <X className="w-6 h-6 text-theme-muted" />
+              </button>
+            </div>
+
+            {/* Modal Content */}
+            <div className="p-6 space-y-6">
+              {/* Run Info */}
+              <div className="bg-theme-hover rounded-lg p-4 border border-theme">
+                <h3 className="text-lg font-semibold text-theme-text mb-3">
+                  {t("runtimeStats.runInfo")}
+                </h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-theme-muted text-sm mb-1">
+                      {t("dashboard.mode")}
+                    </p>
+                    <span
+                      className={`inline-flex px-3 py-1 rounded-full text-sm border capitalize ${getModeColor(
+                        selectedEntry.mode
+                      )}`}
+                    >
+                      {selectedEntry.mode}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-theme-muted text-sm mb-1">
+                      {t("runtimeStats.executionTime")}
+                    </p>
+                    <p className="text-lg font-bold text-theme-primary">
+                      {selectedEntry.runtime_formatted}
+                    </p>
+                  </div>
+                  {selectedEntry.start_time && (
+                    <div>
+                      <p className="text-theme-muted text-sm mb-1">
+                        {t("runtimeStats.startTime")}
+                      </p>
+                      <p className="text-sm font-medium text-theme-text">
+                        {(() => {
+                          const date = parseDateTime(selectedEntry.start_time);
+                          return date ? date.toLocaleString() : "N/A";
+                        })()}
+                      </p>
+                    </div>
+                  )}
+                  {selectedEntry.end_time && (
+                    <div>
+                      <p className="text-theme-muted text-sm mb-1">
+                        {t("runtimeStats.endTime")}
+                      </p>
+                      <p className="text-sm font-medium text-theme-text">
+                        {(() => {
+                          const date = parseDateTime(selectedEntry.end_time);
+                          return date ? date.toLocaleString() : "N/A";
+                        })()}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Image Statistics */}
+              <div className="bg-theme-hover rounded-lg p-4 border border-theme">
+                <h3 className="text-lg font-semibold text-theme-text mb-3">
+                  {t("runtimeStats.imageStats")}
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="p-3 bg-theme-card rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Image className="w-4 h-4 text-blue-400" />
+                      <p className="text-theme-muted text-xs">
+                        {t("runtimeStats.totalImages")}
+                      </p>
+                    </div>
+                    <p className="text-2xl font-bold text-theme-text">
+                      {selectedEntry.total_images}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-theme-card rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Film className="w-4 h-4 text-green-400" />
+                      <p className="text-theme-muted text-xs">
+                        {t("assets.posters")}
+                      </p>
+                    </div>
+                    <p className="text-2xl font-bold text-theme-text">
+                      {selectedEntry.posters}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-theme-card rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Tv className="w-4 h-4 text-orange-400" />
+                      <p className="text-theme-muted text-xs">
+                        {t("assets.seasons")}
+                      </p>
+                    </div>
+                    <p className="text-2xl font-bold text-theme-text">
+                      {selectedEntry.seasons}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-theme-card rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Image className="w-4 h-4 text-purple-400" />
+                      <p className="text-theme-muted text-xs">
+                        {t("assets.backgrounds")}
+                      </p>
+                    </div>
+                    <p className="text-2xl font-bold text-theme-text">
+                      {selectedEntry.backgrounds}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-theme-card rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Tv className="w-4 h-4 text-cyan-400" />
+                      <p className="text-theme-muted text-xs">
+                        {t("assets.titleCards")}
+                      </p>
+                    </div>
+                    <p className="text-2xl font-bold text-theme-text">
+                      {selectedEntry.titlecards}
+                    </p>
+                  </div>
+                  {selectedEntry.collections > 0 && (
+                    <div className="p-3 bg-theme-card rounded-lg">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Film className="w-4 h-4 text-yellow-400" />
+                        <p className="text-theme-muted text-xs">
+                          {t("assets.collections")}
+                        </p>
+                      </div>
+                      <p className="text-2xl font-bold text-theme-text">
+                        {selectedEntry.collections}
+                      </p>
+                    </div>
+                  )}
+                  <div className="p-3 bg-theme-card rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <AlertTriangle
+                        className={`w-4 h-4 ${
+                          selectedEntry.errors > 0
+                            ? "text-red-400"
+                            : "text-green-400"
+                        }`}
+                      />
+                      <p className="text-theme-muted text-xs">
+                        {t("runtimeStats.errors")}
+                      </p>
+                    </div>
+                    <p
+                      className={`text-2xl font-bold ${
+                        selectedEntry.errors > 0
+                          ? "text-red-400"
+                          : "text-green-400"
+                      }`}
+                    >
+                      {selectedEntry.errors}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Additional Information */}
+              {(selectedEntry.tba_skipped > 0 ||
+                selectedEntry.jap_chines_skipped > 0 ||
+                selectedEntry.images_cleared > 0 ||
+                selectedEntry.folders_cleared > 0 ||
+                selectedEntry.space_saved) && (
+                <div className="bg-theme-hover rounded-lg p-4 border border-theme">
+                  <h3 className="text-lg font-semibold text-theme-text mb-3">
+                    {t("runtimeStats.additionalInfo")}
+                  </h3>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {selectedEntry.tba_skipped > 0 && (
+                      <div className="p-3 bg-theme-card rounded-lg">
+                        <p className="text-theme-muted text-xs mb-1">
+                          {t("runtimeStats.tbaSkipped")}
+                        </p>
+                        <p className="text-xl font-bold text-theme-text">
+                          {selectedEntry.tba_skipped}
+                        </p>
+                      </div>
+                    )}
+                    {selectedEntry.jap_chines_skipped > 0 && (
+                      <div className="p-3 bg-theme-card rounded-lg">
+                        <p className="text-theme-muted text-xs mb-1">
+                          {t("runtimeStats.japChinesSkipped")}
+                        </p>
+                        <p className="text-xl font-bold text-theme-text">
+                          {selectedEntry.jap_chines_skipped}
+                        </p>
+                      </div>
+                    )}
+                    {selectedEntry.images_cleared > 0 && (
+                      <div className="p-3 bg-theme-card rounded-lg">
+                        <p className="text-theme-muted text-xs mb-1">
+                          {t("runtimeStats.imagesCleared")}
+                        </p>
+                        <p className="text-xl font-bold text-theme-text">
+                          {selectedEntry.images_cleared}
+                        </p>
+                      </div>
+                    )}
+                    {selectedEntry.folders_cleared > 0 && (
+                      <div className="p-3 bg-theme-card rounded-lg">
+                        <p className="text-theme-muted text-xs mb-1">
+                          {t("runtimeStats.foldersCleared")}
+                        </p>
+                        <p className="text-xl font-bold text-theme-text">
+                          {selectedEntry.folders_cleared}
+                        </p>
+                      </div>
+                    )}
+                    {selectedEntry.space_saved && (
+                      <div className="p-3 bg-theme-card rounded-lg">
+                        <p className="text-theme-muted text-xs mb-1">
+                          {t("runtimeStats.spaceSaved")}
+                        </p>
+                        <p className="text-xl font-bold text-green-400">
+                          {selectedEntry.space_saved}
+                        </p>
+                      </div>
+                    )}
+                    {selectedEntry.notification_sent && (
+                      <div className="p-3 bg-theme-card rounded-lg">
+                        <p className="text-theme-muted text-xs mb-1">
+                          {t("runtimeStats.notificationSent")}
+                        </p>
+                        <p className="text-xl font-bold text-green-400">
+                          {t("common.yes")}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Version Information */}
+              {(selectedEntry.script_version || selectedEntry.im_version) && (
+                <div className="bg-theme-hover rounded-lg p-4 border border-theme">
+                  <h3 className="text-lg font-semibold text-theme-text mb-3">
+                    {t("runtimeStats.versionInfo")}
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    {selectedEntry.script_version && (
+                      <div className="p-3 bg-theme-card rounded-lg">
+                        <p className="text-theme-muted text-xs mb-1">
+                          {t("runtimeStats.scriptVersion")}
+                        </p>
+                        <p className="text-lg font-bold text-theme-primary">
+                          {selectedEntry.script_version}
+                        </p>
+                      </div>
+                    )}
+                    {selectedEntry.im_version && (
+                      <div className="p-3 bg-theme-card rounded-lg">
+                        <p className="text-theme-muted text-xs mb-1">
+                          {t("runtimeStats.imVersion")}
+                        </p>
+                        <p className="text-lg font-bold text-theme-primary">
+                          {selectedEntry.im_version}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Notes */}
+              {selectedEntry.notes && (
+                <div className="bg-theme-hover rounded-lg p-4 border border-theme">
+                  <h3 className="text-lg font-semibold text-theme-text mb-3">
+                    {t("runtimeStats.notes")}
+                  </h3>
+                  <p className="text-theme-text text-sm whitespace-pre-wrap">
+                    {selectedEntry.notes}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="sticky bottom-0 bg-theme-card border-t border-theme p-4 flex justify-end">
+              <button
+                onClick={() => setShowDetailModal(false)}
+                className="px-6 py-2 bg-theme-primary hover:bg-theme-primary/80 text-white rounded-lg font-medium transition-all"
+              >
+                {t("common.close")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

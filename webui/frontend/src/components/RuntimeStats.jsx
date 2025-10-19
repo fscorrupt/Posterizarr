@@ -14,6 +14,30 @@ const API_URL = "/api";
 
 let cachedRuntimeStats = null;
 
+// Helper function to parse dates in multiple formats
+const parseDateTime = (dateStr) => {
+  if (!dateStr) return null;
+
+  // Try ISO format first
+  let date = new Date(dateStr);
+  if (!isNaN(date.getTime())) {
+    return date;
+  }
+
+  // Try German format: "19.10.2025 05:14:22"
+  const germanFormat = /^(\d{2})\.(\d{2})\.(\d{4})\s+(\d{2}):(\d{2}):(\d{2})$/;
+  const match = dateStr.match(germanFormat);
+  if (match) {
+    const [, day, month, year, hour, minute, second] = match;
+    date = new Date(year, month - 1, day, hour, minute, second);
+    if (!isNaN(date.getTime())) {
+      return date;
+    }
+  }
+
+  return null;
+};
+
 function RuntimeStats() {
   const { t } = useTranslation();
   const [runtimeStats, setRuntimeStats] = useState(
@@ -157,8 +181,8 @@ function RuntimeStats() {
         </div>
       ) : (
         <>
-          {/* Run Info - Mode and Timestamp */}
-          {(runtimeStats.mode || runtimeStats.timestamp) && (
+          {/* Run Info - Mode and Start Time */}
+          {(runtimeStats.mode || runtimeStats.start_time) && (
             <div className="mb-4 p-3 bg-theme-hover rounded-lg border border-theme">
               <div className="flex items-center justify-between text-sm">
                 {runtimeStats.mode && (
@@ -171,13 +195,16 @@ function RuntimeStats() {
                     </span>
                   </div>
                 )}
-                {runtimeStats.timestamp && (
+                {runtimeStats.start_time && (
                   <div className="flex items-center gap-2">
                     <span className="text-theme-muted">
                       {t("dashboard.lastRun")}:
                     </span>
                     <span className="font-medium text-theme-text">
-                      {new Date(runtimeStats.timestamp).toLocaleString()}
+                      {(() => {
+                        const date = parseDateTime(runtimeStats.start_time);
+                        return date ? date.toLocaleString() : "N/A";
+                      })()}
                     </span>
                   </div>
                 )}
@@ -462,9 +489,12 @@ function RuntimeStats() {
                       </span>
                     </div>
                     <span className="text-sm font-bold text-theme-primary">
-                      {new Date(
-                        runtimeStats.scheduler.next_run
-                      ).toLocaleString()}
+                      {(() => {
+                        const date = parseDateTime(
+                          runtimeStats.scheduler.next_run
+                        );
+                        return date ? date.toLocaleString() : "N/A";
+                      })()}
                     </span>
                   </div>
                 )}
