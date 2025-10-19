@@ -145,7 +145,7 @@ const AssetOverview = () => {
           _originalType: asset.Type,
         };
 
-        console.log("🔄 Found actual asset file from filesystem:", {
+        console.log("Found actual asset file from filesystem:", {
           dbRecord: {
             Title: asset.Title,
             Type: asset.Type,
@@ -172,7 +172,7 @@ const AssetOverview = () => {
 
   // Fallback: Manual path construction (for backwards compatibility)
   const constructAssetManually = (asset) => {
-    console.warn("⚠️ Using manual path construction as fallback");
+    console.warn("Using manual path construction as fallback");
 
     let fullPath;
 
@@ -239,23 +239,20 @@ const AssetOverview = () => {
       _originalType: asset.Type, // Keep original for reference
     };
 
-    console.log(
-      "🔄 Converting asset for replacer (Gallery-compatible format):",
-      {
-        original: {
-          Title: asset.Title,
-          Type: asset.Type,
-          Rootfolder: asset.Rootfolder,
-          LibraryName: asset.LibraryName,
-        },
-        converted: {
-          path: assetForReplacer.path,
-          name: assetForReplacer.name,
-          url: assetForReplacer.url,
-          type: assetForReplacer.type,
-        },
-      }
-    );
+    console.log("Converting asset for replacer (Gallery-compatible format):", {
+      original: {
+        Title: asset.Title,
+        Type: asset.Type,
+        Rootfolder: asset.Rootfolder,
+        LibraryName: asset.LibraryName,
+      },
+      converted: {
+        path: assetForReplacer.path,
+        name: assetForReplacer.name,
+        url: assetForReplacer.url,
+        type: assetForReplacer.type,
+      },
+    });
 
     setSelectedAsset(assetForReplacer);
     setShowReplacer(true);
@@ -270,14 +267,14 @@ const AssetOverview = () => {
       });
 
       if (response.ok) {
-        console.log("✅ DB entry deleted after successful replacement");
+        console.log("DB entry deleted after successful replacement");
         // Refresh the data to update the UI
         await fetchData();
 
         // Trigger event to update sidebar badge count
         window.dispatchEvent(new Event("assetReplaced"));
       } else {
-        console.error("❌ Failed to delete DB entry");
+        console.error("Failed to delete DB entry");
       }
     } catch (error) {
       console.error("Error deleting DB entry:", error);

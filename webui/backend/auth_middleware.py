@@ -28,11 +28,12 @@ if not auth_logger.handlers:
             LOGS_DIR = Path(__file__).parent.parent.parent / "UILogs"
 
         LOGS_DIR.mkdir(exist_ok=True)
-        auth_log_path = LOGS_DIR / "AuthServer.log"
 
+        # Handler 1: AuthServer.log (separate auth log)
+        auth_log_path = LOGS_DIR / "AuthServer.log"
         if auth_log_path.exists():
             auth_log_path.unlink()
-            logger.info(f"🗑️  Cleared old AuthServer.log")
+            logger.info(f"Cleared old AuthServer.log")
 
         auth_handler = logging.FileHandler(auth_log_path, encoding="utf-8", mode="w")
         auth_handler.setFormatter(
@@ -43,10 +44,23 @@ if not auth_logger.handlers:
         )
         auth_logger.addHandler(auth_handler)
 
-        logger.info(f"✅ Auth logger initialized: {auth_log_path}")
+        # Handler 2: FrontendUI.log (combined log with backend and UI)
+        frontend_log_path = LOGS_DIR / "FrontendUI.log"
+        frontend_handler = logging.FileHandler(
+            frontend_log_path, encoding="utf-8", mode="a"
+        )
+        frontend_handler.setFormatter(
+            logging.Formatter(
+                "[%(asctime)s] [%(levelname)-8s] |AUTH| %(message)s",
+                datefmt="%Y-%m-%d %H:%M:%S",
+            )
+        )
+        auth_logger.addHandler(frontend_handler)
+
+        logger.info(f"Auth logger initialized: {auth_log_path}")
 
     except Exception as e:
-        logger.warning(f"⚠️ Could not initialize auth logger: {e}")
+        logger.warning(f"Could not initialize auth logger: {e}")
 
 logger = auth_logger
 
@@ -68,10 +82,10 @@ class BasicAuthMiddleware(BaseHTTPMiddleware):
         self.enabled = auth_config["enabled"]
 
         if self.enabled:
-            auth_logger.info("🔒 Basic Auth ENABLED on startup (Full blocking mode)")
-            auth_logger.info(f"   Username: {self.username}")
+            auth_logger.info("Basic Auth ENABLED on startup (Full blocking mode)")
+            auth_logger.info(f"Username: {self.username}")
         else:
-            auth_logger.info("🔓 Basic Auth DISABLED on startup")
+            auth_logger.info("Basic Auth DISABLED on startup")
 
     def _load_config(self) -> dict:
         """
@@ -123,10 +137,10 @@ class BasicAuthMiddleware(BaseHTTPMiddleware):
             self.password = current_password
 
             if self.enabled:
-                auth_logger.info("🔄 Auth Status Changed: ENABLED (Full blocking mode)")
+                auth_logger.info("Auth Status Changed: ENABLED (Full blocking mode)")
                 auth_logger.info(f"   Username: {self.username}")
             else:
-                auth_logger.info("🔄 Auth Status Changed: DISABLED")
+                auth_logger.info("Auth Status Changed: DISABLED")
 
         # If Basic Auth is disabled, allow through
         if not self.enabled:
@@ -187,7 +201,7 @@ class BasicAuthMiddleware(BaseHTTPMiddleware):
 
         if not auth_header or not auth_header.startswith("Basic "):
             auth_logger.warning(
-                f"⚠️ Unauthorized access | IP: {client_ip} | Path: {request.url.path}"
+                f"Unauthorized access | IP: {client_ip} | Path: {request.url.path}"
             )
             return self._unauthorized_response()
 
@@ -204,19 +218,19 @@ class BasicAuthMiddleware(BaseHTTPMiddleware):
                 # Auth successful - only log on first successful login
                 if request.url.path == "/":
                     auth_logger.info(
-                        f"✅ Successful login | User: {username} | IP: {client_ip}"
+                        f"Successful login | User: {username} | IP: {client_ip}"
                     )
                 response = await call_next(request)
                 return response
             else:
                 # Auth failed
                 auth_logger.warning(
-                    f"❌ Failed login attempt | User: {username} | IP: {client_ip}"
+                    f"Failed login attempt | User: {username} | IP: {client_ip}"
                 )
                 return self._unauthorized_response()
 
         except Exception as e:
-            auth_logger.error(f"⚠️ Auth error: {e}")
+            auth_logger.error(f"Auth error: {e}")
             return self._unauthorized_response()
 
     def _unauthorized_response(self):

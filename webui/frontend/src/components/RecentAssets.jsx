@@ -5,7 +5,7 @@
 // - All badges at bottom (no overlay)
 // - Cached data with silent background refresh (every 2 minutes)
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   FileImage,
   ExternalLink,
@@ -15,6 +15,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useDashboardLoading } from "../context/DashboardLoadingContext";
 import Notification from "./Notification";
 import { useToast } from "../context/ToastContext";
 import CompactImageSizeSlider from "./CompactImageSizeSlider";
@@ -26,6 +27,8 @@ let cachedAssets = null;
 function RecentAssets() {
   const { t } = useTranslation();
   const { showSuccess, showError, showInfo } = useToast();
+  const { startLoading, finishLoading } = useDashboardLoading();
+  const hasInitiallyLoaded = useRef(false);
   const [assets, setAssets] = useState(cachedAssets || []);
   const [loading, setLoading] = useState(false); // No initial loading if cached
   const [error, setError] = useState(null); // Error state
@@ -55,6 +58,7 @@ function RecentAssets() {
   const fetchRecentAssets = async (silent = false) => {
     if (!silent) {
       setRefreshing(true);
+      startLoading("recent-assets");
     }
     setError(null);
 
@@ -63,9 +67,15 @@ function RecentAssets() {
       const data = await response.json();
 
       if (data.success) {
-        cachedAssets = data.assets; // 🎯 Save to persistent cache
+        cachedAssets = data.assets; // Save to persistent cache
         setAssets(data.assets);
         setError(null);
+
+        // Mark as loaded after first successful fetch
+        if (!hasInitiallyLoaded.current) {
+          hasInitiallyLoaded.current = true;
+          finishLoading("recent-assets");
+        }
       } else {
         const errorMsg = data.error || t("recentAssets.loadError");
         setError(errorMsg);
@@ -79,20 +89,37 @@ function RecentAssets() {
     } finally {
       setLoading(false);
       if (!silent) {
-        setTimeout(() => setRefreshing(false), 500);
+        setTimeout(() => {
+          setRefreshing(false);
+        }, 500);
       }
     }
   };
 
   useEffect(() => {
-    // 🎯 Always fetch on mount (silent mode = no loading spinner)
-    fetchRecentAssets(true);
+    // Register as loading and fetch on mount (silent mode = no loading spinner)
+    startLoading("recent-assets");
 
-    // 🎯 Background refresh every 2 minutes (silent)
+    // Check cache first
+    if (cachedAssets) {
+      setAssets(cachedAssets);
+      setLoading(false);
+      if (!hasInitiallyLoaded.current) {
+        hasInitiallyLoaded.current = true;
+        finishLoading("recent-assets");
+      }
+    } else {
+      fetchRecentAssets(true);
+    }
+
+    // Background refresh every 2 minutes (silent)
     const interval = setInterval(() => fetchRecentAssets(true), 2 * 60 * 1000);
 
-    return () => clearInterval(interval);
-  }, []);
+    return () => {
+      clearInterval(interval);
+      // Don't finish loading on unmount - that happens when data is fetched
+    };
+  }, [startLoading]);
 
   const handleAssetCountChange = (newCount) => {
     // Ensure count is between 5 and 10

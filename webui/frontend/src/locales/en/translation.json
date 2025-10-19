@@ -26,7 +26,7 @@
       "confirmMessage": "Are you sure you want to reset ALL posters in \"{{library}}\"? This action CANNOT be undone!\\n\\nAre you absolutely sure?",
       "title": "Reset Posters",
       "description": "Reset all posters in a Plex library to default",
-      "warning": "⚠️ Warning:",
+      "warning": "Warning:",
       "warningText": "This will reset ALL posters in the specified library. This action CANNOT be undone! The script must be stopped before resetting posters.",
       "placeholder": "Enter library name (e.g., Movies, TV Shows)",
       "button": "Reset Posters"
@@ -154,7 +154,7 @@
     },
     "jellyfin": {
       "title": "Jellyfin Sync Mode",
-      "description": "🔄 Sync all artwork from Plex to Jellyfin",
+      "description": "Sync all artwork from Plex to Jellyfin",
       "syncInfo": "This mode will synchronize every artwork you have in Plex to your Jellyfin server.",
       "howItWorks": "How Jellyfin Sync works:",
       "step1Title": "Library Names Must Match",
@@ -164,13 +164,13 @@
       "step3Title": "Smart Sync",
       "step3Text": "Only syncs artwork if the hashes don't match, saving time and bandwidth.",
       "tip": "💡 Tip: This is handy if you want to run the sync after a Kometa run, so you have Kometa overlayed images in Jellyfin.",
-      "important": "⚠️ Important: Make sure both UseJellyfin and UsePlex are set to true in your config.json, and that library names match exactly.",
+      "important": "Important: Make sure both UseJellyfin and UsePlex are set to true in your config.json, and that library names match exactly.",
       "cancel": "Cancel",
       "start": "Start Jellyfin Sync"
     },
     "emby": {
       "title": "Emby Sync Mode",
-      "description": "🔄 Sync all artwork from Plex to Emby",
+      "description": "Sync all artwork from Plex to Emby",
       "syncInfo": "This mode will synchronize every artwork you have in Plex to your Emby server.",
       "howItWorks": "How Emby Sync works:",
       "step1Title": "Library Names Must Match",
@@ -180,7 +180,7 @@
       "step3Title": "Smart Sync",
       "step3Text": "Only syncs artwork if the hashes don't match, saving time and bandwidth.",
       "tip": "💡 Tip: This is handy if you want to run the sync after a Kometa run, so you have Kometa overlayed images in Emby.",
-      "important": "⚠️ Important: Make sure both UseEmby and UsePlex are set to true in your config.json, and that library names match exactly.",
+      "important": "Important: Make sure both UseEmby and UsePlex are set to true in your config.json, and that library names match exactly.",
       "cancel": "Cancel",
       "start": "Start Emby Sync"
     },
@@ -342,7 +342,7 @@
   "versionBadge": {
     "upToDate": "Up to Date",
     "version": "Version",
-    "updateAvailable": "⚠️ Update available!",
+    "updateAvailable": "Update available!",
     "clickForReleases": "Click here to get to the Github Releases.",
     "currentVersion": "✓ Current version installed"
   },
@@ -1488,7 +1488,7 @@
           {
             "title": "Mount Posterizarr Directory to Tautulli",
             "description": "Tautulli needs access to the Posterizarr directory to execute the trigger script.",
-            "warning": "⚠️ The mount path is case-sensitive and must be exactly /posterizarr",
+            "warning": "The mount path is case-sensitive and must be exactly /posterizarr",
             "code": [
               {
                 "label": "Add this volume mount to your Tautulli docker-compose.yml:",
@@ -1606,7 +1606,7 @@
         {
           "title": "Mount Posterizarr Directory to Sonarr",
           "description": "Sonarr needs write access to the Posterizarr watcher directory.",
-          "warning": "⚠️ The mount path is case-sensitive and must be exactly /posterizarr",
+          "warning": "The mount path is case-sensitive and must be exactly /posterizarr",
           "code": [
             {
               "label": "Add this volume mount to your Sonarr docker-compose.yml:",
@@ -1678,7 +1678,7 @@
         {
           "title": "Mount Posterizarr Directory to Radarr",
           "description": "Radarr needs write access to the Posterizarr watcher directory.",
-          "warning": "⚠️ The mount path is case-sensitive and must be exactly /posterizarr",
+          "warning": "The mount path is case-sensitive and must be exactly /posterizarr",
           "code": [
             {
               "label": "Add this volume mount to your Radarr docker-compose.yml:",

@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Cpu, HardDrive, Server, RefreshCw, Monitor } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useDashboardLoading } from "../context/DashboardLoadingContext";
 
 const API_URL = "/api";
 
@@ -8,6 +9,8 @@ let cachedSystemInfo = null;
 
 function SystemInfo() {
   const { t } = useTranslation();
+  const { startLoading, finishLoading } = useDashboardLoading();
+  const hasInitiallyLoaded = useRef(false);
   const [systemInfo, setSystemInfo] = useState(
     cachedSystemInfo || {
       platform: "Loading...",
@@ -35,27 +38,39 @@ function SystemInfo() {
         return;
       }
       const data = await response.json();
-      cachedSystemInfo = data; // 🎯 Save to persistent cache
+      cachedSystemInfo = data; // Save to persistent cache
       setSystemInfo(data);
+
+      // Mark as loaded after first successful fetch
+      if (!hasInitiallyLoaded.current) {
+        hasInitiallyLoaded.current = true;
+        finishLoading("system-info");
+      }
     } catch (error) {
       console.error("Error fetching system info:", error);
     } finally {
       setLoading(false);
       if (!silent) {
-        setTimeout(() => setRefreshing(false), 500);
+        setTimeout(() => {
+          setRefreshing(false);
+        }, 500);
       }
     }
   };
 
   useEffect(() => {
-    // 🎯 Immer beim Mount fetchen (silent mode = kein Refresh-Spinner)
+    // Register as loading component and fetch data
+    startLoading("system-info");
     fetchSystemInfo(true);
 
-    // 🎯 Optional: Alle 5 Minuten im Hintergrund aktualisieren (silent)
+    // Optional: Alle 5 Minuten im Hintergrund aktualisieren (silent)
     const interval = setInterval(() => fetchSystemInfo(true), 5 * 60 * 1000);
 
-    return () => clearInterval(interval);
-  }, []);
+    return () => {
+      clearInterval(interval);
+      // Don't finish loading on unmount - that happens when data is fetched
+    };
+  }, [startLoading]);
 
   // Format memory percentage color
   const getMemoryColor = (percent) => {

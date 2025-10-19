@@ -26,7 +26,7 @@
       "confirmMessage": "Sei sicuro di voler reimpostare TUTTE le locandine in \"{{library}}\"? Questa azione NON PUÒ essere annullata!\\n\\nSei assolutamente sicuro?",
       "title": "Reimposta locandine",
       "description": "Reimposta tutte le locandine in una libreria Plex ai valori predefiniti",
-      "warning": "⚠️ Attenzione:",
+      "warning": "Attenzione:",
       "warningText": "Questo reimposterà TUTTE le locandine nella libreria specificata. Questa azione NON PUÒ essere annullata! Lo script deve essere fermato prima di reimpostare le locandine.",
       "placeholder": "Inserisci il nome della libreria (es. Film, Serie TV)",
       "button": "Reimposta locandine"
@@ -154,7 +154,7 @@
     },
     "jellyfin": {
       "title": "Modalità di sincronizzazione Jellyfin",
-      "description": "🔄 Sincronizza tutte le grafiche da Plex a Jellyfin",
+      "description": "Sincronizza tutte le grafiche da Plex a Jellyfin",
       "syncInfo": "Questa modalità sincronizzerà ogni grafica che hai in Plex sul tuo server Jellyfin.",
       "howItWorks": "Come funziona la sincronizzazione Jellyfin:",
       "step1Title": "I nomi delle librerie devono corrispondere",
@@ -164,13 +164,13 @@
       "step3Title": "Sincronizzazione intelligente",
       "step3Text": "Sincronizza solo le grafiche se gli hash non corrispondono, risparmiando tempo e larghezza di banda.",
       "tip": "💡 Suggerimento: questo è utile se vuoi eseguire la sincronizzazione dopo un'esecuzione di Kometa, in modo da avere immagini con sovrapposizione Kometa in Jellyfin.",
-      "important": "⚠️ Importante: assicurati che sia UseJellyfin che UsePlex siano impostati su true nel tuo config.json e che i nomi delle librerie corrispondano esattamente.",
+      "important": "Importante: assicurati che sia UseJellyfin che UsePlex siano impostati su true nel tuo config.json e che i nomi delle librerie corrispondano esattamente.",
       "cancel": "Annulla",
       "start": "Avvia sincronizzazione Jellyfin"
     },
     "emby": {
       "title": "Modalità di sincronizzazione Emby",
-      "description": "🔄 Sincronizza tutte le grafiche da Plex a Emby",
+      "description": "Sincronizza tutte le grafiche da Plex a Emby",
       "syncInfo": "Questa modalità sincronizzerà ogni grafica che hai in Plex sul tuo server Emby.",
       "howItWorks": "Come funziona la sincronizzazione Emby:",
       "step1Title": "I nomi delle librerie devono corrispondere",
@@ -180,7 +180,7 @@
       "step3Title": "Sincronizzazione intelligente",
       "step3Text": "Sincronizza solo le grafiche se gli hash non corrispondono, risparmiando tempo e larghezza di banda.",
       "tip": "💡 Suggerimento: questo è utile se vuoi eseguire la sincronizzazione dopo un'esecuzione di Kometa, in modo da avere immagini con sovrapposizione Kometa in Emby.",
-      "important": "⚠️ Importante: assicurati che sia UseEmby che UsePlex siano impostati su true nel tuo config.json e che i nomi delle librerie corrispondano esattamente.",
+      "important": "Importante: assicurati che sia UseEmby che UsePlex siano impostati su true nel tuo config.json e che i nomi delle librerie corrispondano esattamente.",
       "cancel": "Annulla",
       "start": "Avvia sincronizzazione Emby"
     },
@@ -342,7 +342,7 @@
   "versionBadge": {
     "upToDate": "Aggiornato",
     "version": "Versione",
-    "updateAvailable": "⚠️ Aggiornamento disponibile!",
+    "updateAvailable": "Aggiornamento disponibile!",
     "clickForReleases": "Clicca qui per andare ai rilasci Github.",
     "currentVersion": "✓ Versione corrente installata"
   },
@@ -1487,7 +1487,7 @@
           {
             "title": "Monta la directory Posterizarr su Tautulli",
             "description": "Tautulli necessita di accedere alla directory Posterizarr per eseguire lo script trigger.",
-            "warning": "⚠️ Il percorso di mount è case-sensitive e deve essere esattamente /posterizarr",
+            "warning": "Il percorso di mount è case-sensitive e deve essere esattamente /posterizarr",
             "code": [
               {
                 "label": "Aggiungi questo volume mount al tuo docker-compose.yml di Tautulli:",
@@ -1605,7 +1605,7 @@
         {
           "title": "Monta la directory Posterizarr su Sonarr",
           "description": "Sonarr necessita di accesso in scrittura alla directory watcher di Posterizarr.",
-          "warning": "⚠️ Il percorso di mount è case-sensitive e deve essere esattamente /posterizarr",
+          "warning": "Il percorso di mount è case-sensitive e deve essere esattamente /posterizarr",
           "code": [
             {
               "label": "Aggiungi questo volume mount al tuo docker-compose.yml di Sonarr:",
@@ -1677,7 +1677,7 @@
         {
           "title": "Monta la directory Posterizarr su Radarr",
           "description": "Radarr necessita di accesso in scrittura alla directory watcher di Posterizarr.",
-          "warning": "⚠️ Il percorso di mount è case-sensitive e deve essere esattamente /posterizarr",
+          "warning": "Il percorso di mount è case-sensitive e deve essere esattamente /posterizarr",
           "code": [
             {
               "label": "Aggiungi questo volume mount al tuo docker-compose.yml di Radarr:",

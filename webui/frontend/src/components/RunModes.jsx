@@ -56,9 +56,7 @@ const waitForLogFile = async (logFileName, maxAttempts = 30, delayMs = 200) => {
       const data = await response.json();
 
       if (data.exists) {
-        console.log(
-          `✅ Log file ${logFileName} exists after ${i + 1} attempts`
-        );
+        console.log(`Log file ${logFileName} exists after ${i + 1} attempts`);
         return true;
       }
 
@@ -72,7 +70,7 @@ const waitForLogFile = async (logFileName, maxAttempts = 30, delayMs = 200) => {
   }
 
   console.warn(
-    `⚠️ Log file ${logFileName} not found after ${maxAttempts} attempts`
+    `Log file ${logFileName} not found after ${maxAttempts} attempts`
   );
   return false;
 };
@@ -365,16 +363,16 @@ function RunModes() {
 
         // ✨ Weiterleitung zum LogViewer mit der richtigen Log-Datei
         const logFile = getLogFileForMode(mode);
-        console.log(`🎯 Waiting for log file: ${logFile}`);
+        console.log(`Waiting for log file: ${logFile}`);
 
         // Wait for log file to be created before navigating
         const logExists = await waitForLogFile(logFile);
 
         if (logExists) {
-          console.log(`🎯 Redirecting to LogViewer with log: ${logFile}`);
+          console.log(`Redirecting to LogViewer with log: ${logFile}`);
           navigate("/logs", { state: { logFile: logFile } });
         } else {
-          console.warn(`⚠️ Log file ${logFile} not found, redirecting anyway`);
+          console.warn(`Log file ${logFile} not found, redirecting anyway`);
           // Still navigate even if log doesn't exist yet
           navigate("/logs", { state: { logFile: logFile } });
         }
@@ -484,17 +482,17 @@ function RunModes() {
           setUploadPreview(null);
           fetchStatus();
 
-          console.log("🎯 Waiting for log file: Manuallog.log (upload)");
+          console.log("Waiting for log file: Manuallog.log (upload)");
 
           // Wait for log file to be created before navigating
           const logExists = await waitForLogFile("Manuallog.log");
 
           if (logExists) {
-            console.log("🎯 Redirecting to LogViewer with log: Manuallog.log");
+            console.log("Redirecting to LogViewer with log: Manuallog.log");
             navigate("/logs", { state: { logFile: "Manuallog.log" } });
           } else {
             console.warn(
-              "⚠️ Log file Manuallog.log not found, redirecting anyway"
+              "Log file Manuallog.log not found, redirecting anyway"
             );
             navigate("/logs", { state: { logFile: "Manuallog.log" } });
           }
@@ -531,17 +529,17 @@ function RunModes() {
           setUploadPreview(null);
           fetchStatus();
 
-          console.log("🎯 Waiting for log file: Manuallog.log (URL)");
+          console.log("Waiting for log file: Manuallog.log (URL)");
 
           // Wait for log file to be created before navigating
           const logExists = await waitForLogFile("Manuallog.log");
 
           if (logExists) {
-            console.log("🎯 Redirecting to LogViewer with log: Manuallog.log");
+            console.log("Redirecting to LogViewer with log: Manuallog.log");
             navigate("/logs", { state: { logFile: "Manuallog.log" } });
           } else {
             console.warn(
-              "⚠️ Log file Manuallog.log not found, redirecting anyway"
+              "Log file Manuallog.log not found, redirecting anyway"
             );
             navigate("/logs", { state: { logFile: "Manuallog.log" } });
           }
@@ -1477,7 +1475,7 @@ function RunModes() {
                 </div>
                 {tmdbSearch.searchByID && (
                   <div className="text-xs text-yellow-600 dark:text-yellow-500 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded px-3 py-2">
-                    ⚠️ {t("runModes.manual.searchByIdWarning")}
+                    {t("runModes.manual.searchByIdWarning")}
                   </div>
                 )}
                 <input

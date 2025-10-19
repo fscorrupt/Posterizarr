@@ -27,7 +27,7 @@ export function setupFetchInterceptor() {
   };
 
   console.log(
-    "✅ Fetch interceptor installed - Auth headers will be added automatically"
+    "Fetch interceptor installed - Auth headers will be added automatically"
   );
 }
 
@@ -35,6 +35,6 @@ export function removeFetchInterceptor() {
   // Restore original fetch if needed
   if (window.originalFetch) {
     window.fetch = window.originalFetch;
-    console.log("🗑️ Fetch interceptor removed");
+    console.log("Fetch interceptor removed");
   }
 }

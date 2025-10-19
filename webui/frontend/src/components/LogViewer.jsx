@@ -224,7 +224,7 @@ function LogViewer() {
       currentLogFileRef.current = logFile; // Track which log we're watching
 
       ws.onopen = () => {
-        console.log(`✅ WebSocket connected to ${logFile}`);
+        console.log(`WebSocket connected to ${logFile}`);
         setConnected(true);
         setIsReconnecting(false);
       };
@@ -261,7 +261,7 @@ function LogViewer() {
       };
 
       ws.onerror = (error) => {
-        console.warn("⚠️ WebSocket error:", error);
+        console.warn("WebSocket error:", error);
         setConnected(false);
       };
 
@@ -275,7 +275,7 @@ function LogViewer() {
           showError(t("logViewer.disconnected"));
 
           reconnectTimeoutRef.current = setTimeout(() => {
-            console.log(`🔄 Reconnecting to ${currentLogFileRef.current}...`);
+            console.log(`Reconnecting to ${currentLogFileRef.current}...`);
             connectWebSocket(currentLogFileRef.current); // Reconnect to the same log file
           }, 2000);
         }

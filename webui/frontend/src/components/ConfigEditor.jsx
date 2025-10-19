@@ -1579,7 +1579,7 @@ function ConfigEditor() {
 
         // Debug logging
         console.log(
-          `🔍 Checking ${group}.${field} -> ${flatKey} = ${val} (converted to: ${boolVal})`
+          `Checking ${group}.${field} -> ${flatKey} = ${val} (converted to: ${boolVal})`
         );
 
         return boolVal;
@@ -1587,7 +1587,7 @@ function ConfigEditor() {
       const val = config[group]?.[field];
       const boolVal = val === "true" || val === true;
       console.log(
-        `🔍 Checking ${group}.${field} (nested) = ${val} (converted to: ${boolVal})`
+        `Checking ${group}.${field} (nested) = ${val} (converted to: ${boolVal})`
       );
       return boolVal;
     };
@@ -1654,7 +1654,7 @@ function ConfigEditor() {
     const keyLower = key.toLowerCase();
 
     console.log(
-      `🎯 isFieldDisabled called: key="${key}", groupName="${groupName}", keyLower="${keyLower}"`
+      `isFieldDisabled called: key="${key}", groupName="${groupName}", keyLower="${keyLower}"`
     );
 
     // Groups where AddBorder affects bordercolor and borderwidth

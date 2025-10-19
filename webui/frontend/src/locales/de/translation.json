@@ -26,7 +26,7 @@
       "confirmMessage": "Bist du sicher, dass du ALLE Poster in \"{{library}}\" zurücksetzen möchtest? Diese Aktion kann NICHT rückgängig gemacht werden!\\n\\nBist du absolut sicher?",
       "title": "Poster zurücksetzen",
       "description": "Setze alle Poster in einer Plex-Bibliothek auf Standard zurück",
-      "warning": "⚠️ Warnung:",
+      "warning": "Warnung:",
       "warningText": "Dies setzt ALLE Poster in der angegebenen Bibliothek zurück. Diese Aktion kann NICHT rückgängig gemacht werden! Das Skript muss vor dem Zurücksetzen gestoppt werden.",
       "placeholder": "Gib Bibliotheksnamen ein (z.B. Filme, TV-Serien)",
       "button": "Poster zurücksetzen"
@@ -154,7 +154,7 @@
     },
     "jellyfin": {
       "title": "Jellyfin Sync-Modus",
-      "description": "🔄 Synchronisiere alle Artworks von Plex zu Jellyfin",
+      "description": "Synchronisiere alle Artworks von Plex zu Jellyfin",
       "syncInfo": "Dieser Modus synchronisiert jedes Artwork, das du in Plex hast, mit deinem Jellyfin-Server.",
       "howItWorks": "Wie Jellyfin Sync funktioniert:",
       "step1Title": "Bibliotheksnamen müssen übereinstimmen",
@@ -164,13 +164,13 @@
       "step3Title": "Intelligente Synchronisation",
       "step3Text": "Synchronisiert nur Artworks, wenn die Hashes nicht übereinstimmen, was Zeit und Bandbreite spart.",
       "tip": "💡 Tipp: Dies ist praktisch, wenn du die Synchronisation nach einem Kometa-Durchlauf ausführen möchtest, damit du Kometa-überlappte Bilder in Jellyfin hast.",
-      "important": "⚠️ Wichtig: Stelle sicher, dass sowohl UseJellyfin als auch UsePlex in deiner config.json auf true gesetzt sind und dass die Bibliotheksnamen genau übereinstimmen.",
+      "important": "Wichtig: Stelle sicher, dass sowohl UseJellyfin als auch UsePlex in deiner config.json auf true gesetzt sind und dass die Bibliotheksnamen genau übereinstimmen.",
       "cancel": "Abbrechen",
       "start": "Jellyfin Sync starten"
     },
     "emby": {
       "title": "Emby Sync-Modus",
-      "description": "🔄 Synchronisiere alle Artworks von Plex zu Emby",
+      "description": "Synchronisiere alle Artworks von Plex zu Emby",
       "syncInfo": "Dieser Modus synchronisiert jedes Artwork, das du in Plex hast, mit deinem Emby-Server.",
       "howItWorks": "Wie Emby Sync funktioniert:",
       "step1Title": "Bibliotheksnamen müssen übereinstimmen",
@@ -180,7 +180,7 @@
       "step3Title": "Intelligente Synchronisation",
       "step3Text": "Synchronisiert nur Artworks, wenn die Hashes nicht übereinstimmen, was Zeit und Bandbreite spart.",
       "tip": "💡 Tipp: Dies ist praktisch, wenn du die Synchronisation nach einem Kometa-Durchlauf ausführen möchtest, damit du Kometa-überlappte Bilder in Emby hast.",
-      "important": "⚠️ Wichtig: Stelle sicher, dass sowohl UseEmby als auch UsePlex in deiner config.json auf true gesetzt sind und dass die Bibliotheksnamen genau übereinstimmen.",
+      "important": "Wichtig: Stelle sicher, dass sowohl UseEmby als auch UsePlex in deiner config.json auf true gesetzt sind und dass die Bibliotheksnamen genau übereinstimmen.",
       "cancel": "Abbrechen",
       "start": "Emby Sync starten"
     },
@@ -342,7 +342,7 @@
   "versionBadge": {
     "upToDate": "Aktuell",
     "version": "Version",
-    "updateAvailable": "⚠️ Update verfügbar!",
+    "updateAvailable": "Update verfügbar!",
     "clickForReleases": "Klicke hier, um zu den GitHub Releases zu gelangen.",
     "currentVersion": "✓ Aktuelle Version installiert"
   },
@@ -1539,7 +1539,7 @@
           {
             "title": "Posterizarr-Verzeichnis zu Tautulli mounten",
             "description": "Tautulli benötigt Zugriff auf das Posterizarr-Verzeichnis, um das Trigger-Skript auszuführen.",
-            "warning": "⚠️ Der Mount-Pfad ist case-sensitive und muss exakt /posterizarr sein",
+            "warning": "Der Mount-Pfad ist case-sensitive und muss exakt /posterizarr sein",
             "code": [
               {
                 "label": "Füge dieses Volume-Mount zu deiner Tautulli docker-compose.yml hinzu:",
@@ -1657,7 +1657,7 @@
         {
           "title": "Posterizarr-Verzeichnis zu Sonarr mounten",
           "description": "Sonarr benötigt Schreibzugriff auf das Posterizarr-Watcher-Verzeichnis.",
-          "warning": "⚠️ Der Mount-Pfad ist case-sensitive und muss exakt /posterizarr sein",
+          "warning": "Der Mount-Pfad ist case-sensitive und muss exakt /posterizarr sein",
           "code": [
             {
               "label": "Füge dieses Volume-Mount zu deiner Sonarr docker-compose.yml hinzu:",
@@ -1729,7 +1729,7 @@
         {
           "title": "Posterizarr-Verzeichnis zu Radarr mounten",
           "description": "Radarr benötigt Schreibzugriff auf das Posterizarr-Watcher-Verzeichnis.",
-          "warning": "⚠️ Der Mount-Pfad ist case-sensitive und muss exakt /posterizarr sein",
+          "warning": "Der Mount-Pfad ist case-sensitive und muss exakt /posterizarr sein",
           "code": [
             {
               "label": "Füge dieses Volume-Mount zu deiner Radarr docker-compose.yml hinzu:",

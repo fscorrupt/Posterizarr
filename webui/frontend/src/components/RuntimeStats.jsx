@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Clock,
   RefreshCw,
@@ -10,6 +10,7 @@ import {
   Globe,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useDashboardLoading } from "../context/DashboardLoadingContext";
 import {
   formatDateToLocale,
   formatTimestampWithTzInfo,
@@ -23,6 +24,8 @@ let cachedRuntimeStats = null;
 
 function RuntimeStats() {
   const { t } = useTranslation();
+  const { startLoading, finishLoading } = useDashboardLoading();
+  const hasInitiallyLoaded = useRef(false);
   const [runtimeStats, setRuntimeStats] = useState(
     cachedRuntimeStats || {
       runtime: null,
@@ -90,27 +93,51 @@ function RuntimeStats() {
       if (data.success) {
         cachedRuntimeStats = data;
         setRuntimeStats(data);
+
+        // Mark as loaded after first successful fetch
+        if (!hasInitiallyLoaded.current) {
+          hasInitiallyLoaded.current = true;
+          finishLoading("runtime-stats");
+        }
       }
     } catch (error) {
       console.error("Error fetching runtime stats:", error);
     } finally {
       setLoading(false);
       if (!silent) {
-        setTimeout(() => setRefreshing(false), 500);
+        setTimeout(() => {
+          setRefreshing(false);
+        }, 500);
       }
     }
   };
 
   useEffect(() => {
-    // Fetch on mount (silent mode)
-    fetchRuntimeStats(true);
+    // Register as loading and fetch on mount (silent mode)
+    startLoading("runtime-stats");
+
+    // Check cache first
+    if (cachedRuntimeStats) {
+      setRuntimeStats(cachedRuntimeStats);
+      setLoading(false);
+      if (!hasInitiallyLoaded.current) {
+        hasInitiallyLoaded.current = true;
+        finishLoading("runtime-stats");
+      }
+    } else {
+      fetchRuntimeStats(true);
+    }
+
     fetchMigrationStatus();
 
     // Refresh every 30 seconds (silent)
     const interval = setInterval(() => fetchRuntimeStats(true), 30 * 1000);
 
-    return () => clearInterval(interval);
-  }, []);
+    return () => {
+      clearInterval(interval);
+      // Don't finish loading on unmount - that happens when data is fetched
+    };
+  }, [startLoading]);
 
   if (loading) {
     return (

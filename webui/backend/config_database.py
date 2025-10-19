@@ -34,9 +34,9 @@ class ConfigDB:
         try:
             self.connection = sqlite3.connect(self.db_path, check_same_thread=False)
             self.connection.row_factory = sqlite3.Row
-            logger.info(f"✅ Connected to config database: {self.db_path}")
+            logger.info(f"Connected to config database: {self.db_path}")
         except sqlite3.Error as e:
-            logger.error(f"❌ Error connecting to config database: {e}")
+            logger.error(f"Error connecting to config database: {e}")
             raise
 
     def close(self):
@@ -96,9 +96,9 @@ class ConfigDB:
             )
 
             self.connection.commit()
-            logger.info("✅ Config database tables created successfully")
+            logger.info("Config database tables created successfully")
         except sqlite3.Error as e:
-            logger.error(f"❌ Error creating config tables: {e}")
+            logger.error(f"Error creating config tables: {e}")
             raise
 
     def _get_value_type(self, value: Any) -> str:
@@ -149,12 +149,12 @@ class ConfigDB:
             # Load config from file if not provided
             if config_data is None:
                 if not self.config_json_path.exists():
-                    logger.error(f"❌ Config file not found: {self.config_json_path}")
+                    logger.error(f"Config file not found: {self.config_json_path}")
                     return False
 
                 with open(self.config_json_path, "r", encoding="utf-8") as f:
                     config_data = json.load(f)
-                logger.info(f"📖 Loaded config from: {self.config_json_path}")
+                logger.info(f"Loaded config from: {self.config_json_path}")
 
             cursor = self.connection.cursor()
             imported_count = 0
@@ -237,19 +237,19 @@ class ConfigDB:
 
             self.connection.commit()
             logger.info(
-                f"✅ Config imported successfully: {imported_count} new, {updated_count} updated"
+                f"Config imported successfully: {imported_count} new, {updated_count} updated"
             )
             return True
 
         except json.JSONDecodeError as e:
-            logger.error(f"❌ Error parsing JSON: {e}")
+            logger.error(f"Error parsing JSON: {e}")
             return False
         except sqlite3.Error as e:
-            logger.error(f"❌ Database error during import: {e}")
+            logger.error(f"Database error during import: {e}")
             self.connection.rollback()
             return False
         except Exception as e:
-            logger.error(f"❌ Unexpected error during import: {e}")
+            logger.error(f"Unexpected error during import: {e}")
             self.connection.rollback()
             return False
 
@@ -296,15 +296,15 @@ class ConfigDB:
             if output_path:
                 with open(output_path, "w", encoding="utf-8") as f:
                     json.dump(config_data, f, indent=2, ensure_ascii=False)
-                logger.info(f"✅ Config exported to: {output_path}")
+                logger.info(f"Config exported to: {output_path}")
 
             return config_data
 
         except sqlite3.Error as e:
-            logger.error(f"❌ Database error during export: {e}")
+            logger.error(f"Database error during export: {e}")
             return {}
         except Exception as e:
-            logger.error(f"❌ Unexpected error during export: {e}")
+            logger.error(f"Unexpected error during export: {e}")
             return {}
 
     def get_value(self, section: str, key: str, default: Any = None) -> Any:
@@ -335,7 +335,7 @@ class ConfigDB:
             return default
 
         except sqlite3.Error as e:
-            logger.error(f"❌ Error getting value: {e}")
+            logger.error(f"Error getting value: {e}")
             return default
 
     def set_value(self, section: str, key: str, value: Any) -> bool:
@@ -372,7 +372,7 @@ class ConfigDB:
             return True
 
         except sqlite3.Error as e:
-            logger.error(f"❌ Error setting value: {e}")
+            logger.error(f"Error setting value: {e}")
             return False
 
     def get_section(self, section: str) -> Dict:
@@ -405,7 +405,7 @@ class ConfigDB:
             return result
 
         except sqlite3.Error as e:
-            logger.error(f"❌ Error getting section: {e}")
+            logger.error(f"Error getting section: {e}")
             return {}
 
     def get_all_sections(self) -> list:
@@ -423,7 +423,7 @@ class ConfigDB:
             return [row[0] for row in cursor.fetchall()]
 
         except sqlite3.Error as e:
-            logger.error(f"❌ Error getting sections: {e}")
+            logger.error(f"Error getting sections: {e}")
             return []
 
     def initialize(self):
@@ -431,23 +431,21 @@ class ConfigDB:
         db_exists = self.db_path.exists()
 
         if db_exists:
-            logger.info(f"📊 Config database already exists: {self.db_path}")
+            logger.info(f" Config database already exists: {self.db_path}")
         else:
-            logger.info(f"📊 Creating new config database: {self.db_path}")
+            logger.info(f" Creating new config database: {self.db_path}")
 
         self.connect()
         self.create_tables()
 
         # Always sync with config.json on startup
-        logger.info(f"🔄 Syncing config database with config.json...")
+        logger.info(f"Syncing config database with config.json...")
         success = self.import_from_json()
 
         if success:
             if not db_exists:
-                logger.info(
-                    f"✅ Config database created and populated from config.json"
-                )
+                logger.info(f"Config database created and populated from config.json")
             else:
-                logger.info(f"✅ Config database synced with config.json")
+                logger.info(f"Config database synced with config.json")
         else:
-            logger.warning(f"⚠️  Config database sync had issues")
+            logger.warning(f" Config database sync had issues")

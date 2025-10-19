@@ -31,9 +31,7 @@ const waitForLogFile = async (logFileName, maxAttempts = 30, delayMs = 200) => {
       const data = await response.json();
 
       if (data.exists) {
-        console.log(
-          `✅ Log file ${logFileName} exists after ${i + 1} attempts`
-        );
+        console.log(`Log file ${logFileName} exists after ${i + 1} attempts`);
         return true;
       }
 
@@ -47,7 +45,7 @@ const waitForLogFile = async (logFileName, maxAttempts = 30, delayMs = 200) => {
   }
 
   console.warn(
-    `⚠️ Log file ${logFileName} not found after ${maxAttempts} attempts`
+    `Log file ${logFileName} not found after ${maxAttempts} attempts`
   );
   return false;
 };
@@ -412,32 +410,32 @@ const SchedulerSettings = () => {
         method: "POST",
       });
 
-      console.log("📥 Response received, status:", response.status);
+      console.log("Response received, status:", response.status);
       const data = await response.json();
       console.log("📦 Response data:", data);
 
       if (data.success) {
-        console.log("✅ Success! Showing toast and navigating...");
+        console.log("Success! Showing toast and navigating...");
         showSuccess(t("schedulerSettings.success.manualRunTriggered"));
 
         // Update status
         fetchSchedulerData();
 
         const logFile = "Scriptlog.log"; // Scheduler runs use the normal script log
-        console.log(`🎯 Waiting for log file: ${logFile}`);
+        console.log(`Waiting for log file: ${logFile}`);
 
         // Wait for log file to be created before navigating
         const logExists = await waitForLogFile(logFile);
 
         if (logExists) {
-          console.log(`🎯 Redirecting to LogViewer with log: ${logFile}`);
+          console.log(`Redirecting to LogViewer with log: ${logFile}`);
           navigate("/logs", { state: { logFile: logFile } });
         } else {
-          console.warn(`⚠️ Log file ${logFile} not found, redirecting anyway`);
+          console.warn(`Log file ${logFile} not found, redirecting anyway`);
           navigate("/logs", { state: { logFile: logFile } });
         }
       } else {
-        console.log("❌ Request failed:", data.detail);
+        console.log("Request failed:", data.detail);
         showError(data.detail || t("schedulerSettings.errors.triggerRun"));
       }
     } catch (error) {

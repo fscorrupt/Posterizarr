@@ -72,15 +72,15 @@ class ImageChoicesDB:
         db_exists = self.db_path.exists()
 
         if db_exists:
-            logger.info(f"✅ Database already exists: {self.db_path}")
+            logger.info(f"Database already exists: {self.db_path}")
         else:
-            logger.info(f"📊 Creating new empty database: {self.db_path}")
+            logger.info(f"Creating new empty database: {self.db_path}")
 
         self.connect()
         self.create_tables()
 
         if not db_exists:
-            logger.info(f"✅ New empty database created successfully: {self.db_path}")
+            logger.info(f"New empty database created successfully: {self.db_path}")
 
     def insert_choice(
         self,

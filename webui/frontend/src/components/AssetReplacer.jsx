@@ -25,9 +25,7 @@ const waitForLogFile = async (logFileName, maxAttempts = 30, delayMs = 200) => {
       const data = await response.json();
 
       if (data.exists) {
-        console.log(
-          `✅ Log file ${logFileName} exists after ${i + 1} attempts`
-        );
+        console.log(`Log file ${logFileName} exists after ${i + 1} attempts`);
         return true;
       }
 
@@ -41,7 +39,7 @@ const waitForLogFile = async (logFileName, maxAttempts = 30, delayMs = 200) => {
   }
 
   console.warn(
-    `⚠️ Log file ${logFileName} not found after ${maxAttempts} attempts`
+    `Log file ${logFileName} not found after ${maxAttempts} attempts`
   );
   return false;
 };
@@ -308,18 +306,18 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
         if (response.ok) {
           const data = await response.json();
 
-          console.log("🔍 Raw config response:", data);
+          console.log("Raw config response:", data);
 
           // Handle both flat and grouped config structures
           let configSource;
           if (data.using_flat_structure) {
             // Flat structure: config keys are directly in data.config
             configSource = data.config || {};
-            console.log("📦 Using flat config structure");
+            console.log("Using flat config structure");
           } else {
             // Grouped structure: config keys are under ApiPart
             configSource = data.config?.ApiPart || data.ApiPart || {};
-            console.log("📦 Using grouped config structure");
+            console.log("Using grouped config structure");
           }
 
           // Process PreferredBackgroundLanguageOrder - handle "PleaseFillMe"
@@ -352,7 +350,7 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
             season: seasonOrder,
           });
 
-          console.log("📋 Loaded language preferences:", {
+          console.log("Loaded language preferences:", {
             poster: posterOrder,
             background: backgroundOrder,
             season: seasonOrder,
@@ -506,13 +504,13 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
       const data = await response.json();
 
       if (data.success) {
-        console.log("📥 Received results from API:");
+        console.log("Received results from API:");
         console.log("  TMDB:", data.results.tmdb?.length || 0, "items");
         console.log("  TVDB:", data.results.tvdb?.length || 0, "items");
         console.log("  Fanart:", data.results.fanart?.length || 0, "items");
         console.log("  Asset type:", metadata.asset_type);
         console.log(
-          "  ℹ️ Results are already sorted by backend using language preferences"
+          "  Results are already sorted by backend using language preferences"
         );
 
         // Backend already sorted by language preference, use results directly
@@ -678,17 +676,17 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
           // Call onSuccess to delete DB entry before navigating
           onSuccess?.();
 
-          console.log("🎯 Waiting for log file: Manuallog.log");
+          console.log("Waiting for log file: Manuallog.log");
 
           // Wait for log file to be created before navigating
           const logExists = await waitForLogFile("Manuallog.log");
 
           if (logExists) {
-            console.log("🎯 Redirecting to LogViewer with log: Manuallog.log");
+            console.log("Redirecting to LogViewer with log: Manuallog.log");
             navigate("/logs", { state: { logFile: "Manuallog.log" } });
           } else {
             console.warn(
-              "⚠️ Log file Manuallog.log not found, redirecting anyway"
+              "Log file Manuallog.log not found, redirecting anyway"
             );
             navigate("/logs", { state: { logFile: "Manuallog.log" } });
           }
@@ -896,17 +894,17 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
           // Call onSuccess to delete DB entry before navigating
           onSuccess?.();
 
-          console.log("🎯 Waiting for log file: Manuallog.log");
+          console.log("Waiting for log file: Manuallog.log");
 
           // Wait for log file to be created before navigating
           const logExists = await waitForLogFile("Manuallog.log");
 
           if (logExists) {
-            console.log("🎯 Redirecting to LogViewer with log: Manuallog.log");
+            console.log("Redirecting to LogViewer with log: Manuallog.log");
             navigate("/logs", { state: { logFile: "Manuallog.log" } });
           } else {
             console.warn(
-              "⚠️ Log file Manuallog.log not found, redirecting anyway"
+              "Log file Manuallog.log not found, redirecting anyway"
             );
             navigate("/logs", { state: { logFile: "Manuallog.log" } });
           }

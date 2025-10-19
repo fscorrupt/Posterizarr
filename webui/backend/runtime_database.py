@@ -138,7 +138,7 @@ class RuntimeDatabase:
                 # Check if migration was already done
                 if not self._is_migrated():
                     logger.info(
-                        "📊 Migration not yet performed, running auto-migration..."
+                        "Migration not yet performed, running auto-migration..."
                     )
                     self._auto_migrate()
 
@@ -188,7 +188,7 @@ class RuntimeDatabase:
             conn.commit()
             conn.close()
 
-            logger.info(f"✅ Migration marked as completed ({imported_count} entries)")
+            logger.info(f"Migration marked as completed ({imported_count} entries)")
         except Exception as e:
             logger.error(f"Error marking migration: {e}")
 
@@ -216,7 +216,7 @@ class RuntimeDatabase:
                 self._mark_as_migrated(0)
                 return
 
-            logger.info("🔄 Starting automatic runtime data migration...")
+            logger.info("Starting automatic runtime data migration...")
 
             imported_count = 0
             skipped_count = 0
@@ -245,14 +245,14 @@ class RuntimeDatabase:
                         if runtime_data:
                             self.add_runtime_entry(**runtime_data)
                             imported_count += 1
-                            logger.info(f"  ✅ Imported from {json_file}")
+                            logger.info(f"Imported from {json_file}")
                     except Exception as e:
                         logger.debug(f"  ⏭️  Skipped {json_file}: {e}")
                         skipped_count += 1
 
             # Fallback: Import from log files if no JSON files found
             if imported_count == 0:
-                logger.info("📋 No JSON files found, checking log files...")
+                logger.info("No JSON files found, checking log files...")
                 from runtime_parser import parse_runtime_from_log
 
                 # Check for rotated logs
@@ -288,16 +288,16 @@ class RuntimeDatabase:
                         if runtime_data:
                             self.add_runtime_entry(**runtime_data)
                             imported_count += 1
-                            logger.debug(f"  ✅ Imported from {log_path.name}")
+                            logger.debug(f"Imported from {log_path.name}")
                         else:
                             skipped_count += 1
 
                     except Exception as e:
-                        logger.debug(f"  ⏭️  Skipped {log_path.name}: {e}")
+                        logger.debug(f"Skipped {log_path.name}: {e}")
                         skipped_count += 1
 
             logger.info(
-                f"✅ Auto-migration complete: {imported_count} imported, {skipped_count} skipped"
+                f"Auto-migration complete: {imported_count} imported, {skipped_count} skipped"
             )
 
             # Mark as migrated

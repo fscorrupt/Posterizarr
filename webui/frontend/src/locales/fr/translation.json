@@ -26,7 +26,7 @@
       "confirmMessage": "Êtes-vous sûr de vouloir réinitialiser TOUTES les affiches dans \"{{library}}\" ? Cette action NE PEUT PAS être annulée !\\n\\nÊtes-vous absolument sûr ?",
       "title": "Réinitialiser les affiches",
       "description": "Réinitialiser toutes les affiches d'une bibliothèque Plex par défaut",
-      "warning": "⚠️ Avertissement :",
+      "warning": "Avertissement :",
       "warningText": "Cela réinitialisera TOUTES les affiches dans la bibliothèque spécifiée. Cette action NE PEUT PAS être annulée ! Le script doit être arrêté avant de réinitialiser les affiches.",
       "placeholder": "Entrez le nom de la bibliothèque (ex : Films, Séries TV)",
       "button": "Réinitialiser les affiches"
@@ -154,7 +154,7 @@
     },
     "jellyfin": {
       "title": "Mode de synchronisation Jellyfin",
-      "description": "🔄 Synchroniser toutes les illustrations de Plex vers Jellyfin",
+      "description": "Synchroniser toutes les illustrations de Plex vers Jellyfin",
       "syncInfo": "Ce mode synchronisera toutes les illustrations que vous avez dans Plex avec votre serveur Jellyfin.",
       "howItWorks": "Comment fonctionne la synchronisation Jellyfin :",
       "step1Title": "Les noms de bibliothèque doivent correspondre",
@@ -164,13 +164,13 @@
       "step3Title": "Synchronisation intelligente",
       "step3Text": "Ne synchronise les illustrations que si les hashes ne correspondent pas, économisant du temps et de la bande passante.",
       "tip": "💡 Astuce : Ceci est pratique si vous voulez lancer la synchronisation après une exécution de Kometa, pour avoir les images avec superposition de Kometa dans Jellyfin.",
-      "important": "⚠️ Important : Assurez-vous que UseJellyfin et UsePlex sont tous deux définis sur vrai dans votre config.json, et que les noms de bibliothèque correspondent exactement.",
+      "important": "Important : Assurez-vous que UseJellyfin et UsePlex sont tous deux définis sur vrai dans votre config.json, et que les noms de bibliothèque correspondent exactement.",
       "cancel": "Annuler",
       "start": "Démarrer la synchronisation Jellyfin"
     },
     "emby": {
       "title": "Mode de synchronisation Emby",
-      "description": "🔄 Synchroniser toutes les illustrations de Plex vers Emby",
+      "description": "Synchroniser toutes les illustrations de Plex vers Emby",
       "syncInfo": "Ce mode synchronisera toutes les illustrations que vous avez dans Plex avec votre serveur Emby.",
       "howItWorks": "Comment fonctionne la synchronisation Emby :",
       "step1Title": "Les noms de bibliothèque doivent correspondre",
@@ -180,7 +180,7 @@
       "step3Title": "Synchronisation intelligente",
       "step3Text": "Ne synchronise les illustrations que si les hashes ne correspondent pas, économisant du temps et de la bande passante.",
       "tip": "💡 Astuce : Ceci est pratique si vous voulez lancer la synchronisation après une exécution de Kometa, pour avoir les images avec superposition de Kometa dans Emby.",
-      "important": "⚠️ Important : Assurez-vous que UseEmby et UsePlex sont tous deux définis sur vrai dans votre config.json, et que les noms de bibliothèque correspondent exactement.",
+      "important": "Important : Assurez-vous que UseEmby et UsePlex sont tous deux définis sur vrai dans votre config.json, et que les noms de bibliothèque correspondent exactement.",
       "cancel": "Annuler",
       "start": "Démarrer la synchronisation Emby"
     },
@@ -342,7 +342,7 @@
   "versionBadge": {
     "upToDate": "À jour",
     "version": "Version",
-    "updateAvailable": "⚠️ Mise à jour disponible !",
+    "updateAvailable": "Mise à jour disponible !",
     "clickForReleases": "Cliquez ici pour accéder aux versions Github.",
     "currentVersion": "✓ Version actuelle installée"
   },
@@ -1487,7 +1487,7 @@
           {
             "title": "Monter le répertoire Posterizarr sur Tautulli",
             "description": "Tautulli a besoin d'accéder au répertoire Posterizarr pour exécuter le script de déclenchement.",
-            "warning": "⚠️ Le chemin de montage est sensible à la casse et doit être exactement /posterizarr",
+            "warning": "Le chemin de montage est sensible à la casse et doit être exactement /posterizarr",
             "code": [
               {
                 "label": "Ajoutez ce montage de volume à votre docker-compose.yml de Tautulli :",
@@ -1605,7 +1605,7 @@
         {
           "title": "Monter le répertoire Posterizarr sur Sonarr",
           "description": "Sonarr a besoin d'un accès en écriture au répertoire watcher de Posterizarr.",
-          "warning": "⚠️ Le chemin de montage est sensible à la casse et doit être exactement /posterizarr",
+          "warning": "Le chemin de montage est sensible à la casse et doit être exactement /posterizarr",
           "code": [
             {
               "label": "Ajoutez ce montage de volume à votre docker-compose.yml de Sonarr :",
@@ -1677,7 +1677,7 @@
         {
           "title": "Monter le répertoire Posterizarr sur Radarr",
           "description": "Radarr a besoin d'un accès en écriture au répertoire watcher de Posterizarr.",
-          "warning": "⚠️ Le chemin de montage est sensible à la casse et doit être exactement /posterizarr",
+          "warning": "Le chemin de montage est sensible à la casse et doit être exactement /posterizarr",
           "code": [
             {
               "label": "Ajoutez ce montage de volume à votre docker-compose.yml de Radarr :",

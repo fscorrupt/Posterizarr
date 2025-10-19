@@ -35,7 +35,7 @@ export function AuthProvider({ children }) {
 
       const data = await response.json();
 
-      console.log("🔐 Auth status check:", data);
+      console.log("Auth status check:", data);
 
       // Backend returns: { enabled: bool, authenticated: bool }
       setIsAuthEnabled(data.enabled);

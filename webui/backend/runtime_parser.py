@@ -368,9 +368,9 @@ def import_json_to_db(logs_dir: Path = None):
                 if runtime_data:
                     runtime_db.add_runtime_entry(**runtime_data)
                     imported_count += 1
-                    logger.info(f"✅ Imported {json_file} to database")
+                    logger.info(f"Imported {json_file} to database")
 
-        logger.info(f"✅ JSON import complete: {imported_count} files imported")
+        logger.info(f"JSON import complete: {imported_count} files imported")
 
     except Exception as e:
         logger.error(f"Error importing JSON files to database: {e}")

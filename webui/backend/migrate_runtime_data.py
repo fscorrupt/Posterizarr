@@ -35,7 +35,7 @@ def migrate_runtime_data():
     """
     Migrate runtime data from existing log files to database
     """
-    logger.info("🔄 Starting runtime data migration...")
+    logger.info("Starting runtime data migration...")
 
     # Check for rotated logs
     rotated_logs_dir = BASE_DIR / "RotatedLogs"
@@ -76,17 +76,17 @@ def migrate_runtime_data():
             if runtime_data:
                 runtime_db.add_runtime_entry(**runtime_data)
                 imported_count += 1
-                logger.info(f"  ✅ Imported: {runtime_data['runtime_formatted']}")
+                logger.info(f"Imported: {runtime_data['runtime_formatted']}")
             else:
                 skipped_count += 1
-                logger.debug(f"  ⏭️  Skipped: No runtime data found")
+                logger.debug(f" Skipped: No runtime data found")
 
         except Exception as e:
-            logger.error(f"  ❌ Error processing {log_path}: {e}")
+            logger.error(f"  Error processing {log_path}: {e}")
             skipped_count += 1
 
     logger.info(
-        f"✅ Migration complete: {imported_count} imported, {skipped_count} skipped"
+        f"Migration complete: {imported_count} imported, {skipped_count} skipped"
     )
     return imported_count, skipped_count
 

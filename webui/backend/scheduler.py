@@ -67,7 +67,7 @@ class PosterizarrScheduler:
             jobstores=jobstores,
             executors=executors,
             job_defaults=job_defaults,
-            timezone=initial_timezone,  # ✅ Use detected timezone
+            timezone=initial_timezone,  # Use detected timezone
         )
 
         logger.info(f"Scheduler initialized with timezone: {initial_timezone}")
@@ -455,7 +455,7 @@ class PosterizarrScheduler:
             "running": self.scheduler.running,
             "is_executing": self.is_running,
             "schedules": config.get("schedules", []),
-            "timezone": current_timezone,  # ✅ Use detected timezone
+            "timezone": current_timezone,  # Use detected timezone
             "last_run": config.get("last_run"),
             "next_run": config.get("next_run"),
             "active_jobs": job_info,

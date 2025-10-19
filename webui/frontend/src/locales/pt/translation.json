@@ -26,7 +26,7 @@
       "confirmMessage": "Tem certeza de que deseja redefinir TODOS os cartazes em \"{{library}}\"? Esta ação NÃO PODE ser desfeita!\\n\\nTem certeza absoluta?",
       "title": "Redefinir cartazes",
       "description": "Redefinir todos os cartazes em uma biblioteca Plex para o padrão",
-      "warning": "⚠️ Aviso:",
+      "warning": "Aviso:",
       "warningText": "Isso redefinirá TODOS os cartazes na biblioteca especificada. Esta ação NÃO PODE ser desfeita! O script deve ser parado antes de redefinir os cartazes.",
       "placeholder": "Insira o nome da biblioteca (ex: Filmes, Séries)",
       "button": "Redefinir cartazes"
@@ -154,7 +154,7 @@
     },
     "jellyfin": {
       "title": "Modo de sincronização do Jellyfin",
-      "description": "🔄 Sincronizar todas as artes do Plex para o Jellyfin",
+      "description": "Sincronizar todas as artes do Plex para o Jellyfin",
       "syncInfo": "Este modo sincronizará todas as artes que você tem no Plex para o seu servidor Jellyfin.",
       "howItWorks": "Como funciona a sincronização do Jellyfin:",
       "step1Title": "Os nomes das bibliotecas devem corresponder",
@@ -164,13 +164,13 @@
       "step3Title": "Sincronização inteligente",
       "step3Text": "Sincroniza apenas as artes se os hashes não corresponderem, economizando tempo e largura de banda.",
       "tip": "💡 Dica: isso é útil se você deseja executar a sincronização após uma execução do Kometa, para ter imagens sobrepostas do Kometa no Jellyfin.",
-      "important": "⚠️ Importante: certifique-se de que UseJellyfin e UsePlex estejam definidos como true em seu config.json e que os nomes das bibliotecas correspondam exatamente.",
+      "important": "Importante: certifique-se de que UseJellyfin e UsePlex estejam definidos como true em seu config.json e que os nomes das bibliotecas correspondam exatamente.",
       "cancel": "Cancelar",
       "start": "Iniciar sincronização do Jellyfin"
     },
     "emby": {
       "title": "Modo de sincronização do Emby",
-      "description": "🔄 Sincronizar todas as artes do Plex para o Emby",
+      "description": "Sincronizar todas as artes do Plex para o Emby",
       "syncInfo": "Este modo sincronizará todas as artes que você tem no Plex para o seu servidor Emby.",
       "howItWorks": "Como funciona a sincronização do Emby:",
       "step1Title": "Os nomes das bibliotecas devem corresponder",
@@ -180,7 +180,7 @@
       "step3Title": "Sincronização inteligente",
       "step3Text": "Sincroniza apenas as artes se os hashes não corresponderem, economizando tempo e largura de banda.",
       "tip": "💡 Dica: isso é útil se você deseja executar a sincronização após uma execução do Kometa, para ter imagens sobrepostas do Kometa no Emby.",
-      "important": "⚠️ Importante: certifique-se de que UseEmby e UsePlex estejam definidos como true em seu config.json e que os nomes das bibliotecas correspondam exatamente.",
+      "important": "Importante: certifique-se de que UseEmby e UsePlex estejam definidos como true em seu config.json e que os nomes das bibliotecas correspondam exatamente.",
       "cancel": "Cancelar",
       "start": "Iniciar sincronização do Emby"
     },
@@ -342,7 +342,7 @@
   "versionBadge": {
     "upToDate": "Atualizado",
     "version": "Versão",
-    "updateAvailable": "⚠️ Atualização disponível!",
+    "updateAvailable": "Atualização disponível!",
     "clickForReleases": "Clique aqui para ir para os lançamentos do Github.",
     "currentVersion": "✓ Versão atual instalada"
   },
@@ -1487,7 +1487,7 @@
           {
             "title": "Montar diretório Posterizarr no Tautulli",
             "description": "Tautulli precisa de acesso ao diretório Posterizarr para executar o script de gatilho.",
-            "warning": "⚠️ O caminho de montagem é sensível a maiúsculas e minúsculas e deve ser exatamente /posterizarr",
+            "warning": "O caminho de montagem é sensível a maiúsculas e minúsculas e deve ser exatamente /posterizarr",
             "code": [
               {
                 "label": "Adicione esta montagem de volume ao seu docker-compose.yml do Tautulli:",
@@ -1605,7 +1605,7 @@
         {
           "title": "Montar diretório Posterizarr no Sonarr",
           "description": "Sonarr precisa de acesso de escrita ao diretório watcher do Posterizarr.",
-          "warning": "⚠️ O caminho de montagem é sensível a maiúsculas e minúsculas e deve ser exatamente /posterizarr",
+          "warning": "O caminho de montagem é sensível a maiúsculas e minúsculas e deve ser exatamente /posterizarr",
           "code": [
             {
               "label": "Adicione esta montagem de volume ao seu docker-compose.yml do Sonarr:",
@@ -1677,7 +1677,7 @@
         {
           "title": "Montar diretório Posterizarr no Radarr",
           "description": "Radarr precisa de acesso de escrita ao diretório watcher do Posterizarr.",
-          "warning": "⚠️ O caminho de montagem é sensível a maiúsculas e minúsculas e deve ser exatamente /posterizarr",
+          "warning": "O caminho de montagem é sensível a maiúsculas e minúsculas e deve ser exatamente /posterizarr",
           "code": [
             {
               "label": "Adicione esta montagem de volume ao seu docker-compose.yml do Radarr:",
