@@ -774,6 +774,8 @@
       "arr": "Arr"
     },
     "refreshHistory": "Refresh history",
+    "clickForDetails": "Click to view details",
+    "detailTitle": "Run Details",
     "table": {
       "timestamp": "Timestamp",
       "mode": "Mode",
@@ -1365,7 +1367,13 @@
     "scheduledRuns": "Scheduled Runs",
     "nextRun": "Next Run",
     "configuredSchedules": "Configured Schedule Times",
-    "timezone": "Timezone"
+    "timezone": "Timezone",
+    "runInfo": "Run Information",
+    "imageStats": "Image Statistics",
+    "startTime": "Start Time",
+    "endTime": "End Time",
+    "notificationSent": "Notification Sent",
+    "notes": "Notes"
   },
   "dangerZone": {
     "title": "Danger Zone",
