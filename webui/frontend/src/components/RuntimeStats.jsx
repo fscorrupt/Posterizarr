@@ -7,36 +7,19 @@ import {
   Film,
   Tv,
   Calendar,
+  Globe,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import {
+  formatDateToLocale,
+  formatTimestampWithTzInfo,
+  getBrowserTimezone,
+  isTimezoneDifferent,
+} from "../utils/timeUtils";
 
 const API_URL = "/api";
 
 let cachedRuntimeStats = null;
-
-// Helper function to parse dates in multiple formats
-const parseDateTime = (dateStr) => {
-  if (!dateStr) return null;
-
-  // Try ISO format first
-  let date = new Date(dateStr);
-  if (!isNaN(date.getTime())) {
-    return date;
-  }
-
-  // Try German format: "19.10.2025 05:14:22"
-  const germanFormat = /^(\d{2})\.(\d{2})\.(\d{4})\s+(\d{2}):(\d{2}):(\d{2})$/;
-  const match = dateStr.match(germanFormat);
-  if (match) {
-    const [, day, month, year, hour, minute, second] = match;
-    date = new Date(year, month - 1, day, hour, minute, second);
-    if (!isNaN(date.getTime())) {
-      return date;
-    }
-  }
-
-  return null;
-};
 
 function RuntimeStats() {
   const { t } = useTranslation();
@@ -201,10 +184,7 @@ function RuntimeStats() {
                       {t("dashboard.lastRun")}:
                     </span>
                     <span className="font-medium text-theme-text">
-                      {(() => {
-                        const date = parseDateTime(runtimeStats.start_time);
-                        return date ? date.toLocaleString() : "N/A";
-                      })()}
+                      {formatDateToLocale(runtimeStats.start_time)}
                     </span>
                   </div>
                 )}
@@ -481,21 +461,35 @@ function RuntimeStats() {
               <div className="space-y-3">
                 {/* Next Run */}
                 {runtimeStats.scheduler.next_run && (
-                  <div className="flex items-center justify-between p-3 bg-theme-hover rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-theme-primary" />
-                      <span className="text-sm font-medium text-theme-text">
-                        {t("runtimeStats.nextRun")}:
+                  <div className="p-3 bg-theme-hover rounded-lg space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-theme-primary" />
+                        <span className="text-sm font-medium text-theme-text">
+                          {t("runtimeStats.nextRun")}:
+                        </span>
+                      </div>
+                      <span className="text-sm font-bold text-theme-primary">
+                        {formatDateToLocale(runtimeStats.scheduler.next_run)}
                       </span>
                     </div>
-                    <span className="text-sm font-bold text-theme-primary">
-                      {(() => {
-                        const date = parseDateTime(
-                          runtimeStats.scheduler.next_run
+                    {/* Timezone info if different */}
+                    {(() => {
+                      const schedulerTz = runtimeStats.scheduler.timezone;
+                      if (schedulerTz && isTimezoneDifferent(schedulerTz)) {
+                        const browserTz = getBrowserTimezone();
+                        return (
+                          <div className="flex items-center gap-1 text-xs text-theme-muted border-t border-theme-primary/20 pt-2">
+                            <Globe className="w-3 h-3" />
+                            <span>
+                              {t("runtimeStats.displayedInYourTimezone")}:{" "}
+                              <span className="font-mono">{browserTz}</span>
+                            </span>
+                          </div>
                         );
-                        return date ? date.toLocaleString() : "N/A";
-                      })()}
-                    </span>
+                      }
+                      return null;
+                    })()}
                   </div>
                 )}
 
@@ -520,12 +514,22 @@ function RuntimeStats() {
                         )}
                       </div>
                       {runtimeStats.scheduler.timezone && (
-                        <p className="text-xs text-theme-muted mt-2">
-                          {t("runtimeStats.timezone")}:{" "}
-                          <span className="font-mono text-theme-text">
-                            {runtimeStats.scheduler.timezone}
+                        <div className="flex items-center gap-1 text-xs text-theme-muted mt-2">
+                          <Globe className="w-3 h-3" />
+                          <span>
+                            {t("runtimeStats.schedulerTimezone")}:{" "}
+                            <span className="font-mono text-theme-text">
+                              {runtimeStats.scheduler.timezone}
+                            </span>
                           </span>
-                        </p>
+                          {isTimezoneDifferent(
+                            runtimeStats.scheduler.timezone
+                          ) && (
+                            <span className="text-yellow-500 ml-1">
+                              ({t("runtimeStats.differentFromBrowser")})
+                            </span>
+                          )}
+                        </div>
                       )}
                     </div>
                   )}

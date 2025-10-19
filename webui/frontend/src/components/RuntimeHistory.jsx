@@ -15,6 +15,11 @@ import {
   X,
   Info,
 } from "lucide-react";
+import {
+  formatDateToLocale,
+  getBrowserTimezone,
+  isTimezoneDifferent,
+} from "../utils/timeUtils";
 
 const API_URL = "/api";
 
@@ -25,29 +30,7 @@ let cachedMigrationStatus = null;
 let lastFetchTime = 0;
 const CACHE_DURATION = 30000; // 30 seconds
 
-// Helper function to parse dates in multiple formats
-const parseDateTime = (dateStr) => {
-  if (!dateStr) return null;
-
-  // Try ISO format first
-  let date = new Date(dateStr);
-  if (!isNaN(date.getTime())) {
-    return date;
-  }
-
-  // Try German format: "19.10.2025 05:14:22"
-  const germanFormat = /^(\d{2})\.(\d{2})\.(\d{4})\s+(\d{2}):(\d{2}):(\d{2})$/;
-  const match = dateStr.match(germanFormat);
-  if (match) {
-    const [, day, month, year, hour, minute, second] = match;
-    date = new Date(year, month - 1, day, hour, minute, second);
-    if (!isNaN(date.getTime())) {
-      return date;
-    }
-  }
-
-  return null;
-};
+// date parsing/formatting handled by ../utils/timeUtils (browser-localized display)
 
 function RuntimeHistory() {
   const { t } = useTranslation();
@@ -661,10 +644,7 @@ function RuntimeHistory() {
                     title={t("runtimeHistory.clickForDetails")}
                   >
                     <td className="py-3 px-4 text-theme-text text-sm">
-                      {(() => {
-                        const date = parseDateTime(entry.start_time);
-                        return date ? date.toLocaleString() : "N/A";
-                      })()}
+                      {formatDateToLocale(entry.start_time)}
                     </td>
                     <td className="py-3 px-4">
                       <span
@@ -760,10 +740,7 @@ function RuntimeHistory() {
                     {t("runtimeHistory.detailTitle")}
                   </h2>
                   <p className="text-sm text-theme-muted">
-                    {(() => {
-                      const date = parseDateTime(selectedEntry.start_time);
-                      return date ? date.toLocaleString() : "N/A";
-                    })()}
+                    {formatDateToLocale(selectedEntry.start_time)}
                   </p>
                 </div>
               </div>
@@ -809,10 +786,7 @@ function RuntimeHistory() {
                         {t("runtimeStats.startTime")}
                       </p>
                       <p className="text-sm font-medium text-theme-text">
-                        {(() => {
-                          const date = parseDateTime(selectedEntry.start_time);
-                          return date ? date.toLocaleString() : "N/A";
-                        })()}
+                        {formatDateToLocale(selectedEntry.start_time)}
                       </p>
                     </div>
                   )}
@@ -822,10 +796,7 @@ function RuntimeHistory() {
                         {t("runtimeStats.endTime")}
                       </p>
                       <p className="text-sm font-medium text-theme-text">
-                        {(() => {
-                          const date = parseDateTime(selectedEntry.end_time);
-                          return date ? date.toLocaleString() : "N/A";
-                        })()}
+                        {formatDateToLocale(selectedEntry.end_time)}
                       </p>
                     </div>
                   )}

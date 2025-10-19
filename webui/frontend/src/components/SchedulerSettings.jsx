@@ -515,14 +515,14 @@ const SchedulerSettings = () => {
         <button
           onClick={toggleScheduler}
           disabled={isUpdating}
-          className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all shadow-lg hover:scale-105 ${
+          className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all shadow-sm hover:scale-105 ${
             config?.enabled
               ? "bg-green-600 hover:bg-green-700 text-white"
-              : "bg-theme-card hover:bg-theme-hover text-theme-text border border-theme"
+              : "bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 text-theme-text"
           } ${isUpdating ? "opacity-50 cursor-not-allowed" : ""}`}
         >
           {isUpdating ? (
-            <Loader2 className="w-5 h-5 animate-spin" />
+            <Loader2 className="w-5 h-5 text-theme-primary animate-spin" />
           ) : (
             <Power className="w-5 h-5" />
           )}
@@ -616,6 +616,9 @@ const SchedulerSettings = () => {
           <label className="block text-sm font-medium text-theme-text mb-2">
             {t("schedulerSettings.timezone")}
           </label>
+          <p className="text-xs text-theme-muted mb-2">
+            {t("schedulerSettings.timezoneDescription")}
+          </p>
           <div className="relative" ref={timezoneDropdownRef}>
             <button
               onClick={() => {
