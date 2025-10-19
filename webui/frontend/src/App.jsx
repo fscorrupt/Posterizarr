@@ -19,13 +19,12 @@ import ConfigEditor from "./components/ConfigEditor";
 import LogViewer from "./components/LogViewer";
 import Dashboard from "./components/Dashboard";
 import GalleryHub from "./components/GalleryHub";
-import TestGallery from "./components/TestGallery";
+import AssetsManager from "./components/AssetsManager";
 import About from "./components/About";
 import HowItWorks from "./components/HowItWorks";
 import AutoTriggers from "./components/AutoTriggers";
 import SchedulerSettings from "./components/SchedulerSettings";
 import RunModes from "./components/RunModes";
-import OverlayAssets from "./components/OverlayAssets";
 import AssetOverview from "./components/AssetOverview";
 import RuntimeHistory from "./components/RuntimeHistory";
 import Sidebar from "./components/Sidebar";
@@ -132,9 +131,8 @@ function AppContent() {
               <Routes>
                 <Route path="/" element={<Dashboard />} />
                 <Route path="/run-modes" element={<RunModes />} />
-                <Route path="/overlay-assets" element={<OverlayAssets />} />
+                <Route path="/assets-manager" element={<AssetsManager />} />
                 <Route path="/asset-overview" element={<AssetOverview />} />
-                <Route path="/test-gallery" element={<TestGallery />} />
                 <Route path="/runtime-history" element={<RuntimeHistory />} />
 
                 <Route

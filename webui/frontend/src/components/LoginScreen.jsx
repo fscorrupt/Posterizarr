@@ -46,16 +46,13 @@ function LoginScreen({ onLoginSuccess }) {
       <div className="w-full max-w-md">
         {/* Logo/Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-24 h-24 bg-theme-primary rounded-2xl mb-4 shadow-2xl p-4">
+          <div className="mb-6">
             <img
-              src="/favicon.png"
+              src="/logo.png"
               alt="Posterizarr Logo"
-              className="w-full h-full object-contain"
+              className="h-16 w-auto object-contain mx-auto"
             />
           </div>
-          <h1 className="text-3xl font-bold text-theme-text mb-2">
-            Posterizarr
-          </h1>
           <p className="text-theme-muted">{t("auth.signInToContinue")}</p>
         </div>
 

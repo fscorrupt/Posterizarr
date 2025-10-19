@@ -299,7 +299,13 @@
     "close": "Chiudi",
     "deleteTitle": "Elimina file",
     "deleteConfirm": "Sei sicuro di voler eliminare questo file?",
-    "cancel": "Annulla"
+    "cancel": "Annulla",
+    "uploadPreview": "Anteprima caricamento",
+    "fontFile": "File di carattere"
+  },
+  "assetsManager": {
+    "testGallery": "Galleria di test",
+    "overlayAssets": "Asset di sovrapposizione"
   },
   "nav": {
     "dashboard": "Pannello di controllo",
@@ -315,7 +321,7 @@
     "autoTriggers": "Trigger automatici",
     "assetOverview": "Panoramica asset",
     "assetReplacer": "Sostitutore asset",
-    "overlayAssets": "Asset di sovrapposizione",
+    "assetsManager": "Gestore asset",
     "generalSettings": "Impostazioni generali",
     "library": "Libreria",
     "notifications": "Notifiche",
@@ -324,7 +330,6 @@
     "backgrounds": "Sfondi",
     "titleCards": "Schede titolo",
     "seasons": "Stagioni",
-    "test": "Asset di test",
     "folderView": "Vista cartelle"
   },
   "scrollButtons": {
@@ -1466,7 +1471,7 @@
             "title": "Scarica lo script trigger",
             "description": "Scarica trigger.py da GitHub e posizionalo nella directory degli script di Tautulli.",
             "substeps": [
-              "Scarica da: https://github.com/cyb3rgh05t/posterizarr/blob/main/trigger.py",
+              "Scarica da: https://github.com/fscorrupt/posterizarr/blob/main/trigger.py",
               "Posiziona nella directory degli script di Tautulli (vedi Wiki Tautulli per la posizione)",
               "Imposta i permessi di esecuzione: chmod +x trigger.py"
             ]
@@ -1584,7 +1589,7 @@
           "title": "Scarica lo script trigger",
           "description": "Scarica ArrTrigger.sh da GitHub e posizionalo nella directory degli script di Sonarr.",
           "substeps": [
-            "Scarica da: https://github.com/cyb3rgh05t/posterizarr/blob/main/ArrTrigger.sh",
+            "Scarica da: https://github.com/fscorrupt/posterizarr/blob/main/ArrTrigger.sh",
             "Esempio: Crea directory /opt/appdata/sonarr/scripts/",
             "Posiziona ArrTrigger.sh in questa directory",
             "Imposta i permessi di esecuzione: chmod +x ArrTrigger.sh"
@@ -1656,7 +1661,7 @@
           "title": "Scarica lo script trigger",
           "description": "Scarica ArrTrigger.sh da GitHub e posizionalo nella directory degli script di Radarr.",
           "substeps": [
-            "Scarica da: https://github.com/cyb3rgh05t/posterizarr/blob/main/ArrTrigger.sh",
+            "Scarica da: https://github.com/fscorrupt/posterizarr/blob/main/ArrTrigger.sh",
             "Esempio: Crea directory /opt/appdata/radarr/scripts/",
             "Posiziona ArrTrigger.sh in questa directory",
             "Imposta i permessi di esecuzione: chmod +x ArrTrigger.sh"

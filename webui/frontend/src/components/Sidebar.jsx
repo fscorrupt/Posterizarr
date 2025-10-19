@@ -27,6 +27,7 @@ import {
   AlertTriangle,
   TrendingUp,
   Zap,
+  FolderKanban,
 } from "lucide-react";
 import VersionBadge from "./VersionBadge";
 import { useSidebar } from "../context/SidebarContext";
@@ -155,8 +156,11 @@ const Sidebar = () => {
       icon: AlertTriangle,
       badge: missingAssetsCount,
     },
-    { path: "/overlay-assets", label: t("nav.overlayAssets"), icon: FileImage },
-    { path: "/test-gallery", label: t("nav.test"), icon: Image },
+    {
+      path: "/assets-manager",
+      label: t("nav.assetsManager"),
+      icon: FolderKanban,
+    },
     {
       path: "/config",
       label: t("nav.config"),

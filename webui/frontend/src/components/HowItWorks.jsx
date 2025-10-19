@@ -164,14 +164,14 @@ function HowItWorks() {
               <div key={step.id} className="relative">
                 {/* Connection Line */}
                 {index < workflowSteps.length - 1 && (
-                  <div className="absolute left-8 top-20 w-0.5 h-8 bg-theme-border" />
+                  <div className="absolute left-8 sm:left-8 top-20 w-0.5 h-8 bg-theme-border" />
                 )}
 
                 <div
                   className="bg-theme-hover border border-theme rounded-lg p-5 transition-all duration-300 cursor-pointer hover:border-theme-primary/50"
                   onClick={() => setExpandedStep(isExpanded ? null : step.id)}
                 >
-                  <div className="flex items-start gap-4">
+                  <div className="flex flex-col sm:flex-row items-start gap-4">
                     {/* Step Number & Icon */}
                     <div className="flex-shrink-0">
                       <div className="w-16 h-16 rounded-lg bg-theme-primary/10 border border-theme-primary/30 flex items-center justify-center relative">
@@ -186,17 +186,17 @@ function HowItWorks() {
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-lg font-semibold text-theme-text">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-2">
+                        <h3 className="text-lg font-semibold text-theme-text break-words">
                           {step.title}
                         </h3>
                         <ChevronRight
-                          className={`w-5 h-5 text-theme-muted transition-transform duration-300 ${
+                          className={`w-5 h-5 text-theme-muted transition-transform duration-300 flex-shrink-0 ${
                             isExpanded ? "rotate-90" : ""
                           }`}
                         />
                       </div>
-                      <p className="text-theme-muted text-sm mb-3">
+                      <p className="text-theme-muted text-sm mb-3 break-words">
                         {step.description}
                       </p>
 
@@ -212,10 +212,10 @@ function HowItWorks() {
                           {step.details.map((detail, idx) => (
                             <div
                               key={idx}
-                              className="flex items-center gap-2 text-sm text-theme-text"
+                              className="flex items-start gap-2 text-sm text-theme-text"
                             >
-                              <CheckCircle className="w-4 h-4 flex-shrink-0 text-theme-primary" />
-                              <span>{detail}</span>
+                              <CheckCircle className="w-4 h-4 flex-shrink-0 text-theme-primary mt-0.5" />
+                              <span className="break-words">{detail}</span>
                             </div>
                           ))}
                         </div>

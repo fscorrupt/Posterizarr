@@ -8,6 +8,7 @@ import {
   ChevronDown,
   CheckSquare,
   Square,
+  X,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import CompactImageSizeSlider from "./CompactImageSizeSlider";
@@ -378,10 +379,10 @@ function Gallery() {
                   }
                 }}
                 disabled={loading || imagesLoading}
-                className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 bg-theme-primary hover:bg-theme-primary/90 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg text-sm font-medium transition-all shadow-lg"
+                className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg text-theme-text text-sm font-medium transition-all shadow-sm"
               >
                 <RefreshCw
-                  className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 ${
+                  className={`w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 text-theme-primary ${
                     loading || imagesLoading ? "animate-spin" : ""
                   }`}
                 />
@@ -399,8 +400,8 @@ function Gallery() {
                   onClick={() => setActiveFolder(folder)}
                   className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap shadow-sm ${
                     activeFolder?.path === folder.path
-                      ? "bg-theme-primary text-white scale-105"
-                      : "bg-theme-hover text-theme-text hover:bg-theme-primary/70 hover:scale-105"
+                      ? "bg-theme-primary text-white scale-105 border-2 border-theme-primary"
+                      : "bg-theme-card text-theme-text hover:bg-theme-hover border border-theme hover:border-theme-primary/50 hover:scale-105"
                   }`}
                 >
                   <Folder className="w-4 h-4 flex-shrink-0" />
@@ -507,18 +508,18 @@ function Gallery() {
                 <div className="flex flex-wrap items-center gap-2 sm:gap-4">
                   <button
                     onClick={toggleSelectAll}
-                    className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 bg-theme-primary hover:bg-theme-primary/90 rounded-lg text-sm font-medium transition-all"
+                    className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-theme-text text-sm font-medium transition-all shadow-sm"
                   >
                     {selectedImages.length === displayedImages.length ? (
                       <>
-                        <Square className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                        <Square className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 text-theme-primary" />
                         <span className="text-sm sm:text-base">
                           {t("gallery.deselectAll")}
                         </span>
                       </>
                     ) : (
                       <>
-                        <CheckSquare className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0" />
+                        <CheckSquare className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 text-theme-primary" />
                         <span className="text-sm sm:text-base">
                           {t("gallery.selectAll")}
                         </span>
@@ -772,27 +773,38 @@ function Gallery() {
           onClick={() => setSelectedImage(null)}
         >
           <div
-            className="bg-theme-card rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-hidden shadow-2xl border-2 border-theme-primary"
+            className="bg-theme-card rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border-2 border-theme-primary"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="px-6 py-4 border-b border-theme-hover bg-gradient-to-r from-theme-card to-theme-hover">
-              <h3 className="text-xl font-bold text-theme-text mb-1">
-                {selectedImage.path.split(/[\\/]/).slice(-2, -1)[0] ||
-                  "Unknown"}
-              </h3>
-              <p className="text-sm text-theme-muted truncate">
-                {formatDisplayPath(selectedImage.path)}
-              </p>
+            <div className="sticky top-0 z-10 px-4 sm:px-6 py-4 border-b border-theme-hover bg-gradient-to-r from-theme-card to-theme-hover">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-lg sm:text-xl font-bold text-theme-text mb-1 break-words">
+                    {selectedImage.path.split(/[\\/]/).slice(-2, -1)[0] ||
+                      "Unknown"}
+                  </h3>
+                  <p className="text-xs sm:text-sm text-theme-muted truncate">
+                    {formatDisplayPath(selectedImage.path)}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setSelectedImage(null)}
+                  className="flex-shrink-0 p-2 hover:bg-theme-hover rounded-lg transition-colors sm:hidden"
+                  aria-label="Close"
+                >
+                  <X className="w-5 h-5 text-theme-text" />
+                </button>
+              </div>
             </div>
 
             {/* Image Content */}
-            <div className="p-6 bg-theme-bg flex items-center justify-center">
-              <div className="max-h-[65vh] flex items-center justify-center">
+            <div className="p-4 sm:p-6 bg-theme-bg flex items-center justify-center">
+              <div className="max-h-[50vh] sm:max-h-[65vh] flex items-center justify-center">
                 <img
                   src={`${selectedImage.url}?t=${cacheBuster}`}
                   alt={selectedImage.name}
-                  className="max-w-full max-h-[65vh] object-contain rounded-lg shadow-2xl"
+                  className="max-w-full max-h-[50vh] sm:max-h-[65vh] object-contain rounded-lg shadow-2xl"
                   onError={(e) => {
                     e.target.style.display = "none";
                     e.target.nextSibling.style.display = "block";
@@ -813,25 +825,25 @@ function Gallery() {
             </div>
 
             {/* Footer with Actions */}
-            <div className="px-6 py-4 border-t border-theme-hover bg-theme-card">
-              <div className="flex items-center justify-between gap-4">
+            <div className="sticky bottom-0 px-4 sm:px-6 py-4 border-t border-theme-hover bg-theme-card">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 {/* File Size Info */}
-                <span className="text-sm text-theme-muted font-medium">
+                <span className="text-xs sm:text-sm text-theme-muted font-medium">
                   {t("gallery.size")}: {(selectedImage.size / 1024).toFixed(2)}{" "}
                   KB
                 </span>
 
                 {/* Action Buttons */}
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       setAssetToReplace(selectedImage);
                       setReplacerOpen(true);
                     }}
-                    className="flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors bg-theme-primary text-white hover:bg-theme-primary/90"
+                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-theme-text font-medium transition-all shadow-sm"
                   >
-                    <RefreshCw className="w-4 h-4" />
+                    <RefreshCw className="w-4 h-4 text-theme-primary" />
                     {t("gallery.replace")}
                   </button>
 
@@ -844,14 +856,14 @@ function Gallery() {
                       });
                     }}
                     disabled={deletingImage === selectedImage.path}
-                    className={`flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors ${
+                    className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg font-medium transition-colors ${
                       deletingImage === selectedImage.path
                         ? "bg-theme-muted cursor-not-allowed opacity-50"
-                        : "bg-red-600 hover:bg-red-700 text-white"
+                        : "bg-theme-card hover:bg-theme-hover border border-theme hover:border-red-500/50 text-theme-text"
                     }`}
                   >
                     <Trash2
-                      className={`w-4 h-4 ${
+                      className={`w-4 h-4 text-red-400 ${
                         deletingImage === selectedImage.path
                           ? "animate-spin"
                           : ""
@@ -862,7 +874,7 @@ function Gallery() {
 
                   <button
                     onClick={() => setSelectedImage(null)}
-                    className="px-5 py-2.5 bg-theme-hover hover:bg-theme-hover/80 rounded-lg font-medium transition-colors text-theme-text border border-theme-hover"
+                    className="hidden sm:flex items-center justify-center px-5 py-2.5 bg-theme-card hover:bg-theme-hover border border-theme rounded-lg font-medium transition-colors text-theme-text shadow-sm"
                   >
                     {t("gallery.close")}
                   </button>

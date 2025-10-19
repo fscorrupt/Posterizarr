@@ -220,14 +220,14 @@ function TautulliContent() {
       </div>
 
       {/* Requirements Alert */}
-      <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">
-        <div className="flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+      <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 sm:p-4">
+        <div className="flex items-start gap-2 sm:gap-3">
+          <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500 flex-shrink-0 mt-0.5" />
           <div>
-            <h3 className="font-semibold text-theme-text mb-1">
+            <h3 className="font-semibold text-theme-text mb-1 text-sm sm:text-base">
               {t("autoTriggers.tautulli.requirements.title")}
             </h3>
-            <p className="text-sm text-theme-muted">
+            <p className="text-xs sm:text-sm text-theme-muted">
               {mode === "docker"
                 ? t("autoTriggers.tautulli.requirements.docker")
                 : t("autoTriggers.tautulli.requirements.windows")}
@@ -237,13 +237,13 @@ function TautulliContent() {
       </div>
 
       {/* Setup Steps */}
-      <div className="bg-theme-card border border-theme rounded-lg p-6">
-        <h2 className="text-2xl font-bold text-theme-text mb-6 flex items-center gap-2">
-          <FileCode className="w-6 h-6 text-theme-primary" />
+      <div className="bg-theme-card border border-theme rounded-lg p-4 sm:p-6">
+        <h2 className="text-xl sm:text-2xl font-bold text-theme-text mb-4 sm:mb-6 flex items-center gap-2">
+          <FileCode className="w-5 h-5 sm:w-6 sm:h-6 text-theme-primary" />
           {t("autoTriggers.setupSteps")}
         </h2>
 
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {steps.map((step, index) => {
             const isExpanded = expandedStep === index;
             const hasCode = step.code && step.code.length > 0;
@@ -252,12 +252,12 @@ function TautulliContent() {
               <div key={index} className="relative">
                 {/* Connection Line */}
                 {index < steps.length - 1 && (
-                  <div className="absolute left-8 top-20 w-0.5 h-8 bg-theme-border" />
+                  <div className="absolute left-6 sm:left-8 top-16 sm:top-20 w-0.5 h-6 sm:h-8 bg-theme-border" />
                 )}
 
-                <div className="bg-theme-hover border border-theme rounded-lg p-5">
+                <div className="bg-theme-hover border border-theme rounded-lg p-3 sm:p-5">
                   <div
-                    className={`flex items-start gap-4 ${
+                    className={`flex items-start gap-3 sm:gap-4 ${
                       hasCode ? "cursor-pointer" : ""
                     }`}
                     onClick={() =>
@@ -266,10 +266,10 @@ function TautulliContent() {
                   >
                     {/* Step Number */}
                     <div className="flex-shrink-0">
-                      <div className="w-16 h-16 rounded-lg bg-theme-primary/10 border border-theme-primary/30 flex items-center justify-center relative">
-                        <CheckCircle className="w-7 h-7 text-theme-primary" />
-                        <div className="absolute -top-2 -right-2 w-6 h-6 bg-theme-primary rounded-full border-2 border-theme-card flex items-center justify-center">
-                          <span className="text-xs font-bold text-white">
+                      <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg bg-theme-primary/10 border border-theme-primary/30 flex items-center justify-center relative">
+                        <CheckCircle className="w-5 h-5 sm:w-7 sm:h-7 text-theme-primary" />
+                        <div className="absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2 w-5 h-5 sm:w-6 sm:h-6 bg-theme-primary rounded-full border-2 border-theme-card flex items-center justify-center">
+                          <span className="text-[10px] sm:text-xs font-bold text-white">
                             {index + 1}
                           </span>
                         </div>
@@ -278,28 +278,28 @@ function TautulliContent() {
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-lg font-semibold text-theme-text">
+                      <div className="flex items-start justify-between mb-2 gap-2">
+                        <h3 className="text-base sm:text-lg font-semibold text-theme-text break-words leading-tight flex-1">
                           {step.title}
                         </h3>
                         {hasCode && (
                           <ChevronRight
-                            className={`w-5 h-5 text-theme-muted transition-transform duration-300 ${
+                            className={`w-4 h-4 sm:w-5 sm:h-5 text-theme-muted transition-transform duration-300 flex-shrink-0 mt-0.5 ${
                               isExpanded ? "rotate-90" : ""
                             }`}
                           />
                         )}
                       </div>
-                      <p className="text-theme-muted text-sm mb-3">
+                      <p className="text-theme-muted text-xs sm:text-sm mb-2 sm:mb-3 break-words leading-relaxed">
                         {step.description}
                       </p>
 
                       {/* Warning if present */}
                       {step.warning && (
-                        <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 mb-3">
+                        <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-2 sm:p-3 mb-2 sm:mb-3">
                           <div className="flex items-start gap-2">
-                            <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
-                            <p className="text-sm text-theme-text">
+                            <AlertCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500 flex-shrink-0 mt-0.5" />
+                            <p className="text-xs sm:text-sm text-theme-text break-words leading-relaxed">
                               {step.warning}
                             </p>
                           </div>
@@ -308,10 +308,10 @@ function TautulliContent() {
 
                       {/* Info if present */}
                       {step.info && (
-                        <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 mb-3">
+                        <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-2 sm:p-3 mb-2 sm:mb-3">
                           <div className="flex items-start gap-2">
-                            <Info className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
-                            <p className="text-sm text-theme-text">
+                            <Info className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-500 flex-shrink-0 mt-0.5" />
+                            <p className="text-xs sm:text-sm text-theme-text break-words leading-relaxed">
                               {step.info}
                             </p>
                           </div>
@@ -320,17 +320,22 @@ function TautulliContent() {
 
                       {/* Code Blocks */}
                       {hasCode && isExpanded && (
-                        <div className="space-y-3 mt-4 pt-4 border-t border-theme">
+                        <div className="space-y-2 sm:space-y-3 mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-theme">
                           {step.code.map((codeBlock, codeIndex) => (
-                            <div key={codeIndex} className="space-y-2">
+                            <div
+                              key={codeIndex}
+                              className="space-y-1.5 sm:space-y-2"
+                            >
                               {codeBlock.label && (
-                                <p className="text-sm font-medium text-theme-text">
+                                <p className="text-xs sm:text-sm font-medium text-theme-text break-words">
                                   {codeBlock.label}
                                 </p>
                               )}
                               <div className="relative">
-                                <pre className="bg-theme-darker border border-theme rounded-lg p-4 overflow-x-auto text-sm text-theme-text">
-                                  <code>{codeBlock.content}</code>
+                                <pre className="bg-theme-darker border border-theme rounded-lg p-3 sm:p-4 overflow-x-auto text-xs sm:text-sm text-theme-text">
+                                  <code className="break-all">
+                                    {codeBlock.content}
+                                  </code>
                                 </pre>
                                 <button
                                   onClick={(e) => {
@@ -340,13 +345,13 @@ function TautulliContent() {
                                       `${index}-${codeIndex}`
                                     );
                                   }}
-                                  className="absolute top-2 right-2 p-2 rounded-lg bg-theme-card hover:bg-theme-hover transition-colors"
+                                  className="absolute top-2 right-2 p-1.5 sm:p-2 rounded-lg bg-theme-card hover:bg-theme-hover transition-colors"
                                   title={t("autoTriggers.copyCode")}
                                 >
                                   {copiedCode === `${index}-${codeIndex}` ? (
-                                    <Check className="w-4 h-4 text-green-500" />
+                                    <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-500" />
                                   ) : (
-                                    <Copy className="w-4 h-4 text-theme-muted" />
+                                    <Copy className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-theme-muted" />
                                   )}
                                 </button>
                               </div>
@@ -357,14 +362,14 @@ function TautulliContent() {
 
                       {/* Sub-steps if present */}
                       {step.substeps && (
-                        <div className="space-y-2 mt-3 pl-4 border-l-2 border-theme-primary/30">
+                        <div className="space-y-1.5 sm:space-y-2 mt-2 sm:mt-3 pl-3 sm:pl-4 border-l-2 border-theme-primary/30">
                           {step.substeps.map((substep, subIndex) => (
                             <div
                               key={subIndex}
                               className="flex items-start gap-2"
                             >
-                              <CheckCircle className="w-4 h-4 text-theme-primary flex-shrink-0 mt-0.5" />
-                              <span className="text-sm text-theme-text">
+                              <CheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-theme-primary flex-shrink-0 mt-0.5" />
+                              <span className="text-xs sm:text-sm text-theme-text break-words leading-relaxed">
                                 {substep}
                               </span>
                             </div>
@@ -381,9 +386,9 @@ function TautulliContent() {
       </div>
 
       {/* Resources */}
-      <div className="bg-theme-card border border-theme rounded-lg p-6">
-        <h3 className="text-lg font-bold text-theme-text mb-4 flex items-center gap-2">
-          <ExternalLink className="w-5 h-5 text-theme-primary" />
+      <div className="bg-theme-card border border-theme rounded-lg p-4 sm:p-6">
+        <h3 className="text-base sm:text-lg font-bold text-theme-text mb-3 sm:mb-4 flex items-center gap-2">
+          <ExternalLink className="w-4 h-4 sm:w-5 sm:h-5 text-theme-primary" />
           {t("autoTriggers.resources.title")}
         </h3>
         <div className="space-y-2">
@@ -391,16 +396,16 @@ function TautulliContent() {
             href="https://github.com/Tautulli/Tautulli/wiki/Custom-Scripts"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 text-theme-primary hover:underline text-sm"
+            className="flex items-center gap-2 text-theme-primary hover:underline text-xs sm:text-sm break-all"
           >
-            <ExternalLink className="w-4 h-4" />
+            <ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
             {t("autoTriggers.resources.tautulliWiki")}
           </a>
           <a
-            href="https://github.com/cyb3rgh05t/posterizarr/blob/main/trigger.py"
+            href="https://github.com/fscorrupt/posterizarr/blob/main/trigger.py"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 text-theme-primary hover:underline text-sm"
+            className="flex items-center gap-2 text-theme-primary hover:underline text-xs sm:text-sm break-all"
           >
             <Code className="w-4 h-4" />
             {t("autoTriggers.resources.triggerScript")}
@@ -428,14 +433,14 @@ function SonarrContent() {
   return (
     <div className="space-y-6">
       {/* Requirements Alert */}
-      <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">
-        <div className="flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+      <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 sm:p-4">
+        <div className="flex items-start gap-2 sm:gap-3">
+          <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500 flex-shrink-0 mt-0.5" />
           <div>
-            <h3 className="font-semibold text-theme-text mb-1">
+            <h3 className="font-semibold text-theme-text mb-1 text-sm sm:text-base">
               {t("autoTriggers.sonarr.requirements.title")}
             </h3>
-            <p className="text-sm text-theme-muted">
+            <p className="text-xs sm:text-sm text-theme-muted">
               {t("autoTriggers.sonarr.requirements.description")}
             </p>
           </div>
@@ -443,17 +448,17 @@ function SonarrContent() {
       </div>
 
       {/* How It Works */}
-      <div className="bg-theme-card border border-theme rounded-lg p-6">
-        <h2 className="text-xl font-bold text-theme-text mb-4 flex items-center gap-2">
-          <Info className="w-5 h-5 text-theme-primary" />
+      <div className="bg-theme-card border border-theme rounded-lg p-4 sm:p-6">
+        <h2 className="text-lg sm:text-xl font-bold text-theme-text mb-3 sm:mb-4 flex items-center gap-2">
+          <Info className="w-4 h-4 sm:w-5 sm:h-5 text-theme-primary" />
           {t("autoTriggers.howItWorks")}
         </h2>
-        <div className="space-y-3 text-sm text-theme-muted">
+        <div className="space-y-2 sm:space-y-3 text-xs sm:text-sm text-theme-muted">
           {t("autoTriggers.sonarr.howItWorks", { returnObjects: true }).map(
             (item, index) => (
               <div key={index} className="flex items-start gap-2">
-                <CheckCircle className="w-4 h-4 text-theme-primary flex-shrink-0 mt-0.5" />
-                <span>{item}</span>
+                <CheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-theme-primary flex-shrink-0 mt-0.5" />
+                <span className="leading-relaxed">{item}</span>
               </div>
             )
           )}
@@ -461,13 +466,13 @@ function SonarrContent() {
       </div>
 
       {/* Setup Steps */}
-      <div className="bg-theme-card border border-theme rounded-lg p-6">
-        <h2 className="text-2xl font-bold text-theme-text mb-6 flex items-center gap-2">
-          <FileCode className="w-6 h-6 text-theme-primary" />
+      <div className="bg-theme-card border border-theme rounded-lg p-4 sm:p-6">
+        <h2 className="text-xl sm:text-2xl font-bold text-theme-text mb-4 sm:mb-6 flex items-center gap-2">
+          <FileCode className="w-5 h-5 sm:w-6 sm:h-6 text-theme-primary" />
           {t("autoTriggers.setupSteps")}
         </h2>
 
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {steps.map((step, index) => {
             const isExpanded = expandedStep === index;
             const hasCode = step.code && step.code.length > 0;
@@ -476,12 +481,12 @@ function SonarrContent() {
               <div key={index} className="relative">
                 {/* Connection Line */}
                 {index < steps.length - 1 && (
-                  <div className="absolute left-8 top-20 w-0.5 h-8 bg-theme-border" />
+                  <div className="absolute left-6 sm:left-8 top-16 sm:top-20 w-0.5 h-6 sm:h-8 bg-theme-border" />
                 )}
 
-                <div className="bg-theme-hover border border-theme rounded-lg p-5">
+                <div className="bg-theme-hover border border-theme rounded-lg p-3 sm:p-5">
                   <div
-                    className={`flex items-start gap-4 ${
+                    className={`flex items-start gap-3 sm:gap-4 ${
                       hasCode ? "cursor-pointer" : ""
                     }`}
                     onClick={() =>
@@ -490,10 +495,10 @@ function SonarrContent() {
                   >
                     {/* Step Number */}
                     <div className="flex-shrink-0">
-                      <div className="w-16 h-16 rounded-lg bg-theme-primary/10 border border-theme-primary/30 flex items-center justify-center relative">
-                        <CheckCircle className="w-7 h-7 text-theme-primary" />
-                        <div className="absolute -top-2 -right-2 w-6 h-6 bg-theme-primary rounded-full border-2 border-theme-card flex items-center justify-center">
-                          <span className="text-xs font-bold text-white">
+                      <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg bg-theme-primary/10 border border-theme-primary/30 flex items-center justify-center relative">
+                        <CheckCircle className="w-5 h-5 sm:w-7 sm:h-7 text-theme-primary" />
+                        <div className="absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2 w-5 h-5 sm:w-6 sm:h-6 bg-theme-primary rounded-full border-2 border-theme-card flex items-center justify-center">
+                          <span className="text-[10px] sm:text-xs font-bold text-white">
                             {index + 1}
                           </span>
                         </div>
@@ -502,28 +507,28 @@ function SonarrContent() {
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-lg font-semibold text-theme-text">
+                      <div className="flex items-start justify-between mb-2 gap-2">
+                        <h3 className="text-base sm:text-lg font-semibold text-theme-text break-words leading-tight flex-1">
                           {step.title}
                         </h3>
                         {hasCode && (
                           <ChevronRight
-                            className={`w-5 h-5 text-theme-muted transition-transform duration-300 ${
+                            className={`w-4 h-4 sm:w-5 sm:h-5 text-theme-muted transition-transform duration-300 flex-shrink-0 mt-0.5 ${
                               isExpanded ? "rotate-90" : ""
                             }`}
                           />
                         )}
                       </div>
-                      <p className="text-theme-muted text-sm mb-3">
+                      <p className="text-theme-muted text-xs sm:text-sm mb-2 sm:mb-3 break-words leading-relaxed">
                         {step.description}
                       </p>
 
                       {/* Warning if present */}
                       {step.warning && (
-                        <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 mb-3">
+                        <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-2 sm:p-3 mb-2 sm:mb-3">
                           <div className="flex items-start gap-2">
-                            <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
-                            <p className="text-sm text-theme-text">
+                            <AlertCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500 flex-shrink-0 mt-0.5" />
+                            <p className="text-xs sm:text-sm text-theme-text break-words leading-relaxed">
                               {step.warning}
                             </p>
                           </div>
@@ -532,10 +537,10 @@ function SonarrContent() {
 
                       {/* Info if present */}
                       {step.info && (
-                        <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 mb-3">
+                        <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-2 sm:p-3 mb-2 sm:mb-3">
                           <div className="flex items-start gap-2">
-                            <Info className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
-                            <p className="text-sm text-theme-text">
+                            <Info className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-500 flex-shrink-0 mt-0.5" />
+                            <p className="text-xs sm:text-sm text-theme-text break-words leading-relaxed">
                               {step.info}
                             </p>
                           </div>
@@ -544,17 +549,22 @@ function SonarrContent() {
 
                       {/* Code Blocks */}
                       {hasCode && isExpanded && (
-                        <div className="space-y-3 mt-4 pt-4 border-t border-theme">
+                        <div className="space-y-2 sm:space-y-3 mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-theme">
                           {step.code.map((codeBlock, codeIndex) => (
-                            <div key={codeIndex} className="space-y-2">
+                            <div
+                              key={codeIndex}
+                              className="space-y-1.5 sm:space-y-2"
+                            >
                               {codeBlock.label && (
-                                <p className="text-sm font-medium text-theme-text">
+                                <p className="text-xs sm:text-sm font-medium text-theme-text break-words">
                                   {codeBlock.label}
                                 </p>
                               )}
                               <div className="relative">
-                                <pre className="bg-theme-darker border border-theme rounded-lg p-4 overflow-x-auto text-sm text-theme-text">
-                                  <code>{codeBlock.content}</code>
+                                <pre className="bg-theme-darker border border-theme rounded-lg p-3 sm:p-4 overflow-x-auto text-xs sm:text-sm text-theme-text">
+                                  <code className="break-all">
+                                    {codeBlock.content}
+                                  </code>
                                 </pre>
                                 <button
                                   onClick={(e) => {
@@ -564,13 +574,13 @@ function SonarrContent() {
                                       `${index}-${codeIndex}`
                                     );
                                   }}
-                                  className="absolute top-2 right-2 p-2 rounded-lg bg-theme-card hover:bg-theme-hover transition-colors"
+                                  className="absolute top-2 right-2 p-1.5 sm:p-2 rounded-lg bg-theme-card hover:bg-theme-hover transition-colors"
                                   title={t("autoTriggers.copyCode")}
                                 >
                                   {copiedCode === `${index}-${codeIndex}` ? (
-                                    <Check className="w-4 h-4 text-green-500" />
+                                    <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-500" />
                                   ) : (
-                                    <Copy className="w-4 h-4 text-theme-muted" />
+                                    <Copy className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-theme-muted" />
                                   )}
                                 </button>
                               </div>
@@ -581,14 +591,14 @@ function SonarrContent() {
 
                       {/* Sub-steps if present */}
                       {step.substeps && (
-                        <div className="space-y-2 mt-3 pl-4 border-l-2 border-theme-primary/30">
+                        <div className="space-y-1.5 sm:space-y-2 mt-2 sm:mt-3 pl-3 sm:pl-4 border-l-2 border-theme-primary/30">
                           {step.substeps.map((substep, subIndex) => (
                             <div
                               key={subIndex}
                               className="flex items-start gap-2"
                             >
-                              <CheckCircle className="w-4 h-4 text-theme-primary flex-shrink-0 mt-0.5" />
-                              <span className="text-sm text-theme-text">
+                              <CheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-theme-primary flex-shrink-0 mt-0.5" />
+                              <span className="text-xs sm:text-sm text-theme-text break-words leading-relaxed">
                                 {substep}
                               </span>
                             </div>
@@ -605,9 +615,9 @@ function SonarrContent() {
       </div>
 
       {/* Resources */}
-      <div className="bg-theme-card border border-theme rounded-lg p-6">
-        <h3 className="text-lg font-bold text-theme-text mb-4 flex items-center gap-2">
-          <ExternalLink className="w-5 h-5 text-theme-primary" />
+      <div className="bg-theme-card border border-theme rounded-lg p-4 sm:p-6">
+        <h3 className="text-base sm:text-lg font-bold text-theme-text mb-3 sm:mb-4 flex items-center gap-2">
+          <ExternalLink className="w-4 h-4 sm:w-5 sm:h-5 text-theme-primary" />
           {t("autoTriggers.resources.title")}
         </h3>
         <div className="space-y-2">
@@ -615,18 +625,18 @@ function SonarrContent() {
             href="https://wiki.servarr.com/sonarr/settings#connect"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 text-theme-primary hover:underline text-sm"
+            className="flex items-center gap-2 text-theme-primary hover:underline text-xs sm:text-sm break-all"
           >
-            <ExternalLink className="w-4 h-4" />
+            <ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
             {t("autoTriggers.resources.sonarrWiki")}
           </a>
           <a
-            href="https://github.com/cyb3rgh05t/posterizarr/blob/main/ArrTrigger.sh"
+            href="https://github.com/fscorrupt/posterizarr/blob/main/ArrTrigger.sh"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 text-theme-primary hover:underline text-sm"
+            className="flex items-center gap-2 text-theme-primary hover:underline text-xs sm:text-sm break-all"
           >
-            <Code className="w-4 h-4" />
+            <Code className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
             {t("autoTriggers.resources.arrTriggerScript")}
           </a>
         </div>
@@ -652,14 +662,14 @@ function RadarrContent() {
   return (
     <div className="space-y-6">
       {/* Requirements Alert */}
-      <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-4">
-        <div className="flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+      <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 sm:p-4">
+        <div className="flex items-start gap-2 sm:gap-3">
+          <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-500 flex-shrink-0 mt-0.5" />
           <div>
-            <h3 className="font-semibold text-theme-text mb-1">
+            <h3 className="font-semibold text-theme-text mb-1 text-sm sm:text-base">
               {t("autoTriggers.radarr.requirements.title")}
             </h3>
-            <p className="text-sm text-theme-muted">
+            <p className="text-xs sm:text-sm text-theme-muted">
               {t("autoTriggers.radarr.requirements.description")}
             </p>
           </div>
@@ -667,17 +677,17 @@ function RadarrContent() {
       </div>
 
       {/* How It Works */}
-      <div className="bg-theme-card border border-theme rounded-lg p-6">
-        <h2 className="text-xl font-bold text-theme-text mb-4 flex items-center gap-2">
-          <Info className="w-5 h-5 text-theme-primary" />
+      <div className="bg-theme-card border border-theme rounded-lg p-4 sm:p-6">
+        <h2 className="text-lg sm:text-xl font-bold text-theme-text mb-3 sm:mb-4 flex items-center gap-2">
+          <Info className="w-4 h-4 sm:w-5 sm:h-5 text-theme-primary" />
           {t("autoTriggers.howItWorks")}
         </h2>
-        <div className="space-y-3 text-sm text-theme-muted">
+        <div className="space-y-2 sm:space-y-3 text-xs sm:text-sm text-theme-muted">
           {t("autoTriggers.radarr.howItWorks", { returnObjects: true }).map(
             (item, index) => (
               <div key={index} className="flex items-start gap-2">
-                <CheckCircle className="w-4 h-4 text-theme-primary flex-shrink-0 mt-0.5" />
-                <span>{item}</span>
+                <CheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-theme-primary flex-shrink-0 mt-0.5" />
+                <span className="leading-relaxed">{item}</span>
               </div>
             )
           )}
@@ -685,13 +695,13 @@ function RadarrContent() {
       </div>
 
       {/* Setup Steps */}
-      <div className="bg-theme-card border border-theme rounded-lg p-6">
-        <h2 className="text-2xl font-bold text-theme-text mb-6 flex items-center gap-2">
-          <FileCode className="w-6 h-6 text-theme-primary" />
+      <div className="bg-theme-card border border-theme rounded-lg p-4 sm:p-6">
+        <h2 className="text-xl sm:text-2xl font-bold text-theme-text mb-4 sm:mb-6 flex items-center gap-2">
+          <FileCode className="w-5 h-5 sm:w-6 sm:h-6 text-theme-primary" />
           {t("autoTriggers.setupSteps")}
         </h2>
 
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {steps.map((step, index) => {
             const isExpanded = expandedStep === index;
             const hasCode = step.code && step.code.length > 0;
@@ -700,12 +710,12 @@ function RadarrContent() {
               <div key={index} className="relative">
                 {/* Connection Line */}
                 {index < steps.length - 1 && (
-                  <div className="absolute left-8 top-20 w-0.5 h-8 bg-theme-border" />
+                  <div className="absolute left-6 sm:left-8 top-16 sm:top-20 w-0.5 h-6 sm:h-8 bg-theme-border" />
                 )}
 
-                <div className="bg-theme-hover border border-theme rounded-lg p-5">
+                <div className="bg-theme-hover border border-theme rounded-lg p-3 sm:p-5">
                   <div
-                    className={`flex items-start gap-4 ${
+                    className={`flex items-start gap-3 sm:gap-4 ${
                       hasCode ? "cursor-pointer" : ""
                     }`}
                     onClick={() =>
@@ -714,10 +724,10 @@ function RadarrContent() {
                   >
                     {/* Step Number */}
                     <div className="flex-shrink-0">
-                      <div className="w-16 h-16 rounded-lg bg-theme-primary/10 border border-theme-primary/30 flex items-center justify-center relative">
-                        <CheckCircle className="w-7 h-7 text-theme-primary" />
-                        <div className="absolute -top-2 -right-2 w-6 h-6 bg-theme-primary rounded-full border-2 border-theme-card flex items-center justify-center">
-                          <span className="text-xs font-bold text-white">
+                      <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg bg-theme-primary/10 border border-theme-primary/30 flex items-center justify-center relative">
+                        <CheckCircle className="w-5 h-5 sm:w-7 sm:h-7 text-theme-primary" />
+                        <div className="absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2 w-5 h-5 sm:w-6 sm:h-6 bg-theme-primary rounded-full border-2 border-theme-card flex items-center justify-center">
+                          <span className="text-[10px] sm:text-xs font-bold text-white">
                             {index + 1}
                           </span>
                         </div>
@@ -726,28 +736,28 @@ function RadarrContent() {
 
                     {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-lg font-semibold text-theme-text">
+                      <div className="flex items-start justify-between mb-2 gap-2">
+                        <h3 className="text-base sm:text-lg font-semibold text-theme-text break-words leading-tight flex-1">
                           {step.title}
                         </h3>
                         {hasCode && (
                           <ChevronRight
-                            className={`w-5 h-5 text-theme-muted transition-transform duration-300 ${
+                            className={`w-4 h-4 sm:w-5 sm:h-5 text-theme-muted transition-transform duration-300 flex-shrink-0 mt-0.5 ${
                               isExpanded ? "rotate-90" : ""
                             }`}
                           />
                         )}
                       </div>
-                      <p className="text-theme-muted text-sm mb-3">
+                      <p className="text-theme-muted text-xs sm:text-sm mb-2 sm:mb-3 break-words leading-relaxed">
                         {step.description}
                       </p>
 
                       {/* Warning if present */}
                       {step.warning && (
-                        <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 mb-3">
+                        <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-2 sm:p-3 mb-2 sm:mb-3">
                           <div className="flex items-start gap-2">
-                            <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
-                            <p className="text-sm text-theme-text">
+                            <AlertCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-amber-500 flex-shrink-0 mt-0.5" />
+                            <p className="text-xs sm:text-sm text-theme-text break-words leading-relaxed">
                               {step.warning}
                             </p>
                           </div>
@@ -756,10 +766,10 @@ function RadarrContent() {
 
                       {/* Info if present */}
                       {step.info && (
-                        <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-3 mb-3">
+                        <div className="bg-blue-500/10 border border-blue-500/30 rounded-lg p-2 sm:p-3 mb-2 sm:mb-3">
                           <div className="flex items-start gap-2">
-                            <Info className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
-                            <p className="text-sm text-theme-text">
+                            <Info className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-500 flex-shrink-0 mt-0.5" />
+                            <p className="text-xs sm:text-sm text-theme-text break-words leading-relaxed">
                               {step.info}
                             </p>
                           </div>
@@ -768,17 +778,22 @@ function RadarrContent() {
 
                       {/* Code Blocks */}
                       {hasCode && isExpanded && (
-                        <div className="space-y-3 mt-4 pt-4 border-t border-theme">
+                        <div className="space-y-2 sm:space-y-3 mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-theme">
                           {step.code.map((codeBlock, codeIndex) => (
-                            <div key={codeIndex} className="space-y-2">
+                            <div
+                              key={codeIndex}
+                              className="space-y-1.5 sm:space-y-2"
+                            >
                               {codeBlock.label && (
-                                <p className="text-sm font-medium text-theme-text">
+                                <p className="text-xs sm:text-sm font-medium text-theme-text break-words">
                                   {codeBlock.label}
                                 </p>
                               )}
                               <div className="relative">
-                                <pre className="bg-theme-darker border border-theme rounded-lg p-4 overflow-x-auto text-sm text-theme-text">
-                                  <code>{codeBlock.content}</code>
+                                <pre className="bg-theme-darker border border-theme rounded-lg p-3 sm:p-4 overflow-x-auto text-xs sm:text-sm text-theme-text">
+                                  <code className="break-all">
+                                    {codeBlock.content}
+                                  </code>
                                 </pre>
                                 <button
                                   onClick={(e) => {
@@ -788,13 +803,13 @@ function RadarrContent() {
                                       `${index}-${codeIndex}`
                                     );
                                   }}
-                                  className="absolute top-2 right-2 p-2 rounded-lg bg-theme-card hover:bg-theme-hover transition-colors"
+                                  className="absolute top-2 right-2 p-1.5 sm:p-2 rounded-lg bg-theme-card hover:bg-theme-hover transition-colors"
                                   title={t("autoTriggers.copyCode")}
                                 >
                                   {copiedCode === `${index}-${codeIndex}` ? (
-                                    <Check className="w-4 h-4 text-green-500" />
+                                    <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-green-500" />
                                   ) : (
-                                    <Copy className="w-4 h-4 text-theme-muted" />
+                                    <Copy className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-theme-muted" />
                                   )}
                                 </button>
                               </div>
@@ -805,14 +820,14 @@ function RadarrContent() {
 
                       {/* Sub-steps if present */}
                       {step.substeps && (
-                        <div className="space-y-2 mt-3 pl-4 border-l-2 border-theme-primary/30">
+                        <div className="space-y-1.5 sm:space-y-2 mt-2 sm:mt-3 pl-3 sm:pl-4 border-l-2 border-theme-primary/30">
                           {step.substeps.map((substep, subIndex) => (
                             <div
                               key={subIndex}
                               className="flex items-start gap-2"
                             >
-                              <CheckCircle className="w-4 h-4 text-theme-primary flex-shrink-0 mt-0.5" />
-                              <span className="text-sm text-theme-text">
+                              <CheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-theme-primary flex-shrink-0 mt-0.5" />
+                              <span className="text-xs sm:text-sm text-theme-text break-words leading-relaxed">
                                 {substep}
                               </span>
                             </div>
@@ -829,9 +844,9 @@ function RadarrContent() {
       </div>
 
       {/* Resources */}
-      <div className="bg-theme-card border border-theme rounded-lg p-6">
-        <h3 className="text-lg font-bold text-theme-text mb-4 flex items-center gap-2">
-          <ExternalLink className="w-5 h-5 text-theme-primary" />
+      <div className="bg-theme-card border border-theme rounded-lg p-4 sm:p-6">
+        <h3 className="text-base sm:text-lg font-bold text-theme-text mb-3 sm:mb-4 flex items-center gap-2">
+          <ExternalLink className="w-4 h-4 sm:w-5 sm:h-5 text-theme-primary" />
           {t("autoTriggers.resources.title")}
         </h3>
         <div className="space-y-2">
@@ -839,18 +854,18 @@ function RadarrContent() {
             href="https://wiki.servarr.com/radarr/settings#connect"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 text-theme-primary hover:underline text-sm"
+            className="flex items-center gap-2 text-theme-primary hover:underline text-xs sm:text-sm break-all"
           >
-            <ExternalLink className="w-4 h-4" />
+            <ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
             {t("autoTriggers.resources.radarrWiki")}
           </a>
           <a
-            href="https://github.com/cyb3rgh05t/posterizarr/blob/main/ArrTrigger.sh"
+            href="https://github.com/fscorrupt/posterizarr/blob/main/ArrTrigger.sh"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 text-theme-primary hover:underline text-sm"
+            className="flex items-center gap-2 text-theme-primary hover:underline text-xs sm:text-sm break-all"
           >
-            <Code className="w-4 h-4" />
+            <Code className="w-3.5 h-3.5 sm:w-4 sm:h-4 flex-shrink-0" />
             {t("autoTriggers.resources.arrTriggerScript")}
           </a>
         </div>

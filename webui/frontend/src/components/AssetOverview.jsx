@@ -675,19 +675,19 @@ const AssetOverview = () => {
                   key={asset.id}
                   className="bg-theme-bg border border-theme rounded-lg p-4 hover:border-theme-primary/50 transition-colors"
                 >
-                  <div className="flex items-start justify-between gap-4">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                     <div className="flex-1 min-w-0">
-                      <h3 className="text-lg font-semibold text-theme-text truncate">
+                      <h3 className="text-lg font-semibold text-theme-text break-words">
                         {asset.Title}
                       </h3>
-                      <div className="flex items-center gap-2 mt-1 text-sm text-theme-muted">
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-2 text-sm text-theme-muted">
                         <span className="font-medium">
                           {t("assetOverview.type")}:
                         </span>
                         <span className="bg-theme-card px-2 py-0.5 rounded">
                           {asset.Type || "Unknown"}
                         </span>
-                        <span className="mx-2">•</span>
+                        <span className="hidden sm:inline">•</span>
                         <span className="font-medium">
                           {t("assetOverview.language")}:
                         </span>
@@ -698,7 +698,7 @@ const AssetOverview = () => {
                             ? asset.Language
                             : "Unknown"}
                         </span>
-                        <span className="mx-2">•</span>
+                        <span className="hidden sm:inline">•</span>
                         <span className="font-medium">
                           {t("assetOverview.source")}:
                         </span>
@@ -709,7 +709,7 @@ const AssetOverview = () => {
                             href={asset.FavProviderLink}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="bg-theme-card px-2 py-0.5 rounded text-theme-primary hover:text-theme-primary/80 hover:underline transition-colors"
+                            className="bg-theme-card px-2 py-0.5 rounded text-theme-primary hover:text-theme-primary/80 hover:underline transition-colors break-all"
                             title={asset.DownloadSource || "View Source"}
                           >
                             {asset.DownloadSource &&
@@ -721,7 +721,7 @@ const AssetOverview = () => {
                               : "View Source"}
                           </a>
                         ) : (
-                          <span className="bg-theme-card px-2 py-0.5 rounded">
+                          <span className="bg-theme-card px-2 py-0.5 rounded break-all">
                             {asset.DownloadSource &&
                             asset.DownloadSource !== "false" &&
                             asset.DownloadSource !== false

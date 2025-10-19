@@ -832,19 +832,18 @@ function Dashboard() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <h1 className="text-3xl font-bold text-theme-text flex items-center gap-3">
-            <Activity className="w-8 h-8 text-theme-primary" />
-            {t("dashboard.welcome")}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <h1 className="text-2xl sm:text-3xl font-bold text-theme-text flex items-center gap-3">
+            <Activity className="w-7 h-7 sm:w-8 sm:h-8 text-theme-primary" />
+            Dashboard
           </h1>
           <button
             onClick={() => setShowCardsModal(true)}
-            className="flex items-center gap-2 px-3 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
+            className="w-10 h-10 flex items-center justify-center bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-full transition-all shadow-sm hover:scale-105"
             title={t("dashboard.customize")}
           >
             <Edit3 className="w-4 h-4 text-theme-primary" />
-            <span className="text-theme-text">{t("dashboard.customize")}</span>
           </button>
         </div>
 
@@ -852,7 +851,7 @@ function Dashboard() {
         {!status.running && (
           <Link
             to="/run-modes"
-            className="flex items-center gap-2 px-3 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
+            className="flex items-center justify-center gap-2 px-3 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-sm font-medium transition-all shadow-sm"
           >
             <Play className="w-4 h-4 text-theme-primary" />
             <span className="text-theme-text">{t("dashboard.runScript")}</span>
@@ -960,7 +959,7 @@ function Dashboard() {
                   onDragStart={(e) => handleDragStart(e, index)}
                   onDragOver={(e) => handleDragOver(e, index)}
                   onDragEnd={handleDragEnd}
-                  className={`flex items-center justify-between p-3 bg-theme-hover rounded-lg cursor-move hover:bg-theme-hover/70 transition-all ${
+                  className={`flex items-center justify-between p-3 bg-theme-hover rounded-lg cursor-move hover:bg-theme-hover/70 hover:border-theme-primary/50 hover:shadow-md hover:scale-[1.02] transition-all border border-transparent ${
                     draggedItem === index ? "opacity-50 scale-95" : ""
                   }`}
                 >
@@ -975,16 +974,19 @@ function Dashboard() {
                       {cardLabels[cardKey]}
                     </span>
                   </div>
-                  <input
-                    type="checkbox"
-                    checked={visibleCards[cardKey]}
-                    onChange={(e) => {
-                      e.stopPropagation();
-                      toggleCardVisibility(cardKey);
-                    }}
-                    onClick={(e) => e.stopPropagation()}
-                    className="w-5 h-5 rounded border-theme-primary text-theme-primary focus:ring-theme-primary focus:ring-offset-0 cursor-pointer"
-                  />
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={visibleCards[cardKey]}
+                      onChange={(e) => {
+                        e.stopPropagation();
+                        toggleCardVisibility(cardKey);
+                      }}
+                      onClick={(e) => e.stopPropagation()}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-gray-600 rounded-full peer peer-focus:ring-2 peer-focus:ring-theme-primary peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-theme-primary"></div>
+                  </label>
                 </label>
               ))}
             </div>
@@ -993,7 +995,7 @@ function Dashboard() {
             <div className="flex items-center justify-end gap-3 p-6 border-t border-theme">
               <button
                 onClick={() => setShowCardsModal(false)}
-                className="px-4 py-2 bg-theme-primary hover:bg-theme-primary/90 rounded-lg font-medium transition-all"
+                className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-theme-primary font-medium transition-all shadow-sm"
               >
                 {t("common.done")}
               </button>

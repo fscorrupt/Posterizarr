@@ -3291,15 +3291,15 @@ function ConfigEditor() {
           <button
             onClick={saveConfig}
             disabled={saving}
-            className="flex items-center gap-2 px-3 py-2 bg-theme-primary hover:bg-theme-primary/90 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg transition-all"
+            className="flex items-center gap-2 px-3 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 disabled:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50 rounded-lg text-theme-text transition-all shadow-sm"
             title={t("configEditor.saveConfigTitle")}
           >
             {saving ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
+              <Loader2 className="w-4 h-4 text-theme-primary animate-spin" />
             ) : (
-              <Save className="w-4 h-4" />
+              <Save className="w-4 h-4 text-theme-primary" />
             )}
-            <span className="text-sm text-white">
+            <span className="text-sm">
               {saving
                 ? t("configEditor.saving")
                 : t("configEditor.saveChanges")}
@@ -3637,7 +3637,7 @@ function ConfigEditor() {
             </p>
             <button
               onClick={() => setSearchQuery("")}
-              className="px-4 py-2 bg-theme-primary hover:bg-theme-primary/90 rounded-lg font-medium transition-all"
+              className="px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-theme-text font-medium transition-all shadow-sm"
             >
               {t("configEditor.clearSearch")}
             </button>

@@ -579,18 +579,18 @@ function LogViewer() {
             {/* Download Button */}
             <button
               onClick={downloadLogs}
-              className="flex items-center gap-2 px-4 py-2 bg-theme-primary hover:bg-theme-primary/90 rounded-lg text-sm font-medium transition-all hover:scale-[1.02] shadow-sm"
+              className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-theme-text text-sm font-medium transition-all hover:scale-[1.02] shadow-sm"
             >
-              <Download className="w-4 h-4" />
+              <Download className="w-4 h-4 text-theme-primary" />
               {t("logViewer.download")}
             </button>
 
             {/* Clear Button */}
             <button
               onClick={clearLogs}
-              className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 rounded-lg text-sm font-medium transition-all hover:scale-[1.02] shadow-sm"
+              className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-red-500/50 rounded-lg text-theme-text text-sm font-medium transition-all hover:scale-[1.02] shadow-sm"
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="w-4 h-4 text-red-400" />
               {t("logViewer.clear")}
             </button>
           </div>

@@ -299,7 +299,13 @@
     "close": "Close",
     "deleteTitle": "Delete File",
     "deleteConfirm": "Are you sure you want to delete this file?",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "uploadPreview": "Upload Preview",
+    "fontFile": "Font File"
+  },
+  "assetsManager": {
+    "testGallery": "Test Gallery",
+    "overlayAssets": "Overlay Assets"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -315,7 +321,7 @@
     "autoTriggers": "Auto Triggers",
     "assetOverview": "Asset Overview",
     "assetReplacer": "Asset Replacer",
-    "overlayAssets": "Overlay Assets",
+    "assetsManager": "Assets Manager",
     "generalSettings": "General Settings",
     "library": "Library",
     "notifications": "Notifications",
@@ -324,7 +330,6 @@
     "backgrounds": "Backgrounds",
     "titleCards": "Title Cards",
     "seasons": "Seasons",
-    "test": "Test Assets",
     "folderView": "Folder View"
   },
   "scrollButtons": {
@@ -1466,7 +1471,7 @@
             "title": "Download the Trigger Script",
             "description": "Download trigger.py from GitHub and place it in your Tautulli scripts directory.",
             "substeps": [
-              "Download from: https://github.com/cyb3rgh05t/posterizarr/blob/main/trigger.py",
+              "Download from: https://github.com/fscorrupt/posterizarr/blob/main/trigger.py",
               "Place in Tautulli script directory (see Tautulli Wiki for location)",
               "Set executable permissions: chmod +x trigger.py"
             ]
@@ -1584,7 +1589,7 @@
           "title": "Download the Trigger Script",
           "description": "Download ArrTrigger.sh from GitHub and place it in your Sonarr scripts directory.",
           "substeps": [
-            "Download from: https://github.com/cyb3rgh05t/posterizarr/blob/main/ArrTrigger.sh",
+            "Download from: https://github.com/fscorrupt/posterizarr/blob/main/ArrTrigger.sh",
             "Example: Create /opt/appdata/sonarr/scripts/ directory",
             "Place ArrTrigger.sh in this directory",
             "Set executable permissions: chmod +x ArrTrigger.sh"
@@ -1656,7 +1661,7 @@
           "title": "Download the Trigger Script",
           "description": "Download ArrTrigger.sh from GitHub and place it in your Radarr scripts directory.",
           "substeps": [
-            "Download from: https://github.com/cyb3rgh05t/posterizarr/blob/main/ArrTrigger.sh",
+            "Download from: https://github.com/fscorrupt/posterizarr/blob/main/ArrTrigger.sh",
             "Example: Create /opt/appdata/radarr/scripts/ directory",
             "Place ArrTrigger.sh in this directory",
             "Set executable permissions: chmod +x ArrTrigger.sh"

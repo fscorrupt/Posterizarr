@@ -67,10 +67,10 @@ function GalleryHub() {
           <div className="flex gap-2 flex-shrink-0">
             <button
               onClick={() => setViewMode("grid")}
-              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg transition-all ${
+              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg transition-all shadow-sm ${
                 viewMode === "grid"
-                  ? "bg-theme-primary text-white"
-                  : "bg-theme-hover hover:bg-theme-primary/70 border border-theme-border text-theme-text"
+                  ? "bg-theme-primary text-white border-2 border-theme-primary"
+                  : "bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 text-theme-text"
               }`}
             >
               <LayoutGrid className="w-4 h-4 flex-shrink-0" />
@@ -80,10 +80,10 @@ function GalleryHub() {
             </button>
             <button
               onClick={() => setViewMode("folder")}
-              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg transition-all ${
+              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-lg transition-all shadow-sm ${
                 viewMode === "folder"
-                  ? "bg-theme-primary text-white"
-                  : "bg-theme-hover hover:bg-theme-primary/70 border border-theme-border text-theme-text"
+                  ? "bg-theme-primary text-white border-2 border-theme-primary"
+                  : "bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 text-theme-text"
               }`}
             >
               <FolderTree className="w-4 h-4 flex-shrink-0" />

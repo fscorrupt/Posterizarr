@@ -79,11 +79,11 @@ function ReleasesSection() {
         {releases.map((release, index) => (
           <div
             key={release.version}
-            className="flex items-center justify-between p-4 bg-theme-hover border border-theme rounded-lg hover:bg-theme-primary/10 transition-all group"
+            className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 p-4 bg-theme-hover border border-theme rounded-lg hover:bg-theme-primary/10 transition-all group"
           >
-            <div className="flex items-center gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 flex-1 min-w-0">
               {/* Release Date */}
-              <div className="text-theme-muted text-sm min-w-[100px]">
+              <div className="text-theme-muted text-sm sm:min-w-[100px]">
                 <div className="flex items-center gap-2">
                   <Clock className="w-4 h-4" />
                   {formatDaysAgo(release.days_ago)}
@@ -91,7 +91,7 @@ function ReleasesSection() {
               </div>
 
               {/* Version Number */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-theme-text font-bold text-lg">
                   {release.version}
                 </span>
@@ -113,7 +113,7 @@ function ReleasesSection() {
               href={release.html_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 px-4 py-2 bg-theme-primary/20 hover:bg-theme-primary/30 border border-theme-primary rounded-lg transition-all"
+              className="flex items-center justify-center gap-2 px-4 py-2 bg-theme-primary/20 hover:bg-theme-primary/30 border border-theme-primary rounded-lg transition-all whitespace-nowrap flex-shrink-0"
             >
               <span className="text-theme-text text-sm font-medium">
                 {t("releasesSection.viewChangelog")}
