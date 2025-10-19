@@ -484,25 +484,36 @@ code {
 }
 
 /* ========================================
-   CUSTOM SCROLLBAR
+   CUSTOM SCROLLBAR - HIDDEN
    ======================================== */
 
+/* Hide scrollbars for Webkit browsers (Chrome, Safari, Edge) */
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 0px;
+  height: 0px;
+  display: none;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--theme-bg-card);
+  display: none;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--theme-border);
-  border-radius: 5px;
+  display: none;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--theme-bg-hover);
+  display: none;
+}
+
+/* Hide scrollbars for Firefox */
+* {
+  scrollbar-width: none;
+}
+
+/* Hide scrollbars for IE and Edge Legacy */
+* {
+  -ms-overflow-style: none;
 }
 
 /* ========================================
