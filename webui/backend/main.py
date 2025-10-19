@@ -7293,12 +7293,11 @@ async def upload_asset_replacement(
                         detail="Invalid asset path - path traversal not allowed",
                     )
 
-            # Check if asset exists
-            if not full_asset_path.exists():
-                logger.error(f"Asset not found: {full_asset_path}")
-                raise HTTPException(
-                    status_code=404, detail=f"Asset not found: {asset_path}"
-                )
+            # Log whether this is a new asset or replacement
+            if full_asset_path.exists():
+                logger.info(f"Replacing existing asset: {full_asset_path}")
+            else:
+                logger.info(f"Creating new asset: {full_asset_path}")
 
             logger.info(f"Full asset path: {full_asset_path}")
             logger.info(f"Is Docker: {IS_DOCKER}, Assets Dir: {ASSETS_DIR}")
@@ -7342,18 +7341,22 @@ async def upload_asset_replacement(
             logger.error("Uploaded file is empty")
             raise HTTPException(status_code=400, detail="Uploaded file is empty")
 
-        # Create backup of original
-        try:
-            backup_path = full_asset_path.with_suffix(
-                full_asset_path.suffix + ".backup"
-            )
-            if full_asset_path.exists() and not backup_path.exists():
-                import shutil
+        # Track if this is a replacement or new asset
+        is_replacement = full_asset_path.exists()
 
-                shutil.copy2(full_asset_path, backup_path)
-                logger.info(f"Created backup: {backup_path}")
-        except Exception as e:
-            logger.warning(f"Failed to create backup (continuing anyway): {e}")
+        # Create backup of original if replacing
+        if is_replacement:
+            try:
+                backup_path = full_asset_path.with_suffix(
+                    full_asset_path.suffix + ".backup"
+                )
+                if not backup_path.exists():
+                    import shutil
+
+                    shutil.copy2(full_asset_path, backup_path)
+                    logger.info(f"Created backup: {backup_path}")
+            except Exception as e:
+                logger.warning(f"Failed to create backup (continuing anyway): {e}")
 
         # Save new image
         try:
@@ -7375,7 +7378,8 @@ async def upload_asset_replacement(
                     status_code=500, detail="File was not saved completely"
                 )
 
-            logger.info(f"Replaced asset: {asset_path} (size: {len(contents)} bytes)")
+            action = "Replaced" if is_replacement else "Created"
+            logger.info(f"{action} asset: {asset_path} (size: {len(contents)} bytes)")
         except PermissionError as e:
             logger.error(f"Permission denied writing to {full_asset_path}: {e}")
             raise HTTPException(
@@ -7397,9 +7401,10 @@ async def upload_asset_replacement(
 
         result = {
             "success": True,
-            "message": "Asset replaced successfully",
+            "message": f"Asset {'replaced' if is_replacement else 'created'} successfully",
             "path": asset_path,
             "size": len(contents),
+            "was_replacement": is_replacement,
         }
 
         # If process_with_overlays is enabled, trigger Manual Run
