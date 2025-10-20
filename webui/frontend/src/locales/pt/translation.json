@@ -1235,7 +1235,9 @@
     "source": "Fonte",
     "viewSource": "Ver fonte",
     "replace": "Substituir",
-    "replaceTooltip": "Substituir este ativo"
+    "replaceTooltip": "Substituir este ativo",
+    "noEditsNeeded": "Nenhuma edição necessária",
+    "noEditsNeededTooltip": "Marcar este ativo como revisado e ocultá-lo da lista"
   },
   "common": {
     "save": "Salvar",

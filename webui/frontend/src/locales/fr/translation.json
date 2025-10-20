@@ -1235,7 +1235,9 @@
     "source": "Source",
     "viewSource": "Voir la source",
     "replace": "Remplacer",
-    "replaceTooltip": "Remplacer cette ressource"
+    "replaceTooltip": "Remplacer cette ressource",
+    "noEditsNeeded": "Aucune modification nécessaire",
+    "noEditsNeededTooltip": "Marquer cette ressource comme vérifiée et la masquer de la liste"
   },
   "common": {
     "save": "Enregistrer",

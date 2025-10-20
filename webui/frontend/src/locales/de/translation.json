@@ -1287,7 +1287,9 @@
     "source": "Quelle",
     "viewSource": "Quelle anzeigen",
     "replace": "Ersetzen",
-    "replaceTooltip": "Dieses Asset ersetzen"
+    "replaceTooltip": "Dieses Asset ersetzen",
+    "noEditsNeeded": "Keine Änderungen nötig",
+    "noEditsNeededTooltip": "Dieses Asset als überprüft markieren und aus der Liste ausblenden"
   },
   "common": {
     "save": "Speichern",

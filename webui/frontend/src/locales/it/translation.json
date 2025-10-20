@@ -1235,7 +1235,9 @@
     "source": "Fonte",
     "viewSource": "Visualizza fonte",
     "replace": "Sostituisci",
-    "replaceTooltip": "Sostituisci questo asset"
+    "replaceTooltip": "Sostituisci questo asset",
+    "noEditsNeeded": "Nessuna modifica necessaria",
+    "noEditsNeededTooltip": "Contrassegna questo asset come verificato e nascondilo dall'elenco"
   },
   "common": {
     "save": "Salva",

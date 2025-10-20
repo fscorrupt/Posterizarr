@@ -1236,7 +1236,9 @@
     "source": "Source",
     "viewSource": "View Source",
     "replace": "Replace",
-    "replaceTooltip": "Replace this asset"
+    "replaceTooltip": "Replace this asset",
+    "noEditsNeeded": "No Edits Needed",
+    "noEditsNeededTooltip": "Mark this asset as reviewed and hide it from the list"
   },
   "common": {
     "save": "Save",
