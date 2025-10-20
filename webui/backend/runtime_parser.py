@@ -151,16 +151,46 @@ def parse_runtime_from_log(log_path: Path, mode: str = "normal") -> Optional[Dic
 
 def save_runtime_to_db(log_path: Path, mode: str = "normal"):
     """
-    Parse runtime from log file and save to database
+    Parse runtime from JSON file (preferred) or log file and save to database
 
     Args:
-        log_path: Path to the log file
+        log_path: Path to the log file (used to determine JSON file location)
         mode: The run mode
     """
     try:
         from runtime_database import runtime_db
 
-        runtime_data = parse_runtime_from_log(log_path, mode)
+        runtime_data = None
+
+        # Map mode to JSON filename
+        mode_json_map = {
+            "normal": "normal.json",
+            "testing": "testing.json",
+            "manual": "manual.json",
+            "backup": "backup.json",
+            "syncjelly": "syncjelly.json",
+            "syncemby": "syncemby.json",
+            "scheduled": "normal.json",  # Scheduler uses normal.json
+            "tautulli": "tautulli.json",
+            "arr": "arr.json",
+            "replace": "replace.json",
+        }
+
+        # Try to find and parse JSON file first (preferred)
+        json_filename = mode_json_map.get(mode)
+        if json_filename:
+            json_path = log_path.parent / json_filename
+            if json_path.exists():
+                runtime_data = parse_runtime_from_json(json_path, mode)
+                if runtime_data:
+                    logger.info(f"Parsed runtime data from {json_filename}")
+
+        # Fallback to log file if JSON not found or failed
+        if not runtime_data:
+            logger.info(
+                f"JSON file not found, falling back to log file: {log_path.name}"
+            )
+            runtime_data = parse_runtime_from_log(log_path, mode)
 
         if runtime_data:
             runtime_db.add_runtime_entry(**runtime_data)
@@ -351,7 +381,7 @@ def import_json_to_db(logs_dir: Path = None):
             ("arr.json", "arr"),
             ("syncjelly.json", "syncjelly"),
             ("syncemby.json", "syncemby"),
-            ("backup.json", "backup")
+            ("backup.json", "backup"),
         ]
 
         imported_count = 0

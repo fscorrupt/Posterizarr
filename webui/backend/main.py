@@ -3467,6 +3467,9 @@ async def get_status():
             logger.info(
                 f"Process finished with exit code {poll_result}, cleaning up..."
             )
+            # Store mode before clearing for runtime tracking
+            finished_mode = current_mode
+
             current_process = None
             current_mode = None
             manual_is_running = False
@@ -3486,7 +3489,7 @@ async def get_status():
                 logger.error(f"Error importing ImageChoices.csv to database: {e}")
 
             # Save runtime statistics to database
-            if RUNTIME_DB_AVAILABLE:
+            if RUNTIME_DB_AVAILABLE and finished_mode:
                 try:
                     # Determine which log file was used
                     mode_log_map = {
@@ -3498,14 +3501,16 @@ async def get_status():
                         "syncemby": "Scriptlog.log",
                         "reset": "Scriptlog.log",
                     }
-                    log_filename = mode_log_map.get(current_mode, "Scriptlog.log")
+                    log_filename = mode_log_map.get(finished_mode, "Scriptlog.log")
                     log_path = LOGS_DIR / log_filename
 
                     if log_path.exists():
-                        save_runtime_to_db(log_path, current_mode or "normal")
+                        save_runtime_to_db(log_path, finished_mode)
                         logger.info(
-                            f"Runtime statistics saved to database for {current_mode} mode"
+                            f"Runtime statistics saved to database for {finished_mode} mode"
                         )
+                    else:
+                        logger.warning(f"Log file not found: {log_path}")
                 except Exception as e:
                     logger.error(f"Error saving runtime to database: {e}")
 
