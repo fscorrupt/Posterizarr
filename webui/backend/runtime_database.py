@@ -62,7 +62,7 @@ class RuntimeDatabase:
                     tba_skipped INTEGER DEFAULT 0,
                     jap_chines_skipped INTEGER DEFAULT 0,
                     notification_sent INTEGER DEFAULT 0,
-                    uptime_kuma TEXT,
+                    uptime_kuma INTEGER DEFAULT 0,
                     images_cleared INTEGER DEFAULT 0,
                     folders_cleared INTEGER DEFAULT 0,
                     space_saved TEXT,
@@ -88,7 +88,7 @@ class RuntimeDatabase:
                     "tba_skipped": "INTEGER DEFAULT 0",
                     "jap_chines_skipped": "INTEGER DEFAULT 0",
                     "notification_sent": "INTEGER DEFAULT 0",
-                    "uptime_kuma": "TEXT",
+                    "uptime_kuma": "INTEGER DEFAULT 0",
                     "images_cleared": "INTEGER DEFAULT 0",
                     "folders_cleared": "INTEGER DEFAULT 0",
                     "space_saved": "TEXT",
@@ -96,6 +96,10 @@ class RuntimeDatabase:
                     "im_version": "TEXT",
                     "start_time": "TEXT",
                     "end_time": "TEXT",
+                    "fallbacks": "INTEGER DEFAULT 0",
+                    "textless": "INTEGER DEFAULT 0",
+                    "truncated": "INTEGER DEFAULT 0",
+                    "text": "INTEGER DEFAULT 0",
                 }
 
                 for col_name, col_type in new_columns.items():
@@ -322,7 +326,7 @@ class RuntimeDatabase:
         tba_skipped: int = 0,
         jap_chines_skipped: int = 0,
         notification_sent: bool = False,
-        uptime_kuma: str = None,
+        uptime_kuma: bool = False,
         images_cleared: int = 0,
         folders_cleared: int = 0,
         space_saved: str = None,
@@ -333,6 +337,10 @@ class RuntimeDatabase:
         log_file: str = None,
         status: str = "completed",
         notes: str = None,
+        fallbacks: int = 0,
+        textless: int = 0,
+        truncated: int = 0,
+        text: int = 0,
     ) -> int:
         """
         Add a new runtime entry to the database
@@ -353,8 +361,9 @@ class RuntimeDatabase:
                     total_images, posters, seasons, backgrounds, titlecards, collections,
                     errors, tba_skipped, jap_chines_skipped, notification_sent, uptime_kuma,
                     images_cleared, folders_cleared, space_saved, script_version, im_version,
-                    start_time, end_time, log_file, status, notes
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    start_time, end_time, log_file, status, notes,
+                    fallbacks, textless, truncated, text
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
                 (
                     timestamp,
@@ -371,7 +380,7 @@ class RuntimeDatabase:
                     tba_skipped,
                     jap_chines_skipped,
                     1 if notification_sent else 0,
-                    uptime_kuma,
+                    1 if uptime_kuma else 0,
                     images_cleared,
                     folders_cleared,
                     space_saved,
@@ -382,6 +391,10 @@ class RuntimeDatabase:
                     log_file,
                     status,
                     notes,
+                    fallbacks,
+                    textless,
+                    truncated,
+                    text,
                 ),
             )
 
