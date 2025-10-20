@@ -1289,7 +1289,10 @@
     "replace": "Ersetzen",
     "replaceTooltip": "Dieses Asset ersetzen",
     "noEditsNeeded": "Keine Änderungen nötig",
-    "noEditsNeededTooltip": "Dieses Asset als überprüft markieren und aus der Liste ausblenden"
+    "noEditsNeededTooltip": "Dieses Asset als überprüft markieren und aus der Liste ausblenden",
+    "markedAsReviewed": "{{title}} als überprüft markiert und aus der Liste ausgeblendet",
+    "updateFailed": "Aktualisierung von {{title}} fehlgeschlagen",
+    "updateError": "Fehler beim Aktualisieren des Assets: {{error}}"
   },
   "common": {
     "save": "Speichern",

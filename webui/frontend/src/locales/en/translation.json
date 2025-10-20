@@ -1238,7 +1238,10 @@
     "replace": "Replace",
     "replaceTooltip": "Replace this asset",
     "noEditsNeeded": "No Edits Needed",
-    "noEditsNeededTooltip": "Mark this asset as reviewed and hide it from the list"
+    "noEditsNeededTooltip": "Mark this asset as reviewed and hide it from the list",
+    "markedAsReviewed": "{{title}} marked as reviewed and hidden from list",
+    "updateFailed": "Failed to update {{title}}",
+    "updateError": "Error updating asset: {{error}}"
   },
   "common": {
     "save": "Save",

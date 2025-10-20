@@ -1237,7 +1237,10 @@
     "replace": "Sostituisci",
     "replaceTooltip": "Sostituisci questo asset",
     "noEditsNeeded": "Nessuna modifica necessaria",
-    "noEditsNeededTooltip": "Contrassegna questo asset come verificato e nascondilo dall'elenco"
+    "noEditsNeededTooltip": "Contrassegna questo asset come verificato e nascondilo dall'elenco",
+    "markedAsReviewed": "{{title}} contrassegnato come verificato e nascosto dall'elenco",
+    "updateFailed": "Aggiornamento di {{title}} non riuscito",
+    "updateError": "Errore durante l'aggiornamento dell'asset: {{error}}"
   },
   "common": {
     "save": "Salva",

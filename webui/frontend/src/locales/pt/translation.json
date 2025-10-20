@@ -1237,7 +1237,10 @@
     "replace": "Substituir",
     "replaceTooltip": "Substituir este ativo",
     "noEditsNeeded": "Nenhuma edição necessária",
-    "noEditsNeededTooltip": "Marcar este ativo como revisado e ocultá-lo da lista"
+    "noEditsNeededTooltip": "Marcar este ativo como revisado e ocultá-lo da lista",
+    "markedAsReviewed": "{{title}} marcado como revisado e oculto da lista",
+    "updateFailed": "Falha ao atualizar {{title}}",
+    "updateError": "Erro ao atualizar ativo: {{error}}"
   },
   "common": {
     "save": "Salvar",

@@ -12,10 +12,12 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useToast } from "../context/ToastContext";
 import AssetReplacer from "./AssetReplacer";
 
 const AssetOverview = () => {
   const { t } = useTranslation();
+  const { showSuccess, showError } = useToast();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -315,6 +317,90 @@ const AssetOverview = () => {
   const handleCloseReplacer = () => {
     setShowReplacer(false);
     setSelectedAsset(null);
+  };
+
+  // Handle marking asset as "No Edits Needed"
+  const handleNoEditsNeeded = async (asset) => {
+    console.log(`[AssetOverview] Marking asset as "No Edits Needed":`, {
+      id: asset.id,
+      title: asset.Title,
+      type: asset.Type,
+      library: asset.LibraryName,
+    });
+
+    try {
+      // Build the complete record with all required fields
+      const updateRecord = {
+        Title: asset.Title,
+        Type: asset.Type || null,
+        Rootfolder: asset.Rootfolder || null,
+        LibraryName: asset.LibraryName || null,
+        Language: asset.Language || null,
+        Fallback: asset.Fallback || null,
+        TextTruncated: asset.TextTruncated || null,
+        DownloadSource: asset.DownloadSource || null,
+        FavProviderLink: asset.FavProviderLink || null,
+        Manual: "true", // Mark as manually reviewed
+      };
+
+      console.log(
+        `[AssetOverview] Sending PUT request to /api/imagechoices/${asset.id}`,
+        {
+          method: "PUT",
+          payload: updateRecord,
+        }
+      );
+
+      const response = await fetch(`/api/imagechoices/${asset.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updateRecord),
+      });
+
+      const responseData = await response.json();
+      console.log(`[AssetOverview] PUT response:`, {
+        ok: response.ok,
+        status: response.status,
+        data: responseData,
+      });
+
+      if (response.ok) {
+        console.log(
+          `[AssetOverview] ✅ Asset ${asset.id} marked as Manual=true (No Edits Needed)`
+        );
+        showSuccess(
+          t("assetOverview.markedAsReviewed", { title: asset.Title })
+        );
+
+        // Refresh the data to update the UI
+        await fetchData();
+
+        // Trigger event to update sidebar badge count
+        window.dispatchEvent(new Event("assetReplaced"));
+      } else {
+        console.error(
+          `[AssetOverview] ❌ Failed to update asset Manual field:`,
+          {
+            status: response.status,
+            statusText: response.statusText,
+            error: responseData,
+          }
+        );
+        showError(t("assetOverview.updateFailed", { title: asset.Title }));
+      }
+    } catch (error) {
+      console.error(`[AssetOverview] ❌ Error updating asset:`, {
+        error: error.message,
+        stack: error.stack,
+        asset: {
+          id: asset.id,
+          title: asset.Title,
+        },
+      });
+      showError(t("assetOverview.updateError", { error: error.message }));
+    }
   };
 
   // Get all assets from all categories
@@ -944,8 +1030,16 @@ const AssetOverview = () => {
                       </div>
                     </div>
 
-                    {/* Replace Button */}
-                    <div className="flex items-start">
+                    {/* Action Buttons */}
+                    <div className="flex items-start gap-2">
+                      <button
+                        onClick={() => handleNoEditsNeeded(asset)}
+                        className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-theme-text transition-all whitespace-nowrap shadow-sm"
+                        title={t("assetOverview.noEditsNeededTooltip")}
+                      >
+                        <Edit className="w-4 h-4 text-theme-primary" />
+                        {t("assetOverview.noEditsNeeded")}
+                      </button>
                       <button
                         onClick={() => handleReplace(asset)}
                         className="flex items-center gap-2 px-4 py-2 bg-theme-card hover:bg-theme-hover border border-theme hover:border-theme-primary/50 rounded-lg text-theme-text transition-all whitespace-nowrap shadow-sm"
