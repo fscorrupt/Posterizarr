@@ -3986,13 +3986,12 @@ async def import_json_runtime_data():
     Looks for and imports from:
     - normal.json
     - manual.json
-    - test.json
+    - testing.json
     - tautulli.json
     - arr.json
-    - jellysync.json
-    - embysync.json
+    - syncjelly.json
+    - syncemby.json
     - backup.json
-    - replace.json
     """
     try:
         if not RUNTIME_DB_AVAILABLE or not runtime_db:

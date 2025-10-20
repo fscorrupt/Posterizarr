@@ -179,13 +179,12 @@ def parse_runtime_from_json(json_path: Path, mode: str = None) -> Optional[Dict]
     Supported JSON files:
     - normal.json
     - manual.json
-    - test.json
+    - testing.json
     - tautulli.json
     - arr.json
-    - jellysync.json
-    - embysync.json
+    - syncjelly.json
+    - syncemby.json
     - backup.json
-    - replace.json
 
     Args:
         json_path: Path to the JSON file
@@ -316,13 +315,12 @@ def import_json_to_db(logs_dir: Path = None):
     This function looks for:
     - normal.json
     - manual.json
-    - test.json
+    - testing.json
     - tautulli.json
     - arr.json
-    - jellysync.json
-    - embysync.json
+    - syncjelly.json
+    - syncemby.json
     - backup.json
-    - replace.json
 
     Args:
         logs_dir: Path to Logs directory (auto-detected if not provided)
@@ -348,13 +346,12 @@ def import_json_to_db(logs_dir: Path = None):
         json_files = [
             ("normal.json", "normal"),
             ("manual.json", "manual"),
-            ("test.json", "testing"),
+            ("testing.json", "testing"),
             ("tautulli.json", "tautulli"),
             ("arr.json", "arr"),
-            ("jellysync.json", "syncjelly"),
-            ("embysync.json", "syncemby"),
-            ("backup.json", "backup"),
-            ("replace.json", "replace"),
+            ("syncjelly.json", "syncjelly"),
+            ("syncemby.json", "syncemby"),
+            ("backup.json", "backup")
         ]
 
         imported_count = 0
