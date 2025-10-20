@@ -800,7 +800,7 @@
     "enabled": "Activé",
     "disabled": "Désactivé",
     "containerUsersOnly": "Utilisateurs de conteneurs uniquement",
-    "containerUsersInfo": "Veuillez n'utiliser qu'une seule option de planification. Utilisez soit la variable d'environnement RUN_TIME pour la planification, soit les planifications de l'interface utilisateur. Si vous préférez utiliser les planifications de l'interface utilisateur, définissez la variable d'environnement sur désactivé.",
+    "containerUsersInfo": "Définissez <strong>RUN_TIME=disabled</strong> dans vos paramètres compose ou conteneur avant d’activer le planificateur de l’interface – n’utilisez pas les deux planifications en même temps. (Exemple : <strong>RUN_TIME=02:00</strong> → remplacer par <strong>RUN_TIME=disabled</strong>)",
     "lastRun": "Dernière exécution",
     "nextRun": "Prochaine exécution",
     "never": "Jamais",

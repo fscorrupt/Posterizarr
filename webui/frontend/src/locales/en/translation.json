@@ -801,7 +801,7 @@
     "enabled": "Enabled",
     "disabled": "Disabled",
     "containerUsersOnly": "Container Users Only",
-    "containerUsersInfo": "Check your container settings or compose file BEFORE enabling the button here. Use the container runtime environment variable RUN_TIME for scheduling, or use the UI schedules by enabling the scheduler on this page.",
+    "containerUsersInfo": "Set <strong>RUN_TIME=disabled</strong> in your compose or container settings before enabling the UI scheduler—do not use both schedules at once.(Example: <strong>RUN_TIME=02:00</strong> → change to <strong>RUN_TIME=disabled</strong>)",
     "lastRun": "Last Run",
     "nextRun": "Next Run",
     "never": "Never",
