@@ -4728,7 +4728,7 @@ function MassDownloadPlexArtwork {
             $global:posterurl = $ArtUrl
         }
     }
-
+    $Mode = "backup"
     Write-Entry -Message "Query plex libs..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
     $Libsoverview = @()
     foreach ($lib in $Libs.MediaContainer.Directory) {
@@ -5244,7 +5244,6 @@ function MassDownloadPlexArtwork {
         Write-Entry -Message "Output hashtable..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
         $directoryHashtable.keys | Out-File "$global:ScriptRoot\Logs\hashtable.log" -Force
     }
-
 
     # Download poster foreach movie
     Write-Entry -Message "Starting asset download now, this can take a while..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -6288,6 +6287,32 @@ function MassDownloadPlexArtwork {
             }
         }
     }
+
+    # Export json
+    $jsonObject = [PSCustomObject]@{
+        Posters             = $posterCount
+        Backgrounds         = $BackgroundCount
+        Titlecards          = $EpisodeCount
+        Seasons             = $SeasonCount
+        Collections         = if ($collectionCount) { $collectionCount } Else { 0 }
+        Mode                = $Mode
+        Runtime             = $($hours.ToString() + ":" + $minutes.ToString() + ":" + $seconds.ToString())
+        Errors              = if ($errorCount) { $errorCount } Else { 0 }
+        "TBA Skipped"       = if ($SkipTBACount) { $SkipTBACount } Else { 0 }
+        "Jap/Chines Skipped" = if ($SkipJapTitleCount) { $SkipJapTitleCount } Else { 0 }
+        "Notification Sent" = if ($global:SendNotification -eq 'true') { $global:SendNotification } Else { "false" }
+        "Uptime Kuma"       = if ($global:UptimeKumaUrl) { "true" } Else { "false" }
+        "Images cleared"    = if ($ImagesCleared) { $ImagesCleared } Else { 0 }
+        "Folders Cleared"   = if ($PathsCleared) { $PathsCleared } Else { 0 }
+        "Space saved"       = if ($savedsizestring) { $savedsizestring } Else { 0 }
+        "Script Version"    = $CurrentScriptVersion
+        "IM Version"        = $global:CurrentImagemagickversion
+        "Start time"        = $startTime.ToString('dd.MM.yyyy HH:mm:ss')
+        "End Time"          = $endTime.ToString('dd.MM.yyyy HH:mm:ss')
+    }
+
+    $jsonOutput = $jsonObject | ConvertTo-Json
+    $jsonOutput | Out-File -FilePath "$global:ScriptRoot\Logs\$Mode.json" -Encoding utf8
 
     # Clear Running File
     if (Test-Path $CurrentlyRunning) {
@@ -7540,6 +7565,13 @@ $extraPlexHeaders = @{
 #### MAIN SCRIPT START ####
 #region Manual Mode
 if ($Manual) {
+    $posterCount = 0
+    $BackgroundCount = 0
+    $EpisodeCount = 0
+    $SeasonCount = 0
+    $collectionCount = 0
+    $Mode = "Manual"
+
     Write-Entry -Message "Manual Poster Creation Started" -Path $global:ScriptRoot\Logs\Manuallog.log -Color DarkMagenta -log Info
     # Regex to find a positive number (1 or greater) at the end of the string
     $seasonNumberPattern = '([1-9]\d*)$'
@@ -7923,6 +7955,7 @@ if ($Manual) {
                     $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$PosterImage`""
                     Write-Entry -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                 }
+                $SeasonCount++
             }
             elseif ($CollectionCard) {
                 if ($AddCollectionBorder -eq 'true' -and $AddCollectionOverlay -eq 'true') {
@@ -7941,6 +7974,7 @@ if ($Manual) {
                     $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$PosterImage`""
                     Write-Entry -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                 }
+                $collectionCount++
             }
             elseif ($TitleCard) {
                 if ($AddTitleCardBorder -eq 'true' -and $AddTitleCardOverlay -eq 'true') {
@@ -7959,6 +7993,7 @@ if ($Manual) {
                     $Arguments = "`"$PosterImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$PosterImage`""
                     Write-Entry -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
                 }
+                $EpisodeCount++
             }
             elseif ($BackgroundCard) {
                 # Resize Image to 2000x3000 and apply Border and overlay
@@ -7978,6 +8013,7 @@ if ($Manual) {
                     $Arguments = "`"$PosterImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$BackgroundSize`" `"$PosterImage`""
                     Write-Entry -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
                 }
+                $BackgroundCount++
             }
             Else {
                 # Resize Image to 2000x3000 and apply Border and overlay
@@ -7997,6 +8033,7 @@ if ($Manual) {
                     $Arguments = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$PosterImage`""
                     Write-Entry -Subtext "Resizing it" -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
                 }
+                $posterCount++
             }
             $logEntry = "`"$magick`" $Arguments"
             $logEntry | Out-File $global:ScriptRoot\Logs\ImageMagickCommands.log -Append
@@ -8175,12 +8212,23 @@ if ($Manual) {
     Else {
         if ($TitleCard) {
             $Resizeargument = "`"$PosterImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$PosterSize`" `"$PosterImage`""
+            $EpisodeCount++
         }
         Elseif ($BackgroundCard) {
             $Resizeargument = "`"$PosterImage`" -resize `"$BackgroundSize^`" -gravity center -extent `"$PosterSize`" `"$PosterImage`""
+            $BackgroundCount++
+        }
+        Elseif ($SeasonPoster) {
+            $Resizeargument = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$PosterImage`""
+            $SeasonCount++
+        }
+        Elseif ($CollectionCard) {
+            $Resizeargument = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$PosterImage`""
+            $collectionCount++
         }
         Else {
             $Resizeargument = "`"$PosterImage`" -resize `"$PosterSize^`" -gravity center -extent `"$PosterSize`" `"$PosterImage`""
+            $posterCount++
         }
         Write-Entry -Subtext "Resizing it... " -Path $global:ScriptRoot\Logs\Manuallog.log -Color White -log Info
         $logEntry = "`"$magick`" $Resizeargument"
@@ -8191,6 +8239,13 @@ if ($Manual) {
         # Move file back to original naming with Brackets.
         Move-Item -LiteralPath $PosterImage -destination $PosterImageoriginal -Force -ErrorAction SilentlyContinue
         Write-Entry -Subtext "Poster created and moved to: $PosterImageoriginal" -Path $global:ScriptRoot\Logs\Manuallog.log -Color Green -log Info
+
+        $endTime = Get-Date
+        $executionTime = New-TimeSpan -Start $startTime -End $endTime
+        # Format the execution time
+        $hours = [math]::Floor($executionTime.TotalHours)
+        $minutes = $executionTime.Minutes
+        $seconds = $executionTime.Seconds
 
         $CSVtemp = New-Object psobject
         $CSVtemp | Add-Member -MemberType NoteProperty -Name "Title" -Value $Titletext
@@ -8205,6 +8260,32 @@ if ($Manual) {
         $CSVtemp | Add-Member -MemberType NoteProperty -Name "Manual" -Value "true"
         # Export the array to a CSV file
         $CSVtemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
+
+        # Export json
+        $jsonObject = [PSCustomObject]@{
+            Posters             = $posterCount
+            Backgrounds         = $BackgroundCount
+            Titlecards          = $EpisodeCount
+            Seasons             = $SeasonCount
+            Collections         = if ($collectionCount) { $collectionCount } Else { 0 }
+            Mode                = $Mode
+            Runtime             = $($hours.ToString() + ":" + $minutes.ToString() + ":" + $seconds.ToString())
+            Errors              = if ($errorCount) { $errorCount } Else { 0 }
+            "TBA Skipped"       = if ($SkipTBACount) { $SkipTBACount } Else { 0 }
+            "Jap/Chines Skipped" = if ($SkipJapTitleCount) { $SkipJapTitleCount } Else { 0 }
+            "Notification Sent" = if ($global:SendNotification -eq 'true') { $global:SendNotification } Else { "false" }
+            "Uptime Kuma"       = if ($global:UptimeKumaUrl) { "true" } Else { "false" }
+            "Images cleared"    = if ($ImagesCleared) { $ImagesCleared } Else { 0 }
+            "Folders Cleared"   = if ($PathsCleared) { $PathsCleared } Else { 0 }
+            "Space saved"       = if ($savedsizestring) { $savedsizestring } Else { 0 }
+            "Script Version"    = $CurrentScriptVersion
+            "IM Version"        = $global:CurrentImagemagickversion
+            "Start time"        = $startTime.ToString('dd.MM.yyyy HH:mm:ss')
+            "End Time"          = $endTime.ToString('dd.MM.yyyy HH:mm:ss')
+        }
+
+        $jsonOutput = $jsonObject | ConvertTo-Json
+        $jsonOutput | Out-File -FilePath "$global:ScriptRoot\Logs\$Mode.json" -Encoding utf8
     }
 
     # Clear Running File
@@ -8224,6 +8305,7 @@ if ($Manual) {
 }
 #region Testing Mode
 Elseif ($Testing) {
+    $Mode = "testing"
     Write-Entry -Message "Poster Testing Started" -Path $global:ScriptRoot\Logs\Testinglog.log -Color DarkMagenta -log Info
     Write-Entry -Subtext "I will now create a few posters for you with different text lengths using your current configuration settings." -Path $global:ScriptRoot\Logs\Testinglog.log -Color Yellow -log Warning
     # Poster Part
@@ -9199,7 +9281,8 @@ Elseif ($Testing) {
     $gettestimages = Get-ChildItem $global:ScriptRoot\test
     $titlecardscount = ($gettestimages | Where-Object { $_.name -like 'Title*' }).count
     $backgroundsscount = ($gettestimages | Where-Object { $_.name -like 'back*' }).count
-    $posterscount = ($gettestimages | Where-Object { $_.name -like 'poster*' -or $_.name -like 'SeasonPoster*' }).count
+    $posterscount = ($gettestimages | Where-Object { $_.name -like 'poster*' }).count
+    $seasonscount = ($gettestimages | Where-Object { $_.name -like 'SeasonPoster*' }).count
     if ($global:NotifyUrl -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -notlike 'PSDocker*') {
         $jsonPayload = @"
         {
@@ -9234,6 +9317,11 @@ Elseif ($Testing) {
                 {
                     "name": "Posters",
                     "value": "$posterscount",
+                    "inline": true
+                },
+                {
+                    "name": "Seasons",
+                    "value": "$seasonscount",
                     "inline": true
                 },
                 {
@@ -9300,6 +9388,11 @@ Elseif ($Testing) {
                         "inline": true
                     },
                     {
+                        "name": "Seasons",
+                        "value": "$seasonscount",
+                        "inline": true
+                    },
+                    {
                         "name": "Backgrounds",
                         "value": "$backgroundsscount",
                         "inline": true
@@ -9338,6 +9431,33 @@ Elseif ($Testing) {
         }
     }
 
+    # Export json
+    $jsonObject = [PSCustomObject]@{
+        Posters             = $posterscount
+        Backgrounds         = $backgroundsscount
+        Titlecards          = $titlecardscount
+        Seasons             = $seasonscount
+        Collections         = if ($collectionCount) { $collectionCount } Else { 0 }
+        Mode                = $Mode
+        Runtime             = $($hours.ToString() + ":" + $minutes.ToString() + ":" + $seconds.ToString())
+        Errors              = if ($errorCount) { $errorCount } Else { 0 }
+        "TBA Skipped"       = if ($SkipTBACount) { $SkipTBACount } Else { 0 }
+        "Jap/Chines Skipped" = if ($SkipJapTitleCount) { $SkipJapTitleCount } Else { 0 }
+        "Notification Sent" = if ($global:SendNotification -eq 'true') { $global:SendNotification } Else { "false" }
+        "Uptime Kuma"       = if ($global:UptimeKumaUrl) { "true" } Else { "false" }
+        "Images cleared"    = if ($ImagesCleared) { $ImagesCleared } Else { 0 }
+        "Folders Cleared"   = if ($PathsCleared) { $PathsCleared } Else { 0 }
+        "Space saved"       = if ($savedsizestring) { $savedsizestring } Else { 0 }
+        "Script Version"    = $CurrentScriptVersion
+        "IM Version"        = $global:CurrentImagemagickversion
+        "Start time"        = $startTime.ToString('dd.MM.yyyy HH:mm:ss')
+        "End Time"          = $endTime.ToString('dd.MM.yyyy HH:mm:ss')
+    }
+
+    $jsonOutput = $jsonObject | ConvertTo-Json
+    $jsonOutput | Out-File -FilePath "$global:ScriptRoot\Logs\$Mode.json" -Encoding utf8
+
+
     # Clear Running File
     if (Test-Path $CurrentlyRunning) {
         try {
@@ -9359,6 +9479,7 @@ Elseif ($Tautulli) {
     # {rating_key}	The unique identifier for the movie, episode, or track.
     # {parent_rating_key}	The unique identifier for the season or album.
     # {grandparent_rating_key}	The unique identifier for the TV show or artist.
+    $Mode = "tautulli"
 
     $Libraries = @()
     if (($RatingKey -or $parentratingkey -or $grandparentratingkey) -and $mediatype) {
@@ -13424,6 +13545,32 @@ Elseif ($Tautulli) {
     }
     Write-Entry -Message "Script execution time: $FormattedTimespawn" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
 
+    # Export json
+    $jsonObject = [PSCustomObject]@{
+        Posters             = $posterCount
+        Backgrounds         = $BackgroundCount
+        Titlecards          = $EpisodeCount
+        Seasons             = $SeasonCount
+        Collections         = if ($collectionCount) { $collectionCount } Else { 0 }
+        Mode                = $Mode
+        Runtime             = $($hours.ToString() + ":" + $minutes.ToString() + ":" + $seconds.ToString())
+        Errors              = if ($errorCount) { $errorCount } Else { 0 }
+        "TBA Skipped"       = if ($SkipTBACount) { $SkipTBACount } Else { 0 }
+        "Jap/Chines Skipped" = if ($SkipJapTitleCount) { $SkipJapTitleCount } Else { 0 }
+        "Notification Sent" = if ($global:SendNotification -eq 'true') { $global:SendNotification } Else { "false" }
+        "Uptime Kuma"       = if ($global:UptimeKumaUrl) { "true" } Else { "false" }
+        "Images cleared"    = if ($ImagesCleared) { $ImagesCleared } Else { 0 }
+        "Folders Cleared"   = if ($PathsCleared) { $PathsCleared } Else { 0 }
+        "Space saved"       = if ($savedsizestring) { $savedsizestring } Else { 0 }
+        "Script Version"    = $CurrentScriptVersion
+        "IM Version"        = $global:CurrentImagemagickversion
+        "Start time"        = $startTime.ToString('dd.MM.yyyy HH:mm:ss')
+        "End Time"          = $endTime.ToString('dd.MM.yyyy HH:mm:ss')
+    }
+
+    $jsonOutput = $jsonObject | ConvertTo-Json
+    $jsonOutput | Out-File -FilePath "$global:ScriptRoot\Logs\$Mode.json" -Encoding utf8
+
     # Clear Running File
     if (Test-Path $CurrentlyRunning) {
         try {
@@ -13442,6 +13589,7 @@ Elseif ($Tautulli) {
 #region Arr Mode
 Elseif ($ArrTrigger) {
     $arrplatform = $arrTriggers['arr_platform']
+    $Mode = "arr"
 
     switch ($arrplatform) {
         'Sonarr' {
@@ -17333,7 +17481,7 @@ Elseif ($ArrTrigger) {
                         "name": "Posterizarr @Github",
                         "url": "https://github.com/fscorrupt/Posterizarr"
                         },
-                        "description": "Run took: $FormattedTimespawn $(if ($errorCount -ge '1') {"\n During execution Errors occurred, please check log for detailed description."})",
+                        "description": "Recently added Run took: $FormattedTimespawn $(if ($errorCount -ge '1') {"\n During execution Errors occurred, please check log for detailed description."})",
                         "timestamp": "$(((Get-Date).ToUniversalTime()).ToString("yyyy-MM-ddTHH:mm:ss.fffZ"))",
                         "color": $(if ($errorCount -ge '1') {16711680}Elseif ($Testing){8388736}Elseif ($FallbackCount.count -gt '1' -or $PosterUnknownCount -ge '1' -or $TextTruncatedCount.count -gt '1'){15120384}Else{5763719}),
                         "fields": [
@@ -17428,7 +17576,7 @@ Elseif ($ArrTrigger) {
                             "name": "Posterizarr @Github",
                             "url": "https://github.com/fscorrupt/Posterizarr"
                             },
-                            "description": "Run took: $FormattedTimespawn $(if ($errorCount -ge '1') {"\n During execution Errors occurred, please check log for detailed description."})",
+                            "description": "Recently added Run took: $FormattedTimespawn $(if ($errorCount -ge '1') {"\n During execution Errors occurred, please check log for detailed description."})",
                             "timestamp": "$(((Get-Date).ToUniversalTime()).ToString("yyyy-MM-ddTHH:mm:ss.fffZ"))",
                             "color": $(if ($errorCount -ge '1') {16711680}Elseif ($Testing){8388736}Elseif ($FallbackCount.count -gt '1' -or $PosterUnknownCount -ge '1' -or $TextTruncatedCount.count -gt '1'){15120384}Else{5763719}),
                             "fields": [
@@ -17506,13 +17654,39 @@ Elseif ($ArrTrigger) {
         Else {
             if ($global:NotifyUrl -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker*' -and $global:SendNotification -eq 'true') {
                 if ($errorCount -ge '1') {
-                    apprise --notification-type="failure" --title="Posterizarr" --body="Run took: $FormattedTimespawn`nIt Created '$posterCount' Images`n`nDuring execution '$errorCount' Errors occurred, please check log for detailed description." "$global:NotifyUrl"
+                    apprise --notification-type="failure" --title="Posterizarr" --body="Recently added Run took: $FormattedTimespawn`nIt Created '$posterCount' Images`n`nDuring execution '$errorCount' Errors occurred, please check log for detailed description." "$global:NotifyUrl"
                 }
                 Else {
-                    apprise --notification-type="success" --title="Posterizarr" --body="Run took: $FormattedTimespawn`nIt Created '$posterCount' Images" "$global:NotifyUrl"
+                    apprise --notification-type="success" --title="Posterizarr" --body="Recently added Run took: $FormattedTimespawn`nIt Created '$posterCount' Images" "$global:NotifyUrl"
                 }
             }
         }
+
+        # Export json
+        $jsonObject = [PSCustomObject]@{
+            Posters             = $posterCount
+            Backgrounds         = $BackgroundCount
+            Titlecards          = $EpisodeCount
+            Seasons             = $SeasonCount
+            Collections         = if ($collectionCount) { $collectionCount } Else { 0 }
+            Mode                = $Mode
+            Runtime             = $($hours.ToString() + ":" + $minutes.ToString() + ":" + $seconds.ToString())
+            Errors              = if ($errorCount) { $errorCount } Else { 0 }
+            "TBA Skipped"       = if ($SkipTBACount) { $SkipTBACount } Else { 0 }
+            "Jap/Chines Skipped" = if ($SkipJapTitleCount) { $SkipJapTitleCount } Else { 0 }
+            "Notification Sent" = if ($global:SendNotification -eq 'true') { $global:SendNotification } Else { "false" }
+            "Uptime Kuma"       = if ($global:UptimeKumaUrl) { "true" } Else { "false" }
+            "Images cleared"    = if ($ImagesCleared) { $ImagesCleared } Else { 0 }
+            "Folders Cleared"   = if ($PathsCleared) { $PathsCleared } Else { 0 }
+            "Space saved"       = if ($savedsizestring) { $savedsizestring } Else { 0 }
+            "Script Version"    = $CurrentScriptVersion
+            "IM Version"        = $global:CurrentImagemagickversion
+            "Start time"        = $startTime.ToString('dd.MM.yyyy HH:mm:ss')
+            "End Time"          = $endTime.ToString('dd.MM.yyyy HH:mm:ss')
+        }
+
+        $jsonOutput = $jsonObject | ConvertTo-Json
+        $jsonOutput | Out-File -FilePath "$global:ScriptRoot\Logs\$Mode.json" -Encoding utf8
 
         # Clear Running File
         if (Test-Path $CurrentlyRunning) {
@@ -21553,6 +21727,228 @@ Elseif ($ArrTrigger) {
         }
         Write-Entry -Message "Script execution time: $FormattedTimespawn" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
 
+        # Send Notification
+        if ($global:NotifyUrl -like '*discord*' -and $global:SendNotification -eq 'true') {
+            if ($SkipTBA -eq 'true' -or $SkipJapTitle -eq 'true') {
+
+                $jsonPayload = @"
+                {
+                    "username": "$global:DiscordUserName",
+                    "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
+                    "content": "",
+                    "embeds": [
+                    {
+                        "author": {
+                        "name": "Posterizarr @Github",
+                        "url": "https://github.com/fscorrupt/Posterizarr"
+                        },
+                        "description": "Run took: $FormattedTimespawn $(if ($errorCount -ge '1') {"\n During execution Errors occurred, please check log for detailed description."})",
+                        "timestamp": "$(((Get-Date).ToUniversalTime()).ToString("yyyy-MM-ddTHH:mm:ss.fffZ"))",
+                        "color": $(if ($errorCount -ge '1') {16711680}Elseif ($Testing){8388736}Elseif ($FallbackCount.count -gt '1' -or $PosterUnknownCount -ge '1' -or $TextTruncatedCount.count -gt '1'){15120384}Else{5763719}),
+                        "fields": [
+                        {
+                            "name": "",
+                            "value": ":bar_chart:",
+                            "inline": false
+                        },
+                        {
+                            "name": "Errors",
+                            "value": "$errorCount",
+                            "inline": false
+                        },
+                        {
+                            "name": "Fallbacks",
+                            "value": "$($FallbackCount.count)",
+                            "inline": true
+                        },
+                        {
+                            "name": "Textless",
+                            "value": "$($TextlessCount.count)",
+                            "inline": true
+                        },
+                        {
+                            "name": "Truncated",
+                            "value": "$($TextTruncatedCount.count)",
+                            "inline": true
+                        },
+                        {
+                            "name": "Unknown",
+                            "value": "$PosterUnknownCount",
+                            "inline": true
+                        },
+                        {
+                            "name": "TBA Skipped",
+                            "value": "$SkipTBACount",
+                            "inline": true
+                        },
+                        {
+                            "name": "Jap/Chinese Skipped",
+                            "value": "$SkipJapTitleCount",
+                            "inline": true
+                        },
+                        {
+                            "name": "",
+                            "value": ":frame_photo:",
+                            "inline": false
+                        },
+                        {
+                            "name": "Posters",
+                            "value": "$($posterCount-$SeasonCount-$BackgroundCount-$EpisodeCount)",
+                            "inline": false
+                        },
+                        {
+                            "name": "Backgrounds",
+                            "value": "$BackgroundCount",
+                            "inline": true
+                        },
+                        {
+                            "name": "Seasons",
+                            "value": "$SeasonCount",
+                            "inline": true
+                        },
+                        {
+                            "name": "TitleCards",
+                            "value": "$EpisodeCount",
+                            "inline": true
+                        }
+                        ],
+                        "thumbnail": {
+                            "url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png"
+                        },
+                        "footer": {
+                            "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $global:CurrentImagemagickversion | IM vNext: $global:LatestImagemagickversion"
+                        }
+                    }
+                    ]
+                }
+"@
+
+            }
+            Else {
+
+                $jsonPayload = @"
+                    {
+                        "username": "$global:DiscordUserName",
+                        "avatar_url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png",
+                        "content": "",
+                        "embeds": [
+                        {
+                            "author": {
+                            "name": "Posterizarr @Github",
+                            "url": "https://github.com/fscorrupt/Posterizarr"
+                            },
+                            "description": "Run took: $FormattedTimespawn $(if ($errorCount -ge '1') {"\n During execution Errors occurred, please check log for detailed description."})",
+                            "timestamp": "$(((Get-Date).ToUniversalTime()).ToString("yyyy-MM-ddTHH:mm:ss.fffZ"))",
+                            "color": $(if ($errorCount -ge '1') {16711680}Elseif ($Testing){8388736}Elseif ($FallbackCount.count -gt '1' -or $PosterUnknownCount -ge '1' -or $TextTruncatedCount.count -gt '1'){15120384}Else{5763719}),
+                            "fields": [
+                            {
+                                "name": "",
+                                "value": ":bar_chart:",
+                                "inline": false
+                            },
+                            {
+                                "name": "Errors",
+                                "value": "$errorCount",
+                                "inline": false
+                            },
+                            {
+                                "name": "Fallbacks",
+                                "value": "$($FallbackCount.count)",
+                                "inline": true
+                            },
+                            {
+                                "name": "Textless",
+                                "value": "$($TextlessCount.count)",
+                                "inline": true
+                            },
+                            {
+                                "name": "Truncated",
+                                "value": "$($TextTruncatedCount.count)",
+                                "inline": true
+                            },
+                            {
+                                "name": "Unknown",
+                                "value": "$PosterUnknownCount",
+                                "inline": true
+                            },
+                            {
+                                "name": "",
+                                "value": ":frame_photo:",
+                                "inline": false
+                            },
+                            {
+                                "name": "Posters",
+                                "value": "$($posterCount-$SeasonCount-$BackgroundCount-$EpisodeCount)",
+                                "inline": false
+                            },
+                            {
+                                "name": "Backgrounds",
+                                "value": "$BackgroundCount",
+                                "inline": true
+                            },
+                            {
+                                "name": "Seasons",
+                                "value": "$SeasonCount",
+                                "inline": true
+                            },
+                            {
+                                "name": "TitleCards",
+                                "value": "$EpisodeCount",
+                                "inline": true
+                            }
+                            ],
+                            "thumbnail": {
+                                "url": "https://github.com/fscorrupt/Posterizarr/raw/$($Branch)/images/webhook.png"
+                            },
+                            "footer": {
+                                "text": "$Platform  | vCurr: $CurrentScriptVersion | vNext: $LatestScriptVersion | IM vCurr: $global:CurrentImagemagickversion | IM vNext: $global:LatestImagemagickversion"
+                            }
+                        }
+                        ]
+                    }
+"@
+
+            }
+            $global:NotifyUrl = $global:NotifyUrl.replace('discord://', 'https://discord.com/api/webhooks/')
+            Push-ObjectToDiscord -strDiscordWebhook $global:NotifyUrl -objPayload $jsonPayload
+        }
+        Else {
+            if ($global:NotifyUrl -and $env:POWERSHELL_DISTRIBUTION_CHANNEL -like 'PSDocker*' -and $global:SendNotification -eq 'true') {
+                if ($errorCount -ge '1') {
+                    apprise --notification-type="failure" --title="Posterizarr" --body="Run took: $FormattedTimespawn`nIt Created '$posterCount' Images`n`nDuring execution '$errorCount' Errors occurred, please check log for detailed description." "$global:NotifyUrl"
+                }
+                Else {
+                    apprise --notification-type="success" --title="Posterizarr" --body="Run took: $FormattedTimespawn`nIt Created '$posterCount' Images" "$global:NotifyUrl"
+                }
+            }
+        }
+
+        # Export json
+        $jsonObject = [PSCustomObject]@{
+            Posters             = $posterCount
+            Backgrounds         = $BackgroundCount
+            Titlecards          = $EpisodeCount
+            Seasons             = $SeasonCount
+            Collections         = if ($collectionCount) { $collectionCount } Else { 0 }
+            Mode                = $Mode
+            Runtime             = $($hours.ToString() + ":" + $minutes.ToString() + ":" + $seconds.ToString())
+            Errors              = if ($errorCount) { $errorCount } Else { 0 }
+            "TBA Skipped"       = if ($SkipTBACount) { $SkipTBACount } Else { 0 }
+            "Jap/Chines Skipped" = if ($SkipJapTitleCount) { $SkipJapTitleCount } Else { 0 }
+            "Notification Sent" = if ($global:SendNotification -eq 'true') { $global:SendNotification } Else { "false" }
+            "Uptime Kuma"       = if ($global:UptimeKumaUrl) { "true" } Else { "false" }
+            "Images cleared"    = if ($ImagesCleared) { $ImagesCleared } Else { 0 }
+            "Folders Cleared"   = if ($PathsCleared) { $PathsCleared } Else { 0 }
+            "Space saved"       = if ($savedsizestring) { $savedsizestring } Else { 0 }
+            "Script Version"    = $CurrentScriptVersion
+            "IM Version"        = $global:CurrentImagemagickversion
+            "Start time"        = $startTime.ToString('dd.MM.yyyy HH:mm:ss')
+            "End Time"          = $endTime.ToString('dd.MM.yyyy HH:mm:ss')
+        }
+
+        $jsonOutput = $jsonObject | ConvertTo-Json
+        $jsonOutput | Out-File -FilePath "$global:ScriptRoot\Logs\$Mode.json" -Encoding utf8
+
         # Clear Running File
         if (Test-Path $CurrentlyRunning) {
             try {
@@ -21594,12 +21990,14 @@ Elseif ($SyncJelly -or $SyncEmby) {
         CheckJellyfinAccess -JellyfinUrl $JellyfinUrl -JellyfinApi $JellyfinAPIKey
         $OtherMediaServerUrl = $JellyfinUrl
         $OtherMediaServerApiKey = $JellyfinAPIKey
+        $Mode = "syncjelly"
     }
     if ($SyncEmby) {
         # Check Emby now:
         CheckEmbyAccess -EmbyUrl $EmbyUrl -EmbyAPI $EmbyAPIKey
         $OtherMediaServerUrl = $EmbyUrl
         $OtherMediaServerApiKey = $EmbyAPIKey
+        $Mode = "syncemby"
     }
 
     Write-Entry -Message "Query plex libs..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
@@ -22752,7 +23150,7 @@ Elseif ($SyncJelly -or $SyncEmby) {
                     "name": "Posterizarr @Github",
                     "url": "https://github.com/fscorrupt/Posterizarr"
                     },
-                    "description": "Run took: $FormattedTimespawn $(if ($errorCount -ge '1') {"\n During execution Errors occurred, please check log for detailed description."})",
+                    "description": "Sync run took: $FormattedTimespawn $(if ($errorCount -ge '1') {"\n During execution Errors occurred, please check log for detailed description."})",
                     "timestamp": "$(((Get-Date).ToUniversalTime()).ToString("yyyy-MM-ddTHH:mm:ss.fffZ"))",
                     "color": $(if ($errorCount -ge '1') {16711680}Elseif ($Testing){8388736}Elseif ($FallbackCount.count -gt '1' -or $PosterUnknownCount -ge '1' -or $TextTruncatedCount.count -gt '1'){15120384}Else{5763719}),
                     "fields": [
@@ -22816,6 +23214,33 @@ Elseif ($SyncJelly -or $SyncEmby) {
         }
     }
 
+    # Export json
+    $jsonObject = [PSCustomObject]@{
+        Posters             = $posterCount
+        Backgrounds         = $BackgroundCount
+        Titlecards          = $EpisodeCount
+        Seasons             = $SeasonCount
+        Collections         = if ($collectionCount) { $collectionCount } Else { 0 }
+        Mode                = $Mode
+        Runtime             = $($hours.ToString() + ":" + $minutes.ToString() + ":" + $seconds.ToString())
+        Errors              = if ($errorCount) { $errorCount } Else { 0 }
+        "TBA Skipped"       = if ($SkipTBACount) { $SkipTBACount } Else { 0 }
+        "Jap/Chines Skipped" = if ($SkipJapTitleCount) { $SkipJapTitleCount } Else { 0 }
+        "Notification Sent" = if ($global:SendNotification -eq 'true') { $global:SendNotification } Else { "false" }
+        "Uptime Kuma"       = if ($global:UptimeKumaUrl) { "true" } Else { "false" }
+        "Images cleared"    = if ($ImagesCleared) { $ImagesCleared } Else { 0 }
+        "Folders Cleared"   = if ($PathsCleared) { $PathsCleared } Else { 0 }
+        "Space saved"       = if ($savedsizestring) { $savedsizestring } Else { 0 }
+        "Script Version"    = $CurrentScriptVersion
+        "IM Version"        = $global:CurrentImagemagickversion
+        "Start time"        = $startTime.ToString('dd.MM.yyyy HH:mm:ss')
+        "End Time"          = $endTime.ToString('dd.MM.yyyy HH:mm:ss')
+    }
+
+    $jsonOutput = $jsonObject | ConvertTo-Json
+    $jsonOutput | Out-File -FilePath "$global:ScriptRoot\Logs\$Mode.json" -Encoding utf8
+
+
     # Clear Running File
     if (Test-Path $CurrentlyRunning) {
         try {
@@ -22838,6 +23263,10 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
     $EpisodeCount = 0
     $BackgroundCount = 0
     $PosterUnknownCount = 0
+    $SkipTBACount = 0
+    $SkipJapTitleCount = 0
+    $Mode = "normal"
+
     Write-Entry -Message "Query Jellyfin/Emby..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
     Write-Entry -Message "Query all items from all Libs, this can take a while..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
     $PreferredMetadataLanguage = (Invoke-RestMethod -Method Get -Uri "$OtherMediaServerUrl/System/Configuration?api_key=$OtherMediaServerApiKey").PreferredMetadataLanguage
@@ -27151,6 +27580,32 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
         }
     }
 
+    # Export json
+    $jsonObject = [PSCustomObject]@{
+        Posters             = $($posterCount-$SeasonCount-$BackgroundCount-$EpisodeCount)
+        Backgrounds         = $BackgroundCount
+        Titlecards          = $EpisodeCount
+        Seasons             = $SeasonCount
+        Collections         = if ($collectionCount) { $collectionCount } Else { 0 }
+        Mode                = $Mode
+        Runtime             = $($hours.ToString() + ":" + $minutes.ToString() + ":" + $seconds.ToString())
+        Errors              = if ($errorCount) { $errorCount } Else { 0 }
+        "TBA Skipped"       = if ($SkipTBACount) { $SkipTBACount } Else { 0 }
+        "Jap/Chines Skipped" = if ($SkipJapTitleCount) { $SkipJapTitleCount } Else { 0 }
+        "Notification Sent" = if ($global:SendNotification -eq 'true') { $global:SendNotification } Else { "false" }
+        "Uptime Kuma"       = if ($global:UptimeKumaUrl) { "true" } Else { "false" }
+        "Images cleared"    = if ($ImagesCleared) { $ImagesCleared } Else { 0 }
+        "Folders Cleared"   = if ($PathsCleared) { $PathsCleared } Else { 0 }
+        "Space saved"       = if ($savedsizestring) { $savedsizestring } Else { 0 }
+        "Script Version"    = $CurrentScriptVersion
+        "IM Version"        = $global:CurrentImagemagickversion
+        "Start time"        = $startTime.ToString('dd.MM.yyyy HH:mm:ss')
+        "End Time"          = $endTime.ToString('dd.MM.yyyy HH:mm:ss')
+    }
+
+    $jsonOutput = $jsonObject | ConvertTo-Json
+    $jsonOutput | Out-File -FilePath "$global:ScriptRoot\Logs\$Mode.json" -Encoding utf8
+
     # Clear Running File
     if (Test-Path $CurrentlyRunning) {
         try {
@@ -27194,6 +27649,7 @@ ElseIf ($PosterReset) {
 }
 #region Normal Mode
 else {
+    $Mode = "normal"
     Write-Entry -Message "Query plex libs..." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
     $Libsoverview = @()
     foreach ($lib in $Libs.MediaContainer.Directory) {
@@ -32162,6 +32618,32 @@ else {
             }
         }
     }
+
+    # Export json
+    $jsonObject = [PSCustomObject]@{
+        Posters             = $($posterCount-$SeasonCount-$BackgroundCount-$EpisodeCount)
+        Backgrounds         = $BackgroundCount
+        Titlecards          = $EpisodeCount
+        Seasons             = $SeasonCount
+        Collections         = if ($collectionCount) { $collectionCount } Else { 0 }
+        Mode                = $Mode
+        Runtime             = $($hours.ToString() + ":" + $minutes.ToString() + ":" + $seconds.ToString())
+        Errors              = if ($errorCount) { $errorCount } Else { 0 }
+        "TBA Skipped"       = if ($SkipTBACount) { $SkipTBACount } Else { 0 }
+        "Jap/Chines Skipped" = if ($SkipJapTitleCount) { $SkipJapTitleCount } Else { 0 }
+        "Notification Sent" = if ($global:SendNotification -eq 'true') { $global:SendNotification } Else { "false" }
+        "Uptime Kuma"       = if ($global:UptimeKumaUrl) { "true" } Else { "false" }
+        "Images cleared"    = if ($ImagesCleared) { $ImagesCleared } Else { 0 }
+        "Folders Cleared"   = if ($PathsCleared) { $PathsCleared } Else { 0 }
+        "Space saved"       = if ($savedsizestring) { $savedsizestring } Else { 0 }
+        "Script Version"    = $CurrentScriptVersion
+        "IM Version"        = $global:CurrentImagemagickversion
+        "Start time"        = $startTime.ToString('dd.MM.yyyy HH:mm:ss')
+        "End Time"          = $endTime.ToString('dd.MM.yyyy HH:mm:ss')
+    }
+
+    $jsonOutput = $jsonObject | ConvertTo-Json
+    $jsonOutput | Out-File -FilePath "$global:ScriptRoot\Logs\$Mode.json" -Encoding utf8
 
     # Clear Running File
     if (Test-Path $CurrentlyRunning) {

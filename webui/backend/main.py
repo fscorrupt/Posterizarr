@@ -7,6 +7,7 @@ from fastapi import (
     Request,
     UploadFile,
     File,
+    Form,
 )
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
@@ -2801,7 +2802,7 @@ async def validate_uptimekuma(request: UptimeKumaValidationRequest):
 @app.post("/api/libraries/plex")
 async def get_plex_libraries(request: PlexValidationRequest):
     """Fetch Plex libraries"""
-    logger.info("📚 Fetching Plex libraries...")
+    logger.info("Fetching Plex libraries...")
 
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
@@ -2839,7 +2840,7 @@ async def get_plex_libraries(request: PlexValidationRequest):
 @app.post("/api/libraries/jellyfin")
 async def get_jellyfin_libraries(request: JellyfinValidationRequest):
     """Fetch Jellyfin libraries"""
-    logger.info("📚 Fetching Jellyfin libraries...")
+    logger.info("Fetching Jellyfin libraries...")
 
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
@@ -2883,7 +2884,7 @@ async def get_jellyfin_libraries(request: JellyfinValidationRequest):
 @app.post("/api/libraries/emby")
 async def get_emby_libraries(request: EmbyValidationRequest):
     """Fetch Emby libraries"""
-    logger.info("📚 Fetching Emby libraries...")
+    logger.info("Fetching Emby libraries...")
 
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
@@ -2918,6 +2919,169 @@ async def get_emby_libraries(request: EmbyValidationRequest):
                 }
     except Exception as e:
         logger.error(f"💥 Error fetching Emby libraries: {str(e)}")
+        return {"success": False, "error": str(e)}
+
+
+# Request model for fetching library items
+class LibraryItemsRequest(BaseModel):
+    url: str
+    token: str
+    library_key: str
+
+
+@app.post("/api/libraries/plex/items")
+async def get_plex_library_items(request: LibraryItemsRequest):
+    """Fetch items from a specific Plex library"""
+    logger.info(f"Fetching items from Plex library key: {request.library_key}")
+
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            url = f"{request.url}/library/sections/{request.library_key}/all?X-Plex-Token={request.token}"
+            response = await client.get(url)
+
+            if response.status_code == 200:
+                root = ET.fromstring(response.content)
+                items = []
+
+                # Parse both Video (movies) and Directory (shows) elements
+                for item in root.findall(".//*[@title]"):
+                    title = item.get("title", "")
+                    year = item.get("year", "")
+                    item_type = item.get("type", "")
+                    rating_key = item.get("ratingKey", "")
+
+                    # Get the folder path if available
+                    folder_name = title
+                    if year:
+                        folder_name = f"{title} ({year})"
+
+                    # Try to get TMDB ID from GUID
+                    tmdb_id = ""
+                    for guid in item.findall(".//Guid"):
+                        guid_id = guid.get("id", "")
+                        if "tmdb://" in guid_id:
+                            tmdb_id = guid_id.replace("tmdb://", "")
+                            folder_name = f"{title} ({year}) {{tmdb-{tmdb_id}}}"
+                            break
+
+                    items.append(
+                        {
+                            "title": title,
+                            "year": year,
+                            "folderName": folder_name,
+                            "type": item_type,
+                            "ratingKey": rating_key,
+                        }
+                    )
+
+                logger.info(f"Found {len(items)} items in library")
+                return {"success": True, "items": items}
+            else:
+                logger.error(f"Failed to fetch library items: {response.status_code}")
+                return {
+                    "success": False,
+                    "error": f"Failed to fetch items (Status: {response.status_code})",
+                }
+    except Exception as e:
+        logger.error(f"💥 Error fetching Plex library items: {str(e)}")
+        logger.exception("Full traceback:")
+        return {"success": False, "error": str(e)}
+
+
+@app.get("/api/assets/folders")
+async def get_assets_folders(library_name: Optional[str] = None):
+    """Get folders from assets directory
+
+    If library_name is provided, returns folders from that library.
+    Otherwise returns all library folders (top-level directories).
+    """
+    try:
+        if not ASSETS_DIR.exists():
+            logger.warning(f"Assets directory does not exist: {ASSETS_DIR}")
+            return {"success": True, "folders": [], "path": str(ASSETS_DIR)}
+
+        logger.info(f"Scanning assets directory: {ASSETS_DIR}")
+
+        if library_name:
+            # Get items from specific library folder
+            library_path = ASSETS_DIR / library_name
+            if not library_path.exists() or not library_path.is_dir():
+                logger.warning(f"Library folder not found: {library_path}")
+                return {
+                    "success": False,
+                    "error": f"Library folder '{library_name}' not found",
+                }
+
+            folders = []
+            try:
+                # List all subdirectories in the library folder
+                for item_path in sorted(library_path.iterdir()):
+                    if item_path.is_dir():
+                        folder_name = item_path.name
+
+                        # Try to extract title and year from folder name
+                        # Format: "Title (Year) {tmdb-123}" or "Title (Year)" or just "Title"
+                        title = folder_name
+                        year = ""
+
+                        # Try to extract year from (YYYY) pattern
+                        year_match = re.search(r"\((\d{4})\)", folder_name)
+                        if year_match:
+                            year = year_match.group(1)
+                            # Extract title (everything before the year)
+                            title = folder_name[: year_match.start()].strip()
+
+                        folders.append(
+                            {
+                                "folderName": folder_name,
+                                "title": title,
+                                "year": year,
+                                "path": str(item_path.relative_to(ASSETS_DIR)),
+                            }
+                        )
+
+                logger.info(f"Found {len(folders)} folders in library '{library_name}'")
+                return {
+                    "success": True,
+                    "folders": folders,
+                    "library": library_name,
+                    "path": str(library_path.relative_to(ASSETS_DIR)),
+                }
+            except Exception as e:
+                logger.error(f"Error scanning library folder: {e}")
+                return {"success": False, "error": str(e)}
+        else:
+            # Get top-level library folders
+            libraries = []
+            try:
+                for library_path in sorted(ASSETS_DIR.iterdir()):
+                    if library_path.is_dir():
+                        # Count items in library
+                        item_count = sum(
+                            1 for item in library_path.iterdir() if item.is_dir()
+                        )
+
+                        libraries.append(
+                            {
+                                "name": library_path.name,
+                                "path": str(library_path.relative_to(ASSETS_DIR)),
+                                "itemCount": item_count,
+                            }
+                        )
+
+                logger.info(f"Found {len(libraries)} library folders")
+                return {
+                    "success": True,
+                    "libraries": libraries,
+                    "path": str(ASSETS_DIR),
+                }
+            except Exception as e:
+                logger.error(f"Error scanning assets directory: {e}")
+                return {"success": False, "error": str(e)}
+
+    except Exception as e:
+        logger.error(f"💥 Error getting assets folders: {str(e)}")
+        logger.exception("Full traceback:")
         return {"success": False, "error": str(e)}
 
 
@@ -3467,6 +3631,9 @@ async def get_status():
             logger.info(
                 f"Process finished with exit code {poll_result}, cleaning up..."
             )
+            # Store mode before clearing for runtime tracking
+            finished_mode = current_mode
+
             current_process = None
             current_mode = None
             manual_is_running = False
@@ -3486,7 +3653,7 @@ async def get_status():
                 logger.error(f"Error importing ImageChoices.csv to database: {e}")
 
             # Save runtime statistics to database
-            if RUNTIME_DB_AVAILABLE:
+            if RUNTIME_DB_AVAILABLE and finished_mode:
                 try:
                     # Determine which log file was used
                     mode_log_map = {
@@ -3498,14 +3665,16 @@ async def get_status():
                         "syncemby": "Scriptlog.log",
                         "reset": "Scriptlog.log",
                     }
-                    log_filename = mode_log_map.get(current_mode, "Scriptlog.log")
+                    log_filename = mode_log_map.get(finished_mode, "Scriptlog.log")
                     log_path = LOGS_DIR / log_filename
 
                     if log_path.exists():
-                        save_runtime_to_db(log_path, current_mode or "normal")
+                        save_runtime_to_db(log_path, finished_mode)
                         logger.info(
-                            f"Runtime statistics saved to database for {current_mode} mode"
+                            f"Runtime statistics saved to database for {finished_mode} mode"
                         )
+                    else:
+                        logger.warning(f"Log file not found: {log_path}")
                 except Exception as e:
                     logger.error(f"Error saving runtime to database: {e}")
 
@@ -3986,13 +4155,12 @@ async def import_json_runtime_data():
     Looks for and imports from:
     - normal.json
     - manual.json
-    - test.json
+    - testing.json
     - tautulli.json
     - arr.json
-    - jellysync.json
-    - embysync.json
+    - syncjelly.json
+    - syncemby.json
     - backup.json
-    - replace.json
     """
     try:
         if not RUNTIME_DB_AVAILABLE or not runtime_db:
@@ -4721,73 +4889,92 @@ async def run_manual_mode(request: ManualModeRequest):
 @app.post("/api/run-manual-upload")
 async def run_manual_mode_upload(
     file: UploadFile = File(...),
-    picturePath: str = "",
-    titletext: str = "",
-    folderName: str = "",
-    libraryName: str = "",
-    posterType: str = "standard",
-    seasonPosterName: str = "",
-    epTitleName: str = "",
-    episodeNumber: str = "",
+    picturePath: str = Form(""),
+    titletext: str = Form(""),
+    folderName: str = Form(""),
+    libraryName: str = Form(""),
+    posterType: str = Form("standard"),
+    seasonPosterName: str = Form(""),
+    epTitleName: str = Form(""),
+    episodeNumber: str = Form(""),
 ):
     """Run manual mode with uploaded file"""
     global current_process, current_mode
 
     logger.info(f"Manual mode upload request received")
-    logger.info(f"  File: {file.filename}")
+    logger.info(f"  File: {file.filename if file else 'None'}")
+    logger.info(f"  File content type: {file.content_type if file else 'None'}")
     logger.info(f"  Poster Type: {posterType}")
+    logger.info(f"  Title Text: '{titletext}'")
+    logger.info(f"  Folder Name: '{folderName}'")
+    logger.info(f"  Library Name: '{libraryName}'")
+    logger.info(f"  Season Poster Name: '{seasonPosterName}'")
+    logger.info(f"  Episode Title Name: '{epTitleName}'")
+    logger.info(f"  Episode Number: '{episodeNumber}'")
 
     # Check if already running
     if current_process and current_process.poll() is None:
-        raise HTTPException(
-            status_code=400,
-            detail="Script is already running. Please stop the script first.",
-        )
+        error_msg = "Script is already running. Please stop the script first."
+        logger.error(f"Manual upload rejected: {error_msg}")
+        raise HTTPException(status_code=400, detail=error_msg)
 
     if not SCRIPT_PATH.exists():
-        raise HTTPException(status_code=404, detail="Posterizarr.ps1 not found")
+        error_msg = "Posterizarr.ps1 not found"
+        logger.error(f"Manual upload failed: {error_msg}")
+        raise HTTPException(status_code=404, detail=error_msg)
 
     # Validate file upload
     if not file:
-        raise HTTPException(status_code=400, detail="No file uploaded")
+        error_msg = "No file uploaded"
+        logger.error(f"Manual upload validation failed: {error_msg}")
+        raise HTTPException(status_code=400, detail=error_msg)
 
     # Validate file type
     allowed_extensions = [".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tiff"]
     file_extension = Path(file.filename).suffix.lower()
     if file_extension not in allowed_extensions:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Invalid file type. Allowed: {', '.join(allowed_extensions)}",
-        )
+        error_msg = f"Invalid file type '{file_extension}'. Allowed: {', '.join(allowed_extensions)}"
+        logger.error(f"Manual upload validation failed: {error_msg}")
+        raise HTTPException(status_code=400, detail=error_msg)
 
     # Validate required fields
     if posterType != "titlecard" and not titletext.strip():
-        raise HTTPException(status_code=400, detail="Title text is required")
+        error_msg = "Title text is required"
+        logger.error(
+            f"Manual upload validation failed: {error_msg} (posterType: {posterType})"
+        )
+        raise HTTPException(status_code=400, detail=error_msg)
 
     if posterType != "collection" and not folderName.strip():
-        raise HTTPException(status_code=400, detail="Folder name is required")
+        error_msg = "Folder name is required"
+        logger.error(
+            f"Manual upload validation failed: {error_msg} (posterType: {posterType})"
+        )
+        raise HTTPException(status_code=400, detail=error_msg)
 
     if not libraryName.strip():
-        raise HTTPException(status_code=400, detail="Library name is required")
+        error_msg = "Library name is required"
+        logger.error(f"Manual upload validation failed: {error_msg}")
+        raise HTTPException(status_code=400, detail=error_msg)
 
     if posterType == "season" and not seasonPosterName.strip():
-        raise HTTPException(
-            status_code=400, detail="Season poster name is required for season posters"
-        )
+        error_msg = "Season poster name is required for season posters"
+        logger.error(f"Manual upload validation failed: {error_msg}")
+        raise HTTPException(status_code=400, detail=error_msg)
 
     if posterType == "titlecard":
         if not epTitleName.strip():
-            raise HTTPException(
-                status_code=400, detail="Episode title name is required for title cards"
-            )
+            error_msg = "Episode title name is required for title cards"
+            logger.error(f"Manual upload validation failed: {error_msg}")
+            raise HTTPException(status_code=400, detail=error_msg)
         if not episodeNumber.strip():
-            raise HTTPException(
-                status_code=400, detail="Episode number is required for title cards"
-            )
+            error_msg = "Episode number is required for title cards"
+            logger.error(f"Manual upload validation failed: {error_msg}")
+            raise HTTPException(status_code=400, detail=error_msg)
         if not seasonPosterName.strip():
-            raise HTTPException(
-                status_code=400, detail="Season name is required for title cards"
-            )
+            error_msg = "Season name is required for title cards"
+            logger.error(f"Manual upload validation failed: {error_msg}")
+            raise HTTPException(status_code=400, detail=error_msg)
 
     try:
         # Create uploads directory if it doesn't exist with permission check
@@ -4830,6 +5017,65 @@ async def run_manual_mode_upload(
             content = await file.read()
             if len(content) == 0:
                 raise HTTPException(status_code=400, detail="Uploaded file is empty")
+
+            # Validate image dimensions and REJECT if too small
+            try:
+                from PIL import Image
+                import io
+
+                # Open image from bytes
+                img = Image.open(io.BytesIO(content))
+                width, height = img.size
+                logger.info(f"Manual upload image dimensions: {width}x{height} pixels")
+
+                # Load config to get minimum dimensions
+                try:
+                    if CONFIG_PATH.exists():
+                        with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+                            config = json.load(f)
+                        poster_min_width = int(
+                            config.get("ApiPart", {}).get("PosterMinWidth", "2000")
+                        )
+                        poster_min_height = int(
+                            config.get("ApiPart", {}).get("PosterMinHeight", "3000")
+                        )
+                        bg_tc_min_width = int(
+                            config.get("ApiPart", {}).get("BgTcMinWidth", "3840")
+                        )
+                        bg_tc_min_height = int(
+                            config.get("ApiPart", {}).get("BgTcMinHeight", "2160")
+                        )
+                    else:
+                        poster_min_width = 2000
+                        poster_min_height = 3000
+                        bg_tc_min_width = 3840
+                        bg_tc_min_height = 2160
+                except:
+                    poster_min_width = 2000
+                    poster_min_height = 3000
+                    bg_tc_min_width = 3840
+                    bg_tc_min_height = 2160
+
+                # Check dimensions based on poster type and REJECT if too small
+                if posterType in ["standard", "season", "collection"]:
+                    if width < poster_min_width or height < poster_min_height:
+                        error_msg = f"Image dimensions ({width}x{height}) are too small. Minimum required: {poster_min_width}x{poster_min_height} pixels for posters. Please upload a higher resolution image."
+                        logger.error(error_msg)
+                        raise HTTPException(status_code=400, detail=error_msg)
+                elif posterType in ["background", "titlecard"]:
+                    if width < bg_tc_min_width or height < bg_tc_min_height:
+                        error_msg = f"Image dimensions ({width}x{height}) are too small. Minimum required: {bg_tc_min_width}x{bg_tc_min_height} pixels for backgrounds/title cards. Please upload a higher resolution image."
+                        logger.error(error_msg)
+                        raise HTTPException(status_code=400, detail=error_msg)
+
+            except HTTPException:
+                # Re-raise HTTP exceptions (dimension validation failures)
+                raise
+            except Exception as e:
+                logger.warning(
+                    f"Could not validate image dimensions for manual upload: {e}"
+                )
+                # Don't fail upload if dimension check itself fails
 
             with open(upload_path, "wb") as buffer:
                 buffer.write(content)
@@ -5003,12 +5249,18 @@ async def run_manual_mode_upload(
             "pid": current_process.pid,
             "upload_path": str(upload_path),
         }
+    except HTTPException:
+        # Re-raise HTTPExceptions as they are already properly formatted
+        raise
     except FileNotFoundError as e:
         error_msg = f"PowerShell not found. Please install PowerShell 7+ (pwsh) or ensure Windows PowerShell is in PATH."
-        logger.error(error_msg)
+        logger.error(f"Manual upload failed: {error_msg}")
+        logger.error(f"Exception details: {e}")
         raise HTTPException(status_code=500, detail=error_msg)
     except Exception as e:
-        logger.error(f"Error running manual mode: {e}")
+        error_msg = f"Error running manual mode with uploaded file: {str(e)}"
+        logger.error(error_msg)
+        logger.exception("Full traceback:")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -6057,6 +6309,12 @@ async def get_recent_assets():
     Assets are ordered by ID DESC (newest/highest ID first)
     """
     try:
+        # Auto-import CSV to database before fetching (ensures fresh data)
+        try:
+            import_imagechoices_to_db()
+        except Exception as e:
+            logger.warning(f"Could not import CSV to database: {e}")
+
         # Get all assets from database (already sorted by id DESC - newest first)
         db_records = db.get_all_choices()
 
@@ -7005,12 +7263,12 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                 if request.media_type == "movie" and tmdb_id_to_use:
                     url = f"https://webservice.fanart.tv/v3/movies/{tmdb_id_to_use}?api_key={fanart_api_key}"
                     logger.info(
-                        f"🎨 Fanart.tv Movie URL: {url.replace(fanart_api_key, 'API_KEY')}"
+                        f"Fanart.tv Movie URL: {url.replace(fanart_api_key, 'API_KEY')}"
                     )
                 elif request.media_type == "tv" and request.tvdb_id:
                     url = f"https://webservice.fanart.tv/v3/tv/{request.tvdb_id}?api_key={fanart_api_key}"
                     logger.info(
-                        f"🎨 Fanart.tv TV URL: {url.replace(fanart_api_key, 'API_KEY')}"
+                        f"Fanart.tv TV URL: {url.replace(fanart_api_key, 'API_KEY')}"
                     )
                 else:
                     logger.warning(
@@ -7020,7 +7278,7 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
 
                 async with httpx.AsyncClient(timeout=10.0) as client:
                     response = await client.get(url)
-                    logger.info(f"🎨 Fanart.tv Response Status: {response.status_code}")
+                    logger.info(f"Fanart.tv Response Status: {response.status_code}")
                     if response.status_code == 200:
                         data = response.json()
 
@@ -7258,6 +7516,83 @@ async def upload_asset_replacement(
             logger.error("Uploaded file is empty")
             raise HTTPException(status_code=400, detail="Uploaded file is empty")
 
+        # Validate image dimensions and reject if too small
+        try:
+            from PIL import Image
+            import io
+
+            # Open image from bytes
+            img = Image.open(io.BytesIO(contents))
+            width, height = img.size
+            logger.info(f"Image dimensions: {width}x{height} pixels")
+
+            # Determine asset type from path/filename
+            asset_path_lower = asset_path.lower()
+            is_poster = (
+                "poster" in asset_path_lower
+                or asset_path_lower.endswith((".jpg", ".png"))
+                and "background" not in asset_path_lower
+                and "titlecard" not in asset_path_lower
+                and not re.search(r"s\d+e\d+", asset_path_lower, re.IGNORECASE)
+            )
+            is_background = "background" in asset_path_lower
+            is_titlecard = "titlecard" in asset_path_lower or re.search(
+                r"s\d+e\d+", asset_path_lower, re.IGNORECASE
+            )
+            is_season = (
+                re.search(r"season\s*\d+", asset_path_lower, re.IGNORECASE)
+                and not is_titlecard
+            )
+
+            # Load config to get minimum dimensions
+            try:
+                if CONFIG_PATH.exists():
+                    with open(CONFIG_PATH, "r", encoding="utf-8") as f:
+                        config = json.load(f)
+                    poster_min_width = int(
+                        config.get("ApiPart", {}).get("PosterMinWidth", "2000")
+                    )
+                    poster_min_height = int(
+                        config.get("ApiPart", {}).get("PosterMinHeight", "3000")
+                    )
+                    bg_tc_min_width = int(
+                        config.get("ApiPart", {}).get("BgTcMinWidth", "3840")
+                    )
+                    bg_tc_min_height = int(
+                        config.get("ApiPart", {}).get("BgTcMinHeight", "2160")
+                    )
+                else:
+                    # Fallback to defaults if config not available
+                    poster_min_width = 2000
+                    poster_min_height = 3000
+                    bg_tc_min_width = 3840
+                    bg_tc_min_height = 2160
+            except:
+                # Fallback to defaults if config not available
+                poster_min_width = 2000
+                poster_min_height = 3000
+                bg_tc_min_width = 3840
+                bg_tc_min_height = 2160
+
+            # Check dimensions based on asset type and REJECT if too small
+            if is_poster or is_season:
+                if width < poster_min_width or height < poster_min_height:
+                    error_msg = f"Image dimensions ({width}x{height}) are too small. Minimum required: {poster_min_width}x{poster_min_height} pixels for posters. Please upload a higher resolution image."
+                    logger.error(error_msg)
+                    raise HTTPException(status_code=400, detail=error_msg)
+            elif is_background or is_titlecard:
+                if width < bg_tc_min_width or height < bg_tc_min_height:
+                    error_msg = f"Image dimensions ({width}x{height}) are too small. Minimum required: {bg_tc_min_width}x{bg_tc_min_height} pixels for backgrounds/title cards. Please upload a higher resolution image."
+                    logger.error(error_msg)
+                    raise HTTPException(status_code=400, detail=error_msg)
+
+        except HTTPException:
+            # Re-raise HTTP exceptions (dimension validation failures)
+            raise
+        except Exception as e:
+            logger.warning(f"Could not validate image dimensions: {e}")
+            # Don't fail upload if dimension check itself fails, just log it
+
         # Track if this is a replacement or new asset
         is_replacement = full_asset_path.exists()
 
@@ -7326,7 +7661,7 @@ async def upload_asset_replacement(
 
         # If process_with_overlays is enabled, trigger Manual Run
         if process_with_overlays:
-            logger.info(f"🎨 Processing with overlays enabled for: {asset_path}")
+            logger.info(f"Processing with overlays enabled for: {asset_path}")
 
             try:
                 # Parse asset path to extract info
@@ -7493,7 +7828,7 @@ async def replace_asset_from_url(
 
         # If process_with_overlays is enabled, trigger Manual Run
         if process_with_overlays:
-            logger.info(f"🎨 Processing with overlays enabled for: {asset_path}")
+            logger.info(f"Processing with overlays enabled for: {asset_path}")
 
             try:
                 # Parse asset path to extract info
@@ -8046,6 +8381,7 @@ async def find_asset_for_imagechoice(record_id: int):
         rootfolder = record_dict.get("Rootfolder")
         library = record_dict.get("LibraryName")
         asset_type = (record_dict.get("Type") or "").lower()
+        title = record_dict.get("Title") or ""  # Title contains season/episode info
 
         if not rootfolder or not library:
             raise HTTPException(
@@ -8062,12 +8398,39 @@ async def find_asset_for_imagechoice(record_id: int):
             )
 
         # Determine which file pattern to look for based on type
+        import re
+
         if "background" in asset_type:
             pattern = "background.*"
         elif "season" in asset_type:
-            pattern = "Season*.*"
+            # For seasons, extract the season number from the Title field
+            # Title format: "Show Name | Season04" or "Show Name | Season05"
+            season_match = re.search(r"season\s*(\d+)", title, re.IGNORECASE)
+            if season_match:
+                season_num = season_match.group(1).zfill(2)  # Ensure 2 digits
+                pattern = f"Season{season_num}.*"
+                logger.info(f"Season pattern extracted from title '{title}': {pattern}")
+            else:
+                # Fallback to generic pattern
+                pattern = "Season*.*"
+                logger.warning(
+                    f"Could not extract season number from title '{title}', using generic pattern"
+                )
         elif "titlecard" in asset_type or "episode" in asset_type:
-            pattern = "S[0-9][0-9]E[0-9][0-9].*"
+            # For titlecards, extract episode code from Title
+            # Title format: "S04E01 | Episode Title"
+            episode_match = re.search(r"(S\d+E\d+)", title, re.IGNORECASE)
+            if episode_match:
+                episode_code = episode_match.group(1).upper()
+                pattern = f"{episode_code}.*"
+                logger.info(
+                    f"Episode pattern extracted from title '{title}': {pattern}"
+                )
+            else:
+                pattern = "S[0-9][0-9]E[0-9][0-9].*"
+                logger.warning(
+                    f"Could not extract episode code from title '{title}', using generic pattern"
+                )
         else:
             pattern = "poster.*"
 
@@ -8077,6 +8440,9 @@ async def find_asset_for_imagechoice(record_id: int):
         matching_files = list(folder_path.glob(pattern))
 
         if not matching_files:
+            logger.error(
+                f"No matching asset found in {library}/{rootfolder} with pattern '{pattern}'"
+            )
             raise HTTPException(
                 status_code=404,
                 detail=f"No matching asset found in {library}/{rootfolder} with pattern {pattern}",
@@ -8084,6 +8450,9 @@ async def find_asset_for_imagechoice(record_id: int):
 
         # Return the first match (in Gallery-compatible format)
         asset_file = matching_files[0]
+        logger.info(
+            f"Found asset file for record {record_id}: {asset_file.name} (pattern: {pattern}, from title: '{title}')"
+        )
         relative_path = asset_file.relative_to(ASSETS_DIR)
         path_str = str(relative_path).replace("\\", "/")
 

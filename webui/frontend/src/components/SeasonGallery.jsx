@@ -784,7 +784,7 @@ function SeasonGallery() {
                             className={`w-full px-4 py-2 text-sm transition-all text-center ${
                               itemsPerPage === value
                                 ? "bg-theme-primary text-white"
-                                : "text-theme-text hover:bg-theme-primary/30 hover:border-theme-primary/20"
+                                : "text-theme-text hover:bg-theme-hover hover:text-theme-primary"
                             }`}
                           >
                             {value}

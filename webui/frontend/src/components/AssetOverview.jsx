@@ -180,14 +180,41 @@ const AssetOverview = () => {
       // Rootfolder contains: "Man-Thing (2005) {tmdb-18882}"
       // Determine filename based on asset type (same as actual file structure)
       const assetType = (asset.Type || "").toLowerCase();
+      const title = asset.Title || "";
       let filename = "poster.jpg"; // Default
 
       if (assetType.includes("background")) {
         filename = "background.jpg";
       } else if (assetType.includes("season")) {
-        filename = "season.jpg";
-      } else if (assetType.includes("titlecard")) {
-        filename = "titlecard.jpg";
+        // Extract season number from Title (e.g., "Show Name | Season04" or "Show Name | Season05")
+        // NOT from Type field which only contains "Season"
+        const seasonMatch = title.match(/season\s*(\d+)/i);
+        if (seasonMatch) {
+          const seasonNum = seasonMatch[1].padStart(2, "0");
+          filename = `Season${seasonNum}.jpg`;
+          console.log(`Season filename from title '${title}': ${filename}`);
+        } else {
+          filename = "Season01.jpg"; // Fallback to Season01 if no number found
+          console.warn(
+            `Could not extract season number from title '${title}', using Season01.jpg as fallback`
+          );
+        }
+      } else if (
+        assetType.includes("titlecard") ||
+        assetType.includes("episode")
+      ) {
+        // Extract episode code from Title (e.g., "S04E01 | Episode Title")
+        const episodeMatch = title.match(/(S\d+E\d+)/i);
+        if (episodeMatch) {
+          const episodeCode = episodeMatch[1].toUpperCase();
+          filename = `${episodeCode}.jpg`;
+          console.log(`Episode filename from title '${title}': ${filename}`);
+        } else {
+          filename = "S01E01.jpg"; // Fallback
+          console.warn(
+            `Could not extract episode code from title '${title}', using S01E01.jpg as fallback`
+          );
+        }
       }
 
       // Construct path like Gallery does: "LibraryName/Rootfolder/filename"
@@ -693,7 +720,7 @@ const AssetOverview = () => {
                     className={`w-full px-4 py-3 text-left text-sm transition-all ${
                       selectedType === type
                         ? "bg-theme-primary text-white"
-                        : "text-theme-text hover:bg-theme-primary/30 hover:border-theme-primary/20"
+                        : "text-theme-text hover:bg-theme-hover hover:text-theme-primary"
                     }`}
                   >
                     {type === "All Types" ? t("assetOverview.allTypes") : type}
@@ -742,7 +769,7 @@ const AssetOverview = () => {
                     className={`w-full px-4 py-3 text-left text-sm transition-all ${
                       selectedLibrary === lib
                         ? "bg-theme-primary text-white"
-                        : "text-theme-text hover:bg-theme-primary/30 hover:border-theme-primary/20"
+                        : "text-theme-text hover:bg-theme-hover hover:text-theme-primary"
                     }`}
                   >
                     {lib === "All Libraries"
@@ -791,7 +818,7 @@ const AssetOverview = () => {
                   className={`w-full px-4 py-3 text-left text-sm transition-all ${
                     selectedCategory === "All Categories"
                       ? "bg-theme-primary text-white"
-                      : "text-theme-text hover:bg-theme-primary/30 hover:border-theme-primary/20"
+                      : "text-theme-text hover:bg-theme-hover hover:text-theme-primary"
                   }`}
                 >
                   {t("assetOverview.allCategories")}
@@ -806,7 +833,7 @@ const AssetOverview = () => {
                     className={`w-full px-4 py-3 text-left text-sm transition-all ${
                       selectedCategory === card.label
                         ? "bg-theme-primary text-white"
-                        : "text-theme-text hover:bg-theme-primary/30 hover:border-theme-primary/20"
+                        : "text-theme-text hover:bg-theme-hover hover:text-theme-primary"
                     }`}
                   >
                     {card.label}

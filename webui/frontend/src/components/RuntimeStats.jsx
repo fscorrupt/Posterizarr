@@ -198,7 +198,7 @@ function RuntimeStats() {
           {migrationStatus && !migrationStatus.is_migrated && (
             <div className="mt-6 p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
               <p className="text-blue-400 text-sm">
-                💡 <strong>{t("runtimeStats.migrationTip")}</strong>{" "}
+                <strong>{t("runtimeStats.migrationTip")}</strong>{" "}
                 {t("runtimeStats.migrationDesc")}
               </p>
             </div>

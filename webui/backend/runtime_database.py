@@ -227,16 +227,15 @@ class RuntimeDatabase:
             json_files = [
                 ("normal.json", "normal"),
                 ("manual.json", "manual"),
-                ("test.json", "testing"),
+                ("testing.json", "testing"),
                 ("tautulli.json", "tautulli"),
                 ("arr.json", "arr"),
-                ("jellysync.json", "syncjelly"),
-                ("embysync.json", "syncemby"),
-                ("backup.json", "backup"),
-                ("replace.json", "replace"),
+                ("syncjelly.json", "syncjelly"),
+                ("syncemby.json", "syncemby"),
+                ("backup.json", "backup")
             ]
 
-            logger.info("📄 Checking for JSON files...")
+            logger.info("Checking for JSON files...")
             for json_file, mode in json_files:
                 json_path = LOGS_DIR / json_file
                 if json_path.exists():

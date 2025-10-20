@@ -256,8 +256,54 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
     const mediaType = isTV ? "tv" : "movie";
 
     // Extract season/episode numbers
-    const seasonMatch = asset.path?.match(/Season(\d+)/);
-    const episodeMatch = asset.path?.match(/S(\d+)E(\d+)/);
+    // Priority 1: From DB Title field (if asset comes from AssetOverview)
+    // Priority 2: From asset path
+    let seasonNumber = null;
+    let episodeNumber = null;
+
+    // Check if we have DB data (from AssetOverview)
+    const dbTitle = asset._dbData?.Title || "";
+
+    if (dbTitle) {
+      // Extract from DB Title field
+      // Format: "Show Name | Season04" or "S04E01 | Episode Title"
+      const dbSeasonMatch = dbTitle.match(/Season\s*(\d+)/i);
+      const dbEpisodeMatch = dbTitle.match(/S(\d+)E(\d+)/i);
+
+      if (dbSeasonMatch) {
+        seasonNumber = parseInt(dbSeasonMatch[1]);
+        console.log(
+          `Season number from DB Title '${dbTitle}': ${seasonNumber}`
+        );
+      }
+
+      if (dbEpisodeMatch) {
+        seasonNumber = parseInt(dbEpisodeMatch[1]);
+        episodeNumber = parseInt(dbEpisodeMatch[2]);
+        console.log(
+          `Episode info from DB Title '${dbTitle}': S${seasonNumber}E${episodeNumber}`
+        );
+      }
+    }
+
+    // Fallback: Extract from path if not found in DB
+    if (seasonNumber === null || episodeNumber === null) {
+      const pathSeasonMatch = asset.path?.match(/Season(\d+)/i);
+      const pathEpisodeMatch = asset.path?.match(/S(\d+)E(\d+)/i);
+
+      if (pathSeasonMatch && seasonNumber === null) {
+        seasonNumber = parseInt(pathSeasonMatch[1]);
+      }
+
+      if (pathEpisodeMatch) {
+        if (seasonNumber === null) {
+          seasonNumber = parseInt(pathEpisodeMatch[1]);
+        }
+        if (episodeNumber === null) {
+          episodeNumber = parseInt(pathEpisodeMatch[2]);
+        }
+      }
+    }
 
     return {
       // NO ID extraction - users will search manually
@@ -269,12 +315,8 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
       library_name: libraryName,
       media_type: mediaType,
       asset_type: assetType,
-      season_number: seasonMatch
-        ? parseInt(seasonMatch[1])
-        : episodeMatch
-        ? parseInt(episodeMatch[1])
-        : null,
-      episode_number: episodeMatch ? parseInt(episodeMatch[2]) : null,
+      season_number: seasonNumber,
+      episode_number: episodeNumber,
     };
   };
 
@@ -400,9 +442,23 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
   useEffect(() => {
     if (metadata.episode_number) {
       const episodeNum = String(metadata.episode_number).padStart(2, "0");
+
+      // Extract episode title from DB if available
+      // Format: "S04E01 | Episode Title"
+      let episodeTitleName = "";
+      const dbTitle = asset._dbData?.Title || "";
+      if (dbTitle && dbTitle.includes("|")) {
+        const parts = dbTitle.split("|");
+        if (parts.length >= 2) {
+          episodeTitleName = parts[1].trim();
+          console.log(`Episode title from DB: '${episodeTitleName}'`);
+        }
+      }
+
       setManualForm((prev) => ({
         ...prev,
         episodeNumber: episodeNum,
+        episodeTitleName: episodeTitleName || prev.episodeTitleName,
       }));
       // Also set for manual search
       setManualSearchForm((prev) => ({
@@ -410,7 +466,7 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
         episodeNumber: String(metadata.episode_number),
       }));
     }
-  }, [metadata.episode_number]);
+  }, [metadata.episode_number, asset._dbData]);
 
   // Initialize title text from metadata
   useEffect(() => {
@@ -487,8 +543,27 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
           year: searchYear ? parseInt(searchYear) : null,
           tmdb_id: null,
           tvdb_id: null,
+          // Include season/episode numbers from manual search form
+          season_number: manualSearchForm.seasonNumber
+            ? parseInt(manualSearchForm.seasonNumber)
+            : metadata.season_number,
+          episode_number: manualSearchForm.episodeNumber
+            ? parseInt(manualSearchForm.episodeNumber)
+            : metadata.episode_number,
         };
       }
+
+      // Debug logging
+      console.log("Fetching previews with metadata:", {
+        asset_path: asset.path,
+        title: metadata.title,
+        year: metadata.year,
+        media_type: metadata.media_type,
+        asset_type: metadata.asset_type,
+        season_number: metadata.season_number,
+        episode_number: metadata.episode_number,
+        manual_search: manualSearch,
+      });
 
       const response = await fetch(`${API_URL}/assets/fetch-replacements`, {
         method: "POST",
@@ -1337,6 +1412,22 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
 
               {/* Upload Section */}
               <div className="bg-theme-card border border-theme rounded-lg p-4 sm:p-6">
+                {/* Recommended Size Info */}
+                <div className="mb-4 px-3 py-2 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                  <p className="text-xs text-blue-400 flex items-center gap-2">
+                    <span className="font-semibold">ℹ️ Recommended sizes:</span>
+                    {metadata.asset_type === "poster" ||
+                    metadata.asset_type === "season" ? (
+                      <span>Posters: 2000×3000px or higher (2:3 ratio)</span>
+                    ) : (
+                      <span>
+                        Backgrounds/Title Cards: 3840×2160px or higher (16:9
+                        ratio)
+                      </span>
+                    )}
+                  </p>
+                </div>
+
                 <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
                   {/* Upload Area */}
                   <div className="flex-1 w-full">
