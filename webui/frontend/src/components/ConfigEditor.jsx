@@ -1781,7 +1781,7 @@ function ConfigEditor() {
       groupName === "Collection Title" &&
       textFieldSuffixes.some((suffix) => keyLower.endsWith(suffix))
     ) {
-      console.log(`📚 Collection Title field detected: ${keyLower}`);
+      console.log(`Collection Title field detected: ${keyLower}`);
       const addCollectionTitle = getGroupValue(groupName, "AddCollectionTitle");
       console.log(
         `   AddCollectionTitle = ${addCollectionTitle}, returning ${!addCollectionTitle}`

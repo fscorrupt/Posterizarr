@@ -333,7 +333,7 @@ function RunModes() {
 
       // Clear picturePath when file is uploaded
       setManualForm({ ...manualForm, picturePath: "" });
-      showSuccess(`File "${file.name}" uploaded successfully! 📁`);
+      showSuccess(`File "${file.name}" uploaded successfully! `);
     }
   };
 

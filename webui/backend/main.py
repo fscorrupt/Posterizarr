@@ -2801,7 +2801,7 @@ async def validate_uptimekuma(request: UptimeKumaValidationRequest):
 @app.post("/api/libraries/plex")
 async def get_plex_libraries(request: PlexValidationRequest):
     """Fetch Plex libraries"""
-    logger.info("📚 Fetching Plex libraries...")
+    logger.info("Fetching Plex libraries...")
 
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
@@ -2839,7 +2839,7 @@ async def get_plex_libraries(request: PlexValidationRequest):
 @app.post("/api/libraries/jellyfin")
 async def get_jellyfin_libraries(request: JellyfinValidationRequest):
     """Fetch Jellyfin libraries"""
-    logger.info("📚 Fetching Jellyfin libraries...")
+    logger.info("Fetching Jellyfin libraries...")
 
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
@@ -2883,7 +2883,7 @@ async def get_jellyfin_libraries(request: JellyfinValidationRequest):
 @app.post("/api/libraries/emby")
 async def get_emby_libraries(request: EmbyValidationRequest):
     """Fetch Emby libraries"""
-    logger.info("📚 Fetching Emby libraries...")
+    logger.info("Fetching Emby libraries...")
 
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
@@ -7005,12 +7005,12 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
                 if request.media_type == "movie" and tmdb_id_to_use:
                     url = f"https://webservice.fanart.tv/v3/movies/{tmdb_id_to_use}?api_key={fanart_api_key}"
                     logger.info(
-                        f"🎨 Fanart.tv Movie URL: {url.replace(fanart_api_key, 'API_KEY')}"
+                        f"Fanart.tv Movie URL: {url.replace(fanart_api_key, 'API_KEY')}"
                     )
                 elif request.media_type == "tv" and request.tvdb_id:
                     url = f"https://webservice.fanart.tv/v3/tv/{request.tvdb_id}?api_key={fanart_api_key}"
                     logger.info(
-                        f"🎨 Fanart.tv TV URL: {url.replace(fanart_api_key, 'API_KEY')}"
+                        f"Fanart.tv TV URL: {url.replace(fanart_api_key, 'API_KEY')}"
                     )
                 else:
                     logger.warning(
@@ -7020,7 +7020,7 @@ async def fetch_asset_replacements(request: AssetReplaceRequest):
 
                 async with httpx.AsyncClient(timeout=10.0) as client:
                     response = await client.get(url)
-                    logger.info(f"🎨 Fanart.tv Response Status: {response.status_code}")
+                    logger.info(f"Fanart.tv Response Status: {response.status_code}")
                     if response.status_code == 200:
                         data = response.json()
 
@@ -7326,7 +7326,7 @@ async def upload_asset_replacement(
 
         # If process_with_overlays is enabled, trigger Manual Run
         if process_with_overlays:
-            logger.info(f"🎨 Processing with overlays enabled for: {asset_path}")
+            logger.info(f"Processing with overlays enabled for: {asset_path}")
 
             try:
                 # Parse asset path to extract info
@@ -7493,7 +7493,7 @@ async def replace_asset_from_url(
 
         # If process_with_overlays is enabled, trigger Manual Run
         if process_with_overlays:
-            logger.info(f"🎨 Processing with overlays enabled for: {asset_path}")
+            logger.info(f"Processing with overlays enabled for: {asset_path}")
 
             try:
                 # Parse asset path to extract info
