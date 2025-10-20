@@ -223,7 +223,7 @@ const LibraryExclusionSelector = ({
         librariesFetched &&
         availableLibraries.length > 0 && (
           <div className="space-y-2">
-            <p 
+            <p
               className="text-sm text-theme-muted"
               dangerouslySetInnerHTML={{
                 __html: t("libraryExclusion.selectToExclude"),

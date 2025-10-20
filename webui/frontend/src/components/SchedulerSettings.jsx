@@ -540,7 +540,7 @@ const SchedulerSettings = () => {
             <h3 className="text-sm font-semibold text-blue-300 mb-2">
               {t("schedulerSettings.containerUsersOnly")}
             </h3>
-            <p 
+            <p
               className="text-sm text-blue-200 leading-relaxed"
               dangerouslySetInnerHTML={{
                 __html: t("schedulerSettings.containerUsersInfo"),
