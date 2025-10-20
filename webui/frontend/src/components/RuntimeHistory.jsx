@@ -14,6 +14,10 @@ import {
   ChevronDown,
   X,
   Info,
+  ImageOff,
+  Type,
+  Scissors,
+  FileText,
 } from "lucide-react";
 import {
   formatDateToLocale,
@@ -879,6 +883,72 @@ function RuntimeHistory() {
                   )}
                   <div className="p-3 bg-theme-card rounded-lg">
                     <div className="flex items-center gap-2 mb-2">
+                      <ImageOff className="w-4 h-4 text-amber-400" />
+                      <p className="text-theme-muted text-xs">
+                        {t("runtimeStats.fallbacks")}
+                      </p>
+                    </div>
+                    <p className="text-2xl font-bold text-theme-text">
+                      {selectedEntry.fallbacks || 0}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-theme-card rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Image className="w-4 h-4 text-indigo-400" />
+                      <p className="text-theme-muted text-xs">
+                        {t("runtimeStats.textless")}
+                      </p>
+                    </div>
+                    <p className="text-2xl font-bold text-theme-text">
+                      {selectedEntry.textless || 0}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-theme-card rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Scissors className="w-4 h-4 text-pink-400" />
+                      <p className="text-theme-muted text-xs">
+                        {t("runtimeStats.truncated")}
+                      </p>
+                    </div>
+                    <p className="text-2xl font-bold text-theme-text">
+                      {selectedEntry.truncated || 0}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-theme-card rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Type className="w-4 h-4 text-teal-400" />
+                      <p className="text-theme-muted text-xs">
+                        {t("runtimeStats.text")}
+                      </p>
+                    </div>
+                    <p className="text-2xl font-bold text-theme-text">
+                      {selectedEntry.text || 0}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-theme-card rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Film className="w-4 h-4 text-slate-400" />
+                      <p className="text-theme-muted text-xs">
+                        {t("runtimeStats.tbaSkipped")}
+                      </p>
+                    </div>
+                    <p className="text-2xl font-bold text-theme-text">
+                      {selectedEntry.tba_skipped || 0}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-theme-card rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
+                      <FileText className="w-4 h-4 text-gray-400" />
+                      <p className="text-theme-muted text-xs">
+                        {t("runtimeStats.japChinesSkipped")}
+                      </p>
+                    </div>
+                    <p className="text-2xl font-bold text-theme-text">
+                      {selectedEntry.jap_chines_skipped || 0}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-theme-card rounded-lg">
+                    <div className="flex items-center gap-2 mb-2">
                       <AlertTriangle
                         className={`w-4 h-4 ${
                           selectedEntry.errors > 0
@@ -904,79 +974,53 @@ function RuntimeHistory() {
               </div>
 
               {/* Additional Information */}
-              {(selectedEntry.tba_skipped > 0 ||
-                selectedEntry.jap_chines_skipped > 0 ||
-                selectedEntry.images_cleared > 0 ||
-                selectedEntry.folders_cleared > 0 ||
-                selectedEntry.space_saved) && (
-                <div className="bg-theme-hover rounded-lg p-4 border border-theme">
-                  <h3 className="text-lg font-semibold text-theme-text mb-3">
-                    {t("runtimeStats.additionalInfo")}
-                  </h3>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {selectedEntry.tba_skipped > 0 && (
-                      <div className="p-3 bg-theme-card rounded-lg">
-                        <p className="text-theme-muted text-xs mb-1">
-                          {t("runtimeStats.tbaSkipped")}
-                        </p>
-                        <p className="text-xl font-bold text-theme-text">
-                          {selectedEntry.tba_skipped}
-                        </p>
-                      </div>
-                    )}
-                    {selectedEntry.jap_chines_skipped > 0 && (
-                      <div className="p-3 bg-theme-card rounded-lg">
-                        <p className="text-theme-muted text-xs mb-1">
-                          {t("runtimeStats.japChinesSkipped")}
-                        </p>
-                        <p className="text-xl font-bold text-theme-text">
-                          {selectedEntry.jap_chines_skipped}
-                        </p>
-                      </div>
-                    )}
-                    {selectedEntry.images_cleared > 0 && (
-                      <div className="p-3 bg-theme-card rounded-lg">
-                        <p className="text-theme-muted text-xs mb-1">
-                          {t("runtimeStats.imagesCleared")}
-                        </p>
-                        <p className="text-xl font-bold text-theme-text">
-                          {selectedEntry.images_cleared}
-                        </p>
-                      </div>
-                    )}
-                    {selectedEntry.folders_cleared > 0 && (
-                      <div className="p-3 bg-theme-card rounded-lg">
-                        <p className="text-theme-muted text-xs mb-1">
-                          {t("runtimeStats.foldersCleared")}
-                        </p>
-                        <p className="text-xl font-bold text-theme-text">
-                          {selectedEntry.folders_cleared}
-                        </p>
-                      </div>
-                    )}
-                    {selectedEntry.space_saved && (
-                      <div className="p-3 bg-theme-card rounded-lg">
-                        <p className="text-theme-muted text-xs mb-1">
-                          {t("runtimeStats.spaceSaved")}
-                        </p>
-                        <p className="text-xl font-bold text-green-400">
-                          {selectedEntry.space_saved}
-                        </p>
-                      </div>
-                    )}
-                    {selectedEntry.notification_sent && (
-                      <div className="p-3 bg-theme-card rounded-lg">
-                        <p className="text-theme-muted text-xs mb-1">
-                          {t("runtimeStats.notificationSent")}
-                        </p>
-                        <p className="text-xl font-bold text-green-400">
-                          {t("common.yes")}
-                        </p>
-                      </div>
-                    )}
+              <div className="bg-theme-hover rounded-lg p-4 border border-theme">
+                <h3 className="text-lg font-semibold text-theme-text mb-3">
+                  {t("runtimeStats.additionalInfo")}
+                </h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="p-3 bg-theme-card rounded-lg">
+                    <p className="text-theme-muted text-xs mb-1">
+                      {t("runtimeStats.notificationSent")}
+                    </p>
+                    <p className={`text-xl font-bold ${selectedEntry.notification_sent ? "text-green-400" : "text-red-400"}`}>
+                      {selectedEntry.notification_sent ? t("common.yes").toUpperCase() : t("common.no").toUpperCase()}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-theme-card rounded-lg">
+                    <p className="text-theme-muted text-xs mb-1">
+                      Uptime Kuma
+                    </p>
+                    <p className={`text-xl font-bold ${selectedEntry.uptime_kuma ? "text-green-400" : "text-red-400"}`}>
+                      {selectedEntry.uptime_kuma ? t("common.yes").toUpperCase() : t("common.no").toUpperCase()}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-theme-card rounded-lg">
+                    <p className="text-theme-muted text-xs mb-1">
+                      {t("runtimeStats.imagesCleared")}
+                    </p>
+                    <p className="text-xl font-bold text-theme-text">
+                      {selectedEntry.images_cleared || 0}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-theme-card rounded-lg">
+                    <p className="text-theme-muted text-xs mb-1">
+                      {t("runtimeStats.foldersCleared")}
+                    </p>
+                    <p className="text-xl font-bold text-theme-text">
+                      {selectedEntry.folders_cleared || 0}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-theme-card rounded-lg">
+                    <p className="text-theme-muted text-xs mb-1">
+                      {t("runtimeStats.spaceSaved")}
+                    </p>
+                    <p className="text-xl font-bold text-green-400">
+                      {selectedEntry.space_saved || "0"}
+                    </p>
                   </div>
                 </div>
-              )}
+              </div>
 
               {/* Version Information */}
               {(selectedEntry.script_version || selectedEntry.im_version) && (
