@@ -7,6 +7,7 @@ from fastapi import (
     Request,
     UploadFile,
     File,
+    Form,
 )
 from contextlib import asynccontextmanager
 from fastapi.middleware.cors import CORSMiddleware
@@ -2921,6 +2922,169 @@ async def get_emby_libraries(request: EmbyValidationRequest):
         return {"success": False, "error": str(e)}
 
 
+# Request model for fetching library items
+class LibraryItemsRequest(BaseModel):
+    url: str
+    token: str
+    library_key: str
+
+
+@app.post("/api/libraries/plex/items")
+async def get_plex_library_items(request: LibraryItemsRequest):
+    """Fetch items from a specific Plex library"""
+    logger.info(f"Fetching items from Plex library key: {request.library_key}")
+
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            url = f"{request.url}/library/sections/{request.library_key}/all?X-Plex-Token={request.token}"
+            response = await client.get(url)
+
+            if response.status_code == 200:
+                root = ET.fromstring(response.content)
+                items = []
+
+                # Parse both Video (movies) and Directory (shows) elements
+                for item in root.findall(".//*[@title]"):
+                    title = item.get("title", "")
+                    year = item.get("year", "")
+                    item_type = item.get("type", "")
+                    rating_key = item.get("ratingKey", "")
+
+                    # Get the folder path if available
+                    folder_name = title
+                    if year:
+                        folder_name = f"{title} ({year})"
+
+                    # Try to get TMDB ID from GUID
+                    tmdb_id = ""
+                    for guid in item.findall(".//Guid"):
+                        guid_id = guid.get("id", "")
+                        if "tmdb://" in guid_id:
+                            tmdb_id = guid_id.replace("tmdb://", "")
+                            folder_name = f"{title} ({year}) {{tmdb-{tmdb_id}}}"
+                            break
+
+                    items.append(
+                        {
+                            "title": title,
+                            "year": year,
+                            "folderName": folder_name,
+                            "type": item_type,
+                            "ratingKey": rating_key,
+                        }
+                    )
+
+                logger.info(f"Found {len(items)} items in library")
+                return {"success": True, "items": items}
+            else:
+                logger.error(f"Failed to fetch library items: {response.status_code}")
+                return {
+                    "success": False,
+                    "error": f"Failed to fetch items (Status: {response.status_code})",
+                }
+    except Exception as e:
+        logger.error(f"💥 Error fetching Plex library items: {str(e)}")
+        logger.exception("Full traceback:")
+        return {"success": False, "error": str(e)}
+
+
+@app.get("/api/assets/folders")
+async def get_assets_folders(library_name: Optional[str] = None):
+    """Get folders from assets directory
+
+    If library_name is provided, returns folders from that library.
+    Otherwise returns all library folders (top-level directories).
+    """
+    try:
+        if not ASSETS_DIR.exists():
+            logger.warning(f"Assets directory does not exist: {ASSETS_DIR}")
+            return {"success": True, "folders": [], "path": str(ASSETS_DIR)}
+
+        logger.info(f"Scanning assets directory: {ASSETS_DIR}")
+
+        if library_name:
+            # Get items from specific library folder
+            library_path = ASSETS_DIR / library_name
+            if not library_path.exists() or not library_path.is_dir():
+                logger.warning(f"Library folder not found: {library_path}")
+                return {
+                    "success": False,
+                    "error": f"Library folder '{library_name}' not found",
+                }
+
+            folders = []
+            try:
+                # List all subdirectories in the library folder
+                for item_path in sorted(library_path.iterdir()):
+                    if item_path.is_dir():
+                        folder_name = item_path.name
+
+                        # Try to extract title and year from folder name
+                        # Format: "Title (Year) {tmdb-123}" or "Title (Year)" or just "Title"
+                        title = folder_name
+                        year = ""
+
+                        # Try to extract year from (YYYY) pattern
+                        year_match = re.search(r"\((\d{4})\)", folder_name)
+                        if year_match:
+                            year = year_match.group(1)
+                            # Extract title (everything before the year)
+                            title = folder_name[: year_match.start()].strip()
+
+                        folders.append(
+                            {
+                                "folderName": folder_name,
+                                "title": title,
+                                "year": year,
+                                "path": str(item_path.relative_to(ASSETS_DIR)),
+                            }
+                        )
+
+                logger.info(f"Found {len(folders)} folders in library '{library_name}'")
+                return {
+                    "success": True,
+                    "folders": folders,
+                    "library": library_name,
+                    "path": str(library_path.relative_to(ASSETS_DIR)),
+                }
+            except Exception as e:
+                logger.error(f"Error scanning library folder: {e}")
+                return {"success": False, "error": str(e)}
+        else:
+            # Get top-level library folders
+            libraries = []
+            try:
+                for library_path in sorted(ASSETS_DIR.iterdir()):
+                    if library_path.is_dir():
+                        # Count items in library
+                        item_count = sum(
+                            1 for item in library_path.iterdir() if item.is_dir()
+                        )
+
+                        libraries.append(
+                            {
+                                "name": library_path.name,
+                                "path": str(library_path.relative_to(ASSETS_DIR)),
+                                "itemCount": item_count,
+                            }
+                        )
+
+                logger.info(f"Found {len(libraries)} library folders")
+                return {
+                    "success": True,
+                    "libraries": libraries,
+                    "path": str(ASSETS_DIR),
+                }
+            except Exception as e:
+                logger.error(f"Error scanning assets directory: {e}")
+                return {"success": False, "error": str(e)}
+
+    except Exception as e:
+        logger.error(f"💥 Error getting assets folders: {str(e)}")
+        logger.exception("Full traceback:")
+        return {"success": False, "error": str(e)}
+
+
 def get_last_log_lines(count=25, mode=None, log_file=None):
     """Get last N lines from log files based on current mode or specific log file"""
 
@@ -4725,73 +4889,92 @@ async def run_manual_mode(request: ManualModeRequest):
 @app.post("/api/run-manual-upload")
 async def run_manual_mode_upload(
     file: UploadFile = File(...),
-    picturePath: str = "",
-    titletext: str = "",
-    folderName: str = "",
-    libraryName: str = "",
-    posterType: str = "standard",
-    seasonPosterName: str = "",
-    epTitleName: str = "",
-    episodeNumber: str = "",
+    picturePath: str = Form(""),
+    titletext: str = Form(""),
+    folderName: str = Form(""),
+    libraryName: str = Form(""),
+    posterType: str = Form("standard"),
+    seasonPosterName: str = Form(""),
+    epTitleName: str = Form(""),
+    episodeNumber: str = Form(""),
 ):
     """Run manual mode with uploaded file"""
     global current_process, current_mode
 
     logger.info(f"Manual mode upload request received")
-    logger.info(f"  File: {file.filename}")
+    logger.info(f"  File: {file.filename if file else 'None'}")
+    logger.info(f"  File content type: {file.content_type if file else 'None'}")
     logger.info(f"  Poster Type: {posterType}")
+    logger.info(f"  Title Text: '{titletext}'")
+    logger.info(f"  Folder Name: '{folderName}'")
+    logger.info(f"  Library Name: '{libraryName}'")
+    logger.info(f"  Season Poster Name: '{seasonPosterName}'")
+    logger.info(f"  Episode Title Name: '{epTitleName}'")
+    logger.info(f"  Episode Number: '{episodeNumber}'")
 
     # Check if already running
     if current_process and current_process.poll() is None:
-        raise HTTPException(
-            status_code=400,
-            detail="Script is already running. Please stop the script first.",
-        )
+        error_msg = "Script is already running. Please stop the script first."
+        logger.error(f"Manual upload rejected: {error_msg}")
+        raise HTTPException(status_code=400, detail=error_msg)
 
     if not SCRIPT_PATH.exists():
-        raise HTTPException(status_code=404, detail="Posterizarr.ps1 not found")
+        error_msg = "Posterizarr.ps1 not found"
+        logger.error(f"Manual upload failed: {error_msg}")
+        raise HTTPException(status_code=404, detail=error_msg)
 
     # Validate file upload
     if not file:
-        raise HTTPException(status_code=400, detail="No file uploaded")
+        error_msg = "No file uploaded"
+        logger.error(f"Manual upload validation failed: {error_msg}")
+        raise HTTPException(status_code=400, detail=error_msg)
 
     # Validate file type
     allowed_extensions = [".jpg", ".jpeg", ".png", ".webp", ".bmp", ".tiff"]
     file_extension = Path(file.filename).suffix.lower()
     if file_extension not in allowed_extensions:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Invalid file type. Allowed: {', '.join(allowed_extensions)}",
-        )
+        error_msg = f"Invalid file type '{file_extension}'. Allowed: {', '.join(allowed_extensions)}"
+        logger.error(f"Manual upload validation failed: {error_msg}")
+        raise HTTPException(status_code=400, detail=error_msg)
 
     # Validate required fields
     if posterType != "titlecard" and not titletext.strip():
-        raise HTTPException(status_code=400, detail="Title text is required")
+        error_msg = "Title text is required"
+        logger.error(
+            f"Manual upload validation failed: {error_msg} (posterType: {posterType})"
+        )
+        raise HTTPException(status_code=400, detail=error_msg)
 
     if posterType != "collection" and not folderName.strip():
-        raise HTTPException(status_code=400, detail="Folder name is required")
+        error_msg = "Folder name is required"
+        logger.error(
+            f"Manual upload validation failed: {error_msg} (posterType: {posterType})"
+        )
+        raise HTTPException(status_code=400, detail=error_msg)
 
     if not libraryName.strip():
-        raise HTTPException(status_code=400, detail="Library name is required")
+        error_msg = "Library name is required"
+        logger.error(f"Manual upload validation failed: {error_msg}")
+        raise HTTPException(status_code=400, detail=error_msg)
 
     if posterType == "season" and not seasonPosterName.strip():
-        raise HTTPException(
-            status_code=400, detail="Season poster name is required for season posters"
-        )
+        error_msg = "Season poster name is required for season posters"
+        logger.error(f"Manual upload validation failed: {error_msg}")
+        raise HTTPException(status_code=400, detail=error_msg)
 
     if posterType == "titlecard":
         if not epTitleName.strip():
-            raise HTTPException(
-                status_code=400, detail="Episode title name is required for title cards"
-            )
+            error_msg = "Episode title name is required for title cards"
+            logger.error(f"Manual upload validation failed: {error_msg}")
+            raise HTTPException(status_code=400, detail=error_msg)
         if not episodeNumber.strip():
-            raise HTTPException(
-                status_code=400, detail="Episode number is required for title cards"
-            )
+            error_msg = "Episode number is required for title cards"
+            logger.error(f"Manual upload validation failed: {error_msg}")
+            raise HTTPException(status_code=400, detail=error_msg)
         if not seasonPosterName.strip():
-            raise HTTPException(
-                status_code=400, detail="Season name is required for title cards"
-            )
+            error_msg = "Season name is required for title cards"
+            logger.error(f"Manual upload validation failed: {error_msg}")
+            raise HTTPException(status_code=400, detail=error_msg)
 
     try:
         # Create uploads directory if it doesn't exist with permission check
@@ -5007,12 +5190,18 @@ async def run_manual_mode_upload(
             "pid": current_process.pid,
             "upload_path": str(upload_path),
         }
+    except HTTPException:
+        # Re-raise HTTPExceptions as they are already properly formatted
+        raise
     except FileNotFoundError as e:
         error_msg = f"PowerShell not found. Please install PowerShell 7+ (pwsh) or ensure Windows PowerShell is in PATH."
-        logger.error(error_msg)
+        logger.error(f"Manual upload failed: {error_msg}")
+        logger.error(f"Exception details: {e}")
         raise HTTPException(status_code=500, detail=error_msg)
     except Exception as e:
-        logger.error(f"Error running manual mode: {e}")
+        error_msg = f"Error running manual mode with uploaded file: {str(e)}"
+        logger.error(error_msg)
+        logger.exception("Full traceback:")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -8050,6 +8239,7 @@ async def find_asset_for_imagechoice(record_id: int):
         rootfolder = record_dict.get("Rootfolder")
         library = record_dict.get("LibraryName")
         asset_type = (record_dict.get("Type") or "").lower()
+        title = record_dict.get("Title") or ""  # Title contains season/episode info
 
         if not rootfolder or not library:
             raise HTTPException(
@@ -8066,12 +8256,39 @@ async def find_asset_for_imagechoice(record_id: int):
             )
 
         # Determine which file pattern to look for based on type
+        import re
+
         if "background" in asset_type:
             pattern = "background.*"
         elif "season" in asset_type:
-            pattern = "Season*.*"
+            # For seasons, extract the season number from the Title field
+            # Title format: "Show Name | Season04" or "Show Name | Season05"
+            season_match = re.search(r"season\s*(\d+)", title, re.IGNORECASE)
+            if season_match:
+                season_num = season_match.group(1).zfill(2)  # Ensure 2 digits
+                pattern = f"Season{season_num}.*"
+                logger.info(f"Season pattern extracted from title '{title}': {pattern}")
+            else:
+                # Fallback to generic pattern
+                pattern = "Season*.*"
+                logger.warning(
+                    f"Could not extract season number from title '{title}', using generic pattern"
+                )
         elif "titlecard" in asset_type or "episode" in asset_type:
-            pattern = "S[0-9][0-9]E[0-9][0-9].*"
+            # For titlecards, extract episode code from Title
+            # Title format: "S04E01 | Episode Title"
+            episode_match = re.search(r"(S\d+E\d+)", title, re.IGNORECASE)
+            if episode_match:
+                episode_code = episode_match.group(1).upper()
+                pattern = f"{episode_code}.*"
+                logger.info(
+                    f"Episode pattern extracted from title '{title}': {pattern}"
+                )
+            else:
+                pattern = "S[0-9][0-9]E[0-9][0-9].*"
+                logger.warning(
+                    f"Could not extract episode code from title '{title}', using generic pattern"
+                )
         else:
             pattern = "poster.*"
 
@@ -8081,6 +8298,9 @@ async def find_asset_for_imagechoice(record_id: int):
         matching_files = list(folder_path.glob(pattern))
 
         if not matching_files:
+            logger.error(
+                f"No matching asset found in {library}/{rootfolder} with pattern '{pattern}'"
+            )
             raise HTTPException(
                 status_code=404,
                 detail=f"No matching asset found in {library}/{rootfolder} with pattern {pattern}",
@@ -8088,6 +8308,9 @@ async def find_asset_for_imagechoice(record_id: int):
 
         # Return the first match (in Gallery-compatible format)
         asset_file = matching_files[0]
+        logger.info(
+            f"Found asset file for record {record_id}: {asset_file.name} (pattern: {pattern}, from title: '{title}')"
+        )
         relative_path = asset_file.relative_to(ASSETS_DIR)
         path_str = str(relative_path).replace("\\", "/")
 
