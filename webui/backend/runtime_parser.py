@@ -263,7 +263,8 @@ def parse_runtime_from_json(json_path: Path, mode: str = None) -> Optional[Dict]
             "errors": data.get("Errors", 0),
             "tba_skipped": data.get("TBA Skipped", 0),
             "jap_chines_skipped": data.get("Jap/Chines Skipped", 0),
-            "notification_sent": str(data.get("Notification Sent", "false")).lower() == "true",
+            "notification_sent": str(data.get("Notification Sent", "false")).lower()
+            == "true",
             "uptime_kuma": str(data.get("Uptime Kuma", "false")).lower() == "true",
             "images_cleared": data.get("Images cleared", 0),
             "folders_cleared": data.get("Folders Cleared", 0),

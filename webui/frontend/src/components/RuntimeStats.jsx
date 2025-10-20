@@ -153,13 +153,17 @@ function RuntimeStats() {
     fetchMigrationStatus();
 
     // Refresh every 30 seconds (silent)
-    const interval = setInterval(() => fetchRuntimeStats(true), 30 * 1000);
+    const interval = setInterval(() => {
+      console.log("Auto-refreshing runtime stats...");
+      fetchRuntimeStats(true);
+    }, 30 * 1000);
 
     return () => {
       clearInterval(interval);
       // Don't finish loading on unmount - that happens when data is fetched
     };
-  }, [startLoading]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   if (loading) {
     return (
@@ -512,16 +516,28 @@ function RuntimeStats() {
                 <p className="text-theme-muted text-xs mb-1">
                   {t("runtimeStats.notificationSent")}
                 </p>
-                <p className={`text-xl font-bold ${runtimeStats.notification_sent ? "text-green-400" : "text-red-400"}`}>
-                  {runtimeStats.notification_sent ? t("common.yes").toUpperCase() : t("common.no").toUpperCase()}
+                <p
+                  className={`text-xl font-bold ${
+                    runtimeStats.notification_sent
+                      ? "text-green-400"
+                      : "text-red-400"
+                  }`}
+                >
+                  {runtimeStats.notification_sent
+                    ? t("common.yes").toUpperCase()
+                    : t("common.no").toUpperCase()}
                 </p>
               </div>
               <div className="p-3 bg-theme-hover rounded-lg">
-                <p className="text-theme-muted text-xs mb-1">
-                  Uptime Kuma
-                </p>
-                <p className={`text-xl font-bold ${runtimeStats.uptime_kuma ? "text-green-400" : "text-red-400"}`}>
-                  {runtimeStats.uptime_kuma ? t("common.yes").toUpperCase() : t("common.no").toUpperCase()}
+                <p className="text-theme-muted text-xs mb-1">Uptime Kuma</p>
+                <p
+                  className={`text-xl font-bold ${
+                    runtimeStats.uptime_kuma ? "text-green-400" : "text-red-400"
+                  }`}
+                >
+                  {runtimeStats.uptime_kuma
+                    ? t("common.yes").toUpperCase()
+                    : t("common.no").toUpperCase()}
                 </p>
               </div>
               <div className="p-3 bg-theme-hover rounded-lg">

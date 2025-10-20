@@ -236,7 +236,7 @@ class RuntimeDatabase:
                 ("arr.json", "arr"),
                 ("syncjelly.json", "syncjelly"),
                 ("syncemby.json", "syncemby"),
-                ("backup.json", "backup")
+                ("backup.json", "backup"),
             ]
 
             logger.info("Checking for JSON files...")

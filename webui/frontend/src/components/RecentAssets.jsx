@@ -113,13 +113,17 @@ function RecentAssets() {
     }
 
     // Background refresh every 2 minutes (silent)
-    const interval = setInterval(() => fetchRecentAssets(true), 2 * 60 * 1000);
+    const interval = setInterval(() => {
+      console.log("Auto-refreshing recent assets...");
+      fetchRecentAssets(true);
+    }, 2 * 60 * 1000);
 
     return () => {
       clearInterval(interval);
       // Don't finish loading on unmount - that happens when data is fetched
     };
-  }, [startLoading]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleAssetCountChange = (newCount) => {
     // Ensure count is between 5 and 10

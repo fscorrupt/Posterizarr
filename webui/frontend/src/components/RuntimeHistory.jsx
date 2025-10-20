@@ -983,16 +983,30 @@ function RuntimeHistory() {
                     <p className="text-theme-muted text-xs mb-1">
                       {t("runtimeStats.notificationSent")}
                     </p>
-                    <p className={`text-xl font-bold ${selectedEntry.notification_sent ? "text-green-400" : "text-red-400"}`}>
-                      {selectedEntry.notification_sent ? t("common.yes").toUpperCase() : t("common.no").toUpperCase()}
+                    <p
+                      className={`text-xl font-bold ${
+                        selectedEntry.notification_sent
+                          ? "text-green-400"
+                          : "text-red-400"
+                      }`}
+                    >
+                      {selectedEntry.notification_sent
+                        ? t("common.yes").toUpperCase()
+                        : t("common.no").toUpperCase()}
                     </p>
                   </div>
                   <div className="p-3 bg-theme-card rounded-lg">
-                    <p className="text-theme-muted text-xs mb-1">
-                      Uptime Kuma
-                    </p>
-                    <p className={`text-xl font-bold ${selectedEntry.uptime_kuma ? "text-green-400" : "text-red-400"}`}>
-                      {selectedEntry.uptime_kuma ? t("common.yes").toUpperCase() : t("common.no").toUpperCase()}
+                    <p className="text-theme-muted text-xs mb-1">Uptime Kuma</p>
+                    <p
+                      className={`text-xl font-bold ${
+                        selectedEntry.uptime_kuma
+                          ? "text-green-400"
+                          : "text-red-400"
+                      }`}
+                    >
+                      {selectedEntry.uptime_kuma
+                        ? t("common.yes").toUpperCase()
+                        : t("common.no").toUpperCase()}
                     </p>
                   </div>
                   <div className="p-3 bg-theme-card rounded-lg">
