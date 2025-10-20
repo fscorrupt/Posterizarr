@@ -3,8 +3,10 @@
 <br />
 <div align="center">
   <a href="https://github.com/fscorrupt/Posterizarr">
-    <img src="/images/logo_banner.png" alt="Logo" width="100" height="100">
+    <img src="/images/webhook.png" alt="Logo" width="100" height="100">
   </a>
+
+<h1 align="center">Posterizarr</h1>
 
   <p align="center">
     <a href="https://ko-fi.com/R6R81S6SC">Donate</a>
@@ -70,39 +72,6 @@ Posterizarr is cross-platform ready, meaning it can run on Linux, [Docker (Alpin
 >- Season Posters
 >- TitleCards
 >- Collections are **NOT** supported (but you can create them through manual mode)
-
-## Quick Start
-1. **Installation**
-   - Docker: `docker-compose up -d` (using provided docker-compose.yml)
-   - Manual: Clone repo and follow [Manual Installation guide](walkthrough.md)
-
-2. **Required API Keys**
-   - Get TMDB API Token from [TMDB](https://www.themoviedb.org/settings/api)
-   - Get Fanart API Key from [Fanart.tv](https://fanart.tv/get-an-api-key)
-   - Get TVDB API Key from [TVDB](https://thetvdb.com/api-information/signup)
-   - Review the [What You Need](#-what-you-need) section for required software/plugins
-
-3. **Basic Configuration**
-   - Copy `config.example.json` to `config.json` -> [Configuration](#configuration)
-   - Add your API keys
-   - Set your media server details (Plex/Jellyfin/Emby)
-   - Configure asset paths
-
-4. **First Run**
-   ```bash
-   # Docker
-   docker exec -it posterizarr pwsh /app/Posterizarr.ps1 -Testing
-
-   # Windows (as Admin) & Linux
-   ./Posterizarr.ps1 -Testing
-   ```
-
-5. **Access Web UI**
-   - Open `http://localhost:8000` in your browser
-   - Default credentials: none required
-
-For detailed setup instructions, see the [full walkthrough](walkthrough.md).
-
 
 ## 🧰 What You Need
 
@@ -776,10 +745,6 @@ The setup process is handled by a simple script that installs all necessary depe
         ```bash
         setup.ps1
         ```
-        or
-        ```bash
-        setup.bat
-        ```
     * **On Linux or macOS:**
         ```bash
         sh setup.sh
@@ -790,26 +755,25 @@ The setup process is handled by a simple script that installs all necessary depe
 
 After the setup is complete, you need to start the backend and frontend processes in **two separate terminals**.
 
-**Terminal 2: Start the Frontend**
-```bash
-# Navigate to the frontend directory
-cd webui/frontend
-
-# Run the development server
-npm run build
-```
-
 **Terminal 1: Start the Backend**
 ```bash
 # Navigate to the backend directory
 cd webui/backend
 
 # Run the Python server
-python -m uvicorn main:app --host 0.0.0.0 --port 8000
+python main.py
 ```
 
+**Terminal 2: Start the Frontend**
+```bash
+# Navigate to the frontend directory
+cd webui/frontend
 
-Once both services are running, you can access the Posterizarr Web UI by opening your browser and navigating to: http://localhost:8000
+# Run the development server
+npm run dev
+```
+
+Once both services are running, you can access the Posterizarr Web UI by opening your browser and navigating to: http://localhost:3000
 
 ### Testing Mode
 
@@ -922,17 +886,6 @@ To create a poster for a media collection, use the -CollectionCard switch. The s
 On [docker](#docker) this way:
 ```sh
 docker exec -it posterizarr pwsh /app/Posterizarr.ps1 -Manual -CollectionCard -PicturePath "/path/to/collection_bg.jpg" -Titletext "James Bond" -LibraryName "Movies"
-```
-
-**Background Poster**
-
-To create a standard background poster for a movie or a TV show's main entry:
-```powershell
-.\Posterizarr.ps1 -Manual -BackgroundCard -PicturePath "C:\path\to\movie_bg.jpg" -Titletext "The Martian" -FolderName "The Martian (2015)" -LibraryName "Movies"
-```
-On [docker](#docker) this way:
-```sh
-docker exec -it posterizarr pwsh /app/Posterizarr.ps1 -Manual -BackgroundCard -PicturePath "/path/to/movie_bg.jpg" -Titletext "The Martian" -FolderName "The Martian (2015)" -LibraryName "Movies"
 ```
 
 **Episode Title Card**
