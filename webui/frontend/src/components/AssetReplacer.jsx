@@ -487,8 +487,27 @@ function AssetReplacer({ asset, onClose, onSuccess }) {
           year: searchYear ? parseInt(searchYear) : null,
           tmdb_id: null,
           tvdb_id: null,
+          // Include season/episode numbers from manual search form
+          season_number: manualSearchForm.seasonNumber
+            ? parseInt(manualSearchForm.seasonNumber)
+            : metadata.season_number,
+          episode_number: manualSearchForm.episodeNumber
+            ? parseInt(manualSearchForm.episodeNumber)
+            : metadata.episode_number,
         };
       }
+
+      // Debug logging
+      console.log("Fetching previews with metadata:", {
+        asset_path: asset.path,
+        title: metadata.title,
+        year: metadata.year,
+        media_type: metadata.media_type,
+        asset_type: metadata.asset_type,
+        season_number: metadata.season_number,
+        episode_number: metadata.episode_number,
+        manual_search: manualSearch,
+      });
 
       const response = await fetch(`${API_URL}/assets/fetch-replacements`, {
         method: "POST",
