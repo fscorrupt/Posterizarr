@@ -6161,6 +6161,34 @@ function MassDownloadPlexArtwork {
     if ($posterCount -ge '1') {
         Write-Entry -Message "Show/Movie Posters downloaded: $($posterCount-$SeasonCount-$BackgroundCount-$EpisodeCount)| Season images downloaded: $SeasonCount | Background images downloaded: $BackgroundCount | TitleCards downloaded: $EpisodeCount" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Green -log Info
     }
+    if ((Test-Path $global:ScriptRoot\Logs\ImageChoices.csv)) {
+        Write-Entry -Message "You can find a detailed Summary of image Choices here: $global:ScriptRoot\Logs\ImageChoices.csv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+        # Calculate Summary
+        $SummaryCount = Import-Csv -LiteralPath "$global:ScriptRoot\Logs\ImageChoices.csv" -Delimiter ';'
+        $FallbackCount = @($SummaryCount | Where-Object Fallback -eq 'true')
+        $TextlessCount = @($SummaryCount | Where-Object Language -eq 'Textless')
+        $TextTruncatedCount = @($SummaryCount | Where-Object TextTruncated -eq 'true')
+        $TextCount = @($SummaryCount | Where-Object Textless -eq 'false')
+        if ($TextlessCount -or $FallbackCount -or $TextCount -or $PosterUnknownCount -or $TextTruncatedCount) {
+            Write-Entry -Message "This is a subset summary of all image choices from the ImageChoices.csv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+        }
+        if ($TextlessCount) {
+            Write-Entry -Subtext "'$($TextlessCount.count)' times the script took a Textless image" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+        }
+        if ($FallbackCount) {
+            Write-Entry -Subtext "'$($FallbackCount.count)' times the script took a fallback image" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+            Write-Entry -Subtext "'$($posterCount-$($FallbackCount.count))' times the script took the image from fav provider: $global:FavProvider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+        }
+        if ($TextCount) {
+            Write-Entry -Subtext "'$($TextCount.count)' times the script took an image with Text" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+        }
+        if ($PosterUnknownCount -ge '1') {
+            Write-Entry -Subtext "'$PosterUnknownCount' times the script took a season poster where we cannot tell if it has text or not" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+        }
+        if ($TextTruncatedCount) {
+            Write-Entry -Subtext "'$($TextTruncatedCount.count)' times the script truncated the text in images" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+        }
+    }
     if ($errorCount -ge '1') {
         Write-Entry -Message "During execution '$errorCount' Errors occurred, please check the log for a detailed description where you see [ERROR-HERE]." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
     }
@@ -6298,6 +6326,10 @@ function MassDownloadPlexArtwork {
         Mode                = $Mode
         Runtime             = $($hours.ToString() + ":" + $minutes.ToString() + ":" + $seconds.ToString())
         Errors              = if ($errorCount) { $errorCount } Else { 0 }
+        Fallbacks            = if ($FallbackCount) { $FallbackCount } Else { 0 }
+        Textless             = if ($TextlessCount) { $TextlessCount } Else { 0 }
+        Truncated            = if ($TextTruncatedCount) { $TextTruncatedCount } Else { 0 }
+        Text                 = if ($TextCount) { $TextCount } Else { 0 }
         "TBA Skipped"       = if ($SkipTBACount) { $SkipTBACount } Else { 0 }
         "Jap/Chines Skipped" = if ($SkipJapTitleCount) { $SkipJapTitleCount } Else { 0 }
         "Notification Sent" = if ($global:SendNotification -eq 'true') { $global:SendNotification } Else { "false" }
@@ -8261,6 +8293,15 @@ if ($Manual) {
         # Export the array to a CSV file
         $CSVtemp | Export-Csv -Path "$global:ScriptRoot\Logs\ImageChoices.csv" -NoTypeInformation -Delimiter ';' -Encoding UTF8 -Force -Append
 
+        if ((Test-Path $global:ScriptRoot\Logs\ImageChoices.csv)) {
+            # Calculate Summary
+            $SummaryCount = Import-Csv -LiteralPath "$global:ScriptRoot\Logs\ImageChoices.csv" -Delimiter ';'
+            $FallbackCount = @($SummaryCount | Where-Object Fallback -eq 'true')
+            $TextlessCount = @($SummaryCount | Where-Object Language -eq 'Textless')
+            $TextTruncatedCount = @($SummaryCount | Where-Object TextTruncated -eq 'true')
+            $TextCount = @($SummaryCount | Where-Object Textless -eq 'false')
+        }
+
         # Export json
         $jsonObject = [PSCustomObject]@{
             Posters             = $posterCount
@@ -8271,6 +8312,10 @@ if ($Manual) {
             Mode                = $Mode
             Runtime             = $($hours.ToString() + ":" + $minutes.ToString() + ":" + $seconds.ToString())
             Errors              = if ($errorCount) { $errorCount } Else { 0 }
+            Fallbacks            = if ($FallbackCount) { $FallbackCount } Else { 0 }
+            Textless             = if ($TextlessCount) { $TextlessCount } Else { 0 }
+            Truncated            = if ($TextTruncatedCount) { $TextTruncatedCount } Else { 0 }
+            Text                 = if ($TextCount) { $TextCount } Else { 0 }
             "TBA Skipped"       = if ($SkipTBACount) { $SkipTBACount } Else { 0 }
             "Jap/Chines Skipped" = if ($SkipJapTitleCount) { $SkipJapTitleCount } Else { 0 }
             "Notification Sent" = if ($global:SendNotification -eq 'true') { $global:SendNotification } Else { "false" }
@@ -9430,7 +9475,14 @@ Elseif ($Testing) {
             }
         }
     }
-
+    if ((Test-Path $global:ScriptRoot\Logs\ImageChoices.csv)) {
+        # Calculate Summary
+        $SummaryCount = Import-Csv -LiteralPath "$global:ScriptRoot\Logs\ImageChoices.csv" -Delimiter ';'
+        $FallbackCount = @($SummaryCount | Where-Object Fallback -eq 'true')
+        $TextlessCount = @($SummaryCount | Where-Object Language -eq 'Textless')
+        $TextTruncatedCount = @($SummaryCount | Where-Object TextTruncated -eq 'true')
+        $TextCount = @($SummaryCount | Where-Object Textless -eq 'false')
+    }
     # Export json
     $jsonObject = [PSCustomObject]@{
         Posters             = $posterscount
@@ -9441,6 +9493,10 @@ Elseif ($Testing) {
         Mode                = $Mode
         Runtime             = $($hours.ToString() + ":" + $minutes.ToString() + ":" + $seconds.ToString())
         Errors              = if ($errorCount) { $errorCount } Else { 0 }
+        Fallbacks            = if ($FallbackCount) { $FallbackCount } Else { 0 }
+        Textless             = if ($TextlessCount) { $TextlessCount } Else { 0 }
+        Truncated            = if ($TextTruncatedCount) { $TextTruncatedCount } Else { 0 }
+        Text                 = if ($TextCount) { $TextCount } Else { 0 }
         "TBA Skipped"       = if ($SkipTBACount) { $SkipTBACount } Else { 0 }
         "Jap/Chines Skipped" = if ($SkipJapTitleCount) { $SkipJapTitleCount } Else { 0 }
         "Notification Sent" = if ($global:SendNotification -eq 'true') { $global:SendNotification } Else { "false" }
@@ -13555,6 +13611,10 @@ Elseif ($Tautulli) {
         Mode                = $Mode
         Runtime             = $($hours.ToString() + ":" + $minutes.ToString() + ":" + $seconds.ToString())
         Errors              = if ($errorCount) { $errorCount } Else { 0 }
+        Fallbacks            = if ($FallbackCount) { $FallbackCount } Else { 0 }
+        Textless             = if ($TextlessCount) { $TextlessCount } Else { 0 }
+        Truncated            = if ($TextTruncatedCount) { $TextTruncatedCount } Else { 0 }
+        Text                 = if ($TextCount) { $TextCount } Else { 0 }
         "TBA Skipped"       = if ($SkipTBACount) { $SkipTBACount } Else { 0 }
         "Jap/Chines Skipped" = if ($SkipJapTitleCount) { $SkipJapTitleCount } Else { 0 }
         "Notification Sent" = if ($global:SendNotification -eq 'true') { $global:SendNotification } Else { "false" }
@@ -17442,6 +17502,34 @@ Elseif ($ArrTrigger) {
                 Write-Entry -Subtext "'$($TextTruncatedCount.count)' times the script truncated the text in images" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
             }
         }
+        if ((Test-Path $global:ScriptRoot\Logs\ImageChoices.csv)) {
+            Write-Entry -Message "You can find a detailed Summary of image Choices here: $global:ScriptRoot\Logs\ImageChoices.csv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
+            # Calculate Summary
+            $SummaryCount = Import-Csv -LiteralPath "$global:ScriptRoot\Logs\ImageChoices.csv" -Delimiter ';'
+            $FallbackCount = @($SummaryCount | Where-Object Fallback -eq 'true')
+            $TextlessCount = @($SummaryCount | Where-Object Language -eq 'Textless')
+            $TextTruncatedCount = @($SummaryCount | Where-Object TextTruncated -eq 'true')
+            $TextCount = @($SummaryCount | Where-Object Textless -eq 'false')
+            if ($TextlessCount -or $FallbackCount -or $TextCount -or $PosterUnknownCount -or $TextTruncatedCount) {
+                Write-Entry -Message "This is a subset summary of all image choices from the ImageChoices.csv" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+            }
+            if ($TextlessCount) {
+                Write-Entry -Subtext "'$($TextlessCount.count)' times the script took a Textless image" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+            }
+            if ($FallbackCount) {
+                Write-Entry -Subtext "'$($FallbackCount.count)' times the script took a fallback image" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+                Write-Entry -Subtext "'$($posterCount-$($FallbackCount.count))' times the script took the image from fav provider: $global:FavProvider" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+            }
+            if ($TextCount) {
+                Write-Entry -Subtext "'$($TextCount.count)' times the script took an image with Text" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+            }
+            if ($PosterUnknownCount -ge '1') {
+                Write-Entry -Subtext "'$PosterUnknownCount' times the script took a season poster where we cannot tell if it has text or not" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+            }
+            if ($TextTruncatedCount) {
+                Write-Entry -Subtext "'$($TextTruncatedCount.count)' times the script truncated the text in images" -Path $global:ScriptRoot\Logs\Scriptlog.log -Color Yellow -log Info
+            }
+        }
         if ($errorCount -ge '1') {
             Write-Entry -Message "During execution '$errorCount' Errors occurred, please check the log for a detailed description where you see [ERROR-HERE]." -Path $global:ScriptRoot\Logs\Scriptlog.log -Color White -log Info
         }
@@ -17672,6 +17760,10 @@ Elseif ($ArrTrigger) {
             Mode                = $Mode
             Runtime             = $($hours.ToString() + ":" + $minutes.ToString() + ":" + $seconds.ToString())
             Errors              = if ($errorCount) { $errorCount } Else { 0 }
+            Fallbacks            = if ($FallbackCount) { $FallbackCount } Else { 0 }
+            Textless             = if ($TextlessCount) { $TextlessCount } Else { 0 }
+            Truncated            = if ($TextTruncatedCount) { $TextTruncatedCount } Else { 0 }
+            Text                 = if ($TextCount) { $TextCount } Else { 0 }
             "TBA Skipped"       = if ($SkipTBACount) { $SkipTBACount } Else { 0 }
             "Jap/Chines Skipped" = if ($SkipJapTitleCount) { $SkipJapTitleCount } Else { 0 }
             "Notification Sent" = if ($global:SendNotification -eq 'true') { $global:SendNotification } Else { "false" }
@@ -21933,6 +22025,10 @@ Elseif ($ArrTrigger) {
             Mode                = $Mode
             Runtime             = $($hours.ToString() + ":" + $minutes.ToString() + ":" + $seconds.ToString())
             Errors              = if ($errorCount) { $errorCount } Else { 0 }
+            Fallbacks            = if ($FallbackCount) { $FallbackCount } Else { 0 }
+            Textless             = if ($TextlessCount) { $TextlessCount } Else { 0 }
+            Truncated            = if ($TextTruncatedCount) { $TextTruncatedCount } Else { 0 }
+            Text                 = if ($TextCount) { $TextCount } Else { 0 }
             "TBA Skipped"       = if ($SkipTBACount) { $SkipTBACount } Else { 0 }
             "Jap/Chines Skipped" = if ($SkipJapTitleCount) { $SkipJapTitleCount } Else { 0 }
             "Notification Sent" = if ($global:SendNotification -eq 'true') { $global:SendNotification } Else { "false" }
@@ -23224,6 +23320,10 @@ Elseif ($SyncJelly -or $SyncEmby) {
         Mode                = $Mode
         Runtime             = $($hours.ToString() + ":" + $minutes.ToString() + ":" + $seconds.ToString())
         Errors              = if ($errorCount) { $errorCount } Else { 0 }
+        Fallbacks            = if ($FallbackCount) { $FallbackCount } Else { 0 }
+        Textless             = if ($TextlessCount) { $TextlessCount } Else { 0 }
+        Truncated            = if ($TextTruncatedCount) { $TextTruncatedCount } Else { 0 }
+        Text                 = if ($TextCount) { $TextCount } Else { 0 }
         "TBA Skipped"       = if ($SkipTBACount) { $SkipTBACount } Else { 0 }
         "Jap/Chines Skipped" = if ($SkipJapTitleCount) { $SkipJapTitleCount } Else { 0 }
         "Notification Sent" = if ($global:SendNotification -eq 'true') { $global:SendNotification } Else { "false" }
@@ -27590,6 +27690,10 @@ Elseif ($OtherMediaServerUrl -and $OtherMediaServerApiKey -and $UseOtherMediaSer
         Mode                = $Mode
         Runtime             = $($hours.ToString() + ":" + $minutes.ToString() + ":" + $seconds.ToString())
         Errors              = if ($errorCount) { $errorCount } Else { 0 }
+        Fallbacks            = if ($FallbackCount) { $FallbackCount } Else { 0 }
+        Textless             = if ($TextlessCount) { $TextlessCount } Else { 0 }
+        Truncated            = if ($TextTruncatedCount) { $TextTruncatedCount } Else { 0 }
+        Text                 = if ($TextCount) { $TextCount } Else { 0 }
         "TBA Skipped"       = if ($SkipTBACount) { $SkipTBACount } Else { 0 }
         "Jap/Chines Skipped" = if ($SkipJapTitleCount) { $SkipJapTitleCount } Else { 0 }
         "Notification Sent" = if ($global:SendNotification -eq 'true') { $global:SendNotification } Else { "false" }
@@ -32629,6 +32733,10 @@ else {
         Mode                = $Mode
         Runtime             = $($hours.ToString() + ":" + $minutes.ToString() + ":" + $seconds.ToString())
         Errors              = if ($errorCount) { $errorCount } Else { 0 }
+        Fallbacks            = if ($FallbackCount) { $FallbackCount } Else { 0 }
+        Textless             = if ($TextlessCount) { $TextlessCount } Else { 0 }
+        Truncated            = if ($TextTruncatedCount) { $TextTruncatedCount } Else { 0 }
+        Text                 = if ($TextCount) { $TextCount } Else { 0 }
         "TBA Skipped"       = if ($SkipTBACount) { $SkipTBACount } Else { 0 }
         "Jap/Chines Skipped" = if ($SkipJapTitleCount) { $SkipJapTitleCount } Else { 0 }
         "Notification Sent" = if ($global:SendNotification -eq 'true') { $global:SendNotification } Else { "false" }
